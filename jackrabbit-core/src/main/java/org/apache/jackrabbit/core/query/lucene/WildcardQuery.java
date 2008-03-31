@@ -126,7 +126,7 @@ public class WildcardQuery extends Query implements Transformable {
      * @throws IOException if an error occurs while reading from the index.
      */
     public Query rewrite(IndexReader reader) throws IOException {
-        Query stdWildcardQuery = new MultiTermQuery(new Term(FieldNames.PROPERTIES, pattern)) {
+        Query stdWildcardQuery = new MultiTermQuery(new Term(field, pattern)) {
             protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
                 return new WildcardTermEnum(reader, field, propName, pattern, transform);
             }

@@ -39,7 +39,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ComparisonImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
@@ -110,12 +109,12 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     private final SessionImpl session;
 
     /**
-     * The shared item state manager of the workspace.
+     * The item state manager of the workspace.
      */
-    private final ItemStateManager sharedItemMgr;
+    private final ItemStateManager ism;
 
     /**
-     * A hierarchy manager based on {@link #sharedItemMgr} to resolve paths.
+     * A hierarchy manager based on {@link #ism} to resolve paths.
      */
     private final HierarchyManager hmgr;
 
@@ -160,9 +159,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
      *
      * @param qomTree            the root of the query object model.
      * @param session            of the user executing this query.
-     * @param sharedItemMgr      the shared item state manager of the
-     *                           workspace.
-     * @param hmgr               a hierarchy manager based on sharedItemMgr.
+     * @param ism                the item state manager of the workspace.
+     * @param hmgr               a hierarchy manager based on ism.
      * @param nsMappings         namespace resolver for internal prefixes.
      * @param analyzer           for parsing the query statement of the contains
      *                           function.
@@ -173,7 +171,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
      */
     private JQOM2LuceneQueryBuilder(QueryObjectModelTree qomTree,
                                     SessionImpl session,
-                                    ItemStateManager sharedItemMgr,
+                                    ItemStateManager ism,
                                     HierarchyManager hmgr,
                                     NamespaceMappings nsMappings,
                                     Analyzer analyzer,
@@ -182,7 +180,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                                     Map bindVariableValues) {
         this.qomTree = qomTree;
         this.session = session;
-        this.sharedItemMgr = sharedItemMgr;
+        this.ism = ism;
         this.hmgr = hmgr;
         this.nsMappings = nsMappings;
         this.npResolver = NamePathResolverImpl.create(nsMappings);
@@ -301,157 +299,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     }
 
     public Object visit(ComparisonImpl node, Object data) throws Exception {
-        Value v = (Value) ((StaticOperandImpl) node.getOperand2()).accept(this, data);
-        final String stringValue;
-        switch (v.getType()) {
-            case PropertyType.BINARY:
-                throw new InvalidQueryException("Binary value not supported in comparison");
-            case PropertyType.BOOLEAN:
-                stringValue = v.getString();
-                break;
-            case PropertyType.DATE:
-                stringValue = DateField.dateToString(v.getDate().getTime());
-                break;
-            case PropertyType.DOUBLE:
-                stringValue = DoubleField.doubleToString(v.getDouble());
-                break;
-            case PropertyType.LONG:
-                stringValue = LongField.longToString(v.getLong());
-                break;
-            case PropertyType.NAME:
-                Name n = session.getQName(v.getString());
-                stringValue = nsMappings.translatePropertyName(n);
-                break;
-            case PropertyType.PATH:
-                Path p = session.getQPath(v.getString());
-                stringValue = npResolver.getJCRPath(p);
-                break;
-            case PropertyType.REFERENCE:
-                stringValue = v.getString();
-                break;
-            case PropertyType.STRING:
-                stringValue = v.getString();
-                break;
-            default:
-                // TODO: support for new types defined in JSR 283
-                throw new InvalidQueryException("Unsupported property type "
-                        + PropertyType.nameFromValue(v.getType()));
-        }
-
-        final int operator = node.getOperator();
-
-        return ((DynamicOperandImpl) node.getOperand1()).accept(
-                new DefaultTraversingQOMTreeVisitor() {
-            public Object visit(PropertyValueImpl node, Object data) throws Exception {
-                String propName = npResolver.getJCRName(node.getPropertyQName());
-                String text = FieldNames.createNamedValue(propName, stringValue);
-                switch (operator) {
-                    case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
-                        return new TermQuery(new Term(FieldNames.PROPERTIES, text));
-                    case QueryObjectModelConstants.OPERATOR_GREATER_THAN:
-                        Term lower = new Term(FieldNames.PROPERTIES, text);
-                        Term upper = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(propName, "\uFFFF"));
-                        return new RangeQuery(lower, upper, false);
-                    case QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO:
-                        lower = new Term(FieldNames.PROPERTIES, text);
-                        upper = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(propName, "\uFFFF"));
-                        return new RangeQuery(lower, upper, true);
-                    case QueryObjectModelConstants.OPERATOR_LESS_THAN:
-                        lower = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(propName, ""));
-                        upper = new Term(FieldNames.PROPERTIES, text);
-                        return new RangeQuery(lower, upper, false);
-                    case QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO:
-                        lower = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(propName, ""));
-                        upper = new Term(FieldNames.PROPERTIES, text);
-                        return new RangeQuery(lower, upper, true);
-                    case QueryObjectModelConstants.OPERATOR_LIKE:
-                        if (stringValue.equals("%")) {
-                            return new MatchAllQuery(propName);
-                        } else {
-                            return new WildcardQuery(FieldNames.PROPERTIES,
-                                    propName, stringValue);
-                        }
-                    case QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO:
-                        MatchAllQuery all = new MatchAllQuery(propName);
-                        BooleanQuery b = new BooleanQuery();
-                        b.add(all, BooleanClause.Occur.SHOULD);
-                        b.add(new TermQuery(new Term(FieldNames.PROPERTIES, text)),
-                                BooleanClause.Occur.MUST_NOT);
-                        return b;
-                    default:
-                        throw new InvalidQueryException(
-                                "Unknown operator " + operator);
-                }
-            }
-
-            public Object visit(LengthImpl node, Object data) throws Exception {
-                // TODO: implement
-                return super.visit(node, data);
-            }
-
-            public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
-                // TODO: implement
-                throw new UnsupportedOperationException("Not yet implemented");
-            }
-
-            public Object visit(NodeNameImpl node, Object data) throws Exception {
-                // TODO: implement
-                throw new UnsupportedOperationException("Not yet implemented");
-            }
-
-            public Object visit(FullTextSearchScoreImpl node, Object data)
-                    throws Exception {
-                // TODO: implement
-                throw new UnsupportedOperationException("Not yet implemented");
-            }
-
-            public Object visit(UpperCaseImpl node, Object data) throws Exception {
-                Object obj = super.visit(node, data);
-                if (obj instanceof Transformable) {
-                    ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_UPPER_CASE);
-                    return obj;
-                } else if (obj instanceof TermQuery) {
-                    return transformTermQuery((TermQuery) obj, true);
-                } else {
-                    throw new InvalidQueryException(
-                            "upper-case not supported on operand "
-                            + node.getOperand().getClass().getName());
-                }
-            }
-
-            public Object visit(LowerCaseImpl node, Object data) throws Exception {
-                Object obj = super.visit(node, data);
-                if (obj instanceof Transformable) {
-                    ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_LOWER_CASE);
-                    return obj;
-                } else if (obj instanceof TermQuery) {
-                    return transformTermQuery((TermQuery) obj, false);
-                } else {
-                    throw new InvalidQueryException(
-                            "lower-case not supported on operand "
-                            + node.getOperand().getClass().getName());
-                }
-            }
-
-            private Query transformTermQuery(TermQuery query, boolean toUpper)
-                    throws InvalidQueryException {
-                if (query.getTerm().field() == FieldNames.PROPERTIES) {
-                    if (toUpper) {
-                        return new CaseTermQuery.Upper(query.getTerm());
-                    } else {
-                        return new CaseTermQuery.Lower(query.getTerm());
-                    }
-                } else {
-                    throw new InvalidQueryException(
-                            "Upper/LowerCase not supported on field "
-                            + query.getTerm().field());
-                }
-            }
-        }, data);
+        return ((DynamicOperandImpl) node.getOperand1()).accept(this, node);
     }
 
     public Object visit(DescendantNodeImpl node, Object data) throws Exception {
@@ -554,9 +402,18 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         return node.getValue();
     }
 
-    public Object visit(LowerCaseImpl node, Object data) {
-        // query builder should not use this method
-        throw new IllegalStateException();
+    public Object visit(LowerCaseImpl node, Object data) throws Exception {
+        Object obj = ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+        if (obj instanceof Transformable) {
+            ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_LOWER_CASE);
+            return obj;
+        } else if (obj instanceof TermQuery) {
+            return transformTermQuery((TermQuery) obj, false);
+        } else {
+            throw new InvalidQueryException(
+                    "lower-case not supported on operand "
+                    + node.getOperand().getClass().getName());
+        }
     }
 
     public Object visit(NodeLocalNameImpl node, Object data) {
@@ -564,9 +421,78 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
-    public Object visit(NodeNameImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+    public Object visit(NodeNameImpl node, Object data) throws Exception {
+        if (data instanceof ComparisonImpl) {
+            ComparisonImpl comp = ((ComparisonImpl) data);
+            int operator = comp.getOperator();
+            Value v = (Value) ((StaticOperandImpl) comp.getOperand2()).accept(this, data);
+            switch (v.getType()) {
+                case PropertyType.DATE:
+                case PropertyType.DOUBLE:
+                // TODO case PropertyType.DECIMAL:
+                case PropertyType.LONG:
+                case PropertyType.BOOLEAN:
+                case PropertyType.REFERENCE:
+                // TODO case PropertyType.WEAKREFERENCE:
+                // TODO case PropertyType.URI
+                    throw new InvalidQueryException(v.getString() +
+                            " cannot be converted into a NAME value");
+            }
+
+            Name value;
+            try {
+                value = JQOM2LuceneQueryBuilder.this.session.getQName(v.getString());
+            } catch (RepositoryException e) {
+                throw new InvalidQueryException(v.getString() +
+                        " cannot be converted into a NAME value");
+            }
+            String stringValue = npResolver.getJCRName(value);
+            // the prefix including colon
+            String prefix = stringValue.substring(0, stringValue.indexOf(':') + 1);
+
+            switch (operator) {
+                case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
+                    return new TermQuery(new Term(FieldNames.LABEL, stringValue));
+                case QueryObjectModelConstants.OPERATOR_GREATER_THAN:
+                    Term lower = new Term(FieldNames.LABEL, stringValue);
+                    Term upper = new Term(FieldNames.LABEL,
+                            prefix + "\uFFFF");
+                    return new RangeQuery(lower, upper, false);
+                case QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.LABEL, stringValue);
+                    upper = new Term(FieldNames.LABEL,
+                            prefix + "\uFFFF");
+                    return new RangeQuery(lower, upper, true);
+                case QueryObjectModelConstants.OPERATOR_LESS_THAN:
+                    lower = new Term(FieldNames.LABEL, prefix);
+                    upper = new Term(FieldNames.LABEL, stringValue);
+                    return new RangeQuery(lower, upper, false);
+                case QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.LABEL, prefix);
+                    upper = new Term(FieldNames.LABEL, stringValue);
+                    return new RangeQuery(lower, upper, true);
+                case QueryObjectModelConstants.OPERATOR_LIKE:
+                    if (stringValue.equals("%")) {
+                        return new MatchAllDocsQuery();
+                    } else {
+                        return new WildcardQuery(FieldNames.LABEL,
+                                null, stringValue);
+                    }
+                case QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO:
+                    MatchAllDocsQuery all = new MatchAllDocsQuery();
+                    BooleanQuery b = new BooleanQuery();
+                    b.add(all, BooleanClause.Occur.SHOULD);
+                    b.add(new TermQuery(new Term(FieldNames.LABEL, stringValue)),
+                            BooleanClause.Occur.MUST_NOT);
+                    return b;
+                default:
+                    throw new InvalidQueryException(
+                            "Unknown operator " + operator);
+            }
+        } else {
+            // TODO
+            throw new InvalidQueryException("not yet implemented");
+        }
     }
 
     public Object visit(NotImpl node, Object data) throws Exception {
@@ -594,9 +520,59 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         return new MatchAllQuery(propName);
     }
 
-    public Object visit(PropertyValueImpl node, Object data) {
-        // query builder should not use this method
-        throw new IllegalStateException();
+    public Object visit(PropertyValueImpl node, Object data) throws Exception {
+        if (data instanceof ComparisonImpl) {
+            ComparisonImpl comp = ((ComparisonImpl) data);
+            int operator = comp.getOperator();
+            Value v = (Value) ((StaticOperandImpl) comp.getOperand2()).accept(this, data);
+            String stringValue = stringValueOf(v);
+            String propName = npResolver.getJCRName(node.getPropertyQName());
+            String text = FieldNames.createNamedValue(propName, stringValue);
+            switch (operator) {
+                case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
+                    return new TermQuery(new Term(FieldNames.PROPERTIES, text));
+                case QueryObjectModelConstants.OPERATOR_GREATER_THAN:
+                    Term lower = new Term(FieldNames.PROPERTIES, text);
+                    Term upper = new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(propName, "\uFFFF"));
+                    return new RangeQuery(lower, upper, false);
+                case QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.PROPERTIES, text);
+                    upper = new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(propName, "\uFFFF"));
+                    return new RangeQuery(lower, upper, true);
+                case QueryObjectModelConstants.OPERATOR_LESS_THAN:
+                    lower = new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(propName, ""));
+                    upper = new Term(FieldNames.PROPERTIES, text);
+                    return new RangeQuery(lower, upper, false);
+                case QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.PROPERTIES,
+                            FieldNames.createNamedValue(propName, ""));
+                    upper = new Term(FieldNames.PROPERTIES, text);
+                    return new RangeQuery(lower, upper, true);
+                case QueryObjectModelConstants.OPERATOR_LIKE:
+                    if (stringValue.equals("%")) {
+                        return new MatchAllQuery(propName);
+                    } else {
+                        return new WildcardQuery(FieldNames.PROPERTIES,
+                                propName, stringValue);
+                    }
+                case QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO:
+                    MatchAllQuery all = new MatchAllQuery(propName);
+                    BooleanQuery b = new BooleanQuery();
+                    b.add(all, BooleanClause.Occur.SHOULD);
+                    b.add(new TermQuery(new Term(FieldNames.PROPERTIES, text)),
+                            BooleanClause.Occur.MUST_NOT);
+                    return b;
+                default:
+                    throw new InvalidQueryException(
+                            "Unknown operator " + operator);
+            }
+        } else {
+            // TODO
+            throw new InvalidQueryException("not yet implemented");
+        }
     }
 
     public Object visit(QueryObjectModelTree node, Object data)
@@ -702,7 +678,62 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     }
 
     public Object visit(UpperCaseImpl node, Object data) throws Exception {
-        // query builder should not use this method
-        throw new IllegalStateException();
+        Object obj = ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+        if (obj instanceof Transformable) {
+            ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_UPPER_CASE);
+            return obj;
+        } else if (obj instanceof TermQuery) {
+            return transformTermQuery((TermQuery) obj, true);
+        } else {
+            throw new InvalidQueryException(
+                    "upper-case not supported on operand "
+                    + node.getOperand().getClass().getName());
+        }
+    }
+
+    //------------------------------< internal >--------------------------------
+
+    private String stringValueOf(Value value) throws RepositoryException {
+        switch (value.getType()) {
+            case PropertyType.BINARY:
+                return value.getString();
+            case PropertyType.BOOLEAN:
+                return value.getString();
+            case PropertyType.DATE:
+                return DateField.dateToString(value.getDate().getTime());
+            case PropertyType.DOUBLE:
+                return DoubleField.doubleToString(value.getDouble());
+            case PropertyType.LONG:
+                return LongField.longToString(value.getLong());
+            case PropertyType.NAME:
+                Name n = session.getQName(value.getString());
+                return nsMappings.translatePropertyName(n);
+            case PropertyType.PATH:
+                Path p = session.getQPath(value.getString());
+                return npResolver.getJCRPath(p);
+            case PropertyType.REFERENCE:
+                return value.getString();
+            case PropertyType.STRING:
+                return value.getString();
+            default:
+                // TODO: support for new types defined in JSR 283
+                throw new InvalidQueryException("Unsupported property type "
+                        + PropertyType.nameFromValue(value.getType()));
+        }
+    }
+
+    private Query transformTermQuery(TermQuery query, boolean toUpper)
+            throws InvalidQueryException {
+        if (query.getTerm().field() == FieldNames.PROPERTIES) {
+            if (toUpper) {
+                return new CaseTermQuery.Upper(query.getTerm());
+            } else {
+                return new CaseTermQuery.Lower(query.getTerm());
+            }
+        } else {
+            throw new InvalidQueryException(
+                    "Upper/LowerCase not supported on field "
+                    + query.getTerm().field());
+        }
     }
 }
