@@ -29,8 +29,10 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("QOM tests");
 
+        suite.addTestSuite(BindVariableValueTest.class);
         suite.addTestSuite(ChildNodeTest.class);
         suite.addTestSuite(DescendantNodeTest.class);
+        suite.addTestSuite(NodeNameTest.class);
         suite.addTestSuite(QueryObjectModelFactoryTest.class);
         suite.addTestSuite(SameNodeTest.class);
         suite.addTestSuite(SelectorTest.class);
