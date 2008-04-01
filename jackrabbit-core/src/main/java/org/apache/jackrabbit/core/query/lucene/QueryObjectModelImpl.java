@@ -100,7 +100,8 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         Query query = JQOM2LuceneQueryBuilder.createQuery(qomTree, session,
                 index.getContext().getItemStateManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
-                propReg, index.getSynonymProvider(), getBindVariableValues());
+                propReg, index.getSynonymProvider(), getBindVariableValues(),
+                index.getIndexFormatVersion());
 
         ColumnImpl[] columns = qomTree.getColumns();
         Name[] selectProps = new Name[columns.length];
