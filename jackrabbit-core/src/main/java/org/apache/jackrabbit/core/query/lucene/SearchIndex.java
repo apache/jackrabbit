@@ -35,7 +35,10 @@ import org.apache.jackrabbit.extractor.DefaultTextExtractor;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.uuid.UUID;
@@ -145,6 +148,27 @@ public class SearchIndex extends AbstractQueryHandler {
      * thread.
      */
     public static final long DEFAULT_EXTRACTOR_TIMEOUT = 100;
+
+    /**
+     * The path of the root node.
+     */
+    private static final Path ROOT_PATH;
+
+    /**
+     * The path <code>/jcr:system</code>.
+     */
+    private static final Path JCR_SYSTEM_PATH;
+
+    static {
+        PathFactory factory = PathFactoryImpl.getInstance();
+        ROOT_PATH = factory.create(NameConstants.ROOT);
+        try {
+            JCR_SYSTEM_PATH = factory.create(ROOT_PATH, NameConstants.JCR_SYSTEM, false);
+        } catch (RepositoryException e) {
+            // should never happen, path is always valid
+            throw new InternalError(e.getMessage());
+        }
+    }
 
     /**
      * The actual index
@@ -428,8 +452,15 @@ public class SearchIndex extends AbstractQueryHandler {
 
         index = new MultiIndex(indexDir, this, excludedIDs, nsMappings);
         if (index.numDocs() == 0) {
-            index.createInitialIndex(
-                    context.getItemStateManager(), context.getRootId());
+            Path rootPath;
+            if (excludedIDs.isEmpty()) {
+                // this is the index for jcr:system
+                rootPath = JCR_SYSTEM_PATH;
+            } else {
+                rootPath = ROOT_PATH;
+            }
+            index.createInitialIndex(context.getItemStateManager(),
+                    context.getRootId(), rootPath);
         }
         if (consistencyCheckEnabled
                 && (index.getRedoLogApplied() || forceConsistencyCheck)) {
