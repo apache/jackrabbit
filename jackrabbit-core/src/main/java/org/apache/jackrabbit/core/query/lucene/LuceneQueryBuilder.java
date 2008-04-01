@@ -598,7 +598,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
 
             if (node.getIncludeDescendants()) {
-                Query refPropQuery = createMatchAllQuery(refProperty);
+                Query refPropQuery = Util.createMatchAllQuery(refProperty, indexFormatVersion);
                 context = new DescendantSelfAxisQuery(context, refPropQuery, false);
             }
 
@@ -806,7 +806,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // the like operation always has one string value.
                     // no coercing, see above
                     if (stringValues[0].equals("%")) {
-                        query = createMatchAllQuery(field);
+                        query = Util.createMatchAllQuery(field, indexFormatVersion);
                     } else {
                         query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
                     }
@@ -827,7 +827,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case QueryConstants.OPERATION_NE_VALUE:      // !=
                     // match nodes with property 'field' that includes svp and mvp
                     BooleanQuery notQuery = new BooleanQuery();
-                    notQuery.add(createMatchAllQuery(field), Occur.SHOULD);
+                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion), Occur.SHOULD);
                     // exclude all nodes where 'field' has the term in question
                     for (int i = 0; i < stringValues.length; i++) {
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -853,7 +853,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // minus the nodes that have a multi-valued property 'field' and
                     //    all values are equal to term in question
                     notQuery = new BooleanQuery();
-                    notQuery.add(createMatchAllQuery(field), Occur.SHOULD);
+                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion), Occur.SHOULD);
                     for (int i = 0; i < stringValues.length; i++) {
                         // exclude the nodes that have the term and are single valued
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
@@ -876,7 +876,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = notQuery;
                     break;
                 case QueryConstants.OPERATION_NULL:
-                    query = new NotQuery(createMatchAllQuery(field));
+                    query = new NotQuery(Util.createMatchAllQuery(field, indexFormatVersion));
                     break;
                 case QueryConstants.OPERATION_SIMILAR:
                     String uuid = "x";
@@ -891,10 +891,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = new SimilarityQuery(uuid, analyzer);
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
-                    query = createMatchAllQuery(field);
+                    query = Util.createMatchAllQuery(field, indexFormatVersion);
                     break;
                 case QueryConstants.OPERATION_SPELLCHECK:
-                    query = createMatchAllQuery(field);
+                    query = Util.createMatchAllQuery(field, indexFormatVersion);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown relation operation: "
@@ -1104,21 +1104,5 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             log.debug("Using literal " + literal + " as is.");
         }
         return (String[]) values.toArray(new String[values.size()]);
-    }
-
-    /**
-     * Depending on the index format this method returns
-     * a query that matches all nodes that have a property named 'field'
-     *
-     * @param field
-     * @return Query that matches all nodes that have a property named 'field'
-     */
-    private Query createMatchAllQuery(String field) {
-        if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
-            // new index format style
-            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, field));
-        } else {
-            return new MatchAllQuery(field);
-        }
     }
 }
