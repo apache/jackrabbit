@@ -155,6 +155,11 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
     private final Map selectors = new HashMap();
 
     /**
+     * The index format version.
+     */
+    private final IndexFormatVersion version;
+
+    /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
      *
      * @param qomTree            the root of the query object model.
@@ -168,6 +173,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
      * @param synonymProvider    the synonym provider or <code>null</code> if
      *                           node is configured.
      * @param bindVariableValues the bind variable values.
+     * @param version            the index format version.
      */
     private JQOM2LuceneQueryBuilder(QueryObjectModelTree qomTree,
                                     SessionImpl session,
@@ -177,7 +183,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg,
                                     SynonymProvider synonymProvider,
-                                    Map bindVariableValues) {
+                                    Map bindVariableValues,
+                                    IndexFormatVersion version) {
         this.qomTree = qomTree;
         this.session = session;
         this.ism = ism;
@@ -188,6 +195,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         this.propRegistry = propReg;
         this.synonymProvider = synonymProvider;
         this.bindVariableValues = bindVariableValues;
+        this.version = version;
     }
 
     /**
@@ -206,6 +214,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
      * @param synonymProvider    the synonym provider or <code>null</code> if
      *                           node is configured.
      * @param bindVariableValues the bind variable values.
+     * @param version            the index format version.
      * @return the lucene query tree.
      * @throws RepositoryException if an error occurs during the translation.
      */
@@ -216,15 +225,16 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg,
                                     SynonymProvider synonymProvider,
-                                    Map bindVariableValues)
+                                    Map bindVariableValues,
+                                    IndexFormatVersion version)
             throws RepositoryException {
 
         NodeId id = ((NodeImpl) session.getRootNode()).getNodeId();
         HierarchyManager hmgr = new HierarchyManagerImpl(
                 id, sharedItemMgr, session);
         JQOM2LuceneQueryBuilder builder = new JQOM2LuceneQueryBuilder(
-                qomTree, session, sharedItemMgr, hmgr, nsMappings,
-                analyzer, propReg, synonymProvider, bindVariableValues);
+                qomTree, session, sharedItemMgr, hmgr, nsMappings, analyzer,
+                propReg, synonymProvider, bindVariableValues, version);
 
         return builder.createLuceneQuery();
     }
@@ -507,8 +517,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(PropertyExistenceImpl node, Object data) throws Exception {
         String propName = npResolver.getJCRName(node.getPropertyQName());
-        // TODO respect index version
-        return new MatchAllQuery(propName);
+        return createMatchAllQuery(propName);
     }
 
     public Object visit(PropertyValueImpl node, Object data) throws Exception {
@@ -765,6 +774,22 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             throw new InvalidQueryException(
                     "lower/upper-case not supported on operand "
                     + operand.getClass().getName());
+        }
+    }
+
+    /**
+     * Depending on the index format this method returns
+     * a query that matches all nodes that have a property named 'field'
+     *
+     * @param field
+     * @return Query that matches all nodes that have a property named 'field'
+     */
+    private Query createMatchAllQuery(String field) {
+        if (version.getVersion() >= IndexFormatVersion.V2.getVersion()) {
+            // new index format style
+            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, field));
+        } else {
+            return new MatchAllQuery(field);
         }
     }
 }

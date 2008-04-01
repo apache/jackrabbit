@@ -38,7 +38,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     protected void setUp() throws Exception {
         super.setUp();
         vf = superuser.getValueFactory();
-        node = testRootNode.addNode(nodeName1);
+        node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "abc");
         node.setProperty(propertyName2, "ABC");
         testRootNode.save();
