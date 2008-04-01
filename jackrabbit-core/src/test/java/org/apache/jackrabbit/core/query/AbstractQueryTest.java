@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
@@ -39,13 +40,17 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     protected QueryManager qm;
 
+    protected QueryObjectModelFactory qomFactory;
+
     protected void setUp() throws Exception {
         super.setUp();
         qm = superuser.getWorkspace().getQueryManager();
+        qomFactory = ((QueryManagerImpl) qm).getQOMFactory();
     }
 
     protected void tearDown() throws Exception {
         qm = null;
+        qomFactory = null;
         super.tearDown();
     }
 
