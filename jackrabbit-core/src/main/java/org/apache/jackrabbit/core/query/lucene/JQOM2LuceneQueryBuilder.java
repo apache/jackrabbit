@@ -517,7 +517,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(PropertyExistenceImpl node, Object data) throws Exception {
         String propName = npResolver.getJCRName(node.getPropertyQName());
-        return createMatchAllQuery(propName);
+        return Util.createMatchAllQuery(propName, version);
     }
 
     public Object visit(PropertyValueImpl node, Object data) throws Exception {
@@ -774,22 +774,6 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             throw new InvalidQueryException(
                     "lower/upper-case not supported on operand "
                     + operand.getClass().getName());
-        }
-    }
-
-    /**
-     * Depending on the index format this method returns
-     * a query that matches all nodes that have a property named 'field'
-     *
-     * @param field
-     * @return Query that matches all nodes that have a property named 'field'
-     */
-    private Query createMatchAllQuery(String field) {
-        if (version.getVersion() >= IndexFormatVersion.V2.getVersion()) {
-            // new index format style
-            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, field));
-        } else {
-            return new MatchAllQuery(field);
         }
     }
 }

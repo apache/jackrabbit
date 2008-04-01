@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.index.Term;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -74,5 +77,23 @@ public class Util {
             }
         }
         return true;
+    }
+
+    /**
+     * Depending on the index format this method returns a query that matches
+     * all nodes that have a property with a given <code>name</code>.
+     *
+     * @param name    the property name.
+     * @param version the index format version.
+     * @return Query that matches all nodes that have a property with the given
+     *         <code>name</code>.
+     */
+    public static Query createMatchAllQuery(String name, IndexFormatVersion version) {
+        if (version.getVersion() >= IndexFormatVersion.V2.getVersion()) {
+            // new index format style
+            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, name));
+        } else {
+            return new MatchAllQuery(name);
+        }
     }
 }
