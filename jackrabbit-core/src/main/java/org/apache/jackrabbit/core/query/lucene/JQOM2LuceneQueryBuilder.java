@@ -404,16 +404,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(LowerCaseImpl node, Object data) throws Exception {
         Object obj = ((DynamicOperandImpl) node.getOperand()).accept(this, data);
-        if (obj instanceof Transformable) {
-            ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_LOWER_CASE);
-            return obj;
-        } else if (obj instanceof TermQuery) {
-            return transformTermQuery((TermQuery) obj, false);
-        } else {
-            throw new InvalidQueryException(
-                    "lower-case not supported on operand "
-                    + node.getOperand().getClass().getName());
-        }
+        return transformCase(obj, data, false);
     }
 
     public Object visit(NodeLocalNameImpl node, Object data) {
@@ -679,16 +670,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
 
     public Object visit(UpperCaseImpl node, Object data) throws Exception {
         Object obj = ((DynamicOperandImpl) node.getOperand()).accept(this, data);
-        if (obj instanceof Transformable) {
-            ((Transformable) obj).setTransformation(TransformConstants.TRANSFORM_UPPER_CASE);
-            return obj;
-        } else if (obj instanceof TermQuery) {
-            return transformTermQuery((TermQuery) obj, true);
-        } else {
-            throw new InvalidQueryException(
-                    "upper-case not supported on operand "
-                    + node.getOperand().getClass().getName());
-        }
+        return transformCase(obj, data, true);
     }
 
     //------------------------------< internal >--------------------------------
@@ -734,6 +716,43 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             throw new InvalidQueryException(
                     "Upper/LowerCase not supported on field "
                     + query.getTerm().field());
+        }
+    }
+
+    private Object transformCase(Object operand, Object data, boolean toUpperCase)
+            throws InvalidQueryException, Exception {
+        if (operand instanceof Transformable) {
+            ((Transformable) operand).setTransformation(toUpperCase ?
+                    TransformConstants.TRANSFORM_UPPER_CASE :
+                    TransformConstants.TRANSFORM_LOWER_CASE);
+            return operand;
+        } else if (operand instanceof TermQuery) {
+            return transformTermQuery((TermQuery) operand, toUpperCase);
+        } else if (operand instanceof LowerCaseImpl) {
+            LowerCaseImpl lc = (LowerCaseImpl) operand;
+            if (toUpperCase) {
+                // upper-case operand, ignore lower-case
+                return transformCase(lc.getOperand(), data, true);
+            } else {
+                // lower-cased twice
+                return ((DynamicOperandImpl) lc.getOperand()).accept(this, data);
+            }
+        } else if (operand instanceof UpperCaseImpl) {
+            UpperCaseImpl oc = (UpperCaseImpl) operand;
+            if (toUpperCase) {
+                // upper-cased twice
+                return ((DynamicOperandImpl) oc.getOperand()).accept(this, data);
+            } else {
+                // lower-case operand, ignore upper-case
+                return transformCase(oc.getOperand(), data, false);
+            }
+        } else if (operand instanceof CaseTermQuery) {
+            CaseTermQuery ctq = (CaseTermQuery) operand;
+            return transformTermQuery(new TermQuery(ctq.getTerm()), toUpperCase);
+        } else {
+            throw new InvalidQueryException(
+                    "lower/upper-case not supported on operand "
+                    + operand.getClass().getName());
         }
     }
 }
