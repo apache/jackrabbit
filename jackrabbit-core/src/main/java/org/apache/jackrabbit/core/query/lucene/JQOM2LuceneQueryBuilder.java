@@ -749,6 +749,18 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         } else if (operand instanceof CaseTermQuery) {
             CaseTermQuery ctq = (CaseTermQuery) operand;
             return transformTermQuery(new TermQuery(ctq.getTerm()), toUpperCase);
+        } else if (operand instanceof MatchAllQuery) {
+            return operand;
+        } else if (operand instanceof BooleanQuery) {
+            BooleanQuery original = (BooleanQuery) operand;
+            BooleanQuery transformed = new BooleanQuery();
+            BooleanClause[] clauses = original.getClauses();
+            for (int i = 0; i < clauses.length; i++) {
+                Query q = (Query) transformCase(clauses[i].getQuery(),
+                        data, toUpperCase);
+                transformed.add(q, clauses[i].getOccur());
+            }
+            return transformed;
         } else {
             throw new InvalidQueryException(
                     "lower/upper-case not supported on operand "

@@ -16,19 +16,40 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.QueryResult;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <code>UpperLowerCaseQueryTest</code> tests the functions fn:lower-case() and
- * fn:upper-case() in XPath and LOWER() and UPPER() in SQL.
+ * fn:upper-case() in XPath, LOWER() and UPPER() in SQL and UpperCase and
+ * LowerCase in JQOM.
  */
-public class UpperLowerCaseQueryTest extends AbstractQueryTest {
+public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryObjectModelConstants {
+
+    /**
+     * Maps operator strings to QueryObjectModelConstants.
+     */
+    private static final Map OPERATORS = new HashMap();
+
+    static {
+        OPERATORS.put("=", new Integer(OPERATOR_EQUAL_TO));
+        OPERATORS.put(">", new Integer(OPERATOR_GREATER_THAN));
+        OPERATORS.put(">=", new Integer(OPERATOR_GREATER_THAN_OR_EQUAL_TO));
+        OPERATORS.put("<", new Integer(OPERATOR_LESS_THAN));
+        OPERATORS.put("<=", new Integer(OPERATOR_LESS_THAN_OR_EQUAL_TO));
+        OPERATORS.put("like", new Integer(OPERATOR_LIKE));
+        OPERATORS.put("!=", new Integer(OPERATOR_NOT_EQUAL_TO));
+    }
 
     public void testEqualsGeneralComparison() throws RepositoryException {
         check(new String[]{"foo", "Foo", "fOO", "FOO", "fooBar", "fo", "fooo"},
@@ -272,6 +293,21 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
                 sqlOperation + " '" + queryTerm.toLowerCase() + "'";
         executeSQLQuery(sql, nodes);
 
+        QueryResult result = qomFactory.createQuery(
+                qomFactory.selector(testNodeType, "s"),
+                qomFactory.and(
+                        qomFactory.childNode("s", testRoot),
+                        qomFactory.comparison(
+                                qomFactory.lowerCase(
+                                        qomFactory.propertyValue("s", propertyName1)),
+                                getOperatorForString(operation),
+                                qomFactory.literal(
+                                        superuser.getValueFactory().createValue(
+                                                queryTerm.toLowerCase()))
+                        )
+                ), null, null).execute();
+        checkResult(result, nodes);
+
         // run queries with upper-case
         xpath = testPath;
         if (operation.equals("like")) {
@@ -287,9 +323,32 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
                 testRoot + "/%' and UPPER(" + propertyName1 + ") " +
                 sqlOperation + " '" + queryTerm.toUpperCase() + "'";
         executeSQLQuery(sql, nodes);
+
+        result = qomFactory.createQuery(
+                qomFactory.selector(testNodeType, "s"),
+                qomFactory.and(
+                        qomFactory.childNode("s", testRoot),
+                        qomFactory.comparison(
+                                qomFactory.upperCase(
+                                        qomFactory.propertyValue("s", propertyName1)),
+                                getOperatorForString(operation),
+                                qomFactory.literal(
+                                        superuser.getValueFactory().createValue(
+                                                queryTerm.toUpperCase()))
+                        )
+                ), null, null).execute();
+        checkResult(result, nodes);
     }
 
     private char getRandomChar(String pool, Random random) {
         return pool.charAt(random.nextInt(pool.length()));
+    }
+
+    protected static int getOperatorForString(String operator) {
+        Integer i = (Integer) OPERATORS.get(operator);
+        if (i == null) {
+            throw new IllegalArgumentException("unknown operator: " + operator);
+        }
+        return i.intValue();
     }
 }
