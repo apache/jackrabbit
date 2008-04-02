@@ -33,7 +33,7 @@
   </parent>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
   <name>Jackrabbit JCR-RMI</name>
-  <version>1.4.1</version>
+  <version>1.4.2-SNAPSHOT</version>
   <!--
    Keep the description on a single line. Otherwise Maven might generate
    a corrupted MANIFEST.MF (see http://jira.codehaus.org/browse/MJAR-4)
