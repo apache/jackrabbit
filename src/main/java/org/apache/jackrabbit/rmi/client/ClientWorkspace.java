@@ -31,12 +31,12 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 
-import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.xml.DefaultContentHandler;
+import org.apache.jackrabbit.rmi.xml.SerializingContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 

@@ -41,10 +41,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
+import org.apache.jackrabbit.rmi.xml.DefaultContentHandler;
+import org.apache.jackrabbit.rmi.xml.SerializingContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
