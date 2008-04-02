@@ -1,0 +1,66 @@
+Release Notes -- Apache Jackrabbit JCR-RMI -- Version 1.4.1
+
+Introduction
+------------
+
+This is the 1.4.1 patch release of the jackrabbit-jcr-rmi component of
+Apache Jackrabbit, a fully conforming implementation of the Content
+Repository for Java Technology API (JCR).
+
+This release contains fixes to a number of issues. See below for the full
+list of changes in this release.
+
+See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
+more information.
+
+Release Contents
+----------------
+
+Unlike previous Jackrabbit releases that contained a full set of components,
+this patch release only contains the jackrabbit-jcr-rmi component. The
+component is distributed both as a source archive and a pre-compiled binary.
+
+    * Source archive (jackrabbit-jcr-rmi-1.4.1-src.jar)
+
+        The source archive contains the full source code of this release
+        in a "jackrabbit-jcr-rmi-1.4.1" directory. Use the following
+        commands (or the equivalent in your environment) to build the
+        component with Maven 2 and Java 1.4 or higher:
+
+          $ jar xf jackrabbit-jcr-rmi-1.4.1-src.jar
+          $ cd jackrabbit-jcr-rmi-1.4.1
+          $ mvn install
+
+    * Pre-compiled binary (jackrabbit-jcr-rmi-1.4.1.jar)
+
+        JCR-RMI Library of the Apache Jackrabbit content repository
+        implementation.
+
+See the included README.txt file for more information.
+
+Each release file is accompanied by SHA1 and MD5 checksums and a PGP
+signature. The public key used for the signatures can be found
+in the KEYS file.
+
+Changes and known issues in this release
+----------------------------------------
+
+All the changes and known issues in this release are listed below.
+The issue identifier and title is listed for each change and known issue.
+You can look up individual issues for more details in the Jackrabbit
+issue tracker at http://issues.apache.org/jira/browse/JCR
+
+  Improvement:
+  [JCR-1343] Replace xerces for serialization by JAXP
+
+  Bugs:
+  [JCR-1406] Add the org.apache.jackrabbit.rmi.jackrabbit package ...
+  [JCR-1454] NullPointerException may be thrown when trying to enumerate ... 
+   	
+  Known Issues:
+  [JCR-300]  Streamline the JCR-RMI network interfaces
+  [JCR-301]  Improve the JCR-RMI Value classes
+  [JCR-781]  RMI: Allow custom socket factories
+  [JCR-1317] Add a MBean method to programatically create a new Workspace. 
+  [JCR-1457] Restart of RMI-component fails (because it's not ...
+  
