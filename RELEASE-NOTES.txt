@@ -42,25 +42,17 @@ Each release file is accompanied by SHA1 and MD5 checksums and a PGP
 signature. The public key used for the signatures can be found
 in the KEYS file.
 
-Changes and known issues in this release
-----------------------------------------
+Changes in this release
+-----------------------
 
-All the changes and known issues in this release are listed below.
-The issue identifier and title is listed for each change and known issue.
-You can look up individual issues for more details in the Jackrabbit
-issue tracker at http://issues.apache.org/jira/browse/JCR
+All the changes in this release are listed below. The issue identifier and
+title is listed for each change and known issue. You can look up individual
+issues for more details in the Jackrabbit issue tracker at
+http://issues.apache.org/jira/browse/JCR
 
   Improvement:
   [JCR-1343] Replace xerces for serialization by JAXP
 
   Bugs:
   [JCR-1406] Add the org.apache.jackrabbit.rmi.jackrabbit package ...
-  [JCR-1454] NullPointerException may be thrown when trying to enumerate ... 
-   	
-  Known Issues:
-  [JCR-300]  Streamline the JCR-RMI network interfaces
-  [JCR-301]  Improve the JCR-RMI Value classes
-  [JCR-781]  RMI: Allow custom socket factories
-  [JCR-1317] Add a MBean method to programatically create a new Workspace. 
-  [JCR-1457] Restart of RMI-component fails (because it's not ...
-  
+  [JCR-1454] NullPointerException may be thrown when trying to enumerate ...
