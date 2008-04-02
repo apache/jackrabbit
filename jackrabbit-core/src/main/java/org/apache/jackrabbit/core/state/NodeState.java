@@ -100,7 +100,7 @@ public class NodeState extends ItemState {
 
     /**
      * Shared set, consisting of the parent ids of this shareable node. This
-     * entry is {@link Collections.EMPTY_SET} if this node is not shareable.
+     * entry is {@link Collections#EMPTY_SET} if this node is not shareable.
      */
     private Set sharedSet = Collections.EMPTY_SET;
 
@@ -471,6 +471,8 @@ public class NodeState extends ItemState {
     /**
      * Sets the list of <code>ChildNodeEntry</code> objects denoting the
      * child nodes of this node.
+     * @param nodeEntries list of {@link ChildNodeEntry} or
+     * a {@link ChildNodeEntries} list.
      */
     public synchronized void setChildNodeEntries(List nodeEntries) {
         if (nodeEntries instanceof ChildNodeEntries) {
@@ -546,6 +548,7 @@ public class NodeState extends ItemState {
     /**
      * Sets the set of <code>Name</code> objects denoting the
      * properties of this node.
+     * @param propNames set of {@link Name}s.
      */
     public synchronized void setPropertyNames(Set propNames) {
         if (propNames instanceof HashSet) {
@@ -576,6 +579,7 @@ public class NodeState extends ItemState {
     /**
      * Return a flag indicating whether this state is shareable, i.e. whether
      * there is at least one member inside its shared set.
+     * @return <code>true</code> if this state is shareable.
      */
     public synchronized boolean isShareable() {
         return sharedSet != Collections.EMPTY_SET;
@@ -927,6 +931,7 @@ public class NodeState extends ItemState {
 
     /**
      * Notify the listeners that a child node entry has been added
+     * @param added the entry that was added
      */
     protected void notifyNodeAdded(ChildNodeEntry added) {
         if (listener != null) {
@@ -945,6 +950,7 @@ public class NodeState extends ItemState {
 
     /**
      * Notify the listeners that a child node entry has been removed
+     * @param removed the entry that was removed
      */
     protected void notifyNodeRemoved(ChildNodeEntry removed) {
         if (listener != null) {
