@@ -31,12 +31,14 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 
+import org.apache.jackrabbit.commons.xml.DefaultContentHandler;
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.rmi.remote.RemoteNamespaceRegistry;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeTypeManager;
 import org.apache.jackrabbit.rmi.remote.RemoteQueryManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
-import org.apache.jackrabbit.rmi.xml.WorkspaceImportContentHandler;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * Local adapter for the JCR-RMI {@link RemoteWorkspace RemoteWorkspace}
@@ -193,9 +195,23 @@ public class ClientWorkspace extends ClientObject implements Workspace {
 
     /** {@inheritDoc} */
     public ContentHandler getImportContentHandler(
-            String path, int uuidBehaviour)
-            throws RepositoryException {
-        return new WorkspaceImportContentHandler(this, path, uuidBehaviour);
+            final String path, final int mode) throws RepositoryException {
+        try {
+            final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            return new DefaultContentHandler(
+                    SerializingContentHandler.getSerializer(buffer)) {
+                public void endDocument() throws SAXException {
+                    super.endDocument();
+                    try {
+                        remote.importXML(path, buffer.toByteArray(), mode);
+                    } catch (Exception e) {
+                        throw new SAXException("XML import failed", e);
+                    }
+                }
+            };
+        } catch (SAXException e) {
+            throw new RepositoryException("XML serialization failed", e);
+        }
     }
 
     /** {@inheritDoc} */
