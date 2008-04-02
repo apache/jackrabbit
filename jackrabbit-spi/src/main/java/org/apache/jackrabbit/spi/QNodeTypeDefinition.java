@@ -18,8 +18,6 @@ package org.apache.jackrabbit.spi;
 
 import java.util.Collection;
 
-import javax.jcr.nodetype.NodeType;
-
 /**
  * <code>QNodeTypeDefinition</code> is the qualified SPI representation of a
  * {@link javax.jcr.nodetype.NodeType node type}. It refers to qualified names
@@ -72,20 +70,16 @@ public interface QNodeTypeDefinition {
     public Name getPrimaryItemName();
 
     /**
-     * Returns an array containing the property definitions or
-     * <code>null</code> if not set.
+     * Returns an array containing the property definitions.
      *
-     * @return an array containing the property definitions or
-     *         <code>null</code> if not set.
+     * @return an array containing the property definitions.
      */
     public QPropertyDefinition[] getPropertyDefs();
 
     /**
-     * Returns an array containing the child node definitions or
-     * <code>null</code> if not set.
+     * Returns an array containing the child node definitions.
      *
-     * @return an array containing the child node definitions or
-     *         <code>null</code> if not set.
+     * @return an array containing the child node definitions.
      */
     public QNodeDefinition[] getChildNodeDefs();
 
