@@ -16,39 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.GlobPattern;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.core.security.authorization.AbstractPolicyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
+import javax.jcr.RepositoryException;
 import java.security.Principal;
 
 /**
  * <code>PolicyEntryImpl</code>...
  */
-class PolicyEntryImpl implements PolicyEntry {
+class PolicyEntryImpl extends AbstractPolicyEntry {
 
     private static Logger log = LoggerFactory.getLogger(PolicyEntryImpl.class);
-
-    /**
-     * Privileges defined for this entry.
-     */
-    private final int privileges;
-
-    /**
-     * If the actions contained are allowed or denied
-     */
-    private final boolean allow;
-
-    /**
-     * The Principal of this entry
-     */
-    private final Principal principal;
 
     private final String nodePath;
     private final String glob;
@@ -59,11 +40,6 @@ class PolicyEntryImpl implements PolicyEntry {
     private final GlobPattern pattern;
 
     /**
-     * Hash code being calculated on demand.
-     */
-    private int hashCode = -1;
-
-    /**
      * Constructs an new entry.
      *
      * @param principal
@@ -72,20 +48,22 @@ class PolicyEntryImpl implements PolicyEntry {
      */
     PolicyEntryImpl(Principal principal, int privileges, boolean allow,
                     String nodePath, String glob) {
+        super(principal, privileges, allow);
+
         if (principal == null || nodePath == null) {
             throw new IllegalArgumentException("Neither principal nor nodePath must be null.");
         }
-        this.principal = principal;
-        this.privileges = privileges;
-        this.allow = allow;
         this.nodePath = nodePath;
-        this.glob = (glob == null) ? GlobPattern.WILDCARD_ALL : glob;
+        this.glob = glob;
 
-        pattern = GlobPattern.create(nodePath + "/" +glob);
-    }
-
-    int getPrivilegeBits() {
-        return privileges;
+        // TODO: review again
+        if (glob != null && glob.length() > 0) {
+            StringBuffer b = new StringBuffer(nodePath);
+            b.append(glob);
+            pattern = GlobPattern.create(b.toString());
+        } else {
+            pattern = GlobPattern.create(nodePath);
+        }
     }
 
     String getNodePath() {
@@ -104,47 +82,14 @@ class PolicyEntryImpl implements PolicyEntry {
         return pattern.matches(item);
     }
 
-    //-------------------------------------------------< AccessControlEntry >---
-    /**
-     * @see AccessControlEntry#getPrincipal()
-     */
-    public Principal getPrincipal() {
-        return principal;
-    }
-
-    /**
-     * @see AccessControlEntry#getPrivileges()
-     */
-    public Privilege[] getPrivileges() {
-        return PrivilegeRegistry.getPrivileges(privileges);
-    }
-
-    //--------------------------------------------------------< PolicyEntry >---
-    /**
-     * @return true if all actions contained in this Entry are allowed
-     * @see PolicyEntry#isAllow()
-     */
-    public boolean isAllow() {
-        return allow;
+    protected int buildHashCode() {
+        int h = super.buildHashCode();
+        h = 37 * h + nodePath.hashCode();
+        h = 37 * h + glob.hashCode();
+        return h;
     }
 
     //-------------------------------------------------------------< Object >---
-    /**
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        if (hashCode == -1) {
-            int h = 17;
-            h = 37 * h + principal.getName().hashCode();
-            h = 37 * h + privileges;
-            h = 37 * h + Boolean.valueOf(allow).hashCode();
-            h = 37 * h + nodePath.hashCode();
-            h = 37 * h + glob.hashCode();
-            hashCode = h;
-        }
-        return hashCode;
-    }
-
     /**
      * Returns true if the principal, the allow-flag, all privileges and
      * the nodepath and the glob string are equal or the same, respectively.
@@ -160,13 +105,10 @@ class PolicyEntryImpl implements PolicyEntry {
 
         if (obj instanceof PolicyEntryImpl) {
             PolicyEntryImpl tmpl = (PolicyEntryImpl) obj;
-            // TODO: check again if comparing principal-name is sufficient
-            return principal.getName().equals(tmpl.principal.getName()) &&
-                   allow == tmpl.allow &&
-                   privileges == tmpl.privileges &&
+            return super.equals(obj) &&
+                   nodePath.equals(tmpl.nodePath) &&
                    glob.equals(tmpl.glob);
         }
         return false;
     }
-
 }

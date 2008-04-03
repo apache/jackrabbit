@@ -19,8 +19,12 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("security.authorization.combined tests");
 
-        // TODO add tests
+        suite.addTestSuite(PolicyTemplateImplTest.class);
+        suite.addTestSuite(PolicyEntryImplTest.class);
+        suite.addTestSuite(GlobPatternTest.class);
 
+        //todo: add evaluation tests.
+        
         return suite;
     }
 }

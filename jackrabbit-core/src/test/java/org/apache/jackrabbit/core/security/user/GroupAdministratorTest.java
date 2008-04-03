@@ -342,6 +342,5 @@ public class GroupAdministratorTest extends AbstractUserTest {
             // ok.
         }
         assertFalse(impers.allows(buildSubject(selfPrinc)));
-
     }
 }

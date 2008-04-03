@@ -16,40 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
+import org.apache.jackrabbit.core.security.authorization.AbstractPolicyEntry;
 
 import java.security.Principal;
 
 /**
- * Simple, immutable implementation of the
- * {@link org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry}
- * and the {@link PolicyEntry} interfaces.
- * 
- * @see PolicyEntry
+ * <code>ACEImpl</code>
  */
-class ACEImpl implements PolicyEntry {
-
-    /**
-     * Privileges contained in this entry
-     */
-    private final int privileges;
-
-    /**
-     * if the actions contained are allowed or denied
-     */
-    private final boolean allow;
-
-    /**
-     * the Principal of this entry
-     */
-    private final Principal principal;
-
-    /**
-     * Hash code being calculated on demand.
-     */
-    private final int hashCode;
+class ACEImpl extends AbstractPolicyEntry {
 
     /**
      * Construct an access control entry for the given principal, privileges and
@@ -60,76 +34,6 @@ class ACEImpl implements PolicyEntry {
      * @param allow
      */
     ACEImpl(Principal principal, int privileges, boolean allow) {
-        this.principal = principal;
-        this.privileges = privileges;
-        this.allow = allow;
-
-        int h = 17;
-        h = 37 * h + principal.getName().hashCode();
-        h = 37 * h + privileges;
-        h = 37 * h + Boolean.valueOf(allow).hashCode();
-        hashCode = h;
-    }
-
-    /**
-     * @return the int representation of the privileges defined for this entry.
-     * @see #getPrivileges() 
-     */
-    int getPrivilegeBits() {
-        return privileges;
-    }
-
-    //-------------------------------------------------< AccessControlEntry >---
-    /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry#getPrincipal()
-     */
-    public Principal getPrincipal() {
-        return principal;
-    }
-
-    /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry#getPrivileges()
-     */
-    public Privilege[] getPrivileges() {
-        return PrivilegeRegistry.getPrivileges(privileges);
-    }
-
-    //--------------------------------------------------------< PolicyEntry >---
-    /**
-     * @see PolicyEntry#isAllow()
-     */
-    public boolean isAllow() {
-        return allow;
-    }
-
-    //-------------------------------------------------------------< Object >---
-    /**
-     * @see Object#hashCode()
-     */
-    public int hashCode() {
-        return hashCode;
-    }
-
-    /**
-     * Returns true if the principal, the allow-flag and all privileges are
-     * equal / the same.
-     *
-     * @param obj
-     * @return
-     * @see Object#equals(Object)
-     */
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (obj instanceof ACEImpl) {
-            ACEImpl tmpl = (ACEImpl) obj;
-            // TODO: check again if comparing principal-name is sufficient
-            return principal.getName().equals(tmpl.principal.getName()) &&
-                   allow == tmpl.allow &&
-                   privileges == tmpl.privileges;
-        }
-        return false;
+        super(principal, privileges, allow);
     }
 }

@@ -16,30 +16,34 @@
  */
 package org.apache.jackrabbit.core.security.simple;
 
-import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AnonymousPrincipal;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.AnonymousPrincipal;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import javax.security.auth.Subject;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.security.auth.Subject;
+import java.security.Principal;
 
 /**
  * <code>SimpleAccessManager</code> ...
@@ -187,7 +191,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     public boolean hasPrivileges(String absPath, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
         checkInitialized();
         // make sure absPath points to an existing node
-        getValidNodePath(absPath);
+        checkValidNodePath(absPath);
 
         if (privileges == null || privileges.length == 0) {
             // null or empty privilege array -> return true
@@ -214,7 +218,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      */
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
-        getValidNodePath(absPath);
+        checkValidNodePath(absPath);
 
         if (anonymous) {
             return new Privilege[] {PrivilegeRegistry.READ_PRIVILEGE};
@@ -231,8 +235,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      */
     public AccessControlPolicy getEffectivePolicy(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        Path p = getValidNodePath(absPath);
-        checkPrivileges(p, PrivilegeRegistry.READ_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         return new AccessControlPolicy() {
             public String getName() throws RepositoryException {
@@ -249,12 +252,29 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      */
     public AccessControlEntry[] getEffectiveAccessControlEntries(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        Path p = getValidNodePath(absPath);
-        checkPrivileges(p, PrivilegeRegistry.READ_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         return new AccessControlEntry[0];
     }
-    
+
+    //-------------------------------------< JackrabbitAccessControlManager >---
+    /**
+     * {@inheritDoc}
+     */
+    public PolicyTemplate editPolicy(String absPath) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+
+        throw new UnsupportedRepositoryOperationException("Editing is not supported");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public PolicyTemplate editPolicy(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Editing is not supported");
+    }
+
     //---------------------------------------< AbstractAccessControlManager >---
     /**
      * {@inheritDoc}
@@ -265,13 +285,14 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         }
     }
 
-    protected void checkPrivileges(Path absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException {
+    protected void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException {
+        checkValidNodePath(absPath);
         if (anonymous && privileges != PrivilegeRegistry.READ) {
             throw new AccessDeniedException("Anonymous may only READ.");
         }
     }
 
-    protected Path getValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
+    protected void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
         Path path = resolver.getQPath(absPath);
         if (!path.isAbsolute()) {
             throw new RepositoryException("Absolute path expected. Found: " + absPath);
@@ -279,8 +300,6 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
 
         if (hierMgr.resolveNodePath(path) == null) {
             throw new PathNotFoundException(absPath);
-        } else {
-            return path;
         }
     }
 }

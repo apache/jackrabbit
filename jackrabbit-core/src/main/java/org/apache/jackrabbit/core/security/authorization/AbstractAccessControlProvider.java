@@ -19,17 +19,21 @@ package org.apache.jackrabbit.core.security.authorization;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.observation.ObservationManager;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Map;
 import java.security.Principal;
 
 /**
@@ -42,7 +46,14 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     private final String policyName;
     private final String policyDesc;
 
-    protected boolean initialized;
+    /**
+     * Returns the system session this provider has been created for.
+     */
+    protected SessionImpl session;
+    protected ObservationManager observationMgr;
+    protected NamePathResolver resolver;
+
+    private boolean initialized;
 
     protected AbstractAccessControlProvider() {
         this(AbstractAccessControlProvider.class.getName() + ": default Policy", null);
@@ -101,6 +112,29 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     }
 
     //----------------------------------------------< AccessControlProvider >---
+    /**
+     * Tests if the given <code>systemSession</code> is a SessionImpl and
+     * retrieves the observation manager. The it sets the internal 'initialized'
+     * field to true.
+     *
+     * @throws RepositoryException If the specified session is not a
+     * <code>SessionImpl</code> or if retrieving the observation manager fails.
+     * @see AccessControlProvider#init(Session, Map)
+     */
+    public void init(Session systemSession, Map options) throws RepositoryException {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+        if (!(systemSession instanceof SessionImpl)) {
+            throw new RepositoryException("SessionImpl (system session) expected.");
+        }
+        session = (SessionImpl) systemSession;
+        observationMgr = systemSession.getWorkspace().getObservationManager();
+        resolver = (SessionImpl) systemSession;
+
+        initialized = true;
+    }
+
     /**
      * @see AccessControlProvider#close()
      */

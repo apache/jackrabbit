@@ -62,7 +62,7 @@ public class AccessManagerTest extends AbstractJCRTest {
         }
     }
 
-    // TODO: add tests for new methods!!!!
+    // TODO: add tests for new methods
     // TODO: add specific tests for 'AC-read/modify' privileges
 
     public void testCheckPermissionReadOnlySession() throws RepositoryException, NotExecutableException {

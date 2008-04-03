@@ -40,7 +40,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventIterator;
 import java.security.Principal;
@@ -68,9 +67,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     private Path groupsPath;
     private Path usersPath;
 
-    private SessionImpl systemSession;
-    private ObservationManager obsMgr;
-
     private String userAdminGroup;
     private String groupAdminGroup;
 
@@ -83,40 +79,36 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     //----------------------------------------------< AccessControlProvider >---
-     /**
+    /**
      * @see AccessControlProvider#init(Session, Map)
      */
     public void init(Session systemSession, Map options) throws RepositoryException {
-        if (initialized) {
-            throw new IllegalStateException("already initialized");
-        }
-        if (systemSession instanceof SessionImpl) {
-            this.systemSession = (SessionImpl) systemSession;
-            obsMgr = systemSession.getWorkspace().getObservationManager();
+        super.init(systemSession, options);
 
-            userAdminGroup = (options.containsKey(USER_ADMIN_GROUP_NAME)) ? options.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
-            groupAdminGroup = (options.containsKey(GROUP_ADMIN_GROUP_NAME)) ? options.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
+         if (systemSession instanceof SessionImpl) {
+             SessionImpl sImpl = (SessionImpl) systemSession;
+             userAdminGroup = (options.containsKey(USER_ADMIN_GROUP_NAME)) ? options.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
+             groupAdminGroup = (options.containsKey(GROUP_ADMIN_GROUP_NAME)) ? options.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
 
-            // make sure the groups exist (and ev. create them).
-            // TODO: review again.
-            UserManager uMgr = this.systemSession.getUserManager();
-            if (!initGroup(uMgr, userAdminGroup)) {
-                log.warn("Unable to initialize User admininistrator group -> no user admins.");
-                userAdminGroup = null;
-            }
-            if (!initGroup(uMgr, groupAdminGroup)) {
-                log.warn("Unable to initialize Group admininistrator group -> no group admins.");
-                groupAdminGroup = null;
-            }
+             // make sure the groups exist (and ev. create them).
+             // TODO: review again.
+             UserManager uMgr = sImpl.getUserManager();
+             if (!initGroup(uMgr, userAdminGroup)) {
+                 log.warn("Unable to initialize User admininistrator group -> no user admins.");
+                 userAdminGroup = null;
+             }
+             if (!initGroup(uMgr, groupAdminGroup)) {
+                 log.warn("Unable to initialize Group admininistrator group -> no group admins.");
+                 groupAdminGroup = null;
+             }
 
-            usersPath = this.systemSession.getQPath(USERS_PATH);
-            groupsPath = this.systemSession.getQPath(GROUPS_PATH);
+             usersPath = sImpl.getQPath(USERS_PATH);
+             groupsPath = sImpl.getQPath(GROUPS_PATH);
 
-        } else {
-            throw new RepositoryException("SessionImpl (system session) expected.");
-        }
-        initialized = true;
-    }
+         } else {
+             throw new RepositoryException("SessionImpl (system session) expected.");
+         }
+     }
 
     public CompiledPermissions compilePermissions(Set principals) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
@@ -139,7 +131,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
     private ItemBasedPrincipal getUserPrincipal(Set principals) {
         try {
-            UserManager uMgr = systemSession.getUserManager();
+            UserManager uMgr = session.getUserManager();
             for (Iterator it = principals.iterator(); it.hasNext();) {
                 Principal p = (Principal) it.next();
                 if (!(p instanceof Group) && p instanceof ItemBasedPrincipal
@@ -160,7 +152,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         if (principal != null) {
             try {
                 String path = principal.getPath();
-                userNode = (NodeImpl) systemSession.getNode(path);
+                userNode = (NodeImpl) session.getNode(path);
             } catch (RepositoryException e) {
                 log.warn("Error while retrieving user node.", e.getMessage());
             }
@@ -170,28 +162,28 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
     private boolean isMember(Node userNode, Path memberPath) throws RepositoryException, PathNotFoundException {
         // precondition: memberPath points to a rep:members property
-        String propPath = systemSession.getJCRPath(memberPath);
-        if (systemSession.propertyExists(propPath)) {
+        String propPath = session.getJCRPath(memberPath);
+        if (session.propertyExists(propPath)) {
             // check if any of the ref-values equals to the value created from
             // the user-Node (which must be present if the user is member of the group)
-            Property membersProp = systemSession.getProperty(propPath);
+            Property membersProp = session.getProperty(propPath);
             List values = Arrays.asList(membersProp.getValues());
-            return values.contains(systemSession.getValueFactory().createValue(userNode));
+            return values.contains(session.getValueFactory().createValue(userNode));
         } else {
             return false;
         }
     }
 
     private Node getExistingNode(Path path) throws RepositoryException {
-        String absPath = systemSession.getJCRPath(path.getNormalizedPath());
-        if (systemSession.nodeExists(absPath)) {
-            return systemSession.getNode(absPath);
-        } else if (systemSession.propertyExists(absPath)) {
-            return systemSession.getProperty(absPath).getParent();
+        String absPath = resolver.getJCRPath(path.getNormalizedPath());
+        if (session.nodeExists(absPath)) {
+            return session.getNode(absPath);
+        } else if (session.propertyExists(absPath)) {
+            return session.getProperty(absPath).getParent();
         } else {
             String pPath = Text.getRelativeParent(absPath, 1);
-            if (systemSession.nodeExists(pPath)) {
-                return systemSession.getNode(pPath);
+            if (session.nodeExists(pPath)) {
+                return session.getNode(pPath);
             } else {
                 throw new ItemNotFoundException("Unable to determine permissions: No item and no existing parent for target path " + absPath);
             }
@@ -208,10 +200,10 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      * @throws RepositoryException
      */
     private boolean doCalculatePrivileges(Path path) throws RepositoryException {
-        String absPath = systemSession.getJCRPath(path.getNormalizedPath());
+        String absPath = resolver.getJCRPath(path.getNormalizedPath());
         // privileges can only be determined for existing nodes.
         // not for properties and neither for non-existing nodes.
-        return systemSession.nodeExists(absPath);
+        return session.nodeExists(absPath);
     }
 
     private static boolean containsGroup(Set principals, String groupName) {
@@ -263,7 +255,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             isGroupAdmin = containsGroup(principals, groupAdminGroup);
 
             int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED;
-            obsMgr.addEventListener(this, events, GROUPS_PATH, true, null, null, false);
+            observationMgr.addEventListener(this, events, GROUPS_PATH, true, null, null, false);
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
@@ -302,7 +294,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 } // else: outside of user tree -> authN = null
 
                 if (authN != null && authN.isNodeType(NT_REP_USER)) {
-                    int relDepth = systemSession.getHierarchyManager().getRelativeDepth(userNode.getNodeId(), authN.getNodeId());
+                    int relDepth = session.getHierarchyManager().getRelativeDepth(userNode.getNodeId(), authN.getNodeId());
                     switch (relDepth) {
                         case -1:
                             // authN is not below the userNode -> can't write anyway.
@@ -380,7 +372,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          */
         public void close() {
             try {
-                obsMgr.removeEventListener(this);
+                observationMgr.removeEventListener(this);
             } catch (RepositoryException e) {
                 log.error("Internal error: ", e.getMessage());
             }

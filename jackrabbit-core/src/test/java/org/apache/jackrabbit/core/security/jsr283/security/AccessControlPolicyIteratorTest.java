@@ -92,9 +92,10 @@ public class AccessControlPolicyIteratorTest extends AbstractAccessControlTest {
             throw new NotExecutableException();
         }
     }
-    /*
+
     // TODO: uncomment as soon as RangeIterator is adjusted.
-    public void testgetNumberRemaining() {
+    /*
+    public void testgetNumberRemaining() throws NotExecutableException, RepositoryException {
         checkCanReadAc(path);
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
 

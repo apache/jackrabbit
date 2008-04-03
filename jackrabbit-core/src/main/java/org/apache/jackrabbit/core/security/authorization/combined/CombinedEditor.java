@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -36,11 +36,12 @@ import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.PathNotFoundException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,108 +51,97 @@ import java.util.List;
  */
 class CombinedEditor extends ACLEditor {
 
-    // TODO: must make sure, that store paths/globs do not contain remapped prefixes from the session
-
     private static Logger log = LoggerFactory.getLogger(CombinedEditor.class);
 
-    private final SessionImpl session;
     private final NamePathResolver systemResolver;
-    private final Path acRootPath;
+    private final String acRootPath;
 
     CombinedEditor(SessionImpl session, NamePathResolver systemResolver,
                    Path acRootPath) throws RepositoryException {
         super(session);
-        this.session = session;
         this.systemResolver = systemResolver;
-        this.acRootPath = acRootPath;
+        this.acRootPath = session.getJCRPath(acRootPath);
     }
 
-    PolicyTemplateImpl editPolicyTemplate(Principal principal) throws RepositoryException {
+    PolicyTemplate getPolicyTemplate(Principal principal) throws RepositoryException {
         if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
             throw new AccessControlException("Unknown principal.");
         }
-        NodeId nid = getAcId(principal);
-        if (nid == null) {
-            nid = createAcNode(principal).getNodeId();
-        }
 
-        PolicyTemplate pt = getPolicyTemplate(nid);
-        if (pt instanceof PolicyTemplateImpl) {
-            return (PolicyTemplateImpl) pt;
+        String nPath = getPathToAcNode(principal);
+        if (session.nodeExists(nPath)) {
+            return getPolicyTemplate(nPath);
         } else {
-            // should never get here.
-            throw new AccessControlException();
+            // no policy for the given principal
+            log.debug("No combined policy template for Principal " + principal.getName());
+            return null;
         }
-    }
-
-    PolicyTemplateImpl getPolicyTemplate(Principal principal) throws RepositoryException {
-        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Unknown principal.");
-        }
-
-        NodeId nid = getAcId(principal);
-        if (nid != null) {
-            PolicyTemplate pt = getPolicyTemplate(nid);
-            if (pt instanceof PolicyTemplateImpl) {
-                return (PolicyTemplateImpl) pt;
-            }
-        }
-
-        // no policy for the given principal
-        log.debug("No combined policy template for Principal " + principal.getName());
-        return null;
     }
 
     //------------------------------------------------< AccessControlEditor >---
     /**
-     * @see AccessControlEditor#getPolicyTemplate(NodeId)
+     * @see AccessControlEditor#getPolicyTemplate(String)
      */
-    public PolicyTemplate getPolicyTemplate(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate getPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
 
-        NodeImpl acNode = getAcNode(id);
+        NodeImpl acNode = getAcNode(nodePath);
         if (acNode != null) {
-            if (isAccessControlled(acNode)) {
-                return buildTemplate(acNode);
-            } else {
-                log.debug("No local policy defined for Node " + id);
-                return null;
+            return createTemplate(acNode);
+        } else {
+            // nodeID not below rep:accesscontrol -> delegate to ACLEditor
+            return super.getPolicyTemplate(nodePath);
+        }
+    }
+
+    /**
+     * @see AccessControlEditor#editPolicyTemplate(String)
+     */
+    public PolicyTemplate editPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
+
+        if (Text.isDescendant(acRootPath, nodePath)) {
+            NodeImpl acNode = getAcNode(nodePath);
+            if (acNode == null) {
+                // check validity and create the ac node
+                getPrincipal(nodePath);
+                acNode = createAcNode(nodePath);
             }
+            return createTemplate(acNode);
         } else {
             // nodeID not below rep:accesscontrol -> delegate to ACLEditor
-            return super.getPolicyTemplate(id);
+            return super.editPolicyTemplate(nodePath);
         }
     }
 
     /**
-     * @see AccessControlEditor#editPolicyTemplate(NodeId)
+     * @see AccessControlEditor#editPolicyTemplate(Principal)
      */
-    public PolicyTemplate editPolicyTemplate(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
-
-        NodeImpl acNode = getAcNode(id);
-        if (acNode != null) {
-            return buildTemplate(acNode);
-        } else {
-            // nodeID not below rep:accesscontrol -> delegate to ACLEditor
-            return super.editPolicyTemplate(id);
+    public PolicyTemplate editPolicyTemplate(Principal principal) throws RepositoryException {
+        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
+            throw new AccessControlException("Unknown principal.");
         }
+        String nPath = getPathToAcNode(principal);
+        if (!session.nodeExists(nPath)) {
+            createAcNode(nPath);
+        }
+        return getPolicyTemplate(nPath);
     }
 
     /**
-     * @see AccessControlEditor#setPolicyTemplate(NodeId, PolicyTemplate)
+     * @see AccessControlEditor#setPolicyTemplate(String,PolicyTemplate)
      */
-    public void setPolicyTemplate(NodeId id, PolicyTemplate template) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
+    public void setPolicyTemplate(String nodePath, PolicyTemplate template) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
 
         if (template instanceof PolicyTemplateImpl) {
             PolicyTemplateImpl at = (PolicyTemplateImpl) template;
-            if (!id.equals(at.getNodeId())) {
+            if (!nodePath.equals(at.getPath())) {
                 throw new AccessControlException("Attempt to store PolicyTemplate to a wrong node.");
             }
-            NodeImpl acNode = getAcNode(id);
+            NodeImpl acNode = getAcNode(nodePath);
             if (acNode == null) {
-                throw new ItemNotFoundException("No such node " + id);
+                throw new PathNotFoundException("No such node " + nodePath);
             }
 
             /*
@@ -169,9 +159,9 @@ class CombinedEditor extends ACLEditor {
             aclNode = addSecurityNode(acNode, N_POLICY, NT_REP_ACL);
 
             /* add all entries defined on the template */
-            PolicyEntryImpl[] aces = (PolicyEntryImpl[]) template.getEntries();
+            PolicyEntry[] aces = (PolicyEntry[]) template.getEntries();
             for (int i = 0; i < aces.length; i++) {
-                PolicyEntryImpl ace = aces[i];
+                PolicyEntryImpl ace = (PolicyEntryImpl) aces[i];
 
                 // create the ACE node
                 Name nodeName = getUniqueNodeName(aclNode, "entry");
@@ -185,69 +175,66 @@ class CombinedEditor extends ACLEditor {
                 Privilege[] privs = ace.getPrivileges();
                 Value[] vs = new Value[privs.length];
                 for (int j = 0; j < privs.length; j++) {
-                    vs[i] = vf.createValue(privs[j].getName());
+                    vs[j] = vf.createValue(privs[j].getName());
                 }
                 setSecurityProperty(aceNode, P_PRIVILEGES, vs);
-                setSecurityProperty(aceNode, P_NODE_PATH, vf.createValue(ace.getNodePath()));                
+
+                // remove local namespace remapping from the node path before
+                // storing the path value.
+                String pathValue = systemResolver.getJCRPath(session.getQPath(ace.getNodePath()));
+                setSecurityProperty(aceNode, P_NODE_PATH, vf.createValue(pathValue, PropertyType.PATH));
+
+                // TODO: TOBEFIXED respect namespace sensitive parts of the glob
                 setSecurityProperty(aceNode, P_GLOB, vf.createValue(ace.getGlob()));
             }
         } else {
             // try super class
-            super.setPolicyTemplate(id, template);
+            super.setPolicyTemplate(nodePath, template);
         }
     }
 
     /**
-     * @see AccessControlEditor#removePolicyTemplate(NodeId)
+     * @see AccessControlEditor#removePolicyTemplate(String)
+     * @param nodePath
      */
-    public PolicyTemplate removePolicyTemplate(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate removePolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
 
-        NodeImpl acNode = getAcNode(id);
+        NodeImpl acNode = getAcNode(nodePath);
         if (acNode != null) {
             if (isAccessControlled(acNode)) {
                 // build the template in order to have a return value
-                PolicyTemplate tmpl = buildTemplate(acNode);
+                PolicyTemplate tmpl = createTemplate(acNode);
                 removeSecurityItem(acNode.getNode(N_POLICY));
                 return tmpl;
             } else {
-                log.debug("No policy present to remove at " + id);
+                log.debug("No policy present to remove at " + nodePath);
                 return null;
             }
         } else {
             // nodeID not below rep:accesscontrol -> delegate to ACLEditor
-            return super.removePolicyTemplate(id);
+            return super.removePolicyTemplate(nodePath);
         }
     }
-
-    // TODO: check if get/add/remove entries are properly handled by super-class
 
     //------------------------------------------------------------< private >---
     /**
      *
-     * @param nodeId
+     * @param nodePath
      * @return
-     * @throws AccessControlException
+     * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    private NodeImpl getAcNode(NodeId nodeId) throws AccessControlException, RepositoryException {
-        NodeImpl n = session.getNodeById(nodeId);
-        Path p = session.getHierarchyManager().getPath(n.getNodeId());
-        if (p.isDescendantOf(acRootPath)) {
-            return n;
+    private NodeImpl getAcNode(String nodePath) throws PathNotFoundException, RepositoryException {
+        if (Text.isDescendant(acRootPath, nodePath)) {
+            return (NodeImpl) session.getNode(nodePath);
         } else {
             // node outside of rep:accesscontrol tree -> not handled by this editor.
             return null;
         }
     }
 
-    private NodeId getAcId(Principal principal) throws RepositoryException {
-        Path acPath = session.getQPath(getPathToAcNode(principal));
-        return session.getHierarchyManager().resolveNodePath(acPath);
-    }
-
-    private NodeImpl createAcNode(Principal principal) throws RepositoryException {
-        String acPath = getPathToAcNode(principal);
+    private NodeImpl createAcNode(String acPath) throws RepositoryException {
         String[] segms = Text.explode(acPath, '/', false);
         NodeImpl node = (NodeImpl) session.getRootNode();
         for (int i = 0; i < segms.length; i++) {
@@ -270,20 +257,28 @@ class CombinedEditor extends ACLEditor {
      * defining content. It this case setting or modifying an AC-policy is
      * obviously not possible.
      *
-     * @param id
+     * @param nodePath
      * @throws AccessControlException If the given id identifies a Node that
      * represents a ACL or ACE item.
      * @throws RepositoryException
      */
-    private void checkProtectsNode(NodeId id) throws RepositoryException {
-        NodeImpl node = session.getNodeById(id);
-        if (node.isNodeType(NT_REP_ACL) || node.isNodeType(NT_REP_ACE)) {
-            throw new AccessControlException("Node " + id + " defines ACL or ACE.");
+    private void checkProtectsNode(String nodePath) throws RepositoryException {
+        if (session.nodeExists(nodePath)) {
+            NodeImpl n = (NodeImpl) session.getNode(nodePath);
+            if (n.isNodeType(NT_REP_ACL) || n.isNodeType(NT_REP_ACE)) {
+                throw new AccessControlException("Node " + nodePath + " defines ACL or ACE.");
+            }
         }
     }
 
+    /**
+     *
+     * @param principal
+     * @return
+     * @throws RepositoryException
+     */
     private String getPathToAcNode(Principal principal) throws RepositoryException {
-        StringBuffer princPath = new StringBuffer(session.getJCRPath(acRootPath));
+        StringBuffer princPath = new StringBuffer(acRootPath);
         if (principal instanceof ItemBasedPrincipal) {
             princPath.append(((ItemBasedPrincipal) principal).getPath());
         } else {
@@ -291,6 +286,15 @@ class CombinedEditor extends ACLEditor {
             princPath.append(Text.escapeIllegalJcrChars(principal.getName()));
         }
         return princPath.toString();
+    }
+
+    private Principal getPrincipal(String pathToACNode) throws RepositoryException {
+        String name = Text.unescapeIllegalJcrChars(Text.getName(pathToACNode));
+        PrincipalManager pMgr = session.getPrincipalManager();
+        if (!pMgr.hasPrincipal(name)) {
+            throw new AccessControlException("Unknown principal.");
+        }
+        return pMgr.getPrincipal(name);
     }
 
     /**
@@ -303,7 +307,17 @@ class CombinedEditor extends ACLEditor {
         return node.isNodeType(NT_REP_ACCESS_CONTROL) && node.hasNode(N_POLICY);
     }
 
-    private PolicyTemplate buildTemplate(NodeImpl acNode) throws RepositoryException {
+    /**
+     *
+     * @param acNode
+     * @return
+     * @throws RepositoryException
+     */
+    private PolicyTemplate createTemplate(NodeImpl acNode) throws RepositoryException {
+        if (!acNode.isNodeType(NT_REP_ACCESS_CONTROL)) {
+            throw new RepositoryException("Expected node of type rep:AccessControl.");
+        }
+
         Principal principal;
         String principalName = Text.unescapeIllegalJcrChars(acNode.getName());
         PrincipalManager pMgr = ((SessionImpl) acNode.getSession()).getPrincipalManager();
@@ -314,27 +328,32 @@ class CombinedEditor extends ACLEditor {
             // TODO: rather throw?
             principal = new PrincipalImpl(principalName);
         }
-        return new PolicyTemplateImpl(getEntries(acNode, principal), principal, acNode.getNodeId());
-    }
 
-    private List getEntries(NodeImpl acNode, Principal principal) throws RepositoryException {
+        // build the list of policy entries;
         List entries = new ArrayList();
-        if (acNode.isNodeType(NT_REP_ACCESS_CONTROL) && acNode.hasNode(N_POLICY)) {
+        if (acNode.hasNode(N_POLICY)) {
             NodeImpl aclNode = acNode.getNode(N_POLICY);
             // loop over all entries in the aclNode for the princ-Principal
             // and compare if they apply to the Node with 'nodeId'
             for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
                 NodeImpl aceNode = (NodeImpl) aceNodes.nextNode();
-                PolicyEntryImpl ace = createFromNode(aceNode, principal);
+                PolicyEntryImpl ace = createEntry(aceNode, principal);
                 if (ace != null) {
                     entries.add(ace);
                 }
             }
         }
-        return entries;
+        return new PolicyTemplateImpl(entries, principal, acNode.getPath());
     }
 
-    private PolicyEntryImpl createFromNode(NodeImpl node, Principal principal) throws RepositoryException {
+    /**
+     *
+     * @param node
+     * @param principal
+     * @return
+     * @throws RepositoryException
+     */
+    private PolicyEntryImpl createEntry(NodeImpl node, Principal principal) throws RepositoryException {
         if (!node.isNodeType(AccessControlConstants.NT_REP_ACE)) {
             log.warn("Unexpected nodetype. Was not rep:ACE.");
             return null;
@@ -349,10 +368,11 @@ class CombinedEditor extends ACLEditor {
         }
         int privileges = PrivilegeRegistry.getBits(pNames);
 
-        String nodePath = node.getProperty(P_NODE_PATH).getString();
-        String glob = node.getProperty(P_GLOB).getString();
+        String pV = node.getProperty(P_NODE_PATH).getString();
+        String nodePath = session.getJCRPath(systemResolver.getQPath(pV));
 
-        // TODO: mk sure principal and principal-name in node match
+        // TODO: make sure local namespace remappings are respected.
+        String glob = node.getProperty(P_GLOB).getString();
 
         return new PolicyEntryImpl(principal, privileges, allow, nodePath, glob);
     }
