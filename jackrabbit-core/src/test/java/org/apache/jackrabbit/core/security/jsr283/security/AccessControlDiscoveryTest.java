@@ -32,13 +32,6 @@ import java.util.Set;
  */
 public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        // TODO: test if options is supporte
-        //checkSupportedOption(superuser, Repository.OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED
-    }
-
     private Privilege getPrivilege(String name) throws RepositoryException, NotExecutableException {
         Privilege[] privileges = acMgr.getSupportedPrivileges(testRootNode.getPath());
         for (int i = 0; i < privileges.length; i++) {

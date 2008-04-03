@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
@@ -37,18 +36,13 @@ class PolicyTemplateImpl implements PolicyTemplate {
     private static Logger log = LoggerFactory.getLogger(PolicyTemplateImpl.class);
 
     private final Principal principal;
-    private final NodeId acNodeId;
+    private final String acAbsPath;
     private final List entries = new ArrayList();
 
-
-    PolicyTemplateImpl(List aceTemplates, Principal principal, NodeId acNodeId) {
+    PolicyTemplateImpl(List policyEntries, Principal principal, String acAbsPath) {
         this.principal = principal;
-        this.entries.addAll(aceTemplates);
-        this.acNodeId = acNodeId;
-    }
-
-    NodeId getNodeId() {
-        return acNodeId;
+        this.entries.addAll(policyEntries);
+        this.acAbsPath = acAbsPath;
     }
 
     Principal getPrincipal() {
@@ -56,6 +50,9 @@ class PolicyTemplateImpl implements PolicyTemplate {
     }
 
     //-----------------------------------------------------< PolicyTemplate >---
+    public String getPath() {
+        return acAbsPath;
+    }
 
     public boolean isEmpty() {
         return entries.isEmpty();

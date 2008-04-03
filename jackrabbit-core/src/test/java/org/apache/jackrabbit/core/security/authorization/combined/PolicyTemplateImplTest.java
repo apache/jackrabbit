@@ -14,25 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.acl;
+package org.apache.jackrabbit.core.security.authorization.combined;
 
 import org.apache.jackrabbit.core.security.authorization.AbstractPolicyTemplateTest;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * <code>ACLTemplateTest</code>...
- */
-public class ACLTemplateTest extends AbstractPolicyTemplateTest {
+import java.util.Collections;
 
-    private static Logger log = LoggerFactory.getLogger(ACLTemplateTest.class);
+/**
+ * <code>PolicyTemplateImplTest</code>...
+ */
+public class PolicyTemplateImplTest extends AbstractPolicyTemplateTest {
+
+    private static Logger log = LoggerFactory.getLogger(PolicyTemplateImplTest.class);
+
+    private String testPath = "/rep:accessControl/users/test";
 
     protected String getTestPath() {
-        return "/ab/c/d";
+        return testPath;
     }
 
-    protected PolicyTemplate createEmptyTemplate(String path) {
-        return new ACLTemplate(path);
+    protected PolicyTemplate createEmptyTemplate(String testPath) {
+        return new PolicyTemplateImpl(Collections.EMPTY_LIST, testPrincipal, testPath);
+    }
+
+    public void testGetPrincipal() {
+        PolicyTemplateImpl pt = (PolicyTemplateImpl) createEmptyTemplate(testPath);
+        assertEquals(testPrincipal, pt.getPrincipal());
     }
 }

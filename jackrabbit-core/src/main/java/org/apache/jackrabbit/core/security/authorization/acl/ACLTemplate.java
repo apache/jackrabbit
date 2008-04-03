@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.security.jsr283.security.AccessControlExceptio
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
@@ -49,7 +50,8 @@ class ACLTemplate implements PolicyTemplate {
 
     private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
 
-    private final String name;
+    private final String path;
+    private final String name = ACLImpl.POLICY_NAME;
     private final String description;
 
     /**
@@ -62,8 +64,8 @@ class ACLTemplate implements PolicyTemplate {
     /**
      * Construct a new empty {@link PolicyTemplate}.
      */
-    ACLTemplate() {
-        name = ACLImpl.POLICY_NAME;
+    ACLTemplate(String path) {
+        this.path = path;
         description = null;
     }
 
@@ -83,10 +85,11 @@ class ACLTemplate implements PolicyTemplate {
      * the principals in the set will be retrieved.
      */
     ACLTemplate(NodeImpl aclNode, Set principalNames) throws RepositoryException {
-        if (aclNode == null || !aclNode.isNodeType(ACLEditor.NT_REP_ACL)) {
-            throw new IllegalArgumentException("Node must be of type: " + ACLEditor.NT_REP_ACL);
+        if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
+            throw new IllegalArgumentException("Node must be of type: " +
+                    AccessControlConstants.NT_REP_ACL);
         }
-        name = ACLImpl.POLICY_NAME;
+        path = aclNode.getPath();
         description = null;
         loadEntries(aclNode, principalNames);
     }
@@ -211,13 +214,13 @@ class ACLTemplate implements PolicyTemplate {
         NodeIterator itr = aclNode.getNodes();
         while (itr.hasNext()) {
             NodeImpl aceNode = (NodeImpl) itr.nextNode();
-            String principalName = aceNode.getProperty(ACLEditor.P_PRINCIPAL_NAME).getString();
+            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
             // only process aceNode if no filter is present of if the filter
             // contains the principal-name defined with the ace-Node
             String key = (filter == null || filter.isEmpty()) ? noFilter : principalName;
             if (princToEntries.containsKey(key)) {
                 Principal princ = pMgr.getPrincipal(principalName);
-                Value[] privValues = aceNode.getProperty(ACLEditor.P_PRIVILEGES).getValues();
+                Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
                 String[] privNames = new String[privValues.length];
                 for (int i = 0; i < privValues.length; i++) {
                     privNames[i] = privValues[i].getString();
@@ -226,7 +229,7 @@ class ACLTemplate implements PolicyTemplate {
                 ACEImpl ace = new ACEImpl(
                         princ,
                         PrivilegeRegistry.getBits(privNames),
-                        aceNode.isNodeType(ACLEditor.NT_REP_GRANT_ACE));
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
                 // add it to the proper list (e.g. separated by principals)
                 ((List) princToEntries.get(key)).add(ace);
             }
@@ -261,6 +264,13 @@ class ACLTemplate implements PolicyTemplate {
     }
 
     //-----------------------------------------------------< PolicyTemplate >---
+    /**
+     * @see PolicyTemplate#getPath()
+     */
+    public String getPath() {
+        return path;
+    }
+
     /**
      * @see PolicyTemplate#isEmpty()
      */

@@ -31,6 +31,12 @@ public interface PolicyEntry extends AccessControlEntry {
      */
     boolean isAllow();
 
+    /**
+     * @return the int representation of the privileges defined for this entry.
+     * @see #getPrivileges()
+     */
+    int getPrivilegeBits();
+
     // TODO: eventually add
     // String getNodePath();
     // String getGlob();

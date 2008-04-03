@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
@@ -38,9 +37,10 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.AccessDeniedException;
 import java.security.Principal;
 import java.util.List;
 import java.util.ArrayList;
@@ -60,7 +60,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      */
     private static final String DEFAULT_PERMISSION_NAME = "permission";
 
-    private final SessionImpl session;
+    protected final SessionImpl session;
     private final PrincipalManager principalManager;
 
     protected ACLEditor(Session editingSession) throws RepositoryException {
@@ -74,13 +74,14 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
 
     //------------------------------------------------< AccessControlEditor >---
     /**
-     * @see AccessControlEditor#getPolicyTemplate(NodeId)
+     * @see AccessControlEditor#getPolicyTemplate(String)
+     * @param nodePath
      */
-    public PolicyTemplate getPolicyTemplate(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate getPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
 
         PolicyTemplate tmpl = null;
-        NodeImpl aclNode = getAclNode(id);
+        NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode != null) {
             tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
         }
@@ -88,15 +89,16 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#editPolicyTemplate(NodeId)
+     * @see AccessControlEditor#editPolicyTemplate(String)
+     * @param nodePath
      */
-    public PolicyTemplate editPolicyTemplate(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate editPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        checkProtectsNode(nodePath);
 
         PolicyTemplate tmpl;
-        NodeImpl aclNode = getAclNode(id);
+        NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode == null) {
-            tmpl = new ACLTemplate();
+            tmpl = new ACLTemplate(nodePath);
         } else {
             tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
         }
@@ -104,12 +106,19 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#setPolicyTemplate(NodeId, PolicyTemplate)
+     * @see AccessControlEditor#editPolicyTemplate(Principal)
      */
-    public void setPolicyTemplate(NodeId id, PolicyTemplate template) throws RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate editPolicyTemplate(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException {
+        throw new AccessControlException("Unable to edit policy for principal " + principal.getName());
+    }
 
-        NodeImpl aclNode = getAclNode(id);
+    /**
+     * @see AccessControlEditor#setPolicyTemplate(String,PolicyTemplate)
+     */
+    public void setPolicyTemplate(String nodePath, PolicyTemplate template) throws RepositoryException {
+        checkProtectsNode(nodePath);
+
+        NodeImpl aclNode = getAclNode(nodePath);
         /* in order to assert that the parent (ac-controlled node) gets modified
            an existing ACL node is removed first and the recreated.
            this also asserts that all ACEs are cleared without having to
@@ -119,7 +128,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             removeSecurityItem(aclNode);
         }
         // now (re) create it
-        aclNode = createAclNode(id);
+        aclNode = createAclNode(nodePath);
 
         PolicyEntry[] entries = template.getEntries();
         for (int i = 0; i < entries.length; i++) {
@@ -141,13 +150,13 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#removePolicyTemplate(NodeId)
+     * @see AccessControlEditor#removePolicyTemplate(String)
      */
-    public PolicyTemplate removePolicyTemplate(NodeId id) throws AccessControlException, RepositoryException {
-        checkProtectsNode(id);
+    public PolicyTemplate removePolicyTemplate(String nodePath) throws AccessControlException, RepositoryException {
+        checkProtectsNode(nodePath);
 
         PolicyTemplate tmpl = null;
-        NodeImpl aclNode = getAclNode(id);
+        NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode != null) {
             // need to build the template in order to have a return value.
             tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
@@ -157,10 +166,10 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#getAccessControlEntries(NodeId)
+     * @see AccessControlEditor#getAccessControlEntries(String)
      */
-    public AccessControlEntry[] getAccessControlEntries(NodeId id) throws AccessControlException, ItemNotFoundException, RepositoryException {
-        PolicyTemplate pt = getPolicyTemplate(id);
+    public AccessControlEntry[] getAccessControlEntries(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+        PolicyTemplate pt = getPolicyTemplate(nodePath);
         if (pt == null) {
             return new AccessControlEntry[0];
         } else {
@@ -176,15 +185,15 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#addAccessControlEntry(NodeId,Principal,Privilege[])
+     * @see AccessControlEditor#addAccessControlEntry(String,Principal,Privilege[])
      */
-    public AccessControlEntry addAccessControlEntry(NodeId id, Principal principal, Privilege[] privileges) throws AccessControlException, ItemNotFoundException, RepositoryException {
+    public AccessControlEntry addAccessControlEntry(String nodePath, Principal principal, Privilege[] privileges) throws AccessControlException, PathNotFoundException, RepositoryException {
         // JSR 283 requires that the principal is known TODO: check again.
         if (!principalManager.hasPrincipal(principal.getName())) {
             throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
         }
 
-        ACLTemplate pt = (ACLTemplate) editPolicyTemplate(id);
+        ACLTemplate pt = (ACLTemplate) editPolicyTemplate(nodePath);
         // TODO: check again. maybe these 'grant-ACE' should be stored/evaluated separated
         int privs = PrivilegeRegistry.getBits(privileges);
         /*
@@ -202,7 +211,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         }
 
         pt.setEntry(new ACEImpl(principal, privs, true));
-        setPolicyTemplate(id, pt);
+        setPolicyTemplate(nodePath, pt);
         ACEImpl[] tmpls = pt.getEntries(principal);
         for (int i = 0; i < tmpls.length; i++) {
             if (tmpls[i].isAllow()) {
@@ -215,17 +224,17 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
 
 
     /**
-     * @see AccessControlEditor#removeAccessControlEntry(NodeId,AccessControlEntry)
+     * @see AccessControlEditor#removeAccessControlEntry(String,AccessControlEntry)
      */
-    public boolean removeAccessControlEntry(NodeId id, AccessControlEntry entry) throws AccessControlException, ItemNotFoundException, RepositoryException {
+    public boolean removeAccessControlEntry(String nodePath, AccessControlEntry entry) throws AccessControlException, PathNotFoundException, RepositoryException {
         if (!(entry instanceof ACEImpl)) {
             throw new AccessControlException("Unknown AccessControlEntry implementation.");
         }
         // TODO: check again. maybe these 'grant-ACE' should be removed separated
-        PolicyTemplate pt = editPolicyTemplate(id);
+        PolicyTemplate pt = editPolicyTemplate(nodePath);
         boolean removed = pt.removeEntry((ACEImpl) entry);
         if (removed) {
-            setPolicyTemplate(id, pt);
+            setPolicyTemplate(nodePath, pt);
         }
         return removed;
     }
@@ -236,16 +245,27 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      * defining content. It this case setting or modifying an AC-policy is
      * obviously not possible.
      *
-     * @param id
+     * @param nodePath
      * @throws AccessControlException If the given id identifies a Node that
      * represents a ACL or ACE item.
      * @throws RepositoryException
      */
-    private void checkProtectsNode(NodeId id) throws RepositoryException {
-        NodeImpl node = session.getNodeById(id);
+    private void checkProtectsNode(String nodePath) throws RepositoryException {
+        NodeImpl node = getNode(nodePath);
         if (ACLProvider.protectsNode(node)) {
-            throw new AccessControlException("Node " + id + " defines ACL or ACE itself.");
+            throw new AccessControlException("Node " + nodePath + " defines ACL or ACE itself.");
         }
+    }
+
+    /**
+     *
+     * @param path
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    private NodeImpl getNode(String path) throws PathNotFoundException, RepositoryException {
+        return (NodeImpl) session.getNode(path);
     }
 
     /**
@@ -253,14 +273,14 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      * id or <code>null</code> if the node is not mix:AccessControllable
      * or if no policy node exists.
      *
-     * @param id
+     * @param nodePath
      * @return node or <code>null</code>
-     * @throws ItemNotFoundException
+     * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    private NodeImpl getAclNode(NodeId id) throws ItemNotFoundException, RepositoryException {
+    private NodeImpl getAclNode(String nodePath) throws PathNotFoundException, RepositoryException {
         NodeImpl aclNode = null;
-        NodeImpl protectedNode = session.getNodeById(id);
+        NodeImpl protectedNode = getNode(nodePath);
         if (ACLProvider.isAccessControlled(protectedNode)) {
             aclNode = protectedNode.getNode(N_POLICY);
         }
@@ -269,12 +289,12 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
 
     /**
      *
-     * @param id
+     * @param nodePath
      * @return
      * @throws RepositoryException
      */
-    private NodeImpl createAclNode(NodeId id) throws RepositoryException {
-        NodeImpl protectedNode = session.getNodeById(id);
+    private NodeImpl createAclNode(String nodePath) throws RepositoryException {
+        NodeImpl protectedNode = getNode(nodePath);
         if (!protectedNode.isNodeType(NT_REP_ACCESS_CONTROLLABLE)) {
             protectedNode.addMixin(NT_REP_ACCESS_CONTROLLABLE);
         }

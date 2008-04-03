@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Repository;
 
 /**
  * <code>AbstractAccessControlTest</code>...
@@ -46,11 +47,8 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
         if (!(s instanceof SessionImpl)) {
             throw new NotExecutableException();
         }
-        /*
-        if (s.getRepository().getDescriptor(Repository.OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED) == null) {
-            throw new NotExecutableException();
-        }
-        */
+        // TODO: uncomment again.
+        // checkSupportedOption(Repository.OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED);
         try {
             return ((SessionImpl) s).getAccessControlManager();
         } catch (UnsupportedRepositoryOperationException e) {

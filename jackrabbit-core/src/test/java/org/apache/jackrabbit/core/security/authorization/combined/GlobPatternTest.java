@@ -14,23 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.acl;
+package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.core.security.authorization.AbstractPolicyEntryTest;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
+import org.apache.jackrabbit.test.JUnitTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.Principal;
-
 /**
- * <code>ACEImplTest</code>...
+ * <code>GlobPatternTest</code>...
  */
-public class ACEImplTest extends AbstractPolicyEntryTest {
+public class GlobPatternTest extends JUnitTest {
 
-    private static Logger log = LoggerFactory.getLogger(ACEImplTest.class);
+    private static Logger log = LoggerFactory.getLogger(GlobPatternTest.class);
 
-    protected PolicyEntry createPolicyEntry(Principal principal, int privileges, boolean isAllow) {
-        return new ACEImpl(principal, privileges, isAllow);
+    public void testMatches() {
+        // TODO
+    }
+
+    public void testMatchesItem() {
+       // TODO
     }
 }

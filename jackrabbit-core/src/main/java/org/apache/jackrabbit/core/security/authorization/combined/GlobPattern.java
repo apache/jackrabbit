@@ -14,20 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization;
+package org.apache.jackrabbit.core.security.authorization.combined;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
+import javax.jcr.RepositoryException;
 
 /**
- * <code>GlobPattern</code>... TODO IMPROVE
+ * <code>GlobPattern</code>...
  */
-public class GlobPattern {
+class GlobPattern {
 
     private static Logger log = LoggerFactory.getLogger(GlobPattern.class);
 
+    private static final char ALL = '*';
     public static final String WILDCARD_ALL = "*";
 
     private final String pattern;
@@ -36,25 +38,58 @@ public class GlobPattern {
         this.pattern = pattern;
     }
 
-    public static GlobPattern create(String pattern) {
+    static GlobPattern create(String pattern) {
         if (pattern == null) {
             throw new IllegalArgumentException();
         }
         return new GlobPattern(pattern);
     }
 
-    public boolean matches(String toMatch) {
+    boolean matches(String toMatch) {
         // shortcut
-        if (WILDCARD_ALL.equals(pattern) || pattern.equals(toMatch)) {
+        if (WILDCARD_ALL.equals(pattern)) {
             return true;
         }
+        if (toMatch == null) {
+            return false;
+        }
 
-        // TODO
-        return false;
+        if (containsWildCard()) {
+            return matches(pattern, toMatch);
+        } else {
+            return pattern.equals(toMatch);
+        }
     }
 
-    public boolean matches(Item itemToMatch) {
-        // TODO
+    boolean matches(Item itemToMatch) {
+        try {
+            // TODO: missing proper impl
+            return matches(itemToMatch.getPath());
+        } catch (RepositoryException e) {
+            log.error("Unable to determine match.", e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean containsWildCard() {
+        // TODO: add proper impl
+        return pattern.indexOf(ALL) > -1;
+    }
+
+    private static boolean matches(String pattern, String toMatch) {
+        // TODO: add proper impl
+        char[] c1 = pattern.toCharArray();
+        char[] c2 = toMatch.toCharArray();
+
+        for (int i = 0; i < c1.length; i++) {
+            if (c1[i] == ALL) {
+                return true;
+            }
+            if (i >= c2.length || c1[i] != c2[i]) {
+                return false;
+            }
+        }
+
         return false;
     }
 
@@ -86,5 +121,4 @@ public class GlobPattern {
         }
         return false;
     }
-
 }

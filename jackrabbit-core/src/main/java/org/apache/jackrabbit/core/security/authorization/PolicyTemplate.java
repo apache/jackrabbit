@@ -31,6 +31,13 @@ import javax.jcr.RepositoryException;
 public interface PolicyTemplate extends AccessControlPolicy {
 
     /**
+     * Returns the path of the node this template has been created for.
+     *  
+     * @return the path of the node this template has been created for.
+     */
+    String getPath();
+
+    /**
      * Returns <code>true</code> if this template does not yet define any
      * entries.
      *

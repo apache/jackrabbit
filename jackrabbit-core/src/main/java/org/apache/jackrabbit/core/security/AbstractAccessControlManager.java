@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.security.jsr283.security.AccessControlExceptio
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
-import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -37,7 +36,7 @@ import java.security.Principal;
 /**
  * <code>AbstractAccessControlManager</code>...
  */
-public abstract class AbstractAccessControlManager implements AccessControlManager {
+public abstract class AbstractAccessControlManager implements JackrabbitAccessControlManager {
 
     private static Logger log = LoggerFactory.getLogger(AbstractAccessControlManager.class);
 
@@ -50,7 +49,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public Privilege[] getSupportedPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
-        getValidNodePath(absPath);
+        checkValidNodePath(absPath);
 
         // return all known privileges everywhere.
         return PrivilegeRegistry.getRegisteredPrivileges();
@@ -65,7 +64,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public AccessControlPolicy getPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.READ_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         log.debug("Implementation does not provide applicable policies -> getPolicy() always returns null.");
         return null;
@@ -80,7 +79,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.READ_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         log.debug("Implementation does not provide applicable policies -> returning empty iterator.");
         return AccessControlPolicyIteratorAdapter.EMPTY;
@@ -93,7 +92,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.MODIFY_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new AccessControlException("AccessControlPolicy " + policy.getName() + " cannot be applied.");
     }
@@ -105,7 +104,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public AccessControlPolicy removePolicy(String absPath) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.MODIFY_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new AccessControlException("No AccessControlPolicy has been set through this API -> Cannot be removed.");
     }
@@ -118,7 +117,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public AccessControlEntry[] getAccessControlEntries(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.READ_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         return new AccessControlEntry[0];
     }
@@ -130,7 +129,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public AccessControlEntry addAccessControlEntry(String absPath, Principal principal, Privilege[] privileges) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.MODIFY_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new UnsupportedRepositoryOperationException("Adding access control entry is not supported by this AccessControlManager (" + getClass().getName()+ ").");
     }
@@ -142,7 +141,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      */
     public void removeAccessControlEntry(String absPath, AccessControlEntry ace) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(getValidNodePath(absPath), PrivilegeRegistry.MODIFY_AC);
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new AccessControlException("Invalid access control entry, that has not been applied through this API.");
     }
@@ -166,7 +165,7 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      * of if the session does not have the privilege to READ it.
      * @throws RepositoryException
      */
-    protected abstract void checkPrivileges(Path absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException;
+    protected abstract void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException;
 
     /**
      * Build a qualified path from the specified <code>absPath</code> and test
@@ -178,6 +177,6 @@ public abstract class AbstractAccessControlManager implements AccessControlManag
      * @throws RepositoryException If the given <code>absPath</code> is not
      * absolute or if some other error occurs.
      */
-    protected abstract Path getValidNodePath(String absPath) throws PathNotFoundException, RepositoryException;
+    protected abstract void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException;
 
 }
