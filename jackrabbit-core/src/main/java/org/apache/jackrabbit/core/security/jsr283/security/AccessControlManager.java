@@ -88,7 +88,7 @@ public interface AccessControlManager {
      *                               or the session does not have privilege to 
      *                               retrieve the node.
      * @throws AccessDeniedException if the session lacks
-     *                               <code>GET_ACCESS_CONTROL</code> privilege 
+     *                               <code>READ_ACCESS_CONTROL</code> privilege 
      *                               for the <code>absPath</code> node.
      * @throws RepositoryException   if another error occurs.
      */
