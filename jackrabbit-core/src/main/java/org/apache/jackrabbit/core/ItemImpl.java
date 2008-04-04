@@ -211,8 +211,7 @@ public abstract class ItemImpl implements Item {
     }
 
     /**
-     * Notify the listeners that this instance has been discarded
-     * (i.e. it has been temporarily rendered 'invalid').
+     * Notify the listeners that this instance has been created.
      */
     protected void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
