@@ -1962,7 +1962,110 @@ public class NodeImpl extends ItemImpl implements Node {
         return node;
     }
 
-    //-----------------------------------------------------------------< Item >
+    /**
+     * Create a child node that is a clone of a shareable node.
+     *
+     * @param src shareable source node
+     * @param name name of new node
+     * @return child node
+     * @throws ItemExistsException if there already is a child node with the
+     *             name given and the definition does not allow creating another one
+     * @throws VersionException if this node is not checked out
+     * @throws ConstraintViolationException if no definition is found in this
+     *             node that would allow creating the child node
+     * @throws LockException if this node is locked
+     * @throws RepositoryException if some other error occurs
+     */
+    public synchronized NodeImpl clone(NodeImpl src, Name name)
+            throws ItemExistsException, VersionException,
+                   ConstraintViolationException, LockException,
+                   RepositoryException {
+
+        Path nodePath;
+        try {
+            nodePath = PathFactoryImpl.getInstance().create(getPrimaryPath(), name, true);
+        } catch (MalformedPathException e) {
+            // should never happen
+            String msg = "internal error: invalid path " + safeGetJCRPath();
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+
+        // (1) make sure that parent node is checked-out
+        if (!internalIsCheckedOut()) {
+            String msg = safeGetJCRPath()
+                    + ": cannot add a child to a checked-in node";
+            log.debug(msg);
+            throw new VersionException(msg);
+        }
+
+        // (2) check lock status
+        checkLock();
+
+        // (3) check for name collisions
+        NodeDefinitionImpl def;
+        try {
+            def = getApplicableChildNodeDefinition(name, null);
+        } catch (RepositoryException re) {
+            String msg = "no definition found in parent node's node type for new node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg, re);
+        }
+        NodeState thisState = (NodeState) state;
+        NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
+        if (cne != null) {
+            // there's already a child node entry with that name;
+            // check same-name sibling setting of new node
+            if (!def.allowsSameNameSiblings()) {
+                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
+            }
+            // check same-name sibling setting of existing node
+            NodeId newId = cne.getId();
+            if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
+                throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
+            }
+        }
+
+        // (4) check protected flag of parent (i.e. this) node
+        if (definition.isProtected()) {
+            String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
+            log.debug(msg);
+            throw new ConstraintViolationException(msg);
+        }
+
+        // (5) verify that source is shareable
+        if (!src.isShareable()) {
+            String msg = "Source node at " + src.safeGetJCRPath() + " is not shareable.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // (6) detect share cycle
+        NodeId srcId = src.getNodeId();
+        NodeId parentId = getNodeId();
+        HierarchyManager hierMgr = session.getHierarchyManager();
+        if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
+            String msg = "This would create a share cycle.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // (7) do clone operation (modify and store affected states)
+        if (!src.addShare(parentId)) {
+            String msg = "Adding a shareable node twice to the same parent is not supported.";
+            log.debug(msg);
+            throw new UnsupportedRepositoryOperationException(msg);
+        }
+
+        // (8) modify the state of 'this', i.e. the parent node
+        thisState = (NodeState) getOrCreateTransientItemState();
+        // add new child node entry
+        thisState.addChildNodeEntry(name, srcId);
+
+        return itemMgr.getNode(srcId, parentId);
+    }
+
+    // -----------------------------------------------------------------< Item >
     /**
      * {@inheritDoc}
      */
@@ -3119,6 +3222,26 @@ public class NodeImpl extends ItemImpl implements Node {
         return ((NodeState) state).containsShare(parentId);
     }
 
+    /**
+     * Add a parent to the shared set. This method does not check whether
+     * adding this parent would create a share cycle (and should therefore
+     * strictly be used internally), it does, however detect whether the given
+     * parent is already contained in the shared set.
+     *
+     * @return <code>true</code> if adding succeeded;
+     *         <code>false</code> otherwise.
+     */
+    protected boolean addShare(NodeId parentId) throws RepositoryException {
+        // quickly verify whether the share is already contained before
+        // possibly changing the referenced state
+        NodeState state = (NodeState) this.state;
+        if (state.containsShare(parentId)) {
+            return false;
+        }
+        // now make modifications
+        state = (NodeState) getOrCreateTransientItemState();
+        return state.addShare(parentId);
+    }
 
     /**
      * {@inheritDoc}

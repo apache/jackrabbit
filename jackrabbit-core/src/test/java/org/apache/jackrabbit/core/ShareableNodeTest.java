@@ -485,9 +485,12 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verify import and export (6.13.14).
+     * Verify system view import via workspace (6.13.14). Export a system view
+     * containing a shareable node and verify, that reimporting underneath
+     * a different parent adds another member to the shared set and does not
+     * duplicate children nodes.
      */
-    public void testImportExport() throws Exception {
+    public void testImportSystemViewCollision() throws Exception {
         // setup parent nodes and first child
         Node a1 = testRootNode.addNode("a1");
         Node a2 = testRootNode.addNode("a2");
@@ -525,6 +528,179 @@ public class ShareableNodeTest extends AbstractJCRTest {
         InputStream in = new FileInputStream(tmpFile);
         try {
             workspace.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        } finally {
+            in.close();
+        }
+
+        // verify there's another element in the shared set
+        Node[] shared = getSharedSet(b1);
+        assertEquals(3, shared.length);
+
+        // verify child c has not been duplicated
+        Node[] children = toArray(b1.getNodes());
+        assertEquals(1, children.length);
+    }
+
+    /**
+     * Verify document view import via workspace (6.13.14). Export a document
+     * view containing a shareable node and verify, that reimporting
+     * underneath a different parent adds another member to the shared set and
+     * does not duplicate children nodes.
+     */
+    public void testImportDocumentViewCollision() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node a3 = testRootNode.addNode("a3");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child c to shareable nodes b1 & b2
+        b1.addNode("c");
+        b1.save();
+
+        // create temp file
+        File tmpFile = File.createTempFile("test", null);
+        tmpFile.deleteOnExit();
+
+        // export system view of /a1/b1
+        OutputStream out = new FileOutputStream(tmpFile);
+        try {
+            session.exportDocumentView(b1.getPath(), out, false, false);
+        } finally {
+            out.close();
+        }
+
+        // and import again underneath /a3
+        InputStream in = new FileInputStream(tmpFile);
+        try {
+            workspace.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        } finally {
+            in.close();
+        }
+
+        // verify there's another element in the shared set
+        Node[] shared = getSharedSet(b1);
+        assertEquals(3, shared.length);
+
+        // verify child c has not been duplicated
+        Node[] children = toArray(b1.getNodes());
+        assertEquals(1, children.length);
+    }
+
+    /**
+     * Verify system view import via session (6.13.14). Export a system view
+     * containing a shareable node and verify, that reimporting underneath
+     * a different parent adds another member to the shared set and does not
+     * duplicate children nodes.
+     */
+    public void testSessionImportSystemViewCollision() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node a3 = testRootNode.addNode("a3");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child c to shareable nodes b1 & b2
+        b1.addNode("c");
+        b1.save();
+
+        // create temp file
+        File tmpFile = File.createTempFile("test", null);
+        tmpFile.deleteOnExit();
+
+        // export system view of /a1/b1
+        OutputStream out = new FileOutputStream(tmpFile);
+        try {
+            session.exportSystemView(b1.getPath(), out, false, false);
+        } finally {
+            out.close();
+        }
+
+        // and import again underneath /a3
+        InputStream in = new FileInputStream(tmpFile);
+        try {
+            session.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+            session.save();
+        } finally {
+            in.close();
+        }
+
+        // verify there's another element in the shared set
+        Node[] shared = getSharedSet(b1);
+        assertEquals(3, shared.length);
+
+        // verify child c has not been duplicated
+        Node[] children = toArray(b1.getNodes());
+        assertEquals(1, children.length);
+    }
+
+    /**
+     * Verify document view import via session (6.13.14). Export a document
+     * view containing a shareable node and verify, that reimporting
+     * underneath a different parent adds another member to the shared set and
+     * does not duplicate children nodes.
+     */
+    public void testSessionImportDocumentViewCollision() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node a3 = testRootNode.addNode("a3");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child c to shareable nodes b1 & b2
+        b1.addNode("c");
+        b1.save();
+
+        // create temp file
+        File tmpFile = File.createTempFile("test", null);
+        tmpFile.deleteOnExit();
+
+        // export system view of /a1/b1
+        OutputStream out = new FileOutputStream(tmpFile);
+        try {
+            session.exportSystemView(b1.getPath(), out, false, false);
+        } finally {
+            out.close();
+        }
+
+        // and import again underneath /a3
+        InputStream in = new FileInputStream(tmpFile);
+        try {
+            session.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+            session.save();
         } finally {
             in.close();
         }

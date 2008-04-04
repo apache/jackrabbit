@@ -114,6 +114,11 @@ public class SessionImporter implements Importer {
                 refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
+            // if conflicting node is shareable, then clone it
+            if (conflicting.isNodeType(NameConstants.MIX_SHAREABLE)) {
+                parent.clone(conflicting, nodeInfo.getName());
+                return null;
+            }
             String msg = "a node with uuid " + nodeInfo.getId() + " already exists!";
             log.debug(msg);
             throw new ItemExistsException(msg);
@@ -224,6 +229,12 @@ public class SessionImporter implements Importer {
                 if (conflicting != null) {
                     // resolve uuid conflict
                     node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                    if (node == null) {
+                        // no new node has been created, so skip this node
+                        parents.push(null); // push null onto stack for skipped node
+                        log.debug("skipping existing node " + nodeInfo.getName());
+                        return;
+                    }
                 } else {
                     // create new with given uuid
                     node = createNode(parent, nodeName, ntName, mixins, id);
