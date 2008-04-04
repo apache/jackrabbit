@@ -16,8 +16,14 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -133,9 +139,100 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
+     * Verify that the shareable node returned by Node.getNode() has the right
+     * name.
+     */
+    public void testGetNode() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // a1.getNode("b1") should return b1
+        b1 = a1.getNode("b1");
+        assertEquals("b1", b1.getName());
+
+        // a2.getNode("b2") should return b2
+        Node b2 = a2.getNode("b2");
+        assertEquals("b2", b2.getName());
+    }
+
+    /**
+     * Verify that the shareable nodes returned by Node.getNodes() have
+     * the right name.
+     */
+    public void testGetNodes() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // a1.getNodes() should return b1
+        Node[] children = toArray(a1.getNodes());
+        assertEquals(1, children.length);
+        assertEquals("b1", children[0].getName());
+
+        // a2.getNodes() should return b2
+        children = toArray(a2.getNodes());
+        assertEquals(1, children.length);
+        assertEquals("b2", children[0].getName());
+    }
+
+    /**
+     * Verify that the shareable nodes returned by Node.getNodes(String) have
+     * the right name.
+     */
+    public void testGetNodesByPattern() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // a1.getNodes(*) should return b1
+        Node[] children = toArray(a1.getNodes("*"));
+        assertEquals(1, children.length);
+        assertEquals("b1", children[0].getName());
+
+        // a2.getNodes(*) should return b2
+        children = toArray(a2.getNodes("*"));
+        assertEquals(1, children.length);
+        assertEquals("b2", children[0].getName());
+    }
+
+    /**
      * Checks new API Node.getSharedSet() (6.13.1)
      */
-    public void testIterateSharedSet() throws Exception {
+    public void testGetSharedSet() throws Exception {
         // setup parent nodes and first child
         Node a1 = testRootNode.addNode("a1");
         Node a2 = testRootNode.addNode("a2");
@@ -388,6 +485,60 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
+     * Verify import and export (6.13.14).
+     */
+    public void testImportExport() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node a3 = testRootNode.addNode("a3");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child c to shareable nodes b1 & b2
+        b1.addNode("c");
+        b1.save();
+
+        // create temp file
+        File tmpFile = File.createTempFile("test", null);
+        tmpFile.deleteOnExit();
+
+        // export system view of /a1/b1
+        OutputStream out = new FileOutputStream(tmpFile);
+        try {
+            session.exportSystemView(b1.getPath(), out, false, false);
+        } finally {
+            out.close();
+        }
+
+        // and import again underneath /a3
+        InputStream in = new FileInputStream(tmpFile);
+        try {
+            workspace.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        } finally {
+            in.close();
+        }
+
+        // verify there's another element in the shared set
+        Node[] shared = getSharedSet(b1);
+        assertEquals(3, shared.length);
+
+        // verify child c has not been duplicated
+        Node[] children = toArray(b1.getNodes());
+        assertEquals(1, children.length);
+    }
+
+    /**
      * Verifies that observation events are sent only once (6.13.15).
      */
     public void testObservation() throws Exception {
@@ -551,6 +702,40 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone (2nd attempt, with mix:shareable)
         workspace.clone(workspace.getName(), b1.getPath(),
                 a2.getPath() + "/b2", false);
+    }
+
+    /**
+     * Clone a mix:shareable node to the same workspace multiple times, remove
+     * all parents and save.
+     */
+    public void testCloneMultipleTimes() throws Exception {
+        int count = 10;
+        Node[] parents = new Node[count];
+
+        // setup parent nodes and first child
+        for (int i = 0; i < parents.length; i++) {
+            parents[i] = testRootNode.addNode("a" + (i + 1));
+        }
+        Node b = parents[0].addNode("b");
+        testRootNode.save();
+
+        // add mixin
+        b.addMixin("mix:shareable");
+        b.save();
+
+        Workspace workspace = b.getSession().getWorkspace();
+
+        // clone to all other nodes
+        for (int i = 1; i < parents.length; i++) {
+            workspace.clone(workspace.getName(), b.getPath(),
+                    parents[i].getPath() + "/b", false);
+        }
+
+        // remove all parents and save
+        for (int i = 0; i < parents.length; i++) {
+            parents[i].remove();
+        }
+        testRootNode.save();
     }
 
     /**
@@ -736,9 +921,18 @@ public class ShareableNodeTest extends AbstractJCRTest {
      * @return array of nodes in shared set
      */
     private Node[] getSharedSet(Node n) throws RepositoryException {
+        return toArray(((NodeImpl) n).getSharedSet());
+    }
+
+    /**
+     * Return an array of nodes given a <code>NodeIterator</code>.
+     *
+     * @param iter node iterator
+     * @return node array
+     */
+    private static Node[] toArray(NodeIterator iter) {
         ArrayList list = new ArrayList();
 
-        NodeIterator iter = ((NodeImpl) n).getSharedSet();
         while (iter.hasNext()) {
             list.add(iter.nextNode());
         }

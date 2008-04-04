@@ -142,7 +142,6 @@ public abstract class ItemImpl implements Item {
                 addLifeCycleListener(listeners[i]);
             }
         }
-        notifyCreated();
     }
 
     /**
@@ -215,7 +214,7 @@ public abstract class ItemImpl implements Item {
      * Notify the listeners that this instance has been discarded
      * (i.e. it has been temporarily rendered 'invalid').
      */
-    private void notifyCreated() {
+    protected void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la =
                 (ItemLifeCycleListener[]) listeners.values().toArray(

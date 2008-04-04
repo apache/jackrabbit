@@ -348,6 +348,11 @@ public class NameConstants {
     public static final Name NT_QUERY = FACTORY.create(Name.NS_NT_URI, "query");
 
     /**
+     * nt:share
+     */
+    public static final Name NT_SHARE = FACTORY.create(Name.NS_NT_URI, "share");
+
+    /**
      * mix:referenceable
      */
     public static final Name MIX_REFERENCEABLE = FACTORY.create(Name.NS_MIX_URI, "referenceable");
