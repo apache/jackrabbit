@@ -416,9 +416,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * but only one node with the given parent id.
      *
      * @param id node id
-     * @param
-     * @return
-     * @throws RepositoryException
+     * @param parentId parent node id
+     * @return node
+     * @throws RepositoryException if an error occurs
      */
     public synchronized NodeImpl getNode(NodeId id, NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
