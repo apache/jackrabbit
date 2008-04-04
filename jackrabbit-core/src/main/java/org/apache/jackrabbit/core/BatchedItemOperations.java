@@ -203,7 +203,7 @@ public class BatchedItemOperations extends ItemValidator {
     }
 
     //-------------------------------------------< high-level item operations >
-    
+
     /**
      * Clones the subtree at the node <code>srcAbsPath</code> in to the new
      * location at <code>destAbsPath</code>. This operation is only supported:
@@ -213,11 +213,11 @@ public class BatchedItemOperations extends ItemValidator {
      * <li>If the parent node of <code>destAbsPath</code> has not already a shareable
      * node in the same shared set as the node at <code>srcPath</code>.</li>
      * </ul>
-     * 
+     *
      * @param srcPath source path
      * @param destPath destination path
      * @return the node id of the destination's parent
-     * 
+     *
      * @throws ConstraintViolationException if the operation would violate a
      * node-type or other implementation-specific constraint.
      * @throws VersionException if the parent node of <code>destAbsPath</code> is
@@ -236,7 +236,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws RepositoryException if the last element of <code>destAbsPath</code>
      * has an index or if another error occurs.
      */
-    public NodeId clone(Path srcPath, Path destPath) 
+    public NodeId clone(Path srcPath, Path destPath)
             throws ConstraintViolationException, AccessDeniedException,
                    VersionException, PathNotFoundException, ItemExistsException,
                    LockException, RepositoryException, IllegalStateException {
@@ -257,36 +257,73 @@ public class BatchedItemOperations extends ItemValidator {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        
+
+        return clone(srcState, destParentState, destName.getName());
+    }
+
+    /**
+     * Implementation of {@link #clone(Path, Path)} that has already determined
+     * the affected <code>NodeState</code>s.
+     *
+     * @param srcState source state
+     * @param destParentState destination parent state
+     * @param destName destination name
+     * @return the node id of the destination's parent
+     *
+     * @throws ConstraintViolationException if the operation would violate a
+     * node-type or other implementation-specific constraint.
+     * @throws VersionException if the parent node of <code>destAbsPath</code> is
+     * versionable and checked-in, or is non-versionable but its nearest versionable ancestor is
+     * checked-in. This exception will also be thrown if <code>removeExisting</code> is <code>true</code>,
+     * and a UUID conflict occurs that would require the moving and/or altering of a node that is checked-in.
+     * @throws AccessDeniedException if the current session does not have
+     * sufficient access rights to complete the operation.
+     * @throws PathNotFoundException if the node at <code>srcAbsPath</code> in
+     * <code>srcWorkspace</code> or the parent of <code>destAbsPath</code> in this workspace does not exist.
+     * @throws ItemExistsException if a property already exists at
+     * <code>destAbsPath</code> or a node already exist there, and same name
+     * siblings are not allowed or if <code>removeExisting</code> is false and a
+     * UUID conflict occurs.
+     * @throws LockException if a lock prevents the clone.
+     * @throws RepositoryException if the last element of <code>destAbsPath</code>
+     * has an index or if another error occurs.
+     * @see #clone(Path, Path)
+     */
+    public NodeId clone(NodeState srcState, NodeState destParentState, Name destName)
+            throws ConstraintViolationException, AccessDeniedException,
+                   VersionException, PathNotFoundException, ItemExistsException,
+                   LockException, RepositoryException, IllegalStateException {
+
+
         // 2. check access rights, lock status, node type constraints, etc.
-        checkAddNode(destParentState, destName.getName(),
+        checkAddNode(destParentState, destName,
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS);
-        
+
         // 3. verify that source has mixin mix:shareable
         if (!isShareable(srcState)) {
             String msg = "Cloning inside a workspace is only allowed for shareable nodes.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        
+
         // 4. detect share cycle
         NodeId srcId = srcState.getNodeId();
         NodeId destParentId = destParentState.getNodeId();
-        if (destParentId.equals(srcId) || 
+        if (destParentId.equals(srcId) ||
                 hierMgr.isAncestor(srcId, destParentId)) {
             String msg = "This would create a share cycle.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        
+
         // 5. do clone operation (modify and store affected states)
         if (!srcState.addShare(destParentState.getNodeId())) {
             String msg = "Adding a shareable node twice to the same parent is not supported.";
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
-        destParentState.addChildNodeEntry(destName.getName(), srcState.getNodeId());
+        destParentState.addChildNodeEntry(destName, srcState.getNodeId());
 
         // store states
         stateMgr.store(srcState);
@@ -294,7 +331,7 @@ public class BatchedItemOperations extends ItemValidator {
         return destParentState.getNodeId();
     }
 
-    
+
     /**
      * Copies the tree at <code>srcPath</code> to the new location at
      * <code>destPath</code>. Returns the id of the node at its new position.
@@ -365,7 +402,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check precondition
         checkInEditMode();
-        
+
         // 1. check paths & retrieve state
 
         NodeState srcState = getNodeState(srcStateMgr, srcHierMgr, srcPath);
@@ -1925,10 +1962,10 @@ public class BatchedItemOperations extends ItemValidator {
         }
         return vh;
     }
-    
+
     /**
      * Check that the updatable item state manager is in edit mode.
-     * 
+     *
      * @throws IllegalStateException if it isn't
      */
     private void checkInEditMode() throws IllegalStateException {
@@ -1936,7 +1973,7 @@ public class BatchedItemOperations extends ItemValidator {
             throw new IllegalStateException("not in edit mode");
         }
     }
-    
+
     /**
      * Determines whether the specified node is <i>shareable</i>, i.e.
      * whether the mixin type <code>mix:shareable</code> is either
@@ -1958,7 +1995,7 @@ public class BatchedItemOperations extends ItemValidator {
         mixins.toArray(types);
         // primary type
         types[types.length - 1] = primary;
-        
+
         try {
             return ntReg.getEffectiveNodeType(types).includesNodeType(NameConstants.MIX_REFERENCEABLE);
         } catch (NodeTypeConflictException ntce) {

@@ -55,6 +55,9 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
     /** the list of item ids */
     private final List idList;
 
+    /** parent node id (when returning children nodes) or <code>null</code> */
+    private final NodeId parentId;
+
     /** the position of the next item */
     private int pos;
 
@@ -68,8 +71,22 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param idList  list of item id's
      */
     public LazyItemIterator(ItemManager itemMgr, List idList) {
+        this(itemMgr, idList, null);
+    }
+
+    /**
+     * Creates a new <code>LazyItemIterator</code> instance, additionally taking
+     * a parent id as parameter. This version should be invoked to strictly return
+     * children nodes of a node.
+     *
+     * @param itemMgr item manager
+     * @param idList  list of item id's
+     * @param parentId parent id.
+     */
+    public LazyItemIterator(ItemManager itemMgr, List idList, NodeId parentId) {
         this.itemMgr = itemMgr;
         this.idList = new ArrayList(idList);
+        this.parentId = parentId;
         // prefetch first item
         pos = 0;
         prefetchNext();
@@ -87,7 +104,11 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         while (next == null && pos < idList.size()) {
             ItemId id = (ItemId) idList.get(pos);
             try {
-                next = itemMgr.getItem(id);
+                if (parentId != null) {
+                    next = itemMgr.getNode((NodeId) id, parentId);
+                } else {
+                    next = itemMgr.getItem(id);
+                }
             } catch (ItemNotFoundException e) {
                 log.debug("ignoring nonexistent item " + id);
                 // remove invalid id

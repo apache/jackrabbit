@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.core.xml;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -28,6 +30,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.value.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -41,6 +44,8 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.NamespaceException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 
 /**
  * <code>AbstractSAXEventGenerator</code> serves as the base class for
@@ -113,6 +118,21 @@ abstract class AbstractSAXEventGenerator {
     protected final String jcrXMLCharacters;
 
     /**
+     * The mix:shareable node type.
+     */
+    private final String mixShareable;
+
+    /**
+     * The nt:share node type.
+     */
+    private final String ntShare;
+
+    /**
+     * Shareable nodes serialized so far (set of UUIDs).
+     */
+    private Set shareableNodeIds;
+
+    /**
      * Constructor
      *
      * @param node           the node state which should be serialized
@@ -148,6 +168,8 @@ abstract class AbstractSAXEventGenerator {
             jcrRoot = resolver.getJCRName(NameConstants.JCR_ROOT);
             jcrXMLText = resolver.getJCRName(NameConstants.JCR_XMLTEXT);
             jcrXMLCharacters = resolver.getJCRName(NameConstants.JCR_XMLCHARACTERS);
+            mixShareable = resolver.getJCRName(NameConstants.MIX_SHAREABLE);
+            ntShare = resolver.getJCRName(NameConstants.NT_SHARE);
         } catch (NamespaceException e) {
             // should never get here...
             String msg = "internal error: failed to resolve namespace mappings";
@@ -269,6 +291,7 @@ abstract class AbstractSAXEventGenerator {
      */
     protected void process(Node node, int level)
             throws RepositoryException, SAXException {
+
         // enter node
         entering(node, level);
 
@@ -276,12 +299,7 @@ abstract class AbstractSAXEventGenerator {
         enteringProperties(node, level);
 
         // Collect all properties (and sort them, see JCR-1084)
-        SortedMap properties = new TreeMap();
-        PropertyIterator propIter = node.getProperties();
-        while (propIter.hasNext()) {
-            Property property = propIter.nextProperty();
-            properties.put(property.getName(), property);
-        }
+        SortedMap properties = collectProperties(node);
 
         // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
         if (properties.containsKey(jcrPrimaryType)) {
@@ -325,6 +343,54 @@ abstract class AbstractSAXEventGenerator {
 
         // leaving node
         leaving(node, level);
+    }
+
+    /**
+     * Collect all properties of a node and return them as sorted map. Returns
+     * a smaller set if the node is shareable and has already been serialized.
+     *
+     * @param node node
+     * @return properties as sorted map
+     */
+    protected SortedMap collectProperties(Node node) throws RepositoryException {
+        SortedMap properties = new TreeMap();
+
+        // if node is shareable and has already been serialized, change its
+        // type to nt:share and process only the properties jcr:primaryType
+        // and jcr:uuid
+        if (node.isNodeType(mixShareable)) {
+            if (shareableNodeIds == null) {
+                shareableNodeIds = new HashSet();
+            }
+            if (!shareableNodeIds.add(node.getUUID())) {
+                if (node.hasProperty(jcrPrimaryType)) {
+                    Property property = node.getProperty(jcrPrimaryType);
+                    property = new PropertyWrapper(property) {
+                        public Value getValue() throws ValueFormatException,
+                                RepositoryException {
+                            return new StringValue(ntShare);
+                        }
+                    };
+                    properties.put(property.getName(), property);
+                } else {
+                    throw new RepositoryException(
+                            "Missing jcr:primaryType property: " + node.getPath());
+                }
+                if (node.hasProperty(jcrUUID)) {
+                    Property property = node.getProperty(jcrUUID);
+                    properties.put(property.getName(), property);
+                }
+                return properties;
+            }
+        }
+
+        // standard behaviour: return all properties
+        PropertyIterator propIter = node.getProperties();
+        while (propIter.hasNext()) {
+            Property property = propIter.nextProperty();
+            properties.put(property.getName(), property);
+        }
+        return properties;
     }
 
     /**

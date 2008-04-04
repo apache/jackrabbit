@@ -159,6 +159,12 @@ public class WorkspaceImporter implements Importer {
                 refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
+            // if existing node is shareable, then instead of failing, create
+            // new node and share with existing
+            if (conflicting.isShareable()) {
+                itemOps.clone(conflicting, parent, nodeInfo.getName());
+                return null;
+            }
             String msg = "a node with uuid " + nodeInfo.getId()
                     + " already exists!";
             log.debug(msg);
@@ -468,6 +474,13 @@ public class WorkspaceImporter implements Importer {
                         NodeState conflicting = itemOps.getNodeState(id);
                         // resolve uuid conflict
                         node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                        if (node == null) {
+                            // no new node has been created, so skip this node
+                            parents.push(null); // push null onto stack for skipped node
+                            succeeded = true;
+                            log.debug("skipping existing node: " + nodeName);
+                            return;
+                        }
                     } catch (ItemNotFoundException e) {
                         // create new with given uuid
                         NodeDef def = itemOps.findApplicableNodeDefinition(
@@ -493,7 +506,6 @@ public class WorkspaceImporter implements Importer {
             }
 
             // process properties
-
             Iterator iter = propInfos.iterator();
             while (iter.hasNext()) {
                 PropInfo pi = (PropInfo) iter.next();

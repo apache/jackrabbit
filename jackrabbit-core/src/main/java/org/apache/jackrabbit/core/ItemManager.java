@@ -92,12 +92,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * A cache for item instances created by this <code>ItemManager</code>
      */
     private final Map itemCache;
-    
+
     /**
      * Shareable node cache.
      */
     private final ShareableNodesCache shareableNodesCache;
-    
+
     /**
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
@@ -120,7 +120,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // setup item cache with weak references to items
         itemCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
         itemStateProvider.addListener(this);
-        
+
         // setup shareable nodes cache
         shareableNodesCache = new ShareableNodesCache();
     }
@@ -411,8 +411,12 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     /**
-     * Returns a shareble node with a given id and parent id.
-     * @param id
+     * Returns a node with a given id and parent id. If the indicated node is
+     * shareable, there might be multiple nodes associated with the same id,
+     * but only one node with the given parent id.
+     *
+     * @param id node id
+     * @param
      * @return
      * @throws RepositoryException
      */
@@ -420,17 +424,24 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.sanityCheck();
-        
+
         // check shareable nodes
         NodeImpl node = shareableNodesCache.retrieve(id, parentId);
         if (node != null) {
             return node;
         }
-        
+
         node = (NodeImpl) getItem(id);
         if (!node.getParentId().equals(parentId)) {
-            node = new NodeImpl(node, parentId);
-            shareableNodesCache.cache(node);
+            // verify that parent actually appears in the shared set
+            if (!node.hasSharedParent(parentId)) {
+                String msg = "Node with id '" + id
+                        + "' does not have shared parent with id: " + parentId;
+                throw new ItemNotFoundException(msg);
+            }
+
+            node = new NodeImpl(node, parentId, new ItemLifeCycleListener[] { this });
+            node.notifyCreated();
         }
         return node;
     }
@@ -522,7 +533,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             }
         }
 
-        return new LazyItemIterator(this, childIds);
+        return new LazyItemIterator(this, childIds, parentId);
     }
 
     /**
@@ -624,18 +635,21 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // we want to be informed on life cycle changes of the new node object
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
+        NodeImpl node = null;
 
         // check special nodes
         if (state.getNodeTypeName().equals(NameConstants.NT_VERSION)) {
-            return createVersionInstance(id, state, def, listeners);
+            node = createVersionInstance(id, state, def, listeners);
 
         } else if (state.getNodeTypeName().equals(NameConstants.NT_VERSIONHISTORY)) {
-            return createVersionHistoryInstance(id, state, def, listeners);
+            node = createVersionHistoryInstance(id, state, def, listeners);
 
         } else {
             // create node object
-            return new NodeImpl(this, session, id, state, def, listeners);
+            node = new NodeImpl(this, session, id, state, def, listeners);
         }
+        node.notifyCreated();
+        return node;
     }
 
     NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
@@ -651,8 +665,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
         // create property object
-        return new PropertyImpl(
+        PropertyImpl property = new PropertyImpl(
                 this, session, state.getPropertyId(), state, def, listeners);
+        property.notifyCreated();
+        return property;
     }
 
     PropertyImpl createPropertyInstance(PropertyState state)
@@ -737,13 +753,15 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * Removes a cache entry for a specific item.
      *
      * @param id id of the item to remove from the cache
+     * @return <code>true</code> if the item was contained in this cache,
+     *         <code>false</code> otherwise.
      */
-    private void evictItem(ItemId id) {
+    private boolean evictItem(ItemId id) {
         if (log.isDebugEnabled()) {
             log.debug("removing item " + id + " from cache");
         }
         synchronized (itemCache) {
-            itemCache.remove(id);
+            return itemCache.remove(id) != null;
         }
     }
 
@@ -901,15 +919,17 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             item.stateDiscarded(discarded);
         }
     }
-    
+
     /**
-     * Invoked by a <code>NodeImpl</code> when it is has become transient
-     * and has therefore replaced its state. Will inform all other nodes
-     * in the shareable set about this change.
+     * Invoked by a shareable <code>NodeImpl</code> when it is has become
+     * transient and has therefore replaced its state. Will inform all other
+     * nodes in the shareable set about this change.
+     *
+     * @param node node that has changed its underlying state
      */
     public void becameTransient(NodeImpl node) {
         NodeState state = (NodeState) node.getItemState();
-        
+
         NodeImpl n = (NodeImpl) retrieveItem(node.getId());
         if (n != null && n != node) {
             n.stateReplaced(state);
@@ -918,41 +938,49 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     /**
-     * Invoked by a <code>NodeImpl</code> when it is has become transient
-     * and has therefore replaced its state. Will inform all other nodes
-     * in the shareable set about this change.
+     * Invoked by a shareable <code>NodeImpl</code> when it is has become
+     * persistent and has therefore replaced its state. Will inform all other
+     * nodes in the shareable set about this change.
+     *
+     * @param node node that has changed its underlying state
      */
     public void persisted(NodeImpl node) {
+        // item has possibly become shareable on this call: move it
+        // from the main cache to the cache of shareable nodes
+        if (evictItem(node.getNodeId())) {
+            shareableNodesCache.cache(node);
+        }
+
         NodeState state = (NodeState) node.getItemState();
-        
+
         NodeImpl n = (NodeImpl) retrieveItem(node.getId());
         if (n != null && n != node) {
             n.stateReplaced(state);
         }
         shareableNodesCache.stateReplaced(node);
     }
-    
+
     /**
      * Cache of shareable nodes.
      */
     class ShareableNodesCache {
-        
+
         /**
          * This cache is based on a reference map, that maps an item id to a map,
          * which again maps a (hard-ref) parent id to a (weak-ref) shareable node.
          */
         private final ReferenceMap cache;
-        
+
         /**
          * Create a new instance of this class.
          */
         public ShareableNodesCache() {
             cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
         }
-        
+
         /**
          * Clear cache.
-         * 
+         *
          * @see ReferenceMap#clear()
          */
         public void clear() {
@@ -961,7 +989,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
 
         /**
          * Return the first available node that maps to the given id.
-         * 
+         *
          * @param id node id
          * @return node or <code>null</code>
          */
@@ -981,7 +1009,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
 
         /**
          * Return the node with the given id and parent id.
-         * 
+         *
          * @param id node id
          * @param parentId parent id
          * @return node or <code>null</code>
@@ -993,10 +1021,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             }
             return null;
         }
-        
+
         /**
          * Cache some node.
-         * 
+         *
          * @param node node to cache
          */
         public synchronized void cache(NodeImpl node) {
@@ -1010,10 +1038,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
                 log.warn("overwriting cached item: " + old);
             }
         }
-        
+
         /**
          * Evict some node from the cache.
-         * 
+         *
          * @param node node to evict
          */
         public synchronized void evict(NodeImpl node) {
@@ -1022,10 +1050,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
                 map.remove(node.getParentId());
             }
         }
-        
+
         /**
          * Evict all nodes with a given node id from the cache.
-         * 
+         *
          * @param id node id to evict
          */
         public synchronized void evictAll(NodeId id) {
@@ -1035,7 +1063,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         /**
          * Replace the state of all nodes that are in the same shared set
          * as the given node.
-         * 
+         *
          * @param node node in shared set.
          */
         public synchronized void stateReplaced(NodeImpl node) {
