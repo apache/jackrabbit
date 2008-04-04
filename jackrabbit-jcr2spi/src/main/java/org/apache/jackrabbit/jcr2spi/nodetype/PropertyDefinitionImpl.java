@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -118,4 +119,5 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
         return ((QPropertyDefinition) itemDef).isMultiple();
     }
 }
+
 
