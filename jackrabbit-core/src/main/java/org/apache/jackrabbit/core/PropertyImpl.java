@@ -174,6 +174,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.STRING:
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
+            case PropertyType.DATE:
+            case PropertyType.REFERENCE:
+            case PropertyType.BOOLEAN:
                 return value.toString().length();
 
             case PropertyType.NAME:
