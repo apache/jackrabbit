@@ -343,6 +343,11 @@ public class NodeIndexer {
             default:
                 throw new IllegalArgumentException("illegal internal value type");
         }
+
+        // add length
+        if (indexFormatVersion.getVersion() >= IndexFormatVersion.V3.getVersion()) {
+            addLength(doc, fieldName, value);
+        }
     }
 
     /**
@@ -440,7 +445,8 @@ public class NodeIndexer {
      * @param internalValue The value for the field to add to the document.
      */
     protected void addBooleanValue(Document doc, String fieldName, Object internalValue) {
-        doc.add(createFieldWithoutNorms(fieldName, internalValue.toString(), false));
+        doc.add(createFieldWithoutNorms(fieldName, internalValue.toString(),
+                PropertyType.BOOLEAN));
     }
 
     /**
@@ -449,16 +455,27 @@ public class NodeIndexer {
      *
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
-     * @param store         <code>true</code> if the value should be stored,
-     *                      <code>false</code> otherwise
+     * @param propertyType  the property type.
      */
     protected Field createFieldWithoutNorms(String fieldName,
-            String internalValue, boolean store) {
-        Field field = new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, internalValue),
-                store ? Field.Store.YES : Field.Store.NO, Field.Index.NO_NORMS,
-                Field.TermVector.NO);
-        return field;
+                                            String internalValue,
+                                            int propertyType) {
+        if (indexFormatVersion.getVersion()
+                >= IndexFormatVersion.V3.getVersion()) {
+            Field field = new Field(FieldNames.PROPERTIES,
+                    new SingletonTokenStream(
+                            FieldNames.createNamedValue(fieldName, internalValue),
+                            propertyType)
+                    );
+            field.setOmitNorms(true);
+            return field;
+        } else {
+            Field field = new Field(FieldNames.PROPERTIES,
+                    FieldNames.createNamedValue(fieldName, internalValue),
+                    Field.Store.NO, Field.Index.NO_NORMS,
+                    Field.TermVector.NO);
+            return field;
+        }
     }
 
     /**
@@ -476,7 +493,8 @@ public class NodeIndexer {
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
         Calendar value = (Calendar) internalValue;
         long millis = value.getTimeInMillis();
-        doc.add(createFieldWithoutNorms(fieldName, DateField.timeToString(millis), false));
+        doc.add(createFieldWithoutNorms(fieldName, DateField.timeToString(millis),
+                PropertyType.DATE));
     }
 
     /**
@@ -490,7 +508,8 @@ public class NodeIndexer {
      */
     protected void addDoubleValue(Document doc, String fieldName, Object internalValue) {
         double doubleVal = ((Double) internalValue).doubleValue();
-        doc.add(createFieldWithoutNorms(fieldName, DoubleField.doubleToString(doubleVal), false));
+        doc.add(createFieldWithoutNorms(fieldName, DoubleField.doubleToString(doubleVal),
+                PropertyType.DOUBLE));
     }
 
     /**
@@ -504,7 +523,8 @@ public class NodeIndexer {
      */
     protected void addLongValue(Document doc, String fieldName, Object internalValue) {
         long longVal = ((Long) internalValue).longValue();
-        doc.add(createFieldWithoutNorms(fieldName, LongField.longToString(longVal), false));
+        doc.add(createFieldWithoutNorms(fieldName, LongField.longToString(longVal),
+                PropertyType.LONG));
     }
 
     /**
@@ -519,7 +539,11 @@ public class NodeIndexer {
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
         UUID value = (UUID) internalValue;
         String uuid = value.toString();
-        doc.add(createFieldWithoutNorms(fieldName, uuid, true));
+        doc.add(createFieldWithoutNorms(fieldName, uuid,
+                PropertyType.REFERENCE));
+        doc.add(new Field(FieldNames.PROPERTIES,
+                FieldNames.createNamedValue(fieldName, uuid),
+                Field.Store.YES, Field.Index.NO, Field.TermVector.NO));
     }
 
     /**
@@ -539,7 +563,8 @@ public class NodeIndexer {
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(createFieldWithoutNorms(fieldName, pathString, false));
+        doc.add(createFieldWithoutNorms(fieldName, pathString,
+                PropertyType.PATH));
     }
 
     /**
@@ -594,7 +619,8 @@ public class NodeIndexer {
 
         // simple String
         String stringValue = (String) internalValue;
-        doc.add(createFieldWithoutNorms(fieldName, stringValue, false));
+        doc.add(createFieldWithoutNorms(fieldName, stringValue,
+                PropertyType.STRING));
         if (tokenized) {
             if (stringValue.length() == 0) {
                 return;
@@ -632,7 +658,8 @@ public class NodeIndexer {
             Name qualiName = (Name) internalValue;
             String normValue = mappings.getPrefix(qualiName.getNamespaceURI())
                     + ":" + qualiName.getLocalName();
-            doc.add(createFieldWithoutNorms(fieldName, normValue, false));
+            doc.add(createFieldWithoutNorms(fieldName, normValue,
+                    PropertyType.NAME));
         } catch (NamespaceException e) {
             // will never happen
         }
@@ -745,5 +772,31 @@ public class NodeIndexer {
         } else {
             return indexingConfig.getNodeBoost(node);
         }
+    }
+
+    /**
+     * Adds a {@link FieldNames#PROPERTY_LENGTHS} field to <code>document</code>
+     * with a named length value.
+     *
+     * @param doc          the lucene document.
+     * @param propertyName the property name.
+     * @param value        the internal value.
+     */
+    protected void addLength(Document doc,
+                             String propertyName,
+                             InternalValue value) {
+        long length;
+        if (value.getType() == PropertyType.BINARY) {
+            length = value.getBLOBFileValue().getLength();
+        } else if (value.getType() == PropertyType.NAME
+                || value.getType() == PropertyType.PATH) {
+            // TODO https://jsr-283.dev.java.net/issues/show_bug.cgi?id=464
+            return;
+        } else {
+            length = value.toString().length();
+        }
+        doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
+                FieldNames.createNamedLength(propertyName, length),
+                Field.Store.NO, Field.Index.NO_NORMS));
     }
 }

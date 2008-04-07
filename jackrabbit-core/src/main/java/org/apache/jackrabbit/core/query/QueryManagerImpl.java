@@ -131,6 +131,15 @@ public class QueryManagerImpl implements QueryManager {
         return qomFactory;
     }
 
+    //------------------------< testing only >----------------------------------
+
+    /**
+     * @return the query handler implementation.
+     */
+    QueryHandler getQueryHandler() {
+        return searchMgr.getQueryHandler();
+    }
+
     //---------------------------< internal >-----------------------------------
 
     /**
