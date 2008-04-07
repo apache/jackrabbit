@@ -36,6 +36,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import javax.jcr.version.Version;
 
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -48,7 +49,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     //------------------------------------------------------ specification tests
 
     /**
-     * Verifies that Node.getIndex returns the correct index in a shareable
+     * Verify that Node.getIndex returns the correct index in a shareable
      * node (6.13).
      */
     public void testGetIndex() throws Exception {
@@ -79,7 +80,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that Node.getName returns the correct name in a shareable node
+     * Verify that Node.getName returns the correct name in a shareable node
      * (6.13).
      */
     public void testGetName() throws Exception {
@@ -109,7 +110,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that Node.getPath returns the correct path in a shareable
+     * Verify that Node.getPath returns the correct path in a shareable
      * node (6.13).
      */
     public void testGetPath() throws Exception {
@@ -230,7 +231,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks new API Node.getSharedSet() (6.13.1)
+     * Check new API Node.getSharedSet() (6.13.1)
      */
     public void testGetSharedSet() throws Exception {
         // setup parent nodes and first child
@@ -254,7 +255,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Adds the mix:shareable mixin to a node (6.13.2).
+     * Add the mix:shareable mixin to a node (6.13.2).
      */
     public void testAddMixin() throws Exception {
         // setup parent node and first child
@@ -267,7 +268,51 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks new API Node.removeShare() (6.13.4).
+     * Create a shareable node by restoring it (6.13.3).
+     */
+    public void testRestore() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // make b1 shareable
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // make a2 versionable
+        a2.addMixin("mix:versionable");
+        a2.save();
+
+        // check in version and check out again
+        Version v = a2.checkin();
+        a2.checkout();
+
+        // delete b2 and save
+        a2.getNode("b2").remove();
+        a2.save();
+
+        // verify shareable set contains one element only
+        Node[] shared = getSharedSet(b1);
+        assertEquals(1, shared.length);
+
+        // restore version
+        a2.restore(v, false);
+
+        // verify shareable set contains two elements again
+        shared = getSharedSet(b1);
+        assertEquals(2, shared.length);
+    }
+
+
+    /**
+     * Check new API Node.removeShare() (6.13.4).
      */
     public void testRemoveShare() throws Exception {
         // setup parent nodes and first child
@@ -301,7 +346,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks new API Node.removeSharedSet() (6.13.4).
+     * Check new API Node.removeSharedSet() (6.13.4).
      */
     public void testRemoveSharedSet() throws Exception {
         // setup parent nodes and first child
@@ -329,7 +374,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Invokes Node.removeSharedSet(), but saves only one of the parent nodes
+     * Invoke Node.removeSharedSet(), but save only one of the parent nodes
      * of the shared set. This doesn't need to be supported according to the
      * specification (6.13.4).
      */
@@ -362,7 +407,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that shareable nodes in the same shared set have the same
+     * Verify that shareable nodes in the same shared set have the same
      * jcr:uuid (6.13.10).
      */
     public void testSameUUID() throws Exception {
@@ -482,6 +527,64 @@ public class ShareableNodeTest extends AbstractJCRTest {
         } catch (RepositoryException e) {
             // expected
         }
+    }
+
+    /**
+     * Verify export and import of a tree containing multiple nodes in the
+     * same shared set (6.13.14). The first serialized node in that shared
+     * set is serialized in the normal fashion (with all of its properties
+     * and children), but any subsequent shared node in that shared set is
+     * serialized as a special node of type <code>nt:share</code>, which
+     * contains only the <code>jcr:uuid</code> property of the shared node
+     * and the <code>jcr:primaryType</code> property indicating the type
+     * <code>nt:share</code>.
+     */
+    public void testImportExportNtShare() throws Exception {
+        // setup parent nodes and first child
+        Node p = testRootNode.addNode("p");
+        Node a1 = p.addNode("a1");
+        Node a2 = p.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // create temp file
+        File tmpFile = File.createTempFile("test", null);
+        tmpFile.deleteOnExit();
+
+        // export system view of /p
+        OutputStream out = new FileOutputStream(tmpFile);
+        try {
+            session.exportSystemView(p.getPath(), out, false, false);
+        } finally {
+            out.close();
+        }
+
+        // delete p and save
+        p.remove();
+        testRootNode.save();
+
+        // and import again underneath test root
+        InputStream in = new FileInputStream(tmpFile);
+        try {
+            workspace.importXML(testRootNode.getPath(), in,
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        } finally {
+            in.close();
+        }
+
+        // verify shared set consists of two nodes
+        Node[] shared = getSharedSet(testRootNode.getNode("p/a1/b1"));
+        assertEquals(2, shared.length);
     }
 
     /**
@@ -715,7 +818,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that observation events are sent only once (6.13.15).
+     * Verify that observation events are sent only once (6.13.15).
      */
     public void testObservation() throws Exception {
         // setup parent nodes and first child
@@ -803,7 +906,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that a lock applies to all nodes in a shared set (6.13.16).
+     * Verify that a lock applies to all nodes in a shared set (6.13.16).
      */
     public void testLock() throws Exception {
         // setup parent nodes and first child
@@ -850,7 +953,60 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Clones a mix:shareable node to the same workspace (6.13.20). Verifies
+     * Restore a shareable node and remove an existing shareable node (6.13.19)
+     * In this case the particular shared node is removed but its descendants
+     * continue to exist below the remaining members of the shared set.
+     */
+    public void testRestoreRemoveExisting() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // make b1 shareable
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child c
+        b1.addNode("c");
+        b1.save();
+
+        // make a2 versionable
+        a2.addMixin("mix:versionable");
+        a2.save();
+
+        // check in version and check out again
+        Version v = a2.checkin();
+        a2.checkout();
+
+        // delete b2 and save
+        a2.getNode("b2").remove();
+        a2.save();
+
+        // verify shareable set contains one elements only
+        Node[] shared = getSharedSet(b1);
+        assertEquals(1, shared.length);
+
+        // restore version and remove existing (i.e. b1)
+        a2.restore(v, true);
+
+        // verify shareable set contains still one element
+        shared = getSharedSet(a2.getNode("b2"));
+        assertEquals(1, shared.length);
+
+        // verify child c still exists
+        Node[] children = toArray(a2.getNode("b2").getNodes());
+        assertEquals(1, children.length);
+    }
+
+    /**
+     * Clone a mix:shareable node to the same workspace (6.13.20). Verify
      * that cloning without mix:shareable fails.
      */
     public void testClone() throws Exception {
@@ -882,10 +1038,12 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
     /**
      * Clone a mix:shareable node to the same workspace multiple times, remove
-     * all parents and save.
+     * all parents and save. Exposes an error that occurred when having more
+     * than two members in a shared set and parents were removed in the same
+     * order they were created.
      */
     public void testCloneMultipleTimes() throws Exception {
-        int count = 10;
+        final int count = 10;
         Node[] parents = new Node[count];
 
         // setup parent nodes and first child
@@ -915,7 +1073,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that Node.isSame returns <code>true</code> for shareable nodes
+     * Verify that Node.isSame returns <code>true</code> for shareable nodes
      * in the same shared set (6.13.21)
      */
     public void testIsSame() throws Exception {
@@ -945,7 +1103,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Removes mix:shareable from a shareable node. This is unsupported in
+     * Remove mix:shareable from a shareable node. This is unsupported in
      * Jackrabbit (6.13.22).
      */
     public void testRemoveMixin() throws Exception {
@@ -969,7 +1127,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Verifies that a descendant of a shareable node appears once in the
+     * Verify that a descendant of a shareable node appears once in the
      * result set (6.13.23)
      */
     public void testSearch() throws Exception {
@@ -1009,7 +1167,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     //--------------------------------------------------------- limitation tests
 
     /**
-     * Clones a mix:shareable node to the same workspace, with the same
+     * Clone a mix:shareable node to the same workspace, with the same
      * parent. This is unsupported in Jackrabbit.
      */
     public void testCloneToSameParent() throws Exception {
@@ -1035,7 +1193,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Moves a node in a shared set. This is unsupported in Jackrabbit.
+     * Move a node in a shared set. This is unsupported in Jackrabbit.
      */
     public void testMoveShareableNode() throws Exception {
         // setup parent nodes and first childs
@@ -1061,7 +1219,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Transiently moves a node in a shared set. This is unsupported in
+     * Transiently move a node in a shared set. This is unsupported in
      * Jackrabbit.
      */
     public void testTransientMoveShareableNode() throws Exception {
@@ -1096,7 +1254,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
      * @param n node
      * @return array of nodes in shared set
      */
-    private Node[] getSharedSet(Node n) throws RepositoryException {
+    private static Node[] getSharedSet(Node n) throws RepositoryException {
         return toArray(((NodeImpl) n).getSharedSet());
     }
 

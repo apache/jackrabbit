@@ -1738,7 +1738,15 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see ItemImpl#getQName()
      */
     public Name getQName() throws RepositoryException {
-        return session.getHierarchyManager().getName(id);
+        HierarchyManager hierMgr = session.getHierarchyManager();
+        Name name;
+
+        if (!isShareable()) {
+            name = hierMgr.getName(id);
+        } else {
+            name = hierMgr.getName(getNodeId(), getParentId());
+        }
+        return name;
     }
 
     /**
@@ -2033,31 +2041,12 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ConstraintViolationException(msg);
         }
 
-        // (5) verify that source is shareable
-        if (!src.isShareable()) {
-            String msg = "Source node at " + src.safeGetJCRPath() + " is not shareable.";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // (6) detect share cycle
-        NodeId srcId = src.getNodeId();
+        // (5) do clone operation
         NodeId parentId = getNodeId();
-        HierarchyManager hierMgr = session.getHierarchyManager();
-        if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
-            String msg = "This would create a share cycle.";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
+        src.addShare(parentId);
 
-        // (7) do clone operation (modify and store affected states)
-        if (!src.addShare(parentId)) {
-            String msg = "Adding a shareable node twice to the same parent is not supported.";
-            log.debug(msg);
-            throw new UnsupportedRepositoryOperationException(msg);
-        }
-
-        // (8) modify the state of 'this', i.e. the parent node
+        // (6) modify the state of 'this', i.e. the parent node
+        NodeId srcId = src.getNodeId();
         thisState = (NodeState) getOrCreateTransientItemState();
         // add new child node entry
         thisState.addChildNodeEntry(name, srcId);
@@ -3223,24 +3212,44 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Add a parent to the shared set. This method does not check whether
-     * adding this parent would create a share cycle (and should therefore
-     * strictly be used internally), it does, however detect whether the given
-     * parent is already contained in the shared set.
-     *
-     * @return <code>true</code> if adding succeeded;
-     *         <code>false</code> otherwise.
+     * Add a parent to the shared set. This method checks first, whether:
+     * <ul>
+     * <li>this node is shareable</li>
+     * <li>adding this parent would create a share cycle</li>
+     * <li>whether this parent is already contained in the shared set</li>
+     * </ul>
+     * @param parentId parent to add to the shared set
+     * @throws RepositoryException if an error occurs
      */
-    protected boolean addShare(NodeId parentId) throws RepositoryException {
-        // quickly verify whether the share is already contained before
-        // possibly changing the referenced state
-        NodeState state = (NodeState) this.state;
-        if (state.containsShare(parentId)) {
-            return false;
+    protected void addShare(NodeId parentId) throws RepositoryException {
+        // verify that we're shareable
+        if (!isShareable()) {
+            String msg = "Node at " + safeGetJCRPath() + " is not shareable.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
         }
-        // now make modifications
-        state = (NodeState) getOrCreateTransientItemState();
-        return state.addShare(parentId);
+
+        // detect share cycle
+        NodeId srcId = getNodeId();
+        HierarchyManager hierMgr = session.getHierarchyManager();
+        if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
+            String msg = "This would create a share cycle.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        // quickly verify whether the share is already contained before creating
+        // a transient state in vain
+        NodeState state = (NodeState) this.state;
+        if (!state.containsShare(parentId)) {
+            state = (NodeState) getOrCreateTransientItemState();
+            if (state.addShare(parentId)) {
+                return;
+            }
+        }
+        String msg = "Adding a shareable node twice to the same parent is not supported.";
+        log.debug(msg);
+        throw new UnsupportedRepositoryOperationException(msg);
     }
 
     /**
@@ -4327,6 +4336,9 @@ public class NodeImpl extends ItemImpl implements Node {
                         // check if one of this restoretrees node
                         if (removeExisting) {
                             existing.remove();
+                        } else if (existing.isShareable()) {
+                            // if existing node is shareable, then clone it
+                            restoredChild = clone(existing, f.getName());
                         } else {
                             // since we delete the OPV=Copy children beforehand, all
                             // found nodes must be outside of this tree
@@ -4337,8 +4349,10 @@ public class NodeImpl extends ItemImpl implements Node {
                         // ignore, item with uuid does not exist
                     }
                 }
-                restoredChild = addNode(f.getName(), f);
-                restoredChild.restoreFrozenState(f, vsel, restored, removeExisting);
+                if (restoredChild == null) {
+                    restoredChild = addNode(f.getName(), f);
+                    restoredChild.restoreFrozenState(f, vsel, restored, removeExisting);
+                }
 
             } else if (child instanceof InternalFrozenVersionHistory) {
                 InternalFrozenVersionHistory f = (InternalFrozenVersionHistory) child;

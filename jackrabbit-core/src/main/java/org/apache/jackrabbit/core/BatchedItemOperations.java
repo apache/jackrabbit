@@ -1170,6 +1170,11 @@ public class BatchedItemOperations extends ItemValidator {
 
         EffectiveNodeType ent = getEffectiveNodeType(node);
 
+        // check shareable
+        if (ent.includesNodeType(NameConstants.MIX_SHAREABLE)) {
+            node.addShare(parent.getNodeId());
+        }
+
         if (!node.getMixinTypeNames().isEmpty()) {
             // create jcr:mixinTypes property
             PropDef pd = ent.getApplicablePropertyDef(NameConstants.JCR_MIXINTYPES,
