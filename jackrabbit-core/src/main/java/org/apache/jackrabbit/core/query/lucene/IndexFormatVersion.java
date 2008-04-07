@@ -17,18 +17,30 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.util.Collection;
+import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermPositions;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 
 /**
- * This class indicates the lucene index format that is used. Version 1 formats
- * do not have the <code>PROPERTIES_SET</code> lucene fieldname and queries
- * assuming this format also run on newer versions. When the index is recreated
- * from scratch, the Version 2 format will automatically be used. This format is
- * faster certain queries, so if the index does not contain
- * <code>PROPERTIES_SET</code> fieldname and re-indexing is an option, this is
- * advisable. Existing indexes are not automatically upgraded to a newer
- * version!
+ * This class indicates the lucene index format that is used.
+ * <ul>
+ * <li><b>Version 1</b> is the initial index format, which is used for Jackrabbit
+ * releases 1.0 to 1.3.x. Unless a re-index happens upgraded Jackrabbit
+ * instances will still use this version.</li>
+ * <li><b>Version 2</b> is the index format introduced with Jackrabbit 1.4.x. It
+ * adds a <code>PROPERTIES_SET</code> field which contains all property names of
+ * a node. This speeds up queries that check the existence of a property.</li>
+ * <li><b>Version 3</b> is the index format introduced with Jackrabbit 1.5.x. It
+ * adds support for length queries using the newly added
+ * <code>PROPERTY_LENGTHS</code> field. Furthermore a Payload is added to
+ * <code>PROPERTIES</code> fields to indicate the property type.</li>
+ * </ul>
+ * Please note that existing indexes are not automatically upgraded to a newer
+ * version! If you want to take advantage of a certain 'feature' in an index
+ * format version you need to re-index the repository.
  */
 public class IndexFormatVersion {
 
@@ -38,9 +50,14 @@ public class IndexFormatVersion {
     public static final IndexFormatVersion V1 = new IndexFormatVersion(1);
 
     /**
-     * V2 is the index format for Jackrabbit releases >= 1.4
+     * V2 is the index format for Jackrabbit releases 1.4.x
      */
     public static final IndexFormatVersion V2 = new IndexFormatVersion(2);
+
+    /**
+     * V3 is the index format for Jackrabbit releases >= 1.5
+     */
+    public static final IndexFormatVersion V3 = new IndexFormatVersion(3);
 
     /**
      * The used version of the index format
@@ -75,13 +92,44 @@ public class IndexFormatVersion {
      * @return the index format version of the index used by the given
      * index reader.
      */
-    public static IndexFormatVersion getVersion(IndexReader indexReader) {
-        Collection fields = indexReader.getFieldNames(IndexReader.FieldOption.ALL);
-        if (fields.contains(FieldNames.PROPERTIES_SET)
-                || indexReader.numDocs() == 0) {
+    public static IndexFormatVersion getVersion(IndexReader indexReader)
+            throws IOException {
+        Collection fields = indexReader.getFieldNames(
+                IndexReader.FieldOption.ALL);
+        if (hasPayloads(indexReader) || indexReader.numDocs() == 0) {
+            return IndexFormatVersion.V3;
+        } else if (fields.contains(FieldNames.PROPERTIES_SET)) {
             return IndexFormatVersion.V2;
         } else {
             return IndexFormatVersion.V1;
         }
+    }
+
+    /**
+     * @param reader the index reader.
+     * @return <code>true</code> if the {@link FieldNames#PROPERTIES} fields
+     *         contain payloads; <code>false</code> otherwise.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    public static boolean hasPayloads(IndexReader reader) throws IOException {
+        TermPositions tp = reader.termPositions();
+        try {
+            TermEnum terms = reader.terms(
+                    new Term(FieldNames.PROPERTIES, ""));
+            try {
+                if (terms.next() && terms.term().field() == FieldNames.PROPERTIES) {
+                    tp.seek(terms);
+                    if (tp.next()) {
+                        tp.nextPosition();
+                        return tp.isPayloadAvailable();
+                    }
+                }
+            } finally {
+                terms.close();
+            }
+        } finally {
+            tp.close();
+        }
+        return false;
     }
 }

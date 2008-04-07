@@ -83,6 +83,25 @@ public class FieldNames {
     public static final String AGGREGATED_NODE_UUID = "_:AGGR_NODE_UUID".intern();
 
     /**
+     * Name of the field that contains the lengths of properties. The lengths
+     * are encoded using {@link #createNamedLength(String, long)}.
+     */
+    public static final String PROPERTY_LENGTHS = "_:PROPERTY_LENGTHS".intern();
+
+    /**
+     * Returns a named length for use as a term in the index. The named length
+     * is of the form: <code>propertyName</code> + '[' +
+     * {@link LongField#longToString(long)}.
+     *
+     * @param propertyName a property name.
+     * @param length the length of the property value.
+     * @return the named length string for use as a term in the index.
+     */
+    public static String createNamedLength(String propertyName, long length) {
+        return propertyName + '[' + LongField.longToString(length);
+    }
+
+    /**
      * Returns a named value for use as a term in the index. The named
      * value is of the form: <code>fieldName</code> + '\uFFFF' + value
      *

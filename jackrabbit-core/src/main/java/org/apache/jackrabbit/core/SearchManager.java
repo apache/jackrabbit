@@ -338,6 +338,15 @@ public class SearchManager implements SynchronousEventListener {
 
     }
 
+    //------------------------< for testing only >------------------------------
+
+    /**
+     * @return the query handler implementation.
+     */
+    public QueryHandler getQueryHandler() {
+        return handler;
+    }
+
     //---------------< EventListener interface >--------------------------------
 
     public void onEvent(EventIterator events) {

@@ -91,7 +91,7 @@ import java.util.Collections;
  * Implements a query builder that takes an JQOM and creates a lucene {@link
  * org.apache.lucene.search.Query} tree that can be executed on an index.
  */
-public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
+public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModelConstants {
 
     /**
      * Logger for this class
@@ -400,9 +400,59 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
         throw new UnsupportedOperationException("not yet implemented");
     }
 
-    public Object visit(LengthImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+    public Object visit(LengthImpl node, Object data) throws Exception {
+        if (version.getVersion() < IndexFormatVersion.V3.getVersion()) {
+            throw new InvalidQueryException("Length operator is only " +
+                    "available with index version >= 3. Please re-index " +
+                    "repository and execute query again.");
+        }
+        PropertyValueImpl pv = (PropertyValueImpl) node.getPropertyValue();
+        String propName = npResolver.getJCRName(pv.getPropertyQName());
+        if (data instanceof ComparisonImpl) {
+            ComparisonImpl comp = (ComparisonImpl) data;
+            int operator = comp.getOperator();
+            Value v = (Value) ((StaticOperandImpl) comp.getOperand2()).accept(this, data);
+            String namedLength = FieldNames.createNamedLength(propName, v.getLong());
+
+            switch (operator) {
+                case OPERATOR_EQUAL_TO:
+                    return new TermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength));
+                case OPERATOR_GREATER_THAN:
+                    Term lower = new Term(FieldNames.PROPERTY_LENGTHS, namedLength);
+                    Term upper = new Term(FieldNames.PROPERTY_LENGTHS,
+                            FieldNames.createNamedLength(propName, Long.MAX_VALUE));
+                    return new RangeQuery(lower, upper, false);
+                case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.PROPERTY_LENGTHS, namedLength);
+                    upper = new Term(FieldNames.PROPERTY_LENGTHS,
+                            FieldNames.createNamedLength(propName, Long.MAX_VALUE));
+                    return new RangeQuery(lower, upper, true);
+                case OPERATOR_LESS_THAN:
+                    lower = new Term(FieldNames.PROPERTY_LENGTHS,
+                            FieldNames.createNamedLength(propName, -1));
+                    upper = new Term(FieldNames.PROPERTY_LENGTHS, namedLength);
+                    return new RangeQuery(lower, upper, false);
+                case OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                    lower = new Term(FieldNames.PROPERTY_LENGTHS,
+                            FieldNames.createNamedLength(propName, -1));
+                    upper = new Term(FieldNames.PROPERTY_LENGTHS, namedLength);
+                    return new RangeQuery(lower, upper, true);
+                case OPERATOR_LIKE:
+                    throw new InvalidQueryException("Like operator cannot be used with length operand");
+                case OPERATOR_NOT_EQUAL_TO:
+                    Query all = Util.createMatchAllQuery(propName, version);
+                    BooleanQuery b = new BooleanQuery();
+                    b.add(all, BooleanClause.Occur.SHOULD);
+                    b.add(new TermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength)),
+                            BooleanClause.Occur.MUST_NOT);
+                    return b;
+                default:
+                    throw new InvalidQueryException(
+                            "Unknown operator " + operator);
+            }
+        } else {
+            throw new UnsupportedOperationException("not yet implemented");
+        }
     }
 
     /**
@@ -452,34 +502,34 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             String prefix = stringValue.substring(0, stringValue.indexOf(':') + 1);
 
             switch (operator) {
-                case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
+                case OPERATOR_EQUAL_TO:
                     return new TermQuery(new Term(FieldNames.LABEL, stringValue));
-                case QueryObjectModelConstants.OPERATOR_GREATER_THAN:
+                case OPERATOR_GREATER_THAN:
                     Term lower = new Term(FieldNames.LABEL, stringValue);
                     Term upper = new Term(FieldNames.LABEL,
                             prefix + "\uFFFF");
                     return new RangeQuery(lower, upper, false);
-                case QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
                     lower = new Term(FieldNames.LABEL, stringValue);
                     upper = new Term(FieldNames.LABEL,
                             prefix + "\uFFFF");
                     return new RangeQuery(lower, upper, true);
-                case QueryObjectModelConstants.OPERATOR_LESS_THAN:
+                case OPERATOR_LESS_THAN:
                     lower = new Term(FieldNames.LABEL, prefix);
                     upper = new Term(FieldNames.LABEL, stringValue);
                     return new RangeQuery(lower, upper, false);
-                case QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                case OPERATOR_LESS_THAN_OR_EQUAL_TO:
                     lower = new Term(FieldNames.LABEL, prefix);
                     upper = new Term(FieldNames.LABEL, stringValue);
                     return new RangeQuery(lower, upper, true);
-                case QueryObjectModelConstants.OPERATOR_LIKE:
+                case OPERATOR_LIKE:
                     if (stringValue.equals("%")) {
                         return new MatchAllDocsQuery();
                     } else {
                         return new WildcardQuery(FieldNames.LABEL,
                                 null, stringValue);
                     }
-                case QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO:
+                case OPERATOR_NOT_EQUAL_TO:
                     MatchAllDocsQuery all = new MatchAllDocsQuery();
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
@@ -529,37 +579,37 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             String propName = npResolver.getJCRName(node.getPropertyQName());
             String text = FieldNames.createNamedValue(propName, stringValue);
             switch (operator) {
-                case QueryObjectModelConstants.OPERATOR_EQUAL_TO:
+                case OPERATOR_EQUAL_TO:
                     return new TermQuery(new Term(FieldNames.PROPERTIES, text));
-                case QueryObjectModelConstants.OPERATOR_GREATER_THAN:
+                case OPERATOR_GREATER_THAN:
                     Term lower = new Term(FieldNames.PROPERTIES, text);
                     Term upper = new Term(FieldNames.PROPERTIES,
                             FieldNames.createNamedValue(propName, "\uFFFF"));
                     return new RangeQuery(lower, upper, false);
-                case QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
                     lower = new Term(FieldNames.PROPERTIES, text);
                     upper = new Term(FieldNames.PROPERTIES,
                             FieldNames.createNamedValue(propName, "\uFFFF"));
                     return new RangeQuery(lower, upper, true);
-                case QueryObjectModelConstants.OPERATOR_LESS_THAN:
+                case OPERATOR_LESS_THAN:
                     lower = new Term(FieldNames.PROPERTIES,
                             FieldNames.createNamedValue(propName, ""));
                     upper = new Term(FieldNames.PROPERTIES, text);
                     return new RangeQuery(lower, upper, false);
-                case QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                case OPERATOR_LESS_THAN_OR_EQUAL_TO:
                     lower = new Term(FieldNames.PROPERTIES,
                             FieldNames.createNamedValue(propName, ""));
                     upper = new Term(FieldNames.PROPERTIES, text);
                     return new RangeQuery(lower, upper, true);
-                case QueryObjectModelConstants.OPERATOR_LIKE:
+                case OPERATOR_LIKE:
                     if (stringValue.equals("%")) {
-                        return new MatchAllQuery(propName);
+                        return Util.createMatchAllQuery(propName, version);
                     } else {
                         return new WildcardQuery(FieldNames.PROPERTIES,
                                 propName, stringValue);
                     }
-                case QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO:
-                    MatchAllQuery all = new MatchAllQuery(propName);
+                case OPERATOR_NOT_EQUAL_TO:
+                    Query all = Util.createMatchAllQuery(propName, version);
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
                     b.add(new TermQuery(new Term(FieldNames.PROPERTIES, text)),
@@ -721,6 +771,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
             } else {
                 return new CaseTermQuery.Lower(query.getTerm());
             }
+        } else if (query.getTerm().field() == FieldNames.PROPERTIES_SET) {
+            return query;
         } else {
             throw new InvalidQueryException(
                     "Upper/LowerCase not supported on field "
