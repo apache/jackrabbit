@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.state;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
@@ -377,7 +378,7 @@ public class SessionItemStateManager
      * Returns an iterator over those transient item state instances that are
      * direct or indirect descendants of the item state with the given
      * <code>parentId</code>. The transient item state instance with the given
-     * <code>parentId</code> itself (if there is such) will not be included.
+     * <code>parentId</code> itself (if there is such)                                                                            not be included.
      * <p/>
      * The instances are returned in depth-first tree traversal order.
      *
@@ -407,7 +408,7 @@ public class SessionItemStateManager
                 // determine relative depth: > 0 means it's a descendant
                 int depth;
                 try {
-                    depth = hierMgr.getRelativeDepth(parentId, state.getId());
+                    depth = hierMgr.getShareRelativeDepth(parentId, state.getId());
                 } catch (ItemNotFoundException infe) {
                     /**
                      * one of the parents of the specified item has been
@@ -520,7 +521,8 @@ public class SessionItemStateManager
             while (iter.hasNext()) {
                 ItemState state = (ItemState) iter.next();
                 // determine relative depth: > 0 means it's a descendant
-                int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
+                //int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
+                int depth = zombieHierMgr.getShareRelativeDepth(parentId, state.getId());
                 if (depth < 1) {
                     // not a descendant
                     continue;

@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -213,6 +218,33 @@ public class HierarchyManagerImpl implements HierarchyManager {
      */
     protected NodeId getParentId(ItemState state) {
         return state.getParentId();
+    }
+
+    /**
+     * Return all parents of a node. A shareable node has possibly more than
+     * one parent.
+     *
+     * @param state item state
+     * @return set of parent <code>NodeId</code>s. If state has no parent,
+     *         array has length <code>0</code>.
+     */
+    protected Set getParentIds(ItemState state) {
+        if (state.isNode()) {
+            // if this is a node, quickly check whether it is shareable and
+            // whether it contains more than one parent
+            NodeState ns = (NodeState) state;
+            Set s = ns.getSharedSet();
+            if (s.size() > 1) {
+                return s;
+            }
+        }
+        NodeId parentId = getParentId(state);
+        if (parentId != null) {
+            LinkedHashSet s = new LinkedHashSet();
+            s.add(parentId);
+            return s;
+        }
+        return Collections.EMPTY_SET;
     }
 
     /**
@@ -453,7 +485,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throws ItemNotFoundException, RepositoryException {
 
         NodeState parentState;
-        
+
         try {
             parentState = (NodeState) getItemState(parentId);
         } catch (NoSuchItemStateException nsis) {
@@ -475,7 +507,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         return entry.getName();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -574,5 +606,93 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new RepositoryException(msg, ise);
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isShareAncestor(NodeId ancestor, NodeId descendant)
+            throws ItemNotFoundException, RepositoryException {
+        if (ancestor.equals(descendant)) {
+            // can't be ancestor of self
+            return false;
+        }
+        try {
+            ItemState state = getItemState(descendant);
+            Set parentIds = getParentIds(state);
+            while (parentIds.size() > 0) {
+                if (parentIds.contains(ancestor)) {
+                    return true;
+                }
+                Set grandparentIds = new LinkedHashSet();
+                Iterator iter = parentIds.iterator();
+                while (iter.hasNext()) {
+                    NodeId parentId = (NodeId) iter.next();
+                    grandparentIds.addAll(getParentIds(getItemState(parentId)));
+                }
+                parentIds = grandparentIds;
+            }
+            // not an ancestor
+            return false;
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to determine degree of relationship of "
+                    + ancestor + " and " + descendant;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to determine degree of relationship of "
+                    + ancestor + " and " + descendant;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getShareRelativeDepth(NodeId ancestor, ItemId descendant)
+            throws ItemNotFoundException, RepositoryException {
+
+        if (ancestor.equals(descendant)) {
+            return 0;
+        }
+        int depth = 1;
+        try {
+            ItemState state = getItemState(descendant);
+            if (state.hasOverlayedState()) {
+                state = state.getOverlayedState();
+            }
+            Set parentIds = getParentIds(state);
+            while (parentIds.size() > 0) {
+                if (parentIds.contains(ancestor)) {
+                    return depth;
+                }
+                depth++;
+                Set grandparentIds = new LinkedHashSet();
+                Iterator iter = parentIds.iterator();
+                while (iter.hasNext()) {
+                    NodeId parentId = (NodeId) iter.next();
+                    state = getItemState(parentId);
+                    if (state.hasOverlayedState()) {
+                        state = state.getOverlayedState();
+                    }
+                    grandparentIds.addAll(getParentIds(state));
+                }
+                parentIds = grandparentIds;
+            }
+            // not an ancestor
+            return -1;
+        } catch (NoSuchItemStateException nsise) {
+            String msg = "failed to determine degree of relationship of "
+                    + ancestor + " and " + descendant;
+            log.debug(msg);
+            throw new ItemNotFoundException(msg, nsise);
+        } catch (ItemStateException ise) {
+            String msg = "failed to determine degree of relationship of "
+                    + ancestor + " and " + descendant;
+            log.debug(msg);
+            throw new RepositoryException(msg, ise);
+        }
+    }
+
 }
 

@@ -1556,6 +1556,13 @@ public class SessionImpl extends AbstractSession
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
+
+        if (hierMgr.isShareAncestor(targetNode.getNodeId(), destParentNode.getNodeId())) {
+            String msg = destAbsPath + ": invalid destination path (share cycle detected)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
@@ -1645,7 +1652,7 @@ public class SessionImpl extends AbstractSession
                 log.debug(msg);
                 throw new UnsupportedRepositoryOperationException(msg);
             }
-            
+
             // do move:
             // 1. remove child node entry from old parent
             NodeState srcParentState =

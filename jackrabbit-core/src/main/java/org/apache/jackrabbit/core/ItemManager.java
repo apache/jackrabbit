@@ -434,7 +434,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         node = (NodeImpl) getItem(id);
         if (!node.getParentId().equals(parentId)) {
             // verify that parent actually appears in the shared set
-            if (!node.hasSharedParent(parentId)) {
+            if (!node.hasShareParent(parentId)) {
                 String msg = "Node with id '" + id
                         + "' does not have shared parent with id: " + parentId;
                 throw new ItemNotFoundException(msg);

@@ -93,18 +93,18 @@ public interface HierarchyManager {
      * @throws RepositoryException
      */
     Name getName(ItemId id) throws ItemNotFoundException, RepositoryException;
-    
+
     /**
      * Returns the name of the specified item, with the given parent id. If the
      * given item is not shareable, this is identical to {@link #getName(ItemId)}.
-     * 
+     *
      * @param id node id
      * @param parentId parent node id
      * @return name
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    Name getName(NodeId id, NodeId parentId) 
+    Name getName(NodeId id, NodeId parentId)
             throws ItemNotFoundException, RepositoryException;
 
     /**
@@ -154,5 +154,52 @@ public interface HierarchyManager {
      * @throws RepositoryException   if another error occurs
      */
     boolean isAncestor(NodeId nodeId, ItemId itemId)
+            throws ItemNotFoundException, RepositoryException;
+
+    //------------------------------------------- operation with shareable nodes
+
+    /**
+     * Determines whether the node with the specified <code>ancestor</code>
+     * is a share ancestor of the item denoted by the given <code>descendant</code>.
+     * This is <code>true</code> for two nodes <code>A</code>, <code>B</code>
+     * if either:
+     * <ul>
+     * <li><code>A</code> is a (proper) ancestor of <code>B</code></li>
+     * <li>there is a non-empty sequence of nodes <code>N<sub>1</sub></code>,...
+     * ,<code>N<sub>k</sub></code> such that <code>A</code>=
+     * <code>N<sub>1</sub></code> and <code>B</code>=<code>N<sub>k</sub></code>
+     * and <code>N<sub>i</sub></code> is the parent or a share-parent of
+     * <code>N<sub>i+1</sub></code> (for every <code>i</code> in <code>1</code>
+     * ...<code>k-1</code>.</li>
+     * </ul>
+     *
+     * @param nodeId node id
+     * @param itemId item id
+     * @return <code>true</code> if the node denoted by <code>ancestor</code>
+     *         is a share ancestor of the item denoted by <code>descendant</code>,
+     *         <code>false</code> otherwise
+     * @throws ItemNotFoundException if any of the specified id's does not
+     *                               denote an existing item.
+     * @throws RepositoryException   if another error occurs
+     */
+    boolean isShareAncestor(NodeId ancestor, NodeId descendant)
+            throws ItemNotFoundException, RepositoryException;
+
+    /**
+     * Returns the depth of the specified share-descendant relative to the given
+     * share-ancestor. If <code>ancestor</code> and <code>descendant</code>
+     * denote the same item, <code>0</code> is returned. If <code>ancestor</code>
+     * does not denote an share-ancestor <code>-1</code> is returned.
+     *
+     * @param ancestor ancestor id
+     * @param descendant descendant id
+     * @return the relative depth; <code>-1</code> if <code>ancestor</code> does
+     *         not denote a share-ancestor of the item denoted by <code>descendant</code>
+     *         (or itself).
+     * @throws ItemNotFoundException if either of the specified id's does not
+     *                               denote an existing item.
+     * @throws RepositoryException   if another error occurs
+     */
+    int getShareRelativeDepth(NodeId ancestorId, ItemId descendantId)
             throws ItemNotFoundException, RepositoryException;
 }

@@ -298,14 +298,14 @@ public class ShareableNodeTest extends AbstractJCRTest {
         a2.getNode("b2").remove();
         a2.save();
 
-        // verify shareable set contains one element only
+        // verify shared set contains one element only
         Node[] shared = getSharedSet(b1);
         assertEquals(1, shared.length);
 
         // restore version
         a2.restore(v, false);
 
-        // verify shareable set contains two elements again
+        // verify shared set contains again two elements
         shared = getSharedSet(b1);
         assertEquals(2, shared.length);
     }
@@ -496,18 +496,27 @@ public class ShareableNodeTest extends AbstractJCRTest {
         workspace.copy(s.getPath(), testRootNode.getPath() + "/d");
 
         // verify source contains shared set with 2 entries
-        Node[] shared = getSharedSet(b1);
-        assertEquals(2, shared.length);
+        Node[] shared1 = getSharedSet(b1);
+        assertEquals(2, shared1.length);
 
         // verify destination contains shared set with 2 entries
-        shared = getSharedSet(testRootNode.getNode("d/a1/b1"));
-        assertEquals(2, shared.length);
+        Node[] shared2 = getSharedSet(testRootNode.getNode("d/a1/b1"));
+        assertEquals(2, shared2.length);
+
+        // verify elements in source shared set and destination shared set
+        // don't have the same UUID
+        String srcUUID = shared1[0].getUUID();
+        String destUUID = shared2[0].getUUID();
+        assertFalse(
+                "Source and destination of a copy must not have the same UUID",
+                srcUUID.equals(destUUID));
     }
 
     /**
-     * Verify that a share cycle is detected (6.13.13).
+     * Verify that a share cycle is detected (6.13.13) when a shareable node
+     * is cloned.
      */
-    public void testShareCycle() throws Exception {
+    public void testDetectShareCycleOnClone() throws Exception {
         // setup parent nodes and first child
         Node a1 = testRootNode.addNode("a1");
         Node b1 = a1.addNode("b1");
@@ -523,7 +532,79 @@ public class ShareableNodeTest extends AbstractJCRTest {
             // clone underneath b1: this must fail
             workspace.clone(workspace.getName(), b1.getPath(),
                     b1.getPath() + "/c", false);
-            fail("Cloning should create a share cycle.");
+            fail("Share cycle not detected on clone.");
+        } catch (RepositoryException e) {
+            // expected
+        }
+    }
+
+    /**
+     * Verify that a share cycle is detected (6.13.13) when a node is moved.
+     */
+    public void testDetectShareCycleOnMove() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node
+        Node c = b1.addNode("c");
+        b1.save();
+
+        Node[] shared = getSharedSet(b1);
+        assertEquals(2, shared.length);
+
+        // move node
+        try {
+            workspace.move(testRootNode.getPath() + "/a2", c.getPath() + "/d");
+            fail("Share cycle not detected on move.");
+        } catch (RepositoryException e) {
+            // expected
+        }
+    }
+
+    /**
+     * Verify that a share cycle is detected (6.13.13) when a node is
+     * transiently moved.
+     */
+    public void testDetectShareCycleOnTransientMove() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = session.getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node
+        Node c = b1.addNode("c");
+        b1.save();
+
+        Node[] shared = getSharedSet(b1);
+        assertEquals(2, shared.length);
+
+        // move node
+        try {
+            session.move(testRootNode.getPath() + "/a2", c.getPath());
+            fail("Share cycle not detected on transient move.");
         } catch (RepositoryException e) {
             // expected
         }
@@ -953,9 +1034,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Restore a shareable node and remove an existing shareable node (6.13.19)
-     * In this case the particular shared node is removed but its descendants
-     * continue to exist below the remaining members of the shared set.
+     * Restore a shareable node that automatically removes an existing shareable
+     * node (6.13.19). In this case the particular shared node is removed but
+     * its descendants continue to exist below the remaining members of the
+     * shared set.
      */
     public void testRestoreRemoveExisting() throws Exception {
         // setup parent nodes and first child
@@ -1034,42 +1116,6 @@ public class ShareableNodeTest extends AbstractJCRTest {
         // clone (2nd attempt, with mix:shareable)
         workspace.clone(workspace.getName(), b1.getPath(),
                 a2.getPath() + "/b2", false);
-    }
-
-    /**
-     * Clone a mix:shareable node to the same workspace multiple times, remove
-     * all parents and save. Exposes an error that occurred when having more
-     * than two members in a shared set and parents were removed in the same
-     * order they were created.
-     */
-    public void testCloneMultipleTimes() throws Exception {
-        final int count = 10;
-        Node[] parents = new Node[count];
-
-        // setup parent nodes and first child
-        for (int i = 0; i < parents.length; i++) {
-            parents[i] = testRootNode.addNode("a" + (i + 1));
-        }
-        Node b = parents[0].addNode("b");
-        testRootNode.save();
-
-        // add mixin
-        b.addMixin("mix:shareable");
-        b.save();
-
-        Workspace workspace = b.getSession().getWorkspace();
-
-        // clone to all other nodes
-        for (int i = 1; i < parents.length; i++) {
-            workspace.clone(workspace.getName(), b.getPath(),
-                    parents[i].getPath() + "/b", false);
-        }
-
-        // remove all parents and save
-        for (int i = 0; i < parents.length; i++) {
-            parents[i].remove();
-        }
-        testRootNode.save();
     }
 
     /**
@@ -1244,6 +1290,188 @@ public class ShareableNodeTest extends AbstractJCRTest {
         } catch (UnsupportedRepositoryOperationException e) {
             // expected
         }
+    }
+
+    //----------------------------------------------------- implementation tests
+
+    /**
+     * Verify that invoking save() on a share-ancestor will save changes in
+     * all share-descendants.
+     */
+    public void testRemoveDescendantAndSave() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node c to b1
+        Node c = b1.addNode("c");
+        b1.save();
+
+        // remove child node c
+        c.remove();
+
+        // save a2 (having path /testroot/a2): this should save c as well
+        // since one of the paths to c is /testroot/a2/b2/c
+        a2.save();
+        assertFalse("Saving share-ancestor should save share-descendants",
+                session.hasPendingChanges());
+    }
+
+    /**
+     * Verify that invoking save() on a share-ancestor will save changes in
+     * all share-descendants.
+     */
+    public void testRemoveDescendantAndRemoveShareAndSave() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Session session = b1.getSession();
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node c to b1
+        Node c = b1.addNode("c");
+        b1.save();
+
+        // remove child node c
+        c.remove();
+
+        // remove share b2 from a2
+        ((NodeImpl) a2.getNode("b2")).removeShare();
+
+        // save a2 (having path /testroot/a2): this should save c as well
+        // since one of the paths to c was /testroot/a2/b2/c
+        a2.save();
+        assertFalse("Saving share-ancestor should save share-descendants",
+                session.hasPendingChanges());
+    }
+
+    /**
+     * Verify that invoking save() on a share-ancestor will save changes in
+     * all share-descendants.
+     */
+    public void testModifyDescendantAndSave() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node c to b1
+        Node c = b1.addNode("c");
+        b1.save();
+
+        // add child d to c, this modifies c
+        c.addNode("d");
+
+        // save a2 (having path /testroot/a2): this should save c as well
+        // since one of the paths to c is /testroot/a2/b2/c
+        a2.save();
+        assertFalse("Saving share-ancestor should save share-descendants",
+                c.isModified());
+    }
+
+    /**
+     * Verify that invoking save() on a share-ancestor will save changes in
+     * all share-descendants.
+     */
+    public void testModifyDescendantAndRemoveShareAndSave() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.save();
+
+        // add mixin
+        b1.addMixin("mix:shareable");
+        b1.save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(),
+                a2.getPath() + "/b2", false);
+
+        // add child node c to b1
+        Node c = b1.addNode("c");
+        b1.save();
+
+        // add child d to c, this modifies c
+        c.addNode("d");
+
+        // remove share b2 from a2
+        ((NodeImpl) a2.getNode("b2")).removeShare();
+
+        // save a2 (having path /testroot/a2): this should save c as well
+        // since one of the paths to c was /testroot/a2/b2/c
+        a2.save();
+        assertFalse("Saving share-ancestor should save share-descendants",
+                c.isModified());
+    }
+
+    /**
+     * Clone a mix:shareable node to the same workspace multiple times, remove
+     * all parents and save. Exposes an error that occurred when having more
+     * than two members in a shared set and parents were removed in the same
+     * order they were created.
+     */
+    public void testCloneMultipleTimes() throws Exception {
+        final int count = 10;
+        Node[] parents = new Node[count];
+
+        // setup parent nodes and first child
+        for (int i = 0; i < parents.length; i++) {
+            parents[i] = testRootNode.addNode("a" + (i + 1));
+        }
+        Node b = parents[0].addNode("b");
+        testRootNode.save();
+
+        // add mixin
+        b.addMixin("mix:shareable");
+        b.save();
+
+        Workspace workspace = b.getSession().getWorkspace();
+
+        // clone to all other nodes
+        for (int i = 1; i < parents.length; i++) {
+            workspace.clone(workspace.getName(), b.getPath(),
+                    parents[i].getPath() + "/b", false);
+        }
+
+        // remove all parents and save
+        for (int i = 0; i < parents.length; i++) {
+            parents[i].remove();
+        }
+        testRootNode.save();
     }
 
     //---------------------------------------------------------- utility methods

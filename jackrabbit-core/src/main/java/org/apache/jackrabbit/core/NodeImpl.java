@@ -2043,7 +2043,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // (5) do clone operation
         NodeId parentId = getNodeId();
-        src.addShare(parentId);
+        src.addShareParent(parentId);
 
         // (6) modify the state of 'this', i.e. the parent node
         NodeId srcId = src.getNodeId();
@@ -3181,18 +3181,19 @@ public class NodeImpl extends ItemImpl implements Node {
      *         <code>false</code> otherwise.
      * @see NodeState#isShareable()
      */
-    protected boolean isShareable() {
+    boolean isShareable() {
        return ((NodeState) state).isShareable();
     }
 
     /**
      * Helper method, returning the parent id this node is attached to. If this
      * node is shareable, it returns the primary parent id (which remains
-     * fixed). Otherwise returns the underlying state's parent id.
+     * fixed since shareable nodes are not moveable). Otherwise returns the
+     * underlying state's parent id.
      *
      * @return parent id
      */
-    protected NodeId getParentId() {
+    NodeId getParentId() {
         if (primaryParentId != null) {
             return primaryParentId;
         }
@@ -3201,27 +3202,27 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * Helper method, returning a flag indicating whether this node has
-     * the given shared parent.
+     * the given share-parent.
      *
      * @param parentId parent id
      * @return <code>true</code> if the node has the given shared parent;
      *         <code>false</code> otherwise.
      */
-    protected boolean hasSharedParent(NodeId parentId) {
+    boolean hasShareParent(NodeId parentId) {
         return ((NodeState) state).containsShare(parentId);
     }
 
     /**
-     * Add a parent to the shared set. This method checks first, whether:
+     * Add a share-parent to this node. This method checks, whether:
      * <ul>
      * <li>this node is shareable</li>
-     * <li>adding this parent would create a share cycle</li>
-     * <li>whether this parent is already contained in the shared set</li>
+     * <li>adding the given would create a share cycle</li>
+     * <li>the given parent is already a share-parent</li>
      * </ul>
      * @param parentId parent to add to the shared set
      * @throws RepositoryException if an error occurs
      */
-    protected void addShare(NodeId parentId) throws RepositoryException {
+    void addShareParent(NodeId parentId) throws RepositoryException {
         // verify that we're shareable
         if (!isShareable()) {
             String msg = "Node at " + safeGetJCRPath() + " is not shareable.";
@@ -3293,8 +3294,10 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Invoked when another node in the same shared set has replaced the
      * node state.
+     *
+     * @param state state that is now stored as <code>NodeImpl</code>'s state
      */
-    protected void stateReplaced(NodeState state) {
+    void stateReplaced(NodeState state) {
         this.state = state;
     }
 
