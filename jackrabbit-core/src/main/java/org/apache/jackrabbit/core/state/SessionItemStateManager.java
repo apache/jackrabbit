@@ -428,30 +428,8 @@ public class SessionItemStateManager
                 }
 
                 if (depth < 1) {
-                    // TODO SN: move this to HierarchyManager
-                    // if state is shareable, it has actually more than one parent
-                    if (state.isNode()) {
-                        NodeState ns = (NodeState) state;
-                        if (ns.isShareable()) {
-                            Set sharedSet = ns.getSharedSet();
-                            if (ns.hasOverlayedState()) {
-                                sharedSet = ((NodeState) ns.getOverlayedState()).getSharedSet();
-                            }
-                            Iterator sharedParentIds = sharedSet.iterator();
-                            while (sharedParentIds.hasNext()) {
-                                NodeId sharedParentId = (NodeId) sharedParentIds.next();
-                                int depth2 = hierMgr.getRelativeDepth(parentId, sharedParentId);
-                                if (depth2 >= 0) {
-                                    depth = depth2 + 1;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (depth < 1) {
-                        // not a descendant
-                        continue;
-                    }
+                    // not a descendant
+                    continue;
                 }
 
                 // ensure capacity
