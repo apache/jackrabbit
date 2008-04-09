@@ -310,9 +310,8 @@ public class BatchedItemOperations extends ItemValidator {
         // 4. detect share cycle
         NodeId srcId = srcState.getNodeId();
         NodeId destParentId = destParentState.getNodeId();
-        if (destParentId.equals(srcId) ||
-                hierMgr.isAncestor(srcId, destParentId)) {
-            String msg = "This would create a share cycle.";
+        if (destParentId.equals(srcId) || hierMgr.isAncestor(srcId, destParentId)) {
+            String msg = "Share cycle detected.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -546,6 +545,14 @@ public class BatchedItemOperations extends ItemValidator {
             // subscript in name element
             String msg = safeGetJCRPath(destPath)
                     + ": invalid destination path (subscript in name element is not allowed)";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        HierarchyManagerImpl hierMgr = (HierarchyManagerImpl) this.hierMgr;
+        if (hierMgr.isShareAncestor(target.getNodeId(), destParent.getNodeId())) {
+            String msg = safeGetJCRPath(destPath)
+                    + ": invalid destination path (share cycle detected)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
