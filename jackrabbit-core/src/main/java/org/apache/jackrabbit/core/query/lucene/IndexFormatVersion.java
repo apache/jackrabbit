@@ -117,13 +117,13 @@ public class IndexFormatVersion {
             TermEnum terms = reader.terms(
                     new Term(FieldNames.PROPERTIES, ""));
             try {
-                if (terms.next() && terms.term().field() == FieldNames.PROPERTIES) {
+                do {
                     tp.seek(terms);
                     if (tp.next()) {
                         tp.nextPosition();
                         return tp.isPayloadAvailable();
                     }
-                }
+                } while (terms.next() && terms.term().field() == FieldNames.PROPERTIES);
             } finally {
                 terms.close();
             }
