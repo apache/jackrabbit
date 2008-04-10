@@ -51,6 +51,8 @@ public class PathFactoryImpl implements PathFactory {
      * the root path
      */
     private static final Path ROOT = new PathImpl(new Path.Element[]{ROOT_ELEMENT}, true);
+    private static final Path CURRENT_PATH = new PathImpl(new Path.Element[]{CURRENT_ELEMENT}, true);
+    private static final Path PARENT_PATH = new PathImpl(new Path.Element[]{PARENT_ELEMENT}, true);
 
     private PathFactoryImpl() {}
 
@@ -332,7 +334,7 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * @see Path#getNormalizedPath()
          */
-        public Path getNormalizedPath() throws RepositoryException {
+        public Path getNormalizedPath() {
             if (isNormalized()) {
                 return this;
             }
@@ -341,11 +343,6 @@ public class PathFactoryImpl implements PathFactory {
             for (int i = 0; i < elements.length; i++) {
                 Path.Element elem = elements[i];
                 if (elem.denotesParent() && !last.denotesParent()) {
-                    if (last.denotesRoot()) {
-                        // the first element is the root element;
-                        // ".." would refer to the parent of root
-                        throw new RepositoryException("Path can not be canonicalized: unresolvable '..' element");
-                    }
                     queue.removeLast();
                     if (queue.isEmpty()) {
                         last = PARENT_ELEMENT;
@@ -358,7 +355,7 @@ public class PathFactoryImpl implements PathFactory {
                 }
             }
             if (queue.isEmpty()) {
-                throw new RepositoryException("Path can not be normalized: would result in an empty path.");
+                return CURRENT_PATH;
             }
             boolean isNormalized = true;
             return new PathImpl((Path.Element[]) queue.toArray(new Element[queue.size()]), isNormalized);
@@ -396,8 +393,7 @@ public class PathFactoryImpl implements PathFactory {
 
             if (p0.equals(p1)) {
                 // both paths are equal, the relative path is therefore '.'
-                Builder pb = new Builder(new Path.Element[] {CURRENT_ELEMENT});
-                return pb.getPath();
+                return CURRENT_PATH;
             }
 
             // determine length of common path fragment
@@ -436,22 +432,34 @@ public class PathFactoryImpl implements PathFactory {
             if (degree < 0) {
                 throw new IllegalArgumentException("degree must be >= 0");
             } else if (degree == 0) {
-                return this;
+                return this.getNormalizedPath();
             }
-            int length = elements.length - degree;
-            if (length < 1) {
-                throw new PathNotFoundException("no such ancestor path of degree " + degree);
+
+            if (isAbsolute()) {
+                Path.Element[] normElems = getNormalizedPath().getElements();
+                int length = normElems.length - degree;
+                if (length < 1) {
+                    throw new PathNotFoundException("no such ancestor path of degree " + degree);
+                }
+                Path.Element[] ancestorElements = new Element[length];
+                System.arraycopy(normElems, 0, ancestorElements, 0, length);
+                return new PathImpl(ancestorElements, true);
+            } else {
+                Path.Element[] ancestorElements = new Element[elements.length + degree];
+                System.arraycopy(elements, 0, ancestorElements, 0, elements.length);
+
+                for (int i = elements.length; i < ancestorElements.length; i++) {
+                    ancestorElements[i] = PARENT_ELEMENT;
+                }
+                return new PathImpl(ancestorElements, false).getNormalizedPath();
             }
-            Path.Element[] elements = new Element[length];
-            System.arraycopy(this.elements, 0, elements, 0, length);
-            return new PathImpl(elements, normalized);
         }
 
         /**
          * @see Path#getAncestorCount()
          */
         public int getAncestorCount() {
-            return getDepth() - 1;
+            return (isAbsolute()) ? getDepth() : -1;
         }
 
         /**
@@ -469,11 +477,40 @@ public class PathFactoryImpl implements PathFactory {
             for (int i = 0; i < elements.length; i++) {
                 if (elements[i].denotesParent()) {
                     depth--;
-                } else if (!elements[i].denotesCurrent()) {
+                } else if (elements[i].denotesName()) {
+                    // don't count root/current element.
                     depth++;
                 }
             }
             return depth;
+        }
+
+        /**
+         * @see Path#isEquivalentTo(Path)
+         */
+        public boolean isEquivalentTo(Path other) throws RepositoryException {
+            if (other == null) {
+                throw new IllegalArgumentException("null argument");
+            }
+            if (isAbsolute() != other.isAbsolute()) {
+                throw new IllegalArgumentException("Cannot compare a relative path with an absolute path");
+            }
+
+            if (getDepth() != other.getDepth()) {
+                return false;
+            }
+
+            Element[] elems0 = getNormalizedPath().getElements();
+            Element[] elems1 = other.getNormalizedPath().getElements();
+
+            if (elems0.length != elems1.length)
+                return false;
+
+            for (int k = 0; k < elems0.length; k++) {
+                if (!elems0[k].equals(elems1[k]))
+                    return false;
+            }
+            return true;
         }
 
         /**
@@ -487,25 +524,12 @@ public class PathFactoryImpl implements PathFactory {
             if (isAbsolute() != other.isAbsolute()) {
                 throw new IllegalArgumentException("Cannot compare a relative path with an absolute path");
             }
-            // make sure we're comparing normalized paths
-            Path p0 = getNormalizedPath();
-            Path p1 = other.getNormalizedPath();
 
-            if (p0.equals(p1)) {
+            int delta = other.getDepth() - getDepth();
+            if (delta <= 0)
                 return false;
-            }
-            // calculate depth of paths (might be negative)
-            if (p0.getDepth() >= p1.getDepth()) {
-                return false;
-            }
-            Path.Element[] elems0 = p0.getElements();
-            Path.Element[] elems1 = p1.getElements();
-            for (int i = 0; i < elems0.length; i++) {
-                if (!elems0[i].equals(elems1[i])) {
-                    return false;
-                }
-            }
-            return true;
+
+            return isEquivalentTo(other.getAncestor(delta));
         }
 
         /**
@@ -522,7 +546,7 @@ public class PathFactoryImpl implements PathFactory {
          * @see Path#subPath(int, int)
          */
         public Path subPath(int from, int to) throws IllegalArgumentException, RepositoryException {
-            if (from < 0 || to >= elements.length || from >= to) {
+            if (from < 0 || to > elements.length || from >= to) {
                 throw new IllegalArgumentException();
             }
             if (!isNormalized()) {
@@ -843,12 +867,7 @@ public class PathFactoryImpl implements PathFactory {
         /**
          * flag indicating if the current path is normalized
          */
-        private boolean isNormalized = true;
-
-        /**
-         * flag indicating if the current path has leading parent '..' elements
-         */
-        private boolean leadingParent = true;
+        private boolean isNormalized;
 
         /**
          * Creates a new Builder and initialized it with the given path
@@ -874,11 +893,35 @@ public class PathFactoryImpl implements PathFactory {
             if (elements == null || elements.length == 0) {
                 throw new IllegalArgumentException("Cannot build path from null or 0 elements.");
             }
+
             this.elements = elements;
-            for (int i = 0; i < elements.length; i++) {
-                Path.Element elem = elements[i];
-                leadingParent &= elem.denotesParent();
-                isNormalized &= !elem.denotesCurrent() && (leadingParent || !elem.denotesParent());
+            if (elements.length == 1) {
+                isNormalized = true;
+            } else {
+                boolean absolute = elements[0].denotesRoot();
+                isNormalized = true;
+                int parents = 0;
+                int named = 0;
+                for (int i = 0; i < elements.length; i++) {
+                    Path.Element elem = elements[i];
+                    if (elem.denotesName()) {
+                        named++;
+                    } else if (elem.denotesRoot()) {
+                        if (i > 0) {
+                            throw new IllegalArgumentException("Invalid path: The root element may only occur at the beginning.");
+                        }
+                    } else  if (elem.denotesParent()) {
+                        parents++;
+                        if (absolute || named > 0) {
+                            isNormalized = false;
+                        }
+                    } else /* current element */ {
+                        isNormalized = false;
+                    }
+                }
+                if (absolute && parents > named) {
+                    throw new IllegalArgumentException("Invalid path: Too many parent elements.");
+                }
             }
         }
 
@@ -888,6 +931,20 @@ public class PathFactoryImpl implements PathFactory {
          * @return a new {@link Path}
          */
         private Path getPath() {
+            // special path with a single element
+            if (elements.length == 1) {
+                if (elements[0].denotesRoot()) {
+                    return PathFactoryImpl.ROOT;
+                }
+                if (elements[0].denotesParent()) {
+                    return PathFactoryImpl.PARENT_PATH;
+                }
+                if (elements[0].denotesCurrent()) {
+                    return PathFactoryImpl.CURRENT_PATH;
+                }
+            }
+
+            // default: build a new path
             // no need to check the path format, assuming all names correct
             return new PathImpl(elements, isNormalized);
         }

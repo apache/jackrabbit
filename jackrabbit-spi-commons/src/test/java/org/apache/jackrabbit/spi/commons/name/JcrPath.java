@@ -42,12 +42,12 @@ public final class JcrPath {
         list.add(new JcrPath("/prefix:name/prefix:name", NOR|VAL));
         list.add(new JcrPath("/name[2]/name[2]", NOR|VAL));
         list.add(new JcrPath("/prefix:name[2]/prefix:name[2]", NOR|VAL));
-        list.add(new JcrPath("a/b/c/", "a/b/c", NOR|VAL));
         list.add(new JcrPath("/a/b/c/", "/a/b/c", NOR|VAL));
         list.add(new JcrPath("/a/..../", "/a/....", NOR|VAL));
         list.add(new JcrPath("/a/b:.a./", "/a/b:.a.", NOR|VAL));
 
         // relative paths
+        list.add(new JcrPath("a/b/c/", "a/b/c", NOR|VAL));
         list.add(new JcrPath("a/b/c", NOR|VAL));
         list.add(new JcrPath("prefix:name/prefix:name", NOR|VAL));
         list.add(new JcrPath("name[2]/name[2]", NOR|VAL));
@@ -57,6 +57,8 @@ public final class JcrPath {
 
         // invalid paths
         list.add(new JcrPath(""));
+        list.add(new JcrPath("//"));
+        list.add(new JcrPath("/a//b"));
         list.add(new JcrPath(" /a/b/c/"));
         list.add(new JcrPath("/a/b/c/ "));
         list.add(new JcrPath("/:name/prefix:name"));
@@ -69,9 +71,19 @@ public final class JcrPath {
         list.add(new JcrPath(":name/prefix:name"));
         list.add(new JcrPath("name[0]/name[2]"));
         list.add(new JcrPath("prefix:name[2]foo/prefix:name[2]"));
+        list.add(new JcrPath("/..", "/..", 0));
+        list.add(new JcrPath("/a/b/../../..", "/a/b/../../..", 0));
+
+        // normalized, relative paths
+        list.add(new JcrPath(".", ".", NOR|VAL));
+        list.add(new JcrPath("..", "..", NOR|VAL));
+        list.add(new JcrPath("../..", "../..", NOR|VAL));
+        list.add(new JcrPath("../../a/b", "../../a/b", NOR|VAL));
+        list.add(new JcrPath("../a", "../a",NOR|VAL));        
 
         // not normalized paths
         list.add(new JcrPath("/a/../b", "/b", VAL));
+        list.add(new JcrPath("/a/../b/./c/d/..", "/b/c", VAL));
         list.add(new JcrPath("./../.", "..", VAL));
         list.add(new JcrPath("/a/./b", "/a/b", VAL));
         list.add(new JcrPath("/a/b/../..", "/", VAL));
@@ -80,9 +92,13 @@ public final class JcrPath {
         list.add(new JcrPath("a/../..", "..", VAL));
         list.add(new JcrPath("../../a/.", "../../a", VAL));
 
-        // invalid normalized paths
-        list.add(new JcrPath("/..", "/..", 0));
-        list.add(new JcrPath("/a/b/../../..", "/a/b/../../..", 0));
+        // other non-normalized, relative path
+        list.add(new JcrPath("./.", ".", VAL));
+        list.add(new JcrPath("./a", "a", VAL));
+        list.add(new JcrPath("a/..", ".", VAL));
+        list.add(new JcrPath("../a/..", "..", VAL));
+        list.add(new JcrPath("../a/.", "../a", VAL));
+        list.add(new JcrPath("a/./b", "a/b", VAL));
     }
 
     /**
@@ -104,7 +120,7 @@ public final class JcrPath {
     public JcrPath(String path, String normalizedPath, int flags) {
         this.path = path;
         this.normalizedPath = normalizedPath;
-        this.flags = flags | ((path.length()>0 && path.charAt(0)=='/') ? ABS : 0);
+        this.flags = flags | ((path.length() > 0 && path.charAt(0)=='/') ? ABS : 0);
     }
 
     public static JcrPath[] getTests() {

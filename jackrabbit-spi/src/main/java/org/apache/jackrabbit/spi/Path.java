@@ -16,32 +16,96 @@
  */
 package org.apache.jackrabbit.spi;
 
+import java.io.Serializable;
+
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import java.io.Serializable;
 
 /**
  * The <code>Path</code> interface defines the qualified representation of
- * a JCR path. It consists of {@link Path.Element} objects and is immutable.
- * It has the following properties:
+ * a JCR path. It consists of an ordered list of {@link Path.Element} objects
+ * and is immutable.<p/>
+ *
+ * A {@link Path.Element} is either {@link Path.Element#denotesName() named}
+ * or one of the following special elements:
+ * <ul>
+ * <li>the {@link Element#denotesCurrent() current} element (Notation: "."),</li>
+ * <li>the {@link Element#denotesParent() parent} element (Notation: ".."),</li>
+ * <li>the {@link Element#denotesRoot() root} element (Notation: {}), which can
+ * only occur as the first element in a path.</li>
+ * </ul>
+ *
+ * A <code>Path</code> is defined to have the following characteristics:
  * <p/>
- * <code>isAbsolute()</code>:<br>
- * A path is absolute if the first path element denotes the root element '/'.
+ *
+ * <strong>Equality:</strong><br>
+ * Two paths are equal if they consist of the same elements.
  * <p/>
- * <code>isNormalized()</code>:<br>
- * A path is normalized if all '.' and '..' path elements are resolved as much
- * as possible. If the path is absolute it is normalized if it contains
- * no such elements. For example the path '../../a' is normalized where as
- * '../../b/../a/.' is not. Normalized paths never have '.' elements.
- * Absolute normalized paths have no and relative normalized paths have no or
- * only leading '..' elements.
+ *
+ * <strong>Length:</strong><br>
+ * The {@link Path#getLength() length} of a path is the number of its elements.
  * <p/>
- * <code>isCanonical()</code>:<br>
- * A path is canonical if its absolute and normalized.
+ *
+ * <strong>Depth:</strong><br>
+ * The {@link Path#getDepth() depth} of a path is
+ * <ul>
+ * <li>0 for the root path,</li>
+ * <li>0 for the path consisting of the current element only,</li>
+ * <li>-1 for the path consisting of the parent element only,</li>
+ * <li>1 for the path consisting of any other single element,</li>
+ * <li>depth(P) + depth(Q) for the path P/Q.</li>
+ * </ul>
+ * The depth of a valid absolute path equals the length of its
+ * normalization minus 1.
  * <p/>
- * Note, that the implementation must implement the equals method such that
- * two <code>Path</code> objects having the equal <code>Element</code>s
- * must be equal.
+ *
+ * <strong>Absolute vs. Relative</strong><br>
+ * A path can be absolute or relative:<br>
+ * A path {@link #isAbsolute() is absolute} if its first element is the root
+ * element. A path is relative if it is not absolute.
+ * <ul>
+ * <li>An absolute path is valid if its depth is greater or equals 0. A relative
+ * path is always valid.</li>
+ * <li>Two absolute paths are equivalent if "they refer to the same item in the
+ * hierarchy".</li>
+ * <li>Two relative paths P and Q are equivalent if for every absolute path R such
+ * that R/P and R/Q are valid, R/P and R/Q are equivalent.</li>
+ * </ul>
+ * <p/>
+ *
+ * <strong>Normalization:</strong><br>
+ * A path P {@link Path#isNormalized() is normalized} if P has minimal length
+ * amongst the set of all paths Q which are equivalent to P.<br>
+ * This means that '.' and '..' elements are resolved as much as possible.
+ * An absolute path it is normalized if it contains no current nor parent
+ * element. The normalization of a path is unique.<br>
+ * <p/>
+ *
+ * <strong>Equalivalence:</strong><br>
+ * Path P is {@link Path#isEquivalentTo(Path) equivalent} to path Q (in the above sense)
+ * if the normalization of P is equal to the normalization of Q. This is
+ * an equivalence relation (i.e. reflexive, transitive,
+ * and symmetric).
+ * <p/>
+ *
+ * <strong>Canonical Paths:</strong><br>
+ * A path {@link Path#isCanonical() is canonical} if its absolute and normalized.
+ * <p/>
+ *
+ * <strong>Hierarchical Relationship:</strong><br>
+ * The ancestor relationship is a strict partial order (i.e. irreflexive, transitive,
+ * and asymmetric). Path P is a direct ancestor of path Q if P is equivalent to Q/..
+ * <br>
+ * Path P is an {@link Path#isAncestorOf(Path) ancestor} of path Q if
+ * <ul>
+ * <li>P is a direct ancestor of Q or</li>
+ * <li>P is a direct ancestor of some path S which is an ancestor of Q.</li>
+ * </ul>
+ *
+ * Path P is an {@link Path#isDescendantOf(Path) descendant} of path Q if
+ * <ul>
+ * <li>Path P is a descendant of path Q if Q is an ancestor of P.</li>
+ * </ul>
  */
 public interface Path extends Serializable {
 
@@ -104,14 +168,10 @@ public interface Path extends Serializable {
     public boolean isNormalized();
 
     /**
-     * Returns the normalized path representation of this path. This typically
-     * involves removing/resolving redundant elements such as "." and ".." from
-     * the path, e.g. "/a/./b/.." will be normalized to "/a", "../../a/b/c/.."
-     * will be normalized to "../../a/b", and so on.
+     * Returns the normalized path representation of this path.
      * <p/>
-     * If the normalized path results in an empty path (eg: 'a/..') or if an
-     * absolute path is normalized that would result in a 'negative' path
-     * (eg: /a/../../) a MalformedPathException is thrown.
+     * If the path cannot be normalized (e.g. if an absolute path is normalized
+     * that would result in a 'negative' path) a RepositoryException is thrown.
      *
      * @return a normalized path representation of this path.
      * @throws RepositoryException if the path cannot be normalized.
@@ -120,9 +180,10 @@ public interface Path extends Serializable {
     public Path getNormalizedPath() throws RepositoryException;
 
     /**
-     * Returns the canonical path representation of this path. This typically
-     * involves removing/resolving redundant elements such as "." and ".." from
-     * the path.
+     * Returns the canonical path representation of this path.
+     * <p/>
+     * If the path is relative or cannot be normalized a RepositoryException
+     * is thrown.
      *
      * @return a canonical path representation of this path.
      * @throws RepositoryException if this path can not be canonicalized
@@ -143,7 +204,8 @@ public interface Path extends Serializable {
     public Path computeRelativePath(Path other) throws RepositoryException;
 
     /**
-     * Returns the ancestor path of the specified relative degree.
+     * Normalizes this path and returns the ancestor path of the specified
+     * relative degree.
      * <p/>
      * An ancestor of relative degree <i>x</i> is the path that is <i>x</i>
      * levels up along the path.
@@ -155,26 +217,29 @@ public interface Path extends Serializable {
      * of this path, which returns the root path.
      * </ul>
      * <p/>
-     * Note that there migth be an unexpected result if <i>this</i> path is not
-     * normalized, e.g. the ancestor of degree = 1 of the path "../.." would
-     * be ".." although this is not the parent of "../..".
+     * If this path is relative the implementation may not be able to determine
+     * if the ancestor at <code>degree</code> exists. Such an implementation
+     * should properly build the ancestor (i.e. parent of .. is ../..) and
+     * leave if it the caller to throw <code>PathNotFoundException</code>.
      *
      * @param degree the relative degree of the requested ancestor.
-     * @return the ancestor path of the specified degree.
-     * @throws PathNotFoundException if there is no ancestor of the specified degree.
+     * @return the normalized ancestor path of the specified degree.
      * @throws IllegalArgumentException if <code>degree</code> is negative.
+     * @throws PathNotFoundException if the implementation is able to determine
+     * that there is no ancestor of the specified degree. In case of this
+     * being an absolute path, this would be the case if <code>degree</code> is
+     * greater that the {@link #getDepth() depth} of this path.
      */
     public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException;
 
     /**
      * Returns the number of ancestors of this path. This is the equivalent
-     * of <code>{@link #getDepth()} - 1</code>.
-     * <p/>
-     * Note that the returned value might be negative if this path is not
-     * canonical, e.g. the depth of "../../a" is -1, its ancestor count is
-     * therefore -2.
+     * of <code>{@link #getDepth()}</code> in case of a absolute path.
+     * For relative path the number of ancestors cannot be determined and
+     * -1 should be returned.
      *
-     * @return the number of ancestors of this path
+     * @return the number of ancestors of this path or -1 if the number of
+     * ancestors cannot be determined.
      * @see #getDepth()
      * @see #getLength()
      * @see #isCanonical()
@@ -201,7 +266,8 @@ public interface Path extends Serializable {
      * Returns the depth of this path. The depth reflects the absolute or
      * relative hierarchy level this path is representing, depending on whether
      * this path is an absolute or a relative path. The depth also takes '.'
-     * and '..' elements into account.
+     * and '..' elements into account. The depth of the root path and the
+     * current path must be 0.
      * <p/>
      * Note that the returned value might be negative if this path is not
      * canonical, e.g. the depth of "../../a" is -1.
@@ -213,9 +279,23 @@ public interface Path extends Serializable {
     public int getDepth();
 
     /**
+     * Determines if the the <code>other</code> path would be equal to <code>this</code>
+     * path if both of them are normalized.
+     *
+     * @param other Another path.
+     * @return true if the given other path is equivalent to this path.
+     * @throws IllegalArgumentException if the given path is <code>null</code>
+     * or if not both paths are either absolute or relative.
+     * @throws RepositoryException if any of the path cannot be normalized.
+     */
+    public boolean isEquivalentTo(Path other) throws IllegalArgumentException, RepositoryException;
+
+    /**
      * Determines if <i>this</i> path is an ancestor of the specified path,
      * based on their (absolute or relative) hierarchy level as returned by
-     * <code>{@link #getDepth()}</code>.
+     * <code>{@link #getDepth()}</code>. In case of undefined ancestor/descendant
+     * relationship that might occur with relative paths, the return value
+     * should be <code>false</code>.
      *
      * @return <code>true</code> if <code>other</code> is a descendant;
      * otherwise <code>false</code>.
@@ -229,14 +309,16 @@ public interface Path extends Serializable {
     /**
      * Determines if <i>this</i> path is a descendant of the specified path,
      * based on their (absolute or relative) hierarchy level as returned by
-     * <code>{@link #getDepth()}</code>.
+     * <code>{@link #getDepth()}</code>. In case of undefined ancestor/descendant
+     * relationship that might occur with relative paths, the return value
+     * should be <code>false</code>.
      *
      * @return <code>true</code> if <code>other</code> is an ancestor;
-     * otherwise <code>false</code>
+     * otherwise <code>false</code>.
      * @throws IllegalArgumentException if the given path is <code>null</code>
      * or if not both paths are either absolute or relative.
      * @throws RepositoryException if any of the path cannot be normalized.
-     * @see #getDepth()
+     * @see #isAncestorOf(Path)
      */
     public boolean isDescendantOf(Path other) throws IllegalArgumentException, RepositoryException;
 
@@ -248,10 +330,16 @@ public interface Path extends Serializable {
      * out of the possible range. A <code>RepositoryException</code> is thrown
      * if this <code>Path</code> is not normalized.
      *
-     * @param from
-     * @param to
-     * @return
-     * @throws IllegalArgumentException
+     * @param from index of the element to start with and low endpoint
+     * (inclusive) within the list of elements to use for the sub-path.
+     * @param to index of the element outside of the range i.e. high endpoint
+     * (exclusive) within the list of elements to use for the sub-path.
+     * @return a new <code>Path</code> consisting of those Path.Element objects
+     * between the given <tt><code>from</code>, inclusive, and the given
+     * <code>to</code>, exclusive.
+     * @throws IllegalArgumentException if <code>from</code>
+     * is greater or equal than <code>to</code> or if any of both params is
+     * out of the possible range.
      * @throws RepositoryException If this Path is not normalized.
      */
     public Path subPath(int from, int to) throws IllegalArgumentException, RepositoryException;
@@ -277,7 +365,7 @@ public interface Path extends Serializable {
      * its elements separated by {@link Path#DELIMITER}.
      *
      * @see Path.Element#getString()
-     * @return
+     * @return Returns the String representation of this Path.
      */
     public String getString();
 
@@ -359,12 +447,12 @@ public interface Path extends Serializable {
         public boolean denotesName();
 
         /**
-         * Return the String presentation of a{@link Path.Element}. It must be
+         * Return the String presentation of a {@link Path.Element}. It must be
          * in the format "<code>{namespaceURI}localPart</code>" or
          * "<code>{namespaceURI}localPart[index]</code>" in case of an index
          * greater than {@link Path#INDEX_DEFAULT}.
          *
-         * @return
+         * @return String representation of a {@link Path.Element}.
          */
         public String getString();
     }

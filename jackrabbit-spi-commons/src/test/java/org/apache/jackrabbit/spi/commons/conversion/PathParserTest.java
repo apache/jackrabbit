@@ -28,8 +28,6 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 
-import javax.jcr.RepositoryException;
-
 /**
  * PathParserTest
  */
@@ -57,7 +55,7 @@ public class PathParserTest extends TestCase {
                     Path p = PathParser.parse(t.path, resolver, factory);
                     if (t.normalizedPath==null) {
                         if (!t.isValid()) {
-                            fail("Should throw MalformedPathException: " + t.path);
+                            fail("Should throw IllegalArgumentException: " + t.path);
                         }
                         assertEquals("\"" + t.path + "\".create(false)", t.path,  pathResolver.getJCRPath(p));
                         assertEquals("\"" + t.path + "\".isNormalized()", t.isNormalized(), p.isNormalized());
@@ -66,12 +64,12 @@ public class PathParserTest extends TestCase {
                         // check with normalization
                         p = p.getNormalizedPath();
                         if (!t.isValid()) {
-                            fail("Should throw MalformedPathException: " + t.path);
+                            fail("Should throw IllegalArgumentException: " + t.path);
                         }
                         assertEquals("\"" + t.path + "\".create(true)", t.normalizedPath, pathResolver.getJCRPath(p));
                         assertEquals("\"" + t.path + "\".isAbsolute()", t.isAbsolute(), p.isAbsolute());
                     }
-                } catch (RepositoryException e) {
+                } catch (Exception e) {
                     if (t.isValid()) {
                         System.out.println(t.path);
                         throw e;
@@ -108,7 +106,7 @@ public class PathParserTest extends TestCase {
         }
     }
 
-   public void testNormalizedPaths() throws Exception {
+    public void testNormalizedPaths() throws Exception {
         List paths = new ArrayList();
         // normalized paths
         paths.add(PathParser.parse("/", resolver, factory));
@@ -118,6 +116,7 @@ public class PathParserTest extends TestCase {
         paths.add(PathParser.parse("foo", resolver, factory));
         paths.add(PathParser.parse("../../foo/bar", resolver, factory));
         paths.add(PathParser.parse("..", resolver, factory));
+        paths.add(PathParser.parse(".", resolver, factory));
 
         for (Iterator it = paths.iterator(); it.hasNext(); ) {
             Path path = (Path) it.next();
@@ -132,7 +131,6 @@ public class PathParserTest extends TestCase {
         paths.add(PathParser.parse("/foo/../bar", resolver, factory));
         paths.add(PathParser.parse("/foo/./bar", resolver, factory));
         paths.add(PathParser.parse("./foo", resolver, factory));
-        paths.add(PathParser.parse(".", resolver, factory));
         paths.add(PathParser.parse("foo/..", resolver, factory));
         paths.add(PathParser.parse("../foo/..", resolver, factory));
         paths.add(PathParser.parse("../foo/.", resolver, factory));
@@ -202,7 +200,6 @@ public class PathParserTest extends TestCase {
         paths.add(PathParser.parse("./foo", resolver, factory));
         paths.add(PathParser.parse(".", resolver, factory));
         paths.add(PathParser.parse("/foo/..", resolver, factory));
-        paths.add(PathParser.parse("/../foo/..", resolver, factory));
         paths.add(PathParser.parse("/../foo/.", resolver, factory));
 
         for (Iterator it = paths.iterator(); it.hasNext(); ) {
