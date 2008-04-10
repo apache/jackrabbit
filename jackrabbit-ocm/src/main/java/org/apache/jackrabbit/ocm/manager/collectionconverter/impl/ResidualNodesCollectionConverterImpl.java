@@ -31,7 +31,9 @@ import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -65,13 +67,13 @@ public class ResidualNodesCollectionConverterImpl extends
      */
     protected void doInsertCollection(Session session, Node parentNode,
         CollectionDescriptor collectionDescriptor,
-        ManageableCollection collection) {
+        ManageableObjects objects) {
 
-        if (!(collection instanceof Map)) {
+        if (!(objects instanceof Map)) {
             return;
         }
 
-        Map map = (Map) collection;
+        Map map = (Map) objects;
         for (Iterator ei=map.entrySet().iterator(); ei.hasNext(); ) {
             Map.Entry entry = (Map.Entry) ei.next();
             String name = String.valueOf(entry.getKey());
@@ -85,17 +87,17 @@ public class ResidualNodesCollectionConverterImpl extends
      */
     protected void doUpdateCollection(Session session, Node parentNode,
             CollectionDescriptor collectionDescriptor,
-            ManageableCollection collection) throws RepositoryException {
+            ManageableObjects objects) throws RepositoryException {
 
         String jcrName = getCollectionJcrName(collectionDescriptor);
-        if (!(collection instanceof Map)) {
+        if (!(objects instanceof Map)) {
             for (NodeIterator ni=parentNode.getNodes(jcrName); ni.hasNext(); ) {
                 ni.nextNode().remove();
             }
             return;
         }
 
-        Map map = (Map) collection;
+        Map map = (Map) objects;
         Set updatedItems = new HashSet();
         for (Iterator ei=map.entrySet().iterator(); ei.hasNext(); ) {
             Map.Entry entry = (Map.Entry) ei.next();
@@ -131,7 +133,7 @@ public class ResidualNodesCollectionConverterImpl extends
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
         Node parentNode, CollectionDescriptor collectionDescriptor,
         Class collectionFieldClass) throws RepositoryException {
 
@@ -142,7 +144,7 @@ public class ResidualNodesCollectionConverterImpl extends
                 return null;
             }
 
-            ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+            ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
             while (ni.hasNext()) {
                 Node node = ni.nextNode();
 
@@ -152,15 +154,22 @@ public class ResidualNodesCollectionConverterImpl extends
                 }
 
                 Object item = objectConverter.getObject(session, node.getPath());
-                if (collection instanceof Map) {
+                if (objects instanceof Map) {
                     String name = node.getName();
-                    ((Map) collection).put(name, item);
-                } else {
-                    collection.addObject(item);
+                    ((Map) objects).put(name, item);
+                }
+                else {
+                	if (objects instanceof ManageableCollection)
+                        ((ManageableCollection)objects).addObject(item);
+               	   else
+               	   {
+               		String name = node.getName();
+               		((ManageableMap)objects).addObject(name, item);
+               	   }
                 }
             }
+            return objects;
 
-            return collection;
         } catch (ValueFormatException vfe) {
             throw new ObjectContentManagerException("Cannot get the collection field : "
                 + collectionDescriptor.getFieldName() + "for class "

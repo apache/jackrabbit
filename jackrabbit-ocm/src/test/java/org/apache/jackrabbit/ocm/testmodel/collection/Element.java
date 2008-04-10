@@ -28,7 +28,8 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 @Node(jcrType="ocm:element", discriminator=false)
 public class Element
 {
-    @Field(jcrName="ocm:id") private String id;
+	// an ID field can be used as a unique identifier (for exemple, it can be used as key in a Map)
+    @Field(jcrName="ocm:id", id=true) private String id;
     @Field(jcrName="ocm:text") private String text;
 
 

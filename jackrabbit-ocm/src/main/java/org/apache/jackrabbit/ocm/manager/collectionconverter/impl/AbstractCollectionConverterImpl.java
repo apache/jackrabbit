@@ -30,7 +30,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -60,12 +60,12 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 	}
 
 	protected abstract void doInsertCollection(Session session, Node parentNode, CollectionDescriptor descriptor,
-			ManageableCollection collection) throws RepositoryException;
+			ManageableObjects objects) throws RepositoryException;
 
 	protected abstract void doUpdateCollection(Session session, Node parentNode, CollectionDescriptor descriptor,
-			ManageableCollection collection) throws RepositoryException;
+			ManageableObjects objects) throws RepositoryException;
 
-	protected abstract ManageableCollection doGetCollection(Session session, Node parentNode,
+	protected abstract ManageableObjects doGetCollection(Session session, Node parentNode,
 			CollectionDescriptor collectionDescriptor, Class collectionFieldClass) throws RepositoryException;
 
 	protected abstract boolean doIsNull(Session session, Node parentNode, CollectionDescriptor collectionDescriptor,
@@ -75,9 +75,9 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter#insertCollection(javax.jcr.Session, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection)
 	 */
 	public void insertCollection(Session session, Node parentNode, CollectionDescriptor collectionDescriptor,
-			ManageableCollection collection) {
+			ManageableObjects objects) {
 		try {
-			doInsertCollection(session, parentNode, collectionDescriptor, collection);
+			doInsertCollection(session, parentNode, collectionDescriptor, objects);
 		} catch (ItemExistsException iee) {
 			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName() + ". An item already exists.", iee);
@@ -105,10 +105,10 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter#updateCollection(javax.jcr.Session, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection)
 	 */
 	public void updateCollection(Session session, Node parentNode, CollectionDescriptor collectionDescriptor,
-			ManageableCollection collection) {
+			ManageableObjects objects) {
 		try {
 
-				doUpdateCollection(session, parentNode, collectionDescriptor, collection);
+				doUpdateCollection(session, parentNode, collectionDescriptor, objects);
 		} catch (VersionException ve) {
 			throw new ObjectContentManagerException("Cannot insert collection field : " + collectionDescriptor.getFieldName()
 					+ " of class " + collectionDescriptor.getClassDescriptor().getClassName(), ve);
@@ -128,7 +128,7 @@ public abstract class AbstractCollectionConverterImpl implements CollectionConve
 	/**
 	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter#getCollection(javax.jcr.Session, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, java.lang.Class)
 	 */
-	public ManageableCollection getCollection(Session session, Node parentNode, CollectionDescriptor collectionDescriptor,
+	public ManageableObjects  getCollection(Session session, Node parentNode, CollectionDescriptor collectionDescriptor,
 			Class collectionFieldClass) {
 		try {
 			return doGetCollection(session, parentNode, collectionDescriptor, collectionFieldClass);

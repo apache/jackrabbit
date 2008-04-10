@@ -43,7 +43,8 @@ import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
 import org.apache.jackrabbit.ocm.manager.cache.impl.RequestObjectCacheImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerUtil;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
@@ -227,13 +228,13 @@ public class ObjectConverterImpl implements ObjectConverter {
 			throws NoSuchNodeTypeException, VersionException,
 			ConstraintViolationException, LockException, RepositoryException,
 			ValueFormatException {
-		
+
 		try {
 			objectNode.setProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY,
 					ReflectionUtils.getBeanClass(object).getName());
-			
+
 		} catch (Exception e) {
-			// if it is not possible to add the CLASS_NAME_PROPERTY due to strong constraints in the 
+			// if it is not possible to add the CLASS_NAME_PROPERTY due to strong constraints in the
 			// node type definition, try to add the Discriminator node type.
 			String mixinTypeName;
 			mixinTypeName = ManagerConstant.DISCRIMINATOR_NODE_TYPE;
@@ -241,7 +242,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 			objectNode.setProperty(ManagerConstant.DISCRIMINATOR_CLASS_NAME_PROPERTY,
 					ReflectionUtils.getBeanClass(object).getName());
 		}
-		
+
 	}
 
 	/**
@@ -420,8 +421,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 
             simpleFieldsHelp.retrieveSimpleFields(session, classDescriptor, node, object);
 			retrieveBeanFields(session, classDescriptor, node, path, object, false);
-			retrieveCollectionFields(session, classDescriptor, node, object, false);			
-			
+			retrieveCollectionFields(session, classDescriptor, node, object, false);
+
 			return object;
 		} catch (PathNotFoundException pnfe) {
 			// HINT should never get here
@@ -700,16 +701,16 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 		CollectionConverter collectionConverter = this.getCollectionConverter(session, collectionDescriptor);
 		Class collectionFieldClass = ReflectionUtils.getPropertyType(object, collectionDescriptor.getFieldName());
-		ManageableCollection collection = null;
+		ManageableObjects objects = null;
 		if (collectionDescriptor.isProxy()) {
-			collection = (ManageableCollection) proxyManager.createCollectionProxy(session, collectionConverter, parentNode,
+			objects = (ManageableCollection) proxyManager.createCollectionProxy(session, collectionConverter, parentNode,
 					collectionDescriptor, collectionFieldClass);
 
 		} else {
-			collection = collectionConverter.getCollection(session, parentNode, collectionDescriptor, collectionFieldClass);
+			objects = collectionConverter.getCollection(session, parentNode, collectionDescriptor, collectionFieldClass);
 		}
 
-		ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), collection);
+		ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), objects);
 	}
 
 	/**
@@ -801,7 +802,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			CollectionConverter collectionConverter = this.getCollectionConverter(session, collectionDescriptor);
 			Object collection = ReflectionUtils.getNestedProperty(object, collectionDescriptor.getFieldName());
-			ManageableCollection manageableCollection = ManageableCollectionUtil.getManageableCollection(collection);
+			ManageableObjects manageableCollection = ManageableObjectsUtil.getManageableObjects(collection);
 
 			collectionConverter.insertCollection(session, objectNode, collectionDescriptor, manageableCollection);
 		}
@@ -818,7 +819,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			CollectionConverter collectionConverter = this.getCollectionConverter(session, collectionDescriptor);
 			Object collection = ReflectionUtils.getNestedProperty(object, collectionDescriptor.getFieldName());
-			ManageableCollection manageableCollection = ManageableCollectionUtil.getManageableCollection(collection);
+			ManageableObjects manageableCollection = ManageableObjectsUtil.getManageableObjects(collection);
 
 			collectionConverter.updateCollection(session, objectNode, collectionDescriptor, manageableCollection);
 		}

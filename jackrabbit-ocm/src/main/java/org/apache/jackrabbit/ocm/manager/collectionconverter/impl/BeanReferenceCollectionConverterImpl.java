@@ -36,7 +36,8 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
@@ -73,8 +74,8 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
     protected void doInsertCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) throws RepositoryException {
-        addUuidProperties(session, parentNode, collectionDescriptor, collection);
+                                      ManageableObjects objects) throws RepositoryException {
+        addUuidProperties(session, parentNode, collectionDescriptor, objects);
     }
 
 
@@ -85,7 +86,7 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
     protected void doUpdateCollection(Session session,
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
-                                 ManageableCollection collection) throws RepositoryException
+                                 ManageableObjects objects) throws RepositoryException
     {
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
@@ -94,18 +95,18 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
             parentNode.setProperty(jcrName, (Value[]) null);
         }
 
-        if (collection == null) {
+        if (objects == null) {
             return;
         }
 
-        addUuidProperties(session, parentNode, collectionDescriptor, collection);
+        addUuidProperties(session, parentNode, collectionDescriptor, objects);
 
     }
 
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
                                                    Node parentNode,
                                                    CollectionDescriptor collectionDescriptor,
                                                    Class collectionFieldClass) throws RepositoryException {
@@ -117,16 +118,26 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
             Property property = parentNode.getProperty(jcrName);
             Value[] values = property.getValues();
 
-            ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+            ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
+
+            // For collection of bean references, only Collections are supported
+            if (! (objects instanceof ManageableCollection))
+            {
+
+            	throw new JcrMappingException("Impossible to retrieve the attribute "
+            			+ collectionDescriptor.getFieldName() + " in the class "
+            			+ collectionDescriptor.getClassDescriptor().getClassName()
+            			+  " because it is not a collection");
+            }
 
             for (int i = 0; i < values.length; i++) {
                 String uuid = values[i].getString();
-                String path = session.getNodeByUUID(uuid).getPath();    			
+                String path = session.getNodeByUUID(uuid).getPath();
     			Object object = objectConverter.getObject(session, path);
-                collection.addObject(object);
+                ((ManageableCollection) objects).addObject(object);
             }
 
-            return collection;
+            return objects;
         }
         catch(Exception e) {
           throw new ObjectContentManagerException("Cannot get the collection field : "
@@ -144,17 +155,20 @@ public class BeanReferenceCollectionConverterImpl extends AbstractCollectionConv
         return ! parentNode.hasProperty(jcrName);
     }
 
-	private void addUuidProperties(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
+	private void addUuidProperties(Session session, Node parentNode,
+			CollectionDescriptor collectionDescriptor,
+			ManageableObjects objects)
+	        throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
 		try {
-            if (collection == null) {
+            if (objects == null) {
                 return;
             }
 
             String jcrName = getCollectionJcrName(collectionDescriptor);
-            Value[] values = new Value[collection.getSize()];
+            Value[] values = new Value[objects.getSize()];
             ValueFactory valueFactory = session.getValueFactory();
-            Iterator collectionIterator = collection.getIterator();
-            for (int i = 0; i < collection.getSize(); i++) {
+            Iterator collectionIterator = objects.getIterator();
+            for (int i = 0; i < objects.getSize(); i++) {
                 Object object = collectionIterator.next();
 				if (object != null)
 				{

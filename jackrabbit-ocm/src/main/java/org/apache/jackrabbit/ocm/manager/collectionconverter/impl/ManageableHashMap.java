@@ -21,32 +21,33 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
 
 /**
  * The <code>ManagedHashMap</code> class provides Map support to JCR Mapping
  *
  * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
  */
-public class ManagedHashMap extends HashMap implements ManageableCollection {
+public class ManageableHashMap extends HashMap implements ManageableMap {
 
-    public ManagedHashMap() {
+    public ManageableHashMap() {
     }
 
-    public ManagedHashMap(int initialCapacity) {
+    public ManageableHashMap(int initialCapacity) {
         super(initialCapacity);
     }
 
-    public ManagedHashMap(Map m) {
+    public ManageableHashMap(Map m) {
         super(m);
     }
 
-    public ManagedHashMap(int initialCapacity, float loadFactor) {
+    public ManageableHashMap(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);
     }
 
 
-    public void addObject(Object object) {
-        put(object, object);
+    public void addObject(Object key, Object object) {
+        put(key, object);
     }
 
     public Iterator getIterator() {

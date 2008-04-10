@@ -50,7 +50,7 @@ public class HashMapElement extends HashMap implements ManageableCollection
 
 	public int getSize()
 	{
-		
+
 		return this.size();
 	}
 

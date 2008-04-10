@@ -29,10 +29,12 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
+import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -68,17 +70,17 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
     protected void doInsertCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) throws RepositoryException {
+                                      ManageableObjects objects) throws RepositoryException {
         try {
-            if (collection == null) {
+            if (objects == null) {
                 return;
             }
 
             String jcrName = getCollectionJcrName(collectionDescriptor);
-            Value[] values = new Value[collection.getSize()];
+            Value[] values = new Value[objects.getSize()];
             ValueFactory valueFactory = session.getValueFactory();
-            Iterator collectionIterator = collection.getIterator();
-            for (int i = 0; i < collection.getSize(); i++) {
+            Iterator collectionIterator = objects.getIterator();
+            for (int i = 0; i < objects.getSize(); i++) {
                 Object fieldValue = collectionIterator.next();
                 AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                     .get(fieldValue.getClass());
@@ -102,7 +104,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
     protected void doUpdateCollection(Session session,
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
-                                 ManageableCollection collection) throws RepositoryException {
+                                 ManageableObjects objects) throws RepositoryException {
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
         // Delete existing values
@@ -110,16 +112,16 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             parentNode.setProperty(jcrName, (Value[]) null);
         }
 
-        if (collection == null) {
+        if (objects == null) {
             return;
         }
 
 
         // Add all collection element into an Value array
-        Value[] values = new Value[collection.getSize()];
+        Value[] values = new Value[objects.getSize()];
         ValueFactory valueFactory = session.getValueFactory();
         int i = 0;
-        for (Iterator collectionIterator = collection.getIterator(); collectionIterator.hasNext(); i++) {
+        for (Iterator collectionIterator = objects.getIterator(); collectionIterator.hasNext(); i++) {
             Object fieldValue = collectionIterator.next();
             AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                 .get(fieldValue.getClass());
@@ -132,7 +134,7 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
                                                    Node parentNode,
                                                    CollectionDescriptor collectionDescriptor,
                                                    Class collectionFieldClass) throws RepositoryException {
@@ -144,16 +146,27 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             Property property = parentNode.getProperty(jcrName);
             Value[] values = property.getValues();
 
-            ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+            ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
             String elementClassName = collectionDescriptor.getElementClassName();
             Class elementClass = ReflectionUtils.forName(elementClassName);
+            // For multi value collections, only Collections are supported
+            if (! (objects instanceof ManageableCollection))
+            {
+
+            	throw new JcrMappingException("Impossible to retrieve the attribute "
+            			+ collectionDescriptor.getFieldName() + " in the class "
+            			+ collectionDescriptor.getClassDescriptor().getClassName()
+            			+  " because it is not a collection");
+            }
+
             for (int i = 0; i < values.length; i++) {
                 AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                     .get(elementClass);
-                collection.addObject(atomicTypeConverter.getObject(values[i]));
+
+                ((ManageableCollection) objects).addObject(atomicTypeConverter.getObject(values[i]));
             }
 
-            return collection;
+            return objects;
         }
         catch(ValueFormatException vfe) {
           throw new ObjectContentManagerException("Cannot get the collection field : "

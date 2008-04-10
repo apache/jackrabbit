@@ -25,7 +25,7 @@ import net.sf.cglib.proxy.LazyLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 public class CollectionLazyLoader implements LazyLoader {
@@ -37,7 +37,7 @@ public class CollectionLazyLoader implements LazyLoader {
 	private Node collectionParentNode;
 	private CollectionDescriptor collectionDescriptor;
 	private Class collectionFieldClass;
-	
+
 	public CollectionLazyLoader(CollectionConverter collectionConverter, Session session, Node parentNode,
 			                                               CollectionDescriptor collectionDescriptor, Class collectionFieldClass ) {
 		this.collectionConverter = collectionConverter;
@@ -48,9 +48,9 @@ public class CollectionLazyLoader implements LazyLoader {
 	}
 
 	public Object loadObject() {
-	
-		
-		ManageableCollection collection = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor, collectionFieldClass);
-		return collection;
+
+
+		ManageableObjects objects = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor, collectionFieldClass);
+		return objects;
 	}
 }

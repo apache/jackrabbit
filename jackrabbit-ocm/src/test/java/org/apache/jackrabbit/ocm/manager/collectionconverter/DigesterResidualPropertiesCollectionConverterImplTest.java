@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableHashMap;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
 
 /**
@@ -86,7 +86,7 @@ public class DigesterResidualPropertiesCollectionConverterImplTest extends Diges
             residual = new Residual.ResidualProperties();
             residual.setPath("/test");
 
-            ManagedHashMap map = new ManagedHashMap();
+            ManageableHashMap map = new ManageableHashMap();
             map.put("value1", "Value1");
             map.put("value2", "Value2");
             map.put("value3", "Value3");
@@ -112,7 +112,7 @@ public class DigesterResidualPropertiesCollectionConverterImplTest extends Diges
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
-            map = new ManagedHashMap();
+            map = new ManageableHashMap();
             map.put("value11", "Value11");
             map.put("value12", "Value12");
             map.put("value13", "Value13");
