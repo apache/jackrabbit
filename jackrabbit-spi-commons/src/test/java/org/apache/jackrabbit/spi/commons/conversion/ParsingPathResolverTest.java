@@ -95,10 +95,6 @@ public class ParsingPathResolverTest extends TestCase {
         assertValidPath("../a/b/../../../../f");
         assertValidPath("a/../..");
         assertValidPath("../../a/.");
-
-        // TODO: Should these paths be detected as invalid by the parser?
-        assertValidPath("/..");
-        assertValidPath("/a/b/../../..");
     }
 
     /**

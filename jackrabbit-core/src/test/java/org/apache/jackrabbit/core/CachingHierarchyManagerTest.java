@@ -44,7 +44,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         ItemStateManager provider = new MyItemStateManager();
         cache = new CachingHierarchyManager(rootNodeId, provider, null);
         PathFactory factory = PathFactoryImpl.getInstance();
-        final Path path = factory.create("{}\t{}");
+        final Path path = factory.getRootPath();
         for(int i=0; i<3; i++) {
             new Thread(new Runnable() {
                 public void run() {

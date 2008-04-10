@@ -485,7 +485,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 Path parentPath = absPath.getAncestor(1);
                 while (nid == null) {
                     nid = session.getHierarchyManager().resolveNodePath(parentPath);
-                    if (parentPath.getDepth() == 1) {
+                    if (parentPath.getDepth() == Path.ROOT_DEPTH) {
                         // root-node reached
                         break;
                     } else {
