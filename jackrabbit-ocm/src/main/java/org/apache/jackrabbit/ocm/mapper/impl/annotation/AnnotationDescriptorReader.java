@@ -20,6 +20,9 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -32,6 +35,7 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ImplementDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
+import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
@@ -42,7 +46,7 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 public class AnnotationDescriptorReader implements DescriptorReader
 {
 	private static final Log log = LogFactory.getLog(AnnotationDescriptorReader.class);
-	
+
 	List<Class> annotatedClassNames;
     public AnnotationDescriptorReader(List<Class> annotatedClassNames)
     {
@@ -53,24 +57,24 @@ public class AnnotationDescriptorReader implements DescriptorReader
 
     public MappingDescriptor loadClassDescriptors()
 	{
-		MappingDescriptor mappingDescriptor = new MappingDescriptor();	
+		MappingDescriptor mappingDescriptor = new MappingDescriptor();
 		for (Class clazz : annotatedClassNames) {
-			
+
 			ClassDescriptor classDescriptor = buildClassDescriptor(mappingDescriptor, clazz);
 			mappingDescriptor.addClassDescriptor(classDescriptor);
 		}
 		return mappingDescriptor;
-		
+
 	}
-	
+
 	private ClassDescriptor buildClassDescriptor(MappingDescriptor mappingDescriptor, Class clazz)
 	{
 		ClassDescriptor classDescriptor = null;
-		
+
 		Node nodeAnnotation =  (Node) clazz.getAnnotation(Node.class);
 		if (nodeAnnotation != null)
 		{
-			classDescriptor = createClassDescriptor(clazz, nodeAnnotation);	
+			classDescriptor = createClassDescriptor(clazz, nodeAnnotation);
 			addImplementDescriptor(classDescriptor, clazz);
 			addAttributeDescriptors(mappingDescriptor, classDescriptor, clazz);
 			return classDescriptor;
@@ -79,9 +83,9 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		{
 			throw  new InitMapperException("The annotation @Node is not defined for the persistent class " + clazz.getName());
 		}
-	
-		
-		
+
+
+
 	}
 
 	private ClassDescriptor createClassDescriptor(Class clazz, Node nodeAnnotation)
@@ -94,22 +98,22 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		{
 		     classDescriptor.setJcrSuperTypes(nodeAnnotation.jcrSuperTypes());
 		}
-		
+
 		if (nodeAnnotation.jcrMixinTypes() != null && ! nodeAnnotation.jcrMixinTypes().equals(""))
-		{		
+		{
 		     classDescriptor.setJcrMixinTypes(nodeAnnotation.jcrMixinTypes());
 		}
-		
+
 		if (nodeAnnotation.extend() != null && ! nodeAnnotation.extend().equals(Object.class))
 		{
 		     classDescriptor.setExtend(nodeAnnotation.extend().getName());
 		}
-		
+
 		classDescriptor.setAbstract(nodeAnnotation.isAbstract());
 		classDescriptor.setInterface(clazz.isInterface());
 		return classDescriptor;
 	}
-	
+
 	private void addImplementDescriptor(ClassDescriptor classDescriptor, Class clazz)
 	{
 		Implement implementAnnotation = (Implement) clazz.getAnnotation(Implement.class);
@@ -119,9 +123,9 @@ public class AnnotationDescriptorReader implements DescriptorReader
             implementDescriptor.setInterfaceName(implementAnnotation.interfaceName().getName());
             classDescriptor.addImplementDescriptor(implementDescriptor);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Add FieldDescriptors, BeanDescriptors and CollectionDescriptors.
 	 * The descriptots can be defined on the getter methods or on the field declation.
@@ -137,103 +141,126 @@ public class AnnotationDescriptorReader implements DescriptorReader
 	}
 
 	private void addDescriptorsFromFields(MappingDescriptor mappingDescriptor, ClassDescriptor classDescriptor, Class clazz) {
-	
+
 		java.lang.reflect.Field[] fields = clazz.getDeclaredFields();
+
 	    for (int index = 0; index < fields.length; index++)
 	    {
+
 			Field fieldAnnotation = fields[index].getAnnotation(Field.class);
 			if (fieldAnnotation != null) {
 				addFieldDescriptor(classDescriptor, fields[index].getName(), fieldAnnotation);
 			}
-			
+
 			// Check if there is an Bean annotation
 			Bean beanAnnotation = fields[index].getAnnotation(Bean.class);
 			if (beanAnnotation != null) {
 				addBeanDescriptor(classDescriptor, fields[index].getName(), beanAnnotation);
 			}
-			
+
 			// Check if there is an Collection annotation
 			Collection collectionAnnotation = fields[index].getAnnotation(Collection.class);
 			if (collectionAnnotation != null) {
-				addCollectionDescriptor(mappingDescriptor, classDescriptor, fields[index].getName(),
-						                fields[index].getName(), collectionAnnotation);
+				addCollectionDescriptor(mappingDescriptor, classDescriptor, fields[index], collectionAnnotation);
 			}
-					
-		   	
+
+
 		}
-		
+
 	}
 
 	private void addDescriptorsFromGetters(MappingDescriptor mappingDescriptor, ClassDescriptor classDescriptor, Class clazz) {
 		BeanInfo beanInfo;
 		try {
 			beanInfo = Introspector.getBeanInfo(clazz);
-		} catch (IntrospectionException e) {
-			throw new RuntimeException(e);
-		}
-		PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-		for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+			PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
 
-			// Check if there is an Field annotation
-			Field fieldAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Field.class);
-			if (fieldAnnotation != null) {
-				addFieldDescriptor(classDescriptor, propertyDescriptor.getName(), fieldAnnotation);
+				// Check if there is an Field annotation
+				Field fieldAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Field.class);
+				if (fieldAnnotation != null) {
+					addFieldDescriptor(classDescriptor, propertyDescriptor.getName(), fieldAnnotation);
+				}
+
+				// Check if there is an Bean annotation
+				Bean beanAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Bean.class);
+				if (beanAnnotation != null) {
+					addBeanDescriptor(classDescriptor, propertyDescriptor.getName(), beanAnnotation);
+				}
+
+				// Check if there is an Collection annotation
+				Collection collectionAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Collection.class);
+				if (collectionAnnotation != null) {
+
+					addCollectionDescriptor(mappingDescriptor, classDescriptor,
+							                propertyDescriptor.getPropertyType().getDeclaredField(propertyDescriptor.getName()),
+							                collectionAnnotation);
+				}
 			}
-			
-			// Check if there is an Bean annotation
-			Bean beanAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Bean.class);
-			if (beanAnnotation != null) {
-				addBeanDescriptor(classDescriptor, propertyDescriptor.getName(), beanAnnotation);
-			}
-			
-			// Check if there is an Collection annotation
-			Collection collectionAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Collection.class);
-			if (collectionAnnotation != null) {
-				addCollectionDescriptor(mappingDescriptor, classDescriptor, propertyDescriptor.getName(),
-						                propertyDescriptor.getReadMethod().getReturnType().getName(), collectionAnnotation);
-			}
+		} catch (Exception e) {
+			throw new InitMapperException("Impossible to read the mapping descriptor from the getter", e);
 		}
+
 	}
 
 
 	private void addCollectionDescriptor(MappingDescriptor mappingDescriptor, ClassDescriptor descriptor,
-			                             String fieldName, String collectionClassName, Collection collectionAnnotation) {
-		
+			                             java.lang.reflect.Field field, Collection collectionAnnotation) {
+
 		Class targetClass = collectionAnnotation.elementClassName();
-		CollectionDescriptor collectionDescriptor = new CollectionDescriptor();	
-		
-		collectionDescriptor.setFieldName(fieldName);
-		
+		CollectionDescriptor collectionDescriptor = new CollectionDescriptor();
+
+		collectionDescriptor.setFieldName(field.getName());
+
 		if (collectionAnnotation.jcrName() != null && ! collectionAnnotation.jcrName().equals(""))
 		{
 		   collectionDescriptor.setJcrName(collectionAnnotation.jcrName());
 		}
 		else
 		{
-		   collectionDescriptor.setJcrName(fieldName);
+		   collectionDescriptor.setJcrName(field.getName());
 		}
-		
+
 		Node annotationNode = (Node) targetClass.getAnnotation(Node.class);
 		collectionDescriptor.setProxy(collectionAnnotation.proxy());
-		
+
 		collectionDescriptor.setAutoInsert(collectionAnnotation.autoInsert());
 		collectionDescriptor.setAutoRetrieve(collectionAnnotation.autoRetrieve());
 		collectionDescriptor.setAutoUpdate(collectionAnnotation.autoUpdate());
-		collectionDescriptor.setCollectionClassName(collectionClassName);
+		collectionDescriptor.setCollectionClassName(field.getName());
 		if (! collectionAnnotation.elementClassName().equals(Object.class))
 		{
 			collectionDescriptor.setElementClassName(collectionAnnotation.elementClassName().getName());
 		}
 		else
 		{
-		    collectionDescriptor.setElementClassName(targetClass.getName());
+
+//		    collectionDescriptor.setElementClassName(targetClass.getName());
+			Type type = field.getGenericType();
+			if (type instanceof ParameterizedType)
+			{
+				Type[] paramType = ((ParameterizedType) type).getActualTypeArguments();
+				//TODO : change this condition. No sure if it will be all the time true.
+				// If only one type argument, the attribute is certainly a collection
+				if (paramType.length == 1)
+				{
+					collectionDescriptor.setElementClassName(paramType[0].toString().replace("class ", ""));
+				}
+				// either, it is certainly a map
+				else
+				{
+					collectionDescriptor.setElementClassName(paramType[1].toString().replace("class ", ""));
+				}
+
+			}
+
 		}
 
 		if (! collectionAnnotation.collectionClassName().equals(Object.class))
 		{
 			collectionDescriptor.setCollectionClassName(collectionAnnotation.collectionClassName().getName());
 		}
-		
+
 		collectionDescriptor.setCollectionConverter(collectionAnnotation.collectionConverter().getName());
 		if (annotationNode != null)
 		{
@@ -244,11 +271,11 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		collectionDescriptor.setJcrProtected(collectionAnnotation.jcrProtected());
 		collectionDescriptor.setJcrOnParentVersion(collectionAnnotation.jcrOnParentVersion());
 		collectionDescriptor.setJcrMandatory(collectionAnnotation.jcrMandatory());
-		
+
 
 		descriptor.addCollectionDescriptor(collectionDescriptor);
 	}
-	
+
 	private void addBeanDescriptor(ClassDescriptor classDescriptor, String fieldName, Bean beanAnnotation) {
 		BeanDescriptor beanDescriptor = new BeanDescriptor();
 		beanDescriptor.setFieldName(fieldName);
@@ -260,8 +287,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		{
 			beanDescriptor.setJcrName(fieldName);
 		}
-		
-		beanDescriptor.setProxy(beanAnnotation.proxy());				
+
+		beanDescriptor.setProxy(beanAnnotation.proxy());
 		beanDescriptor.setConverter(beanAnnotation.converter().getName());
 		beanDescriptor.setAutoInsert(beanAnnotation.autoInsert());
 		beanDescriptor.setAutoRetrieve(beanAnnotation.autoRetrieve());
@@ -270,8 +297,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		beanDescriptor.setJcrAutoCreated(beanAnnotation.jcrAutoCreated());
 		beanDescriptor.setJcrMandatory(beanAnnotation.jcrMandatory());
 		beanDescriptor.setJcrOnParentVersion(beanAnnotation.jcrOnParentVersion());
-		beanDescriptor.setJcrProtected(beanAnnotation.jcrProtected());			
-		beanDescriptor.setJcrSameNameSiblings(beanAnnotation.jcrSameNameSiblings());				
+		beanDescriptor.setJcrProtected(beanAnnotation.jcrProtected());
+		beanDescriptor.setJcrSameNameSiblings(beanAnnotation.jcrSameNameSiblings());
 
 		classDescriptor.addBeanDescriptor(beanDescriptor);
 	}
@@ -279,55 +306,55 @@ public class AnnotationDescriptorReader implements DescriptorReader
 
 	private void addFieldDescriptor(ClassDescriptor classDescriptor, String fieldName, Field fieldAnnotation)
 	{
-				
-		FieldDescriptor fieldDescriptor = new FieldDescriptor();				
+
+		FieldDescriptor fieldDescriptor = new FieldDescriptor();
 		fieldDescriptor.setFieldName(fieldName);
 		if ((fieldAnnotation.jcrName() != null) && (!fieldAnnotation.jcrName().equals("")))
 		{
-			fieldDescriptor.setJcrName(fieldAnnotation.jcrName());	
+			fieldDescriptor.setJcrName(fieldAnnotation.jcrName());
 		}
 		else
 		{
-			fieldDescriptor.setJcrName(fieldName);	
+			fieldDescriptor.setJcrName(fieldName);
 		}
-		fieldDescriptor.setId(fieldAnnotation.id());				
+		fieldDescriptor.setId(fieldAnnotation.id());
 		fieldDescriptor.setPath(fieldAnnotation.path());
 		fieldDescriptor.setUuid(fieldAnnotation.uuid());
-		
+
 		// It is not possible to set a null value into an annotation attribute.
 		// If the converter == Object.class, it should be considered as null
 		if (! fieldAnnotation.converter().equals(Object.class))
 		{
 		    fieldDescriptor.setConverter(fieldAnnotation.converter().getName());
 		}
-		
+
 		// It is not possible to set a null value into an annotation attribute.
 		// If the jcrDefaultValue value is an empty string => it should be considered as null
 		if ((fieldAnnotation.jcrDefaultValue() != null) && (!fieldAnnotation.jcrDefaultValue().equals("")))
 		{
 		     fieldDescriptor.setJcrDefaultValue(fieldAnnotation.jcrDefaultValue());
 		}
-		
+
 		// It is not possible to set a null value into an annotation attribute.
 		// If the jcrValueConstraints value is an empty string => it should be considered as null
 		if ((fieldAnnotation.jcrValueConstraints() != null) && (!fieldAnnotation.jcrValueConstraints().equals("")))
-		{	
+		{
 		     fieldDescriptor.setJcrValueConstraints(fieldAnnotation.jcrValueConstraints());
 		}
-		
+
 		// It is not possible to set a null value into an annotation attribute.
 		// If the jcrProperty value is an empty string => it should be considered as null
 		if ((fieldAnnotation.jcrType() != null) && (!fieldAnnotation.jcrType().equals("")))
 		{
 		    fieldDescriptor.setJcrType(fieldAnnotation.jcrType());
 		}
-		
+
 		fieldDescriptor.setJcrAutoCreated(fieldAnnotation.jcrAutoCreated());
 		fieldDescriptor.setJcrMandatory(fieldAnnotation.jcrMandatory());
 		fieldDescriptor.setJcrOnParentVersion(fieldAnnotation.jcrOnParentVersion());
 		fieldDescriptor.setJcrProtected(fieldAnnotation.jcrProtected());
 		fieldDescriptor.setJcrMultiple(fieldAnnotation.jcrMultiple());
-		
+
 		//fieldDescriptor.setJcrType(value)
 		classDescriptor.addFieldDescriptor(fieldDescriptor);
 	}

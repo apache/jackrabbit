@@ -36,7 +36,8 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -69,8 +70,8 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
     protected void doInsertCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) throws RepositoryException {
-        addUuidProperties(session, parentNode, collectionDescriptor, collection);
+                                      ManageableObjects objects) throws RepositoryException {
+        addUuidProperties(session, parentNode, collectionDescriptor, objects);
     }
 
     /**
@@ -80,7 +81,7 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
     protected void doUpdateCollection(Session session,
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
-                                 ManageableCollection collection) throws RepositoryException {
+                                 ManageableObjects objects) throws RepositoryException {
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
         // Delete existing values
@@ -88,17 +89,18 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
             parentNode.setProperty(jcrName, (Value[]) null);
         }
 
-        if (collection == null) {
+        if (objects == null) {
             return;
         }
 
 
-        addUuidProperties(session, parentNode, collectionDescriptor, collection);    }
+        addUuidProperties(session, parentNode, collectionDescriptor, objects);
+    }
 
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
                                                    Node parentNode,
                                                    CollectionDescriptor collectionDescriptor,
                                                    Class collectionFieldClass) throws RepositoryException {
@@ -110,13 +112,17 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
             Property property = parentNode.getProperty(jcrName);
             Value[] values = property.getValues();
 
-            ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+            ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
             for (int i = 0; i < values.length; i++) {
 
-                collection.addObject(values[i].getString());
+            	if (objects instanceof ManageableCollection)
+                    ((ManageableCollection)objects).addObject(values[i].getString());
+            	else
+            		throw new ObjectContentManagerException(
+            				"Unsupported data type in ReferenceCollectionConverter : " + objects.getClass().getName());
             }
 
-            return collection;
+            return objects;
         }
         catch(ValueFormatException vfe) {
           throw new ObjectContentManagerException("Cannot get the collection field : "
@@ -141,17 +147,19 @@ public class ReferenceCollectionConverterImpl extends AbstractCollectionConverte
         return false;
     }
 
-	private void addUuidProperties(Session session, Node parentNode, CollectionDescriptor collectionDescriptor, ManageableCollection collection) throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
+	private void addUuidProperties(Session session, Node parentNode,
+			             CollectionDescriptor collectionDescriptor, ManageableObjects objects)
+	                     throws UnsupportedRepositoryOperationException, RepositoryException, VersionException, LockException, ConstraintViolationException {
 		try {
-            if (collection == null) {
+            if (objects == null) {
                 return;
             }
 
             String jcrName = getCollectionJcrName(collectionDescriptor);
-            Value[] values = new Value[collection.getSize()];
+            Value[] values = new Value[objects.getSize()];
             ValueFactory valueFactory = session.getValueFactory();
-            Iterator collectionIterator = collection.getIterator();
-            for (int i = 0; i < collection.getSize(); i++) {
+            Iterator collectionIterator = objects.getIterator();
+            for (int i = 0; i < objects.getSize(); i++) {
                 String uuid = (String) collectionIterator.next();
                 values[i] = valueFactory.createValue(uuid, PropertyType.REFERENCE);
 

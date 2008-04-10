@@ -31,7 +31,9 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
@@ -91,8 +93,8 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
     protected void doInsertCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) throws RepositoryException {
-        if (collection == null) {
+                                      ManageableObjects objects) throws RepositoryException {
+        if (objects == null) {
             return;
         }
 
@@ -108,7 +110,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
 
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
-        Iterator collectionIterator = collection.getIterator();
+        Iterator collectionIterator = objects.getIterator();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
             String elementJcrName = null;
@@ -134,12 +136,12 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
     protected void doUpdateCollection(Session session,
                                  Node parentNode,
                                  CollectionDescriptor collectionDescriptor,
-                                 ManageableCollection collection) throws RepositoryException {
+                                 ManageableObjects objects) throws RepositoryException {
 
     	String jcrName = getCollectionJcrName(collectionDescriptor);
     	boolean hasNode = parentNode.hasNode(jcrName);
         // If the new value for the collection is null, drop the node matching to the collection
-    	if (collection == null)
+    	if (objects == null)
         {
             if (hasNode)
             {
@@ -151,12 +153,12 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
     	// If there is not yet a node matching to the collection, insert the collection
     	if (! hasNode)
     	{
-    		this.doInsertCollection(session, parentNode, collectionDescriptor, collection);
+    		this.doInsertCollection(session, parentNode, collectionDescriptor, objects);
     		return;
     	}
 
     	// update process
-    	
+
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
         Node collectionNode = parentNode.getNode(jcrName);
         //  If the collection elements have not an id, it is not possible to find the matching JCR nodes => delete the complete collection
@@ -165,7 +167,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             collectionNode = parentNode.addNode(jcrName);
         }
 
-        Iterator collectionIterator = collection.getIterator();
+        Iterator collectionIterator = objects.getIterator();
 
         Map updatedItems = new HashMap();
         while (collectionIterator.hasNext()) {
@@ -214,7 +216,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
                                               Node parentNode,
                                               CollectionDescriptor collectionDescriptor,
                                               Class collectionFieldClass) throws RepositoryException {
@@ -224,7 +226,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             return null;
         }
 
-        ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+        ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
         Node collectionNode = parentNode.getNode(jcrName);
         NodeIterator children = collectionNode.getNodes();
         Class elementClass = ReflectionUtils.forName(collectionDescriptor.getElementClassName());
@@ -232,10 +234,24 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         while (children.hasNext()) {
             Node itemNode = children.nextNode();
             Object item = objectConverter.getObject(session, elementClass, itemNode.getPath());
-            collection.addObject(item);
+            if ( objects instanceof ManageableCollection)
+            	((ManageableCollection)objects).addObject(item);
+            else {
+            	ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(elementClass);
+            	if (!elementClassDescriptor.hasIdField())
+            	{
+            		throw new JcrMappingException("Impossible to use a map for the field : "
+            				                      + collectionDescriptor.getFieldName()
+            				                      + "in the class : " + collectionDescriptor.getCollectionClassName()
+            				                      + ". The element objects have no id field (check their OCM mapping).");
+            	}
+            	Object elementId = ReflectionUtils.getNestedProperty(item,
+            			                           elementClassDescriptor.getIdFieldDescriptor().getFieldName());
+                ((ManageableMap) objects).addObject(elementId, item);
+            }
         }
 
-        return collection;
+        return objects;
     }
 
     /**

@@ -33,7 +33,9 @@ import javax.jcr.ValueFormatException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -67,9 +69,9 @@ public class ResidualPropertiesCollectionConverterImpl extends
      */
     protected void doInsertCollection(Session session, Node parentNode,
         CollectionDescriptor collectionDescriptor,
-        ManageableCollection collection) throws RepositoryException {
+        ManageableObjects objects) throws RepositoryException {
         internalSetProperties(session, parentNode, collectionDescriptor,
-            collection, false);
+            objects, false);
     }
 
     /**
@@ -78,15 +80,15 @@ public class ResidualPropertiesCollectionConverterImpl extends
      */
     protected void doUpdateCollection(Session session, Node parentNode,
         CollectionDescriptor collectionDescriptor,
-        ManageableCollection collection) throws RepositoryException {
+        ManageableObjects objects) throws RepositoryException {
         internalSetProperties(session, parentNode, collectionDescriptor,
-            collection, true);
+            objects, true);
     }
 
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
         Node parentNode, CollectionDescriptor collectionDescriptor,
         Class collectionFieldClass) throws RepositoryException {
         try {
@@ -96,7 +98,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
                 return null;
             }
 
-            ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+            ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
             AtomicTypeConverter atomicTypeConverter = getAtomicTypeConverter(collectionDescriptor);
 
             while (pi.hasNext()) {
@@ -120,15 +122,21 @@ public class ResidualPropertiesCollectionConverterImpl extends
                     value = atomicTypeConverter.getObject(prop.getValue());
                 }
 
-                if (collection instanceof Map) {
+                if (objects instanceof Map) {
                     String name = prop.getName();
-                    ((Map) collection).put(name, value);
+                    ((Map) objects).put(name, value);
                 } else {
-                    collection.addObject(value);
+                	if (objects instanceof ManageableCollection)
+                         ((ManageableCollection)objects).addObject(value);
+                	else
+                	{
+                		String name = prop.getName();
+                		((ManageableMap)objects).addObject(name, value);
+                	}
                 }
             }
 
-            return collection;
+            return objects;
         } catch (ValueFormatException vfe) {
             throw new ObjectContentManagerException("Cannot get the collection field : "
                 + collectionDescriptor.getFieldName() + "for class "
@@ -148,13 +156,13 @@ public class ResidualPropertiesCollectionConverterImpl extends
 
     private void internalSetProperties(Session session, Node parentNode,
         CollectionDescriptor collectionDescriptor,
-        ManageableCollection collection, boolean removeExisting)
+        ManageableObjects objects, boolean removeExisting)
         throws RepositoryException {
 
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
         // can only persist maps, not general collections
-        if (!(collection instanceof Map)) {
+        if (!(objects instanceof Map)) {
             return;
         }
 
@@ -171,7 +179,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
         AtomicTypeConverter atomicTypeConverter = getAtomicTypeConverter(collectionDescriptor);
 
         try {
-            Map map = (Map) collection;
+            Map map = (Map) objects;
             ValueFactory valueFactory = session.getValueFactory();
             for (Iterator ei = map.entrySet().iterator(); ei.hasNext();) {
                 Map.Entry entry = (Map.Entry) ei.next();

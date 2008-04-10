@@ -27,8 +27,8 @@ import net.sf.cglib.proxy.LazyLoader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
@@ -37,8 +37,8 @@ public class ProxyManagerImpl implements ProxyManager
 {
 
 	private final static Log log = LogFactory.getLog(ProxyManagerImpl.class);
-	
-	
+
+
 
 	/**
 	 *
@@ -46,7 +46,7 @@ public class ProxyManagerImpl implements ProxyManager
 	 */
 	public  Object createBeanProxy(Session session, ObjectConverter objectConverter, Class beanClass, String path)
 	{
-		
+
        try {
 			if (!session.itemExists(path)) {
 				return null;
@@ -54,8 +54,8 @@ public class ProxyManagerImpl implements ProxyManager
 		} catch (RepositoryException e) {
 			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to check,if the object exits on " + path, e);
 		}
-				
-		LazyLoader loader = new BeanLazyLoader(objectConverter, session, beanClass, path) ;		
+
+		LazyLoader loader = new BeanLazyLoader(objectConverter, session, beanClass, path) ;
 		return  Enhancer.create(beanClass, loader);
 	}
 
@@ -64,15 +64,15 @@ public class ProxyManagerImpl implements ProxyManager
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager#createCollectionProxy(javax.jcr.Session, org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, java.lang.Class)
 	 */
 	public  Object createCollectionProxy(Session session, CollectionConverter collectionConverter, Node parentNode,  CollectionDescriptor collectionDescriptor, Class collectionFieldClass)
-	{	
-		
+	{
+
 		if (collectionConverter.isNull(session, parentNode, collectionDescriptor, collectionFieldClass)) 	{
 			return null;
 		}
-		
-		ManageableCollection manageableCollection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
-		
+
+		ManageableObjects manageableCollection = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
+
 		LazyLoader loader = new CollectionLazyLoader(collectionConverter, session, parentNode, collectionDescriptor, collectionFieldClass);
 		return  Enhancer.create(manageableCollection.getClass(), loader);
-	}	
+	}
 }

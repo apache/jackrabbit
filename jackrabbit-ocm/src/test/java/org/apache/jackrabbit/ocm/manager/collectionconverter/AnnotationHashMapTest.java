@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -58,7 +61,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-        	
+
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with null hashmap
             // --------------------------------------------------------------------------------
@@ -76,6 +79,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             main = (Main) ocm.getObject( "/test");
             assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertNull("HashMap is not null", main.getHashMap());
+            assertNull("Map is not null", main.getMap());
 
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
@@ -86,17 +90,22 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             main.setText("Main text");
 
             HashMapElement hashMapElement = new HashMapElement();
+            Map<String, Element> map = new HashMap<String, Element>();
+
             Element e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
+            map.put("e1", e1);
 
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
             hashMapElement.addObject(e2);
+            map.put("e2", e2);
 
             main.setHashMap(hashMapElement);
+            main.setMap(map);
 
             ocm.update(main);
             ocm.save();
@@ -106,28 +115,37 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
             assertNotNull("main.getHashMap() is null", main.getHashMap());
+            assertNotNull("main.getHashMap() is null", main.getMap());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
+            assertTrue("Incorrect para element", ((Element) main.getMap().get("e1")).getText().equals("Element 1"));
 
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             hashMapElement = new HashMapElement();
+            map = new HashMap<String, Element>();
+
             e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
+            map.put("e1", e1);
 
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
             hashMapElement.addObject(e2);
+            map.put("e3", e2);
 
             Element e3 = new Element();
             e3.setId("e4");
             e3.setText("Element 4");
             hashMapElement.addObject(e3);
+            map.put("e4", e3);
+
             main.setHashMap(hashMapElement);
+            main.setMap(map);
 
             ocm.update(main);
             ocm.save();
@@ -138,7 +156,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             assertNotNull("main.getElements() is null", main.getHashMap());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
             assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e4")).getText().equals("Element 4"));
-
+            assertTrue("Incorrect para element", main.getMap().get("e4").getText().equals("Element 4"));
         }
         catch (Exception e)
         {

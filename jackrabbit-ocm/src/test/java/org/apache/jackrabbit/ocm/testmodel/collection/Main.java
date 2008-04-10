@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.collection;
 
+import java.util.Map;
+
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
@@ -34,8 +36,11 @@ public class Main
     @Collection (elementClassName=Element.class, collectionClassName=HashMapElement.class)
     private HashMapElement hashMap;
 
+    @Collection private Map<String, Element> map;
+
     @Collection (elementClassName=Element.class, collectionClassName=ArrayListElement.class)
     private ArrayListElement list;
+
 
     public String getPath() {
 		return path;
@@ -62,7 +67,7 @@ public class Main
     {
 		return list;
 	}
-	
+
     public void setList(ArrayListElement list)
     {
 		this.list = list;
@@ -81,6 +86,16 @@ public class Main
     {
         this.text = text;
     }
+
+	public Map<String, Element> getMap()
+	{
+		return map;
+	}
+
+	public void setMap(Map<String, Element> map)
+	{
+		this.map = map;
+	}
 
 
 }

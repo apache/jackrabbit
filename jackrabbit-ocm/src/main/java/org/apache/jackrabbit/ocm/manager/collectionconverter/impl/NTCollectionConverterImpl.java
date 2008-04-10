@@ -38,8 +38,11 @@ import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectionUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
@@ -107,14 +110,14 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     protected void doInsertCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) {
-        if (collection == null) {
+                                      ManageableObjects objects) {
+        if (objects == null) {
             return;
         }
 
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
-        Iterator collectionIterator = collection.getIterator();
+        Iterator collectionIterator = objects.getIterator();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
             String elementJcrName = null;
@@ -139,22 +142,22 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     protected void doUpdateCollection(Session session,
                                       Node parentNode,
                                       CollectionDescriptor collectionDescriptor,
-                                      ManageableCollection collection) throws RepositoryException {
+                                      ManageableObjects objects) throws RepositoryException {
 
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(
                 ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
-        if (collection == null || !elementClassDescriptor.hasIdField()) {
+        if (objects == null || !elementClassDescriptor.hasIdField()) {
             this.deleteCollectionItems(session,
                                        parentNode,
                                        elementClassDescriptor.getJcrType());
         }
 
-        if (collection == null) {
+        if (objects == null) {
             return;
         }
 
-        Iterator collectionIterator = collection.getIterator();
+        Iterator collectionIterator = objects.getIterator();
         Map updatedItems = new HashMap();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
@@ -201,12 +204,12 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     /**
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter#getCollection(javax.jcr.Session, javax.jcr.Node, org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor, java.lang.Class)
      */
-    protected ManageableCollection doGetCollection(Session session,
+    protected ManageableObjects doGetCollection(Session session,
                                                    Node parentNode,
                                                    CollectionDescriptor collectionDescriptor,
                                                    Class collectionFieldClass) throws RepositoryException {
 	    ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
-        ManageableCollection collection = ManageableCollectionUtil.getManageableCollection(collectionFieldClass);
+        ManageableObjects objects = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
 
         NodeIterator nodes = this.getCollectionNodes(session, parentNode, elementClassDescriptor.getJcrType());
 
@@ -219,10 +222,25 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
             Node itemNode = (Node) nodes.next();
             log.debug("Collection node found : " + itemNode.getPath());
             Object item = objectConverter.getObject(session,  itemNode.getPath());
-            collection.addObject(item);
+            mapper.getClassDescriptorByClass(item.getClass());
+            if ( objects instanceof ManageableCollection)
+            	((ManageableCollection)objects).addObject(item);
+            else {
+            	if (!elementClassDescriptor.hasIdField())
+            	{
+            		throw new JcrMappingException("Impossible to use a map for the field : "
+            				                      + collectionDescriptor.getFieldName()
+            				                      + "in the class : " + collectionDescriptor.getCollectionClassName()
+            				                      + ". The element objects have no id field (check their OCM mapping)");
+            	}
+            	Object elementId = ReflectionUtils.getNestedProperty(item,
+            			                           elementClassDescriptor.getIdFieldDescriptor().getFieldName());
+                ((ManageableMap) objects).addObject(elementId, item);
+            }
+
         }
 
-        return collection;
+        return objects;
     }
 
     /**
@@ -238,7 +256,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
         String elementClassName = collectionDescriptor.getElementClassName();
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.forName(elementClassName));
-		QueryResult queryResult = getQuery(session, parentNode, elementClassDescriptor.getJcrType());    	
+		QueryResult queryResult = getQuery(session, parentNode, elementClassDescriptor.getJcrType());
     	return queryResult.getNodes().getSize() == 0;
     }
 
@@ -270,9 +288,9 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     }
 
 
-	
+
 	private QueryResult getQuery(Session session, Node parentNode, String jcrNodeType) throws RepositoryException, InvalidQueryException {
-    	String jcrExpression= "";    	
+    	String jcrExpression= "";
     	if (!parentNode.getPath().startsWith("/jcr:system/jcr:versionStorage"))
     	{
             jcrExpression = "SELECT * FROM " + jcrNodeType + " WHERE jcr:path LIKE '" + parentNode.getPath()
@@ -280,12 +298,12 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
     	}
     	else
     	{
-    	
+
     		jcrExpression = "SELECT * FROM nt:frozenNode" + " WHERE jcr:path LIKE '" + parentNode.getPath() + "/%'"
     		                 + " AND NOT jcr:path LIKE '" + parentNode.getPath() + "/%/%'"
     		                 + " AND jcr:frozenPrimaryType = '" + jcrNodeType + "'";
 
-    		
+
     	}
         Query jcrQuery = session.getWorkspace().getQueryManager().createQuery(jcrExpression, javax.jcr.query.Query.SQL);
         QueryResult queryResult = jcrQuery.execute();
