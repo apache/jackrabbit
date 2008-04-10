@@ -111,7 +111,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 			//Test Date & Calendar
 			filter = queryManager.createFilter(Atomic.class);
 			Calendar calendar = Calendar.getInstance();
-			calendar.set(2012, 12, 01);
+			calendar.set(2012, Calendar.DECEMBER, 01);
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
 			
@@ -120,7 +120,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 
 			filter = queryManager.createFilter(Atomic.class);
 			calendar = Calendar.getInstance();
-			calendar.set(1975, 12, 01);
+			calendar.set(1975, Calendar.DECEMBER, 01);
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
 			
