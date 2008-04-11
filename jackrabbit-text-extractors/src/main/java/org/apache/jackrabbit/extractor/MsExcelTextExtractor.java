@@ -17,20 +17,14 @@
 package org.apache.jackrabbit.extractor;
 
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFRow;
-import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.extractor.ExcelExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.CharArrayWriter;
-import java.io.CharArrayReader;
 import java.io.StringReader;
-import java.util.Iterator;
 
 /**
  * Text extractor for Microsoft Excel sheets.
@@ -65,40 +59,9 @@ public class MsExcelTextExtractor extends AbstractTextExtractor {
     public Reader extractText(InputStream stream,
                               String type,
                               String encoding) throws IOException {
-        CharArrayWriter writer = new CharArrayWriter();
         try {
             POIFSFileSystem fs = new POIFSFileSystem(stream);
-            HSSFWorkbook workbook = new HSSFWorkbook(fs);
-
-            for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                HSSFSheet sheet = workbook.getSheetAt(i);
-
-                Iterator rows = sheet.rowIterator();
-                while (rows.hasNext()) {
-                    HSSFRow row = (HSSFRow) rows.next();
-
-                    Iterator cells = row.cellIterator();
-                    while (cells.hasNext()) {
-                        HSSFCell cell = (HSSFCell) cells.next();
-                        switch (cell.getCellType()) {
-                        case HSSFCell.CELL_TYPE_NUMERIC:
-                            String num = Double.toString(cell.getNumericCellValue()).trim();
-                            if (num.length() > 0) {
-                                writer.write(num + " ");
-                            }
-                            break;
-                        case HSSFCell.CELL_TYPE_STRING:
-                            String text = cell.getStringCellValue().trim();
-                            if (text.length() > 0) {
-                                writer.write(text + " ");
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return new CharArrayReader(writer.toCharArray());
+            return new StringReader(new ExcelExtractor(fs).getText());
         } catch (RuntimeException e) {
             logger.warn("Failed to extract Excel text content", e);
             return new StringReader("");
