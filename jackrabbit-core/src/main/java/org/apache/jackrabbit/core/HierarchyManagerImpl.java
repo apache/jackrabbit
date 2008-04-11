@@ -225,14 +225,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * one parent.
      *
      * @param state item state
+     * @param useOverlayed whether to use overlayed state for shareable nodes
      * @return set of parent <code>NodeId</code>s. If state has no parent,
      *         array has length <code>0</code>.
      */
-    protected Set getParentIds(ItemState state) {
+    protected Set getParentIds(ItemState state, boolean useOverlayed) {
         if (state.isNode()) {
             // if this is a node, quickly check whether it is shareable and
             // whether it contains more than one parent
             NodeState ns = (NodeState) state;
+            if (ns.isShareable() && useOverlayed && ns.hasOverlayedState()) {
+                ns = (NodeState) ns.getOverlayedState();
+            }
             Set s = ns.getSharedSet();
             if (s.size() > 1) {
                 return s;
@@ -618,7 +622,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         try {
             ItemState state = getItemState(descendant);
-            Set parentIds = getParentIds(state);
+            Set parentIds = getParentIds(state, false);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return true;
@@ -627,7 +631,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 Iterator iter = parentIds.iterator();
                 while (iter.hasNext()) {
                     NodeId parentId = (NodeId) iter.next();
-                    grandparentIds.addAll(getParentIds(getItemState(parentId)));
+                    grandparentIds.addAll(getParentIds(getItemState(parentId), false));
                 }
                 parentIds = grandparentIds;
             }
@@ -658,10 +662,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         int depth = 1;
         try {
             ItemState state = getItemState(descendant);
-            if (state.hasOverlayedState()) {
-                state = state.getOverlayedState();
-            }
-            Set parentIds = getParentIds(state);
+            Set parentIds = getParentIds(state, true);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return depth;
@@ -672,10 +673,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
                 while (iter.hasNext()) {
                     NodeId parentId = (NodeId) iter.next();
                     state = getItemState(parentId);
-                    if (state.hasOverlayedState()) {
-                        state = state.getOverlayedState();
-                    }
-                    grandparentIds.addAll(getParentIds(state));
+                    grandparentIds.addAll(getParentIds(state, true));
                 }
                 parentIds = grandparentIds;
             }
