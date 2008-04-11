@@ -23,6 +23,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.apache.jackrabbit.util.Text;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -216,9 +217,12 @@ public class ConfigurationParser {
         } catch (ParserConfigurationException e) {
             throw new ConfigurationException(
                     "Unable to create configuration XML parser", e);
+        } catch (SAXParseException e) {
+            throw new ConfigurationException(
+                    "Configuration file syntax error. (Line: " + e.getLineNumber() + " Column: " + e.getColumnNumber() + ")", e);
         } catch (SAXException e) {
             throw new ConfigurationException(
-                    "Configuration file syntax error.", e);
+                    "Configuration file syntax error. ", e);
         } catch (IOException e) {
             throw new ConfigurationException(
                     "Configuration file could not be read.", e);
