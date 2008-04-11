@@ -394,6 +394,15 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 }
 
                 in = rs.getBinaryStream(1);
+
+                if (!externalBLOBs) {
+                    // JCR-1532: pre-fetch/buffer stream data
+                    ByteArrayInputStream bain = new ByteArrayInputStream(
+                            IOUtils.toByteArray(in));
+                    IOUtils.closeQuietly(in);
+                    in = bain;
+                }
+
                 PropertyState state = createNew(id);
                 Serializer.deserialize(state, in, blobStore);
 
