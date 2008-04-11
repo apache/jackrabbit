@@ -17,20 +17,13 @@
 package org.apache.jackrabbit.extractor;
 
 import org.apache.poi.poifs.eventfilesystem.POIFSReader;
-import org.apache.poi.poifs.eventfilesystem.POIFSReaderListener;
-import org.apache.poi.poifs.eventfilesystem.POIFSReaderEvent;
-import org.apache.poi.poifs.filesystem.DocumentInputStream;
-import org.apache.poi.util.LittleEndian;
+import org.apache.poi.hslf.extractor.PowerPointExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStreamReader;
-import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 
 /**
@@ -68,51 +61,15 @@ public class MsPowerPointTextExtractor extends AbstractTextExtractor {
                               String type,
                               String encoding) throws IOException {
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            MsPowerPointListener listener = new MsPowerPointListener(baos);
-            POIFSReader reader = new POIFSReader();
-            reader.registerListener(listener);
-            reader.read(stream);
-            return new InputStreamReader(
-                    new ByteArrayInputStream(baos.toByteArray()));
+            PowerPointExtractor extractor = new PowerPointExtractor(stream);
+            return new StringReader(extractor.getText(true, true));
         } catch (RuntimeException e) {
             logger.warn("Failed to extract PowerPoint text content", e);
             return new StringReader("");
         } finally {
-            stream.close();
-        }
-    }
-
-    //------------------------------------------------< MsPowerPointListener >
-
-    /**
-     * Reader listener.
-     */
-    private class MsPowerPointListener implements POIFSReaderListener {
-        private OutputStream os;
-
-        MsPowerPointListener(OutputStream os) {
-            this.os = os;
-        }
-
-        public void processPOIFSReaderEvent(POIFSReaderEvent event) {
             try {
-                if (!event.getName().equalsIgnoreCase("PowerPoint Document")) {
-                    return;
-                }
-                DocumentInputStream input = event.getStream();
-                byte[] buffer = new byte[input.available()];
-                input.read(buffer, 0, input.available());
-                for (int i = 0; i < buffer.length - 20; i++) {
-                    long type = LittleEndian.getUShort(buffer, i + 2);
-                    long size = LittleEndian.getUInt(buffer, i + 4);
-                    if (type == 4008) {
-                        os.write(buffer, i + 4 + 1, (int) size + 3);
-                        i = i + 4 + 1 + (int) size - 1;
-                    }
-                }
-            } catch (Exception e) {
-
+                stream.close();
+            } catch (IOException ignored) {
             }
         }
     }
