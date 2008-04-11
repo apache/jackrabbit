@@ -49,6 +49,16 @@ public class NodeNameTest extends AbstractQOMTest {
         checkResult(q.execute(), new Node[]{node1});
     }
 
+    public void testStringLiteralInvalidName() throws RepositoryException {
+        Value literal = superuser.getValueFactory().createValue("[" + nodeName1);
+        try {
+            createQuery(OPERATOR_EQUAL_TO, literal).execute();
+            fail("NodeName comparison with STRING that cannot be converted to NAME must fail with InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+    }
+
     public void testBinaryLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeName1, PropertyType.BINARY);
