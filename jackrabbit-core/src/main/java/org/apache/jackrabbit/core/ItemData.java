@@ -25,6 +25,9 @@ import org.apache.jackrabbit.core.state.ItemState;
  */
 public abstract class ItemData {
 
+    /** Associated item id */
+    protected final ItemId id;
+
     /** Associated item state */
     protected ItemState state;
 
@@ -41,14 +44,20 @@ public abstract class ItemData {
      * @param definition item definition
      */
     protected ItemData(ItemState state, ItemDefinition definition) {
+        this.id = state.getId();
         this.state = state;
         this.definition = definition;
+        this.status = ItemImpl.STATUS_NORMAL;
     }
 
     /**
      * Create a new instance of this class.
+     *
+     * @param id item id
      */
-    protected ItemData() {
+    protected ItemData(ItemId id) {
+        this.id = id;
+        this.status = ItemImpl.STATUS_NORMAL;
     }
 
     /**
@@ -121,7 +130,7 @@ public abstract class ItemData {
      * @return item id
      */
     public ItemId getId() {
-        return getState().getId();
+        return id;
     }
 
     /**

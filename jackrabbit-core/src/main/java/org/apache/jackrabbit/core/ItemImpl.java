@@ -125,7 +125,6 @@ public abstract class ItemImpl implements Item {
         this.id = data.getId();
         this.itemMgr = itemMgr;
         this.data = data;
-        data.setStatus(STATUS_NORMAL);
     }
 
     /**

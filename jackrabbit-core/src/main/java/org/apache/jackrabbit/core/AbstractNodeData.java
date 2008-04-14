@@ -43,8 +43,11 @@ public abstract class AbstractNodeData extends ItemData {
 
     /**
      * Create a new instance of this class.
+     *
+     * @param id item id
      */
-    protected AbstractNodeData() {
+    protected AbstractNodeData(ItemId id) {
+        super(id);
     }
 
     /**
