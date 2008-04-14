@@ -76,7 +76,7 @@ import java.util.Map;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateListener {
+public class ItemManager implements Dumpable, ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
@@ -197,10 +197,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // check privileges
         if (!canRead(id)) {
             // clear cache
-            ItemImpl item = retrieveItem(id);
-            if (item != null) {
-                evictItem(id);
-            }
+            evictItems(id);
             throw new AccessDeniedException("cannot read item " + id);
         }
 
@@ -299,7 +296,7 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             // check privileges
             if (!canRead(id)) {
                 // clear cache
-                evictItem(id);
+                evictItems(id);
                 // item exists but the session has not been granted read access
                 return false;
             }
@@ -396,24 +393,24 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
         // check sanity of session
         session.sanityCheck();
 
-        // check cache
-        ItemImpl item = retrieveItem(id);
-        if (item == null) {
+        ItemData data = retrieveItem(id);
+        if (data == null) {
             // not yet in cache, need to create instance:
             // check privileges
             if (!canRead(id)) {
                 throw new AccessDeniedException("cannot read item " + id);
             }
-            // create instance of item
-            item = createItemInstance(id);
+            // create instance of item data
+            data = createItemData(id);
+            cacheItem(data);
         }
-        return item;
+        return createItemInstance(data);
     }
 
     /**
      * Returns a node with a given id and parent id. If the indicated node is
      * shareable, there might be multiple nodes associated with the same id,
-     * but only one node with the given parent id.
+     * but there'is only one node with the given parent id.
      *
      * @param id node id
      * @param parentId parent node id
@@ -422,54 +419,71 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      */
     public synchronized NodeImpl getNode(NodeId id, NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
 
-        // check shareable nodes
-        NodeImpl node = shareableNodesCache.retrieve(id, parentId);
-        if (node != null) {
-            return node;
+        if (parentId == null) {
+            return (NodeImpl) getItem(id);
         }
-
-        node = (NodeImpl) getItem(id);
-        if (!node.getParentId().equals(parentId)) {
+        AbstractNodeData data = (AbstractNodeData) retrieveItem(id, parentId);
+        if (data == null) {
+            data = (AbstractNodeData) createItemData(id);
+            cacheItem(data);
+        }
+        if (!data.getParentId().equals(parentId)) {
             // verify that parent actually appears in the shared set
-            if (!node.hasShareParent(parentId)) {
+            if (!data.getNodeState().containsShare(parentId)) {
                 String msg = "Node with id '" + id
                         + "' does not have shared parent with id: " + parentId;
                 throw new ItemNotFoundException(msg);
             }
-
-            node = new NodeImpl(node, parentId, new ItemLifeCycleListener[] { this });
-            node.notifyCreated();
+            data = new NodeDataRef(data, parentId);
+            cacheItem(data);
         }
-        return node;
+        return createNodeInstance(data);
     }
 
     /**
-     * Returns the item instance for the given item state.
+     * Returns the item instance for the given item id.
+     *
      * @param state the item state
+     * @param checkAccess whether to check access
      * @return the item instance for the given item <code>state</code>.
      * @throws RepositoryException
      */
-    public synchronized ItemImpl getItem(ItemState state)
+    synchronized ItemImpl getItem(ItemId id, boolean isNew)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
         // check sanity of session
         session.sanityCheck();
 
-        ItemId id = state.getId();
         // check cache
-        ItemImpl item = retrieveItem(id);
-        if (item == null) {
+        ItemData data = retrieveItem(id);
+        if (data == null) {
             // not yet in cache, need to create instance:
             // only check privileges if state is not new
-            if (state.getStatus() != ItemState.STATUS_NEW && !canRead(id)) {
+            if (!isNew && !canRead(id)) {
                 throw new AccessDeniedException("cannot read item " + id);
             }
             // create instance of item
-            item = createItemInstance(id);
+            data = createItemData(id);
+            cacheItem(data);
         }
-        return item;
+        return createItemInstance(data);
+    }
+
+    /**
+     * Create an item instance from an item state. This method creates a
+     * new <code>ItemData</code> instance without looking at the cache and
+     * returns a new item instance.
+     *
+     * @param state item state
+     * @return item instance
+     * @throws RepositoryException if an error occurs
+     */
+    synchronized ItemImpl createItemInstance(ItemState state)
+            throws RepositoryException {
+
+        ItemData data = createItemData(state);
+        cacheItem(data);
+        return createItemInstance(data);
     }
 
     /**
@@ -603,10 +617,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     //-------------------------------------------------< item factory methods >
-    private ItemImpl createItemInstance(ItemId id)
+
+    private ItemData createItemData(ItemId id)
             throws ItemNotFoundException, RepositoryException {
-        // create instance of item using its state object
-        ItemImpl item;
+
         ItemState state;
         try {
             state = itemStateProvider.getItemState(id);
@@ -617,98 +631,47 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
             log.error(msg, ise);
             throw new RepositoryException(msg, ise);
         }
+        return createItemData(state);
+    }
 
+    private ItemData createItemData(ItemState state) throws RepositoryException {
+        ItemId id = state.getId();
         if (id.equals(rootNodeId)) {
             // special handling required for root node
-            item = createNodeInstance((NodeState) state, rootNodeDef);
+            return new NodeData((NodeState) state, rootNodeDef);
         } else if (state.isNode()) {
-            item = createNodeInstance((NodeState) state);
+            NodeState nodeState = (NodeState) state;
+            return new NodeData(nodeState, getDefinition(nodeState));
         } else {
-            item = createPropertyInstance((PropertyState) state);
+            PropertyState propertyState = (PropertyState) state;
+            return new PropertyData(propertyState, getDefinition(propertyState));
         }
-        return item;
     }
 
-    NodeImpl createNodeInstance(NodeState state, NodeDefinition def)
-            throws RepositoryException {
-        NodeId id = state.getNodeId();
-        // we want to be informed on life cycle changes of the new node object
-        // in order to maintain item cache consistency
-        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
-        NodeImpl node = null;
+    private ItemImpl createItemInstance(ItemData data) {
+        if (data.isNode()) {
+            return createNodeInstance((AbstractNodeData) data);
+        } else {
+            return createPropertyInstance((PropertyData) data);
+        }
+    }
 
+    private NodeImpl createNodeInstance(AbstractNodeData data) {
         // check special nodes
+        final NodeState state = data.getNodeState();
         if (state.getNodeTypeName().equals(NameConstants.NT_VERSION)) {
-            node = createVersionInstance(id, state, def, listeners);
-
+            return new VersionImpl(this, session, data);
         } else if (state.getNodeTypeName().equals(NameConstants.NT_VERSIONHISTORY)) {
-            node = createVersionHistoryInstance(id, state, def, listeners);
-
+            return new VersionHistoryImpl(this, session, data);
         } else {
             // create node object
-            node = new NodeImpl(this, session, id, state, def, listeners);
+            return new NodeImpl(this, session, data);
         }
-        node.notifyCreated();
-        return node;
     }
 
-    NodeImpl createNodeInstance(NodeState state) throws RepositoryException {
-        // 1. get definition of the specified node
-        NodeDefinition def = getDefinition(state);
-        // 2. create instance
-        return createNodeInstance(state, def);
-    }
-
-    PropertyImpl createPropertyInstance(PropertyState state,
-                                        PropertyDefinition def) {
-        // we want to be informed on life cycle changes of the new property object
-        // in order to maintain item cache consistency
-        ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{this};
-        // create property object
-        PropertyImpl property = new PropertyImpl(
-                this, session, state.getPropertyId(), state, def, listeners);
-        property.notifyCreated();
-        return property;
-    }
-
-    PropertyImpl createPropertyInstance(PropertyState state)
-            throws RepositoryException {
-        // 1. get definition for the specified property
-        PropertyDefinition def = getDefinition(state);
-        // 2. create instance
-        return createPropertyInstance(state, def);
-    }
-
-    /**
-     * Create a version instance.
-     * @param id node id
-     * @param state node state
-     * @param def node definition
-     * @param listeners listeners
-     * @return version instance
-     * @throws RepositoryException if an error occurs
-     */
-    protected VersionImpl createVersionInstance(
-            NodeId id, NodeState state, NodeDefinition def,
-            ItemLifeCycleListener[] listeners) throws RepositoryException {
-
-        return new VersionImpl(this, session, id, state, def, listeners);
-    }
-
-    /**
-     * Create a version history instance.
-     * @param id node id
-     * @param state node state
-     * @param def node definition
-     * @param listeners listeners
-     * @return version instance
-     * @throws RepositoryException if an error occurs
-     */
-    protected VersionHistoryImpl createVersionHistoryInstance(
-            NodeId id, NodeState state, NodeDefinition def,
-            ItemLifeCycleListener[] listeners) throws RepositoryException {
-
-        return new VersionHistoryImpl(this, session, id, state, def, listeners);
+    private PropertyImpl createPropertyInstance(PropertyData data) {
+        // check special nodes
+        return new PropertyImpl(this, session, data);
     }
 
     //---------------------------------------------------< item cache methods >
@@ -720,13 +683,31 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * @return the item reference stored in the corresponding cache entry
      *         or <code>null</code> if there's no corresponding cache entry.
      */
-    private ItemImpl retrieveItem(ItemId id) {
+    private ItemData retrieveItem(ItemId id) {
         synchronized (itemCache) {
-            ItemImpl item = (ItemImpl) itemCache.get(id);
-            if (item == null && id.denotesNode()) {
-                item = shareableNodesCache.retrieve((NodeId) id);
+            ItemData data = (ItemData) itemCache.get(id);
+            if (data == null && id.denotesNode()) {
+                data = shareableNodesCache.retrieveFirst((NodeId) id);
             }
-            return item;
+            return data;
+        }
+    }
+
+    /**
+     * Return a node from the cache.
+     *
+     * @param id id of the node that should be retrieved.
+     * @param parentId parent id of the node that should be retrieved
+     * @return reference stored in the corresponding cache entry
+     *         or <code>null</code> if there's no corresponding cache entry.
+     */
+    private AbstractNodeData retrieveItem(NodeId id, NodeId parentId) {
+        synchronized (itemCache) {
+            AbstractNodeData data = shareableNodesCache.retrieve(id, parentId);
+            if (data == null) {
+                data = (AbstractNodeData) itemCache.get(id);
+            }
+            return data;
         }
     }
 
@@ -736,16 +717,43 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      *
      * @param item the item to cache
      */
-    private void cacheItem(ItemImpl item) {
+    private void cacheItem(ItemData data) {
         synchronized (itemCache) {
-            ItemId id = item.getId();
+            if (data.isNode()) {
+                AbstractNodeData nd = (AbstractNodeData) data;
+                if (nd.getPrimaryParentId() != null) {
+                    shareableNodesCache.cache(nd);
+                    return;
+                }
+            }
+            ItemId id = data.getId();
             if (itemCache.containsKey(id)) {
                 log.warn("overwriting cached item " + id);
             }
             if (log.isDebugEnabled()) {
                 log.debug("caching item " + id);
             }
-            itemCache.put(id, item);
+            itemCache.put(id, data);
+        }
+    }
+
+    /**
+     * Removes all cache entries with the given item id. If the item is
+     * shareable, there might be more than one cache entry for this item.
+     *
+     * @param id id of the items to remove from the cache
+     * @return <code>true</code> if the item was contained in this cache,
+     *         <code>false</code> otherwise.
+     */
+    private void evictItems(ItemId id) {
+        if (log.isDebugEnabled()) {
+            log.debug("removing items " + id + " from cache");
+        }
+        synchronized (itemCache) {
+            itemCache.remove(id);
+            if (id.denotesNode()) {
+                shareableNodesCache.evictAll((NodeId) id);
+            }
         }
     }
 
@@ -753,17 +761,22 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * Removes a cache entry for a specific item.
      *
      * @param id id of the item to remove from the cache
-     * @return <code>true</code> if the item was contained in this cache,
-     *         <code>false</code> otherwise.
      */
-    private boolean evictItem(ItemId id) {
+    private void evictItem(ItemData data) {
         if (log.isDebugEnabled()) {
-            log.debug("removing item " + id + " from cache");
+            log.debug("removing item " + data.getId() + " from cache");
         }
         synchronized (itemCache) {
-            return itemCache.remove(id) != null;
+            if (data.isNode()) {
+                shareableNodesCache.evict((AbstractNodeData) data);
+            }
+            ItemData cached = (ItemData) itemCache.get(data.getId());
+            if (cached == data) {
+                itemCache.remove(data.getId());
+            }
         }
     }
+
 
     //-------------------------------------------------< misc. helper methods >
     /**
@@ -801,51 +814,27 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
     }
 
     //------------------------------------------------< ItemLifeCycleListener >
-    /**
-     * {@inheritDoc}
-     */
-    public void itemCreated(ItemImpl item) {
-        if (log.isDebugEnabled()) {
-            log.debug("created item " + item.getId());
-        }
-        // add instance to cache
-        if (item.isNode()) {
-            NodeImpl node = (NodeImpl) item;
-            if (node.isShareable()) {
-                shareableNodesCache.cache(node);
-                return;
-            }
-        }
-        cacheItem(item);
-    }
 
     /**
      * {@inheritDoc}
      */
-    public void itemInvalidated(ItemId id, ItemImpl item) {
+    public void itemInvalidated(ItemId id, ItemData data) {
         if (log.isDebugEnabled()) {
             log.debug("invalidated item " + id);
         }
-        // remove instance from cache
-        evictItem(id);
-        if (item.isNode()) {
-            shareableNodesCache.evict((NodeImpl) item);
-        }
+        evictItem(data);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void itemDestroyed(ItemId id, ItemImpl item) {
+    public void itemDestroyed(ItemId id, ItemData data) {
         if (log.isDebugEnabled()) {
             log.debug("destroyed item " + id);
         }
-        // we're no longer interested in this item
-        item.removeLifeCycleListener(this);
-        // remove instance from cache
-        evictItem(id);
-        if (item.isNode()) {
-            shareableNodesCache.evict((NodeImpl) item);
+        synchronized (itemCache) {
+            // remove instance from cache
+            evictItems(id);
         }
     }
 
@@ -884,9 +873,9 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * {@inheritDoc}
      */
     public void stateCreated(ItemState created) {
-        ItemImpl item = retrieveItem(created.getId());
-        if (item != null) {
-            item.stateCreated(created);
+        ItemData data = retrieveItem(created.getId());
+        if (data != null) {
+            data.setStatus(ItemImpl.STATUS_NORMAL);
         }
     }
 
@@ -894,9 +883,20 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * {@inheritDoc}
      */
     public void stateModified(ItemState modified) {
-        ItemImpl item = retrieveItem(modified.getId());
-        if (item != null) {
-            item.stateModified(modified);
+        ItemData data = retrieveItem(modified.getId());
+        if (data != null && data.getState() == modified) {
+            data.setStatus(ItemImpl.STATUS_MODIFIED);
+            /*
+            if (modified.isNode()) {
+                NodeState state = (NodeState) modified;
+                if (state.isShareable()) {
+                    //evictItem(modified.getId());
+                    NodeData nodeData = (NodeData) data;
+                    NodeData shareSibling = new NodeData(nodeData, state.getParentId());
+                    shareableNodesCache.cache(shareSibling);
+                }
+            }
+            */
         }
     }
 
@@ -904,9 +904,13 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
-        ItemImpl item = retrieveItem(destroyed.getId());
-        if (item != null) {
-            item.stateDestroyed(destroyed);
+        ItemData data = retrieveItem(destroyed.getId());
+        if (data != null) {
+            data.setStatus(ItemImpl.STATUS_DESTROYED);
+            if (data.getState() == destroyed) {
+                data.setState(null);
+            }
+            itemDestroyed(destroyed.getId(), data);
         }
     }
 
@@ -914,54 +918,74 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
      * {@inheritDoc}
      */
     public void stateDiscarded(ItemState discarded) {
-        ItemImpl item = retrieveItem(discarded.getId());
-        if (item != null) {
-            item.stateDiscarded(discarded);
+        ItemData data = retrieveItem(discarded.getId());
+        if (data != null && data.getState() == discarded) {
+            if (discarded.isTransient()) {
+                switch (discarded.getStatus()) {
+                /**
+                 * persistent item that has been transiently removed
+                 */
+                case ItemState.STATUS_EXISTING_REMOVED:
+                case ItemState.STATUS_EXISTING_MODIFIED:
+                case ItemState.STATUS_STALE_MODIFIED:
+                    ItemState persistentState = discarded.getOverlayedState();
+                    /**
+                     * the state is a transient wrapper for the underlying
+                     * persistent state, therefore restore the persistent state
+                     * and resurrect this item instance if necessary
+                     */
+                    SessionItemStateManager stateMgr = session.getItemStateManager();
+                    stateMgr.disconnectTransientItemState(discarded);
+                    data.setState(persistentState);
+                    return;
+
+                    /**
+                     * persistent item that has been transiently modified or
+                     * removed and the underlying persistent state has been
+                     * externally destroyed since the transient
+                     * modification/removal.
+                     */
+                case ItemState.STATUS_STALE_DESTROYED:
+                    /**
+                     * first notify the listeners that this instance has been
+                     * permanently invalidated
+                     */
+                    itemDestroyed(discarded.getId(), data);
+                    // now set state of this instance to 'destroyed'
+                    data.setStatus(ItemImpl.STATUS_DESTROYED);
+                    data.setState(null);
+                    return;
+
+                    /**
+                     * new item that has been transiently added
+                     */
+                case ItemState.STATUS_NEW:
+                    /**
+                     * first notify the listeners that this instance has been
+                     * permanently invalidated
+                     */
+                    itemDestroyed(discarded.getId(), data);
+                    // now set state of this instance to 'destroyed'
+                    // finally dispose state
+                    data.setStatus(ItemImpl.STATUS_DESTROYED);
+                    data.setState(null);
+                    return;
+                }
+            }
+
+            /**
+             * first notify the listeners that this instance has been
+             * invalidated
+             */
+            itemInvalidated(discarded.getId(), data);
+            // now render this instance 'invalid'
+            data.setStatus(ItemImpl.STATUS_INVALIDATED);
         }
     }
 
     /**
-     * Invoked by a shareable <code>NodeImpl</code> when it is has become
-     * transient and has therefore replaced its state. Will inform all other
-     * nodes in the shareable set about this change.
-     *
-     * @param node node that has changed its underlying state
-     */
-    public void becameTransient(NodeImpl node) {
-        NodeState state = (NodeState) node.getItemState();
-
-        NodeImpl n = (NodeImpl) retrieveItem(node.getId());
-        if (n != null && n != node) {
-            n.stateReplaced(state);
-        }
-        shareableNodesCache.stateReplaced(node);
-    }
-
-    /**
-     * Invoked by a shareable <code>NodeImpl</code> when it is has become
-     * persistent and has therefore replaced its state. Will inform all other
-     * nodes in the shareable set about this change.
-     *
-     * @param node node that has changed its underlying state
-     */
-    public void persisted(NodeImpl node) {
-        // item has possibly become shareable on this call: move it
-        // from the main cache to the cache of shareable nodes
-        if (evictItem(node.getNodeId())) {
-            shareableNodesCache.cache(node);
-        }
-
-        NodeState state = (NodeState) node.getItemState();
-
-        NodeImpl n = (NodeImpl) retrieveItem(node.getId());
-        if (n != null && n != node) {
-            n.stateReplaced(state);
-        }
-        shareableNodesCache.stateReplaced(node);
-    }
-
-    /**
-     * Cache of shareable nodes.
+     * Cache of shareable nodes. For performance reasons, methods are not
+     * synchronized and thread-safety must be guaranteed by caller.
      */
     class ShareableNodesCache {
 
@@ -993,15 +1017,19 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
          * @param id node id
          * @return node or <code>null</code>
          */
-        public synchronized NodeImpl retrieve(NodeId id) {
+        public AbstractNodeData retrieveFirst(NodeId id) {
             ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map != null) {
                 Iterator iter = map.values().iterator();
-                while (iter.hasNext()) {
-                    NodeImpl node = (NodeImpl) iter.next();
-                    if (node != null) {
-                        return node;
+                try {
+                    while (iter.hasNext()) {
+                        AbstractNodeData data = (AbstractNodeData) iter.next();
+                        if (data != null) {
+                            return data;
+                        }
                     }
+                } finally {
+                    iter = null;
                 }
             }
             return null;
@@ -1014,10 +1042,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
          * @param parentId parent id
          * @return node or <code>null</code>
          */
-        public synchronized NodeImpl retrieve(NodeId id, NodeId parentId) {
+        public AbstractNodeData retrieve(NodeId id, NodeId parentId) {
             ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map != null) {
-                return (NodeImpl) map.get(parentId);
+                return (AbstractNodeData) map.get(parentId);
             }
             return null;
         }
@@ -1027,13 +1055,14 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
          *
          * @param node node to cache
          */
-        public synchronized void cache(NodeImpl node) {
-            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
+        public void cache(AbstractNodeData data) {
+            NodeId id = data.getNodeState().getNodeId();
+            ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map == null) {
                 map = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-                cache.put(node.getId(), map);
+                cache.put(id, map);
             }
-            Object old = map.put(node.getParentId(), node);
+            Object old = map.put(data.getPrimaryParentId(), data);
             if (old != null) {
                 log.warn("overwriting cached item: " + old);
             }
@@ -1044,10 +1073,10 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
          *
          * @param node node to evict
          */
-        public synchronized void evict(NodeImpl node) {
-            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
+        public void evict(AbstractNodeData data) {
+            ReferenceMap map = (ReferenceMap) cache.get(data.getId());
             if (map != null) {
-                map.remove(node.getParentId());
+                map.remove(data.getPrimaryParentId());
             }
         }
 
@@ -1058,27 +1087,6 @@ public class ItemManager implements ItemLifeCycleListener, Dumpable, ItemStateLi
          */
         public synchronized void evictAll(NodeId id) {
             cache.remove(id);
-        }
-
-        /**
-         * Replace the state of all nodes that are in the same shared set
-         * as the given node.
-         *
-         * @param node node in shared set.
-         */
-        public synchronized void stateReplaced(NodeImpl node) {
-            NodeState state = (NodeState) node.getItemState();
-
-            ReferenceMap map = (ReferenceMap) cache.get(node.getId());
-            if (map != null) {
-                Iterator iter = map.values().iterator();
-                while (iter.hasNext()) {
-                    NodeImpl n = (NodeImpl) iter.next();
-                    if (n != null && n != node) {
-                        n.stateReplaced(state);
-                    }
-                }
-            }
         }
     }
 }

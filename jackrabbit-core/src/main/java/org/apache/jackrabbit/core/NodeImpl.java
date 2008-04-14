@@ -111,13 +111,11 @@ public class NodeImpl extends ItemImpl implements Node {
     /** the definition of this node */
     protected NodeDefinition definition;
 
-    /**
-     * Primary parent id, if this is a shareable node, <code>null</code> otherwise.
-     */
-    private NodeId primaryParentId;
-
     // flag set in status passed to getOrCreateProperty if property was created
     protected static final short CREATED = 0;
+
+    /** node data (avoids casting <code>ItemImpl.data</code>) */
+    private final AbstractNodeData data;
 
     /**
      * Protected constructor.
@@ -129,13 +127,12 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param definition definition of <i>this</i> <code>Node</code>
      * @param listeners  listeners on life cylce changes of this <code>NodeImpl</code>
      */
-    protected NodeImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                       NodeState state, NodeDefinition definition,
-                       ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, id, state, listeners);
-        this.definition = definition;
+    protected NodeImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
+        this.data = data;
         // paranoid sanity check
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
+        final NodeState state = data.getNodeState();
         if (ntReg.isRegistered(state.getNodeTypeName())) {
             primaryTypeName = state.getNodeTypeName();
         } else {
@@ -147,25 +144,6 @@ public class NodeImpl extends ItemImpl implements Node {
                     + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
             primaryTypeName = NameConstants.NT_UNSTRUCTURED;
         }
-        if (isShareable()) {
-            this.primaryParentId = state.getParentId();
-        }
-    }
-
-    /**
-     * Protected constructor. Used when creating a node that is a shared
-     * sibling of another node, and that has the same properties, children nodes,
-     * etc. as the other node.
-     */
-    protected NodeImpl(NodeImpl sharedSibling, NodeId parentId,
-                       ItemLifeCycleListener[] listeners) {
-
-        super(sharedSibling.itemMgr, sharedSibling.session,
-                sharedSibling.id, sharedSibling.state, listeners);
-
-        this.definition = sharedSibling.definition;
-        this.primaryTypeName = sharedSibling.primaryTypeName;
-        this.primaryParentId = parentId;
     }
 
     /**
@@ -190,7 +168,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (relPath.indexOf('/') == -1) {
                 Name propName = session.getQName(relPath);
                 // check if property entry exists
-                NodeState thisState = (NodeState) state;
+                NodeState thisState = data.getNodeState();
                 if (thisState.hasPropertyName(propName)) {
                     return new PropertyId(thisState.getNodeId(), propName);
                 } else {
@@ -235,7 +213,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 Path.Element pe = p.getNameElement();
                 if (pe.denotesName()) {
                     // check if node entry exists
-                    NodeState thisState = (NodeState) state;
+                    NodeState thisState = data.getNodeState();
                     int index = pe.getIndex();
                     if (index == 0) {
                         index = 1;
@@ -280,23 +258,24 @@ public class NodeImpl extends ItemImpl implements Node {
 
     protected synchronized ItemState getOrCreateTransientItemState()
             throws RepositoryException {
-        if (!isTransient()) {
-            try {
-                // make transient (copy-on-write)
-                NodeState transientState =
-                        stateMgr.createTransientNodeState((NodeState) state, ItemState.STATUS_EXISTING_MODIFIED);
-                // replace persistent with transient state
-                state = transientState;
-                if (isShareable()) {
-                    itemMgr.becameTransient(this);
+
+        synchronized (data) {
+            if (!isTransient()) {
+                try {
+                    // make transient (copy-on-write)
+                    NodeState transientState =
+                            stateMgr.createTransientNodeState(
+                                    data.getNodeState(), ItemState.STATUS_EXISTING_MODIFIED);
+                    // replace persistent with transient state
+                    data.setState(transientState);
+                } catch (ItemStateException ise) {
+                    String msg = "failed to create transient state";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, ise);
                 }
-            } catch (ItemStateException ise) {
-                String msg = "failed to create transient state";
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
             }
+            return getItemState();
         }
-        return state;
     }
 
     /**
@@ -318,7 +297,7 @@ public class NodeImpl extends ItemImpl implements Node {
          * (e.g. using a NodeTypeInstanceHandler interface)
          */
 
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
 
         // compute system generated values
         NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
@@ -508,7 +487,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // create Property instance wrapping new property state
-        PropertyImpl prop = itemMgr.createPropertyInstance(propState, def);
+        PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
 
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
@@ -543,7 +522,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // create Node instance wrapping new node state
         NodeImpl node;
         try {
-            node = itemMgr.createNodeInstance(nodeState, def);
+            node = (NodeImpl) itemMgr.getItem(id);
         } catch (RepositoryException re) {
             // something went wrong
             stateMgr.disposeTransientItemState(nodeState);
@@ -645,7 +624,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         // set id of new definition
         thisState.setDefinitionId(defId);
-        definition = newDef;
+        data.setDefinition(newDef);
     }
 
     protected void onRemove(NodeId parentId) throws RepositoryException {
@@ -659,10 +638,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 // leave the child node entries and properties
 
                 // set state of this instance to 'invalid'
-                status = STATUS_INVALIDATED;
-                // notify the listeners that this instance has been
+                data.setStatus(STATUS_INVALIDATED);
+                // notify the item manager that this instance has been
                 // temporarily invalidated
-                notifyInvalidated();
+                itemMgr.itemInvalidated(id, data);
                 return;
             }
         }
@@ -800,7 +779,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check for name collisions
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
@@ -816,6 +795,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag of parent (i.e. this) node
+        final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
             log.debug(msg);
@@ -827,7 +807,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
         if (thisState.hasPropertyName(NameConstants.JCR_MIXINTYPES)) {
@@ -862,7 +842,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return a set of the <code>Name</code>s of this node's mixin types.
      */
     public Set getMixinTypeNames() {
-        return ((NodeState) state).getMixinTypeNames();
+        return data.getNodeState().getMixinTypeNames();
     }
 
     /**
@@ -873,7 +853,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if an error occurs
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
-        return getEffectiveNodeType(((NodeState) state).getMixinTypeNames());
+        return getEffectiveNodeType(data.getNodeState().getMixinTypeNames());
     }
 
     /**
@@ -965,7 +945,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return;
         }
 
-        NodeState transientState = (NodeState) state;
+        NodeState transientState = data.getNodeState();
 
         NodeState persistentState = (NodeState) transientState.getOverlayedState();
         if (persistentState == null) {
@@ -1002,16 +982,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // tell state manager to disconnect item state
         stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with persistent state
-        state = persistentState;
+        data.setState(persistentState);
         // reset status
-        status = STATUS_NORMAL;
+        data.setStatus(STATUS_NORMAL);
 
-        if (isShareable()) {
-            // if node has become shareable, set its primary parent id
-            if (primaryParentId == null) {
-                primaryParentId = state.getParentId();
-            }
-            itemMgr.persisted(this);
+        if (isShareable() && data.getPrimaryParentId() == null) {
+            data.setPrimaryParentId(persistentState.getParentId());
         }
     }
 
@@ -1052,6 +1028,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
+        final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
             log.debug(msg);
@@ -1078,7 +1055,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+            HashSet set = new HashSet(data.getNodeState().getMixinTypeNames());
             // primary type
             set.add(primaryTypeName);
             // build effective node type representing primary type including existing mixin's
@@ -1164,6 +1141,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
+        NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
             String msg = safeGetJCRPath()
                     + ": cannot remove a mixin node type from a protected node";
@@ -1175,7 +1153,8 @@ public class NodeImpl extends ItemImpl implements Node {
         checkLock();
 
         // check if mixin is assigned
-        if (!((NodeState) state).getMixinTypeNames().contains(mixinName)) {
+        final NodeState state = data.getNodeState();
+        if (!state.getMixinTypeNames().contains(mixinName)) {
             throw new NoSuchNodeTypeException();
         }
 
@@ -1183,7 +1162,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
 
         // build effective node type of remaining mixin's & primary type
-        Set remainingMixins = new HashSet(((NodeState) state).getMixinTypeNames());
+        Set remainingMixins = new HashSet(state.getMixinTypeNames());
         // remove name of target mixin
         remainingMixins.remove(mixinName);
         EffectiveNodeType entRemaining;
@@ -1282,7 +1261,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (ntName.equals(primaryTypeName)) {
             return true;
         }
-        Set mixins = ((NodeState) state).getMixinTypeNames();
+        Set mixins = data.getNodeState().getMixinTypeNames();
         if (mixins.contains(ntName)) {
             return true;
         }
@@ -1456,7 +1435,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         if (index == 0) {
             index = 1;
         }
@@ -1498,7 +1477,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         if (index == 0) {
             index = 1;
         }
@@ -1545,7 +1524,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         if (!thisState.hasPropertyName(name)) {
             return false;
         }
@@ -1830,6 +1809,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
+        final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
             String msg = safeGetJCRPath()
                     + ": cannot change child node ordering of a protected node";
@@ -1840,7 +1820,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check lock status
         checkLock();
 
-        ArrayList list = new ArrayList(((NodeState) state).getChildNodeEntries());
+        ArrayList list = new ArrayList(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
@@ -1930,12 +1910,13 @@ public class NodeImpl extends ItemImpl implements Node {
         // child node entries (JCR-1055);
         // => backup list of child node entries beforehand in order
         // to restore it afterwards
-        NodeState.ChildNodeEntry cneExisting = ((NodeState) state).getChildNodeEntry(id);
+        NodeState state = data.getNodeState();
+        NodeState.ChildNodeEntry cneExisting = state.getChildNodeEntry(id);
         if (cneExisting == null) {
             throw new ItemNotFoundException(safeGetJCRPath()
                     + ": no child node entry with id " + id);
         }
-        List cneList = new ArrayList(((NodeState) state).getChildNodeEntries());
+        List cneList = new ArrayList(state.getChildNodeEntries());
 
         // remove existing
         existing.remove();
@@ -1948,21 +1929,24 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
+        // fetch <code>state</code> again, as it changed while removing child
+        state = data.getNodeState();
+
         // restore list of child node entries (JCR-1055)
         if (cneExisting.getName().equals(nodeName)) {
             // restore original child node list
-            ((NodeState) state).setChildNodeEntries(cneList);
+            state.setChildNodeEntries(cneList);
         } else {
             // replace child node entry with different name
             // but preserving original position
-            ((NodeState) state).removeAllChildNodeEntries();
+            state.removeAllChildNodeEntries();
             for (Iterator iter = cneList.iterator(); iter.hasNext();) {
                 NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
                 if (cne.getId().equals(id)) {
                     // replace entry with different name
-                    ((NodeState) state).addChildNodeEntry(nodeName, id);
+                    state.addChildNodeEntry(nodeName, id);
                 } else {
-                    ((NodeState) state).addChildNodeEntry(cne.getName(), cne.getId());
+                    state.addChildNodeEntry(cne.getName(), cne.getId());
                 }
             }
         }
@@ -2019,7 +2003,7 @@ public class NodeImpl extends ItemImpl implements Node {
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
-        NodeState thisState = (NodeState) state;
+        NodeState thisState = data.getNodeState();
         NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
@@ -2035,6 +2019,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // (4) check protected flag of parent (i.e. this) node
+        final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
             String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
             log.debug(msg);
@@ -2069,6 +2054,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        final NodeState state = data.getNodeState();
         if (state.getParentId() == null) {
             // this is the root node
             return "";
@@ -2103,16 +2089,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // check if shareable node
-        NodeId parentId = this.primaryParentId;
+        // check if root node
+        NodeId parentId = getParentId();
         if (parentId == null) {
-            // check if root node
-            parentId = state.getParentId();
-            if (parentId == null) {
-                String msg = "root node doesn't have a parent";
-                log.debug(msg);
-                throw new ItemNotFoundException(msg);
-            }
+            String msg = "root node doesn't have a parent";
+            log.debug(msg);
+            throw new ItemNotFoundException(msg);
         }
         return (Node) itemMgr.getItem(parentId);
     }
@@ -2627,7 +2609,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new PathNotFoundException(relPath);
         }
         try {
-            if (((NodeState) state).hasChildNodeEntry(id)) {
+            if (data.getNodeState().hasChildNodeEntry(id)) {
                 return itemMgr.getNode(id, getNodeId());
             }
             return (NodeImpl) itemMgr.getItem(id);
@@ -2789,7 +2771,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        Set mixinNames = ((NodeState) state).getMixinTypeNames();
+        Set mixinNames = data.getNodeState().getMixinTypeNames();
         if (mixinNames.isEmpty()) {
             return new NodeType[0];
         }
@@ -2844,7 +2826,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
-        if (definition.isProtected()) {
+        if (data.getNodeDefinition().isProtected()) {
             return false;
         }
 
@@ -2879,7 +2861,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+            HashSet set = new HashSet(data.getNodeState().getMixinTypeNames());
             // primary type
             set.add(primaryTypeName);
             // build effective node type representing primary type including existing mixin's
@@ -2927,7 +2909,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return definition;
+        return data.getNodeDefinition();
     }
 
     /**
@@ -3104,7 +3086,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!isShareable()) {
             list.add(this);
         } else {
-            NodeState state = (NodeState) this.state;
+            NodeState state = data.getNodeState();
             Iterator iter = state.getSharedSet().iterator();
             while (iter.hasNext()) {
                 NodeId parentId = (NodeId) iter.next();
@@ -3182,7 +3164,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see NodeState#isShareable()
      */
     boolean isShareable() {
-       return ((NodeState) state).isShareable();
+       return data.getNodeState().isShareable();
     }
 
     /**
@@ -3194,10 +3176,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return parent id
      */
     NodeId getParentId() {
-        if (primaryParentId != null) {
-            return primaryParentId;
-        }
-        return state.getParentId();
+        return data.getParentId();
     }
 
     /**
@@ -3209,7 +3188,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *         <code>false</code> otherwise.
      */
     boolean hasShareParent(NodeId parentId) {
-        return ((NodeState) state).containsShare(parentId);
+        return data.getNodeState().containsShare(parentId);
     }
 
     /**
@@ -3241,7 +3220,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // quickly verify whether the share is already contained before creating
         // a transient state in vain
-        NodeState state = (NodeState) this.state;
+        NodeState state = data.getNodeState();
         if (!state.containsShare(parentId)) {
             state = (NodeState) getOrCreateTransientItemState();
             if (state.addShare(parentId)) {
@@ -3276,7 +3255,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState.ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
                 getChildNodeEntry(getNodeId());
         if (entry == null) {
-            String msg = "failed to build path of " + state.getId() + ": "
+            String msg = "failed to build path of " + id + ": "
                     + parentId + " has no child entry for "
                     + id;
             log.debug(msg);
@@ -3289,16 +3268,6 @@ public class NodeImpl extends ItemImpl implements Node {
             builder.addLast(entry.getName(), entry.getIndex());
         }
         return builder.getPath();
-    }
-
-    /**
-     * Invoked when another node in the same shared set has replaced the
-     * node state.
-     *
-     * @param state state that is now stored as <code>NodeImpl</code>'s state
-     */
-    void stateReplaced(NodeState state) {
-        this.state = state;
     }
 
     //------------------------------< versioning support: public Node methods >
@@ -3765,7 +3734,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 Set set = internalGetMergeFailed();
                 set.add(srcNode.getBaseVersion().getUUID());
                 internalSetMergeFailed(set);
-                failedIds.add(state.getId());
+                failedIds.add(id);
                 return null;
             } else {
                 String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();
@@ -4764,12 +4733,13 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag
-        if (definition.isProtected()) {
+        if (data.getDefinition().isProtected()) {
             String msg = safeGetJCRPath() + ": cannot set primary type of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
 
+        final NodeState state = data.getNodeState();
         if (state.getParentId() == null) {
             String msg = "changing the primary type of the root node is not supported";
             log.debug(msg);
@@ -4805,7 +4775,7 @@ public class NodeImpl extends ItemImpl implements Node {
             entOld = ntReg.getEffectiveNodeType(primaryTypeName);
 
             // existing mixin's
-            HashSet set = new HashSet(((NodeState) state).getMixinTypeNames());
+            HashSet set = new HashSet(state.getMixinTypeNames());
             // new primary type
             set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
@@ -4825,7 +4795,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ConstraintViolationException(msg, re);
         }
 
-        if (!defId.equals(((NodeState) state).getDefinitionId())) {
+        if (!defId.equals(state.getDefinitionId())) {
             onRedefine(defId);
         }
 

@@ -1,0 +1,133 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.core;
+
+import javax.jcr.nodetype.ItemDefinition;
+import org.apache.jackrabbit.core.state.ItemState;
+
+/**
+ * Data object referenced by different <code>ItemImpl</code> instances that
+ * all represent the same item, i.e. items having the same <code>ItemId</code>.
+ */
+public abstract class ItemData {
+
+    /** Associated item state */
+    protected ItemState state;
+
+    /** Associated item definition */
+    protected ItemDefinition definition;
+
+    /** Status */
+    protected int status;
+
+    /**
+     * Create a new instance of this class.
+     *
+     * @param state item state
+     * @param definition item definition
+     */
+    protected ItemData(ItemState state, ItemDefinition definition) {
+        this.state = state;
+        this.definition = definition;
+    }
+
+    /**
+     * Create a new instance of this class.
+     */
+    protected ItemData() {
+    }
+
+    /**
+     * Return the associated item state.
+     *
+     * @return item state
+     */
+    public ItemState getState() {
+        return state;
+    }
+
+    /**
+     * Set the associated item state.
+     *
+     * @param state item state
+     */
+    protected void setState(ItemState state) {
+        this.state = state;
+    }
+
+    /**
+     * Return the associated item definition.
+     *
+     * @return item definition
+     */
+    public ItemDefinition getDefinition() {
+        return definition;
+    }
+
+    /**
+     * Set the associated item definition.
+     *
+     * @param definition item definition
+     */
+    protected void setDefinition(ItemDefinition definition) {
+        this.definition = definition;
+    }
+
+    /**
+     * Return the status.
+     *
+     * @return status
+     */
+    public int getStatus() {
+        return status;
+    }
+
+    /**
+     * Set the status.
+     *
+     * @param status
+     */
+    protected void setStatus(int status) {
+        this.status = status;
+    }
+
+    /**
+     * Return a flag indicating whether item is a node.
+     *
+     * @return <code>true</code> if this item is a node;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isNode() {
+        return false;
+    }
+
+    /**
+     * Return the id associated with this item.
+     *
+     * @return item id
+     */
+    public ItemId getId() {
+        return getState().getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return getId().toString();
+    }
+}
