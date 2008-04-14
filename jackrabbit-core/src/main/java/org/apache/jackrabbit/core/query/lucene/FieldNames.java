@@ -58,6 +58,18 @@ public class FieldNames {
     public static final String LABEL = "_:LABEL".intern();
 
     /**
+     * Name of the field that contains the local name of the node. Terms are not
+     * tokenized.
+     */
+    public static final String LOCAL_NAME = "_:LOCAL_NAME".intern();
+
+    /**
+     * Name of the field that contains the namespace URI of the node name. Terms
+     * are not tokenized.
+     */
+    public static final String NAMESPACE_URI = "_:NAMESPACE_URI".intern();
+
+    /**
      * Name of the field that contains the names of multi-valued properties that
      * hold more than one value. Terms are not tokenized and not stored, only
      * indexed.

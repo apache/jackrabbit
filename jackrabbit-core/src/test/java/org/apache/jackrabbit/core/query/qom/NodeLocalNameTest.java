@@ -21,21 +21,29 @@ import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.query.Query;
-import javax.jcr.query.InvalidQueryException;
 import java.util.Calendar;
 
 /**
- * <code>NodeNameTest</code> checks if conversion of literals is correctly
+ * <code>NodeLocalNameTest</code> checks if conversion of literals is correctly
  * performed and operators work as specified.
+ * TODO: assumes https://jsr-283.dev.java.net/issues/show_bug.cgi?id=483 gets resolved as initially proposed
  */
-public class NodeNameTest extends AbstractQOMTest {
+public class NodeLocalNameTest extends AbstractQOMTest {
 
     private Node node1;
+
+    private String nodeLocalName;
 
     protected void setUp() throws Exception {
         super.setUp();
         node1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
+        int colon = nodeName1.indexOf(':');
+        if (colon != -1) {
+            nodeLocalName = nodeName1.substring(colon + 1);
+        } else {
+            nodeLocalName = nodeName1;
+        }
     }
 
     protected void tearDown() throws Exception {
@@ -44,102 +52,74 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testStringLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(nodeName1);
+        Value literal = superuser.getValueFactory().createValue(nodeLocalName);
         Query q = createQuery(OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testStringLiteralInvalidName() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue("[" + nodeName1);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with STRING that cannot be converted to NAME must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Value literal = superuser.getValueFactory().createValue("[" + nodeLocalName);
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testBinaryLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
-                nodeName1, PropertyType.BINARY);
+                nodeLocalName, PropertyType.BINARY);
         Query q = createQuery(OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testDateLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Calendar.getInstance());
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with DATE must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testDoubleLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Math.PI);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with DOUBLE must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testDecimalLiteral() throws RepositoryException {
-        // TODO must throw InvalidQueryException
+        // TODO must not match node
     }
 
     public void testLongLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(283);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with LONG must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testBooleanLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(true);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with BOOLEAN must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testNameLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
-                nodeName1, PropertyType.NAME);
+                nodeLocalName, PropertyType.NAME);
         Query q = createQuery(OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testPathLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
-                nodeName1, PropertyType.PATH);
+                nodeLocalName, PropertyType.PATH);
         Query q = createQuery(OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
 
         literal = superuser.getValueFactory().createValue(
                 node1.getPath(), PropertyType.PATH);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with absolute PATH must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
 
         literal = superuser.getValueFactory().createValue(
                 nodeName1 + "/" + nodeName1, PropertyType.PATH);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with PATH length >1 must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testReferenceLiteral() throws RepositoryException {
@@ -148,33 +128,40 @@ public class NodeNameTest extends AbstractQOMTest {
         }
         node1.save();
         Value literal = superuser.getValueFactory().createValue(node1);
-        try {
-            createQuery(OPERATOR_EQUAL_TO, literal).execute();
-            fail("NodeName comparison with REFERENCE must fail with InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
+        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testWeakReferenceLiteral() throws RepositoryException {
-        // TODO: must throw InvalidQueryException
+        // TODO must not match node
     }
 
-    /**
-     * If the URI consists of a single path segment without a colon (for
-     * example, simply bar) it is converted to a NAME by percent-unescaping
-     * followed by UTF-8-decoding of the byte sequence. If it has a redundant
-     * leading ./ followed by a single segment (with or without a colon, like
-     * ./bar or ./foo:bar ) the redundant ./ is removed and the remainder is
-     * converted to a NAME in the same way. Otherwise a ValueFormatException is
-     * thrown.
-     */
     public void testURILiteral() throws RepositoryException {
-        // TODO
+        // TODO must not match node
     }
 
     public void testEqualTo() throws RepositoryException {
         checkOperator(OPERATOR_EQUAL_TO, false, true, false);
+    }
+
+    public void testGreaterThan() throws RepositoryException {
+        checkOperator(OPERATOR_GREATER_THAN, true, false, false);
+    }
+
+    public void testGreaterThanOrEqualTo() throws RepositoryException {
+        checkOperator(OPERATOR_GREATER_THAN_OR_EQUAL_TO, true, true, false);
+    }
+
+    public void testLessThan() throws RepositoryException {
+        checkOperator(OPERATOR_LESS_THAN, false, false, true);
+    }
+
+    public void testLessThanOrEqualTo() throws RepositoryException {
+        checkOperator(OPERATOR_LESS_THAN_OR_EQUAL_TO, false, true, true);
+    }
+
+    public void testLike() throws RepositoryException {
+        checkOperator(OPERATOR_LIKE, false, true, false);
     }
 
     public void testNotEqualTo() throws RepositoryException {
@@ -188,9 +175,9 @@ public class NodeNameTest extends AbstractQOMTest {
                                boolean matchesEqual,
                                boolean matchesGreater)
             throws RepositoryException {
-        checkOperatorSingleLiteral(createLexicographicallyLesser(nodeName1), operator, matchesLesser);
-        checkOperatorSingleLiteral(nodeName1, operator, matchesEqual);
-        checkOperatorSingleLiteral(createLexicographicallyGreater(nodeName1), operator, matchesGreater);
+        checkOperatorSingleLiteral(createLexicographicallyLesser(nodeLocalName), operator, matchesLesser);
+        checkOperatorSingleLiteral(nodeLocalName, operator, matchesEqual);
+        checkOperatorSingleLiteral(createLexicographicallyGreater(nodeLocalName), operator, matchesGreater);
     }
 
     private void checkOperatorSingleLiteral(String literal,
@@ -220,7 +207,7 @@ public class NodeNameTest extends AbstractQOMTest {
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
                         qomFactory.comparison(
-                                qomFactory.nodeName("s"),
+                                qomFactory.nodeLocalName("s"),
                                 operator,
                                 qomFactory.literal(literal)
                         )

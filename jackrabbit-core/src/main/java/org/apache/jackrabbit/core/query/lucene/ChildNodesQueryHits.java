@@ -99,9 +99,7 @@ public class ChildNodesQueryHits extends AbstractQueryHits {
                 Node parent = session.getNodeById(nextParent.getNodeId());
                 childHits = new NodeTraversingQueryHits(parent, false, 1);
             } catch (RepositoryException e) {
-                IOException ex = new IOException(e.getMessage());
-                ex.initCause(e);
-                throw ex;
+                throw Util.createIOException(e);
             }
         } else {
             childHits = null;

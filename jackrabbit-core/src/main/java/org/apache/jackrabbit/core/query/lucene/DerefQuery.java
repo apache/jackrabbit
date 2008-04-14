@@ -25,8 +25,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.Weight;
+import org.apache.jackrabbit.spi.Name;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,7 +55,17 @@ class DerefQuery extends Query {
      * The nameTest to apply on target node, or <code>null</code> if all
      * target nodes should be selected.
      */
-    private final String nameTest;
+    private final Name nameTest;
+
+    /**
+     * The index format version.
+     */
+    private final IndexFormatVersion version;
+
+    /**
+     * The internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
 
     /**
      * The scorer of the context query
@@ -75,11 +85,16 @@ class DerefQuery extends Query {
      * @param refProperty the name of the reference property.
      * @param nameTest a name test or <code>null</code> if any node is
      *  selected.
+     * @param version the index format version.
+     * @param nsMappings the namespace mappings.
      */
-    DerefQuery(Query context, String refProperty, String nameTest) {
+    DerefQuery(Query context, String refProperty, Name nameTest,
+               IndexFormatVersion version, NamespaceMappings nsMappings) {
         this.contextQuery = context;
         this.refProperty = refProperty;
         this.nameTest = nameTest;
+        this.version = version;
+        this.nsMappings = nsMappings;
     }
 
     /**
@@ -117,7 +132,7 @@ class DerefQuery extends Query {
         if (cQuery == contextQuery) {
             return this;
         } else {
-            return new DerefQuery(cQuery, refProperty, nameTest);
+            return new DerefQuery(cQuery, refProperty, nameTest, version, nsMappings);
         }
     }
 
@@ -182,7 +197,7 @@ class DerefQuery extends Query {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             if (nameTest != null) {
-                nameTestScorer = new TermQuery(new Term(FieldNames.LABEL, nameTest)).weight(searcher).scorer(reader);
+                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader);
             }
             return new DerefScorer(searcher.getSimilarity(), reader);
         }

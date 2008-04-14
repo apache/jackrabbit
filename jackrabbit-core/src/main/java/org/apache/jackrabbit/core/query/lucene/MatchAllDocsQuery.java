@@ -41,9 +41,7 @@ public class MatchAllDocsQuery
                 return new NodeTraversingQueryHits(
                         session.getRootNode(), true);
             } catch (RepositoryException e) {
-                IOException ex = new IOException(e.getMessage());
-                ex.initCause(e);
-                throw ex;
+                throw Util.createIOException(e);
             }
         } else {
             return null;

@@ -24,8 +24,9 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
+import org.apache.jackrabbit.core.query.lucene.hits.Hits;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -52,7 +53,17 @@ class ParentAxisQuery extends Query {
      * The nameTest to apply on the parent axis, or <code>null</code> if any
      * parent node should be selected.
      */
-    private final String nameTest;
+    private final Name nameTest;
+
+    /**
+     * The index format version.
+     */
+    private final IndexFormatVersion version;
+
+    /**
+     * The internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
 
     /**
      * The scorer of the context query
@@ -66,10 +77,15 @@ class ParentAxisQuery extends Query {
      * @param context  the context for this query.
      * @param nameTest a name test or <code>null</code> if any parent node is
      *                 selected.
+     * @param version the index format version.
+     * @param nsMappings the internal namespace mappings.
      */
-    ParentAxisQuery(Query context, String nameTest) {
+    ParentAxisQuery(Query context, Name nameTest,
+                   IndexFormatVersion version, NamespaceMappings nsMappings) {
         this.contextQuery = context;
         this.nameTest = nameTest;
+        this.version = version;
+        this.nsMappings = nsMappings;
     }
 
     /**
@@ -97,7 +113,7 @@ class ParentAxisQuery extends Query {
         if (cQuery == contextQuery) {
             return this;
         } else {
-            return new ParentAxisQuery(cQuery, nameTest);
+            return new ParentAxisQuery(cQuery, nameTest, version, nsMappings);
         }
     }
 
@@ -172,7 +188,8 @@ class ParentAxisQuery extends Query {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             HierarchyResolver resolver = (HierarchyResolver) reader;
-            return new ParentAxisScorer(searcher.getSimilarity(), reader, resolver);
+            return new ParentAxisScorer(searcher.getSimilarity(),
+                    reader, searcher, resolver);
         }
 
         /**
@@ -201,6 +218,11 @@ class ParentAxisQuery extends Query {
         private final HierarchyResolver hResolver;
 
         /**
+         * The searcher instance.
+         */
+        private final Searcher searcher;
+
+        /**
          * BitSet storing the id's of selected documents
          */
         private BitSet hits;
@@ -225,10 +247,16 @@ class ParentAxisQuery extends Query {
          *
          * @param similarity the <code>Similarity</code> instance to use.
          * @param reader     for index access.
+         * @param searcher   the index searcher.
+         * @param resolver   the hierarchy resolver.
          */
-        protected ParentAxisScorer(Similarity similarity, IndexReader reader, HierarchyResolver resolver) {
+        protected ParentAxisScorer(Similarity similarity,
+                                   IndexReader reader,
+                                   Searcher searcher,
+                                   HierarchyResolver resolver) {
             super(similarity);
             this.reader = reader;
+            this.searcher = searcher;
             this.hResolver = resolver;
         }
 
@@ -305,24 +333,21 @@ class ParentAxisQuery extends Query {
 
                 // filter out documents that do not match the name test
                 if (nameTest != null) {
-                    TermDocs tDocs = reader.termDocs(new Term(FieldNames.LABEL, nameTest));
-                    try {
-                        for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                            if (!tDocs.skipTo(i)) {
-                                // no more name tests, clear remaining
-                                hits.clear(i, hits.length());
-                            } else {
-                                // assert doc >= i
-                                int doc = tDocs.doc();
-                                if (doc > i) {
-                                    // clear hits
-                                    hits.clear(i, doc);
-                                    i = doc;
-                                }
+                    Query nameQuery = new NameQuery(nameTest, version, nsMappings);
+                    Hits nameHits = new ScorerHits(nameQuery.weight(searcher).scorer(reader));
+                    for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
+                        int doc = nameHits.skipTo(i);
+                        if (doc == -1) {
+                            // no more name tests, clear remaining
+                            hits.clear(i, hits.length());
+                        } else {
+                            // assert doc >= i
+                            if (doc > i) {
+                                // clear hits
+                                hits.clear(i, doc);
+                                i = doc;
                             }
                         }
-                    } finally {
-                        tDocs.close();
                     }
                 }
             }

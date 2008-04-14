@@ -37,7 +37,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
 
@@ -68,13 +67,23 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
      * The nameTest to apply on the child axis, or <code>null</code> if all
      * child nodes should be selected.
      */
-    private final String nameTest;
+    private final Name nameTest;
 
     /**
      * The context position for the selected child node, or
      * {@link LocationStepQueryNode#NONE} if no position is specified.
      */
     private final int position;
+
+    /**
+     * The index format version.
+     */ 
+    private final IndexFormatVersion version;
+
+    /**
+     * The internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
 
     /**
      * The scorer of the context query
@@ -94,9 +103,15 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
      * @param context the context for this query.
      * @param nameTest a name test or <code>null</code> if any child node is
      * selected.
+     * @param version the index format version.
+     * @param nsMappings the internal namespace mappings.
      */
-    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest) {
-        this(itemMgr, context, nameTest, LocationStepQueryNode.NONE);
+    ChildAxisQuery(ItemStateManager itemMgr,
+                   Query context,
+                   Name nameTest,
+                   IndexFormatVersion version,
+                   NamespaceMappings nsMappings) {
+        this(itemMgr, context, nameTest, LocationStepQueryNode.NONE, version, nsMappings);
     }
 
     /**
@@ -110,12 +125,21 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
      * @param position the context position of the child node to select. If
      * <code>position</code> is {@link LocationStepQueryNode#NONE}, the context
      * position of the child node is not checked.
+     * @param version the index format version.
+     * @param nsMapping the internal namespace mappings.
      */
-    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest, int position) {
+    ChildAxisQuery(ItemStateManager itemMgr,
+                   Query context,
+                   Name nameTest,
+                   int position,
+                   IndexFormatVersion version,
+                   NamespaceMappings nsMapping) {
         this.itemMgr = itemMgr;
         this.contextQuery = context;
         this.nameTest = nameTest;
         this.position = position;
+        this.version = version;
+        this.nsMappings = nsMapping;
     }
 
     /**
@@ -136,7 +160,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
     /**
      * @return the name test or <code>null</code> if none was specified.
      */
-    String getNameTest() {
+    Name getNameTest() {
         return nameTest;
     }
 
@@ -179,7 +203,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     if (nameTest == null) {
                         sub = new MatchAllDocsQuery();
                     } else {
-                        sub = new TermQuery(new Term(FieldNames.LABEL, nameTest));
+                        sub = new NameQuery(nameTest, version, nsMappings);
                     }
                     return new DescendantSelfAxisQuery(dsaq.getContextQuery(),
                             sub, dsaq.getMinLevels() + 1).rewrite(reader);
@@ -191,7 +215,8 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
         if (cQuery == contextQuery) {
             return this;
         } else {
-            return new ChildAxisQuery(itemMgr, cQuery, nameTest, position);
+            return new ChildAxisQuery(itemMgr, cQuery, nameTest,
+                    position, version, nsMappings);
         }
     }
 
@@ -283,7 +308,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             if (nameTest != null) {
-                nameTestScorer = new TermQuery(new Term(FieldNames.LABEL, nameTest)).weight(searcher).scorer(reader);
+                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader);
             }
             return new ChildAxisScorer(searcher.getSimilarity(),
                     reader, (HierarchyResolver) reader);

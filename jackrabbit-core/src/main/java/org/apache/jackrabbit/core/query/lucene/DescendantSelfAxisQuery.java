@@ -233,9 +233,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                         startingPoints.put(node.getPath(), sn);
                     }
                 } catch (RepositoryException e) {
-                    IOException ex = new IOException(e.getMessage());
-                    ex.initCause(e);
-                    throw ex;
+                    throw Util.createIOException(e);
                 }
             } finally {
                 result.close();
@@ -293,9 +291,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                             currentTraversal = new NodeTraversingQueryHits(node,
                                     getMinLevels() == 0);
                         } catch (RepositoryException e) {
-                            IOException ex = new IOException(e.getMessage());
-                            ex.initCause(e);
-                            throw ex;
+                            throw Util.createIOException(e);
                         }
                     } else {
                         currentTraversal = null;

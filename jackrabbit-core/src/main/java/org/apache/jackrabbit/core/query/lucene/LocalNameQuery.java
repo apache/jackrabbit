@@ -17,64 +17,61 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.analysis.Analyzer;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
- * <code>SimilarityQuery</code> implements a query that returns similar nodes
- * for a given node UUID.
+ * <code>LocalNameQuery</code> implements a query for the local name of a node.
  */
-public class SimilarityQuery extends Query {
+public class LocalNameQuery extends Query {
 
     /**
-     * The UUID of the node for which to find similar nodes.
+     * The local name of a node.
      */
-    private final String uuid;
+    private final String localName;
 
     /**
-     * The analyzer in use.
+     * The index format version.
      */
-    private final Analyzer analyzer;
+    private final IndexFormatVersion version;
 
-    public SimilarityQuery(String uuid, Analyzer analyzer) {
-        this.uuid = uuid;
-        this.analyzer = analyzer;
+    /**
+     * Creates a new <code>LocalNameQuery</code> for the given
+     * <code>localName</code>.
+     *
+     * @param localName the local name of a node.
+     * @param version   the version of the index.
+     */
+    public LocalNameQuery(String localName, IndexFormatVersion version) {
+        this.localName = localName;
+        this.version = version;
     }
 
     /**
      * {@inheritDoc}
      */
     public Query rewrite(IndexReader reader) throws IOException {
-        MoreLikeThis more = new MoreLikeThis(reader);
-        more.setAnalyzer(analyzer);
-        more.setFieldNames(new String[]{FieldNames.FULLTEXT});
-        more.setMinWordLen(4);
-        Query similarityQuery = null;
-        TermDocs td = reader.termDocs(new Term(FieldNames.UUID, uuid));
-        try {
-            if (td.next()) {
-                similarityQuery = more.like(td.doc());
-            }
-        } finally {
-            td.close();
-        }
-        if (similarityQuery != null) {
-            return similarityQuery.rewrite(reader);
+        if (version.getVersion() >= IndexFormatVersion.V3.getVersion()) {
+            return new TermQuery(new Term(FieldNames.LOCAL_NAME, localName));
         } else {
-            // return dummy query that never matches
-            return new BooleanQuery();
+            throw new IOException("LocalNameQuery requires IndexFormatVersion V3");
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    public void extractTerms(Set terms) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public String toString(String field) {
-        return "rep:similar(" + uuid + ")";
+        return "local-name() = " + localName;
     }
 }

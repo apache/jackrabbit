@@ -467,9 +467,50 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
         return transformCase(obj, data, false);
     }
 
-    public Object visit(NodeLocalNameImpl node, Object data) {
-        // TODO: implement
-        throw new UnsupportedOperationException("not yet implemented");
+    public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
+        if (version.getVersion() < IndexFormatVersion.V3.getVersion()) {
+            throw new InvalidQueryException("NodeLocalName operand is only " +
+                    "available with index version >= 3. Please re-index " +
+                    "repository and execute query again.");
+        }
+        if (data instanceof ComparisonImpl) {
+            ComparisonImpl comp = ((ComparisonImpl) data);
+            int operator = comp.getOperator();
+            Value v = (Value) ((StaticOperandImpl) comp.getOperand2()).accept(this, data);
+            String value = v.getString();
+
+            switch (operator) {
+                case OPERATOR_EQUAL_TO:
+                    return new TermQuery(new Term(FieldNames.LOCAL_NAME, value));
+                case OPERATOR_GREATER_THAN:
+                    return new LocalNameRangeQuery(value, null, false);
+                case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
+                    return new LocalNameRangeQuery(value, null, true);
+                case OPERATOR_LESS_THAN:
+                    return new LocalNameRangeQuery(null, value, false);
+                case OPERATOR_LESS_THAN_OR_EQUAL_TO:
+                    return new LocalNameRangeQuery(null, value, true);
+                case OPERATOR_LIKE:
+                    if (value.equals("%")) {
+                        return new MatchAllDocsQuery();
+                    } else {
+                        return new WildcardQuery(FieldNames.LOCAL_NAME, null, value);
+                    }
+                case OPERATOR_NOT_EQUAL_TO:
+                    MatchAllDocsQuery all = new MatchAllDocsQuery();
+                    BooleanQuery b = new BooleanQuery();
+                    b.add(all, BooleanClause.Occur.SHOULD);
+                    b.add(new TermQuery(new Term(FieldNames.LOCAL_NAME, value)),
+                            BooleanClause.Occur.MUST_NOT);
+                    return b;
+                default:
+                    throw new InvalidQueryException(
+                            "Unknown operator " + operator);
+            }
+        } else {
+            // TODO
+            throw new InvalidQueryException("not yet implemented");
+        }
     }
 
     public Object visit(NodeNameImpl node, Object data) throws Exception {
@@ -497,43 +538,25 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                 throw new InvalidQueryException(v.getString() +
                         " cannot be converted into a NAME value");
             }
-            String stringValue = npResolver.getJCRName(value);
-            // the prefix including colon
-            String prefix = stringValue.substring(0, stringValue.indexOf(':') + 1);
 
             switch (operator) {
                 case OPERATOR_EQUAL_TO:
-                    return new TermQuery(new Term(FieldNames.LABEL, stringValue));
+                    return new NameQuery(value, version, nsMappings);
                 case OPERATOR_GREATER_THAN:
-                    Term lower = new Term(FieldNames.LABEL, stringValue);
-                    Term upper = new Term(FieldNames.LABEL,
-                            prefix + "\uFFFF");
-                    return new RangeQuery(lower, upper, false);
+                    return new NameRangeQuery(value, null, false, version, nsMappings);
                 case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
-                    lower = new Term(FieldNames.LABEL, stringValue);
-                    upper = new Term(FieldNames.LABEL,
-                            prefix + "\uFFFF");
-                    return new RangeQuery(lower, upper, true);
+                    return new NameRangeQuery(value, null, true, version, nsMappings);
                 case OPERATOR_LESS_THAN:
-                    lower = new Term(FieldNames.LABEL, prefix);
-                    upper = new Term(FieldNames.LABEL, stringValue);
-                    return new RangeQuery(lower, upper, false);
+                    return new NameRangeQuery(null, value, false, version, nsMappings);
                 case OPERATOR_LESS_THAN_OR_EQUAL_TO:
-                    lower = new Term(FieldNames.LABEL, prefix);
-                    upper = new Term(FieldNames.LABEL, stringValue);
-                    return new RangeQuery(lower, upper, true);
+                    return new NameRangeQuery(null, value, true, version, nsMappings);
                 case OPERATOR_LIKE:
-                    if (stringValue.equals("%")) {
-                        return new MatchAllDocsQuery();
-                    } else {
-                        return new WildcardQuery(FieldNames.LABEL,
-                                null, stringValue);
-                    }
+                    throw new InvalidQueryException("Operator LIKE is not supported with NAME operands");
                 case OPERATOR_NOT_EQUAL_TO:
                     MatchAllDocsQuery all = new MatchAllDocsQuery();
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
-                    b.add(new TermQuery(new Term(FieldNames.LABEL, stringValue)),
+                    b.add(new NameQuery(value, version, nsMappings),
                             BooleanClause.Occur.MUST_NOT);
                     return b;
                 default:
