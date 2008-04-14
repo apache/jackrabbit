@@ -905,12 +905,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public void stateDestroyed(ItemState destroyed) {
         ItemData data = retrieveItem(destroyed.getId());
-        if (data != null) {
-            data.setStatus(ItemImpl.STATUS_DESTROYED);
-            if (data.getState() == destroyed) {
-                data.setState(null);
-            }
+        if (data != null && data.getState() == destroyed) {
             itemDestroyed(destroyed.getId(), data);
+
+            data.setStatus(ItemImpl.STATUS_DESTROYED);
+            data.setState(null);
         }
     }
 

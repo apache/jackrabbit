@@ -35,6 +35,8 @@ class NodeDataRef extends AbstractNodeData {
      * @param primaryParentId primary parent id
      */
     protected NodeDataRef(AbstractNodeData data, NodeId primaryParentId) {
+        super(data.getId());
+
         this.data = data;
 
         setPrimaryParentId(primaryParentId);
