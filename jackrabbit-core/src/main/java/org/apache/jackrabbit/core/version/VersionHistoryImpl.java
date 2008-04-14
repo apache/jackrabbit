@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.ItemLifeCycleListener;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -32,7 +31,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NodeIterator;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -58,10 +56,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @param definition node definition
      * @param listeners life cycle listeners
      */
-    public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                              NodeState state, NodeDefinition definition,
-                              ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, id, state, definition, listeners);
+    public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
     }
 
     /**

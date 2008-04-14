@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.commons.collections.iterators.IteratorChain;
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -65,10 +64,8 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -83,7 +80,7 @@ public abstract class ItemImpl implements Item {
     protected static final int STATUS_DESTROYED = 2;
     protected static final int STATUS_INVALIDATED = 3;
 
-    protected int status;
+    //protected int status;
 
     protected final ItemId id;
 
@@ -98,9 +95,9 @@ public abstract class ItemImpl implements Item {
     protected final RepositoryImpl rep;
 
     /**
-     * <code>ItemState</code> associated with this <code>Item</code>
+     * Item data associated with this item.
      */
-    protected ItemState state;
+    protected final ItemData data;
 
     /**
      * <code>ItemManager</code> that created this <code>Item</code>
@@ -113,12 +110,6 @@ public abstract class ItemImpl implements Item {
     protected final SessionItemStateManager stateMgr;
 
     /**
-     * Listeners (weak references)
-     */
-    protected final Map listeners =
-            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
-
-    /**
      * Package private constructor.
      *
      * @param itemMgr   the <code>ItemManager</code> that created this <code>Item</code>
@@ -127,21 +118,14 @@ public abstract class ItemImpl implements Item {
      * @param state     state associated with this <code>Item</code>
      * @param listeners listeners on life cycle changes of this <code>ItemImpl</code>
      */
-    ItemImpl(ItemManager itemMgr, SessionImpl session, ItemId id, ItemState state,
-             ItemLifeCycleListener[] listeners) {
+    ItemImpl(ItemManager itemMgr, SessionImpl session, ItemData data) {
         this.session = session;
         rep = (RepositoryImpl) session.getRepository();
         stateMgr = session.getItemStateManager();
-        this.id = id;
+        this.id = data.getId();
         this.itemMgr = itemMgr;
-        this.state = state;
-        status = STATUS_NORMAL;
-
-        if (listeners != null) {
-            for (int i = 0; i < listeners.length; i++) {
-                addLifeCycleListener(listeners[i]);
-            }
-        }
+        this.data = data;
+        data.setStatus(STATUS_NORMAL);
     }
 
     /**
@@ -154,13 +138,14 @@ public abstract class ItemImpl implements Item {
         session.sanityCheck();
 
         // check status of this item for read operation
+        final int status = data.getStatus();
         if (status == STATUS_DESTROYED || status == STATUS_INVALIDATED) {
             throw new InvalidItemStateException(id + ": the item does not exist anymore");
         }
     }
 
     protected boolean isTransient() {
-        return state.isTransient();
+        return getItemState().isTransient();
     }
 
     protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
@@ -175,6 +160,7 @@ public abstract class ItemImpl implements Item {
      * @throws RepositoryException if an error occurs
      */
     protected void setRemoved() throws RepositoryException {
+        final int status = data.getStatus();
         if (status == STATUS_INVALIDATED || status == STATUS_DESTROYED) {
             // this instance is already 'invalid', get outta here
             return;
@@ -194,10 +180,10 @@ public abstract class ItemImpl implements Item {
             stateMgr.moveTransientItemStateToAttic(transientState);
 
             // set state of this instance to 'invalid'
-            status = STATUS_INVALIDATED;
-            // notify the listeners that this instance has been
+            data.setStatus(STATUS_INVALIDATED);
+            // notify the manager that this instance has been
             // temporarily invalidated
-            notifyInvalidated();
+            itemMgr.itemInvalidated(id, data);
         }
     }
 
@@ -207,74 +193,7 @@ public abstract class ItemImpl implements Item {
      * @return state associated with this <code>Item</code>
      */
     ItemState getItemState() {
-        return state;
-    }
-
-    /**
-     * Notify the listeners that this instance has been created.
-     */
-    protected void notifyCreated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la =
-                (ItemLifeCycleListener[]) listeners.values().toArray(
-                        new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemCreated(this);
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that this instance has been invalidated
-     * (i.e. it has been temporarily rendered 'invalid').
-     */
-    protected void notifyInvalidated() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la =
-                (ItemLifeCycleListener[]) listeners.values().toArray(
-                        new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemInvalidated(id, this);
-            }
-        }
-    }
-
-    /**
-     * Notify the listeners that this instance has been destroyed
-     * (i.e. it has been permanently rendered 'invalid').
-     */
-    protected void notifyDestroyed() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la =
-                (ItemLifeCycleListener[]) listeners.values().toArray(
-                        new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemDestroyed(id, this);
-            }
-        }
-    }
-
-    /**
-     * Add an <code>ItemLifeCycleListener</code>
-     *
-     * @param listener the new listener to be informed on life cycle changes
-     */
-    void addLifeCycleListener(ItemLifeCycleListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
-        }
-    }
-
-    /**
-     * Remove an <code>ItemLifeCycleListener</code>
-     *
-     * @param listener an existing listener
-     */
-    void removeLifeCycleListener(ItemLifeCycleListener listener) {
-        listeners.remove(listener);
+        return data.getState();
     }
 
     /**
@@ -353,6 +272,7 @@ public abstract class ItemImpl implements Item {
         // fail-fast test: check status of this item's state
         if (isTransient()) {
             String msg;
+            final ItemState state = getItemState();
             switch (state.getStatus()) {
                 case ItemState.STATUS_EXISTING_MODIFIED:
                     // add this item's state to the list
@@ -695,15 +615,15 @@ public abstract class ItemImpl implements Item {
 
         // walk through list of transient items and persist each one
         while (iter.hasNext()) {
-            ItemState itemState = (ItemState) iter.next();
-            ItemImpl item = itemMgr.getItem(itemState);
+            ItemState state = (ItemState) iter.next();
+            ItemImpl item = itemMgr.getItem(state.getId(),
+                    state.getStatus() == ItemState.STATUS_NEW);
             // persist state of transient item
             item.makePersistent();
         }
     }
 
     private void restoreTransientItems(Iterator iter) {
-
         // walk through list of transient states and re-apply transient changes
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
@@ -717,11 +637,7 @@ public abstract class ItemImpl implements Item {
                     // TransientItemStateManager will bark because of a deleted
                     // state in its attic. We therefore have to forge a new item
                     // instance ourself.
-                    if (itemState.isNode()) {
-                        item = itemMgr.createNodeInstance((NodeState) itemState);
-                    } else {
-                        item = itemMgr.createPropertyInstance((PropertyState) itemState);
-                    }
+                    item = itemMgr.createItemInstance(itemState);
                     itemState.setStatus(ItemState.STATUS_NEW);
                 } else {
                     try {
@@ -730,11 +646,7 @@ public abstract class ItemImpl implements Item {
                         // itemState probably represents a 'new' item and the
                         // ItemImpl instance wrapping it has already been gc'ed;
                         // we have to re-create the ItemImpl instance
-                        if (itemState.isNode()) {
-                            item = itemMgr.createNodeInstance((NodeState) itemState);
-                        } else {
-                            item = itemMgr.createPropertyInstance((PropertyState) itemState);
-                        }
+                        item = itemMgr.createItemInstance(itemState);
                         itemState.setStatus(ItemState.STATUS_NEW);
                     }
                 }
@@ -943,123 +855,8 @@ public abstract class ItemImpl implements Item {
      */
     public abstract Name getQName() throws RepositoryException;
 
-    //----------------------------------------------------< ItemStateListener >
-    /**
-     * {@inheritDoc}
-     */
-    public void stateCreated(ItemState created) {
-        status = STATUS_NORMAL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDestroyed(ItemState destroyed) {
-        if (state == destroyed) {
-            // set state of this instance to 'destroyed'
-            status = STATUS_DESTROYED;
-            // dispose state
-            if (state == destroyed) {
-                state = null;
-            }
-            /**
-             * notify the listeners that this instance has been
-             * permanently invalidated
-             */
-            notifyDestroyed();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateModified(ItemState modified) {
-        if (state == modified) {
-            status = STATUS_MODIFIED;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void stateDiscarded(ItemState discarded) {
-        if (state == discarded) {
-            /**
-             * the state of this item has been discarded, probably as a result
-             * of calling Item.refresh(false) or ItemImpl.setRemoved()
-             */
-            if (isTransient()) {
-                switch (state.getStatus()) {
-                    /**
-                     * persistent item that has been transiently removed
-                     */
-                    case ItemState.STATUS_EXISTING_REMOVED:
-                        /**
-                         * persistent item that has been transiently modified
-                         */
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        /**
-                         * persistent item that has been transiently modified or removed
-                         * and the underlying persistent state has been externally
-                         * modified since the transient modification/removal.
-                         */
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        ItemState persistentState = state.getOverlayedState();
-                        /**
-                         * the state is a transient wrapper for the underlying
-                         * persistent state, therefore restore the
-                         * persistent state and resurrect this item instance
-                         * if necessary
-                         */
-                        stateMgr.disconnectTransientItemState(state);
-                        state = persistentState;
-
-                        return;
-
-                        /**
-                         * persistent item that has been transiently modified or removed
-                         * and the underlying persistent state has been externally
-                         * destroyed since the transient modification/removal.
-                         */
-                    case ItemState.STATUS_STALE_DESTROYED:
-                        /**
-                         * first notify the listeners that this instance has been
-                         * permanently invalidated
-                         */
-                        notifyDestroyed();
-                        // now set state of this instance to 'destroyed'
-                        status = STATUS_DESTROYED;
-                        state = null;
-                        return;
-
-                        /**
-                         * new item that has been transiently added
-                         */
-                    case ItemState.STATUS_NEW:
-                        /**
-                         * first notify the listeners that this instance has been
-                         * permanently invalidated
-                         */
-                        notifyDestroyed();
-                        // now set state of this instance to 'destroyed'
-                        status = STATUS_DESTROYED;
-                        // finally dispose state
-                        state = null;
-                        return;
-                }
-            }
-
-            /**
-             * first notify the listeners that this instance has been
-             * invalidated
-             */
-            notifyInvalidated();
-            // now render this instance 'invalid'
-            status = STATUS_INVALIDATED;
-        }
-    }
-
     //-----------------------------------------------------------------< Item >
+
     /**
      * {@inheritDoc}
      */
@@ -1086,6 +883,7 @@ public abstract class ItemImpl implements Item {
      * {@inheritDoc}
      */
     public boolean isNew() {
+        final ItemState state = getItemState();
         return state.isTransient() && state.getOverlayedState() == null;
     }
 
@@ -1095,6 +893,7 @@ public abstract class ItemImpl implements Item {
      * be saved but not yet persisted.
      */
     protected boolean isTransactionalNew() {
+        final ItemState state = getItemState();
         return state.getStatus() == ItemState.STATUS_NEW;
     }
 
@@ -1102,6 +901,7 @@ public abstract class ItemImpl implements Item {
      * {@inheritDoc}
      */
     public boolean isModified() {
+        final ItemState state = getItemState();
         return state.isTransient() && state.getOverlayedState() != null;
     }
 
@@ -1371,7 +1171,7 @@ public abstract class ItemImpl implements Item {
 
         // check status of this item's state
         if (isTransient()) {
-            transientState = state;
+            transientState = getItemState();
             switch (transientState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
@@ -1484,6 +1284,7 @@ public abstract class ItemImpl implements Item {
         // check state of this instance
         sanityCheck();
 
+        final ItemState state = getItemState();
         if (state.getParentId() == null) {
             // shortcut
             return 0;

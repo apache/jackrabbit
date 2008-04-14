@@ -53,7 +53,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     private static Logger log = LoggerFactory.getLogger(PropertyImpl.class);
 
-    private final PropertyDefinition definition;
+    /** property data (avoids casting <code>ItemImpl.data</code>) */
+    private final PropertyData data;
 
     /**
      * Package private constructor.
@@ -65,11 +66,9 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @param definition definition of <i>this</i> <code>Property</code>
      * @param listeners  listeners on life cylce changes of this <code>PropertyImpl</code>
      */
-    PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyId id,
-                 PropertyState state, PropertyDefinition definition,
-                 ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, id, state, listeners);
-        this.definition = definition;
+    PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyData data) {
+        super(itemMgr, session, data);
+        this.data = data;
         // value will be read on demand
     }
 
@@ -90,20 +89,24 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     protected synchronized ItemState getOrCreateTransientItemState()
             throws RepositoryException {
-        if (!isTransient()) {
-            // make transient (copy-on-write)
-            try {
-                PropertyState transientState =
-                        stateMgr.createTransientPropertyState((PropertyState) state, ItemState.STATUS_EXISTING_MODIFIED);
-                // swap persistent with transient state
-                state = transientState;
-            } catch (ItemStateException ise) {
-                String msg = "failed to create transient state";
-                log.debug(msg);
-                throw new RepositoryException(msg, ise);
+
+        synchronized (data) {
+            if (!isTransient()) {
+                // make transient (copy-on-write)
+                try {
+                    PropertyState transientState =
+                            stateMgr.createTransientPropertyState(
+                                    data.getPropertyState(), ItemState.STATUS_EXISTING_MODIFIED);
+                    // swap persistent with transient state
+                    data.setState(transientState);
+                } catch (ItemStateException ise) {
+                    String msg = "failed to create transient state";
+                    log.debug(msg);
+                    throw new RepositoryException(msg, ise);
+                }
             }
+            return getItemState();
         }
-        return state;
     }
 
     protected void makePersistent() throws InvalidItemStateException {
@@ -112,7 +115,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             return;
         }
 
-        PropertyState transientState = (PropertyState) state;
+        PropertyState transientState = data.getPropertyState();
         PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this property is 'new'
@@ -139,9 +142,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         // tell state manager to disconnect item state
         stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with persistent state
-        state = persistentState;
+        data.setState(persistentState);
         // reset status
-        status = STATUS_NORMAL;
+        data.setStatus(STATUS_NORMAL);
     }
 
     protected void restoreTransient(PropertyState transientState)
@@ -222,6 +225,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             LockException, ConstraintViolationException,
             RepositoryException {
         NodeImpl parent = (NodeImpl) getParent();
+        PropertyDefinition definition = data.getPropertyDefinition();
 
         // verify that parent node is checked-out
         if (!parent.internalIsCheckedOut()) {
@@ -324,6 +328,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         checkSetValue(false);
 
         // check type according to definition of this property
+        final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
             reqType = PropertyType.NAME;
@@ -373,6 +378,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         checkSetValue(true);
 
         // check type according to definition of this property
+        final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
             reqType = PropertyType.NAME;
@@ -420,6 +426,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws RepositoryException
      */
     public InternalValue[] internalGetValues() throws RepositoryException {
+        final PropertyDefinition definition = data.getPropertyDefinition();
         if (definition.isMultiple()) {
             return getPropertyState().getValues();
         } else {
@@ -438,6 +445,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @throws RepositoryException
      */
     public InternalValue internalGetValue() throws RepositoryException {
+        final PropertyDefinition definition = data.getPropertyDefinition();
         if (definition.isMultiple()) {
             throw new ValueFormatException(
                     this + " is a multi-valued property,"
@@ -583,6 +591,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         checkSetValue(false);
 
         // check type according to definition of this property
+        final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
             if (value != null) {
@@ -652,6 +661,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             }
         }
 
+        final PropertyDefinition definition = data.getPropertyDefinition();
         int reqType = definition.getRequiredType();
         if (reqType == PropertyType.UNDEFINED) {
             reqType = valueType; // use the given type as property type
@@ -705,7 +715,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         // check state of this instance
         sanityCheck();
 
-        return definition;
+        return data.getPropertyDefinition();
     }
 
     public int getType() throws RepositoryException {

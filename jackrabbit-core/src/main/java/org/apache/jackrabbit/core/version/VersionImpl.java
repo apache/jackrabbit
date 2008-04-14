@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.ItemLifeCycleListener;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,6 @@ import javax.jcr.Item;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import java.util.Calendar;
@@ -54,10 +52,8 @@ public class VersionImpl extends NodeImpl implements Version {
      * @param definition node definition
      * @param listeners life cycle listeners
      */
-    public VersionImpl(ItemManager itemMgr, SessionImpl session, NodeId id,
-                          NodeState state, NodeDefinition definition,
-                          ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, id, state, definition, listeners);
+    public VersionImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
+        super(itemMgr, session, data);
     }
 
     /**
