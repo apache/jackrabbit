@@ -265,9 +265,7 @@ public class MultiIndex {
             fs.init();
             store = new IndexingQueueStore(fs, INDEXING_QUEUE_FILE);
         } catch (FileSystemException e) {
-            IOException ex = new IOException();
-            ex.initCause(e);
-            throw ex;
+            throw Util.createIOException(e);
         }
 
         // initialize indexing queue

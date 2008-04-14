@@ -182,7 +182,7 @@ public class NodeIndexer {
             if (node.getParentId() == null) {
                 // root node
                 doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
-                doc.add(new Field(FieldNames.LABEL, "", Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
+                addNodeName(doc, "", "");
             } else {
                 doc.add(new Field(
                         FieldNames.PARENT, node.getParentId().toString(),
@@ -196,8 +196,8 @@ public class NodeIndexer {
                             "Missing child node entry for node with id: "
                             + node.getNodeId());
                 }
-                String name = resolver.getJCRName(child.getName());
-                doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
+                Name name = child.getName();
+                addNodeName(doc, name.getNamespaceURI(), name.getLocalName());
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
@@ -798,5 +798,25 @@ public class NodeIndexer {
         doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
                 FieldNames.createNamedLength(propertyName, length),
                 Field.Store.NO, Field.Index.NO_NORMS));
+    }
+
+    /**
+     * Depending on the index format version adds one or two fields to the
+     * document for the node name.
+     *
+     * @param doc the lucene document.
+     * @param namespaceURI the namespace URI of the node name.
+     * @param localName the local name of the node.
+     */
+    protected void addNodeName(Document doc,
+                               String namespaceURI,
+                               String localName) throws NamespaceException {
+        String name = mappings.getPrefix(namespaceURI) + ":" + localName;
+        doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS));
+        // as of version 3, also index combination of namespace URI and local name
+        if (indexFormatVersion.getVersion() >= IndexFormatVersion.V3.getVersion()) {
+            doc.add(new Field(FieldNames.NAMESPACE_URI, namespaceURI, Field.Store.NO, Field.Index.NO_NORMS));
+            doc.add(new Field(FieldNames.LOCAL_NAME, localName, Field.Store.NO, Field.Index.NO_NORMS));
+        }
     }
 }

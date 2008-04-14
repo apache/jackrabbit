@@ -183,9 +183,7 @@ abstract class AbstractIndex {
                     if (cause instanceof IOException) {
                         ex = (IOException) cause;
                     } else {
-                        IOException e = new IOException();
-                        e.initCause(cause);
-                        ex = e;
+                        throw Util.createIOException(cause);
                     }
                 } else {
                     // all others are logged

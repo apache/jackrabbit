@@ -89,9 +89,7 @@ public class PropertiesSynonymProvider implements SynonymProvider {
             configLastModified = config.lastModified();
             lastCheck = System.currentTimeMillis();
         } catch (FileSystemException e) {
-            IOException ex = new IOException();
-            ex.initCause(e);
-            throw ex;
+            throw Util.createIOException(e);
         }
     }
 
@@ -161,9 +159,7 @@ public class PropertiesSynonymProvider implements SynonymProvider {
             }
             return synonyms;
         } catch (FileSystemException e) {
-            IOException ex = new IOException();
-            ex.initCause(e);
-            throw ex;
+            throw Util.createIOException(e);
         }
     }
 

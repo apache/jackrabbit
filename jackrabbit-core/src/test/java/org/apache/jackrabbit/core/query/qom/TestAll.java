@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ChildNodeTest.class);
         suite.addTestSuite(DescendantNodeTest.class);
         suite.addTestSuite(LengthTest.class);
+        suite.addTestSuite(NodeLocalNameTest.class);
         suite.addTestSuite(NodeNameTest.class);
         suite.addTestSuite(PropertyExistenceTest.class);
         suite.addTestSuite(QueryObjectModelFactoryTest.class);

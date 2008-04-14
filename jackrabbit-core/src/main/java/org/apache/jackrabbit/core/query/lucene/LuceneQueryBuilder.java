@@ -416,9 +416,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // text search on some child axis
                 Path.Element[] elements = relPath.getElements();
                 for (int i = elements.length - 1; i >= 0; i--) {
-                    String name = null;
+                    Name name = null;
                     if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                        name = resolver.getJCRName(elements[i].getName());
+                        name = elements[i].getName();
                     }
                     // join text search with name test
                     // if path references property that's elements.length - 2
@@ -426,7 +426,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     if (name != null
                             && ((node.getReferencesProperty() && i == elements.length - 2)
                                 || (!node.getReferencesProperty() && i == elements.length - 1))) {
-                        Query q = new TermQuery(new Term(FieldNames.LABEL, name));
+                        Query q = new NameQuery(name, indexFormatVersion, nsMappings);
                         BooleanQuery and = new BooleanQuery();
                         and.add(q, Occur.MUST);
                         and.add(context, Occur.MUST);
@@ -434,11 +434,13 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     } else if ((node.getReferencesProperty() && i < elements.length - 2)
                             || (!node.getReferencesProperty() && i < elements.length - 1)) {
                         // otherwise do a parent axis step
-                        context = new ParentAxisQuery(context, name);
+                        context = new ParentAxisQuery(context, name,
+                                indexFormatVersion, nsMappings);
                     }
                 }
                 // finally select parent
-                context = new ParentAxisQuery(context, null);
+                context = new ParentAxisQuery(context, null,
+                        indexFormatVersion, nsMappings);
             }
             return context;
         } catch (NamespaceException e) {
@@ -465,15 +467,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 } else {
                     // then this is a node != the root node
                     // will never match anything!
-                    String name = "";
-                    try {
-                        name = resolver.getJCRName(nameTest);
-                    } catch (NamespaceException e) {
-                        exceptions.add(e);
-                    }
                     BooleanQuery and = new BooleanQuery();
                     and.add(new TermQuery(new Term(FieldNames.PARENT, "")), Occur.MUST);
-                    and.add(new TermQuery(new Term(FieldNames.LABEL, name)), Occur.MUST);
+                    and.add(new NameQuery(nameTest, indexFormatVersion, nsMappings), Occur.MUST);
                     context = and;
                 }
                 LocationStepQueryNode[] tmp = new LocationStepQueryNode[steps.length - 1];
@@ -526,15 +522,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
 
-        TermQuery nameTest = null;
+        NameQuery nameTest = null;
         if (node.getNameTest() != null) {
-            try {
-                String internalName = resolver.getJCRName(node.getNameTest());
-                nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
-            } catch (NamespaceException e) {
-                // should never happen
-                exceptions.add(e);
-            }
+            nameTest = new NameQuery(node.getNameTest(), indexFormatVersion, nsMappings);
         }
 
         if (node.getIncludeDescendants()) {
@@ -564,7 +554,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                             andQuery.add(context, Occur.MUST);
                         } else {
                             context = new DescendantSelfAxisQuery(context, true);
-                            andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                            andQuery.add(new ChildAxisQuery(sharedItemMgr,
+                                    context, null, node.getIndex(),
+                                    indexFormatVersion, nsMappings), Occur.MUST);
                         }
                     } else {
                         andQuery.add(new MatchAllDocsQuery(), Occur.MUST);
@@ -574,10 +566,14 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } else {
             // name test
             if (nameTest != null) {
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getTerm().text(), node.getIndex()), Occur.MUST);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context,
+                        nameTest.getName(), node.getIndex(), indexFormatVersion,
+                        nsMappings), Occur.MUST);
             } else {
                 // select child nodes
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null,
+                        node.getIndex(), indexFormatVersion, nsMappings),
+                        Occur.MUST);
             }
         }
 
@@ -592,17 +588,14 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         try {
             String refProperty = resolver.getJCRName(node.getRefProperty());
-            String nameTest = null;
-            if (node.getNameTest() != null) {
-                nameTest = resolver.getJCRName(node.getNameTest());
-            }
 
             if (node.getIncludeDescendants()) {
                 Query refPropQuery = Util.createMatchAllQuery(refProperty, indexFormatVersion);
                 context = new DescendantSelfAxisQuery(context, refPropQuery, false);
             }
 
-            context = new DerefQuery(context, refProperty, nameTest);
+            context = new DerefQuery(context, refProperty, node.getNameTest(),
+                    indexFormatVersion, nsMappings);
 
             // attach predicates
             Object[] predicates = node.acceptOperands(this, data);
@@ -726,9 +719,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // parse string literal as JCR Name
                 try {
                     Name n = session.getQName(ISO9075.decode(node.getStringValue()));
-                    String translatedQName = nsMappings.translatePropertyName(n);
-                    Term t = new Term(FieldNames.LABEL, translatedQName);
-                    query = new TermQuery(t);
+                    query = new NameQuery(n, indexFormatVersion, nsMappings);
                 } catch (NameException e) {
                     exceptions.add(e);
                     return data;
@@ -738,7 +729,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 }
             } else {
                 // will never match -> create dummy query
-                query = new TermQuery(new Term(FieldNames.UUID, "x"));
+                query = new BooleanQuery();
             }
         } else {
             switch (node.getOperation()) {
@@ -879,16 +870,17 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = new NotQuery(Util.createMatchAllQuery(field, indexFormatVersion));
                     break;
                 case QueryConstants.OPERATION_SIMILAR:
-                    String uuid = "x";
                     try {
                         NodeId id = hmgr.resolveNodePath(session.getQPath(node.getStringValue()));
                         if (id != null) {
-                            uuid = id.getUUID().toString();
+                            query = new SimilarityQuery(id.getUUID().toString(), analyzer);
+                        } else {
+                            query = new BooleanQuery();
                         }
                     } catch (Exception e) {
                         exceptions.add(e);
+                        query = new BooleanQuery();
                     }
-                    query = new SimilarityQuery(uuid, analyzer);
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
                     query = Util.createMatchAllQuery(field, indexFormatVersion);
@@ -903,37 +895,35 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         if (relPath.getLength() > 1) {
-            try {
-                // child axis in relation
-                Path.Element[] elements = relPath.getElements();
-                // elements.length - 1 = property name
-                // elements.length - 2 = last child axis name test
-                for (int i = elements.length - 2; i >= 0; i--) {
-                    String name = null;
-                    if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                        name = resolver.getJCRName(elements[i].getName());
-                    }
-                    if (i == elements.length - 2) {
-                        // join name test with property query if there is one
-                        if (name != null) {
-                            Query nameTest = new TermQuery(new Term(FieldNames.LABEL, name));
-                            BooleanQuery and = new BooleanQuery();
-                            and.add(query, Occur.MUST);
-                            and.add(nameTest, Occur.MUST);
-                            query = and;
-                        } else {
-                            // otherwise the query can be used as is
-                        }
-                    } else {
-                        query = new ParentAxisQuery(query, name);
-                    }
+            // child axis in relation
+            Path.Element[] elements = relPath.getElements();
+            // elements.length - 1 = property name
+            // elements.length - 2 = last child axis name test
+            for (int i = elements.length - 2; i >= 0; i--) {
+                Name name = null;
+                if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
+                    name = elements[i].getName();
                 }
-            } catch (NamespaceException e) {
-                // should never happen
-                exceptions.add(e);
+                if (i == elements.length - 2) {
+                    // join name test with property query if there is one
+                    if (name != null) {
+                        Query nameTest = new NameQuery(name,
+                                indexFormatVersion, nsMappings);
+                        BooleanQuery and = new BooleanQuery();
+                        and.add(query, Occur.MUST);
+                        and.add(nameTest, Occur.MUST);
+                        query = and;
+                    } else {
+                        // otherwise the query can be used as is
+                    }
+                } else {
+                    query = new ParentAxisQuery(query, name,
+                            indexFormatVersion, nsMappings);
+                }
             }
             // finally select the parent of the selected nodes
-            query = new ParentAxisQuery(query, null);
+            query = new ParentAxisQuery(query, null,
+                    indexFormatVersion, nsMappings);
         }
 
         return query;

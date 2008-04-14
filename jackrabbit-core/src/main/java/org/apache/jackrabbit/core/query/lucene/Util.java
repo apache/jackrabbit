@@ -96,4 +96,15 @@ public class Util {
             return new MatchAllQuery(name);
         }
     }
+
+    /**
+     * Creates an {@link IOException} with <code>t</code> as its cause.
+     *
+     * @param t the cause.
+     */
+    public static IOException createIOException(Throwable t) {
+        IOException ex = new IOException(t.getMessage());
+        ex.initCause(t);
+        return ex;
+    }
 }

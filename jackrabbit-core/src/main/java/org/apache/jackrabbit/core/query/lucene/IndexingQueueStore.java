@@ -239,9 +239,7 @@ class IndexingQueueStore {
                     out.close();
                     out = null;
                 }
-                IOException ex = new IOException(e.getMessage());
-                ex.initCause(e);
-                throw ex;
+                throw Util.createIOException(e);
             }
         }
         return out;
