@@ -444,10 +444,7 @@ public class MultiIndex {
             synchronized (updateMonitor) {
                 updateInProgress = false;
                 updateMonitor.notifyAll();
-                if (multiReader != null) {
-                    multiReader.close();
-                    multiReader = null;
-                }
+                closeMultiReader();
             }
         }
     }
@@ -510,10 +507,7 @@ public class MultiIndex {
             synchronized (updateMonitor) {
                 updateInProgress = false;
                 updateMonitor.notifyAll();
-                if (multiReader != null) {
-                    multiReader.close();
-                    multiReader = null;
-                }
+                closeMultiReader();
             }
         }
         return num;
@@ -682,10 +676,7 @@ public class MultiIndex {
                 synchronized (updateMonitor) {
                     updateInProgress = false;
                     updateMonitor.notifyAll();
-                    if (multiReader != null) {
-                        multiReader.close();
-                        multiReader = null;
-                    }
+                    closeMultiReader();
                 }
             }
         }
@@ -761,13 +752,10 @@ public class MultiIndex {
             flushTask.cancel();
 
             // commit / close indexes
-            if (multiReader != null) {
-                try {
-                    multiReader.close();
-                } catch (IOException e) {
-                    log.error("Exception while closing search index.", e);
-                }
-                multiReader = null;
+            try {
+                closeMultiReader();
+            } catch (IOException e) {
+                log.error("Exception while closing search index.", e);
             }
             try {
                 flush();
@@ -906,6 +894,28 @@ public class MultiIndex {
 
         // delete obsolete indexes
         attemptDelete();
+    }
+
+    /**
+     * Closes the {@link #multiReader} and sets it <code>null</code>. If the
+     * reader is already <code>null</code> this method does nothing. When this
+     * method returns {@link #multiReader} is guaranteed to be <code>null</code>
+     * even if an exception is thrown.
+     * <p/>
+     * Please note that this method does not take care of any synchronization.
+     * A caller must ensure that it is the only thread operating on this multi
+     * index, or that it holds the {@link #updateMonitor}.
+     *
+     * @throws IOException if an error occurs while closing the reader.
+     */
+    void closeMultiReader() throws IOException {
+        if (multiReader != null) {
+            try {
+                multiReader.close();
+            } finally {
+                multiReader = null;
+            }
+        }
     }
 
     //-------------------------< internal >-------------------------------------
@@ -1143,10 +1153,7 @@ public class MultiIndex {
                         synchronized (updateMonitor) {
                             updateInProgress = false;
                             updateMonitor.notifyAll();
-                            if (multiReader != null) {
-                                multiReader.close();
-                                multiReader = null;
-                            }
+                            closeMultiReader();
                         }
                     }
                 }
