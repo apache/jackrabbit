@@ -132,7 +132,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         n2.setProperty(propertyName1, n1);
         testRootNode.save();
-        assertEquals("Wrong reference target.", n2.getProperty(propertyName1).getNode(), n1);
+        assertEquals("Wrong reference target.", n2.getProperty(propertyName1).getNode().getUUID(), n1.getUUID());
         n2.remove();
         testRootNode.save();
     }
@@ -166,7 +166,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         n3.setProperty(propertyName1, n1);
         testRootNode.save();
-        assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode(), n1);
+        assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode().getUUID(), n1.getUUID());
         PropertyIterator iter = n1.getReferences();
         if (iter.hasNext()) {
             assertEquals("Wrong referer", iter.nextProperty().getParent().getPath(), n3.getPath());
@@ -179,7 +179,7 @@ public class ReferencesTest extends AbstractJCRTest {
         // change reference: n3.p1 -> n2
         n3.setProperty(propertyName1, n2);
         n3.save();
-        assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode(), n2);
+        assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode().getUUID(), n2.getUUID());
         iter = n1.getReferences();
         if (iter.hasNext()) {
             fail("too many referers: " + iter.nextProperty().getPath());
