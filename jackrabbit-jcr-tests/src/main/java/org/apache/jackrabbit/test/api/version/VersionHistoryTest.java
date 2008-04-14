@@ -33,6 +33,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.GregorianCalendar;
 import java.util.Calendar;
@@ -138,20 +139,22 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     public void testGetAllVersions() throws RepositoryException {
         int cnt = 5;
-        HashSet versions = new HashSet();
-        versions.add(vHistory.getRootVersion());
+        HashMap versions = new HashMap();
+        Version v = vHistory.getRootVersion();
+        versions.put(v.getUUID(), v);
         for (int i = 0; i < cnt; i++) {
-            versions.add(versionableNode.checkin());
+            v = versionableNode.checkin();
+            versions.put(v.getUUID(), v);
             versionableNode.checkout();
         }
 
         VersionIterator it = vHistory.getAllVersions();
         while (it.hasNext()) {
-            Version v = it.nextVersion();
-            if (!versions.contains(v)) {
+            v = it.nextVersion();
+            if (!versions.containsKey(v.getUUID())) {
                 fail("VersionHistory.getAllVersions() must only contain the root version and versions, that have been created by a Node.checkin() call.");
             }
-            versions.remove(v);
+            versions.remove(v.getUUID());
         }
         assertTrue("VersionHistory.getAllVersions() must contain the root version and all versions that have been created with a Node.checkin() call.", versions.isEmpty());
     }
