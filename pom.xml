@@ -141,7 +141,7 @@
         </configuration>
       </plugin>
     </plugins>
-    
+
     <pluginManagement>
       <plugins>
         <!--  Default configuration of OSGi bundleing (JCR-1342) -->
@@ -162,6 +162,21 @@
       </plugins>
     </pluginManagement>    
   </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>1.1.1</version>
+        <configuration>
+          <xmlOutput>true</xmlOutput>
+          <findbugsXmlOutput>true</findbugsXmlOutput>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
 
   <profiles>
     <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
