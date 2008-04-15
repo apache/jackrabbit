@@ -163,6 +163,14 @@
     </pluginManagement>    
   </build>
 
+  <distributionManagement>
+    <site>
+      <id>jackrabbit.reports.site</id>
+      <name>Jackrabbit Reports Site</name>
+      <url>file:///export/home/jukka/jackrabbit</url>
+    </site>
+  </distributionManagement>
+
   <reporting>
     <plugins>
       <plugin>
@@ -196,7 +204,6 @@
       </plugin>
     </plugins>
   </reporting>
-
 
   <profiles>
     <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
