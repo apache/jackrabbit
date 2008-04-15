@@ -26,16 +26,16 @@ import org.apache.jackrabbit.core.state.ItemState;
 public abstract class ItemData {
 
     /** Associated item id */
-    protected final ItemId id;
+    private final ItemId id;
 
     /** Associated item state */
-    protected ItemState state;
+    private ItemState state;
 
     /** Associated item definition */
-    protected ItemDefinition definition;
+    private ItemDefinition definition;
 
     /** Status */
-    protected int status;
+    private int status;
 
     /**
      * Create a new instance of this class.
