@@ -80,8 +80,6 @@ public abstract class ItemImpl implements Item {
     protected static final int STATUS_DESTROYED = 2;
     protected static final int STATUS_INVALIDATED = 3;
 
-    //protected int status;
-
     protected final ItemId id;
 
     /**
