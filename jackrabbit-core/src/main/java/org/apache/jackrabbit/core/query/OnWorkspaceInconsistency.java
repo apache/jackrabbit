@@ -77,9 +77,9 @@ public abstract class OnWorkspaceInconsistency {
     private final String name;
 
     /**
-     * Private constructor.
+     * Protected constructor.
      */
-    private OnWorkspaceInconsistency(String name) {
+    protected OnWorkspaceInconsistency(String name) {
         this.name = name;
     }
 
