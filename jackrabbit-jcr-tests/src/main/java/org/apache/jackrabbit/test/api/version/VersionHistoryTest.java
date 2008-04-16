@@ -34,7 +34,6 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.GregorianCalendar;
 import java.util.Calendar;
 import java.io.InputStream;
