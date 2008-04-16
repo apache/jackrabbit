@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -38,6 +39,11 @@ public class QueryHandlerContext {
      * The persistent <code>ItemStateManager</code>
      */
     private final ItemStateManager stateMgr;
+
+    /**
+     * The underlying persistence manager.
+     */
+    private final PersistenceManager pm;
 
     /**
      * The node type registry of the repository
@@ -77,6 +83,7 @@ public class QueryHandlerContext {
      *                         <code>FileSystem</code> has been configured
      *                         <code>fs</code> is <code>null</code>.
      * @param stateMgr         provides persistent item states.
+     * @param pm               the underlying persistence manager.
      * @param rootId           the id of the root node.
      * @param ntRegistry       the node type registry.
      * @param nsRegistry       the namespace registry.
@@ -88,6 +95,7 @@ public class QueryHandlerContext {
      */
     public QueryHandlerContext(FileSystem fs,
                                ItemStateManager stateMgr,
+                               PersistenceManager pm,
                                NodeId rootId,
                                NodeTypeRegistry ntRegistry,
                                NamespaceRegistryImpl nsRegistry,
@@ -95,6 +103,7 @@ public class QueryHandlerContext {
                                NodeId excludedNodeId) {
         this.fs = fs;
         this.stateMgr = stateMgr;
+        this.pm = pm;
         this.rootId = rootId;
         this.ntRegistry = ntRegistry;
         this.nsRegistry = nsRegistry;
@@ -113,6 +122,13 @@ public class QueryHandlerContext {
      */
     public ItemStateManager getItemStateManager() {
         return stateMgr;
+    }
+
+    /**
+     * @return the underlying persistence manager.
+     */
+    public PersistenceManager getPersistenceManager() {
+        return pm;
     }
 
     /**
