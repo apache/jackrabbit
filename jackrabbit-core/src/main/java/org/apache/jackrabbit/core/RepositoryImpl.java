@@ -657,7 +657,7 @@ public class RepositoryImpl extends AbstractRepository
                 SystemSession defSysSession = getSystemSession(wspName);
                 systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
                         nsReg, ntReg, defSysSession.getItemStateManager(),
-                        SYSTEM_ROOT_NODE_ID, null, null);
+                        vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID, null, null);
                 ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
                 obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
                         | Event.NODE_REMOVED | Event.PROPERTY_ADDED
@@ -1714,6 +1714,7 @@ public class RepositoryImpl extends AbstractRepository
                             nsReg,
                             ntReg,
                             itemStateMgr,
+                            persistMgr,
                             rootNodeId,
                             getSystemSearchManager(getName()),
                             SYSTEM_ROOT_NODE_ID);

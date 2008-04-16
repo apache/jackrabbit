@@ -17,13 +17,9 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.NodeIdIterator;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
 import java.io.IOException;
 
 /**
@@ -35,6 +31,11 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      * The context for this query handler.
      */
     private QueryHandlerContext context;
+
+    /**
+     * The {@link OnWorkspaceInconsistency} handler. Defaults to 'fail'.
+     */
+    private OnWorkspaceInconsistency owi = OnWorkspaceInconsistency.FAIL;
 
     /**
      * Initializes this query handler by setting all properties in this class
@@ -64,7 +65,7 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     }
 
     /**
-     * This default implementation calls the individual {@link #deleteNode(NodeId)}
+     * This default implementation calls the individual {@link #deleteNode(org.apache.jackrabbit.core.NodeId)}
      * and {@link #addNode(org.apache.jackrabbit.core.state.NodeState)} methods
      * for each entry in the iterators. First the nodes to remove are processed
      * then the nodes to add.
@@ -82,5 +83,34 @@ public abstract class AbstractQueryHandler implements QueryHandler {
         while (add.hasNext()) {
             addNode(add.nextNodeState());
         }
+    }
+
+    /**
+     * @return the {@link OnWorkspaceInconsistency} handler.
+     */
+    public OnWorkspaceInconsistency getOnWorkspaceInconsistencyHandler() {
+        return owi;
+    }
+
+    //--------------------------< properties >----------------------------------
+
+    /**
+     * Sets the {@link OnWorkspaceInconsistency} handler with the given name.
+     * Currently the only valid name is:
+     * <ul>
+     * <li><code>fail</code></li>
+     * </ul>
+     *
+     * @param name the name of a {@link OnWorkspaceInconsistency} handler.
+     */
+    public void setOnWorkspaceInconsistency(String name) {
+        owi = OnWorkspaceInconsistency.fromString(name);
+    }
+
+    /**
+     * @return the name of the currently set {@link OnWorkspaceInconsistency}.
+     */
+    public String getOnWorkspaceInconsistency() {
+        return owi.getName();
     }
 }
