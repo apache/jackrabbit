@@ -864,7 +864,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // repair collected broken bundles
-        if (consistencyFix && !modifications.isEmpty()) {
+        if (fix && !modifications.isEmpty()) {
             log.info(name + ": Fixing " + modifications.size() + " inconsistent bundle(s)...");
             Iterator iterator = modifications.iterator();
             while (iterator.hasNext()) {
