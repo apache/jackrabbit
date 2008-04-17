@@ -43,6 +43,8 @@ public class Checkin extends AbstractOperation {
     private final NodeState nodeState;
     private final VersionManager mgr;
 
+    private NodeId newVersionId;
+
     private Checkin(NodeState nodeState, VersionManager mgr) {
         this.nodeState = nodeState;
         this.mgr = mgr;
@@ -77,6 +79,7 @@ public class Checkin extends AbstractOperation {
         nodeState.getHierarchyEntry().invalidate(false);
     }
     //----------------------------------------< Access Operation Parameters >---
+    
     /**
      *
      * @return The nodeState to be checked in.
@@ -85,6 +88,14 @@ public class Checkin extends AbstractOperation {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 
+    public void setNewVersionId(NodeId newVersionId) {
+        this.newVersionId = newVersionId;
+    }
+
+    public NodeId getNewVersionId() {
+        return this.newVersionId;
+    }
+    
     //------------------------------------------------------------< Factory >---
     /**
      *
@@ -92,7 +103,7 @@ public class Checkin extends AbstractOperation {
      * @param mgr
      * @return
      */
-    public static Operation create(NodeState nodeState, VersionManager mgr) {
+    public static Checkin create(NodeState nodeState, VersionManager mgr) {
         return new Checkin(nodeState, mgr);
     }
 }

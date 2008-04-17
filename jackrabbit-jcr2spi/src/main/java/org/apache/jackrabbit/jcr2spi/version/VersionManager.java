@@ -41,6 +41,7 @@ public interface VersionManager {
 
     /**
      * @param nodeState
+     * @return <code>NodeEntry</code> of newly created version or <code>null</code>
      * @throws VersionException
      * @throws UnsupportedRepositoryOperationException
      * @throws InvalidItemStateException
@@ -48,7 +49,7 @@ public interface VersionManager {
      * @throws RepositoryException
      * @see javax.jcr.Node#checkin()
      */
-    public void checkin(NodeState nodeState) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
+    public NodeEntry checkin(NodeState nodeState) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 
     /**
      * @param nodeState

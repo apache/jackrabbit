@@ -626,15 +626,15 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public void checkin(final SessionInfo sessionInfo, final NodeId nodeId)
+    public NodeId checkin(final SessionInfo sessionInfo, final NodeId nodeId)
             throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        executeWithLocalEvents(new Callable() {
+        Version newVersion = (Version) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                getNode(nodeId, getSessionInfoImpl(sessionInfo)).checkin();
-                return null;
+                return getNode(nodeId, getSessionInfoImpl(sessionInfo)).checkin();
             }
         }, sInfo);
+        return idFactory.createNodeId(newVersion, sInfo.getNamePathResolver());
     }
 
     /**
