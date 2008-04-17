@@ -23,8 +23,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(PolicyEntryImplTest.class);
         suite.addTestSuite(GlobPatternTest.class);
 
-        //todo: add evaluation tests.
-        
+        suite.addTestSuite(EvaluationTest.class);
+
         return suite;
     }
 }

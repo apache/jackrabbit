@@ -122,10 +122,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Node</code> instance
      * @param session    the <code>Session</code> through which this <code>Node</code> is acquired
-     * @param id         id of this <code>Node</code>
-     * @param state      state associated with this <code>Node</code>
-     * @param definition definition of <i>this</i> <code>Node</code>
-     * @param listeners  listeners on life cylce changes of this <code>NodeImpl</code>
+     * @param data       the node data
      */
     protected NodeImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
         super(itemMgr, session, data);
@@ -522,7 +519,12 @@ public class NodeImpl extends ItemImpl implements Node {
         // create Node instance wrapping new node state
         NodeImpl node;
         try {
-            node = (NodeImpl) itemMgr.getItem(id);
+            // NOTE: since the node is not yet connected to its parent, avoid
+            // calling ItemManager#getItem(ItemId) which may include a permission
+            // check (with subsequent usage of the hierarachy-mgr -> error).
+            // just let the mgr create the new node that is known to exist and
+            // which has not been accessed before.
+            node = (NodeImpl) itemMgr.createItemInstance(nodeState);
         } catch (RepositoryException re) {
             // something went wrong
             stateMgr.disposeTransientItemState(nodeState);

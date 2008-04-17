@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
@@ -42,7 +41,7 @@ public interface AccessControlEditor {
      * Modification will therefore not take effect, until it is written back to
      * the editor and persisted.
      * <p/>
-     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(NodeId)},
+     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(org.apache.jackrabbit.spi.Path)},
      * the scope of the PolicyTemplate it limited to the Node itself and does
      * not take inherited elements into account.
      *
@@ -67,7 +66,7 @@ public interface AccessControlEditor {
      * representation. Modification will therefore not take effect, until it is
      * written back to the editor and persisted.
      * <p/>
-     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(NodeId)},
+     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(org.apache.jackrabbit.spi.Path)},
      * the scope of the PolicyTemplate it limited to the Node itself and does
      * never not take inherited elements into account.
      *

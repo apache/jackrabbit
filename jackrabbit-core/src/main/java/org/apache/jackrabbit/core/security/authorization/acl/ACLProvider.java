@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -37,30 +37,31 @@ import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.NodeIterator;
+import javax.jcr.Node;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * The ACLProvider generates access control policies out of the items stored
@@ -97,7 +98,19 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private NodeId rootNodeId;
 
-    private String policyNodeName;
+    //--------------------------------------< AbstractAccessControlProvider >---
+    /**
+     * @see AbstractAccessControlProvider#isAcItem(Path)
+     */
+    protected boolean isAcItem(Path absPath) throws RepositoryException {
+        Path.Element[] elems = absPath.getElements();
+        for (int i = 0; i < elems.length; i++) {
+            if (N_POLICY.equals(elems[i].getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     //----------------------------------------------< AccessControlProvider >---
     /**
@@ -110,7 +123,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         // minimal protection on the root node.
         NodeImpl root = (NodeImpl) session.getRootNode();
         rootNodeId = root.getNodeId();
-        policyNodeName = resolver.getJCRName(N_POLICY);
         systemEditor = new ACLEditor(systemSession);
 
         if (!isAccessControlled(root)) {
@@ -119,19 +131,21 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#getPolicy(NodeId)
+     * @see AccessControlProvider#getPolicy(Path)
+     * @param absPath
      */
-    public AccessControlPolicy getPolicy(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy getPolicy(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
-        return getACL(nodeId);
+        return getACL(absPath);
     }
 
     /**
-     * @see AccessControlProvider#getAccessControlEntries(NodeId)
+     * @see AccessControlProvider#getAccessControlEntries(Path)
+     * @param absPath
      */
-    public AccessControlEntry[] getAccessControlEntries(NodeId nodeId) throws RepositoryException {
+    public AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException {
         checkInitialized();
-        ACLImpl acl = getACL(nodeId);
+        ACLImpl acl = getACL(absPath);
 
         // TODO: check again what the expected return value would be.
         // TODO: check again if correct. call probably expensive.
@@ -190,45 +204,59 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws ItemNotFoundException, RepositoryException {
+    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
+        } else if (isReadOnly(principals)) {
+            return getReadOnlyPermissions();
         } else {
             return new AclPermissions(principals);
         }
     }
 
+    /**
+     * @see AccessControlProvider#canAccessRoot(Set)
+     */
+    public boolean canAccessRoot(Set principals) throws RepositoryException {
+        checkInitialized();
+        if (isAdminOrSystem(principals)) {
+            return true;
+        } else {
+            return new AclPermissions(principals, false).grants(PathFactoryImpl.getInstance().getRootPath(), Permission.READ);
+        }
+    }
+
     //------------------------------------------------------------< private >---
     /**
-     * Build the ACL that is effective on the Node identified by
-     * <code>nodeId</code>. In contrast to {@link #getACL(NodeId, Set)}
+     * Build the ACL that is effective on the Node at
+     * <code>absPath</code>. In contrast to {@link #getACL(NodeImpl, Set)}
      * the returned ACL contains all entries that apply to that node.
      *
-     * @param nodeId
+     * @param absPath
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private ACLImpl getACL(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
-        return getACL(nodeId, Collections.EMPTY_SET);
+    private ACLImpl getACL(Path absPath) throws ItemNotFoundException, RepositoryException {
+        return getACL((NodeImpl) session.getNode(session.getJCRPath(absPath)),
+                Collections.EMPTY_SET);
     }
 
     /**
-     * Build the ACL that is effective on the Node identified by
-     * <code>nodeId</code>, but only retrieve those entries that apply to
+     * Build the ACL that is effective on the Node at
+     * <code>absPath</code>, but only retrieve those entries that apply to
      * any of the principals whose name is present in the given
      * <code>principalNameFilter</code>.
      *
-     * @param nodeId
+     * @param node
      * @param principalNameFilter
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private ACLImpl getACL(NodeId nodeId, Set principalNameFilter) throws ItemNotFoundException, RepositoryException {
-        // -> build the acl for the Node identified by 'id'
-        NodeImpl node = session.getNodeById(nodeId);
+    private ACLImpl getACL(NodeImpl node, Set principalNameFilter) throws ItemNotFoundException, RepositoryException {
+        // -> build the acl for the Node
         ACLImpl acl;
         // check for special ACL building item
         if (protectsNode(node)) {
@@ -239,7 +267,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 parentNode = (NodeImpl) node.getParent().getParent();
             }
             ACLImpl baseACL = buildAcl(parentNode, principalNameFilter);
-            acl = new ACLImpl(nodeId, baseACL, true);
+            acl = new ACLImpl(node.getNodeId(), baseACL, true);
         } else {
             // build Acl for non-protection node.
             acl = buildAcl(node, principalNameFilter);
@@ -380,36 +408,56 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private class AclPermissions extends AbstractCompiledPermissions implements EventListener {
 
         private final Set principalNames;
-        private boolean readAllowed;
+
+        /**
+         * flag indicating that there is not 'deny READ'.
+         * -> simplify {@link #grants(Path, int)} in case of permissions == READ
+         */
+        private boolean readAllowed = false;
+        /**
+         * flag indicating if only READ is granted
+         * -> simplify {@link #grants(Path, int)} in case of permissions != READ
+         */
+        private boolean readOnly = false;
 
         private AclPermissions(Set principals) throws RepositoryException {
+            this(principals, true);
+        }
+        private AclPermissions(Set principals, boolean listenToEvents) throws RepositoryException {
             principalNames = new HashSet(principals.size());
             for (Iterator it = principals.iterator(); it.hasNext();) {
                 principalNames.add(((Principal) it.next()).getName());
             }
 
-            /*
-             Determine if there is any 'denyRead' entry (since the default
-             is that everyone can READ everywhere -> makes evaluation for
-             the most common check (can-read) easy.
-            */
-            readAllowed = readAllowedEveryWhere(principalNames);
+            if (listenToEvents) {
+                /*
+                 Determine if there is any 'denyRead' entry (since the default
+                 is that everyone can READ everywhere -> makes evaluation for
+                 the most common check (can-read) easy.
+                */
+                searchReadDeny(principalNames);
+                /*
+                Determine if there is any ACE node that grants another permission
+                than READ.
+                */
+                searchNonReadAllow(principalNames);
 
-            /*
-             Make sure this AclPermission recalculates the permissions if
-             any ACL concerning it is modified. interesting events are:
-             - new ACE-entry for any of the principals (NODE_ADDED)
-             - changing ACE-entry for any of the principals (PROPERTY_CHANGED)
-               > new permissions granted/denied
-               >
-             - removed ACE-entry for any of the principals (NODE_REMOVED)
-            */
-            int events = Event.PROPERTY_CHANGED | Event.NODE_ADDED | Event.NODE_REMOVED;
-            String[] ntNames = new String[] {
-                    resolver.getJCRName(NT_REP_ACE),
-                    resolver.getJCRName(NT_REP_ACL)
-            };
-            observationMgr.addEventListener(this, events, session.getRootNode().getPath(), true, null, ntNames, true);
+                /*
+                 Make sure this AclPermission recalculates the permissions if
+                 any ACL concerning it is modified. interesting events are:
+                 - new ACE-entry for any of the principals (NODE_ADDED)
+                 - changing ACE-entry for any of the principals (PROPERTY_CHANGED)
+                   > new permissions granted/denied
+                   >
+                 - removed ACE-entry for any of the principals (NODE_REMOVED)
+                */
+                int events = Event.PROPERTY_CHANGED | Event.NODE_ADDED | Event.NODE_REMOVED;
+                String[] ntNames = new String[] {
+                        resolver.getJCRName(NT_REP_ACE),
+                        resolver.getJCRName(NT_REP_ACL)
+                };
+                observationMgr.addEventListener(this, events, session.getRootNode().getPath(), true, null, ntNames, true);
+            }
         }
 
         /**
@@ -417,53 +465,74 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * principals AND denies-READ.
          *
          * @param principalnames
-         * @return true if read is allowed on all items.
          */
-        private boolean readAllowedEveryWhere(Set principalnames) {
+        private void searchReadDeny(Set principalnames) {
             try {
                 QueryManager qm = session.getWorkspace().getQueryManager();
                 StringBuffer stmt = new StringBuffer("/jcr:root");
                 stmt.append("//element(*,");
                 stmt.append(resolver.getJCRName(NT_REP_DENY_ACE));
-                stmt.append(")[");
+                stmt.append(")[(");
 
                 // where the rep:principalName property exactly matches any of
                 // the given principalsNames
                 int i = 0;
                 Iterator itr = principalnames.iterator();
                 while (itr.hasNext()) {
-                    stmt.append("@");
-                    String pName = resolver.getJCRName(P_PRINCIPAL_NAME);
-                    stmt.append(ISO9075.encode(pName));
-                    stmt.append("='").append(itr.next().toString()).append("'");
+                    stmt.append("@").append(resolver.getJCRName(P_PRINCIPAL_NAME)).append(" eq ");
+                    stmt.append("'").append(itr.next().toString()).append("'");
                     if (++i < principalnames.size()) {
                         stmt.append(" or ");
                     }
                 }
                 // AND rep:privileges contains the READ privilege
-                stmt.append(" and jcr:like(@");
-                String pName = resolver.getJCRName(P_PRIVILEGES);
-                stmt.append(ISO9075.encode(pName));
-                stmt.append(",'%").append(Privilege.READ).append("%')");
-                stmt.append("]");
+                stmt.append(") and @ ");
+                stmt.append(resolver.getJCRName(P_PRIVILEGES));
+                stmt.append(" = '").append(Privilege.READ).append("']");
+
                 Query q = qm.createQuery(stmt.toString(), Query.XPATH);
 
                 NodeIterator it = q.execute().getNodes();
-                while (it.hasNext()) {
-                    String path = it.nextNode().getPath();
-                    // if there is a node that AND it is not below /accesscontrol
-                    // we cannot use the short-cut within 'grants'
-                    if (!Text.isDescendantOrEqual("/"+ N_ACCESSCONTROL, path)) {
-                        return false;
-                    }
-                }
-                // didn't find any matching ACE that denies READ for any
-                // of the principals.
-                return true;
+                readAllowed =  !it.hasNext();
             } catch (RepositoryException e) {
                 log.error(e.toString());
                 // unable to determine... -> no shortcut upon grants
-                return false;
+                readAllowed = false;
+            }
+        }
+
+        private void searchNonReadAllow(Set principalnames) {
+            try {
+                QueryManager qm = session.getWorkspace().getQueryManager();
+                StringBuffer stmt = new StringBuffer("/jcr:root");
+                stmt.append("//element(*,");
+                stmt.append(resolver.getJCRName(NT_REP_GRANT_ACE));
+                stmt.append(")[(");
+                // where the rep:principalName property exactly matches any of
+                // the given principalsNames
+                int i = 0;
+                Iterator itr = principalnames.iterator();
+                while (itr.hasNext()) {
+                    stmt.append("@").append(resolver.getJCRName(P_PRINCIPAL_NAME)).append(" eq ");
+                    stmt.append("'").append(itr.next().toString()).append("'");
+                    if (++i < principalnames.size()) {
+                        stmt.append(" or ");
+                    }
+                }
+
+                // AND rep:privileges contains the READ privilege
+                stmt.append(") and @");
+                stmt.append(resolver.getJCRName(P_PRIVILEGES));
+                stmt.append(" ne \"").append(Privilege.READ).append("\"]");
+
+                Query q = qm.createQuery(stmt.toString(), Query.XPATH);
+
+                NodeIterator it = q.execute().getNodes();
+                readOnly =  !it.hasNext();
+            } catch (RepositoryException e) {
+                log.error(e.toString());
+                // unable to determine... -> no shortcut upon grants
+                readOnly = false;
             }
         }
 
@@ -473,35 +542,33 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          */
         protected Result buildResult(Path absPath) throws RepositoryException {
             boolean existingNode = false;
-            NodeId nid = null;
+            Node node = null;
             String jcrPath = resolver.getJCRPath(absPath);
 
             if (session.nodeExists(jcrPath)) {
-                nid = session.getHierarchyManager().resolveNodePath(absPath);
+                node = session.getNode(jcrPath);
                 existingNode = true;
             } else {
                 // path points to existing prop or non-existing item (node or prop).
                 // -> find the nearest persisted node
-                Path parentPath = absPath.getAncestor(1);
-                while (nid == null) {
-                    nid = session.getHierarchyManager().resolveNodePath(parentPath);
-                    if (parentPath.getDepth() == Path.ROOT_DEPTH) {
-                        // root-node reached
+                String parentPath = Text.getRelativeParent(jcrPath, 1);
+                while (parentPath.length() > 0) {
+                    if (session.nodeExists(parentPath)) {
+                        node = session.getNode(parentPath);
                         break;
-                    } else {
-                        parentPath = parentPath.getAncestor(1);
                     }
+                    parentPath = Text.getRelativeParent(parentPath, 1);
                 }
             }
 
-            if (nid == null) {
+            if (node == null) {
                 // should never get here
                 throw new ItemNotFoundException("Item out of hierarchy.");
             }
 
             // build the ACL for the specified principals at path or at the
             // direct ancestor of path (that must be definition exist).
-            ACLImpl acl = getACL(nid, principalNames);
+            ACLImpl acl = getACL((NodeImpl) node, principalNames);
 
             // privileges to expose
             int privileges = acl.getPrivileges();
@@ -525,7 +592,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             try {
                 observationMgr.removeEventListener(this);
             } catch (RepositoryException e) {
-                log.error("Internal error: ", e.getMessage());
+                log.debug("Unable to unregister listener: ", e.getMessage());
             }
             super.close();
         }
@@ -536,15 +603,16 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * @param permissions
          * @return
          * @throws RepositoryException
+         * @see CompiledPermissions#grants(Path, int)
          */
         public boolean grants(Path absPath, int permissions) throws RepositoryException {
-            // common check
-            if (permissions == Permission.READ && readAllowed &&
-                    /* easy check if path doesn't point to AC-content */
-                    resolver.getJCRPath(absPath).indexOf(policyNodeName) == -1) {
+            if (permissions == Permission.READ && readAllowed && !isAcItem(absPath)) {
                 return true;
+            } else if (permissions != Permission.READ && readOnly) {
+                return false;
+            } else {
+                return super.grants(absPath, permissions);
             }
-            return super.grants(absPath, permissions);
         }
 
         //--------------------------------------------------< EventListener >---
@@ -559,11 +627,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 try {
                     Event ev = events.nextEvent();
                     String path = ev.getPath();
-                    if (Text.isDescendantOrEqual("/"+ N_ACCESSCONTROL, path)) {
-                        // access control change applies to the 'combined' acls
-                        // -> ignore
-                        continue;
-                    }
+                    // TODO: check if valid. check required.
 
                     switch (ev.getType()) {
                         case Event.NODE_ADDED:
@@ -580,6 +644,15 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                                     for (int i = 0; i < vs.length; i++) {
                                         if (Privilege.READ.equals(vs[i].getString())) {
                                             readAllowed = false;
+                                        }
+                                    }
+                                }
+                                // if ace is a new ALLOW -> check if obsoletes read-only
+                                if (readOnly && n.isNodeType(NT_REP_GRANT_ACE)) {
+                                    Value[] vs = n.getProperty(P_PRIVILEGES).getValues();
+                                    for (int i = 0; i < vs.length; i++) {
+                                        if (!Privilege.READ.equals(vs[i].getString())) {
+                                            readOnly = false;
                                         }
                                     }
                                 }

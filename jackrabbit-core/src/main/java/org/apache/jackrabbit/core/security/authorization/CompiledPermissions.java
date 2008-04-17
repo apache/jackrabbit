@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.authorization;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>CompiledPermissions</code> represents the evaluation of an
@@ -46,8 +45,7 @@ public interface CompiledPermissions {
      * defined by {@link Permission} encoded as a bitmask value
      * @return <code>true</code> if the specified permissions are granted,
      * <code>false</code> otherwise.
-     * @throws ItemNotFoundException if neither the path nor its direct
-     * ancestor point to an existing item.
+     * @throws RepositoryException if an error occurs.
      */
     boolean grants(Path absPath, int permissions) throws RepositoryException;
 
@@ -58,6 +56,19 @@ public interface CompiledPermissions {
      *
      * @return the granted privileges at <code>absPath</code> or zero if
      * the path does not denote an existing <code>Node</code>.
+     * @throws RepositoryException if an error occurs
      */
     int getPrivileges(Path absPath) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if READ permission is granted everywhere.
+     * This method acts as shortcut for {@link #grants(Path, int)} where
+     * permissions is {@link Permission#READ} and allows to shorten the
+     * evaluation time given the fact that a check for READ permission is
+     * considered to be the most frequent test.
+     *
+     * @return <code>true</code> if the READ permission is granted everywhere.
+     * @throws RepositoryException if an error occurs
+     */
+    boolean canReadAll() throws RepositoryException;
 }

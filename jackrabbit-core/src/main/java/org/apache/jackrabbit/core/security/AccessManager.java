@@ -170,6 +170,16 @@ public interface AccessManager {
     boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Determines whether the item with the specified id can be read.
+     *
+     * @param itemPath
+     * @return <code>true</code> if the item can be read; otherwise <code>false</code>.
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException;
+
+    /**
      * Determines whether the subject of the current context is granted access
      * to the given workspace. Note that an implementation is free to test for
      * the existance of a workspace with the specified name. In this case

@@ -25,11 +25,11 @@ import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Node;
-import javax.jcr.NamespaceException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import java.io.IOException;
@@ -338,8 +338,8 @@ public class QueryResultImpl implements QueryResult {
             throws RepositoryException {
         for (int i = 0; i < nodes.length; i++) {
             try {
-                if (nodes[i] != null && !accessMgr.isGranted(
-                        nodes[i].getNodeId(), AccessManager.READ)) {
+                // TODO: rather use AccessManager.canRead(Path)
+                if (nodes[i] != null && !accessMgr.isGranted(nodes[i].getNodeId(), AccessManager.READ)) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {

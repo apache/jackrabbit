@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.test.JUnitTest;
+import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,15 +52,113 @@ public abstract class AbstractPolicyTemplateTest extends JUnitTest {
 
         assertNotNull(pt.getEntries());
         assertTrue(pt.getEntries().length == 0);
+        assertTrue(pt.size() == pt.getEntries().length);
         assertTrue(pt.isEmpty());
         assertNotNull(pt.getName());
     }
-
 
     public void testGetPath() {
         PolicyTemplate pt = (PolicyTemplate) createEmptyTemplate(getTestPath());
         assertEquals(getTestPath(), pt.getPath());
     }
 
-    // TODO: add more tests
+    public void testSetInvalidEntry() throws RepositoryException {
+        PolicyTemplate pt = (PolicyTemplate) createEmptyTemplate(getTestPath());
+        try {
+            pt.setEntry(new PolicyEntry() {
+                public boolean isAllow() {
+                    return false;
+                }
+                public int getPrivilegeBits() {
+                    return PrivilegeRegistry.READ;
+                }
+
+                public Principal getPrincipal() {
+                    return testPrincipal;
+                }
+
+                public Privilege[] getPrivileges() {
+                    return new Privilege[] {PrivilegeRegistry.READ_PRIVILEGE};
+                }
+            });
+            fail("Passing an unknown PolicyEntry should fail");
+        } catch (AccessControlException e) {
+            // success
+        }
+    }
+
+    public void testSetInvalidEntry2() throws RepositoryException {
+        PolicyTemplate pt = (PolicyTemplate) createEmptyTemplate(getTestPath());
+        try {
+            pt.setEntry(new PolicyEntry() {
+                public boolean isAllow() {
+                    return false;
+                }
+                public int getPrivilegeBits() {
+                    return 0;
+                }
+
+                public Principal getPrincipal() {
+                    return testPrincipal;
+                }
+
+                public Privilege[] getPrivileges() {
+                    return new Privilege[0];
+                }
+            });
+            fail("Passing a PolicyEntry with invalid privileges should fail");
+        } catch (AccessControlException e) {
+            // success
+        }
+    }
+
+        public void testRemoveInvalidEntry() throws RepositoryException {
+        PolicyTemplate pt = (PolicyTemplate) createEmptyTemplate(getTestPath());
+        try {
+            pt.removeEntry(new PolicyEntry() {
+                public boolean isAllow() {
+                    return false;
+                }
+                public int getPrivilegeBits() {
+                    return PrivilegeRegistry.READ;
+                }
+
+                public Principal getPrincipal() {
+                    return testPrincipal;
+                }
+
+                public Privilege[] getPrivileges() {
+                    return new Privilege[] {PrivilegeRegistry.READ_PRIVILEGE};
+                }
+            });
+            fail("Passing an unknown PolicyEntry should fail");
+        } catch (AccessControlException e) {
+            // success
+        }
+    }
+
+    public void testRemoveInvalidEntry2() throws RepositoryException {
+        PolicyTemplate pt = (PolicyTemplate) createEmptyTemplate(getTestPath());
+        try {
+            pt.removeEntry(new PolicyEntry() {
+                public boolean isAllow() {
+                    return false;
+                }
+                public int getPrivilegeBits() {
+                    return 0;
+                }
+
+                public Principal getPrincipal() {
+                    return testPrincipal;
+                }
+
+                public Privilege[] getPrivileges() {
+                    return new Privilege[0];
+                }
+            });
+            fail("Passing a PolicyEntry with invalid privileges should fail");
+        } catch (AccessControlException e) {
+            // success
+        }
+    }
 }

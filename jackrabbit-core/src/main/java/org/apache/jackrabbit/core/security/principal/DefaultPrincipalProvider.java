@@ -75,7 +75,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * @throws RepositoryException if an error accessing the repository occurs.
      */
     public DefaultPrincipalProvider(Session securitySession,
-                             UserManagerImpl userManager) throws RepositoryException {
+                                    UserManagerImpl userManager) throws RepositoryException {
 
         this.userManager = userManager;
         everyonePrincipal = EveryonePrincipal.getInstance();

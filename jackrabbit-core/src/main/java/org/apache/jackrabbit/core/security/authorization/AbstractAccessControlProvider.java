@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
@@ -54,6 +53,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     protected NamePathResolver resolver;
 
     private boolean initialized;
+    private Principal everyone;
 
     protected AbstractAccessControlProvider() {
         this(AbstractAccessControlProvider.class.getName() + ": default Policy", null);
@@ -73,6 +73,20 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         }
     }
 
+    /**
+     * Simple test if the specified path points to an item that defines AC
+     * information.
+     * 
+     * @param absPath
+     * @return
+     */
+    protected abstract boolean isAcItem(Path absPath) throws RepositoryException;
+
+    /**
+     *
+     * @param principals
+     * @return
+     */
     protected static boolean isAdminOrSystem(Set principals) {
         for (Iterator it = principals.iterator(); it.hasNext();) {
             Principal p = (Principal) it.next();
@@ -83,6 +97,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     protected static CompiledPermissions getAdminPermissions() {
         return new CompiledPermissions() {
             public void close() {
@@ -94,19 +112,50 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
             public int getPrivileges(Path absPath) throws RepositoryException {
                 return PrivilegeRegistry.ALL;
             }
+            public boolean canReadAll() throws RepositoryException {
+                return true;
+            }
         };
     }
 
-    protected static CompiledPermissions getReadOnlyPermissions() {
+    /**
+     * Simple implementation to determine if the given set of principals
+     * only will result in read-only access.
+     *
+     * @param principals
+     * @return true if the given set only contains the everyone group.
+     */
+    protected boolean isReadOnly(Set principals) {
+        // TODO: improve. need to detect if 'anonymous' is included.
+        return principals.size() == 1 && principals.contains(everyone);
+    }
+
+    /**
+     *
+     * @return
+     */
+    protected CompiledPermissions getReadOnlyPermissions() {
         return new CompiledPermissions() {
             public void close() {
                 //nop
             }
             public boolean grants(Path absPath, int permissions) throws RepositoryException {
-                return permissions == Permission.READ;
+                if (isAcItem(absPath)) {
+                    // read-only never has read-AC permission
+                    return false;
+                } else {
+                    return permissions == Permission.READ;
+                }
             }
             public int getPrivileges(Path absPath) throws RepositoryException {
-                return PrivilegeRegistry.READ;
+                if (isAcItem(absPath)) {
+                    return PrivilegeRegistry.NO_PRIVILEGE;
+                } else {
+                    return PrivilegeRegistry.READ;
+                }
+            }
+            public boolean canReadAll() throws RepositoryException {
+                return false;
             }
         };
     }
@@ -132,6 +181,8 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         observationMgr = systemSession.getWorkspace().getObservationManager();
         resolver = (SessionImpl) systemSession;
 
+        everyone = session.getPrincipalManager().getEveryone();
+
         initialized = true;
     }
 
@@ -144,9 +195,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     }
 
     /**
-     * @see AccessControlProvider#getPolicy(NodeId)
+     * @see AccessControlProvider#getPolicy(Path)
+     * @param absPath
      */
-    public AccessControlPolicy getPolicy(NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+    public AccessControlPolicy getPolicy(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
         return new AccessControlPolicy() {
             public String getName() throws RepositoryException {
@@ -159,9 +211,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     }
 
     /**
-     * @see AccessControlProvider#getAccessControlEntries(NodeId)
+     * @see AccessControlProvider#getAccessControlEntries(Path)
+     * @param absPath
      */
-    public AccessControlEntry[] getAccessControlEntries(NodeId nodeId) throws RepositoryException {
+    public AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException {
         checkInitialized();
         // always empty array, since aces will never be changed using the api.
         return new AccessControlEntry[0];

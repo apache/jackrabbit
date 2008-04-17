@@ -93,6 +93,13 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         return getResult(absPath).getPrivileges();
     }
 
+    /**
+     * @see CompiledPermissions#canReadAll()
+     */
+    public boolean canReadAll() throws RepositoryException {
+        return false;
+    }
+
     //--------------------------------------------------------< inner class >---
 
     protected class Result {

@@ -112,9 +112,7 @@ public abstract class ItemImpl implements Item {
      *
      * @param itemMgr   the <code>ItemManager</code> that created this <code>Item</code>
      * @param session   the <code>Session</code> through which this <code>Item</code> is acquired
-     * @param id        id of this <code>Item</code>
-     * @param state     state associated with this <code>Item</code>
-     * @param listeners listeners on life cycle changes of this <code>ItemImpl</code>
+     * @param data      ItemData of this <code>Item</code>
      */
     ItemImpl(ItemManager itemMgr, SessionImpl session, ItemData data) {
         this.session = session;
@@ -613,8 +611,7 @@ public abstract class ItemImpl implements Item {
         // walk through list of transient items and persist each one
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
-            ItemImpl item = itemMgr.getItem(state.getId(),
-                    state.getStatus() == ItemState.STATUS_NEW);
+            ItemImpl item = itemMgr.getItem(state.getId());
             // persist state of transient item
             item.makePersistent();
         }

@@ -26,6 +26,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.AccessDeniedException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
@@ -110,6 +111,11 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
                     next = itemMgr.getItem(id);
                 }
             } catch (ItemNotFoundException e) {
+                log.debug("ignoring nonexistent item " + id);
+                // remove invalid id
+                idList.remove(pos);
+                // try next
+            } catch (AccessDeniedException e) {
                 log.debug("ignoring nonexistent item " + id);
                 // remove invalid id
                 idList.remove(pos);

@@ -157,6 +157,10 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         return internalIsGranted(parentPath, permissions);
     }
 
+    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+        return true;
+    }
+
     private boolean internalIsGranted(Path absPath, int permissions) throws ItemNotFoundException, RepositoryException {
         if (!absPath.isAbsolute()) {
             throw new RepositoryException("Absolute path expected");
