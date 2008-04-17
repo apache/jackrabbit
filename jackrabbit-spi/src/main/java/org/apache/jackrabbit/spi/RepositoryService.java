@@ -584,8 +584,7 @@ public interface RepositoryService {
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#checkin()
-     * @return <code>NodeId</code> of newly created version, or <code>null</code>
-     * when that information is not available
+     * @return <code>NodeId</code> of newly created version
      */
     public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 

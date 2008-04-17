@@ -61,12 +61,7 @@ public class VersionManagerImpl implements VersionManager {
     public NodeEntry checkin(NodeState nodeState) throws RepositoryException {
         Checkin ci = Checkin.create(nodeState, this);
         workspaceManager.execute(ci);
-        if (ci.getNewVersionId() == null) {
-            return null;
-        }
-        else {
-            return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(ci.getNewVersionId());
-        }
+        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(ci.getNewVersionId());
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
