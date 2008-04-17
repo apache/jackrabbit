@@ -767,14 +767,14 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsVersionable();
         checkHasPendingChanges();
         checkIsLocked();
-        NodeEntry newVersion = null;
         if (isCheckedOut()) {
-            newVersion = session.getVersionManager().checkin(getNodeState());
+            NodeEntry newVersion = session.getVersionManager().checkin(getNodeState());
+            return (Version) itemMgr.getItem(newVersion);
         } else {
             // nothing to do
             log.debug("Node " + safeGetJCRPath() + " is already checked in.");
+            return getBaseVersion();
         }
-        return newVersion == null ? getBaseVersion() : (Version) itemMgr.getItem(newVersion);
     }
 
     /**

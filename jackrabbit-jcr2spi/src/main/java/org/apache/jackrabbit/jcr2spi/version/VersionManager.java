@@ -41,7 +41,7 @@ public interface VersionManager {
 
     /**
      * @param nodeState
-     * @return <code>NodeEntry</code> of newly created version or <code>null</code>
+     * @return <code>NodeEntry</code> of newly created version
      * @throws VersionException
      * @throws UnsupportedRepositoryOperationException
      * @throws InvalidItemStateException
