@@ -88,11 +88,8 @@ class IndexNodeResolver extends NodeResolver {
     //--------------------------------------------------------------------------
     /**
      *
-     * @param value
-     * @param props
+     * @param nodeName
      * @param ntName
-     * @param exact
-     * @param maxSize Currently ignored!
      * @return
      * @throws RepositoryException
      */
