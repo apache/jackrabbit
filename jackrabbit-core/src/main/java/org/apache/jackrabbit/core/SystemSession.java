@@ -166,6 +166,16 @@ class SystemSession extends SessionImpl {
         }
 
         /**
+         * Always returns true.
+         *
+         * @see AccessManager#canRead(Path)
+         * @param itemPath
+         */
+        public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+            return true;
+        }
+
+        /**
          * {@inheritDoc}
          *
          * @return always <code>true</code>

@@ -119,6 +119,10 @@ public class SimpleJBossAccessManager implements AccessManager {
         return internalIsGranted(permissions);
     }
 
+    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+        return true;
+    }
+
     public boolean canAccess(String workspaceName) {
         return system || anonymous;
     }

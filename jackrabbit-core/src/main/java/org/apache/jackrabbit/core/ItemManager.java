@@ -179,41 +179,138 @@ public class ItemManager implements Dumpable, ItemStateListener {
     }
 
     /**
-     * Retrieves state of item with given <code>id</code>. If the specified item
-     * doesn't exist an <code>ItemNotFoundException</code> will be thrown.
+     * Common implementation for all variants of item/node/propertyExists
+     * with both itemId or path param.
+     *
+     * @param itemId The id of the item to test.
+     * @param path Path of the item to check if known or <code>null</code>. In
+     * the latter case the test for access permission is executed using the
+     * itemId.
+     * @return true if the item with the given <code>itemId</code> exists AND
+     * can be read by this session.
+     */
+    private boolean itemExists(ItemId itemId, Path path) {
+        try {
+            // check sanity of session
+            session.sanityCheck();
+
+            // check if state exists for the given item
+            if (!itemStateProvider.hasItemState(itemId)) {
+                return false;
+            }
+
+            ItemData data = getItemData(itemId, path);
+            return data != null;
+        } catch (ItemNotFoundException infe) {
+            return false;
+        } catch (RepositoryException re) {
+            return false;
+        }
+    }
+
+    /**
+     * Common implementation for all variants of getItem/getNode/getProperty
+     * with both itemId or path parameter.
+     *
+     * @param itemId
+     * @param path Path of the item to retrieve or <code>null</code>. In
+     * the latter case the test for access permission is executed using the
+     * itemId.
+     * @return The item identified by the given <code>itemId</code>.
+     * @throws ItemNotFoundException
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    private ItemImpl getItem(ItemId itemId, Path path) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+        // check sanity of session
+        session.sanityCheck();
+
+        ItemData data = getItemData(itemId, path);
+        if (data == null) {
+            throw new AccessDeniedException("cannot read item " + itemId);
+        }
+        return createItemInstance(data);
+    }
+
+    /**
+     * Retrieves the data of the item with given <code>id</code>. If the
+     * specified item doesn't exist an <code>ItemNotFoundException</code> will
+     * be thrown.
      * If the item exists but the current session is not granted read access an
      * <code>AccessDeniedException</code> will be thrown.
      *
-     * @param id id of item to be retrieved
+     * @param itemId id of item to be retrieved
+     * @param path The path of the item to retrieve the data for or
+     * <code>null</code>. In the latter case the id (instead of the path) is
+     * used to test if READ permission is granted.
      * @return state state of said item
      * @throws ItemNotFoundException if no item with given <code>id</code> exists
      * @throws AccessDeniedException if the current session is not allowed to
      *                               read the said item
      * @throws RepositoryException   if another error occurs
      */
-    private ItemState getItemState(ItemId id)
+    private ItemData getItemData(ItemId itemId, Path path)
             throws ItemNotFoundException, AccessDeniedException,
             RepositoryException {
-        // check privileges
-        if (!canRead(id)) {
-            // clear cache
-            evictItems(id);
-            throw new AccessDeniedException("cannot read item " + id);
+        ItemData data = retrieveItem(itemId);
+        if (data == null) {
+            // not yet in cache, need to create instance:
+            // - retrieve item state
+            // - create instance of item data
+            // NOTE: permission check & caching within createItemData
+            ItemState state;
+            try {
+                state = itemStateProvider.getItemState(itemId);
+            } catch (NoSuchItemStateException nsise) {
+                throw new ItemNotFoundException(itemId.toString());
+            } catch (ItemStateException ise) {
+                String msg = "failed to retrieve item state of item " + itemId;
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+            // create item data including: perm check and caching.
+            data = createItemData(state, path);
+        } else {
+            // already cached: check if read-permission is granted in order
+            // to have a consistent behaviour to 'itemExists' above.
+            if (!canRead(data, path)) {
+                // item exists but read-perm has been revoked in the mean time.
+                // -> remove from cache
+                evictItems(itemId);
+                return null;
+            }
         }
+        return data;
+    }
 
-        try {
-            return itemStateProvider.getItemState(id);
-        } catch (NoSuchItemStateException nsise) {
-            String msg = "no such item: " + id;
-            log.debug(msg);
-            throw new ItemNotFoundException(msg);
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of " + id;
-            log.error(msg);
-            throw new RepositoryException(msg, ise);
+    /**
+     * @param data
+     * @param path Path to be used for the permission check or <code>null</code>
+     * in which case the itemId present with the specified <code>data</code> is used.
+     * @return true if the item with the given <code>data</code> can be read;
+     * <code>false</code> otherwise.
+     * @throws AccessDeniedException
+     * @throws RepositoryException
+     */
+    private boolean canRead(ItemData data, Path path) throws AccessDeniedException, RepositoryException {
+        if (data.getState().getStatus() == ItemState.STATUS_NEW &&
+                !data.getDefinition().isProtected()) {
+            // NEW items can always be read as long they have been added
+            // through the API and NOT by the system (i.e. protected props).
+            return true;
+        } else {
+            return (path == null) ?
+                    canRead(data.getId()) :
+                    session.getAccessManager().canRead(path);
         }
     }
 
+    /**
+     * @param id
+     * @return true if the item with the given <code>id</code> can be read;
+     * <code>false</code> otherwise.
+     * @throws RepositoryException
+     */
     private boolean canRead(ItemId id) throws RepositoryException {
         return session.getAccessManager().isGranted(id, AccessManager.READ);
     }
@@ -235,7 +332,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             session.sanityCheck();
 
             ItemId id = hierMgr.resolvePath(path);
-            return (id != null) && itemExists(id);
+            return (id != null) && itemExists(id, path);
         } catch (RepositoryException re) {
             return false;
         }
@@ -253,7 +350,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             session.sanityCheck();
 
             NodeId id = hierMgr.resolveNodePath(path);
-            return (id != null) && itemExists(id);
+            return (id != null) && itemExists(id, path);
         } catch (RepositoryException re) {
             return false;
         }
@@ -271,7 +368,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             session.sanityCheck();
 
             PropertyId id = hierMgr.resolvePropertyPath(path);
-            return (id != null) && itemExists(id);
+            return (id != null) && itemExists(id, path);
         } catch (RepositoryException re) {
             return false;
         }
@@ -284,28 +381,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @return true if the specified item exists
      */
     public boolean itemExists(ItemId id) {
-        try {
-            // check sanity of session
-            session.sanityCheck();
-
-            // check if state exists for the given item
-            if (!itemStateProvider.hasItemState(id)) {
-                return false;
-            }
-
-            // check privileges
-            if (!canRead(id)) {
-                // clear cache
-                evictItems(id);
-                // item exists but the session has not been granted read access
-                return false;
-            }
-            return true;
-        } catch (ItemNotFoundException infe) {
-            return false;
-        } catch (RepositoryException re) {
-            return false;
-        }
+        return itemExists(id, null);
     }
 
     /**
@@ -337,7 +413,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
         try {
-            return getItem(id);
+            return getItem(id, path);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -357,7 +433,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
         try {
-            return (NodeImpl) getItem(id);
+            return (NodeImpl) getItem(id, path);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -377,7 +453,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
         try {
-            return (PropertyImpl) getItem(id);
+            return (PropertyImpl) getItem(id, path);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -390,21 +466,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public synchronized ItemImpl getItem(ItemId id)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
-
-        ItemData data = retrieveItem(id);
-        if (data == null) {
-            // not yet in cache, need to create instance:
-            // check privileges
-            if (!canRead(id)) {
-                throw new AccessDeniedException("cannot read item " + id);
-            }
-            // create instance of item data
-            data = createItemData(id);
-            cacheItem(data);
-        }
-        return createItemInstance(data);
+        return getItem(id, null);
     }
 
     /**
@@ -419,14 +481,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     public synchronized NodeImpl getNode(NodeId id, NodeId parentId)
             throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-
         if (parentId == null) {
             return (NodeImpl) getItem(id);
         }
         AbstractNodeData data = (AbstractNodeData) retrieveItem(id, parentId);
         if (data == null) {
-            data = (AbstractNodeData) createItemData(id);
-            cacheItem(data);
+            data = (AbstractNodeData) getItemData(id, null);
         }
         if (!data.getParentId().equals(parentId)) {
             // verify that parent actually appears in the shared set
@@ -435,6 +495,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
                         + "' does not have shared parent with id: " + parentId;
                 throw new ItemNotFoundException(msg);
             }
+            // TODO: ev. need to check if read perm. is granted.
             data = new NodeDataRef(data, parentId);
             cacheItem(data);
         }
@@ -442,37 +503,9 @@ public class ItemManager implements Dumpable, ItemStateListener {
     }
 
     /**
-     * Returns the item instance for the given item id.
-     *
-     * @param state the item state
-     * @param checkAccess whether to check access
-     * @return the item instance for the given item <code>state</code>.
-     * @throws RepositoryException
-     */
-    synchronized ItemImpl getItem(ItemId id, boolean isNew)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        // check sanity of session
-        session.sanityCheck();
-
-        // check cache
-        ItemData data = retrieveItem(id);
-        if (data == null) {
-            // not yet in cache, need to create instance:
-            // only check privileges if state is not new
-            if (!isNew && !canRead(id)) {
-                throw new AccessDeniedException("cannot read item " + id);
-            }
-            // create instance of item
-            data = createItemData(id);
-            cacheItem(data);
-        }
-        return createItemInstance(data);
-    }
-
-    /**
      * Create an item instance from an item state. This method creates a
-     * new <code>ItemData</code> instance without looking at the cache and
-     * returns a new item instance.
+     * new <code>ItemData</code> instance without looking at the cache nor
+     * testing if the item can be read and returns a new item instance.
      *
      * @param state item state
      * @return item instance
@@ -480,9 +513,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     synchronized ItemImpl createItemInstance(ItemState state)
             throws RepositoryException {
-
-        ItemData data = createItemData(state);
-        cacheItem(data);
+        ItemData data = createItemData(state, null, false);
         return createItemInstance(data);
     }
 
@@ -498,18 +529,17 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check sanity of session
         session.sanityCheck();
 
-        ItemState state = getItemState(parentId);
-        if (!state.isNode()) {
+        ItemData data = getItemData(parentId, null);
+        if (!data.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeState nodeState = (NodeState) state;
-        Iterator iter = nodeState.getChildNodeEntries().iterator();
+        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            // check read access
+            // make sure any of the properties can be read.
             if (canRead(entry.getId())) {
                 return true;
             }
@@ -529,22 +559,20 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check sanity of session
         session.sanityCheck();
 
-        ItemState state = getItemState(parentId);
-        if (!state.isNode()) {
+        ItemData data = getItemData(parentId, null);
+        if (!data.isNode()) {
             String msg = "can't list child nodes of property " + parentId;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeState nodeState = (NodeState) state;
         ArrayList childIds = new ArrayList();
-        Iterator iter = nodeState.getChildNodeEntries().iterator();
+        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
             NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
-            // check read access
-            if (canRead(entry.getId())) {
-                childIds.add(entry.getId());
-            }
+            // delay check for read-access until item is being built
+            // thus avoid duplicate check
+            childIds.add(entry.getId());
         }
 
         return new LazyItemIterator(this, childIds, parentId);
@@ -562,18 +590,17 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check sanity of session
         session.sanityCheck();
 
-        ItemState state = getItemState(parentId);
-        if (!state.isNode()) {
+        ItemData data = getItemData(parentId, null);
+        if (!data.isNode()) {
             String msg = "can't list child properties of property " + parentId;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeState nodeState = (NodeState) state;
-        Iterator iter = nodeState.getPropertyNames().iterator();
+        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
             Name propName = (Name) iter.next();
-            // check read access
+            // make sure any of the properties can be read.
             if (canRead(new PropertyId(parentId, propName))) {
                 return true;
             }
@@ -594,58 +621,74 @@ public class ItemManager implements Dumpable, ItemStateListener {
         // check sanity of session
         session.sanityCheck();
 
-        ItemState state = getItemState(parentId);
-        if (!state.isNode()) {
+        ItemData data = getItemData(parentId, null);
+        if (!data.isNode()) {
             String msg = "can't list child properties of property " + parentId;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        NodeState nodeState = (NodeState) state;
         ArrayList childIds = new ArrayList();
-        Iterator iter = nodeState.getPropertyNames().iterator();
+        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
             Name propName = (Name) iter.next();
             PropertyId id = new PropertyId(parentId, propName);
-            // check read access
-            if (canRead(id)) {
-                childIds.add(id);
-            }
+            // delay check for read-access until item is being built
+            // thus avoid duplicate check
+            childIds.add(id);
         }
 
         return new LazyItemIterator(this, childIds);
     }
 
     //-------------------------------------------------< item factory methods >
-
-    private ItemData createItemData(ItemId id)
-            throws ItemNotFoundException, RepositoryException {
-
-        ItemState state;
-        try {
-            state = itemStateProvider.getItemState(id);
-        } catch (NoSuchItemStateException nsise) {
-            throw new ItemNotFoundException(id.toString());
-        } catch (ItemStateException ise) {
-            String msg = "failed to retrieve item state of item " + id;
-            log.error(msg, ise);
-            throw new RepositoryException(msg, ise);
-        }
-        return createItemData(state);
+    /**
+     * Same as {@link #createItemData(ItemState, Path, boolean)} where the
+     * permissionCheck flag is 'true'. This method will throw
+     * <code>AccessDeniedException</code> if reading the item data is not
+     * allowed.
+     *
+     * @param state
+     * @return
+     * @throws RepositoryException
+     */
+    private ItemData createItemData(ItemState state, Path path) throws RepositoryException {
+        return createItemData(state, path, true);
     }
 
-    private ItemData createItemData(ItemState state) throws RepositoryException {
+    /**
+     * Builds the <code>ItemData</code> for the specified <code>state</code>.
+     * If <code>permissionCheck</code> is <code>true</code>, the access manager
+     * is used to determine if reading that item would be granted. If this is
+     * not the case an <code>AccessDeniedException</code> is thrown.
+     * Before returning the created <code>ItemData</code> it is put into the
+     * cache. In order to benefit from the cache {@link #getItemData(ItemId, Path)}
+     * should be called
+     *
+     * @param state
+     * @return
+     * @throws RepositoryException
+     */
+    private ItemData createItemData(ItemState state, Path path, boolean permissionCheck) throws RepositoryException {
+        ItemData data;
         ItemId id = state.getId();
         if (id.equals(rootNodeId)) {
             // special handling required for root node
-            return new NodeData((NodeState) state, rootNodeDef);
+            data = new NodeData((NodeState) state, rootNodeDef);
         } else if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
-            return new NodeData(nodeState, getDefinition(nodeState));
+            data = new NodeData(nodeState, getDefinition(nodeState));
         } else {
             PropertyState propertyState = (PropertyState) state;
-            return new PropertyData(propertyState, getDefinition(propertyState));
+            data = new PropertyData(propertyState, getDefinition(propertyState));
         }
+        // make sure read-perm. is granted before returning the data.
+        if (permissionCheck && !canRead(data, path)) {
+            throw new AccessDeniedException("cannot read item " + state.getId());
+        }
+        // before returning the data: put them into the cache.
+        cacheItem(data);
+        return data;
     }
 
     private ItemImpl createItemInstance(ItemData data) {
@@ -715,7 +758,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * Puts the reference of an item in the cache with
      * the item's path as the key.
      *
-     * @param item the item to cache
+     * @param data the item data to cache
      */
     private void cacheItem(ItemData data) {
         synchronized (itemCache) {
@@ -760,7 +803,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * Removes a cache entry for a specific item.
      *
-     * @param id id of the item to remove from the cache
+     * @param data The item data to remove from the cache
      */
     private void evictItem(ItemData data) {
         if (log.isDebugEnabled()) {

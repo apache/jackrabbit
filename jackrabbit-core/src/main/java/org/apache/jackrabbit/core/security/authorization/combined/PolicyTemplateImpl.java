@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.authorization.combined;
 
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,8 @@ class PolicyTemplateImpl implements PolicyTemplate {
     public boolean setEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
         if (entry instanceof PolicyEntryImpl &&
             principal.equals(entry.getPrincipal())) {
+            // make sure valid privileges are provided.
+            PrivilegeRegistry.getBits(entry.getPrivileges());
             return internalAddEntry((PolicyEntryImpl) entry);
         } else {
             throw new AccessControlException("Invalid entry.");
@@ -76,7 +79,14 @@ class PolicyTemplateImpl implements PolicyTemplate {
     }
 
     public boolean removeEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
-        return entries.remove(entry);
+        if (entry instanceof PolicyEntryImpl &&
+            principal.equals(entry.getPrincipal())) {
+            // make sure valid privileges are provided.
+            PrivilegeRegistry.getBits(entry.getPrivileges());
+            return entries.remove(entry);
+        } else {
+            throw new AccessControlException("Invalid entry.");
+        }
     }
 
     //------------------------------------------------< AccessControlPolicy >---

@@ -1846,7 +1846,8 @@ public class BatchedItemOperations extends ItemValidator {
             iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
                 Name propName = (Name) iter.next();
-                if (!srcAccessMgr.isGranted(srcPath, propName, Permission.READ)) {
+                Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);
+                if (!srcAccessMgr.canRead(propPath)) {
                     continue;
                 }
                 PropertyId propId = new PropertyId(srcState.getNodeId(), propName);

@@ -78,6 +78,17 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
               "Policy that defines the general access control rules for the security workspace.");
     }
 
+    //--------------------------------------< AbstractAccessControlProvider >---
+    /**
+     * Always returns false, since this ac provider does not use content stored
+     * in items to evaluate AC information.
+     * 
+     * @see AbstractAccessControlProvider#isAcItem(Path)
+     */
+    protected boolean isAcItem(Path absPath) throws RepositoryException {
+        return false;
+    }
+
     //----------------------------------------------< AccessControlProvider >---
     /**
      * @see AccessControlProvider#init(Session, Map)
@@ -110,7 +121,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          }
      }
 
-    public CompiledPermissions compilePermissions(Set principals) throws ItemNotFoundException, RepositoryException {
+    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -125,6 +136,11 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 return new CompiledPermissionsImpl(principals, userNode);
             }
         }
+    }
+
+    public boolean canAccessRoot(Set principals) throws RepositoryException {
+        checkInitialized();
+        return true;
     }
 
     //------------------------------------------------------------< private >---
@@ -387,10 +403,15 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 // read is always granted
                 return true;
             }
-            // TODO: additional simple checks.... (last accessed... etc)
-
-            // finally retrieve from cache (or build)
+            // otherwise: retrieve from cache (or build)
             return super.grants(absPath, permissions);
+        }
+
+        /**
+         * @see CompiledPermissions#canReadAll()
+         */
+        public boolean canReadAll() throws RepositoryException {
+            return true;
         }
 
         //--------------------------------------------------< EventListener >---

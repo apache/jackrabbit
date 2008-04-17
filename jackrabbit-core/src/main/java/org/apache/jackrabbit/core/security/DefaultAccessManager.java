@@ -151,6 +151,10 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
                 public int getPrivileges(Path absPath) throws RepositoryException {
                     return 0;
                 }
+
+                public boolean canReadAll() throws RepositoryException {
+                    return false;
+                }
             };
         }
 
@@ -192,24 +196,28 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     public boolean isGranted(ItemId id, int actions)
             throws ItemNotFoundException, RepositoryException {
         checkInitialized();
-        int perm = 0;
-        if ((actions & READ) == READ) {
-            perm |= Permission.READ;
-        }
-        if ((actions & WRITE) == WRITE) {
-            if (id.denotesNode()) {
-                // TODO: check again if correct
-                perm |= Permission.SET_PROPERTY;
-                perm |= Permission.ADD_NODE;
-            } else {
-                perm |= Permission.SET_PROPERTY;
+        if (actions == READ && compiledPermissions.canReadAll()) {
+            return true;
+        } else {
+            int perm = 0;
+            if ((actions & READ) == READ) {
+                perm |= Permission.READ;
             }
+            if ((actions & WRITE) == WRITE) {
+                if (id.denotesNode()) {
+                    // TODO: check again if correct
+                    perm |= Permission.SET_PROPERTY;
+                    perm |= Permission.ADD_NODE;
+                } else {
+                    perm |= Permission.SET_PROPERTY;
+                }
+            }
+            if ((actions & REMOVE) == REMOVE) {
+                perm |= (id.denotesNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
+            }
+            Path path = hierMgr.getPath(id);
+            return isGranted(path, perm);
         }
-        if ((actions & REMOVE) == REMOVE) {
-            perm |= (id.denotesNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
-        }
-        Path path = hierMgr.getPath(id);
-        return isGranted(path, perm);
     }
 
     public boolean isGranted(Path absPath, int permissions) throws RepositoryException {
@@ -223,6 +231,18 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
         Path p = PathFactoryImpl.getInstance().create(parentPath, childName, true);
         return isGranted(p, permissions);
+    }
+
+    /**
+     * @see AccessManager#canRead(Path)
+     */
+    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+        Path path;
+        if (compiledPermissions.canReadAll()) {
+            return true;
+        } else {
+            return isGranted(itemPath, Permission.READ);
+        }
     }
 
     /**
@@ -282,7 +302,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
         // TODO: acProvider may not retrieve the correct policy in case of transient modifications
-        return acProvider.getPolicy(getNodeId(absPath));
+        return acProvider.getPolicy(getPath(absPath));
     }
 
     /**
@@ -351,7 +371,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkInitialized();
         checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
-        return acProvider.getAccessControlEntries(getNodeId(absPath));
+        return acProvider.getAccessControlEntries(getPath(absPath));
     }
 
     /**
@@ -450,12 +470,13 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         return (compiledPermissions.getPrivileges(p) | ~privileges) == -1;
     }
 
-    private NodeId getNodeId(String absPath) throws RepositoryException {
-        NodeId id = hierMgr.resolveNodePath(resolver.getQPath(absPath));
+    private Path getPath(String absPath) throws RepositoryException {
+        Path path = resolver.getQPath(absPath);
+        NodeId id = hierMgr.resolveNodePath(path);
         if (id == null) {
             throw new PathNotFoundException(absPath);
         }
-        return id;
+        return path;
     }
 
     /**

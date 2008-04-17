@@ -89,7 +89,7 @@ class ACLTemplate implements PolicyTemplate {
             throw new IllegalArgumentException("Node must be of type: " +
                     AccessControlConstants.NT_REP_ACL);
         }
-        path = aclNode.getPath();
+        path = aclNode.getParent().getPath();
         description = null;
         loadEntries(aclNode, principalNames);
     }
@@ -116,6 +116,14 @@ class ACLTemplate implements PolicyTemplate {
         // TODO: ev. assert that the principal is known to the repository
         // make sure valid privileges are provided.
         PrivilegeRegistry.getBits(ace.getPrivileges());
+    }
+
+    private List internalGetEntries() {
+        List l = new ArrayList();
+        for (Iterator it = entries.values().iterator(); it.hasNext();) {
+            l.addAll((List) it.next());
+        }
+        return l;
     }
 
     private List internalGetEntries(Principal principal) {
@@ -152,7 +160,6 @@ class ACLTemplate implements PolicyTemplate {
             if (entry.isAllow() == entries[i].isAllow()) {
                 // replace the existing entry with the new one at the end.
                 l.remove(i);
-                l.add(entry);
             } else {
                 complementEntry = t;
             }
@@ -170,8 +177,10 @@ class ACLTemplate implements PolicyTemplate {
                 l.remove(complementEntry);
                 ACEImpl tmpl = new ACEImpl(entry.getPrincipal(), resultPrivs, !entry.isAllow());
                 l.add(tmpl);
-            } /* else: complement entry is null or does not need to be modified.*/
+            } /* else: does not need to be modified.*/
         }
+        // finally add the new entry at the end.
+        l.add(entry);
         return true;
     }
 
@@ -282,17 +291,14 @@ class ACLTemplate implements PolicyTemplate {
      * @see PolicyTemplate#size()
      */
     public int size() {
-        return entries.size();
+        return internalGetEntries().size();
     }
 
     /**
      * @see PolicyTemplate#getEntries()
      */
     public PolicyEntry[] getEntries() {
-        List l = new ArrayList();
-        for (Iterator it = entries.values().iterator(); it.hasNext();) {
-            l.addAll((List) it.next());
-        }
+        List l = internalGetEntries();
         return (PolicyEntry[]) l.toArray(new PolicyEntry[l.size()]);
     }
 

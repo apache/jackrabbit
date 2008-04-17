@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.SecurityConstants;
@@ -34,11 +33,11 @@ import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
@@ -63,18 +62,30 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
     private static Logger log = LoggerFactory.getLogger(CombinedProvider.class);
 
     // TODO: add means to show effective-policy to a user.
-    // TODO: TOBEFIXED add means to create user-based ACLs (currently editor is not exposed in the API)
     // TODO: TOBEFIXED proper evaluation of permissions respecting resource-based ACLs.
     // TODO: TOBEFIXED assert proper evaluation order of group/non-group principal-ACLs
 
     private CombinedEditor editor;
     private NodeImpl acRoot;
 
-    private String policyName;
-
     public CombinedProvider() {
         super("Combined AC policy", "Policy evaluating user-based and resource-based ACLs.");
     }
+
+    //--------------------------------------< AbstractAccessControlProvider >---
+    /**
+     * @see AbstractAccessControlProvider#isAcItem(Path)
+     */
+    protected boolean isAcItem(Path absPath) throws RepositoryException {
+        Path.Element[] elems = absPath.getElements();
+        for (int i = 0; i < elems.length; i++) {
+            if (N_POLICY.equals(elems[i].getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //----------------------------------------------< AccessControlProvider >---
     /**
      * @see AccessControlProvider#init(javax.jcr.Session, java.util.Map)
@@ -91,8 +102,6 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         } else {
             acRoot = root.addNode(N_ACCESSCONTROL, NT_REP_ACCESS_CONTROL, null);
         }
-
-        policyName = session.getJCRName(AccessControlConstants.N_POLICY);
 
         editor = new CombinedEditor(session, resolver, resolver.getQPath(acRoot.getPath()));
         try {
@@ -131,9 +140,10 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
     }
 
     /**
-     * @see AccessControlProvider#getAccessControlEntries(org.apache.jackrabbit.core.NodeId)
+     * @see AccessControlProvider#getAccessControlEntries(Path)
+     * @param absPath
      */
-    public AccessControlEntry[] getAccessControlEntries(NodeId nodeId) throws RepositoryException {
+    public AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException {
         checkInitialized();
         // TODO: TOBEFIXED
         return new AccessControlEntry[0];
@@ -162,13 +172,26 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
     /**
      * @see AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws ItemNotFoundException, RepositoryException {
+    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
+        } else if (isReadOnly(principals)) {
+            return getReadOnlyPermissions();
         } else {
-            // TODO: TOBEFIXED include the resource-based ACLs!
             return new CompiledPermissionImpl(principals);
+        }
+    }
+
+    /**
+     * @see AccessControlProvider#canAccessRoot(Set)
+     */
+    public boolean canAccessRoot(Set principals) throws RepositoryException {
+        checkInitialized();
+        if (isAdminOrSystem(principals)) {
+            return true;
+        } else {
+            return new CompiledPermissionImpl(principals, false).grants(PathFactoryImpl.getInstance().getRootPath(), Permission.READ);
         }
     }
 
@@ -188,18 +211,28 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
          * @throws RepositoryException
          */
         private CompiledPermissionImpl(Set principals) throws RepositoryException {
+            this(principals, true);
+        }
+
+        /**
+         * @param principals
+         * @throws RepositoryException
+         */
+        private CompiledPermissionImpl(Set principals, boolean listenToEvents) throws RepositoryException {
 
             this.principals = principals;
             acPaths = new HashSet(principals.size());
             entries = reload();
 
             // TODO: describe
-            int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED |
-                    Event.PROPERTY_REMOVED | Event.NODE_ADDED | Event.NODE_REMOVED;
-            String[] ntNames = new String[] {
-                    session.getJCRName(NT_REP_ACE)
-            };
-            observationMgr.addEventListener(this, events, acRoot.getPath(), true, null, ntNames, false);
+            if (listenToEvents) {
+                int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED |
+                        Event.PROPERTY_REMOVED | Event.NODE_ADDED | Event.NODE_REMOVED;
+                String[] ntNames = new String[] {
+                        session.getJCRName(NT_REP_ACE)
+                };
+                observationMgr.addEventListener(this, events, acRoot.getPath(), true, null, ntNames, false);
+            }
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
@@ -211,19 +244,12 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
                 throw new RepositoryException("Absolute path expected.");
             }
 
-            String jcrPath = session.getJCRPath(absPath);
-            boolean isAclItem = false;
             /* Test if the given path points to a Node (or an existing or non
              * existing direct decendant of an existing Node) that stores
              * AC-information
              */
-            String[] segments = Text.explode(jcrPath, '/', false);
-            if (segments.length > 0) {
-                for (int i = segments.length - 1; i >= 0 && !isAclItem; i--) {
-                    isAclItem = policyName.equals(segments[i]);
-                }
-            }
-
+            boolean isAclItem = isAcItem(absPath);
+            String jcrPath = session.getJCRPath(absPath);            
             int permissions;
             if (session.itemExists(jcrPath)) {
                 permissions = entries.getPermissions(session.getItem(jcrPath), isAclItem);
@@ -255,7 +281,7 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
             try {
                 observationMgr.removeEventListener(this);
             } catch (RepositoryException e) {
-                log.error("Internal error: ", e.getMessage());
+                log.debug("Unable to unregister listener: ", e.getMessage());
             }
             super.close();
         }

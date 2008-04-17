@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
@@ -26,17 +30,11 @@ import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactory;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactoryImpl;
-import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
@@ -46,8 +44,6 @@ import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -444,8 +440,6 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      */
     private class WorkspaceAccessManagerImpl implements SecurityConstants, WorkspaceAccessManager {
 
-        private final Path rootPath = PathFactoryImpl.getInstance().getRootPath();
-
         //-----------------------------------------< WorkspaceAccessManager >---
         /**
          * {@inheritDoc}
@@ -466,10 +460,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
          */
         public boolean grants(Set principals, String workspaceName) throws RepositoryException {
             try {
-                // TODO: improve
                 AccessControlProvider prov = getAccessControlProvider(workspaceName);
-                CompiledPermissions cp = prov.compilePermissions(principals);
-                return cp.grants(rootPath, Permission.READ);
+                return prov.canAccessRoot(principals);
             } catch (NoSuchWorkspaceException e) {
                 // no such workspace -> return false.
                 return false;

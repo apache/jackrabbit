@@ -150,7 +150,7 @@ class EventConsumer {
                 ItemId targetId = state.getTargetId();
                 boolean granted = false;
                 try {
-                    granted = session.getAccessManager().isGranted(targetId, AccessManager.READ);
+                    granted = canRead(targetId);
                 } catch (RepositoryException e) {
                     log.warn("Unable to check access rights for item: " + targetId);
                 }
@@ -181,7 +181,7 @@ class EventConsumer {
             // check read permission
             boolean granted = false;
             try {
-                granted = session.getAccessManager().isGranted(item.getId(), AccessManager.READ);
+                granted = canRead(item.getId());
             } catch (RepositoryException e) {
                 log.warn("Unable to check access rights for item: " + item.getId());
             }
@@ -213,7 +213,7 @@ class EventConsumer {
                     || state.getType() == Event.PROPERTY_ADDED
                     || state.getType() == Event.PROPERTY_CHANGED) {
                 ItemId targetId = state.getTargetId();
-                if (!session.getAccessManager().isGranted(targetId, AccessManager.READ)) {
+                if (!canRead(targetId)) {
                     if (denied == null) {
                         denied = new HashSet();
                     }
@@ -269,5 +269,9 @@ class EventConsumer {
             hashCode = session.hashCode() ^ listener.hashCode();
         }
         return hashCode;
+    }
+
+    private boolean canRead(ItemId itemId) throws RepositoryException {
+        return session.getAccessManager().isGranted(itemId, AccessManager.READ);
     }
 }

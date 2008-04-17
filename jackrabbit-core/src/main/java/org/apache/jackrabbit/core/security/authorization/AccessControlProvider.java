@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -72,31 +72,31 @@ public interface AccessControlProvider {
     void close();
 
     /**
-     * Returns the effective policy for the specified node.
+     * Returns the effective policy for the node at the given absPath.
      *
-     * @param nodeId
-     * @return The effective policy that applies at <code>nodeId</code>.
+     * @param absPath an absolute path.
+     * @return The effective policy that applies at <code>absPath</code>.
      * @throws ItemNotFoundException If no Node with the specified
-     * <code>nodeId</code> exists.
+     * <code>absPath</code> exists.
      * @throws RepositoryException If another error occurs.
      * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager#getEffectivePolicy(String)
      */
-    AccessControlPolicy getPolicy(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    AccessControlPolicy getPolicy(Path absPath) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Returns the effective 'grant' access control entries for the specified
-     * item. An implementation may retrieve the entries from the effective
+     * Returns the effective 'grant' access control entries for the node at absPath.
+     * An implementation may retrieve the entries from the effective
      * policy or by other implementation specific means.
      *
-     * @param nodeId
+     * @param absPath an absolute path.
      * @return The effective access control entries or an empty array if
-     * no entries apply at <code>nodeId</code>.
+     * no entries apply at <code>absPath</code>.
      * @throws ItemNotFoundException If no Node with the specified
-     * <code>nodeId</code> exists.
+     * <code>absPath</code> exists.
      * @throws RepositoryException If an error occurs.
      * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager#getEffectiveAccessControlEntries(String)
      */
-    AccessControlEntry[] getAccessControlEntries(NodeId nodeId) throws RepositoryException;
+    AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException;
 
     /**
      * Returns an <code>AccessControlEditor</code> for the given Session object
@@ -117,9 +117,20 @@ public interface AccessControlProvider {
      * caller is adviced to pass a Set that respects the order of insertion.
      * @return The effective, compiled CompiledPolicy that applies for the
      * specified set of principals.
-     * @throws ItemNotFoundException If no Node with the specified
-     * <code>nodeId</code> exists.
-     * @throws RepositoryException If another error occurs.
+     * @throws RepositoryException If an error occurs.
      */
-    CompiledPermissions compilePermissions(Set principals) throws ItemNotFoundException, RepositoryException;
+    CompiledPermissions compilePermissions(Set principals) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if the given set of principals can access the
+     * root node of the workspace this provider has been built for;
+     * <code>false</code> otherwise.
+     *
+     * @param principals
+     * @return <code>true</code> if the given set of principals can access the
+     * root node of the workspace this provider has been built for;
+     * <code>false</code> otherwise.
+     * @throws RepositoryException
+     */
+    boolean canAccessRoot(Set principals) throws RepositoryException;
 }
