@@ -16,35 +16,35 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
-import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
-import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Node;
-import javax.jcr.Item;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import javax.jcr.lock.LockException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
