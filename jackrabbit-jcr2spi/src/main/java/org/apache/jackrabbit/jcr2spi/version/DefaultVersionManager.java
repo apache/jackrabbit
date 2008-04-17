@@ -37,7 +37,7 @@ public class DefaultVersionManager implements VersionManager {
 
     private static Logger log = LoggerFactory.getLogger(DefaultVersionManager.class);
 
-    public void checkin(NodeState nodeState) throws RepositoryException {
+    public NodeEntry checkin(NodeState nodeState) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("Versioning ist not supported by this repository.");
     }
 

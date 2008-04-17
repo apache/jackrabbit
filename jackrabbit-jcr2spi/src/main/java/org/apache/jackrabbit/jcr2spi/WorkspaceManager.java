@@ -911,7 +911,8 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
          * @see OperationVisitor#visit(Checkin)
          */
         public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-            service.checkin(sessionInfo, operation.getNodeId());
+            NodeId newId = service.checkin(sessionInfo, operation.getNodeId());
+            operation.setNewVersionId(newId);
         }
 
         /**
