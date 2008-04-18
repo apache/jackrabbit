@@ -562,11 +562,13 @@ public class SessionImporter implements Importer, SessionListener {
      * @param propertyInfo
      * @param targetType
      * @param isMultiple
-     * @param nsResolver
+     * @param resolver The name/path resolver used to build <code>QValue</code>s.
      * @return
      * @throws RepositoryException
      */
-    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType, boolean isMultiple, NamePathResolver resolver) throws RepositoryException {
+    private QValue[] getPropertyValues(PropInfo propertyInfo, int targetType,
+                                       boolean isMultiple, NamePathResolver resolver)
+            throws RepositoryException {
         TextValue[] tva = propertyInfo.getValues();
         // check multi-valued characteristic
         if ((tva.length == 0 || tva.length > 1) && !isMultiple) {
@@ -584,7 +586,7 @@ public class SessionImporter implements Importer, SessionListener {
      *
      * @param tv
      * @param targetType
-     * @param nsResolver
+     * @param resolver The name/path resolver used to build a <code>QValue</code>.
      * @return
      * @throws RepositoryException
      */
