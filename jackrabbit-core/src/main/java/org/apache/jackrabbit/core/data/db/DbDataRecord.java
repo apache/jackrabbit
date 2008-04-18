@@ -33,7 +33,7 @@ public class DbDataRecord extends AbstractDataRecord {
 
     /**
      * Creates a data record based on the given identifier and length.
-     *
+     * 
      * @param identifier data identifier
      * @param length the length
      * @param file file that contains the binary stream
@@ -58,7 +58,13 @@ public class DbDataRecord extends AbstractDataRecord {
      */
     public InputStream getStream() throws DataStoreException {
         lastModified = store.touch(getIdentifier(), lastModified);
-        return store.getInputStream(getIdentifier());
+        return new DbInputStream(store, getIdentifier());
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public long getLastModified() {
+        return lastModified;
+    }
 }

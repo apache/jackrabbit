@@ -37,7 +37,7 @@ public class FileDataRecord extends AbstractDataRecord {
      * @param identifier data identifier
      * @param file file that contains the binary stream
      */
-    protected FileDataRecord(DataIdentifier identifier, File file) {
+    public FileDataRecord(DataIdentifier identifier, File file) {
         super(identifier);
         assert file.isFile();
         this.file = file;
@@ -61,4 +61,10 @@ public class FileDataRecord extends AbstractDataRecord {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public long getLastModified() {
+        return file.lastModified();
+    }
 }

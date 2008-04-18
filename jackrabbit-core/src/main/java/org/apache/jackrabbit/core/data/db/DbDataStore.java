@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -487,6 +488,51 @@ public class DbDataStore implements DataStore {
     }
 
     /**
+     * getDatabaseResources() does NOT close the DB resources on success. It's up to the client of
+     * the stream backed by these resources to close it and therefore close the DB resources.
+     *
+     * @param identifier data identifier
+     * @return database resources that will back the stream corresponding
+     *                     to the passed data identifier
+     * @throws DataStoreException if the data store could not be accessed,
+     *                     or if the given identifier is invalid
+     */
+    public DbResources getDatabaseResources(DataIdentifier identifier) throws DataStoreException {
+        ConnectionRecoveryManager conn = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
+            PreparedStatement prep = conn.executeStmt(selectDataSQL, new Object[]{identifier.toString()});
+            rs = prep.getResultSet();
+            if (!rs.next()) {
+                throw new DataStoreException("Record not found: " + identifier);
+            }
+            InputStream result = null;
+            InputStream stream = rs.getBinaryStream(2);
+            if (stream == null) {
+                // If the stream is null, go ahead and close resources
+                result = new ByteArrayInputStream(new byte[0]);
+                DatabaseHelper.closeSilently(rs);
+                putBack(conn);
+            } else {
+                result = new BufferedInputStream(stream);
+                if (copyWhenReading) {
+                    File temp = moveToTempFile(result);
+                    result = new TempFileInputStream(temp);
+                }
+            }
+
+            DbResources dbResources = new DbResources(conn, rs, prep, result, this);
+            return dbResources;
+        } catch (Exception e) {
+            DatabaseHelper.closeSilently(rs);
+            putBack(conn);
+            throw convert("Retrieving database resources ", e);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public synchronized void init(String homeDir) throws DataStoreException {
@@ -643,32 +689,6 @@ public class DbDataStore implements DataStore {
             }
         }
         return lastModified;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public InputStream getInputStream(DataIdentifier identifier) throws DataStoreException {
-        ConnectionRecoveryManager conn = getConnection();
-        try {
-            String id = identifier.toString();
-            // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
-            PreparedStatement prep = conn.executeStmt(selectDataSQL, new Object[]{id});
-            ResultSet rs = prep.getResultSet();
-            if (!rs.next()) {
-                throw new DataStoreException("Record not found: " + identifier);
-            }
-            InputStream in = new BufferedInputStream(rs.getBinaryStream(2));
-            if (copyWhenReading) {
-                File temp = moveToTempFile(in);
-                in = new TempFileInputStream(temp);
-            }
-            return in;
-        } catch (Exception e) {
-            throw convert("Can not read identifier " + identifier, e);
-        } finally {
-            putBack(conn);
-        }
     }
 
     /**
