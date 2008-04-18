@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
@@ -96,7 +95,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     private WorkspaceAccess wspAccess;
 
     /**
-     * access items for resolution of last persisted item in hierarchy
+     * the hierarchy manager used to resolve path from itemId
      */
     private HierarchyManager hierMgr;
 
@@ -186,7 +185,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public void checkPermission(ItemId id, int permissions) throws AccessDeniedException, ItemNotFoundException, RepositoryException {
         if (!isGranted(id, permissions)) {
-            throw new AccessDeniedException("Not sufficient privileges for permissions : " + permissions + " on " + hierMgr.getPath(id));
+            throw new AccessDeniedException("Not sufficient privileges for permissions : " + permissions + " on " + id);
         }
     }
 
@@ -471,12 +470,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     private Path getPath(String absPath) throws RepositoryException {
-        Path path = resolver.getQPath(absPath);
-        NodeId id = hierMgr.resolveNodePath(path);
-        if (id == null) {
-            throw new PathNotFoundException(absPath);
-        }
-        return path;
+        return resolver.getQPath(absPath);
     }
 
     /**
