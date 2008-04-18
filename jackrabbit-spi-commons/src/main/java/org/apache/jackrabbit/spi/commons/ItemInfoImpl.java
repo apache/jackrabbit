@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.ItemInfo;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.NodeId;
 
 import java.io.Serializable;
 
@@ -28,12 +28,6 @@ import java.io.Serializable;
  * implementations.
  */
 public abstract class ItemInfoImpl implements ItemInfo, Serializable {
-
-    /**
-     * The parent node id of this item or <code>null</code> if this item
-     * represents the root node info.
-     */
-    private final NodeId parentId;
 
     /**
      * The name of this item info.
@@ -51,26 +45,31 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
     private final boolean isNode;
 
     /**
-     * Creates a new serializable item info for the given qualified
-     * <code>item</code> info.
+     * Creates a new item info from the given name, path and boolean flag.
      *
      * @param parentId the parent id.
      * @param name     the name of this item.
      * @param path     the path to this item.
      * @param isNode   if this item is a node.
+     * @deprecated Use {@link #ItemInfoImpl(Name, Path, boolean)} instead. The
+     * parentId is not used any more and the corresponding getter has been
+     * removed.
      */
     public ItemInfoImpl(NodeId parentId, Name name, Path path, boolean isNode) {
-        this.parentId = parentId;
+        this(name, path, isNode);
+    }
+    
+    /**
+     * Creates a new item info from the given name, path and boolean flag.
+     *
+     * @param name     the name of this item.
+     * @param path     the path to this item.
+     * @param isNode   if this item is a node.
+     */
+    public ItemInfoImpl(Name name, Path path, boolean isNode) {
         this.name = name;
         this.path = path;
         this.isNode = isNode;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeId getParentId() {
-        return parentId;
     }
 
     /**

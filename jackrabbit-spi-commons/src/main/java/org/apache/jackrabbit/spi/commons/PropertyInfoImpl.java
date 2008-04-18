@@ -63,19 +63,19 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
         if (propertyInfo instanceof Serializable) {
             return propertyInfo;
         } else {
-            NodeId parentId = propertyInfo.getParentId();
+            NodeId parentId = propertyInfo.getId().getParentId();
             parentId = idFactory.createNodeId(
                     parentId.getUniqueID(), parentId.getPath());
             PropertyId propId = idFactory.createPropertyId(
                     parentId, propertyInfo.getId().getName());
-            return new PropertyInfoImpl(parentId, propertyInfo.getName(),
+            return new PropertyInfoImpl(propertyInfo.getName(),
                     propertyInfo.getPath(), propId, propertyInfo.getType(),
                     propertyInfo.isMultiValued(), propertyInfo.getValues());
         }
     }
 
     /**
-     * Creates a new serializable property info for the given parameters.
+     * Creates a new property info for the given parameters.
      *
      * @param parentId      the parent id.
      * @param name          the name of this property.
@@ -84,11 +84,29 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @param type          the type of this property.
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
+     * @deprecated Use {@link #PropertyInfoImpl(Name, Path, PropertyId, int, boolean, QValue[])}
+     * instead. The parentId is not used any more.
      */
     public PropertyInfoImpl(NodeId parentId, Name name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {
-        super(parentId, name, path, false);
+        this(name, path, id, type, isMultiValued, values);
+    }
+
+    /**
+     * Creates a new property info for the given parameters.
+     *
+     * @param name          the name of this property.
+     * @param path          the path to this property.
+     * @param id            the id of this property.
+     * @param type          the type of this property.
+     * @param isMultiValued whether this property is multi-valued.
+     * @param values        the values.
+     */
+    public PropertyInfoImpl(Name name, Path path,
+                            PropertyId id, int type, boolean isMultiValued,
+                            QValue[] values) {
+        super(name, path, false);
         this.propertyId = id;
         this.type = type;
         this.isMultiValued = isMultiValued;
