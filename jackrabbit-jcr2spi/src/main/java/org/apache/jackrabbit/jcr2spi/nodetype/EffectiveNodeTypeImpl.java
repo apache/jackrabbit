@@ -58,6 +58,8 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     private final HashMap namedItemDefs;
     // list of unnamed item definitions (i.e. residual definitions)
     private final ArrayList unnamedItemDefs;
+    // (optional) set of additional mixins supported on node type
+    private Set supportedMixins;
 
     /**
      * private constructor.
@@ -68,6 +70,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         allNodeTypes = new TreeSet();
         namedItemDefs = new HashMap();
         unnamedItemDefs = new ArrayList();
+        supportedMixins = null;
     }
 
     /**
@@ -93,6 +96,15 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         ent.mergedNodeTypes.add(ntName);
         ent.allNodeTypes.add(ntName);
 
+        Name[] smixins = ntd.getSupportedMixinTypes();
+    
+        if (smixins != null) {
+            ent.supportedMixins = new HashSet();
+            for (int i = 0; i < smixins.length; i++) {
+                ent.supportedMixins.add(smixins[i]);
+            }
+        }
+        
         // map of all item definitions (maps id to definition)
         // used to effectively detect ambiguous child definitions where
         // ambiguity is defined in terms of definition identity
@@ -204,15 +216,6 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
         // we're done
         return ent;
-    }
-
-    /**
-     * Factory method: creates a new 'empty' effective node type instance
-     *
-     * @return a new EffectiveNodeType
-     */
-    static EffectiveNodeType create() {
-        return new EffectiveNodeTypeImpl();
     }
 
     //--------------------------------------------------< EffectiveNodeType >---
@@ -507,6 +510,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     public boolean includesNodeTypes(Name[] nodeTypeNames) {
         return allNodeTypes.containsAll(Arrays.asList(nodeTypeNames));
+    }
+
+    /**
+     * @inheritDoc
+     * @see EffectiveNodeType#supportsMixin(Name)
+     */
+    public boolean supportsMixin(Name mixin) {
+        if (supportedMixins == null) {
+            return true;
+        }
+        else {
+            return supportedMixins.contains(mixin);
+        }
     }
 
     /**
@@ -812,6 +828,11 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
             clone.namedItemDefs.put(key, new ArrayList(list));
         }
         clone.unnamedItemDefs.addAll(unnamedItemDefs);
+        
+        if (supportedMixins != null) {
+            clone.supportedMixins = new HashSet();
+            clone.supportedMixins.addAll(supportedMixins);
+        }
 
         return clone;
     }

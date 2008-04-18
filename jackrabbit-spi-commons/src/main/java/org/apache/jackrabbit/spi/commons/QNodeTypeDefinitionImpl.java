@@ -46,6 +46,11 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     private final Name[] supertypes;
 
     /**
+     * The names of the supported mixins on this node type (or <code>null</code>)
+     */
+    private final Name[] supportedMixins;
+
+    /**
      * Indicates whether this is a mixin node type definition.
      */
     private final boolean isMixin;
@@ -99,6 +104,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      *                               <code>null</code>.
      * @param declaredPropDefs       the declared property definitions.
      * @param declaredNodeDefs       the declared child node definitions.
+     * @deprecated use {@link #QNodeTypeDefinitionImpl(Name, Name[], Name[], boolean, boolean, Name, QPropertyDefinition[], QNodeDefinition[])}
      */
     public QNodeTypeDefinitionImpl(Name name,
                                    Name[] supertypes,
@@ -109,6 +115,39 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                                    QNodeDefinition[] declaredNodeDefs) {
         this.name = name;
         this.supertypes = supertypes;
+        this.supportedMixins = null;
+        this.isMixin = isMixin;
+        this.hasOrderableChildNodes = hasOrderableChildNodes;
+        this.primaryItemName = primaryItemName;
+        this.propertyDefs = getSerializablePropertyDefs(declaredPropDefs);
+        this.childNodeDefs = getSerializableNodeDefs(declaredNodeDefs);
+    }
+
+    /**
+     * Creates a new serializable qualified node type definition.
+     *
+     * @param name                   the name of the node type
+     * @param supertypes             the names of the supertypes
+     * @param supportedMixins        the names of supported mixins (or <code>null</code>)
+     * @param isMixin                if this is a mixin node type
+     * @param hasOrderableChildNodes if this node type has orderable child
+     *                               nodes.
+     * @param primaryItemName        the name of the primary item, or
+     *                               <code>null</code>.
+     * @param declaredPropDefs       the declared property definitions.
+     * @param declaredNodeDefs       the declared child node definitions.
+     */
+    public QNodeTypeDefinitionImpl(Name name,
+                                   Name[] supertypes,
+                                   Name[] supportedMixins,
+                                   boolean isMixin,
+                                   boolean hasOrderableChildNodes,
+                                   Name primaryItemName,
+                                   QPropertyDefinition[] declaredPropDefs,
+                                   QNodeDefinition[] declaredNodeDefs) {
+        this.name = name;
+        this.supertypes = supertypes;
+        this.supportedMixins = supportedMixins;
         this.isMixin = isMixin;
         this.hasOrderableChildNodes = hasOrderableChildNodes;
         this.primaryItemName = primaryItemName;
@@ -216,7 +255,18 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         }
         return dependencies;
     }
-
+    
+    public Name[] getSupportedMixinTypes() {
+        if (supportedMixins == null) {
+            return null;
+        }
+        else {
+            Name[] mixins = new Name[supportedMixins.length];
+            System.arraycopy(supportedMixins, 0, mixins, 0, supportedMixins.length);
+            return mixins;
+        }
+    }
+    
     //-------------------------------< internal >-------------------------------
 
     /**

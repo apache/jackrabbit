@@ -1446,6 +1446,12 @@ public class NodeImpl extends ItemImpl implements Node {
         Name[] existingNts = getNodeState().getNodeTypeNames();
         // build effective node type representing primary type including existing mixin's
         EffectiveNodeType entExisting = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(existingNts);
+        
+        // check if the base type supports adding this mixin
+        if (! entExisting.supportsMixin(mixinName)) {
+            log.debug(mixin.getName() + ": not supported on node type " + primaryTypeName);
+            return false;
+        }
 
         // check if adding new mixin conflicts with existing nodetypes
         if (entExisting.includesNodeType(mixinName)) {

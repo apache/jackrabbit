@@ -43,6 +43,15 @@ public interface EffectiveNodeType {
      *         <code>false</code>
      */
     public boolean includesNodeType(Name nodeTypeName);
+    
+    /**
+     * Determines whether this effective node type supports adding
+     * the specified mixin.
+     * @param mixin name of mixin type
+     * @return <code>true</code> if the mixin type is supported, otherwise
+     *         <code>false</code>
+     */
+    public boolean supportsMixin(Name mixin);
 
     /**
      * Determines whether this effective node type representation includes

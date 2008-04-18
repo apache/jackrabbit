@@ -48,6 +48,17 @@ public interface QNodeTypeDefinition {
     public Name[] getSupertypes();
 
     /**
+     * Returns an array containing the names of additional mixin types
+     * supported on this node type.
+     * <p>
+     * The returned array must not be modified by the application.
+     *
+     * @return an array of mixin type names, or <code>null</code>
+     * when there are no known constraints.
+     */
+    public Name[] getSupportedMixinTypes();
+
+    /**
      * Returns the value of the mixin flag.
      *
      * @return true if this is a mixin node type; false otherwise.
