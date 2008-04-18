@@ -83,16 +83,10 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                         parentId.getUniqueID(), parentId.getPath());
                 serRefs.add(idFactory.createPropertyId(parentId, refs[i].getName()));
             }
-            NodeId parentId = null;
-            if (nodeInfo.getParentId() != null) {
-                parentId = nodeInfo.getParentId();
-                parentId = idFactory.createNodeId(
-                        parentId.getUniqueID(), parentId.getPath());
-            }
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
             final Iterator propIds = nodeInfo.getPropertyIds();
-            return new NodeInfoImpl(parentId, nodeInfo.getName(),
+            return new NodeInfoImpl(nodeInfo.getName(),
                     nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
@@ -116,8 +110,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     }
 
     /**
-     * Creates a new serializable node info for the given <code>node</code>
-     * info.
+     * Creates a new node info from the given parameters.
      *
      * @param parentId        the parent id.
      * @param name            the name of this item.
@@ -128,11 +121,31 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param mixinNames      the names of the assigned mixins.
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
+     * @deprecated Use {@link #NodeInfoImpl(Name, Path, NodeId, int, Name, Name[], Iterator, Iterator)}
+     * instead. The parentId is not used any more.
      */
     public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
-                         int index, Name primaryTypeName, Name[] mixinNames,
-                         Iterator references, Iterator propertyIds) {
-        super(parentId, name, path, true);
+                        int index, Name primaryTypeName, Name[] mixinNames,
+                        Iterator references, Iterator propertyIds) {
+         this(name, path, id, index, primaryTypeName, mixinNames, references, propertyIds);
+    }
+
+    /**
+     * Creates a new node info from the given parameters.
+     *
+     * @param name            the name of this item.
+     * @param path            the path to this item.
+     * @param id              the id of this item.
+     * @param index           the index of this item.
+     * @param primaryTypeName the name of the primary node type.
+     * @param mixinNames      the names of the assigned mixins.
+     * @param references      the references to this node.
+     * @param propertyIds     the properties of this node.
+     */
+    public NodeInfoImpl(Name name, Path path, NodeId id,
+                        int index, Name primaryTypeName, Name[] mixinNames,
+                        Iterator references, Iterator propertyIds) {
+        super(name, path, true);
         this.id = id;
         this.index = index;
         this.primaryTypeName = primaryTypeName;

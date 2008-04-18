@@ -23,13 +23,6 @@ package org.apache.jackrabbit.spi;
 public interface ItemInfo {
 
     /**
-     * Returns the id of the parent <code>NodeInfo</code>.
-     *
-     * @return the id of the parent item info.
-     */
-    public NodeId getParentId();
-
-    /**
      * Returns the qualified representation of the item name. For the root node
      * expected return value is <code>{""}""</code>.
      *

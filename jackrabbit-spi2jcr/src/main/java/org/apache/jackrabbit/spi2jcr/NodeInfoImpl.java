@@ -49,8 +49,7 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
                         IdFactoryImpl idFactory,
                         NamePathResolver resolver)
             throws RepositoryException, NameException {
-        super(node.getName().length() == 0 ? null : idFactory.createNodeId(node.getParent(), resolver),
-                node.getName().length() == 0 ? NameConstants.ROOT : resolver.getQName(node.getName()),
+        super(node.getName().length() == 0 ? NameConstants.ROOT : resolver.getQName(node.getName()),
                 resolver.getQPath(node.getPath()),
                 idFactory.createNodeId(node, resolver), node.getIndex(),
                 resolver.getQName(node.getPrimaryNodeType().getName()),

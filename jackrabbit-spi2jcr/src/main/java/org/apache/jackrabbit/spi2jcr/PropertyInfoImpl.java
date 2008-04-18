@@ -48,8 +48,7 @@ class PropertyInfoImpl
                             NamePathResolver resolver,
                             QValueFactory qValueFactory)
             throws RepositoryException, NameException {
-        super(idFactory.createNodeId(property.getParent(), resolver),
-                resolver.getQName(property.getName()),
+        super(resolver.getQName(property.getName()),
                 resolver.getQPath(property.getPath()),
                 idFactory.createPropertyId(property, resolver),
                 property.getType(), property.getDefinition().isMultiple(),
