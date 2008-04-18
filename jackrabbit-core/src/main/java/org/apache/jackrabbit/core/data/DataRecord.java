@@ -46,4 +46,10 @@ public interface DataRecord {
      */
     InputStream getStream() throws DataStoreException;
 
+    /**
+     * Returns the last modified of the record.
+     * 
+     * @return last modified time of the binary stream
+     */
+    long getLastModified();
 }
