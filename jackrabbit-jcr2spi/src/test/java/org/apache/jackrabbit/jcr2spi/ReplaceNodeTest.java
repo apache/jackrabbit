@@ -26,11 +26,11 @@ import javax.jcr.Node;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
- * <code>ReplaceRemovedNode</code>
+ * <code>ReplaceNodeTest</code>
  */
-public class ReplaceNode extends AbstractJCRTest {
+public class ReplaceNodeTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(ReplaceNode.class);
+    private static Logger log = LoggerFactory.getLogger(ReplaceNodeTest.class);
 
     private Node removeNode;
     private String uuid;

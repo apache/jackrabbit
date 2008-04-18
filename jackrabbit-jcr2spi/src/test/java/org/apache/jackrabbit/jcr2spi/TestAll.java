@@ -80,7 +80,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UpdateTest.class);
 
         // various
-        suite.addTestSuite(ReplaceNode.class);
+        suite.addTestSuite(ReplaceNodeTest.class);
         suite.addTestSuite(HierarchyNodeTest.class);
         suite.addTestSuite(LazyItemIteratorTest.class);
 
