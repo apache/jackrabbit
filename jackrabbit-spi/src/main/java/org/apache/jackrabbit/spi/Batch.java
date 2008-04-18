@@ -158,7 +158,9 @@ public interface Batch {
     public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
-     * Modify the value of an existing property.
+     * Modify the value of an existing property. Note that in contrast to
+     * the JCR API this method should not accept a <code>null</code> value.
+     * Removing a property is achieved by calling {@link #remove(ItemId)}.
      *
      * @param propertyId PropertyId identifying the property to be modified.
      * @param value The new value.
@@ -180,7 +182,9 @@ public interface Batch {
     public void setValue(PropertyId propertyId, QValue value) throws RepositoryException;
 
     /**
-     * Modify the value of an existing, multi-valued property.
+     * Modify the value of an existing, multi-valued property. Note that in
+     * contrast to the JCR API this method should not accept a <code>null</code>
+     * value. Removing a property is achieved by calling {@link #remove(ItemId)}.
      *
      * @param propertyId PropertyId identifying the property to be modified.
      * @param values The new values.
