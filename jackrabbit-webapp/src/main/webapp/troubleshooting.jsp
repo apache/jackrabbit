@@ -95,5 +95,5 @@ request.setAttribute("title", "Troubleshooting");
   Details of the Java and operating system environment are included in
   the system properties shown below:
 </p>
-<pre><% System.getProperties().store(out, null); %></pre>
+<pre><% System.getProperties().list(new java.io.PrintWriter(out)); %></pre>
 <jsp:include page="footer.jsp"/>
