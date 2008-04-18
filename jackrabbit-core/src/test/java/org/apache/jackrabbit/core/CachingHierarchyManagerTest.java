@@ -43,15 +43,15 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeId rootNodeId = new NodeId(UUID.randomUUID());
         ItemStateManager provider = new MyItemStateManager();
         cache = new CachingHierarchyManager(rootNodeId, provider, null);
-        PathFactory factory = PathFactoryImpl.getInstance();
-        final Path path = factory.getRootPath();
-        for(int i=0; i<3; i++) {
+        final PathFactory factory = PathFactoryImpl.getInstance();
+        for (int i = 0; i < 3; i++) {
             new Thread(new Runnable() {
                 public void run() {
-                    while(!stop) {
+                    while (!stop) {
+                        Path path = factory.create("{}\t{}a1");
                         try {
                             cache.resolveNodePath(path);
-                        } catch(Exception e) {
+                        } catch (Exception e) {
                             exception = e;
                         }
                     }
@@ -60,16 +60,18 @@ public class CachingHierarchyManagerTest extends TestCase {
         }
         Thread.sleep(1000);
         stop = true;
-        if(exception != null) {
+        if (exception != null) {
             throw exception;
         }
     }
 
     static class MyItemStateManager implements ItemStateManager {
 
-        public ItemState getItemState(ItemId id) throws NoSuchItemStateException, ItemStateException {
-            Name name = NameFactoryImpl.getInstance().create("", "");
-            NodeState ns = new NodeState((NodeId)id, name, null, NodeState.STATUS_NEW, false);
+        public ItemState getItemState(ItemId id)
+                throws NoSuchItemStateException, ItemStateException {
+            Name name = NameFactoryImpl.getInstance().create("", "a1");
+            NodeState ns = new NodeState((NodeId) id, name, null,
+                    NodeState.STATUS_NEW, false);
             ns.setDefinitionId(NodeDefId.valueOf("1"));
             return ns;
         }
