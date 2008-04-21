@@ -171,11 +171,12 @@ public class AnnotationDescriptorReader implements DescriptorReader
 
 	private void addDescriptorsFromGetters(MappingDescriptor mappingDescriptor, ClassDescriptor classDescriptor, Class clazz) {
 		BeanInfo beanInfo;
+		String fieldName = "";
 		try {
 			beanInfo = Introspector.getBeanInfo(clazz);
 			PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-
+				fieldName = propertyDescriptor.getName();
 				// Check if there is an Field annotation
 				Field fieldAnnotation = propertyDescriptor.getReadMethod().getAnnotation(Field.class);
 				if (fieldAnnotation != null) {
@@ -198,7 +199,9 @@ public class AnnotationDescriptorReader implements DescriptorReader
 				}
 			}
 		} catch (Exception e) {
-			throw new InitMapperException("Impossible to read the mapping descriptor from the getter", e);
+			throw new InitMapperException("Impossible to read the mapping descriptor from the getter for class : " +
+					clazz.toString() +
+					(fieldName == null ? "" : " for field : " + fieldName), e);
 		}
 
 	}
@@ -227,33 +230,14 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		collectionDescriptor.setAutoInsert(collectionAnnotation.autoInsert());
 		collectionDescriptor.setAutoRetrieve(collectionAnnotation.autoRetrieve());
 		collectionDescriptor.setAutoUpdate(collectionAnnotation.autoUpdate());
-		collectionDescriptor.setCollectionClassName(field.getName());
+		collectionDescriptor.setCollectionClassName(field.getType().getName());
 		if (! collectionAnnotation.elementClassName().equals(Object.class))
 		{
 			collectionDescriptor.setElementClassName(collectionAnnotation.elementClassName().getName());
 		}
 		else
 		{
-
-//		    collectionDescriptor.setElementClassName(targetClass.getName());
-			Type type = field.getGenericType();
-			if (type instanceof ParameterizedType)
-			{
-				Type[] paramType = ((ParameterizedType) type).getActualTypeArguments();
-				//TODO : change this condition. No sure if it will be all the time true.
-				// If only one type argument, the attribute is certainly a collection
-				if (paramType.length == 1)
-				{
-					collectionDescriptor.setElementClassName(paramType[0].toString().replace("class ", ""));
-				}
-				// either, it is certainly a map
-				else
-				{
-					collectionDescriptor.setElementClassName(paramType[1].toString().replace("class ", ""));
-				}
-
-			}
-
+			setElementClassName(collectionDescriptor, field.getGenericType());
 		}
 
 		if (! collectionAnnotation.collectionClassName().equals(Object.class))
@@ -274,6 +258,36 @@ public class AnnotationDescriptorReader implements DescriptorReader
 
 
 		descriptor.addCollectionDescriptor(collectionDescriptor);
+	}
+
+
+
+	private void setElementClassName(CollectionDescriptor collectionDescriptor, Type type) {
+		if (type instanceof ParameterizedType)
+		{
+			Type[] paramType = ((ParameterizedType) type).getActualTypeArguments();
+			//TODO : change this condition. No sure if it will be all the time true.
+			// If only one type argument, the object is certainly a collection
+			if (paramType.length == 1)
+			{
+				collectionDescriptor.setElementClassName(paramType[0].toString().replace("class ", ""));
+
+			}
+			// either, it is certainly a map
+			else
+			{
+				collectionDescriptor.setElementClassName(paramType[1].toString().replace("class ", ""));
+			}
+
+		}
+		else
+		{
+			Type ancestorType = ((Class)type).getGenericSuperclass();
+            if ( ancestorType!= null)
+            {
+			   setElementClassName(collectionDescriptor,ancestorType);
+            }
+		}
 	}
 
 	private void addBeanDescriptor(ClassDescriptor classDescriptor, String fieldName, Bean beanAnnotation) {

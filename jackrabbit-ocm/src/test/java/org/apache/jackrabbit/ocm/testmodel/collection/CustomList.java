@@ -14,34 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.ocm.manager.collectionconverter;
+package org.apache.jackrabbit.ocm.testmodel.collection;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 /**
- * Common interface used to persist any kind of Collection or Map.
- *
- *
- * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- *
+ * Don't read the code of this class :-)
+ * It just there to test a custom collection
  */
-public interface ManageableObjects
-{
-	/**
-	 * @return The ManageableCollection iterator
-	 */
-    public Iterator getIterator();
+public class CustomList extends ArrayList<Element> {
 
-    /**
-     * @return The ManageableCollection size
-     */
-    public int getSize();
-
-    /**
-     * @return The objects managed by the underlying Collection or Map
-     */
-    public Object getObjects();
-
-
+	public String getCustomString()
+	{
+		StringBuilder customString = new StringBuilder();
+		for (Element element : this)
+		{
+			customString.append(element.getText()).append(" ");
+		}
+		return customString.toString();
+	}
 }

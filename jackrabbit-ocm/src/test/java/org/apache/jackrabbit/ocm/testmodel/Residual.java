@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableHashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualNodesCollectionConverterImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
@@ -37,19 +38,19 @@ public class Residual
 {
 	@Field(path=true) private String path;
 
-    private ManageableHashMap elements;
+    private Map elements;
 
 	/**
      * @return Returns the elements.
      */
-    public ManageableHashMap getElements()
+    public Map getElements()
     {
         return elements;
     }
     /**
      * @param elements The elements to set.
      */
-    public void setElements(ManageableHashMap elements)
+    public void setElements(Map elements)
     {
         this.elements = elements;
     }
@@ -57,21 +58,20 @@ public class Residual
 
     @Node(extend=Residual.class) public static class ResidualProperties extends Residual
     {
-        @Collection( jcrName="value*",elementClassName=String.class,collectionConverter=ResidualPropertiesCollectionConverterImpl.class,
-                collectionClassName=ManageableHashMap.class)
-        private ManageableHashMap elements;
+        @Collection( jcrName="value*",
+        		     collectionConverter=ResidualPropertiesCollectionConverterImpl.class)
+        private Map<String, String> elements;
 
 
     }
 
     @Node(extend=Residual.class) public static class ResidualNodes extends Residual
     {
-    	
-        @Collection( jcrName="value*",elementClassName=Object.class,collectionConverter=ResidualNodesCollectionConverterImpl.class,
-                collectionClassName=ManageableHashMap.class)
-        private ManageableHashMap elements;
 
-    	
+        @Collection( jcrName="value*",collectionConverter=ResidualNodesCollectionConverterImpl.class)
+        private Map<String, Object> elements;
+
+
     }
 
     protected Residual() {}

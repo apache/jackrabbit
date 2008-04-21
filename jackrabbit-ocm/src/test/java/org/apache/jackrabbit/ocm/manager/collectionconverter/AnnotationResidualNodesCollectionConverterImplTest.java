@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
+import java.util.HashMap;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -24,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableHashMap;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
 
@@ -82,7 +83,7 @@ public class AnnotationResidualNodesCollectionConverterImplTest extends Annotati
             residual = new Residual.ResidualNodes();
             residual.setPath("/test");
 
-            ManageableHashMap map = new ManageableHashMap();
+            HashMap<String, Paragraph> map = new HashMap<String, Paragraph>();
             map.put("value1", new Paragraph("Value1"));
             map.put("value2", new Paragraph("Value2"));
             map.put("value3", new Paragraph("Value3"));
@@ -104,7 +105,7 @@ public class AnnotationResidualNodesCollectionConverterImplTest extends Annotati
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
-            map = new ManageableHashMap();
+            map = new HashMap<String, Paragraph>();
             map.put("value11", new Paragraph("Value11"));
             map.put("value12", new Paragraph("Value12"));
             map.put("value13", new Paragraph("Value13"));

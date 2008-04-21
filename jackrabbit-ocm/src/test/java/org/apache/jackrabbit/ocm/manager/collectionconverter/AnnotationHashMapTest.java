@@ -78,7 +78,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertNull("HashMap is not null", main.getHashMap());
+            assertNull("HashMap is not null", main.getHashMapElement());
             assertNull("Map is not null", main.getMap());
 
             // --------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             hashMapElement.addObject(e2);
             map.put("e2", e2);
 
-            main.setHashMap(hashMapElement);
+            main.setHashMapElement(hashMapElement);
             main.setMap(map);
 
             ocm.update(main);
@@ -114,11 +114,12 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            assertNotNull("main.getHashMap() is null", main.getHashMap());
+            assertNotNull("main.getHashMap() is null", main.getHashMapElement());
             assertNotNull("main.getHashMap() is null", main.getMap());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
-            assertTrue("Incorrect para element", ((Element) main.getMap().get("e1")).getText().equals("Element 1"));
+            map = (Map) main.getHashMapElement().getObjects();
+            assertTrue("Incorrect para element", ((Element) map.get("e1")).getText().equals("Element 1"));
+            assertTrue("Incorrect para element", ((Element) map.get("e1")).getText().equals("Element 1"));
 
             // --------------------------------------------------------------------------------
             // Update the object
@@ -144,7 +145,7 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             hashMapElement.addObject(e3);
             map.put("e4", e3);
 
-            main.setHashMap(hashMapElement);
+            main.setHashMapElement(hashMapElement);
             main.setMap(map);
 
             ocm.update(main);
@@ -153,9 +154,10 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
-            assertNotNull("main.getElements() is null", main.getHashMap());
+            assertNotNull("main.getElements() is null", main.getHashMapElement());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e4")).getText().equals("Element 4"));
+            map = (Map) main.getHashMapElement().getObjects();
+            assertTrue("Incorrect para element", ((Element) map.get("e4")).getText().equals("Element 4"));
             assertTrue("Incorrect para element", main.getMap().get("e4").getText().equals("Element 4"));
         }
         catch (Exception e)

@@ -51,6 +51,6 @@ public class CollectionLazyLoader implements LazyLoader {
 
 
 		ManageableObjects objects = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor, collectionFieldClass);
-		return objects;
+		return objects.getObjects();
 	}
 }

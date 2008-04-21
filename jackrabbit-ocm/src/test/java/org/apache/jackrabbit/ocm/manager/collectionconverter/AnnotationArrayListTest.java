@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -27,6 +29,7 @@ import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement;
+import org.apache.jackrabbit.ocm.testmodel.collection.CustomList;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
 import org.apache.jackrabbit.ocm.testmodel.collection.Main;
 
@@ -58,7 +61,7 @@ public class AnnotationArrayListTest extends AnnotationTestBase
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-        	
+
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -76,25 +79,40 @@ public class AnnotationArrayListTest extends AnnotationTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            ArrayList arrayList = main.getList();
-            assertNull("main.getList is not null", arrayList );
+            ArrayListElement arrayListElement = main.getArrayListElement();
+            List<Element> list = main.getList();
+            CustomList customList = main.getCustomList();
+
+            assertNull("main.getArrayListElement is not null", arrayListElement );
+            assertNull("main.getList is not null", list );
+            assertNull("main.getCustomList is not null", customList );
 
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
 
-            ArrayListElement arrayListElement = new ArrayListElement();
+            arrayListElement = new ArrayListElement();
+            list = new ArrayList<Element>();
+            customList = new CustomList();
+
             Element e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            arrayListElement.add(e1);
+            arrayListElement.addObject(e1);
+            list.add(e1);
+            customList.add(e1);
 
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
-            arrayListElement.add(e2);
+            arrayListElement.addObject(e2);
+            list.add(e2);
+            customList.add(e2);
 
-            main.setList(arrayListElement);
+            main.setArrayListElement(arrayListElement);
+            main.setList(list);
+            main.setCustomList(customList);
+
             ocm.update(main);
             ocm.save();
 
@@ -102,31 +120,49 @@ public class AnnotationArrayListTest extends AnnotationTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList is null", arrayList );
-            Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            arrayListElement = main.getArrayListElement();
+            list = main.getList();
+            assertNotNull("main.getArrayListElemnt is null", arrayListElement );
+            assertNotNull("main.getList is null", list );
+            assertNotNull("main.getCustomeList is null", customList );
+            Collection<Element> objects = (Collection<Element>) arrayListElement.getObjects();
+            Element[] elements = (Element[]) objects.toArray(new Element[objects.size()]);
             assertTrue("Incorrect para element", elements[0].getText().equals("Element 1"));
+            assertTrue("Incorrect para element", list.get(0).getText().equals("Element 1"));
+            assertTrue("Incorrect para element", customList.get(0).getText().equals("Element 1"));
+
 
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             arrayListElement = new ArrayListElement();
+            list = new ArrayList<Element>();
+            customList = new CustomList();
+
             e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            arrayListElement.add(e1);
+            arrayListElement.addObject(e1);
+            list.add(e1);
+            customList.add(e1);
 
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
-            arrayListElement.add(e2);
+            arrayListElement.addObject(e2);
+            list.add(e2);
+            customList.add(e2);
 
             Element e3 = new Element();
             e3.setId("e4");
             e3.setText("Element 4");
-            arrayListElement.add(e3);
+            arrayListElement.addObject(e3);
+            list.add(e3);
+            customList.add(e3);
 
-            main.setList(arrayListElement);
+            main.setArrayListElement(arrayListElement);
+            main.setList(list);
+            main.setCustomList(customList);
 
             ocm.update(main);
             ocm.save();
@@ -135,11 +171,15 @@ public class AnnotationArrayListTest extends AnnotationTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList() is null", arrayList );
-            elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            arrayListElement = main.getArrayListElement();
+            list = main.getList();
+            assertNotNull("main.getArrayListElement() is null", arrayListElement );
+            assertNotNull("main.getList() is null", list );
+            objects = (Collection<Element>) arrayListElement.getObjects();
+            elements = (Element[]) objects.toArray(new Element[objects.size()]);
             assertTrue("Incorrect element", elements[2].getText().equals("Element 4"));
-
+            assertTrue("Incorrect element", list.get(2).getText().equals("Element 4"));
+            assertTrue("Incorrect element", customList.get(2).getText().equals("Element 4"));
         }
         catch (Exception e)
         {

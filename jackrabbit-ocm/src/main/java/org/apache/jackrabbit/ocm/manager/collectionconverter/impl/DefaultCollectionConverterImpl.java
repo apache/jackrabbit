@@ -242,7 +242,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             	{
             		throw new JcrMappingException("Impossible to use a map for the field : "
             				                      + collectionDescriptor.getFieldName()
-            				                      + "in the class : " + collectionDescriptor.getCollectionClassName()
+            				                      + " in the class : " + collectionDescriptor.getCollectionClassName()
             				                      + ". The element objects have no id field (check their OCM mapping).");
             	}
             	Object elementId = ReflectionUtils.getNestedProperty(item,

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter.impl;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -24,38 +24,58 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectio
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
 
 /**
- * The <code>ManagedHashMap</code> class provides Map support to JCR Mapping
  *
- * @author <a href="mailto:fmeschbe[at]apache[dot]com">Felix Meschberger</a>
+ * {@link ManageableCollection} ArrayList implementation
+ *
+ * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
+ *
  */
-public class ManageableHashMap extends HashMap implements ManageableMap {
+public class ManageableMapImpl implements ManageableMap
+{
 
-    public ManageableHashMap() {
+	private Map map;
+
+
+	public ManageableMapImpl(Map map) {
+		super();
+		this.map = map;
+	}
+
+	/**
+	 *
+	 * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
+	 */
+    public void addObject(Object key, Object object)
+    {
+    	map.put(key, object);
+
     }
 
-    public ManageableHashMap(int initialCapacity) {
-        super(initialCapacity);
+    /**
+     *
+     * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getIterator()
+     */
+    public Iterator getIterator()
+    {
+        return map.values().iterator();
     }
 
-    public ManageableHashMap(Map m) {
-        super(m);
-    }
+    /**
+     *
+     * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getSize()
+     */
+	public int getSize()
+	{
 
-    public ManageableHashMap(int initialCapacity, float loadFactor) {
-        super(initialCapacity, loadFactor);
-    }
-
-
-    public void addObject(Object key, Object object) {
-        put(key, object);
-    }
-
-    public Iterator getIterator() {
-        return values().iterator();
-    }
+		return map.size();
+	}
 
 
-    public int getSize() {
-        return size();
-    }
+	public Map getObjects() {
+
+		return map;
+	}
+
+
+
 }

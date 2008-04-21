@@ -46,6 +46,8 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollectio
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableCollectionImpl;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableMapImpl;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerUtil;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager;
@@ -703,14 +705,34 @@ public class ObjectConverterImpl implements ObjectConverter {
 		Class collectionFieldClass = ReflectionUtils.getPropertyType(object, collectionDescriptor.getFieldName());
 		ManageableObjects objects = null;
 		if (collectionDescriptor.isProxy()) {
-			objects = (ManageableCollection) proxyManager.createCollectionProxy(session, collectionConverter, parentNode,
+			Object proxy = proxyManager.createCollectionProxy(session, collectionConverter, parentNode,
 					collectionDescriptor, collectionFieldClass);
-
-		} else {
+			ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), proxy);
+		}
+		else
+		{
 			objects = collectionConverter.getCollection(session, parentNode, collectionDescriptor, collectionFieldClass);
+			if (objects==null)
+			{
+			  ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), null);
+			}
+			else
+			{
+				// TODO: find another for managing custom ManageableObjects classes
+			    if ( ! objects.getClass().equals(ManageableCollectionImpl.class) &&
+			    	 ! objects.getClass().equals(ManageableMapImpl.class))
+			    {
+			    	ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), objects);
+			    }
+			    else
+			    {
+				    ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), objects.getObjects());
+			    }
+			}
+
 		}
 
-		ReflectionUtils.setNestedProperty(object, collectionDescriptor.getFieldName(), objects);
+
 	}
 
 	/**

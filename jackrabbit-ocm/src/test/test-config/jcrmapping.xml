@@ -18,13 +18,13 @@
   -->
 
 <jackrabbit-ocm>
-    
-  
+
+
 	<!--
 		The following classes are used to test object associations
 		A has an assocition (1..1) with B (field b) => B is mapped as subnode in A
-		A has a collection of C (field "collection") => there are n subnodes used to map the "C" collection 
-		
+		A has a collection of C (field "collection") => there are n subnodes used to map the "C" collection
+
 	-->
 	<class-descriptor
 		className="org.apache.jackrabbit.ocm.testmodel.A"
@@ -35,26 +35,26 @@
 		<field-descriptor fieldName="a2" jcrName="a2" />
 
 		<!-- bean-descriptor is used to map a bean into subnode
-			* The definition of the associated class has to be defined in this mapping file 
+			* The definition of the associated class has to be defined in this mapping file
 			* proxy="true" => use lazy laoding for this attribute b when retrieving A
 		-->
 		<bean-descriptor fieldName="b" jcrName="b" proxy="false" jcrType="nt:unstructured"
         jcrAutoCreated="false" jcrMandatory="false" jcrOnParentVersion="IGNORE"
         jcrProtected="false" jcrSameNameSiblings="false" />
 
-		<!-- 
-			Use the default collection mapping stategy and the default collection type (can be a Vector, an ArrayList, a Collection or a List) 
+		<!--
+			Use the default collection mapping stategy and the default collection type (can be a Vector, an ArrayList, a Collection or a List)
 			The default collection mapping strategy map a collection under an extra JCR node (specify by the jcrName).
-			
+
 		-->
 		<collection-descriptor fieldName="collection" jcrName="collection" proxy="false"
         elementClassName="org.apache.jackrabbit.ocm.testmodel.C" jcrType="ocm:C"
         jcrAutoCreated="false" jcrMandatory="false" jcrOnParentVersion="IGNORE"
         jcrProtected="false" jcrSameNameSiblings="false"/>
-        
+
 		<collection-descriptor fieldName="emptyCollection" jcrName="emptyCollection" proxy="false"
         elementClassName="org.apache.jackrabbit.ocm.testmodel.C" />
-		
+
 	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.B"  jcrType="nt:unstructured" jcrSuperTypes="nt:base">
@@ -62,7 +62,7 @@
 
 		<field-descriptor fieldName="b1" jcrName="b1" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
         jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
-		
+
         <field-descriptor fieldName="b2" jcrName="b2" jcrType="String" jcrAutoCreated="false" jcrMandatory="false"
         jcrOnParentVersion="IGNORE" jcrProtected="false" jcrMultiple="false" />
 
@@ -74,11 +74,11 @@
 		<field-descriptor fieldName="name" jcrName="ocm:name" />
 	</class-descriptor>
 
-	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Lockable" jcrType="ocm:TestLockable" >		
+	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Lockable" jcrType="ocm:TestLockable" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="a1" jcrName="ocm:a1" />
 		<field-descriptor fieldName="a2" jcrName="ocm:a2" />
-		
+
 		<!--  lockOwner is null is the object is not locked -->
     	<field-descriptor fieldName="lockOwner" jcrName="jcr:lockOwner" />
 	</class-descriptor>
@@ -86,15 +86,15 @@
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Page" jcrType="ocm:page" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="title" jcrName="ocm:title" />
-		<collection-descriptor fieldName="paragraphs" proxy="false" 
-		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph" 
+		<collection-descriptor fieldName="paragraphs" proxy="false"
+		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph"
 		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Paragraph" jcrType="ocm:paragraph" discriminator="false" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="ocm:text"/>
-    	<bean-descriptor fieldName="page" jcrName="page" proxy="true" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl" />		
+    	<bean-descriptor fieldName="page" jcrName="page" proxy="true" converter="org.apache.jackrabbit.ocm.manager.beanconverter.impl.ParentBeanConverterImpl" />
 	</class-descriptor>
 
 
@@ -103,46 +103,49 @@
 		jcrType="nt:unstructured">
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="text" jcrName="text" />
-		<collection-descriptor fieldName="hashMap" jcrName="hashMap" proxy="false"
+		<collection-descriptor fieldName="hashMapElement" jcrName="hashMapElement" proxy="false"
 			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
 			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.HashMapElement" />
 
-		<collection-descriptor fieldName="list" jcrName="list" proxy="false"
+		<collection-descriptor fieldName="arrayListElement" jcrName="arrayListElement" proxy="false"
 			elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element"
 			collectionClassName="org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement" />
+
+		<collection-descriptor fieldName="list" jcrName="list" proxy="false"
+		    elementClassName="org.apache.jackrabbit.ocm.testmodel.collection.Element" />
 
 	</class-descriptor>
 
 	<class-descriptor className="org.apache.jackrabbit.ocm.testmodel.collection.Element" jcrType="ocm:element" discriminator="false" >
-		<field-descriptor fieldName="id" jcrName="ocm:id"  />
+		<field-descriptor fieldName="id" jcrName="ocm:id" id="true"  />
 		<field-descriptor fieldName="text" jcrName="ocm:text" />
 	</class-descriptor>
-	
-	
+
+
 	<class-descriptor 	className="org.apache.jackrabbit.ocm.testmodel.Discriminator" 	jcrType="ocm:discriminatorobject" discriminator="true" >
 		<field-descriptor fieldName="path" path="true" />
 		<field-descriptor fieldName="content" jcrName="ocm:content" />
-	</class-descriptor>		
+	</class-descriptor>
 
 
     <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Residual$ResidualProperties" jcrType="nt:unstructured">
         <field-descriptor fieldName="path" path="true" />
-        <collection-descriptor fieldName="elements" proxy="false" 
+        <collection-descriptor fieldName="elements" proxy="false"
                                jcrName="value*"
                                elementClassName="java.lang.String"
-                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl" 
+                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualPropertiesCollectionConverterImpl"
                                collectionClassName="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap" />
-                               
+
     </class-descriptor>
 
     <class-descriptor className="org.apache.jackrabbit.ocm.testmodel.Residual$ResidualNodes" jcrType="nt:unstructured">
         <field-descriptor fieldName="path" path="true" />
-        <collection-descriptor fieldName="elements" proxy="false" 
+        <collection-descriptor fieldName="elements" proxy="false"
                                jcrName="value*"
                                elementClassName="java.lang.Object"
-                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualNodesCollectionConverterImpl" 
+                               collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ResidualNodesCollectionConverterImpl"
                                collectionClassName="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManagedHashMap" />
-                               
+
     </class-descriptor>
 </jackrabbit-ocm>
- 
+

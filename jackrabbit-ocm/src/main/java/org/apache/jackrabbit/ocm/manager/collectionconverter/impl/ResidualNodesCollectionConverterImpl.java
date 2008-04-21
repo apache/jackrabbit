@@ -69,11 +69,11 @@ public class ResidualNodesCollectionConverterImpl extends
         CollectionDescriptor collectionDescriptor,
         ManageableObjects objects) {
 
-        if (!(objects instanceof Map)) {
+        if (!(objects instanceof ManageableMap)) {
             return;
         }
 
-        Map map = (Map) objects;
+        Map map = (Map) objects.getObjects();
         for (Iterator ei=map.entrySet().iterator(); ei.hasNext(); ) {
             Map.Entry entry = (Map.Entry) ei.next();
             String name = String.valueOf(entry.getKey());
@@ -90,14 +90,14 @@ public class ResidualNodesCollectionConverterImpl extends
             ManageableObjects objects) throws RepositoryException {
 
         String jcrName = getCollectionJcrName(collectionDescriptor);
-        if (!(objects instanceof Map)) {
+        if (!(objects instanceof ManageableMap)) {
             for (NodeIterator ni=parentNode.getNodes(jcrName); ni.hasNext(); ) {
                 ni.nextNode().remove();
             }
             return;
         }
 
-        Map map = (Map) objects;
+        Map map = (Map) objects.getObjects();
         Set updatedItems = new HashSet();
         for (Iterator ei=map.entrySet().iterator(); ei.hasNext(); ) {
             Map.Entry entry = (Map.Entry) ei.next();

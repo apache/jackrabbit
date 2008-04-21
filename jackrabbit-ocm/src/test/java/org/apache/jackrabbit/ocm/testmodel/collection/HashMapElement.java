@@ -19,16 +19,19 @@ package org.apache.jackrabbit.ocm.testmodel.collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableMap;
 
 /**
+ * No very useful class.
+ * This is just there to test custom ManageableMap implementation
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
  */
-public class HashMapElement extends HashMap implements ManageableCollection
+public class HashMapElement implements ManageableMap
 {
 
+	private HashMap<String , Element> map = new HashMap<String, Element>();
     /**
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
      */
@@ -36,7 +39,15 @@ public class HashMapElement extends HashMap implements ManageableCollection
     {
         if (object instanceof Element)
         {
-            this.put(((Element)object).getId(), object);
+        	map.put(((Element)object).getId(), (Element)object);
+        }
+    }
+
+    public void addObject(Object key, Object object)
+    {
+        if (object instanceof Element)
+        {
+        	map.put((String) key, (Element)object);
         }
     }
 
@@ -45,14 +56,18 @@ public class HashMapElement extends HashMap implements ManageableCollection
      */
     public Iterator getIterator()
     {
-       return  this.values().iterator();
+       return  map.values().iterator();
     }
 
 	public int getSize()
 	{
 
-		return this.size();
+		return map.size();
 	}
 
+	public Object getObjects()
+	{
+		return map;
+	}
 
 }
