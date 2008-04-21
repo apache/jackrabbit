@@ -112,11 +112,6 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     private final VersionItemStateProvider versProvider;
 
     /**
-     * the node type manager
-     */
-    private NodeTypeRegistry ntReg;
-
-    /**
      * the dynamic event state collection factory
      */
     private final DynamicESCFactory escFactory;
@@ -136,10 +131,10 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                               NodeId rootParentId,
                               ItemStateCacheFactory cacheFactory,
                               ISMLocking ismLocking) throws RepositoryException {
+        super(ntReg);
         try {
             this.pMgr = pMgr;
             this.fs = fs;
-            this.ntReg = ntReg;
             this.escFactory = new DynamicESCFactory(obsMgr);
 
             // need to store the version storage root directly into the persistence manager
@@ -257,37 +252,20 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
             synchronized (versionItems) {
                 InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
                 if (item == null) {
-                    if (stateMgr.hasItemState(id)) {
-                        NodeState state = (NodeState) stateMgr.getItemState(id);
-                        NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
-                        NodeId parentId = pNode.getParentId();
-                        InternalVersionItem parent = getItem(parentId);
-                        Name ntName = state.getNodeTypeName();
-                        if (ntName.equals(NameConstants.NT_FROZENNODE)) {
-                            item = new InternalFrozenNodeImpl(this, pNode, parent);
-                        } else if (ntName.equals(NameConstants.NT_VERSIONEDCHILD)) {
-                            item = new InternalFrozenVHImpl(this, pNode, parent);
-                        } else if (ntName.equals(NameConstants.NT_VERSION)) {
-                            item = ((InternalVersionHistory) parent).getVersion(id);
-                        } else if (ntName.equals(NameConstants.NT_VERSIONHISTORY)) {
-                            item = new InternalVersionHistoryImpl(this, pNode);
-                        } else {
-                            return null;
-                        }
+                    item = createInternalVersionItem(id);
+                    if (item != null) {
+                        versionItems.put(id, item);
                     } else {
                         return null;
                     }
-                    versionItems.put(id, item);
                 }
                 return item;
             }
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
         } finally {
             releaseReadLock();
         }
     }
-
+    
     /**
      * {@inheritDoc}
      * <p/>
