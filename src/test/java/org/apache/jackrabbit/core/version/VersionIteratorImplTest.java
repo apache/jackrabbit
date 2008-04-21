@@ -48,6 +48,7 @@ public class VersionIteratorImplTest extends TestCase {
 
         public Calendar getCreated() {return null;}
         public InternalFrozenNode getFrozenNode() {return null;}
+        public NodeId getFrozenNodeId() {return null;}
         public Name[] getLabels() {return null;}
         public Name getName() {return null;}
         public InternalVersion[] getPredecessors() {return null;}
