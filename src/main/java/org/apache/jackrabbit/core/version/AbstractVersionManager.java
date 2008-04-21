@@ -21,6 +21,7 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -59,6 +60,11 @@ abstract class AbstractVersionManager implements VersionManager {
     protected LocalItemStateManager stateMgr;
 
     /**
+     * Node type registry.
+     */
+    protected final NodeTypeRegistry ntReg;
+
+    /**
      * Persistent root node of the version histories.
      */
     protected NodeStateEx historyRoot;
@@ -77,6 +83,10 @@ abstract class AbstractVersionManager implements VersionManager {
                         || activeWriter_ == Thread.currentThread();
                 }
             };
+
+    public AbstractVersionManager(NodeTypeRegistry ntReg) {
+        this.ntReg = ntReg;
+    }
 
     //-------------------------------------------------------< VersionManager >
 
@@ -528,5 +538,43 @@ abstract class AbstractVersionManager implements VersionManager {
      * @param item
      */
     protected void itemDiscarded(InternalVersionItem item) {
+    }
+
+    /**
+     * Creates an {@link InternalVersionItem} based on the {@link NodeState}
+     * identified by <code>id</code>.
+     *
+     * @param id    the node id of the version item.
+     * @return the version item or <code>null</code> if there is no node state
+     *         with the given <code>id</code>.
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             version storage.
+     */
+    protected InternalVersionItem createInternalVersionItem(NodeId id)
+            throws RepositoryException {
+        try {
+            if (stateMgr.hasItemState(id)) {
+                NodeState state = (NodeState) stateMgr.getItemState(id);
+                NodeStateEx pNode = new NodeStateEx(stateMgr, ntReg, state, null);
+                NodeId parentId = pNode.getParentId();
+                InternalVersionItem parent = getItem(parentId);
+                Name ntName = state.getNodeTypeName();
+                if (ntName.equals(NameConstants.NT_FROZENNODE)) {
+                    return new InternalFrozenNodeImpl(this, pNode, parent);
+                } else if (ntName.equals(NameConstants.NT_VERSIONEDCHILD)) {
+                    return new InternalFrozenVHImpl(this, pNode, parent);
+                } else if (ntName.equals(NameConstants.NT_VERSION)) {
+                    return ((InternalVersionHistory) parent).getVersion(id);
+                } else if (ntName.equals(NameConstants.NT_VERSIONHISTORY)) {
+                    return new InternalVersionHistoryImpl(this, pNode);
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 }
