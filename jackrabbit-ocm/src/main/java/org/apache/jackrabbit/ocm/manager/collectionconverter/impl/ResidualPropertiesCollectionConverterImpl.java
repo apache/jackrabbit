@@ -162,7 +162,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
         String jcrName = getCollectionJcrName(collectionDescriptor);
 
         // can only persist maps, not general collections
-        if (!(objects instanceof Map)) {
+        if (!(objects instanceof ManageableMap)) {
             return;
         }
 
@@ -179,7 +179,7 @@ public class ResidualPropertiesCollectionConverterImpl extends
         AtomicTypeConverter atomicTypeConverter = getAtomicTypeConverter(collectionDescriptor);
 
         try {
-            Map map = (Map) objects;
+            Map map = (Map) objects.getObjects();
             ValueFactory valueFactory = session.getValueFactory();
             for (Iterator ei = map.entrySet().iterator(); ei.hasNext();) {
                 Map.Entry entry = (Map.Entry) ei.next();

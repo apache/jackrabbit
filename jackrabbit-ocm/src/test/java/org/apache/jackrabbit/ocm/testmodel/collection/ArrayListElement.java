@@ -22,36 +22,42 @@ import java.util.Iterator;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 
 /**
+ * No very useful class.
+ * This is just there to test custom ManageableCollection implementation
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
  */
-public class ArrayListElement extends ArrayList implements ManageableCollection
+public class ArrayListElement implements ManageableCollection
 {
 
-    /**
+	private ArrayList<Element> collection = new ArrayList<Element>();
+     /**
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#addObject(java.lang.Object)
      */
     public void addObject(Object object)
     {
-        if (object instanceof Element)
-        {
-            this.add(object);
-        }
+    	if (object instanceof Element)
+        	collection.add((Element)object);
     }
 
     /**
      * @see org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection#getIterator()
      */
-    public Iterator getIterator()
+    public Iterator<Element> getIterator()
     {
-       return  this.iterator();
+       return  collection.iterator();
     }
 
 	public int getSize()
 	{
-		
-		return this.size();
+
+		return collection.size();
+	}
+
+	public Object getObjects() {
+
+		return collection;
 	}
 
 

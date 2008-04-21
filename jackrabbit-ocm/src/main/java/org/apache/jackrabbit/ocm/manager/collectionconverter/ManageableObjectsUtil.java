@@ -17,20 +17,12 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableArrayList;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableSet;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableVector;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableHashMap;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableCollectionImpl;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableMapImpl;
 import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
@@ -67,29 +59,33 @@ public class ManageableObjectsUtil {
     public static ManageableObjects getManageableObjects(Class manageableObjectsClass) {
         try {
 
-            if (manageableObjectsClass.equals(ArrayList.class)) {
-                return new ManageableArrayList();
-            }
+        	// if the class is an interface, try to find the default class implementation
+        	if (manageableObjectsClass.isInterface())
+        	{
 
-            if (manageableObjectsClass.equals(Vector.class)) {
-                return new ManageableVector();
-            }
+        		Class defaultImplementation  = ReflectionUtils.getDefaultImplementation(manageableObjectsClass);
+        		if (manageableObjectsClass == null)
+        		{
+        			new JcrMappingException("No default implementation for the interface " + manageableObjectsClass);
+        		}
+        		else
+        		{
+        			manageableObjectsClass = defaultImplementation;
+        		}
+        	}
 
-            if (manageableObjectsClass.equals(HashSet.class)) {
-                return new ManageableSet();
-            }
+        	//if the class is implementing the Collection interface
+        	if (ReflectionUtils.implementsInterface(manageableObjectsClass, Collection.class))
+        	{
+        		return new ManageableCollectionImpl((Collection) ReflectionUtils.newInstance(manageableObjectsClass));
+        	}
 
-            if (manageableObjectsClass.equals(Collection.class) || manageableObjectsClass.equals(List.class)) {
-                return new ManageableArrayList();
-            }
+        	//if the class is implementing the Map interface
+        	if (ReflectionUtils.implementsInterface(manageableObjectsClass, Map.class))
+        	{
+        		return new ManageableMapImpl((Map) ReflectionUtils.newInstance(manageableObjectsClass));
+        	}
 
-            if (manageableObjectsClass.equals(Set.class)) {
-                return new ManageableSet();
-            }
-
-            if (manageableObjectsClass.equals(Map.class) || manageableObjectsClass.equals(HashMap.class)) {
-            	return new ManageableHashMap();
-            }
 
             Object manageableObjects = manageableObjectsClass.newInstance();
             if (!(manageableObjects instanceof ManageableObjects)) {
@@ -123,39 +119,19 @@ public class ManageableObjectsUtil {
                 return (ManageableObjects) object;
 
             }
-            if (object.getClass().equals(ArrayList.class)) {
-                ManageableArrayList manageableArrayList = new ManageableArrayList();
-                manageableArrayList.addAll((Collection) object);
 
-                return manageableArrayList;
-            }
+        	//if the class is implementing the Collection interface
+        	if (ReflectionUtils.implementsInterface(object.getClass(), Collection.class))
+        	{
+        		return new ManageableCollectionImpl((Collection) object);
+        	}
 
-            if (object.getClass().equals(Vector.class)) {
-                ManageableVector manageableVector = new ManageableVector();
-                manageableVector.addAll((Collection) object);
+        	//if the class is implementing the Map interface
+        	if (ReflectionUtils.implementsInterface(object.getClass(), Map.class))
+        	{
+        		return new ManageableMapImpl((Map) object);
+        	}
 
-                return manageableVector;
-            }
-
-            if (object.getClass().equals(HashSet.class)) {
-                return new ManageableSet((Set) object);
-            }
-
-            if (object.getClass().equals(Collection.class)
-                || object.getClass().equals(List.class)) {
-                ManageableArrayList manageableArrayList = new ManageableArrayList();
-                manageableArrayList.addAll((Collection) object);
-
-                return manageableArrayList;
-            }
-            if (object.getClass().equals(Set.class)) {
-                return new ManageableSet((Set) object);
-            }
-
-            if (object.getClass().equals(Map.class)
-            	|| object.getClass().equals(HashMap.class)	){
-                return new ManageableHashMap((Map)object);
-            }
 
         }
         catch (Exception e) {

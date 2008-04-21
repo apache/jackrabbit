@@ -32,6 +32,7 @@ import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 import org.apache.jackrabbit.ocm.manager.objectconverter.ProxyManager;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
+import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 public class ProxyManagerImpl implements ProxyManager
 {
@@ -70,9 +71,9 @@ public class ProxyManagerImpl implements ProxyManager
 			return null;
 		}
 
-		ManageableObjects manageableCollection = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
+		//ManageableObjects manageableCollection = ManageableObjectsUtil.getManageableObjects(collectionFieldClass);
 
 		LazyLoader loader = new CollectionLazyLoader(collectionConverter, session, parentNode, collectionDescriptor, collectionFieldClass);
-		return  Enhancer.create(manageableCollection.getClass(), loader);
+		return  Enhancer.create(collectionFieldClass, loader);
 	}
 }

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.Test;
@@ -24,10 +25,9 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableHashMap;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
 
 /**
@@ -86,7 +86,7 @@ public class DigesterResidualPropertiesCollectionConverterImplTest extends Diges
             residual = new Residual.ResidualProperties();
             residual.setPath("/test");
 
-            ManageableHashMap map = new ManageableHashMap();
+            HashMap<String, Object> map = new HashMap<String, Object>();
             map.put("value1", "Value1");
             map.put("value2", "Value2");
             map.put("value3", "Value3");
@@ -112,7 +112,7 @@ public class DigesterResidualPropertiesCollectionConverterImplTest extends Diges
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
-            map = new ManageableHashMap();
+            map = new HashMap<String, Object>();
             map.put("value11", "Value11");
             map.put("value12", "Value12");
             map.put("value13", "Value13");

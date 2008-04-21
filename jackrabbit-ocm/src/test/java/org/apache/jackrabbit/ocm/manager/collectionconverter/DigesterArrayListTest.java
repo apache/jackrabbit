@@ -17,14 +17,16 @@
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.collection.ArrayListElement;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
@@ -57,7 +59,7 @@ public class DigesterArrayListTest extends DigesterTestBase
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-        	
+
 
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository
@@ -75,25 +77,32 @@ public class DigesterArrayListTest extends DigesterTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            ArrayList arrayList = main.getList();
-            assertNull("main.getList is not null", arrayList );
+            ArrayListElement arrayList = main.getArrayListElement();
+            List<Element> list = main.getList();
+            assertNull("main.getArrayListElement is not null", arrayList );
+            assertNull("main.getList is not null", list );
 
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
 
             ArrayListElement arrayListElement = new ArrayListElement();
+            list = new ArrayList<Element>();
+
             Element e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            arrayListElement.add(e1);
+            arrayListElement.addObject(e1);
+            list.add(e1);
 
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
-            arrayListElement.add(e2);
+            arrayListElement.addObject(e2);
+            list.add(e2);
 
-            main.setList(arrayListElement);
+            main.setArrayListElement(arrayListElement);
+            main.setList(list);
             ocm.update(main);
             ocm.save();
 
@@ -101,31 +110,42 @@ public class DigesterArrayListTest extends DigesterTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList is null", arrayList );
-            Element[] elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            arrayList = main.getArrayListElement();
+            list = main.getList();
+            assertNotNull("main.getArrayListElemnt is null", arrayList );
+            assertNotNull("main.getList is null", list );
+            Collection<Element> objects = (Collection<Element>) arrayList.getObjects();
+            Element[] elements = (Element[]) objects.toArray(new Element[objects.size()]);
             assertTrue("Incorrect para element", elements[0].getText().equals("Element 1"));
+            assertTrue("Incorrect para element", list.get(0).getText().equals("Element 1"));
+
+
 
             // --------------------------------------------------------------------------------
             // Update the object
             // --------------------------------------------------------------------------------
             arrayListElement = new ArrayListElement();
+            list = new ArrayList<Element>();
             e1 = new Element();
             e1.setId("e1");
             e1.setText("Element 1");
-            arrayListElement.add(e1);
+            arrayListElement.addObject(e1);
+            list.add(e1);
 
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
-            arrayListElement.add(e2);
+            arrayListElement.addObject(e2);
+            list.add(e2);
 
             Element e3 = new Element();
             e3.setId("e4");
             e3.setText("Element 4");
-            arrayListElement.add(e3);
+            arrayListElement.addObject(e3);
+            list.add(e3);
 
-            main.setList(arrayListElement);
+            main.setArrayListElement(arrayListElement);
+            main.setList(list);
 
             ocm.update(main);
             ocm.save();
@@ -134,11 +154,14 @@ public class DigesterArrayListTest extends DigesterTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            arrayList = main.getList();
-            assertNotNull("main.getList() is null", arrayList );
-            elements = (Element[]) arrayList.toArray(new Element[arrayList.size()]);
+            arrayList = main.getArrayListElement();
+            list = main.getList();
+            assertNotNull("main.getArrayListElement() is null", arrayList );
+            assertNotNull("main.getList() is null", list );
+            objects = (Collection<Element>) arrayList.getObjects();
+            elements = (Element[]) objects.toArray(new Element[objects.size()]);
             assertTrue("Incorrect element", elements[2].getText().equals("Element 4"));
-
+            assertTrue("Incorrect element", list.get(2).getText().equals("Element 4"));
         }
         catch (Exception e)
         {

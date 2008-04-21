@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.collection;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
@@ -32,14 +33,26 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
 public class Main
 {
 	@Field(path=true) private String path;
+
     @Field private String text;
-    @Collection (elementClassName=Element.class, collectionClassName=HashMapElement.class)
-    private HashMapElement hashMap;
+    @Collection (elementClassName=Element.class)
+    private HashMapElement hashMapElement;
 
     @Collection private Map<String, Element> map;
 
-    @Collection (elementClassName=Element.class, collectionClassName=ArrayListElement.class)
-    private ArrayListElement list;
+
+    // 3 ways to implements a collection :
+
+    // inherit from ManageableCollection
+    @Collection (elementClassName=Element.class)
+    private ArrayListElement arrayListElement;
+
+    // standard collection with Type - no need to specify the elementClassName
+    @Collection private List<Element> list;
+
+    // Custom List
+    @Collection
+    private CustomList customList;
 
 
     public String getPath() {
@@ -51,26 +64,26 @@ public class Main
 	/**
      * @return Returns the elements.
      */
-    public HashMapElement getHashMap()
+    public HashMapElement getHashMapElement()
     {
-        return hashMap;
+        return hashMapElement;
     }
     /**
      * @param elements The elements to set.
      */
-    public void setHashMap(HashMapElement hashMap)
+    public void setHashMapElement(HashMapElement hashMap)
     {
-        this.hashMap = hashMap;
+        this.hashMapElement = hashMap;
     }
 
-    public ArrayListElement getList()
+    public ArrayListElement getArrayListElement()
     {
-		return list;
+		return arrayListElement;
 	}
 
-    public void setList(ArrayListElement list)
+    public void setArrayListElement(ArrayListElement list)
     {
-		this.list = list;
+		this.arrayListElement = list;
 	}
 	/**
      * @return Returns the text.
@@ -95,6 +108,19 @@ public class Main
 	public void setMap(Map<String, Element> map)
 	{
 		this.map = map;
+	}
+
+	public List<Element> getList() {
+		return list;
+	}
+	public void setList(List<Element> list) {
+		this.list = list;
+	}
+	public CustomList getCustomList() {
+		return customList;
+	}
+	public void setCustomList(CustomList customList) {
+		this.customList = customList;
 	}
 
 

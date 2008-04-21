@@ -16,13 +16,15 @@
  */
 package org.apache.jackrabbit.ocm.manager.collectionconverter;
 
+import java.util.Map;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
 import org.apache.jackrabbit.ocm.testmodel.collection.HashMapElement;
@@ -58,7 +60,7 @@ public class DigesterHashMapTest extends DigesterTestBase
         try
         {
         	ObjectContentManager ocm = getObjectContentManager();
-        	
+
             // --------------------------------------------------------------------------------
             // Create and store an object graph in the repository with null hashmap
             // --------------------------------------------------------------------------------
@@ -75,7 +77,7 @@ public class DigesterHashMapTest extends DigesterTestBase
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertNull("HashMap is not null", main.getHashMap());
+            assertNull("HashMap is not null", main.getHashMapElement());
 
             // --------------------------------------------------------------------------------
             // Update an object graph in the repository
@@ -96,7 +98,7 @@ public class DigesterHashMapTest extends DigesterTestBase
             e2.setText("Element 2");
             hashMapElement.addObject(e2);
 
-            main.setHashMap(hashMapElement);
+            main.setHashMapElement(hashMapElement);
 
             ocm.update(main);
             ocm.save();
@@ -105,9 +107,10 @@ public class DigesterHashMapTest extends DigesterTestBase
             // Get the object
             // --------------------------------------------------------------------------------
             main = (Main) ocm.getObject( "/test");
-            assertNotNull("main.getHashMap() is null", main.getHashMap());
+            assertNotNull("main.getHashMap() is null", main.getHashMapElement());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e1")).getText().equals("Element 1"));
+            Map map = (Map) main.getHashMapElement().getObjects();
+            assertTrue("Incorrect para element", ((Element) map.get("e1")).getText().equals("Element 1"));
 
             // --------------------------------------------------------------------------------
             // Update the object
@@ -127,7 +130,7 @@ public class DigesterHashMapTest extends DigesterTestBase
             e3.setId("e4");
             e3.setText("Element 4");
             hashMapElement.addObject(e3);
-            main.setHashMap(hashMapElement);
+            main.setHashMapElement(hashMapElement);
 
             ocm.update(main);
             ocm.save();
@@ -135,9 +138,10 @@ public class DigesterHashMapTest extends DigesterTestBase
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
-            assertNotNull("main.getElements() is null", main.getHashMap());
+            assertNotNull("main.getElements() is null", main.getHashMapElement());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
-            assertTrue("Incorrect para element", ((Element) main.getHashMap().get("e4")).getText().equals("Element 4"));
+            map = (Map) main.getHashMapElement().getObjects();
+            assertTrue("Incorrect para element", ((Element) map.get("e4")).getText().equals("Element 4"));
 
         }
         catch (Exception e)

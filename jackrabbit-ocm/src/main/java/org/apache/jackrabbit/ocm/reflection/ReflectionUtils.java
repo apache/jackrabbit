@@ -17,6 +17,13 @@
 package org.apache.jackrabbit.ocm.reflection;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import net.sf.cglib.proxy.Enhancer;
 
@@ -35,6 +42,18 @@ abstract public class ReflectionUtils {
     // default the class loader to the load of this class
     private static ClassLoader classLoader = ReflectionUtils.class.getClassLoader();
 
+    // key = interface class, value =  default implementation for the interface
+    // TODO : inject this map when the object content manager is initialized
+    private static HashMap<Class, Class> defaultImplementation;
+
+    static {
+    	defaultImplementation = new HashMap<Class, Class>();
+    	defaultImplementation.put(Collection.class, ArrayList.class);
+    	defaultImplementation.put(List.class, ArrayList.class);
+    	defaultImplementation.put(Map.class, HashMap.class);
+    	defaultImplementation.put(SortedMap.class, TreeMap.class);
+
+    }
     /**
      * Sets the class loader to use in the {@link #forName(String)} method to
      * load classes.
@@ -167,8 +186,8 @@ abstract public class ReflectionUtils {
     }
 
     public static boolean isProxy(Class beanClass)
-    {    	        	
-         return Enhancer.isEnhanced(beanClass);	
+    {
+         return Enhancer.isEnhanced(beanClass);
     }
 
     public static Class getBeanClass(Object bean)
@@ -181,5 +200,48 @@ abstract public class ReflectionUtils {
          }
          return beanClass;
     }
+
+
+    /**
+     * Check if an class is implementing an specific interface.
+     *
+     * @param clazz
+     * @param interfaceClass
+     * @return true if the class is implementing the interface otherwise false
+     */
+	public static boolean implementsInterface( Class clazz, Class interfaceClass ) {
+
+		// Try to find the interface class in the interfaces list
+		if (clazz.getInterfaces() != null  )
+		{
+		   for ( Class foundInterface : clazz.getInterfaces() ) {
+			   if ( foundInterface == interfaceClass ) {
+				  return true;
+			   }
+			   return implementsInterface(foundInterface, interfaceClass) ;
+		   }
+		}
+		// Try to find from the ancestors
+		if (clazz.getSuperclass() != null)
+		{
+		    return implementsInterface(clazz.getSuperclass(), interfaceClass);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the default implementation for an interface
+	 * @param clazz The interface clazz
+	 * @return The class matching to the interface default interface
+	 */
+	public static Class getDefaultImplementation(Class clazz)
+	{
+		if (! clazz.isInterface())
+			throw new JcrMappingException(clazz + " is not an interface");
+
+		return defaultImplementation.get(clazz);
+	}
+
 
 }
