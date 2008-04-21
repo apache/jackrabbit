@@ -52,6 +52,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     private static Logger log = LoggerFactory.getLogger(InternalVersionHistory.class);
 
     /**
+     * The last current time that was returned by {@link #getCurrentTime()}.
+     */
+    private static final Calendar CURRENT_TIME = Calendar.getInstance();
+
+    /**
      * the cache of the version labels
      * key = version label (String)
      * value = version name
@@ -162,8 +167,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         if (rootVersion.getSuccessors().length==0) {		
             Iterator iter = nameCache.keySet().iterator();
             while (iter.hasNext()) {
-                Name versionName = (Name)iter.next();
-                InternalVersionImpl v = (InternalVersionImpl)createVersionInstance(versionName);
+                Name versionName = (Name) iter.next();
+                InternalVersionImpl v = createVersionInstance(versionName);
                 v.legacyResolveSuccessors();
             }
         }
@@ -480,7 +485,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx vNode = node.addNode(name, NameConstants.NT_VERSION, versionId, true);
 
         // initialize 'created', 'predecessors' and 'successors'
-        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));
         vNode.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, predecessors);
         vNode.setPropertyValues(NameConstants.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
@@ -533,7 +538,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx vNode = pNode.addNode(NameConstants.JCR_ROOTVERSION, NameConstants.NT_VERSION, versionId, true);
 
         // initialize 'created' and 'predecessors'
-        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(Calendar.getInstance()));
+        vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));
         vNode.setPropertyValues(NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
         vNode.setPropertyValues(NameConstants.JCR_SUCCESSORS, PropertyType.REFERENCE, InternalValue.EMPTY_ARRAY);
 
@@ -557,5 +562,25 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         parent.store();
         return new InternalVersionHistoryImpl(vMgr, pNode);
+    }
+
+    /**
+     * Returns the current time as a calendar instance and makes sure that no
+     * two Calendar instances represent the exact same time. If this method is
+     * called quickly in succession each Calendar instance returned is at least
+     * one millisecond later than the previous one.
+     *
+     * @return the current time.
+     */
+    static Calendar getCurrentTime() {
+        long time = System.currentTimeMillis();
+        synchronized (CURRENT_TIME) {
+            if (time > CURRENT_TIME.getTimeInMillis()) {
+                CURRENT_TIME.setTimeInMillis(time);
+            } else {
+                CURRENT_TIME.add(Calendar.MILLISECOND, 1);
+            }
+            return (Calendar) CURRENT_TIME.clone();
+        }
     }
 }
