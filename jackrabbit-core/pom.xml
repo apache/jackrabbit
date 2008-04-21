@@ -197,6 +197,7 @@
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
                 org.apache.jackrabbit.test.api.version.MergeNonVersionableSubNodeTest
+                org.apache.jackrabbit.test.api.version.RestoreTest
               </value>
             </property>
           </systemProperties>
