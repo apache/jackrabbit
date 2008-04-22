@@ -31,8 +31,22 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public interface ItemDefinitionProvider {
 
+
+    /**
+     * Returns the <code>QNodeDefinition</code> for the root node.
+     *
+     * @return the <code>QNodeDefinition</code> for the root node.
+     * @throws RepositoryException
+     */
     public QNodeDefinition getRootNodeDefinition() throws RepositoryException;
 
+    /**
+     * Returns the <code>QNodeDefinition</code> for the specified node state.
+     *
+     * @param nodeState
+     * @return the <code>QNodeDefinition</code> for the specified node state.
+     * @throws RepositoryException
+     */
     public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException;
 
     /**
@@ -65,6 +79,12 @@ public interface ItemDefinitionProvider {
     public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException;
 
+    /**
+     * Returns the <code>QPropertyDefinition</code> for the specified property state.
+     * @param propertyState
+     * @return the <code>QPropertyDefinition</code> for the specified property state.
+     * @throws RepositoryException
+     */
     public QPropertyDefinition getQPropertyDefinition(PropertyState propertyState) throws RepositoryException;
 
     /**
@@ -104,7 +124,7 @@ public interface ItemDefinitionProvider {
      * @param multiValued
      * @return
      * @throws ConstraintViolationException if no applicable property definition
-     *                                      could be found
+     * could be found.
      */
     public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
                                                       Name name, int type,
