@@ -25,6 +25,8 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.commons.collections.iterators.FilterIterator;
+import org.apache.commons.collections.Predicate;
 
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
@@ -266,14 +268,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
             return virtualProvider.getNodeReferences(id);
         }
-        ChangeLog changeLog = getChangeLog();
-        if (changeLog != null) {
-            NodeReferences refs = changeLog.get(id);
-            if (refs != null) {
-                return refs;
-            }
-        }
-        return super.getNodeReferences(id);
+        return getReferences(id);
     }
 
     /**
@@ -288,13 +283,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
             return true;
         }
-        ChangeLog changeLog = getChangeLog();
-        if (changeLog != null) {
-            if (changeLog.get(id) != null) {
-                return true;
-            }
+        try {
+            return getReferences(id).hasReferences();
+        } catch (ItemStateException e) {
+            return false;
         }
-        return super.hasNodeReferences(id);
     }
 
     /**
@@ -315,6 +308,108 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     }
 
     //-------------------------------------------------------< implementation >
+
+    /**
+     * Returns the node references for the given <code>id</code>.
+     *
+     * @param id the node references id.
+     * @return the node references for the given <code>id</code>.
+     * @throws ItemStateException if an error occurs while reading from the
+     *                            underlying shared item state manager.
+     */
+    private NodeReferences getReferences(NodeReferencesId id)
+            throws ItemStateException {
+        NodeReferences refs;
+        try {
+            refs = super.getNodeReferences(id);
+        } catch (NoSuchItemStateException e) {
+            refs = new NodeReferences(id);
+        }
+        // apply changes from change log
+        ChangeLog changes = getChangeLog();
+        if (changes != null) {
+            UUID uuid = id.getTargetId().getUUID();
+            // check removed reference properties
+            for (Iterator it = filterReferenceProperties(changes.deletedStates());
+                 it.hasNext(); ) {
+                PropertyState prop = (PropertyState) it.next();
+                InternalValue[] values = prop.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    if (values[i].getUUID().equals(uuid)) {
+                        refs.removeReference(prop.getPropertyId());
+                        break;
+                    }
+                }
+            }
+            // check added reference properties
+            for (Iterator it = filterReferenceProperties(changes.addedStates());
+                 it.hasNext(); ) {
+                PropertyState prop = (PropertyState) it.next();
+                InternalValue[] values = prop.getValues();
+                for (int i = 0; i < values.length; i++) {
+                    if (values[i].getUUID().equals(uuid)) {
+                        refs.addReference(prop.getPropertyId());
+                        break;
+                    }
+                }
+            }
+            // check modified properties
+            for (Iterator it = changes.modifiedStates(); it.hasNext(); ) {
+                ItemState state = (ItemState) it.next();
+                if (state.isNode()) {
+                    continue;
+                }
+                try {
+                    PropertyState old = (PropertyState) sharedStateMgr.getItemState(state.getId());
+                    if (old.getType() == PropertyType.REFERENCE) {
+                        // remove if one of the old values references the node
+                        InternalValue[] values = old.getValues();
+                        for (int i = 0; i < values.length; i++) {
+                            if (values[i].getUUID().equals(uuid)) {
+                                refs.removeReference(old.getPropertyId());
+                                break;
+                            }
+                        }
+                    }
+                } catch (NoSuchItemStateException e) {
+                    // property is stale
+                }
+
+                PropertyState prop = (PropertyState) state;
+                if (prop.getType() == PropertyType.REFERENCE) {
+                    // add if modified value references node
+                    InternalValue[] values = prop.getValues();
+                    for (int i = 0; i < values.length; i++) {
+                        if (values[i].getUUID().equals(uuid)) {
+                            refs.addReference(prop.getPropertyId());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return refs;
+    }
+
+    /**
+     * Takes an iterator over {@link ItemState}s and returns a new iterator that
+     * filters out all but REFERENCE {@link PropertyState}s.
+     *
+     * @param itemStates item state source iterator.
+     * @return iterator over reference property states.
+     */
+    private Iterator filterReferenceProperties(Iterator itemStates) {
+        return new FilterIterator(itemStates, new Predicate() {
+            public boolean evaluate(Object object) {
+                ItemState state = (ItemState) object;
+                if (!state.isNode()) {
+                    PropertyState prop = (PropertyState) state;
+                    return prop.getType() == PropertyType.REFERENCE;
+                }
+                return false;
+            }
+        });
+    }
 
     /**
      * Determine all node references whose targets only exist in the view of
