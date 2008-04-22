@@ -200,7 +200,7 @@ public class SessionImporter implements Importer {
                     // (see http://issues.apache.org/jira/browse/JCR-1128)
                     if (! (existing.getId().equals(id)
                             && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
-                            || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
+                            || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING))) {
                         throw new ItemExistsException(existing.safeGetJCRPath());
                     }
                     // fall through
