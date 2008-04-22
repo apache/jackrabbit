@@ -37,7 +37,6 @@ import javax.jcr.version.VersionException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -360,8 +359,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throw new VersionException(msg);
         }
         // check if any references (from outside the version storage) exist on this version
-        List refs = vMgr.getItemReferences(v);
-        if (!refs.isEmpty()) {
+        if (vMgr.hasItemReferences(v)) {
             throw new ReferentialIntegrityException("Unable to remove version. At least once referenced.");
         }
 
