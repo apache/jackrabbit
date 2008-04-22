@@ -589,6 +589,154 @@ public class XATest extends AbstractJCRTest {
         otherSuperuser.logout();
     }
 
+    /**
+     * Checks if getReferences() reflects an added reference property that has
+     * been saved but not yet committed.
+     * <p/>
+     * Spec say:
+     * <p/>
+     * <i>Some level 2 implementations may only return properties that have been
+     * saved (in a transactional setting this includes both those properties
+     * that have been saved but not yet committed, as well as properties that
+     * have been committed). Other level 2 implementations may additionally
+     * return properties that have been added within the current Session but are
+     * not yet saved.</i>
+     * <p/>
+     * Jackrabbit does not support the latter, but at least has to support the
+     * first.
+     */
+    public void testGetReferencesAddedRef() throws Exception {
+        // create one referenceable node
+        Node target = testRootNode.addNode(nodeName1);
+        target.addMixin(mixReferenceable);
+        // second node, which will later reference the target node
+        Node n = testRootNode.addNode(nodeName2);
+        testRootNode.save();
+
+        UserTransactionImpl tx = new UserTransactionImpl(superuser);
+        tx.begin();
+        try {
+            // create reference
+            n.setProperty(propertyName1, target);
+            testRootNode.save();
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", target.getReferences().hasNext());
+        } finally {
+            tx.rollback();
+        }
+    }
+
+    /**
+     * Checks if getReferences() reflects a removed reference property that has
+     * been saved but not yet committed.
+     */
+    public void testGetReferencesRemovedRef() throws Exception {
+        // create one referenceable node
+        Node target = testRootNode.addNode(nodeName1);
+        target.addMixin(mixReferenceable);
+        // second node, which reference the target node
+        Node n = testRootNode.addNode(nodeName2);
+        // create reference
+        n.setProperty(propertyName1, target);
+        testRootNode.save();
+
+        UserTransactionImpl tx = new UserTransactionImpl(superuser);
+        tx.begin();
+        try {
+            n.getProperty(propertyName1).remove();
+            testRootNode.save();
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", !target.getReferences().hasNext());
+        } finally {
+            tx.rollback();
+        }
+    }
+
+    /**
+     * Checks if getReferences() reflects a modified reference property that has
+     * been saved but not yet committed.
+     */
+    public void testGetReferencesModifiedRef() throws Exception {
+        // create two referenceable node
+        Node target1 = testRootNode.addNode(nodeName1);
+        target1.addMixin(mixReferenceable);
+        // second node, which reference the target1 node
+        Node target2 = testRootNode.addNode(nodeName2);
+        target2.addMixin(mixReferenceable);
+        Node n = testRootNode.addNode(nodeName3);
+        // create reference
+        n.setProperty(propertyName1, target1);
+        testRootNode.save();
+
+        UserTransactionImpl tx = new UserTransactionImpl(superuser);
+        tx.begin();
+        try {
+            // change reference
+            n.setProperty(propertyName1, target2);
+            testRootNode.save();
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", !target1.getReferences().hasNext());
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", target2.getReferences().hasNext());
+        } finally {
+            tx.rollback();
+        }
+    }
+
+    /**
+     * Checks if getReferences() reflects a modified reference property that has
+     * been saved but not yet committed. The old value is a reference, while
+     * the new value is not.
+     */
+    public void testGetReferencesModifiedRefOldValueReferenceable() throws Exception {
+        // create one referenceable node
+        Node target = testRootNode.addNode(nodeName1);
+        target.addMixin(mixReferenceable);
+        Node n = testRootNode.addNode(nodeName2);
+        // create reference
+        n.setProperty(propertyName1, target);
+        testRootNode.save();
+
+        UserTransactionImpl tx = new UserTransactionImpl(superuser);
+        tx.begin();
+        try {
+            // change reference to a string value
+            n.setProperty(propertyName1, "foo");
+            testRootNode.save();
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", !target.getReferences().hasNext());
+        } finally {
+            tx.rollback();
+        }
+    }
+
+    /**
+     * Checks if getReferences() reflects a modified reference property that has
+     * been saved but not yet committed. The new value is a reference, while
+     * the old value wasn't.
+     */
+    public void testGetReferencesModifiedRefNewValueReferenceable() throws Exception {
+        // create one referenceable node
+        Node target = testRootNode.addNode(nodeName1);
+        target.addMixin(mixReferenceable);
+        Node n = testRootNode.addNode(nodeName2);
+        // create string property
+        n.setProperty(propertyName1, "foo");
+        testRootNode.save();
+
+        UserTransactionImpl tx = new UserTransactionImpl(superuser);
+        tx.begin();
+        try {
+            // change string into a reference
+            n.setProperty(propertyName1, target);
+            testRootNode.save();
+            assertTrue("Node.getReferences() must reflect references that have " +
+                    "been saved but not yet committed", target.getReferences().hasNext());
+        } finally {
+            tx.rollback();
+        }
+    }
+
     //--------------------------------------------------------------< locking >
 
     /**
