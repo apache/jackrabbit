@@ -145,8 +145,8 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * Returns the mininum blob size.
      * @return the mininum blob size.
      */
-    public int getMinBlobSize() {
-        return minBlobSize;
+    public String getMinBlobSize() {
+        return String.valueOf(minBlobSize);
     }
 
     /**
