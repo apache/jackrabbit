@@ -29,8 +29,6 @@ import org.apache.jackrabbit.util.Timer;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -1043,20 +1041,12 @@ public class MultiIndex {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
             Path childPath = PATH_FACTORY.create(path, child.getName(),
                     child.getIndex(), false);
-            NodeState childState;
+            NodeState childState = null;
             try {
                 childState = (NodeState) stateMgr.getItemState(child.getId());
             } catch (NoSuchItemStateException e) {
-                NamePathResolver resolver = new DefaultNamePathResolver(
-                        handler.getContext().getNamespaceRegistry());
-                log.error("Node {} ({}) has missing child '{}' ({})",
-                        new Object[]{
-                            resolver.getJCRPath(path),
-                            node.getNodeId().getUUID().toString(),
-                            resolver.getJCRName(child.getName()),
-                            child.getId().getUUID().toString()
-                        });
-                throw e;
+                handler.getOnWorkspaceInconsistencyHandler().handleMissingChildNode(
+                        e, handler, path, node, child);
             }
             if (childState != null) {
                 createIndex(childState, childPath, stateMgr);

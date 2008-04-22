@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
@@ -128,6 +129,11 @@ public class SearchManager implements SynchronousEventListener {
     private final ItemStateManager itemMgr;
 
     /**
+     * The underlying persistence manager.
+     */
+    private final PersistenceManager pm;
+
+    /**
      * Storage for search index
      */
     private final FileSystem fs;
@@ -180,22 +186,24 @@ public class SearchManager implements SynchronousEventListener {
     /**
      * Creates a new <code>SearchManager</code>.
      *
-     * @param config the search configuration.
-     * @param nsReg            the namespace registry.
-     * @param ntReg the node type registry.
-     * @param itemMgr the shared item state manager.
+     * @param config         the search configuration.
+     * @param nsReg          the namespace registry.
+     * @param ntReg          the node type registry.
+     * @param itemMgr        the shared item state manager.
+     * @param pm             the underlying persistence manager.
      * @param rootNodeId     the id of the root node.
-     * @param parentMgr        the parent search manager or <code>null</code> if
-     *                         there is no parent search manager.
+     * @param parentMgr      the parent search manager or <code>null</code> if
+     *                       there is no parent search manager.
      * @param excludedNodeId id of the node that should be excluded from
-     *                         indexing. Any descendant of that node will also
-     *                         be excluded from indexing.
+     *                       indexing. Any descendant of that node will also be
+     *                       excluded from indexing.
      * @throws RepositoryException if the search manager cannot be initialized
      */
     public SearchManager(SearchConfig config,
                          final NamespaceRegistryImpl nsReg,
                          NodeTypeRegistry ntReg,
                          ItemStateManager itemMgr,
+                         PersistenceManager pm,
                          NodeId rootNodeId,
                          SearchManager parentMgr,
                          NodeId excludedNodeId) throws RepositoryException {
@@ -208,6 +216,7 @@ public class SearchManager implements SynchronousEventListener {
         this.ntReg = ntReg;
         this.nsReg = nsReg;
         this.itemMgr = itemMgr;
+        this.pm = pm;
         this.rootNodeId = rootNodeId;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
         this.excludedNodeId = excludedNodeId;
@@ -568,7 +577,7 @@ public class SearchManager implements SynchronousEventListener {
         try {
             handler = (QueryHandler) config.newInstance();
             QueryHandlerContext context
-                    = new QueryHandlerContext(fs, itemMgr, rootNodeId,
+                    = new QueryHandlerContext(fs, itemMgr, pm, rootNodeId,
                             ntReg, nsReg, parentHandler, excludedNodeId);
             handler.init(context);
         } catch (Exception e) {
