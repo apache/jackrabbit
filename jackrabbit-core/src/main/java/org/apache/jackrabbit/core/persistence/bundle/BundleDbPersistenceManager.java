@@ -364,7 +364,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Sets the minimum blob size. This size defines the threshold of which
      * size a property is included in the bundle or is stored in the blob store.
      *
-     * @param minBlobSize the minimum blobsize in bytes.
+     * @param minBlobSize the minimum blob size in bytes.
      */
     public void setMinBlobSize(String minBlobSize) {
         this.minBlobSize = Integer.decode(minBlobSize).intValue();
@@ -496,7 +496,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Indicates if the username should be included when retrieving the tables
+     * Indicates if the user name should be included when retrieving the tables
      * during {@link #checkTablesExist()}.
      * <p/>
      * Please note that this currently only needs to be changed for oracle based
@@ -753,17 +753,14 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * Checks a single bundle for inconsistencies, ie. inexistent child nodes
      * and inexistent parents.
      *
-     * @param id
-     *            node id for the bundle to check
-     * @param bundle
-     *            the bundle to check
-     * @param fix
-     *            if true, repair things that can be repaired
-     * @param modifications
-     *            if <code>fix == true</code>, collect the repaired
-     *            {@linkplain NodePropBundle bundles} here
+     * @param id node id for the bundle to check
+     * @param bundle the bundle to check
+     * @param fix if <code>true</code>, repair things that can be repaired
+     * @param modifications if <code>fix == true</code>, collect the repaired
+     * {@linkplain NodePropBundle bundles} here
      */
-    protected void checkBundleConsistency(NodeId id, NodePropBundle bundle, boolean fix, Collection modifications) {
+    protected void checkBundleConsistency(NodeId id, NodePropBundle bundle,
+                                          boolean fix, Collection modifications) {
         //log.info(name + ": checking bundle '" + id + "'");
 
         // look at the node's children
@@ -772,7 +769,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         while (iter.hasNext()) {
             NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
 
-            // skip check for system nodes (root, system root, version storage, nodetypes)
+            // skip check for system nodes (root, system root, version storage, node types)
             if (entry.getId().toString().endsWith("babecafebabe")) {
                 continue;
             }
@@ -835,35 +832,59 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // get all node bundles in the database with a single sql statement,
             // which is (probably) faster than loading each bundle and traversing the tree
             ResultSet rs = null;
-            DataInputStream din = null;
             try {
-                String sql;
-                if (getStorageModel() == SM_BINARY_KEYS) {
-                    sql = "select NODE_ID, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE";
-                } else {
-                    sql = "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE";
-                }
+                String sql = "select count(*) from " + schemaObjectPrefix + "BUNDLE";
                 Statement stmt = connectionManager.executeStmt(sql, new Object[0]);
+                try {
+                    rs = stmt.getResultSet();
+                    if (!rs.next()) {
+                        log.error("Could not retrieve total number of bundles. empty result set.");
+                        return;
+                    }
+                    total = rs.getInt(1);
+                } finally {
+                    closeResultSet(rs);
+                }
+                if (getStorageModel() == SM_BINARY_KEYS) {
+                    sql = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE";
+                } else {
+                    sql = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE";
+                }
+                stmt = connectionManager.executeStmt(sql, new Object[0]);
                 rs = stmt.getResultSet();
 
-                // iterate over all nodebundles in the db
+                // iterate over all node bundles in the db
                 while (rs.next()) {
                     NodeId id;
-                    Blob blob;
                     if (getStorageModel() == SM_BINARY_KEYS) {
                         id = new NodeId(new UUID(rs.getBytes(1)));
-                        blob = rs.getBlob(2);
                     } else {
                         id = new NodeId(new UUID(rs.getLong(1), rs.getLong(2)));
-                        blob = rs.getBlob(3);
                     }
-                    din = new DataInputStream(blob.getBinaryStream());
+
+                    // issuing 2nd statement to circumvent issue JCR-1474
+                    ResultSet bRs = null;
+                    byte[] data = null;
+                    try {
+                        Statement bSmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
+                        bRs = bSmt.getResultSet();
+                        if (!bRs.next()) {
+                            throw new SQLException("bundle cannot be retrieved?");
+                        }
+                        Blob blob = bRs.getBlob(1);
+                        data = getBytes(blob);
+                    } finally {
+                        closeResultSet(bRs);
+                    }
+
+
                     try {
                         // parse and check bundle
-                        // check bundle will log any problems itself
+                        // checkBundle will log any problems itself
+                        DataInputStream din = new DataInputStream(new ByteArrayInputStream(data));
                         if (binding.checkBundle(din)) {
                             // reset stream for readBundle()
-                            din = new DataInputStream(blob.getBinaryStream());
+                            din = new DataInputStream(new ByteArrayInputStream(data));
                             NodePropBundle bundle = binding.readBundle(din, id);
                             checkBundleConsistency(id, bundle, fix, modifications);
                         } else {
@@ -874,13 +895,12 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     }
                     count++;
                     if (count % 1000 == 0) {
-                        log.info(name + ": checked " + count + " bundles...");
+                        log.info(name + ": checked " + count + "/" + total + " bundles...");
                     }
                 }
             } catch (Exception e) {
                 log.error("Error loading bundle", e);
             } finally {
-                closeStream(din);
                 closeResultSet(rs);
                 total = count;
             }
@@ -1122,8 +1142,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 }
                 result.add(current);
             }        
-            ListNodeIdIterator it = new ListNodeIdIterator(result);
-            return it;
+            return new ListNodeIdIterator(result);
         } catch (SQLException e) {
             String msg = "getAllNodeIds failed.";
             log.error(msg, e);
@@ -1142,12 +1161,36 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
     
     /**
+     * Reads the blob's bytes and returns it. this is a helper method to
+     * circumvent issue JCR-1039 and JCR-1474
+     * @param blob blob to read
+     * @return bytes of the blob
+     * @throws SQLException if an SQL error occurs
+     * @throws IOException if an I/O error occurs
+     */
+    private byte[] getBytes(Blob blob) throws SQLException, IOException {
+        InputStream in = null;
+        try {
+            long length = blob.length();
+            byte[] bytes = new byte[(int) length];
+            in = blob.getBinaryStream();
+            int read, pos = 0;
+            while ((read = in.read(bytes, pos, bytes.length - pos)) > 0) {
+                pos += read;
+            }
+            return bytes;
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
+    }
+
+    /**
      * Loads a bundle from the underlying system and optionally performs
      * a check on the bundle first.
      *
      * @param id the node id of the bundle
      * @param checkBeforeLoading check the bundle before loading it and log
-     *                           detailed informations about it (slower)
+     *                           detailed information about it (slower)
      * @return the loaded bundle or <code>null</code> if the bundle does not
      *         exist.
      * @throws ItemStateException if an error while loading occurs.
@@ -1156,7 +1199,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throws ItemStateException {
         ResultSet rs = null;
         InputStream in = null;
-        byte[] bytes = null;
         try {
             Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
@@ -1164,14 +1206,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 return null;
             }
             Blob b = rs.getBlob(1);
-            // JCR-1039: pre-fetch/buffer blob data
-            long length = b.length();
-            bytes = new byte[(int) length];
-            in = b.getBinaryStream();
-            int read, pos = 0;
-            while ((read = in.read(bytes, pos, bytes.length - pos)) > 0) {
-                pos += read;
-            }
+            byte[] bytes = getBytes(b);
             DataInputStream din = new DataInputStream(new ByteArrayInputStream(bytes));
             
             if (checkBeforeLoading) {
@@ -1185,7 +1220,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             
             NodePropBundle bundle = binding.readBundle(din, id);
-            bundle.setSize(length);
+            bundle.setSize(bytes.length);
             return bundle;
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
@@ -1435,16 +1470,22 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * logs an sql exception
      * @param message the message
-     * @param se the exception
+     * @param e the exception
      */
-    protected void logException(String message, SQLException se) {
+    protected void logException(String message, SQLException e) {
         if (message != null) {
             log.error(message);
         }
+<<<<<<< .working
         log.error("       Reason: " + se.getMessage());
         log.error("   State/Code: " + se.getSQLState() + "/" +
                 se.getErrorCode());
         log.debug("   dump:", se);
+=======
+        log.error("       Reason: " + e.getMessage());
+        log.error("   State/Code: " + e.getSQLState() + "/" + e.getErrorCode());
+        log.debug("   dump:", e);
+>>>>>>> .merge-right.r649733
     }
 
     /**
@@ -1620,6 +1661,13 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
     }
 
+<<<<<<< .working
+=======
+    /**
+     * Iterator over an in-memory list of node ids.
+     * This helper class is used by {@link BundleDbPersistenceManager#getAllNodeIds}.
+     */
+>>>>>>> .merge-right.r649733
     private class ListNodeIdIterator implements NodeIdIterator {
         
         private final ArrayList list;
