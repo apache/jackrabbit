@@ -1180,7 +1180,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             return bytes;
         } finally {
-            IOUtils.closeQuietly(in);
+            closeStream(in);
         }
     }
 
@@ -1476,16 +1476,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         if (message != null) {
             log.error(message);
         }
-<<<<<<< .working
-        log.error("       Reason: " + se.getMessage());
-        log.error("   State/Code: " + se.getSQLState() + "/" +
-                se.getErrorCode());
-        log.debug("   dump:", se);
-=======
         log.error("       Reason: " + e.getMessage());
         log.error("   State/Code: " + e.getSQLState() + "/" + e.getErrorCode());
         log.debug("   dump:", e);
->>>>>>> .merge-right.r649733
     }
 
     /**
@@ -1661,13 +1654,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
     }
 
-<<<<<<< .working
-=======
     /**
      * Iterator over an in-memory list of node ids.
      * This helper class is used by {@link BundleDbPersistenceManager#getAllNodeIds}.
      */
->>>>>>> .merge-right.r649733
     private class ListNodeIdIterator implements NodeIdIterator {
         
         private final ArrayList list;
