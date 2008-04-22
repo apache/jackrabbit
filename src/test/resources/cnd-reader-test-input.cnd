@@ -15,7 +15,24 @@
  * limitations under the License.
  */
 <ex = "http://example.org/jackrabbit/example">
+<nt = "http://www.jcp.org/jcr/nt/1.0">
+
 [ex:NodeType] > ex:ParentNodeType1, ex:ParentNodeType2
   orderable mixin
   - ex:property (long) = '1', '2' primary mandatory autocreated protected multiple version < '[1,10]'
   + ex:node (ex:RequiredNodeType1, ex:RequiredNodeType2) = ex:RequiredNodeType1 mandatory autocreated protected multiple version
+
+[ex:AnotherNodeType] > ex:NodeType
+  - * (string) = 'a residual property' multiple
+  + * (ex:RequiredNodeType1) multiple
+  
+[ex:Reference]
+  - ex:ref (reference) mandatory protected < 'ex:ref'
+  
+[ex:Name]
+  - ex:name (name) < 'ex:name'
+  
+[ex:Path]
+  - ex:path (path) < 'ex:a/ex:b'  
+
+[ex:Empty]  

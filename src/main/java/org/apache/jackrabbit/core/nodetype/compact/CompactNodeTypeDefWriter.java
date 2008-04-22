@@ -234,7 +234,14 @@ public class CompactNodeTypeDefWriter {
      */
     private void writePropDef(NodeTypeDef ntd, PropDef pd) throws IOException {
         out.write("\n" + INDENT + "- ");
-        writeItemDefName(pd.getName());
+
+
+        Name name = pd.getName();
+        if (name.equals(ItemDef.ANY_NAME)) {
+            out.write('*');
+        } else {
+            writeItemDefName(name);
+        }
         out.write(" (");
         out.write(PropertyType.nameFromValue(pd.getRequiredType()).toLowerCase());
         out.write(")");
