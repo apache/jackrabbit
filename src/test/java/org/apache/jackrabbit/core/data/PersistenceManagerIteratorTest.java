@@ -83,15 +83,22 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
             log("All nodes in one step");
             NodeIdIterator it = apm.getAllNodeIds(null, 0);
             NodeId after = null;
+            NodeId first = null;
             while (it.hasNext()) {
                 NodeId id = it.nextNodeId();
                 log("  " + id.toString());
+                if (first == null) {
+                    // initialize first node id
+                    first = id;
+                }
                 if (after != null) {
                     assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                 }
                 after = id;
             }
 
+            // start with first
+            after = first;
             log("All nodes using batches");
             while (true) {
                 log(" bigger than: " + after);

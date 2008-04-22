@@ -571,7 +571,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             if (u == null) {
                 continue;
             }
-            if (bigger != null && bigger.toString().compareTo(u.toString()) < 0) {
+            if (bigger != null && bigger.toString().compareTo(u.toString()) >= 0) {
                 continue;
             }
             NodeId n = new NodeId(u);
