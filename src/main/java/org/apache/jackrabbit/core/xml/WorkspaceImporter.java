@@ -432,7 +432,7 @@ public class WorkspaceImporter implements Importer {
                         // (see http://issues.apache.org/jira/browse/JCR-1128)
                         if (! (idExisting.equals(id)
                                 && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
-                                || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING))) {
+                                || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING))) {
                             throw new ItemExistsException(itemOps.safeGetJCRPath(existing.getNodeId()));
                         }
                         // fall through
