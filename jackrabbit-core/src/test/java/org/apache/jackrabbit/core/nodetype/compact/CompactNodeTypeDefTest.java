@@ -116,7 +116,6 @@ public class CompactNodeTypeDefTest extends TestCase {
             new CompactNodeTypeDefReader(reader, TEST_FILE);
         List ntdList = cndReader.getNodeTypeDefs();
         NamespaceMapping nsm = cndReader.getNamespaceMapping();
-        NamePathResolver resolver = new DefaultNamePathResolver(nsm);
         NodeTypeDef ntd = (NodeTypeDef)ntdList.get(0);
 
         // Test CND Reader by comparing imported NTD with model NTD.
@@ -124,19 +123,42 @@ public class CompactNodeTypeDefTest extends TestCase {
         if (diff.isModified()){
             fail("Imported node type definition is not identical to model definition");
         }
+    }
+
+    public void testCompactNodeTypeDefs() throws Exception {
+
+        // Read in node type def from test file
+        Reader reader = new InputStreamReader(
+            getClass().getClassLoader().getResourceAsStream(TEST_FILE));
+        CompactNodeTypeDefReader cndReader =
+            new CompactNodeTypeDefReader(reader, TEST_FILE);
+        List ntdList1 = cndReader.getNodeTypeDefs();
+        NamespaceMapping nsm = cndReader.getNamespaceMapping();
+        NamePathResolver resolver = new DefaultNamePathResolver(nsm);
 
         // Put imported node type def back into CND form with CND writer
         StringWriter sw = new StringWriter();
-        CompactNodeTypeDefWriter.write(ntdList, nsm, resolver, sw);
+        CompactNodeTypeDefWriter.write(ntdList1, nsm, resolver, sw);
 
         // Rerun the reader on the product of the writer
         cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE);
-        ntdList = cndReader.getNodeTypeDefs();
-        ntd = (NodeTypeDef)ntdList.get(0);
+        List ntdList2 = cndReader.getNodeTypeDefs();
 
-        diff = NodeTypeDefDiff.create(modelNodeTypeDef, ntd);
-        if (diff.isModified()){
+        if (ntdList1.size() != ntdList2.size())
             fail("Exported node type definition was not successfully read back in");
-        }
+        else
+            for(int k = 0; k < ntdList1.size(); k++) {
+                NodeTypeDef ntd1 = (NodeTypeDef) ntdList1.get(k);
+                NodeTypeDef ntd2 = (NodeTypeDef) ntdList2.get(k);
+
+                NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntd1, ntd2);
+                if (diff.isModified() && !diff.isTrivial()){
+                    fail("Exported node type definition was not successfully read back in. "
+                            + ntd2.getName() + "differs from original");
+                }
+            }
+
+
     }
+
 }
