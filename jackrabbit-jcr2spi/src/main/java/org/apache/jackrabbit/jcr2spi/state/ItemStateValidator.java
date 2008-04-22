@@ -16,32 +16,31 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 
 /**
  * Utility class for validating an item state against constraints
@@ -139,7 +138,8 @@ public class ItemStateValidator {
         }
         // mandatory properties
         // effective node type (primary type incl. mixins)
-        EffectiveNodeType entPrimaryAndMixins = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(nodeState);
+        Name[] ntNames = nodeState.getAllNodeTypeNames();
+        EffectiveNodeType entPrimaryAndMixins = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
         QPropertyDefinition[] pda = entPrimaryAndMixins.getMandatoryQPropertyDefinitions();
         for (int i = 0; i < pda.length; i++) {
             QPropertyDefinition pd = pda[i];
@@ -381,7 +381,8 @@ public class ItemStateValidator {
         // node type constraints
         if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
             // make sure there's an applicable definition for new child node
-            EffectiveNodeType entParent = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(parentState);
+            Name[] ntNames = parentState.getAllNodeTypeNames();
+            EffectiveNodeType entParent = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
             entParent.checkAddNodeConstraints(nodeName, nodeTypeName, mgrProvider.getItemDefinitionProvider());
         }
         // collisions

@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -33,6 +32,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 import java.util.Stack;
 import java.util.Map;
@@ -125,7 +125,7 @@ class DefinitionValidator {
      * @throws InvalidNodeTypeDefException
      * @throws RepositoryException
      */
-    public EffectiveNodeTypeImpl validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs)
+    public EffectiveNodeType validateNodeTypeDef(QNodeTypeDefinition ntDef, Map validatedDefs)
             throws InvalidNodeTypeDefException, RepositoryException {
         /**
          * the effective (i.e. merged and resolved) node type resulting from
@@ -135,7 +135,7 @@ class DefinitionValidator {
          * will be created already at an earlier stage during the validation
          * of child node definitions
          */
-        EffectiveNodeTypeImpl ent = null;
+        EffectiveNodeType ent = null;
 
         Name name = ntDef.getName();
         if (name == null) {
@@ -199,14 +199,14 @@ class DefinitionValidator {
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
-            } catch (NodeTypeConflictException ntce) {
+            } catch (ConstraintViolationException e) {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg, ntce);
-            } catch (NoSuchNodeTypeException nsnte) {
+                throw new InvalidNodeTypeDefException(msg, e);
+            } catch (NoSuchNodeTypeException e) {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
+                throw new InvalidNodeTypeDefException(msg, e);
             }
         } else {
             // no supertypes specified: has to be either a mixin type or nt:base
@@ -343,7 +343,7 @@ class DefinitionValidator {
                          * type just being registered; we have to instantiate it
                          * 'manually'
                          */
-                        ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
+                        ent = entProvider.getEffectiveNodeType(ntDef, validatedDefs);
                         defaultENT = ent;
                     }
                     if (cnd.isAutoCreated()) {
@@ -356,16 +356,16 @@ class DefinitionValidator {
                         definingNTs.push(name);
                         checkForCircularNodeAutoCreation(defaultENT, definingNTs, validatedDefs);
                     }
-                } catch (NodeTypeConflictException ntce) {
+                } catch (ConstraintViolationException e) {
                     String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefException(msg, ntce);
-                } catch (NoSuchNodeTypeException nsnte) {
+                    throw new InvalidNodeTypeDefException(msg, e);
+                } catch (NoSuchNodeTypeException e) {
                     String msg = "[" + name + "#" + cnd.getName()
                             + "] failed to validate default primary type";
                     log.debug(msg);
-                    throw new InvalidNodeTypeDefException(msg, nsnte);
+                    throw new InvalidNodeTypeDefException(msg, e);
                 }
             }
 
@@ -418,19 +418,19 @@ class DefinitionValidator {
                              * instantiate it 'manually'
                              */
                             if (ent == null) {
-                                ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
+                                ent = entProvider.getEffectiveNodeType(ntDef, validatedDefs);
                             }
                         }
-                    } catch (NodeTypeConflictException ntce) {
+                    } catch (ConstraintViolationException e) {
                         String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefException(msg, ntce);
-                    } catch (NoSuchNodeTypeException nsnte) {
+                        throw new InvalidNodeTypeDefException(msg, e);
+                    } catch (NoSuchNodeTypeException e) {
                         String msg = "[" + name + "#" + cnd.getName()
                                 + "] failed to validate required primary type constraint";
                         log.debug(msg);
-                        throw new InvalidNodeTypeDefException(msg, nsnte);
+                        throw new InvalidNodeTypeDefException(msg, e);
                     }
                 }
             }
@@ -443,15 +443,15 @@ class DefinitionValidator {
          */
         if (ent == null) {
             try {
-                ent = EffectiveNodeTypeImpl.create(entProvider, ntDef, validatedDefs);
-            } catch (NodeTypeConflictException ntce) {
+                ent = entProvider.getEffectiveNodeType(ntDef, validatedDefs);
+            } catch (ConstraintViolationException e) {
                 String msg = "[" + name + "] failed to resolve node type definition";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg, ntce);
-            } catch (NoSuchNodeTypeException nsnte) {
+                throw new InvalidNodeTypeDefException(msg, e);
+            } catch (NoSuchNodeTypeException e) {
                 String msg = "[" + name + "] failed to resolve node type definition";
                 log.debug(msg);
-                throw new InvalidNodeTypeDefException(msg, nsnte);
+                throw new InvalidNodeTypeDefException(msg, e);
             }
         }
         return ent;
@@ -548,7 +548,7 @@ class DefinitionValidator {
                 String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, e);
-            } catch (NodeTypeConflictException e) {
+            } catch (ConstraintViolationException e) {
                 String msg = definingNT + " defines invalid default node type for child node " + nodeDefs[i].getName();
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg, e);

@@ -20,15 +20,12 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
@@ -36,6 +33,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * An <code>EffectiveNodeType</code> represents one or more
@@ -48,174 +46,40 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeTypeImpl.class);
 
     // list of explicitly aggregated {i.e. merged) node types
-    private final TreeSet mergedNodeTypes;
+    private final TreeSet mergedNodeTypes = new TreeSet();
     // list of implicitly aggregated {through inheritance) node types
-    private final TreeSet inheritedNodeTypes;
+    private final TreeSet inheritedNodeTypes = new TreeSet();
     // list of all either explicitly (through aggregation) or implicitly
     // (through inheritance) included node types.
-    private final TreeSet allNodeTypes;
+    private final TreeSet allNodeTypes = new TreeSet();
     // map of named item definitions (maps name to list of definitions)
-    private final HashMap namedItemDefs;
+    private final Map namedItemDefs = new HashMap();
     // list of unnamed item definitions (i.e. residual definitions)
-    private final ArrayList unnamedItemDefs;
+    private final List unnamedItemDefs = new ArrayList();
     // (optional) set of additional mixins supported on node type
     private Set supportedMixins;
 
     /**
-     * private constructor.
+     * constructor.
      */
-    private EffectiveNodeTypeImpl() {
-        mergedNodeTypes = new TreeSet();
-        inheritedNodeTypes = new TreeSet();
-        allNodeTypes = new TreeSet();
-        namedItemDefs = new HashMap();
-        unnamedItemDefs = new ArrayList();
-        supportedMixins = null;
-    }
-
-    /**
-     * Factory method: creates an effective node type
-     * representation of a node type definition. Whereas all referenced
-     * node types must exist (i.e. must be registered), the definition itself
-     * is not required to be registered.
-     *
-     * @param entProvider
-     * @param ntd
-     * @param ntdMap
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
-     */
-    static EffectiveNodeTypeImpl create(EffectiveNodeTypeProvider entProvider, QNodeTypeDefinition ntd, Map ntdMap)
-            throws NodeTypeConflictException, NoSuchNodeTypeException {
-        // create empty effective node type instance
-        EffectiveNodeTypeImpl ent = new EffectiveNodeTypeImpl();
-        Name ntName = ntd.getName();
-
-        // prepare new instance
-        ent.mergedNodeTypes.add(ntName);
-        ent.allNodeTypes.add(ntName);
-
-        Name[] smixins = ntd.getSupportedMixinTypes();
-    
-        if (smixins != null) {
-            ent.supportedMixins = new HashSet();
-            for (int i = 0; i < smixins.length; i++) {
-                ent.supportedMixins.add(smixins[i]);
-            }
+    EffectiveNodeTypeImpl(TreeSet mergedNodeTypes, TreeSet inheritedNodeTypes,
+                          TreeSet allNodeTypes, Map namedItemDefs,
+                          List unnamedItemDefs, Set supportedMixins) {
+        this.mergedNodeTypes.addAll(mergedNodeTypes);
+        this.inheritedNodeTypes.addAll(inheritedNodeTypes);
+        this.allNodeTypes.addAll(allNodeTypes);
+        Iterator iter = namedItemDefs.keySet().iterator();
+        while (iter.hasNext()) {
+            Object key = iter.next();
+            List list = (List) namedItemDefs.get(key);
+            this.namedItemDefs.put(key, new ArrayList(list));
         }
-        
-        // map of all item definitions (maps id to definition)
-        // used to effectively detect ambiguous child definitions where
-        // ambiguity is defined in terms of definition identity
-        Set itemDefIds = new HashSet();
+        this.unnamedItemDefs.addAll(unnamedItemDefs);
 
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        for (int i = 0; i < cnda.length; i++) {
-            // check if child node definition would be ambiguous within
-            // this node type definition
-            if (itemDefIds.contains(cnda[i])) {
-                // conflict
-                String msg;
-                if (cnda[i].definesResidual()) {
-                    msg = ntName + " contains ambiguous residual child node definitions";
-                } else {
-                    msg = ntName + " contains ambiguous definitions for child node named "
-                            + cnda[i].getName();
-                }
-                log.debug(msg);
-                throw new NodeTypeConflictException(msg);
-            } else {
-                itemDefIds.add(cnda[i]);
-            }
-            if (cnda[i].definesResidual()) {
-                // residual node definition
-                ent.unnamedItemDefs.add(cnda[i]);
-            } else {
-                // named node definition
-                Name name = cnda[i].getName();
-                List defs = (List) ent.namedItemDefs.get(name);
-                if (defs == null) {
-                    defs = new ArrayList();
-                    ent.namedItemDefs.put(name, defs);
-                }
-                if (defs.size() > 0) {
-                    /**
-                     * there already exists at least one definition with that
-                     * name; make sure none of them is auto-create
-                     */
-                    for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = (QItemDefinition) defs.get(j);
-                        if (cnda[i].isAutoCreated() || qDef.isAutoCreated()) {
-                            // conflict
-                            String msg = "There are more than one 'auto-create' item definitions for '"
-                                    + name + "' in node type '" + ntName + "'";
-                            log.debug(msg);
-                            throw new NodeTypeConflictException(msg);
-                        }
-                    }
-                }
-                defs.add(cnda[i]);
-            }
+        if (supportedMixins != null) {
+            this.supportedMixins = new HashSet();
+            this.supportedMixins.addAll(supportedMixins);
         }
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            // check if property definition would be ambiguous within
-            // this node type definition
-            if (itemDefIds.contains(pda[i])) {
-                // conflict
-                String msg;
-                if (pda[i].definesResidual()) {
-                    msg = ntName + " contains ambiguous residual property definitions";
-                } else {
-                    msg = ntName + " contains ambiguous definitions for property named "
-                            + pda[i].getName();
-                }
-                log.debug(msg);
-                throw new NodeTypeConflictException(msg);
-            } else {
-                itemDefIds.add(pda[i]);
-            }
-            if (pda[i].definesResidual()) {
-                // residual property definition
-                ent.unnamedItemDefs.add(pda[i]);
-            } else {
-                // named property definition
-                Name name = pda[i].getName();
-                List defs = (List) ent.namedItemDefs.get(name);
-                if (defs == null) {
-                    defs = new ArrayList();
-                    ent.namedItemDefs.put(name, defs);
-                }
-                if (defs.size() > 0) {
-                    /**
-                     * there already exists at least one definition with that
-                     * name; make sure none of them is auto-create
-                     */
-                    for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = (QItemDefinition) defs.get(j);
-                        if (pda[i].isAutoCreated() || qDef.isAutoCreated()) {
-                            // conflict
-                            String msg = "There are more than one 'auto-create' item definitions for '"
-                                    + name + "' in node type '" + ntName + "'";
-                            log.debug(msg);
-                            throw new NodeTypeConflictException(msg);
-                        }
-                    }
-                }
-                defs.add(pda[i]);
-            }
-        }
-
-        // resolve supertypes recursively
-        Name[] supertypes = ntd.getSupertypes();
-        if (supertypes.length > 0) {
-            EffectiveNodeTypeImpl effSuperType = (EffectiveNodeTypeImpl)entProvider.getEffectiveNodeType(supertypes, ntdMap);
-            ent.internalMerge(effSuperType, true);
-        }
-
-        // we're done
-        return ent;
     }
 
     //--------------------------------------------------< EffectiveNodeType >---
@@ -615,10 +479,10 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      *
      * @param other
      * @return
-     * @throws NodeTypeConflictException
+     * @throws ConstraintViolationException
      */
     EffectiveNodeTypeImpl merge(EffectiveNodeTypeImpl other)
-            throws NodeTypeConflictException {
+            throws ConstraintViolationException {
         // create a clone of this instance and perform the merge on
         // the 'clone' to avoid a potentially inconsistant state
         // of this instance if an exception is thrown during
@@ -639,10 +503,10 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @param supertype true if the merge is a result of inheritance, i.e. <code>other</code>
      *                  represents one or more supertypes of this instance; otherwise false, i.e.
      *                  the merge is the result of an explicit aggregation
-     * @throws NodeTypeConflictException
+     * @throws ConstraintViolationException
      */
-    private synchronized void internalMerge(EffectiveNodeTypeImpl other, boolean supertype)
-            throws NodeTypeConflictException {
+    synchronized void internalMerge(EffectiveNodeTypeImpl other, boolean supertype)
+            throws ConstraintViolationException {
         Name[] nta = other.getAllNodeTypes();
         int includedCount = 0;
         for (int i = 0; i < nta.length; i++) {
@@ -682,7 +546,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                     + qItemDef.getDeclaringNodeType()
                                     + "': name collision with auto-create definition";
                             log.debug(msg);
-                            throw new NodeTypeConflictException(msg);
+                            throw new ConstraintViolationException(msg);
                         }
                         // check ambiguous definitions
                         if (qDef.definesNode() == qItemDef.definesNode()) {
@@ -703,7 +567,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                             + "they must differ in required type "
                                             + "or cardinality.";
                                     log.debug(msg);
-                                    throw new NodeTypeConflictException(msg);
+                                    throw new ConstraintViolationException(msg);
                                 }
                             } else {
                                 // child node definition
@@ -715,7 +579,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                         + qItemDef.getDeclaringNodeType()
                                         + "': ambiguous child node definition. name must differ.";
                                 log.debug(msg);
-                                throw new NodeTypeConflictException(msg);
+                                throw new ConstraintViolationException(msg);
                             }
                         }
                     }
@@ -757,7 +621,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                     + existing.getDeclaringNodeType()
                                     + "': ambiguous residual property definition";
                             log.debug(msg);
-                            throw new NodeTypeConflictException(msg);
+                            throw new ConstraintViolationException(msg);
                         }
                     } else {
                         // child node definition
@@ -775,7 +639,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                                     + existing.getDeclaringNodeType()
                                     + "': ambiguous residual child node definition";
                             log.debug(msg);
-                            throw new NodeTypeConflictException(msg);
+                            throw new ConstraintViolationException(msg);
                         }
                     }
                 }
@@ -816,24 +680,9 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     protected Object clone() {
-        EffectiveNodeTypeImpl clone = new EffectiveNodeTypeImpl();
-
-        clone.mergedNodeTypes.addAll(mergedNodeTypes);
-        clone.inheritedNodeTypes.addAll(inheritedNodeTypes);
-        clone.allNodeTypes.addAll(allNodeTypes);
-        Iterator iter = namedItemDefs.keySet().iterator();
-        while (iter.hasNext()) {
-            Object key = iter.next();
-            List list = (List) namedItemDefs.get(key);
-            clone.namedItemDefs.put(key, new ArrayList(list));
-        }
-        clone.unnamedItemDefs.addAll(unnamedItemDefs);
-        
-        if (supportedMixins != null) {
-            clone.supportedMixins = new HashSet();
-            clone.supportedMixins.addAll(supportedMixins);
-        }
-
+        EffectiveNodeTypeImpl clone = new EffectiveNodeTypeImpl(mergedNodeTypes,
+                inheritedNodeTypes, allNodeTypes, namedItemDefs, unnamedItemDefs,
+                supportedMixins);
         return clone;
     }
 }

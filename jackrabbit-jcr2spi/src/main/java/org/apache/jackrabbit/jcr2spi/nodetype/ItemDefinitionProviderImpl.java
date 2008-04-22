@@ -74,7 +74,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
         QNodeDefinition definition;
         try {
             /*
-             Don't use 'getEffectiveNodeType(NodeState) here:
+             Don't use 'getEffectiveNodeType(NodeState.getAllNodeTypeNames()) here:
              for NEW-states the definition is always set upon creation.
              for all other states the definion must be retrieved only taking
              the effective nodetypes present on the parent into account
@@ -97,7 +97,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      */
     public QNodeDefinition getQNodeDefinition(NodeState parentState, Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException {
-       EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
+       EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
        EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
        return getQNodeDefinition(ent, entTarget, name);
     }
@@ -151,7 +151,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
                                                       Name name, int type,
                                                       boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
+        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
         return getQPropertyDefinition(ent, name, type, multiValued, false);
     }
 
@@ -161,7 +161,7 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
                                                       Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState);
+        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
         return getQPropertyDefinition(ent, name, type);
     }
 

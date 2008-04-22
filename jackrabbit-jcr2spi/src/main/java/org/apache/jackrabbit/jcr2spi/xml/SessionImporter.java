@@ -38,7 +38,6 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
@@ -185,7 +184,8 @@ public class SessionImporter implements Importer, SessionListener {
                if (!def.allowsSameNameSiblings()) {
                    // existing doesn't allow same-name siblings, check for conflicts
                    EffectiveNodeTypeProvider provider = session.getEffectiveNodeTypeProvider();
-                   EffectiveNodeType entExisting = provider.getEffectiveNodeType(existing);
+                   Name[] ntNames = existing.getAllNodeTypeNames();
+                   EffectiveNodeType entExisting = provider.getEffectiveNodeType(ntNames);
                    if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // skip protected node
                        parents.push(null); // push null onto stack for skipped node
@@ -649,13 +649,9 @@ public class SessionImporter implements Importer, SessionListener {
             return;
         }
         Name[] ntNames = (Name[]) l.toArray(new Name[l.size()]);
-        try {
-            EffectiveNodeType ent = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
-            if (!ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");
-            }
-        } catch (NodeTypeConflictException e) {
-            throw new RepositoryException("Internal error", e);
+        EffectiveNodeType ent = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
+        if (!ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            throw new ConstraintViolationException("XML defines jcr:uuid without defining import node to be referenceable.");
         }
     }
 }

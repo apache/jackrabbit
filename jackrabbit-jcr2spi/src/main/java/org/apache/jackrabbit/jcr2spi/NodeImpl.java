@@ -29,7 +29,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -624,12 +623,8 @@ public class NodeImpl extends ItemImpl implements Node {
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
         Name mixinQName = getQName(mixinName);
-        try {
-            if (!canAddMixin(mixinQName)) {
-                throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
-            }
-        } catch (NodeTypeConflictException e) {
-            throw new ConstraintViolationException(e.getMessage());
+        if (!canAddMixin(mixinQName)) {
+            throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
         }
 
         // get mixin types present in the jcr:mixintypes property without
@@ -663,14 +658,9 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(ntName);
         if (mixin.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             // build effective node type of remaining mixin's & primary type
-            EffectiveNodeType entRemaining;
             Name[] allRemaining = (Name[]) mixinValue.toArray(new Name[mixinValue.size() + 1]);
             allRemaining[mixinValue.size()] = primaryTypeName;
-            try {
-                entRemaining = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
-            } catch (NodeTypeConflictException e) {
-                throw new ConstraintViolationException(e);
-            }
+            EffectiveNodeType entRemaining = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
 
             if (!entRemaining.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 PropertyIterator iter = getReferences();
@@ -736,9 +726,6 @@ public class NodeImpl extends ItemImpl implements Node {
             session.getValidator().checkIsWritable(getNodeState(), ItemStateValidator.CHECK_ALL);
             // then make sure the new mixin would not conflict.
             return canAddMixin(getQName(mixinName));
-        } catch (NodeTypeConflictException e) {
-            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
-            return false;
         } catch (LockException e) {
             log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
             return false;
@@ -1161,12 +1148,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check effective node type
-        try {
-            EffectiveNodeType effnt = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(getNodeState().getNodeTypeNames());
-            return effnt.includesNodeType(qName);
-        } catch (NodeTypeConflictException e) {
-            throw new RepositoryException(e);
-        }
+        EffectiveNodeType effnt = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(getNodeState().getNodeTypeNames());
+        return effnt.includesNodeType(qName);
     }
 
     //-----------------------------------------------------------< ItemImpl >---
@@ -1427,7 +1410,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     private boolean canAddMixin(Name mixinName) throws NoSuchNodeTypeException,
-        NodeTypeConflictException {
+        ConstraintViolationException {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
 
         // first check characteristics of each mixin
@@ -1446,9 +1429,9 @@ public class NodeImpl extends ItemImpl implements Node {
         Name[] existingNts = getNodeState().getNodeTypeNames();
         // build effective node type representing primary type including existing mixin's
         EffectiveNodeType entExisting = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(existingNts);
-        
+
         // check if the base type supports adding this mixin
-        if (! entExisting.supportsMixin(mixinName)) {
+        if (!entExisting.supportsMixin(mixinName)) {
             log.debug(mixin.getName() + ": not supported on node type " + primaryTypeName);
             return false;
         }
