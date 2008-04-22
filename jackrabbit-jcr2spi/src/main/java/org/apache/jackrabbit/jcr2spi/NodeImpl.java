@@ -1262,7 +1262,7 @@ public class NodeImpl extends ItemImpl implements Node {
         throws ItemExistsException, NoSuchNodeTypeException, VersionException,
         ConstraintViolationException, LockException, RepositoryException {
 
-        QNodeDefinition definition = session.getItemDefinitionProvider().getQNodeDefinition(getNodeState(), nodeName, nodeTypeName);
+        QNodeDefinition definition = session.getItemDefinitionProvider().getQNodeDefinition(getNodeState().getAllNodeTypeNames(), nodeName, nodeTypeName);
         if (nodeTypeName == null) {
             // use default node type
             nodeTypeName = definition.getDefaultPrimaryType();
@@ -1555,7 +1555,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } catch (PathNotFoundException e) {
             // item does not exist -> ignore and return null
-        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
+        } catch (NameException e) {
             String msg = "Invalid relative path: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1598,7 +1598,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     // ignore -> return null;
                 }
             }
-        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
+        } catch (NameException e) {
             String msg = "failed to resolve property path " + relPath + " relative to " + safeGetJCRPath();
             log.debug(msg);
             throw new RepositoryException(msg, e);
@@ -1622,6 +1622,6 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                 int type,
                                                                 boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
-        return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState(), propertyName, type, multiValued);
+        return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState().getAllNodeTypeNames(), propertyName, type, multiValued);
     }
 }

@@ -23,10 +23,9 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
@@ -67,27 +66,19 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException {
-        if (nodeState.getHierarchyEntry().getParent() == null) {
+    public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames,
+                                              Name nodeName, Name ntName,
+                                              NodeId nodeId) throws RepositoryException {
+        if (parentNodeTypeNames == null) {
             return getRootNodeDefinition();
         }
         QNodeDefinition definition;
         try {
-            /*
-             Don't use 'getEffectiveNodeType(NodeState.getAllNodeTypeNames()) here:
-             for NEW-states the definition is always set upon creation.
-             for all other states the definion must be retrieved only taking
-             the effective nodetypes present on the parent into account
-             any kind of transiently added mixins must not have an effect
-             on the definition retrieved for an state that has been persisted
-             before. The effective NT must be evaluated as if it had been
-             evaluated upon creating the workspace state.
-             */
-            EffectiveNodeType ent = entProvider.getEffectiveNodeType(nodeState.getParent().getNodeTypeNames());
-            EffectiveNodeType entTarget = getEffectiveNodeType(nodeState.getNodeTypeName());
-            definition = getQNodeDefinition(ent, entTarget, nodeState.getName());
+            EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
+            EffectiveNodeType entTarget = getEffectiveNodeType(ntName);
+            definition = getQNodeDefinition(ent, entTarget, nodeName);
         } catch (RepositoryException e) {
-            definition = service.getNodeDefinition(sessionInfo, nodeState.getNodeEntry().getWorkspaceId());
+            definition = service.getNodeDefinition(sessionInfo, nodeId);
         }
         return definition;
     }
@@ -95,9 +86,9 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
    /**
      * @inheritDoc
      */
-    public QNodeDefinition getQNodeDefinition(NodeState parentState, Name name, Name nodeTypeName)
+   public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames, Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException {
-       EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
+       EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
        EffectiveNodeType entTarget = getEffectiveNodeType(nodeTypeName);
        return getQNodeDefinition(ent, entTarget, name);
     }
@@ -113,23 +104,17 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QPropertyDefinition getQPropertyDefinition(PropertyState propertyState) throws RepositoryException {
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
+                                                      Name propertyName,
+                                                      int propertType,
+                                                      boolean isMultiValued,
+                                                      PropertyId propertyId) throws RepositoryException {
         QPropertyDefinition definition;
         try {
-            /*
-             Don't use 'getEffectiveNodeType(NodeState) here:
-             for NEW-states the definition is always set upon creation.
-             for all other states the definion must be retrieved only taking
-             the effective nodetypes present on the parent into account
-             any kind of transiently added mixins must not have an effect
-             on the definition retrieved for an state that has been persisted
-             before. The effective NT must be evaluated as if it had been
-             evaluated upon creating the workspace state.
-             */
-            EffectiveNodeType ent = entProvider.getEffectiveNodeType(propertyState.getParent().getNodeTypeNames());
-            definition = getQPropertyDefinition(ent, propertyState.getName(), propertyState.getType(), propertyState.isMultiValued(), true);
+            EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
+            definition = getQPropertyDefinition(ent, propertyName, propertType, isMultiValued, true);
         } catch (RepositoryException e) {
-            definition = service.getPropertyDefinition(sessionInfo, ((PropertyEntry) propertyState.getHierarchyEntry()).getWorkspaceId());
+            definition = service.getPropertyDefinition(sessionInfo, propertyId);
         }
         return definition;
     }
@@ -147,21 +132,21 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
     /**
      * @inheritDoc
      */
-    public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type,
                                                       boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
+        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
         return getQPropertyDefinition(ent, name, type, multiValued, false);
     }
 
     /**
      * @inheritDoc
      */
-    public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentState.getAllNodeTypeNames());
+        EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
         return getQPropertyDefinition(ent, name, type);
     }
 

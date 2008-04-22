@@ -18,9 +18,9 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.NodeId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -43,17 +43,22 @@ public interface ItemDefinitionProvider {
     /**
      * Returns the <code>QNodeDefinition</code> for the specified node state.
      *
-     * @param nodeState
+     * @param parentNodeTypeNames
+     * @param nodeName
+     * @param ntName
+     * @param nodeId
      * @return the <code>QNodeDefinition</code> for the specified node state.
      * @throws RepositoryException
      */
-    public QNodeDefinition getQNodeDefinition(NodeState nodeState) throws RepositoryException;
+    public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames,
+                                              Name nodeName, Name ntName,
+                                              NodeId nodeId) throws RepositoryException;
 
     /**
      * Returns the applicable child node definition for a child node with the
      * specified name and node type.
      *
-     * @param parentState
+     * @param parentNodeTypeNames
      * @param name
      * @param nodeTypeName
      * @return
@@ -61,7 +66,8 @@ public interface ItemDefinitionProvider {
      * @throws ConstraintViolationException if no applicable child node definition
      * could be found
      */
-    public QNodeDefinition getQNodeDefinition(NodeState parentState, Name name, Name nodeTypeName)
+    public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames,
+                                              Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException;
 
     /**
@@ -76,7 +82,8 @@ public interface ItemDefinitionProvider {
      * @throws ConstraintViolationException if no applicable child node definition
      * could be found
      */
-    public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent, Name name, Name nodeTypeName)
+    public QNodeDefinition getQNodeDefinition(EffectiveNodeType ent,
+                                              Name name, Name nodeTypeName)
             throws NoSuchNodeTypeException, ConstraintViolationException;
 
     /**
@@ -85,7 +92,23 @@ public interface ItemDefinitionProvider {
      * @return the <code>QPropertyDefinition</code> for the specified property state.
      * @throws RepositoryException
      */
-    public QPropertyDefinition getQPropertyDefinition(PropertyState propertyState) throws RepositoryException;
+    /**
+     * Returns the <code>QPropertyDefinition</code> for the specified parameters.
+     *
+     * @param parentNodeTypeNames
+     * @param propertyName
+     * @param propertType
+     * @param isMultiValued
+     * @param propertyId Used to retrieve the definition from the persistent
+     * layer if it cannot be determined from the information present.
+     * @return
+     * @throws RepositoryException
+     */
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
+                                                      Name propertyName,
+                                                      int propertType,
+                                                      boolean isMultiValued,
+                                                      PropertyId propertyId) throws RepositoryException;
 
     /**
      * Returns the applicable property definition for a property with the
@@ -118,7 +141,7 @@ public interface ItemDefinitionProvider {
      * with required type UNDEFINED</li>
      * </ul>
      *
-     * @param parentState
+     * @param parentNodeTypeNames
      * @param name
      * @param type
      * @param multiValued
@@ -126,7 +149,7 @@ public interface ItemDefinitionProvider {
      * @throws ConstraintViolationException if no applicable property definition
      * could be found.
      */
-    public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type,
                                                       boolean multiValued)
             throws ConstraintViolationException, NoSuchNodeTypeException;
@@ -135,7 +158,7 @@ public interface ItemDefinitionProvider {
      * Returns the applicable property definition for a property with the
      * specified name and type. The multiValued flag is not taken into account
      * in the selection algorithm. Other than
-     * <code>{@link #getQPropertyDefinition(NodeState, Name, int, boolean)}</code>
+     * <code>{@link #getQPropertyDefinition(Name[], Name, int, boolean)}</code>
      * this method does not take the multiValued flag into account in the
      * selection algorithm. If there more than one applicable definitions then
      * the following rules are applied:
@@ -146,14 +169,14 @@ public interface ItemDefinitionProvider {
      * <li>single-value definitions are preferred to multiple-value definitions</li>
      * </ul>
      *
-     * @param parentState
+     * @param parentNodeTypeNames
      * @param name
      * @param type
      * @return
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
+    public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 }
