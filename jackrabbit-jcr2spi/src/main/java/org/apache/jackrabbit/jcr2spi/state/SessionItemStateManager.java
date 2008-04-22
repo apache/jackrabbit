@@ -261,7 +261,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         NodeState parent = operation.getParentState();
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
-        QNodeDefinition def = defProvider.getQNodeDefinition(parent, operation.getNodeName(), operation.getNodeTypeName());
+        QNodeDefinition def = defProvider.getQNodeDefinition(parent.getAllNodeTypeNames(), operation.getNodeName(), operation.getNodeTypeName());
         addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
 
         transientStateMgr.addOperation(operation);
@@ -317,7 +317,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
         // retrieve applicable definition at the new place
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
-        QNodeDefinition newDefinition = defProvider.getQNodeDefinition(destParent, operation.getDestinationName(), srcState.getNodeTypeName());
+        QNodeDefinition newDefinition = defProvider.getQNodeDefinition(destParent.getAllNodeTypeNames(), operation.getDestinationName(), srcState.getNodeTypeName());
 
         // perform the move (modifying states)
         srcParent.moveChildNodeEntry(destParent, srcState, operation.getDestinationName(), newDefinition);
@@ -365,7 +365,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
             } else {
                 // create new jcr:mixinTypes property
                 ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
-                QPropertyDefinition pd = defProvider.getQPropertyDefinition(nState, NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true);
+                QPropertyDefinition pd = defProvider.getQPropertyDefinition(nState.getAllNodeTypeNames(), NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true);
                 QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
                 int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
                 addPropertyState(nState, pd.getName(), pd.getRequiredType(), mixinValue, pd, options);

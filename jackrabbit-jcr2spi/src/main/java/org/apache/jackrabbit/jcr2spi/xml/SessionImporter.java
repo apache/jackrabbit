@@ -397,6 +397,7 @@ public class SessionImporter implements Importer, SessionListener {
      * @throws RepositoryException
      */
     private NodeState importNode(NodeInfo nodeInfo, NodeState parent) throws ConstraintViolationException, ItemNotFoundException, RepositoryException {
+        Name[] parentNtNames = parent.getAllNodeTypeNames();                
         if (parent.hasPropertyName(nodeInfo.getName())) {
             /**
              * a property with the same name already exists; if this property
@@ -406,7 +407,7 @@ public class SessionImporter implements Importer, SessionListener {
              *
              * see http://issues.apache.org/jira/browse/JCR-61
              */
-                PropertyState conflicting = parent.getPropertyState(nodeInfo.getName());
+            PropertyState conflicting = parent.getPropertyState(nodeInfo.getName());
             if (conflicting.getStatus() == Status.NEW) {
                 // assume this property has been imported as well;
                 // rename conflicting property
@@ -421,14 +422,14 @@ public class SessionImporter implements Importer, SessionListener {
                     // could be single- or multi-valued (n == 1)
                     try {
                         // try single-valued
-                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), false);
+                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parentNtNames, newName, conflicting.getType(), false);
                     } catch (ConstraintViolationException cve) {
                         // try multi-valued
-                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
+                        propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parentNtNames, newName, conflicting.getType(), true);
                     }
                 } else {
                     // can only be multi-valued (n == 0 || n > 1)
-                    propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parent, newName, conflicting.getType(), true);
+                    propDef = session.getItemDefinitionProvider().getQPropertyDefinition(parentNtNames, newName, conflicting.getType(), true);
                 }
 
                 Operation ap = AddProperty.create(parent, newName, conflicting.getType(), propDef, conflicting.getValues());
@@ -439,7 +440,7 @@ public class SessionImporter implements Importer, SessionListener {
         }
 
         // do create new nodeState
-        QNodeDefinition def = session.getItemDefinitionProvider().getQNodeDefinition(parent, nodeInfo.getName(), nodeInfo.getNodeTypeName());
+        QNodeDefinition def = session.getItemDefinitionProvider().getQNodeDefinition(parentNtNames, nodeInfo.getName(), nodeInfo.getNodeTypeName());
         if (def.isProtected()) {
             log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
             return null;
@@ -473,7 +474,7 @@ public class SessionImporter implements Importer, SessionListener {
      *
      * @param pi
      * @param parentState
-     * @param nsResolver
+     * @param resolver
      * @throws RepositoryException
      * @throws ConstraintViolationException
      */
@@ -511,21 +512,22 @@ public class SessionImporter implements Importer, SessionListener {
             }
         }
 
-       if (def == null) {
-           // there's no property with that name, find applicable definition
-           if (tva.length == 1) {
-               // could be single- or multi-valued (n == 1)
-               def = session.getItemDefinitionProvider().getQPropertyDefinition(parentState, propName, infoType);
-           } else {
-               // can only be multi-valued (n == 0 || n > 1)
-               def = session.getItemDefinitionProvider().getQPropertyDefinition(parentState, propName, infoType, true);
-           }
-           if (def.isProtected()) {
-               // skip protected property
-               log.debug("skipping protected property " + propName);
-               return;
-           }
-       }
+        Name[] parentNtNames = parentState.getAllNodeTypeNames();
+        if (def == null) {
+            // there's no property with that name, find applicable definition
+            if (tva.length == 1) {
+                // could be single- or multi-valued (n == 1)
+                def = session.getItemDefinitionProvider().getQPropertyDefinition(parentNtNames, propName, infoType);
+            } else {
+                // can only be multi-valued (n == 0 || n > 1)
+                def = session.getItemDefinitionProvider().getQPropertyDefinition(parentNtNames, propName, infoType, true);
+            }
+            if (def.isProtected()) {
+                // skip protected property
+                log.debug("skipping protected property " + propName);
+                return;
+            }
+        }
 
         // retrieve the target property type needed for creation of QValue(s)
         // including an eventual conversion. the targetType is then needed for

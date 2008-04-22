@@ -215,7 +215,17 @@ public class PropertyState extends ItemState {
      */
     public QPropertyDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = definitionProvider.getQPropertyDefinition(this);
+            /*
+            Don't pass 'all-nodetypes from parent':
+            for NEW-states the definition is always set upon creation.
+            for all other states the definion must be retrieved only taking
+            the effective nodetypes present on the parent into account
+            any kind of transiently added mixins must not have an effect
+            on the definition retrieved for an state that has been persisted
+            before. The effective NT must be evaluated as if it had been
+            evaluated upon creating the workspace state.
+            */
+            definition = definitionProvider.getQPropertyDefinition(getParent().getNodeTypeNames(), getName(), getType(), multiValued, ((PropertyEntry) getHierarchyEntry()).getWorkspaceId());
         }
         return definition;
     }

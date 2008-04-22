@@ -590,7 +590,7 @@ public class ItemStateValidator {
             try {
                 NodeState conflictingState = parentState.getChildNodeState(nodeName, Path.INDEX_DEFAULT);
                 QNodeDefinition conflictDef = conflictingState.getDefinition();
-                QNodeDefinition newDef = mgrProvider.getItemDefinitionProvider().getQNodeDefinition(parentState, nodeName, nodeTypeName);
+                QNodeDefinition newDef = mgrProvider.getItemDefinitionProvider().getQNodeDefinition(parentState.getAllNodeTypeNames(), nodeName, nodeTypeName);
 
                 // check same-name sibling setting of both target and existing node
                 if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {

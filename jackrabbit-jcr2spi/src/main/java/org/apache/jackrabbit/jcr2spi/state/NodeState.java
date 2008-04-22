@@ -164,7 +164,7 @@ public class NodeState extends ItemState {
         // TODO: ev. reset the 'markModified' flag
         if (StateUtility.isMovedState(this)) {
             try {
-                QNodeDefinition def = definitionProvider.getQNodeDefinition(this);
+                QNodeDefinition def = retrieveDefinition();
                 if (!def.equals(definition)) {
                     definition = def;
                     return true;
@@ -428,7 +428,7 @@ public class NodeState extends ItemState {
      */
     public QNodeDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
-            definition = definitionProvider.getQNodeDefinition(this);
+            definition = retrieveDefinition();
         }
         return definition;
     }
@@ -558,6 +558,25 @@ public class NodeState extends ItemState {
         childState.markModified();
     }
 
+    private QNodeDefinition retrieveDefinition() throws RepositoryException {
+        QNodeDefinition def;
+        if (isRoot()) {
+            def = definitionProvider.getRootNodeDefinition();
+        } else {
+            /*
+             Don't use getAllNodeTypeNames() to retrieve the definition:
+             for NEW-states the definition is always set upon creation.
+             for all other states the definion must be retrieved only taking
+             the effective nodetypes present on the parent into account
+             any kind of transiently added mixins must not have an effect
+             on the definition retrieved for an state that has been persisted
+             before. The effective NT must be evaluated as if it had been
+             evaluated upon creating the workspace state.
+             */
+            def = definitionProvider.getQNodeDefinition(getParent().getNodeTypeNames(), getName(), getNodeTypeName(), getNodeEntry().getWorkspaceId());
+        }
+        return def;
+    }
     /**
      *
      * @param childState
