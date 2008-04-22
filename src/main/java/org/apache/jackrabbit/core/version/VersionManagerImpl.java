@@ -41,6 +41,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Path;
@@ -52,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -398,13 +398,16 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     /**
      * {@inheritDoc}
      */
-    protected List getItemReferences(InternalVersionItem item) {
+    protected boolean hasItemReferences(InternalVersionItem item)
+            throws RepositoryException {
         try {
             NodeReferences refs = stateMgr.getNodeReferences(
                     new NodeReferencesId(item.getId()));
-            return refs.getReferences();
+            return refs.hasReferences();
+        } catch (NoSuchItemStateException e) {
+            return false;
         } catch (ItemStateException e) {
-            return Collections.EMPTY_LIST;
+            throw new RepositoryException(e);
         }
     }
 
