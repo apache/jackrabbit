@@ -152,6 +152,14 @@ public abstract class AbstractFileSystemTest extends TestCase {
         assertEquals(1, list.length);
         assertEquals("subfolder", list[0]);
 
+        // Try to create a file coliding with an exisiting folder
+        try {
+            createFile("/folder2/subfolder", sampleBytes);
+            fail("FileSystemException expected");
+        } catch (FileSystemException e) {
+            // ok
+        }
+
         // Delete the subfolder
         fs.deleteFolder("/folder2/subfolder");
         assertFalse(fs.exists("/folder2/subfolder"));

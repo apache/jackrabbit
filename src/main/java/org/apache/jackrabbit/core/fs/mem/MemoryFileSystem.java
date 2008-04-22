@@ -136,6 +136,10 @@ public class MemoryFileSystem implements FileSystem {
 
     public OutputStream getOutputStream(String filePath)
             throws FileSystemException {
+        if (isFolder(filePath)) {
+            throw new FileSystemException("path denotes folder: " + filePath);
+        }
+
         String folderPath = filePath;
         if (filePath.lastIndexOf(FileSystem.SEPARATOR) > 0) {
             folderPath = filePath.substring(0, filePath.lastIndexOf("/"));
