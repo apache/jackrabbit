@@ -20,8 +20,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -52,6 +54,7 @@ abstract public class ReflectionUtils {
     	defaultImplementation.put(List.class, ArrayList.class);
     	defaultImplementation.put(Map.class, HashMap.class);
     	defaultImplementation.put(SortedMap.class, TreeMap.class);
+    	defaultImplementation.put(Set.class, HashSet.class);
 
     }
     /**
