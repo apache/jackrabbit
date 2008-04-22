@@ -180,4 +180,23 @@ public interface PersistenceManager {
      */
     void store(ChangeLog changeLog) throws ItemStateException;
 
+    /**
+     * Perform a consistency check of the data. An example are non-existent
+     * nodes referenced in a child node entry. The existence of this feature and
+     * the scope of the implementation can vary in different PersistenceManager
+     * implementations.
+     *
+     * @param uuids
+     *            list of UUIDs of nodes to be checked. if null, all nodes will
+     *            be checked
+     * @param recursive
+     *            if true, the tree(s) below the given node(s) will be traversed
+     *            and checked as well
+     * @param fix
+     *            if true, any problems found that can be repaired will be
+     *            repaired. if false, no data will be modified, instead all
+     *            inconsistencies will only get logged
+     */
+    void checkConsistency(String[] uuids, boolean recursive, boolean fix);
+
 }
