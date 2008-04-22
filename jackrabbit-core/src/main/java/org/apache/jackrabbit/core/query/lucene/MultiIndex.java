@@ -26,6 +26,11 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Timer;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -78,6 +83,11 @@ public class MultiIndex {
      * The logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(MultiIndex.class);
+
+    /**
+     * A path factory.
+     */
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
 
     /**
      * Default name of the redo log file
@@ -368,7 +378,7 @@ public class MultiIndex {
      *                               workspace.
      * @throws IllegalStateException if this index is not empty.
      */
-    void createInitialIndex(ItemStateManager stateMgr, NodeId rootId)
+    void createInitialIndex(ItemStateManager stateMgr, NodeId rootId, Path rootPath)
             throws IOException {
         // only do an initial index if there are no indexes at all
         if (indexNames.size() == 0) {
@@ -377,7 +387,7 @@ public class MultiIndex {
                 // traverse and index workspace
                 executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
-                createIndex(rootState, stateMgr);
+                createIndex(rootState, rootPath, stateMgr);
                 executeAndLog(new Commit(getTransactionId()));
                 scheduleFlushTask();
             } catch (Exception e) {
@@ -1020,7 +1030,7 @@ public class MultiIndex {
      * @throws ItemStateException  if an node state cannot be found.
      * @throws RepositoryException if any other error occurs
      */
-    private void createIndex(NodeState node, ItemStateManager stateMgr)
+    private void createIndex(NodeState node, Path path, ItemStateManager stateMgr)
             throws IOException, ItemStateException, RepositoryException {
         NodeId id = node.getNodeId();
         if (excludedIDs.contains(id)) {
@@ -1031,8 +1041,26 @@ public class MultiIndex {
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
             NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
-            NodeState childState = (NodeState) stateMgr.getItemState(child.getId());
-            createIndex(childState, stateMgr);
+            Path childPath = PATH_FACTORY.create(path, child.getName(),
+                    child.getIndex(), false);
+            NodeState childState;
+            try {
+                childState = (NodeState) stateMgr.getItemState(child.getId());
+            } catch (NoSuchItemStateException e) {
+                NamePathResolver resolver = new DefaultNamePathResolver(
+                        handler.getContext().getNamespaceRegistry());
+                log.error("Node {} ({}) has missing child '{}' ({})",
+                        new Object[]{
+                            resolver.getJCRPath(path),
+                            node.getNodeId().getUUID().toString(),
+                            resolver.getJCRName(child.getName()),
+                            child.getId().getUUID().toString()
+                        });
+                throw e;
+            }
+            if (childState != null) {
+                createIndex(childState, childPath, stateMgr);
+            }
         }
     }
 
