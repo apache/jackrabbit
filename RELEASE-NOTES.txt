@@ -7,9 +7,8 @@ This is the 1.4.3 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release contains fixes to a number of issues, most notably the
-concurrent modification exception reported in JCR-1359 and two concurrent
-versioning deadlocks reported in JCR-1462 and JCR-1480. See below for
+This release contains fixes to a number of issues and adds functionality
+to help recovery from repository inconsistencies. See below for
 the full list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
@@ -51,9 +50,32 @@ The issue identifier and title is listed for each change and known issue.
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at http://issues.apache.org/jira/browse/JCR
 
+  New features
+  [JCR-1428] Add API for selective bundle consistency check ...
+
   Improvements
+  [JCR-1326] Log path of missing node when re-indexing fails
+  [JCR-1492] Make behaviour configurable when re-indexing detects workspace ...
 
   Bug fixes
+  [JCR-1444] The getOutputStream of the MemoryFileSystem class can replace ...
+  [JCR-1474] consistency check fails with derbypm if bundle size exceeds 32k
+  [JCR-1476] Restore to base version throws NullPointerException
+  [JCR-1481] VersionHistory.removeVersion() does not throw ...
+  [JCR-1484] Node.getReferences() does not properly reflect saved but not ...
+  [JCR-1487] Transient states should be persisted in depth-first traversal ...
+  [JCR-1491] UUID check in BundleFsPersistenceManager.getListRecursive() ...
+  [JCR-1499] Error logged when repository is shut down
+  [JCR-1502] Journal log file rotation overwrites old files
+  [JCR-1503] Typo in repository.xml
+  [JCR-1512] Incorrect check for replace when importing item with colliding id
+  [JCR-1515] CompactNodeTypeDefWriter uses bad format for residual properties
+  [JCR-1518] BundleFsPersistenceManager has no property called: minBlobSize
+  [JCR-1519] Property.getLength() returns -1 for BOOLEAN, REFERENCE and ...
+  [JCR-1536] "Index already present" exception when opening a restored ...
+  [JCR-1540] BundleDbPersistenceManager.checkConsistency() only fixes ...
+  [JCR-1541] Evict fixed NodePropBundle from cache
+  [JCR-1546] H2PersistenceManager: no need to call shutdown; javadoc bugs
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -74,6 +96,7 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-709]  ArrayStoreException is thrown when jcr:deref() is used ...
   [JCR-777]  Order by clause using child axis does not throw ...
   [JCR-843]  XPath does not work with sub-axes
+  [JCR-888]  javax.jcr.NamespaceException: : is not a registered namespace uri
   [JCR-908]  Unable to properly restore a previous version of a node that ...
   [JCR-932]  Lossy SQL parsing
   [JCR-935]  ConcurrentModificationException during logout (cont'd)
@@ -96,7 +119,4 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1387] Lock token not removed from session when node is removed
   [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
   [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
-  [JCR-1463] Core: Failing version tests (testRestore...)
-  [JCR-1474] consistency check fails with derbypm if bundle size exceeds 32k
-  [JCR-1476] Restore to base version throws NullPointerException
-  [JCR-1481] VersionHistory.removeVersion() does not throw ...
+  [JCR-1532] ERROR 40XD0: Container has been closed exception with Derby DB
