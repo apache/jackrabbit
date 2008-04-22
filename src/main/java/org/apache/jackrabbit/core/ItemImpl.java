@@ -298,7 +298,9 @@ public abstract class ItemImpl implements Item, ItemStateListener {
 
     /**
      * Builds a list of transient (i.e. new or modified) item states that are
-     * within the scope of <code>this.{@link #save()}</code>.
+     * within the scope of <code>this.{@link #save()}</code>. The collection
+     * returned is ordered depth-first, i.e. the item itself (if transient)
+     * comes last.
      *
      * @return list of transient item states
      * @throws InvalidItemStateException
@@ -310,6 +312,45 @@ public abstract class ItemImpl implements Item, ItemStateListener {
         ArrayList dirty = new ArrayList();
         ItemState transientState;
 
+        if (isNode()) {
+            // build list of 'new' or 'modified' descendants
+            Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
+            while (iter.hasNext()) {
+                transientState = (ItemState) iter.next();
+                // fail-fast test: check status of transient state
+                String msg;
+                switch (transientState.getStatus()) {
+                    case ItemState.STATUS_NEW:
+                    case ItemState.STATUS_EXISTING_MODIFIED:
+                        // add modified state to the list
+                        dirty.add(transientState);
+                        break;
+
+                    case ItemState.STATUS_STALE_MODIFIED:
+                        msg = transientState.getId()
+                            + ": the item cannot be saved because it has been modified externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
+
+                    case ItemState.STATUS_STALE_DESTROYED:
+                        msg = transientState.getId()
+                            + ": the item cannot be saved because it has been deleted externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
+
+                    case ItemState.STATUS_UNDEFINED:
+                        msg = safeGetJCRPath()
+                            + ": the item cannot be saved; it seems to have been removed externally.";
+                        log.debug(msg);
+                        throw new InvalidItemStateException(msg);
+
+                    default:
+                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
+                        // ignore
+                        break;
+                }
+            }
+        }
         // fail-fast test: check status of this item's state
         if (isTransient()) {
             switch (state.getStatus()) {
@@ -357,50 +398,6 @@ public abstract class ItemImpl implements Item, ItemStateListener {
             }
         }
 
-        if (isNode()) {
-            // build list of 'new' or 'modified' descendants
-            Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
-            while (iter.hasNext()) {
-                transientState = (ItemState) iter.next();
-                // fail-fast test: check status of transient state
-                switch (transientState.getStatus()) {
-                    case ItemState.STATUS_NEW:
-                    case ItemState.STATUS_EXISTING_MODIFIED:
-                        // add modified state to the list
-                        dirty.add(transientState);
-                        break;
-
-                    case ItemState.STATUS_STALE_MODIFIED:
-                        {
-                            String msg = transientState.getId()
-                                    + ": the item cannot be saved because it has been modified externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
-
-                    case ItemState.STATUS_STALE_DESTROYED:
-                        {
-                            String msg = transientState.getId()
-                                    + ": the item cannot be saved because it has been deleted externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
-
-                    case ItemState.STATUS_UNDEFINED:
-                        {
-                            String msg = safeGetJCRPath()
-                                    + ": the item cannot be saved; it seems to have been removed externally.";
-                            log.debug(msg);
-                            throw new InvalidItemStateException(msg);
-                        }
-
-                    default:
-                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
-                        // ignore
-                        break;
-                }
-            }
-        }
         return dirty;
     }
 
