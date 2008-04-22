@@ -967,6 +967,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     log.info(name + ": Fixing bundle '" + bundle.getId() + "'");
                     bundle.markOld(); // use UPDATE instead of INSERT
                     storeBundle(bundle);
+                    evictBundle(bundle.getId());
                 } catch (ItemStateException e) {
                     log.error(name + ": Error storing fixed bundle: " + e);
                 }

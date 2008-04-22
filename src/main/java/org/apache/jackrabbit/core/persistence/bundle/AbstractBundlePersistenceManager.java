@@ -130,8 +130,8 @@ public abstract class AbstractBundlePersistenceManager implements
     private long bundleCacheSize = 8 * 1024 * 1024;
 
     /**
-     * Returns the size of the bundlecache in megabytes.
-     * @return the size of the bundlecache in megabytes.
+     * Returns the size of the bundle cache in megabytes.
+     * @return the size of the bundle cache in megabytes.
      */
     public String getBundleCacheSize() {
         return String.valueOf(bundleCacheSize/(1024 * 1024));
@@ -411,7 +411,7 @@ public abstract class AbstractBundlePersistenceManager implements
         bundles = new BundleCache(bundleCacheSize);
         missing = new LRUNodeIdCache();
 
-        // init prop defs
+        // init property definitions
         if (context.getNodeTypeRegistry() != null) {
             idJcrUUID = context.getNodeTypeRegistry().getEffectiveNodeType(NameConstants.MIX_REFERENCEABLE).getApplicablePropertyDef(
                     NameConstants.JCR_UUID, PropertyType.STRING, false).getId();
@@ -656,7 +656,7 @@ public abstract class AbstractBundlePersistenceManager implements
     }
 
     /**
-     * Gets the bundle for the given nodeid.
+     * Gets the bundle for the given node id.
      *
      * @param id the id of the bundle to retrieve.
      * @return the bundle or <code>null</code> if the bundle does not exist
@@ -718,6 +718,15 @@ public abstract class AbstractBundlePersistenceManager implements
      * {@inheritDoc}
      */
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+    }
+
+    /**
+     * Evicts the bundle with <code>id</code> from the bundle cache.
+     *
+     * @param id the id of the bundle.
+     */
+    protected void evictBundle(NodeId id) {
+        bundles.remove(id);
     }
 
 }
