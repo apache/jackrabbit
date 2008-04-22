@@ -17,8 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -46,31 +45,35 @@ public interface EffectiveNodeTypeProvider {
      *
      * @param ntNames
      * @return
-     * @throws NodeTypeConflictException
+     * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
     public EffectiveNodeType getEffectiveNodeType(Name[] ntNames)
-            throws NodeTypeConflictException, NoSuchNodeTypeException;
+            throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**
      * @param ntNames
      * @param ntdMap
      * @return
-     * @throws NodeTypeConflictException
+     * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
     public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map ntdMap)
-            throws NodeTypeConflictException, NoSuchNodeTypeException;
+            throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**
-     * Build the effective (i.e. merged and resolved) node type representation
-     * of the specified node's primary and mixin node types.
+     * Builds an effective node type representation from the given node type
+     * definition. Whereas all referenced node types must exist (i.e. must be
+     * present in the specified map), the definition itself is not required to
+     * be registered.
      *
-     * @param nodeState
+     * @param ntd
+     * @param ntdMap
      * @return
+     * @throws ConstraintViolationException
      * @throws NoSuchNodeTypeException
      */
-    public EffectiveNodeType getEffectiveNodeType(NodeState nodeState)
-            throws NoSuchNodeTypeException, ConstraintViolationException;
-
+    public EffectiveNodeType getEffectiveNodeType(QNodeTypeDefinition ntd,
+                                                  Map ntdMap)
+            throws ConstraintViolationException, NoSuchNodeTypeException;
 }

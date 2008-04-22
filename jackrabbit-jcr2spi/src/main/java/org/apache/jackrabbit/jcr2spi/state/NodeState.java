@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -373,6 +374,39 @@ public class NodeState extends ItemState {
         // primary type
         types[types.length - 1] = getNodeTypeName();
         return types;
+    }
+
+    /**
+     * TODO: clarify usage
+     * In case the status of the given node state is not {@link Status#EXISTING}
+     * the transiently added mixin types are taken into account as well.
+     * 
+     * @return
+     */
+    public synchronized Name[] getAllNodeTypeNames() {
+        Name[] allNtNames;
+        if (getStatus() == Status.EXISTING) {
+            allNtNames = getNodeTypeNames();
+        } else {
+            // TODO: check if correct (and only used for creating new)
+            Name primaryType = getNodeTypeName();
+            allNtNames = new Name[] { primaryType }; // default
+            try {
+                PropertyEntry pe = getNodeEntry().getPropertyEntry(NameConstants.JCR_MIXINTYPES, true);
+                if (pe != null) {
+                    PropertyState mixins = pe.getPropertyState();
+                    QValue[] values = mixins.getValues();
+                    allNtNames = new Name[values.length + 1];
+                    for (int i = 0; i < values.length; i++) {
+                        allNtNames[i] = values[i].getName();
+                    }
+                    allNtNames[values.length] = primaryType;
+                } // else: no jcr:mixinTypes property exists -> ignore
+            } catch (RepositoryException e) {
+                // unexpected error: ignore
+            }
+        }
+        return allNtNames;
     }
 
     /**

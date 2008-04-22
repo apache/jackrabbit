@@ -115,7 +115,7 @@ public interface ItemDefinitionProvider {
      * Returns the applicable property definition for a property with the
      * specified name and type. The multiValued flag is not taken into account
      * in the selection algorithm. Other than
-     * <code>{@link #getApplicablePropertyDefinition(Name, int, boolean)}</code>
+     * <code>{@link #getQPropertyDefinition(NodeState, Name, int, boolean)}</code>
      * this method does not take the multiValued flag into account in the
      * selection algorithm. If there more than one applicable definitions then
      * the following rules are applied:
@@ -133,6 +133,7 @@ public interface ItemDefinitionProvider {
      * @throws ConstraintViolationException if no applicable property definition
      *                                      could be found
      */
-    public QPropertyDefinition getQPropertyDefinition(NodeState parentState, Name name, int type)
+    public QPropertyDefinition getQPropertyDefinition(NodeState parentState,
+                                                      Name name, int type)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 }
