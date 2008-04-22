@@ -74,7 +74,7 @@ public class BundleBinding extends ItemStateBinding {
      * Deserializes a <code>NodePropBundle</code> from a data input stream.
      *
      * @param in the input stream
-     * @param id the nodeid for the new budle
+     * @param id the node id for the new bundle
      * @return the bundle
      * @throws IOException if an I/O error occurs.
      */
@@ -158,22 +158,22 @@ public class BundleBinding extends ItemStateBinding {
             String local = nameIndex.indexToString(in.readInt());
             Name nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
 
-            log.info("Serialzation Version: " + version);
-            log.info("NodeTypeName: " + nodeTypeName);
+            log.debug("Serialzation Version: " + version);
+            log.debug("NodeTypeName: " + nodeTypeName);
         } catch (IOException e) {
             log.error("Error while reading NodeTypeName: " + e);
             return false;
         }
         try {
             UUID parentUuid = readUUID(in);
-            log.info("ParentUUID: " + parentUuid);
+            log.debug("ParentUUID: " + parentUuid);
         } catch (IOException e) {
             log.error("Error while reading ParentUUID: " + e);
             return false;
         }
         try {
             String definitionId = in.readUTF();
-            log.info("DefinitionId: " + definitionId);
+            log.debug("DefinitionId: " + definitionId);
         } catch (IOException e) {
             log.error("Error while reading DefinitionId: " + e);
             return false;
@@ -181,7 +181,7 @@ public class BundleBinding extends ItemStateBinding {
         try {
             Name mixinName = readIndexedQName(in);
             while (mixinName != null) {
-                log.info("MixinTypeName: " + mixinName);
+                log.debug("MixinTypeName: " + mixinName);
                 mixinName = readIndexedQName(in);
             }
         } catch (IOException e) {
@@ -191,7 +191,7 @@ public class BundleBinding extends ItemStateBinding {
         try {
             Name propName = readIndexedQName(in);
             while (propName != null) {
-                log.info("PropertyName: " + propName);
+                log.debug("PropertyName: " + propName);
                 if (!checkPropertyState(in)) {
                     return false;
                 }
@@ -203,7 +203,7 @@ public class BundleBinding extends ItemStateBinding {
         }
         try {
             boolean hasUUID = in.readBoolean();
-            log.info("hasUUID: " + hasUUID);
+            log.debug("hasUUID: " + hasUUID);
         } catch (IOException e) {
             log.error("Error while reading 'hasUUID': " + e);
             return false;
@@ -212,7 +212,7 @@ public class BundleBinding extends ItemStateBinding {
             UUID cneUUID = readUUID(in);
             while (cneUUID != null) {
                 Name cneName = readQName(in);
-                log.info("ChildNodentry: " + cneUUID + ":" + cneName);
+                log.debug("ChildNodentry: " + cneUUID + ":" + cneName);
                 cneUUID = readUUID(in);
             }
         } catch (IOException e) {
@@ -223,7 +223,7 @@ public class BundleBinding extends ItemStateBinding {
         if (version >= VERSION_1) {
             try {
                 short modCount = readModCount(in);
-                log.info("modCount: " + modCount);
+                log.debug("modCount: " + modCount);
             } catch (IOException e) {
                 log.error("Error while reading mod cout: " + e);
                 return false;
@@ -298,7 +298,7 @@ public class BundleBinding extends ItemStateBinding {
      * Deserializes a <code>PropertyState</code> from the data input stream.
      *
      * @param in the input stream
-     * @param id the property id for the new propert entry
+     * @param id the property id for the new property entry
      * @return the property entry
      * @throws IOException if an I/O error occurs.
      */
@@ -398,22 +398,22 @@ public class BundleBinding extends ItemStateBinding {
             type = in.readInt();
             short modCount = (short) ((type >> 16) | 0xffff);
             type &= 0xffff;
-            log.info("  PropertyType: " + PropertyType.nameFromValue(type));
-            log.info("  ModCount: " + modCount);
+            log.debug("  PropertyType: " + PropertyType.nameFromValue(type));
+            log.debug("  ModCount: " + modCount);
         } catch (IOException e) {
             log.error("Error while reading property type: " + e);
             return false;
         }
         try {
             boolean isMV = in.readBoolean();
-            log.info("  MultiValued: " + isMV);
+            log.debug("  MultiValued: " + isMV);
         } catch (IOException e) {
             log.error("Error while reading multivalued: " + e);
             return false;
         }
         try {
             String defintionId = in.readUTF();
-            log.info("  DefinitionId: " + defintionId);
+            log.debug("  DefinitionId: " + defintionId);
         } catch (IOException e) {
             log.error("Error while reading definition id: " + e);
             return false;
@@ -422,7 +422,7 @@ public class BundleBinding extends ItemStateBinding {
         int count;
         try {
             count = in.readInt();
-            log.info("  num values: " + count);
+            log.debug("  num values: " + count);
         } catch (IOException e) {
             log.error("Error while reading number of values: " + e);
             return false;
@@ -433,7 +433,7 @@ public class BundleBinding extends ItemStateBinding {
                     int size;
                     try {
                         size = in.readInt();
-                        log.info("  binary size: " + size);
+                        log.debug("  binary size: " + size);
                     } catch (IOException e) {
                         log.error("Error while reading size of binary: " + e);
                         return false;
@@ -441,7 +441,11 @@ public class BundleBinding extends ItemStateBinding {
                     if (InternalValue.USE_DATA_STORE && size == -2) {
                         try {
                             String s = in.readUTF();
-                            log.info("  global data store id: " + s);
+                            // truncate log output
+                            if (s.length() > 80) {
+                                s = s.substring(80) + "...";
+                            }
+                            log.debug("  global data store id: " + s);
                         } catch (IOException e) {
                             log.error("Error while reading blob id: " + e);
                             return false;
@@ -449,7 +453,7 @@ public class BundleBinding extends ItemStateBinding {
                     } else if (size == -1) {
                         try {
                             String s = in.readUTF();
-                            log.info("  blobid: " + s);
+                            log.debug("  blobid: " + s);
                         } catch (IOException e) {
                             log.error("Error while reading blob id: " + e);
                             return false;
@@ -459,7 +463,7 @@ public class BundleBinding extends ItemStateBinding {
                         byte[] data = new byte[size];
                         try {
                             in.readFully(data);
-                            log.info("  binary: " + data.length + " bytes");
+                            log.debug("  binary: " + data.length + " bytes");
                         } catch (IOException e) {
                             log.error("Error while reading inlined binary: " + e);
                             return false;
@@ -469,7 +473,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.DOUBLE:
                     try {
                         double d = in.readDouble();
-                        log.info("  double: " + d);
+                        log.debug("  double: " + d);
                     } catch (IOException e) {
                         log.error("Error while reading double value: " + e);
                         return false;
@@ -478,7 +482,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.LONG:
                     try {
                         double l = in.readLong();
-                        log.info("  long: " + l);
+                        log.debug("  long: " + l);
                     } catch (IOException e) {
                         log.error("Error while reading long value: " + e);
                         return false;
@@ -487,7 +491,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.BOOLEAN:
                     try {
                         boolean b = in.readBoolean();
-                        log.info("  boolean: " + b);
+                        log.debug("  boolean: " + b);
                     } catch (IOException e) {
                         log.error("Error while reading boolean value: " + e);
                         return false;
@@ -496,7 +500,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.NAME:
                     try {
                         Name name = readQName(in);
-                        log.info("  name: " + name);
+                        log.debug("  name: " + name);
                     } catch (IOException e) {
                         log.error("Error while reading name value: " + e);
                         return false;
@@ -505,7 +509,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.REFERENCE:
                     try {
                         UUID uuid = readUUID(in);
-                        log.info("  reference: " + uuid);
+                        log.debug("  reference: " + uuid);
                     } catch (IOException e) {
                         log.error("Error while reading reference value: " + e);
                         return false;
@@ -517,7 +521,7 @@ public class BundleBinding extends ItemStateBinding {
                     int len;
                     try {
                         len = in.readInt();
-                        log.info("  size of string value: " + len);
+                        log.debug("  size of string value: " + len);
                     } catch (IOException e) {
                         log.error("Error while reading size of string value: " + e);
                         return false;
@@ -528,7 +532,12 @@ public class BundleBinding extends ItemStateBinding {
                         while (pos < len) {
                             pos += in.read(bytes, pos, len - pos);
                         }
-                        log.info("  string: " + new String(bytes, "UTF-8"));
+                        String s = new String(bytes, "UTF-8");
+                        // truncate log output
+                        if (s.length() > 80) {
+                            s = s.substring(80) + "...";
+                        }
+                        log.debug("  string: " + s);
                     } catch (IOException e) {
                         log.error("Error while reading string value: " + e);
                         return false;
@@ -678,7 +687,7 @@ public class BundleBinding extends ItemStateBinding {
                     // because writeUTF(String) has a size limit of 64k,
                     // we're using write(byte[]) instead
                     byte[] bytes = val.toString().getBytes("UTF-8");
-                    out.writeInt(bytes.length); // lenght of byte[]
+                    out.writeInt(bytes.length); // length of byte[]
                     out.write(bytes);   // byte[]
             }
         }
