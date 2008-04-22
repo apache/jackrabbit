@@ -26,20 +26,22 @@ import javax.jcr.RepositoryException;
 /**
  * Extends the {@link BundleDbPersistenceManager} by H2 specific code.
  * <p/>
- * Configuration:<br>
- * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.hsqldb.jdbcDriver"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:hsqldb:file:${wsp.home}/db/itemState"/>
- * <li>&lt;param name="{@link #setUser(String) user}" value="sa"/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value="native"/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
- * <li>&lt;param name="{@link #setLockTimeout(String)} (String) lockTimeout}" value="10000"/>
- * </ul>
+ * Configuration:
+ * <pre>
+ * &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.H2PersistenceManager">
+ *     &lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
+ *     &lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
+ *     &lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
+ *     &lt;param name="{@link #setDriver(String) driver}" value="org.h2.Driver"/>
+ *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:h2:file:${wsp.home}/db/itemState"/>
+ *     &lt;param name="{@link #setUser(String) user}" value="sa"/>
+ *     &lt;param name="{@link #setPassword(String) password}" value="sa"/>
+ *     &lt;param name="{@link #setSchema(String) schema}" value="h2"/>
+ *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
+ *     &lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ *     &lt;param name="{@link #setLockTimeout(String) lockTimeout}" value="10000"/>
+ * &lt;/PersistenceManager>
+ * <pre>
  */
 public class H2PersistenceManager extends BundleDbPersistenceManager {
 
@@ -66,7 +68,7 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
     }
 
     /**
-     * Creates a new h2 persistence manager.
+     * Creates a new H2 persistence manager.
      */
     public H2PersistenceManager() {
     }
@@ -109,23 +111,6 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
             stmt.close();
         }
         super.checkSchema();
-    }
-
-    /**
-     * @see PersistenceManager#close
-     */
-    public synchronized void close() throws Exception {
-        if (!initialized) {
-            throw new IllegalStateException("not initialized");
-        }
-        if (getUrl().startsWith("jdbc:h2:file:")) {
-            // have to explicitly shutdown in-proc h2
-            Statement stmt = connectionManager.getConnection().createStatement();
-            stmt.execute("shutdown");
-            stmt.close();
-        }
-        // call base class implementation
-        super.close();
     }
 
 }
