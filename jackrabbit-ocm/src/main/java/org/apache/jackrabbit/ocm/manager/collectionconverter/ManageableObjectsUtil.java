@@ -66,7 +66,7 @@ public class ManageableObjectsUtil {
         		Class defaultImplementation  = ReflectionUtils.getDefaultImplementation(manageableObjectsClass);
         		if (defaultImplementation == null)
         		{
-        			new JcrMappingException("No default implementation for the interface " + manageableObjectsClass);
+        			throw new JcrMappingException("No default implementation for the interface " + manageableObjectsClass);
         		}
         		else
         		{
