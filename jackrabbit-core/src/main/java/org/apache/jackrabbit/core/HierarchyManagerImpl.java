@@ -58,6 +58,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
     protected final ItemStateManager provider;
 
     /**
+     * Flags describing what items to return in {@link #resolvePath(Path, int)}.
+     */
+    static final int RETURN_NODE = 1;
+    static final int RETURN_PROPERTY = 2;
+    static final int RETURN_ANY = (RETURN_NODE | RETURN_PROPERTY);
+
+    /**
      * Path resolver for outputting user-friendly paths in error messages.
      */
     protected final PathResolver resolver;
@@ -111,69 +118,63 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     //-------------------------------------------------------< implementation >
+
     /**
-     * Recursively invoked method that resolves a path into an item id.
+     * Internal implementation that iteratively resolves a path into an item.
      *
-     * @param path  full path of item to resolve
-     * @param state intermediate state
-     * @param next  next path element index to resolve
-     * @param denotesNode flag indicating whether <code>path</code> refers to a
-     *                    node (<code>true</code>) or a property (<code>false</code>)
-     * @return the id of the item denoted by <code>path</code> or
-     *         <code>null</code> if no item exists at <code>path</code>.
-     * @throws ItemStateException if an error occurred
+     * @param elements path elements
+     * @param next index of next item in <code>elements</code> to inspect
+     * @param id id of item at path <code>elements[0]</code>..<code>elements[next - 1]</code>
+     * @param typesAllowed one of <code>RETURN_ANY</code>, <code>RETURN_NODE</code>
+     *                     or <code>RETURN_PROPERTY</code>
+     * @return id or <code>null</code>
+     * @throws ItemStateException if an intermediate item state is not found
+     * @throws MalformedPathException if building an intermediate path fails
      */
-    private ItemId resolvePath(Path path, ItemState state, int next,
-                                 boolean denotesNode)
-            throws ItemStateException {
+    protected ItemId resolvePath(Path.Element[] elements, int next,
+                                 ItemId id, int typesAllowed)
+            throws ItemStateException, MalformedPathException {
 
-        // allow subclasses to process intermediate state
-        beforeResolvePath(path, state, next);
-
-        Path.Element[] elements = path.getElements();
-        if (elements.length == next) {
-            return state.getId();
+        PathBuilder builder = new PathBuilder();
+        for (int i = 0; i < next; i++) {
+            builder.addLast(elements[i]);
         }
-        Path.Element elem = elements[next];
+        for (int i = next; i < elements.length; i++) {
+            Path.Element elem = elements[i];
+            NodeId parentId = (NodeId) id;
+            id = null;
 
-        Name name = elem.getName();
-        int index = elem.getIndex();
-        if (index == 0) {
-            index = 1;
-        }
-
-        NodeState parentState = (NodeState) state;
-        if (next == elements.length - 1) {
-            // last path element
-            if (denotesNode) {
-                if (parentState.hasChildNodeEntry(name, index)) {
-                    // child node
-                    NodeState.ChildNodeEntry nodeEntry =
-                            getChildNodeEntry(parentState, name, index);
-                    return nodeEntry.getId();
-                }
-            } else {
-                if (parentState.hasPropertyName(name) && (index <= 1)) {
-                    // property
-                    return new PropertyId(parentState.getNodeId(), name);
+            Name name = elem.getName();
+            int index = elem.getIndex();
+            if (index == 0) {
+                index = 1;
+            }
+            int typeExpected = typesAllowed;
+            if (i < elements.length - 1) {
+                // intermediate items must always be nodes
+                typeExpected = RETURN_NODE;
+            }
+            NodeState parentState = (NodeState) getItemState(parentId);
+            if ((typeExpected & RETURN_NODE) != 0) {
+                NodeState.ChildNodeEntry nodeEntry =
+                        getChildNodeEntry(parentState, name, index);
+                if (nodeEntry != null) {
+                    id = nodeEntry.getId();
                 }
             }
-            // no such item
-            return null;
+            if (id == null && (typeExpected & RETURN_PROPERTY) != 0) {
+                if (parentState.hasPropertyName(name) && (index <= 1)) {
+                    // property
+                    id = new PropertyId(parentState.getNodeId(), name);
+                }
+            }
+            if (id == null) {
+                break;
+            }
+            builder.addLast(elements[i]);
+            pathResolved(id, builder);
         }
-
-        // intermediate path element
-        ItemId childId;
-        if (parentState.hasChildNodeEntry(name, index)) {
-            // child node
-            NodeState.ChildNodeEntry nodeEntry =
-                    getChildNodeEntry(parentState, name, index);
-            childId = nodeEntry.getId();
-            // recurse
-            return resolvePath(path, getItemState(childId), next + 1, denotesNode);
-        }
-        // no such item
-        return null;
+        return id;
     }
 
     //---------------------------------------------------------< overridables >
@@ -291,48 +292,6 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * Resolve a path into an item id. Recursively invoked method that may be
-     * overridden by some subclass to either return cached responses or add
-     * response to cache.
-     *
-     * @param path full path of item to resolve
-     * @param id   intermediate item id
-     * @param next next path element index to resolve
-     * @param denotesNode flag indicating whether <code>path</code> refers to a
-     *                    node (<code>true</code>) or a property (<code>false</code>)
-     * @return the id of the item denoted by <code>path</code>
-     * @throws RepositoryException if an error occurred
-     */
-    protected ItemId resolvePath(Path path, ItemId id, int next,
-                                 boolean denotesNode)
-            throws RepositoryException {
-
-        try {
-            return resolvePath(path, getItemState(id), next, denotesNode);
-        } catch (NoSuchItemStateException e) {
-            String msg = "failed to retrieve state of intermediary node";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        } catch (ItemStateException e) {
-            String msg = "failed to retrieve state of intermediary node";
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-    }
-
-    /**
-     * Called by recursively invoked method {@link #resolvePath(Path, ItemState, int, boolean)};
-     * May be overridden by some subclass to process/cache intermediate state.
-     *
-     * @param path  full path of item to resolve
-     * @param state intermediate state
-     * @param next  next path element index to resolve
-     */
-    protected void beforeResolvePath(Path path, ItemState state, int next) {
-        // do nothing
-    }
-
-    /**
      * Adds the path element of an item id to the path currently being built.
      * Recursively invoked method that may be overridden by some subclass to
      * either return cached responses or add response to cache. On exit,
@@ -387,39 +346,79 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
     }
 
+    /**
+     * Internal implementation of {@link #resolvePath(Path)} that will either
+     * resolve to a node or a property. Should be overridden by a subclass
+     * that can resolve an intermediate path into an <code>ItemId</code>. This
+     * subclass can then invoke {@link #resolvePath(Path.Element[], int, ItemId, int)}
+     * with a value of <code>next</code> greater than <code>1</code>.
+     *
+     * @param path path to resolve
+     * @param typesAllowed one of <code>RETURN_ANY</code>, <code>RETURN_NODE</code>
+     *                     or <code>RETURN_PROPERTY</code>
+     * @return id or <code>null</code>
+     * @throws RepositoryException if an error occurs
+     */
+    protected ItemId resolvePath(Path path, int typesAllowed)
+            throws RepositoryException {
+
+        Path.Element[] elements = path.getElements();
+        ItemId id = rootNodeId;
+
+        try {
+            return resolvePath(elements, 1, id, typesAllowed);
+        } catch (ItemStateException e) {
+            String msg = "failed to retrieve state of intermediary node";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * Called by {@link #resolvePath(Path.Element[], int, ItemId, int)}.
+     * May be overridden by some subclass to process/cache intermediate state.
+     *
+     * @param id      id of resolved item
+     * @param builder path builder containing path resolved
+     * @throws MalformedPathException if the path contained in <code>builder</code>
+     *                                is malformed
+     */
+    protected void pathResolved(ItemId id, PathBuilder builder)
+            throws MalformedPathException {
+
+        // do nothing
+    }
+
     //-----------------------------------------------------< HierarchyManager >
+
     /**
      * {@inheritDoc}
      */
-    public ItemId resolvePath(Path path) throws RepositoryException {
+    public final ItemId resolvePath(Path path) throws RepositoryException {
         // shortcut
         if (path.denotesRoot()) {
             return rootNodeId;
         }
-
         if (!path.isCanonical()) {
             String msg = "path is not canonical";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-
-        // first try to resolve node path, then property path
-        ItemId id = resolvePath(path, rootNodeId, 1, true);
-        return (id != null) ? id : resolvePath(path, rootNodeId, 1, false);
+        return resolvePath(path, RETURN_ANY);
     }
 
     /**
      * {@inheritDoc}
      */
     public NodeId resolveNodePath(Path path) throws RepositoryException {
-        return (NodeId) resolvePath(path, rootNodeId, 1, true);
+        return (NodeId) resolvePath(path, RETURN_NODE);
     }
 
     /**
      * {@inheritDoc}
      */
     public PropertyId resolvePropertyPath(Path path) throws RepositoryException {
-        return (PropertyId) resolvePath(path, rootNodeId, 1, false);
+        return (PropertyId) resolvePath(path, RETURN_PROPERTY);
     }
 
     /**
@@ -691,6 +690,4 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new RepositoryException(msg, ise);
         }
     }
-
 }
-

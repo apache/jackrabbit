@@ -38,9 +38,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Implementation of a <code>HierarchyManager</code> that caches paths of
@@ -68,11 +66,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Mapping of item ids to <code>LRUEntry</code> in the path map
      */
     private final ReferenceMap idCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.HARD);
-
-    /**
-     * Set of items that were moved
-     */
-    private final Set movedIds = new HashSet();
 
     /**
      * Cache monitor object
@@ -109,25 +102,52 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     //-------------------------------------------------< base class overrides >
+
     /**
      * {@inheritDoc}
-     * <p/>
-     * Cache the intermediate item inside our cache.
      */
-    protected void beforeResolvePath(Path path, ItemState state, int next) {
+    protected ItemId resolvePath(Path path, int typesAllowed)
+            throws RepositoryException {
 
-        if (state.isNode() && !isCached(state.getId())) {
-            try {
-                PathBuilder builder = new PathBuilder();
-                Path.Element[] elements = path.getElements();
-                for (int i = 0; i < next; i++) {
-                    builder.addLast(elements[i]);
-                }
-                Path parentPath = builder.getPath();
-                cache(((NodeState) state).getNodeId(), parentPath);
-            } catch (MalformedPathException mpe) {
-                log.warn("Failed to build path of " + state.getId(), mpe);
+        Path pathToNode = path;
+        if ((typesAllowed & RETURN_NODE) == 0) {
+            // if we must not return a node, pass parent path
+            // (since we only cache nodes)
+            pathToNode = path.getAncestor(1);
+        }
+
+        PathMap.Element element = map(pathToNode);
+        if (element == null) {
+            // not even intermediate match: call base class
+            return super.resolvePath(path, typesAllowed);
+        }
+
+        LRUEntry entry = (LRUEntry) element.get();
+        if (element.hasPath(path)) {
+            // exact match: return answer
+            synchronized (cacheMonitor) {
+                entry.touch();
             }
+            return entry.getId();
+        }
+        Path.Element[] elements = path.getElements();
+        try {
+            return resolvePath(elements, element.getDepth() + 1, entry.getId(), typesAllowed);
+        } catch (ItemStateException e) {
+            String msg = "failed to retrieve state of intermediary node";
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void pathResolved(ItemId id, PathBuilder builder)
+            throws MalformedPathException {
+
+        if (id.denotesNode() && !isCached(id)) {
+            cache((NodeId) id, builder.getPath());
         }
     }
 
@@ -171,82 +191,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     //-----------------------------------------------------< HierarchyManager >
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Check the path indicated inside our cache first.
-     */
-    public ItemId resolvePath(Path path) throws RepositoryException {
-        // Run base class shortcut and sanity checks first
-        if (path.denotesRoot()) {
-            return rootNodeId;
-        } else if (!path.isCanonical()) {
-            String msg = "path is not canonical";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        ItemId id;
-        PathMap.Element element = map(path);
-        if (element == null) {
-            id = super.resolvePath(path);
-        } else {
-            LRUEntry entry = (LRUEntry) element.get();
-            if (element.hasPath(path)) {
-                synchronized (cacheMonitor) {
-                    entry.touch();
-                }
-                return entry.getId();
-            }
-            // first try to resolve node path, then property path
-            id = super.resolvePath(path, entry.getId(), element.getDepth() + 1, true);
-            if (id == null) {
-                id = super.resolvePath(path, entry.getId(), element.getDepth() + 1, false);
-            }
-        }
-
-        if (id != null && id.denotesNode() && !isCached(id)) {
-            // cache result
-            cache((NodeId) id, path);
-        }
-
-        return id;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Check the path indicated inside our cache first.
-     */
-    public NodeId resolveNodePath(Path path) throws RepositoryException {
-        ItemId id = resolvePath(path);
-        return id != null && id.denotesNode() ? (NodeId) id : null;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Check the path indicated inside our cache first.
-     */
-    public PropertyId resolvePropertyPath(Path path) throws RepositoryException {
-        // Run base class shortcut and sanity checks first
-        if (path.denotesRoot()) {
-            return null;
-        } else if (!path.isCanonical()) {
-            String msg = "path is not canonical";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-
-        // check cache for parent path
-        PathMap.Element element = map(path.getAncestor(1));
-        if (element == null) {
-            return super.resolvePropertyPath(path);
-        } else {
-            LRUEntry entry = (LRUEntry) element.get();
-            return (PropertyId) super.resolvePath(path, entry.getId(), element.getDepth() + 1, false);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -340,7 +284,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * {@inheritDoc}
      *
-     * Evict moved or renamed items from the cache.
+     * If path information is cached for <code>modified</code>, this iterates
+     * over all child nodes in the path map, evicting the ones that do not
+     * (longer) exist in the underlying <code>NodeState</code>.
      */
     public void nodeModified(NodeState modified) {
         synchronized (cacheMonitor) {
@@ -405,7 +351,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (idCache.containsKey(state.getNodeId())) {
                 try {
                     Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
-                    insert(path, id);
+                    nodeAdded(state, path, id);
                 } catch (PathNotFoundException e) {
                     log.warn("Unable to get path of node " + state.getNodeId()
                             + ", event ignored.");
@@ -413,6 +359,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     log.warn("Unable to create path of " + id, e);
                 } catch (ItemNotFoundException e) {
                     log.warn("Unable to find item " + state.getNodeId(), e);
+                } catch (ItemStateException e) {
+                    log.warn("Unable to find item " + id, e);
                 } catch (RepositoryException e) {
                     log.warn("Unable to get path of " + state.getNodeId(), e);
                 }
@@ -489,7 +437,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (idCache.containsKey(state.getNodeId())) {
                 try {
                     Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
-                    remove(path, id);
+                    nodeRemoved(state, path, id);
                 } catch (PathNotFoundException e) {
                     log.warn("Unable to get path of node " + state.getNodeId()
                             + ", event ignored.");
@@ -557,7 +505,6 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (idCache.get(id) != null) {
                 return;
             }
-
             if (idCache.size() >= upperLimit) {
                 /**
                  * Remove least recently used item. Scans the LRU list from head to tail
@@ -593,7 +540,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @return <code>true</code> if the item is already cached;
      *         <code>false</code> otherwise
      */
-    private boolean isCached(ItemId id) {
+    boolean isCached(ItemId id) {
         synchronized (cacheMonitor) {
             return idCache.get(id) != null;
         }
@@ -617,6 +564,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * Remove item from cache. Index of same name sibling items are shifted!
+     * If <code>removeFromPathCache</code> is <code>true</code>, the path map
+     * element associated with <code>entry</code> is deleted recursively and
+     * every associated element is removed.
+     * If <code>removeFromPathCache</code> is <code>false</code>, only the
+     * LRU entry is removed from the cache.
      *
      * @param entry               LRU entry
      * @param removeFromPathCache whether to remove from path cache
@@ -689,22 +641,30 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     /**
-     * Insert a node into the cache. This will automatically shift
-     * all indexes of sibling nodes having index greater or equal.
+     * Invoked when a notification about a child node addition has been received.
      *
-     * @param path child path
-     * @param id   node id
+     * @param state node state
+     * @param path  node path
+     * @param id    node id
      *
      * @throws PathNotFoundException if the path was not found
      */
-    private void insert(Path path, ItemId id) throws PathNotFoundException {
+    private void nodeAdded(NodeState state, Path path, NodeId id)
+            throws PathNotFoundException, ItemStateException {
+
         synchronized (cacheMonitor) {
             PathMap.Element element = null;
 
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
                 element = entry.getElement();
-                element.remove();
+
+                NodeState child = (NodeState) getItemState(id);
+                if (!child.isShareable()) {
+                    element.remove();
+                } else {
+                    element = null;
+                }
             }
 
             PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
@@ -713,30 +673,36 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             }
             if (element != null) {
                 pathCache.put(path, element);
-
-                /* Remember this as a move */
-                movedIds.add(id);
             }
         }
     }
 
     /**
-     * Remove an item from the cache in order to shift the indexes
-     * of items following this item.
+     * Invoked when a notification about a child node removal has been received.
      *
-     * @param path child path
-     * @param id   node id
+     * @param state node state
+     * @param path  node path
+     * @param id    node id
      *
      * @throws PathNotFoundException if the path was not found
      */
-    private void remove(Path path, ItemId id) throws PathNotFoundException {
+    private void nodeRemoved(NodeState state, Path path, NodeId id)
+            throws PathNotFoundException {
+
         synchronized (cacheMonitor) {
-            /* If we remembered this as a move, ignore this event */
-            if (movedIds.remove(id)) {
-                return;
-            }
             PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
             if (parent != null) {
+                // with SNS, this might evict a child that is NOT the one
+                // having <code>id</code>, check first whether item has
+                // the id passed as argument
+                PathMap.Element child = parent.getDescendant(PathFactoryImpl.getInstance().create(
+                        new Path.Element[] { path.getNameElement() }), true);
+                if (child != null) {
+                    LRUEntry entry = (LRUEntry) child.get();
+                    if (entry != null && !entry.getId().equals(id)) {
+                        return;
+                    }
+                }
                 PathMap.Element element = parent.remove(path.getNameElement());
                 if (element != null) {
                     remove(element);

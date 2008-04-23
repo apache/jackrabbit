@@ -466,6 +466,7 @@ public class NodeState extends ItemState {
             sharedChildNodeEntries = false;
         }
         childNodeEntries.removeAll();
+        notifyNodesReplaced();
     }
 
     /**
