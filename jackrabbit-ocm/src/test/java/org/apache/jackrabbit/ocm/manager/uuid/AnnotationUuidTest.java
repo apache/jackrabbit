@@ -58,6 +58,57 @@ public class AnnotationUuidTest extends AnnotationTestBase
                 new TestSuite(AnnotationUuidTest.class));
     }
 
+    public void testCollectionOfBeanWithUuidNull()
+    {
+        try
+        {
+        	ObjectContentManager ocm = getObjectContentManager();
+
+        	A a1 = new A();
+            a1.setPath("/a1");
+            a1.setStringData("testdata1");
+            ocm.insert(a1);
+
+            // --------------------------------------------------------------------------------
+            // Create and store an object B in the repository without references to A
+            // --------------------------------------------------------------------------------
+            B2 b = new B2();
+            b.setPath("/testB2");
+
+            ocm.insert(b);
+            ocm.save();
+
+            // --------------------------------------------------------------------------------
+            // Retrieve object B
+            // --------------------------------------------------------------------------------
+            b = (B2) ocm.getObject("/testB2");
+            Collection allref = b.getMultiReferences();
+            assertNull("collection is not null", allref);
+
+            // --------------------------------------------------------------------------------
+            // Update object B with a collection of A (UUID on A)
+            // --------------------------------------------------------------------------------
+            ArrayList<A> list =  new ArrayList<A>();
+            list.add(a1);
+            b.setMultiReferences(list);
+            ocm.update(b);
+            ocm.save();
+
+            // --------------------------------------------------------------------------------
+            // Retrieve object B
+            // --------------------------------------------------------------------------------
+            b = (B2) ocm.getObject("/testB2");
+            assertNotNull("a is not null", b.getMultiReferences());
+
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);
+        }
+
+    }
 
     /**
      *
@@ -81,7 +132,7 @@ public class AnnotationUuidTest extends AnnotationTestBase
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
             ocm.save();
-            
+
             // --------------------------------------------------------------------------------
             // Get the object
             // --------------------------------------------------------------------------------
@@ -188,14 +239,14 @@ public class AnnotationUuidTest extends AnnotationTestBase
             b.setReference2A("1245");
             try
             {
-            	ocm.update(b);            	
+            	ocm.update(b);
             	fail("Exception not throw");
             }
             catch(Exception e)
             {
             	//Throws an exception due to an invalid uuid
             	System.out.println("Invalid uuid : " + e);
-            	
+
             }
 
 
@@ -341,14 +392,14 @@ public class AnnotationUuidTest extends AnnotationTestBase
             b.setMultiReferences(allref);
             try
             {
-            	ocm.update(b);            	
+            	ocm.update(b);
             	fail("Exception not throw");
             }
             catch(Exception e)
             {
             	//Throws an exception due to an invalid uuid
             	System.out.println("Invalid uuid value in the collection : " + e);
-            	
+
             }
 
             // --------------------------------------------------------------------------------
