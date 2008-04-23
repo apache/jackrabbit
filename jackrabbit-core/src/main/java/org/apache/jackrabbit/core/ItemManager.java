@@ -894,18 +894,18 @@ public class ItemManager implements Dumpable, ItemStateListener {
             Iterator iter = itemCache.keySet().iterator();
             while (iter.hasNext()) {
                 ItemId id = (ItemId) iter.next();
-                ItemImpl item = (ItemImpl) itemCache.get(id);
+                ItemData item = (ItemData) itemCache.get(id);
                 if (item.isNode()) {
                     ps.print("Node: ");
                 } else {
                     ps.print("Property: ");
                 }
-                if (item.isTransient()) {
+                if (item.getState().isTransient()) {
                     ps.print("transient ");
                 } else {
                     ps.print("          ");
                 }
-                ps.println(id + "\t" + item.safeGetJCRPath() + " (" + item + ")");
+                ps.println(id + "\t" + safeGetJCRPath(id) + " (" + item + ")");
             }
         }
     }
