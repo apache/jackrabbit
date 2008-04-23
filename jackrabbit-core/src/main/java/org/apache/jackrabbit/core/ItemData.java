@@ -134,6 +134,15 @@ public abstract class ItemData {
     }
 
     /**
+     * Return the parent id of this item.
+     *
+     * @return parent id
+     */
+    public NodeId getParentId() {
+        return getState().getParentId();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public String toString() {
