@@ -18,8 +18,10 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,8 @@ class EventConsumer {
      * The default Logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(EventConsumer.class);
+
+    private final PathFactory pathFactory = PathFactoryImpl.getInstance();
 
     /**
      * The <code>Session</code> associated with this <code>EventConsumer</code>.
@@ -150,7 +154,7 @@ class EventConsumer {
                 ItemId targetId = state.getTargetId();
                 boolean granted = false;
                 try {
-                    granted = canRead(targetId);
+                    granted = canRead(state);
                 } catch (RepositoryException e) {
                     log.warn("Unable to check access rights for item: " + targetId);
                 }
@@ -176,20 +180,28 @@ class EventConsumer {
      */
     void prepareDeleted(EventStateCollection events, Iterator deletedItems) {
         Set denied = null;
+        Set deletedIds = new HashSet();
         while (deletedItems.hasNext()) {
-            ItemState item = (ItemState) deletedItems.next();
-            // check read permission
-            boolean granted = false;
-            try {
-                granted = canRead(item.getId());
-            } catch (RepositoryException e) {
-                log.warn("Unable to check access rights for item: " + item.getId());
-            }
-            if (!granted) {
-                if (denied == null) {
-                    denied = new HashSet();
+            deletedIds.add(((ItemState) deletedItems.next()).getId());
+        }
+
+        for (Iterator it = events.iterator(); it.hasNext();) {
+            EventState evState = (EventState) it.next();
+            ItemId targetId = evState.getTargetId();
+            if (deletedIds.contains(targetId)) {
+                // check read permission
+                boolean granted = false;
+                try {
+                    granted = canRead(evState);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to check access rights for item: " + targetId);
                 }
-                denied.add(item.getId());
+                if (!granted) {
+                    if (denied == null) {
+                        denied = new HashSet();
+                    }
+                    denied.add(targetId);
+                }
             }
         }
         if (denied != null) {
@@ -213,7 +225,7 @@ class EventConsumer {
                     || state.getType() == Event.PROPERTY_ADDED
                     || state.getType() == Event.PROPERTY_CHANGED) {
                 ItemId targetId = state.getTargetId();
-                if (!canRead(targetId)) {
+                if (!canRead(state)) {
                     if (denied == null) {
                         denied = new HashSet();
                     }
@@ -271,7 +283,16 @@ class EventConsumer {
         return hashCode;
     }
 
-    private boolean canRead(ItemId itemId) throws RepositoryException {
-        return session.getAccessManager().isGranted(itemId, AccessManager.READ);
+    /**
+     * Returns <code>true</code> if the item corresponding to the specified
+     * <code>eventState</code> can be read the the current session.
+     *
+     * @param eventState
+     * @return
+     * @throws RepositoryException
+     */
+    private boolean canRead(EventState eventState) throws RepositoryException {
+        Path targetPath = pathFactory.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), eventState.getChildRelPath().getNormalizedIndex(), true);
+        return session.getAccessManager().canRead(targetPath);
     }
 }
