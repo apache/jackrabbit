@@ -19,20 +19,15 @@ package org.apache.jackrabbit.core.security.jsr283.security;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Repository;
 
 /**
  * <code>AbstractAccessControlTest</code>...
  */
 public abstract class AbstractAccessControlTest extends AbstractJCRTest {
-
-    private static Logger log = LoggerFactory.getLogger(AbstractAccessControlTest.class);
 
     protected AccessControlManager acMgr;
 
