@@ -21,12 +21,14 @@ import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +37,12 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Property;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 /**
  * <code>AccessManagerTest</code>...
@@ -105,7 +110,8 @@ public class AccessManagerTest extends AbstractJCRTest {
         acMgr.checkPermission(id, AccessManager.READ | AccessManager.WRITE | AccessManager.REMOVE  + 1);
     }
 
-    /*
+/*
+// TODO: uncomment as soon as SimpleAccessManager is replaced
     public void testCheckPermissionWithUnknowId() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         AccessManager acMgr = getAccessManager(s);
@@ -118,7 +124,7 @@ public class AccessManagerTest extends AbstractJCRTest {
             // ok
         }
     }
-    */
+*/
 
     public void testIsGranted() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
@@ -150,7 +156,31 @@ public class AccessManagerTest extends AbstractJCRTest {
 
         assertTrue(acMgr.isGranted(id, AccessManager.READ));
         assertTrue(acMgr.isGranted(id, AccessManager.WRITE));
-        assertTrue(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));    }
+        assertTrue(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+    }
+
+/*
+// TODO: uncomment as soon as SimpleAccessManager is replaced
+    public void testIsGrantedForRemovedItem() throws RepositoryException, NotExecutableException {
+        AccessManager acMgr = getAccessManager(superuser);
+        Property p = testRootNode.setProperty(propertyName1, "anyvalue");
+        ItemId id;
+        if (p instanceof PropertyImpl) {
+            id = ((PropertyImpl)p).getId();
+        } else {
+            throw new NotExecutableException();
+        }
+
+        assertTrue(acMgr.isGranted(id, AccessManager.READ));
+        p.remove();
+        try {
+            acMgr.isGranted(id, AccessManager.READ);
+            fail("AccessManager.isGranted should throw ItemNotFoundException if id of a removed item is passed.");
+        } catch (ItemNotFoundException e) {
+            // ok
+        }
+    }
+*/
 
     public void testCanAccess() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
@@ -182,7 +212,8 @@ public class AccessManagerTest extends AbstractJCRTest {
         assertFalse(getAccessManager(s).canAccess(notAccessibleName));
     }
 
-    /*
+/*
+// TODO: uncomment as soon as SimpleAccessManager is replaced
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
@@ -194,7 +225,7 @@ public class AccessManagerTest extends AbstractJCRTest {
         }
         assertFalse(getAccessManager(s).canAccess(testName));
     }
-    */
+*/
 
     public void testIsGrantedWithRelativePath() throws NotExecutableException {
         AccessManager acMgr = getAccessManager(superuser);

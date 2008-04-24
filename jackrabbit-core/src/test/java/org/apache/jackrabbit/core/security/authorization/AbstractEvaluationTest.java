@@ -26,9 +26,9 @@ import org.apache.jackrabbit.core.security.jsr283.security.AbstractAccessControl
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.JUnitTest;
+import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -39,6 +39,8 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.observation.ObservationManager;
+import javax.jcr.observation.Event;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.security.Principal;
 
@@ -47,7 +49,7 @@ import java.security.Principal;
  */
 public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
-    private static Logger log = LoggerFactory.getLogger(AbstractEvaluationTest.class);
+    protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
 
     protected Credentials creds;
     protected User testUser;
@@ -60,6 +62,10 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     protected String childPPath;
     protected String childchildPPath;
     protected String siblingPath;
+
+    // TODO: test AC for moved node
+    // TODO: test AC for moved AC-controlled node
+    // TODO: test if combination of group and user permissions are properly evaluated
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -341,7 +347,6 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
     }
 
-
     public void testWithDrawRead() throws RepositoryException, NotExecutableException {
         /*
          precondition:
@@ -354,8 +359,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         // withdraw the READ privilege
         withdrawPrivileges(path, PrivilegeRegistry.READ, getRestrictions(path));
 
-        //assertFalse(testSession.itemExists(path));
-
+        // test if login as testuser -> item at path must not exist.
         Session s = null;
         try {
             s = helper.getRepository().login(creds);
@@ -364,6 +368,42 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
             if (s != null) {
                 s.logout();
             }
+        }
+    }
+
+    public void testEventGeneration() throws RepositoryException, NotExecutableException {
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        // withdraw the READ privilege
+        withdrawPrivileges(path, PrivilegeRegistry.READ, getRestrictions(path));
+
+        // testUser registers a eventlistener for 'path
+        ObservationManager obsMgr = testSession.getWorkspace().getObservationManager();
+        EventResult listener = new EventResult(((JUnitTest) this).log);
+        try {
+            obsMgr.addEventListener(listener, Event.NODE_REMOVED, path, true, new String[0], new String[0], true);
+
+            // superuser removes the node with childNPath in order to provoke
+            // events being generated
+            superuser.getItem(childNPath).remove();
+            superuser.save();
+
+            obsMgr.removeEventListener(listener);
+            // since the testUser does not have read-permission on the removed
+            // node, no corresponding event must be generated.
+            Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+            for (int i = 0; i < evts.length; i++) {
+                if (evts[i].getType() == Event.NODE_REMOVED &&
+                        evts[i].getPath().equals(childNPath)) {
+                    fail("TestUser does not have READ permission below " + path + " -> events below must not show up.");
+                }
+            }
+        } finally {
+            obsMgr.removeEventListener(listener);
         }
     }
 
@@ -504,8 +544,4 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
         return policyNode;
     }
-
-    // TODO: test AC for moved node
-    // TODO: test AC for moved AC-controlled node
-    // TODO: test if combination of group and user permissions are properly evaluated
 }
