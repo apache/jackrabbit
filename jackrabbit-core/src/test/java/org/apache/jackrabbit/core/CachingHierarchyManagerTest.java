@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -31,7 +30,6 @@ import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -45,18 +43,24 @@ public class CachingHierarchyManagerTest extends TestCase {
     volatile boolean stop;
     CachingHierarchyManager cache;
 
+    /**
+     * Test multi-threaded read and write access to the cache.
+     */
     public void testResolveNodePath() throws Exception {
-        NodeId rootNodeId = new NodeId(UUID.randomUUID());
-        ItemStateManager provider = new MyItemStateManager();
-        cache = new CachingHierarchyManager(rootNodeId, provider, null);
-        final PathFactory factory = PathFactoryImpl.getInstance();
+        StaticItemStateManager ism = new StaticItemStateManager();
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        ism.setContainer(cache);
+        ism.addNode(ism.getRoot(), "a");
+        ism.addNode(ism.getRoot(), "b");
+        final Path aPath = toPath("/a");
+        final Path bPath = toPath("/b");
         for (int i = 0; i < 3; i++) {
             new Thread(new Runnable() {
                 public void run() {
                     while (!stop) {
-                        Path path = factory.create("{}\t{}a1");
                         try {
-                            cache.resolveNodePath(path);
+                            cache.resolveNodePath(aPath);
+                            cache.resolveNodePath(bPath);
                         } catch (Exception e) {
                             exception = e;
                         }
@@ -70,31 +74,6 @@ public class CachingHierarchyManagerTest extends TestCase {
             throw exception;
         }
     }
-
-    static class MyItemStateManager implements ItemStateManager {
-
-        public ItemState getItemState(ItemId id)
-                throws NoSuchItemStateException, ItemStateException {
-            Name name = NameFactoryImpl.getInstance().create("", "a1");
-            NodeState ns = new NodeState((NodeId) id, name, null,
-                    NodeState.STATUS_NEW, false);
-            ns.setDefinitionId(NodeDefId.valueOf("1"));
-            return ns;
-        }
-
-        public NodeReferences getNodeReferences(NodeReferencesId id) throws NoSuchItemStateException, ItemStateException {
-            return null;
-        }
-
-        public boolean hasItemState(ItemId id) {
-            return false;
-        }
-
-        public boolean hasNodeReferences(NodeReferencesId id) {
-            return false;
-        }
-
-    };
 
     //-------------------------------------------------------------- basic tests
 
