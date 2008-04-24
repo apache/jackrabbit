@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.authorization;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.core.security.authorization.combined.GlobPatternTest;
 
 /**
  * Test suite
@@ -37,9 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("security.authorization tests");
 
         suite.addTestSuite(PrivilegeRegistryTest.class);
-
         suite.addTestSuite(PolicyTemplateTest.class);
-        suite.addTestSuite(GlobPatternTest.class);
 
         return suite;
     }
