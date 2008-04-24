@@ -463,12 +463,12 @@ public final class EventStateCollection {
     }
 
     /**
-     * Resolves the node type name in <code>node</code> into a {@link NodeType}
-     * object using the {@link NodeTypeManager} of <code>session</code>.
+     * Resolves the node type name in <code>node</code> into a {@link javax.jcr.nodetype.NodeType}
+     * object using the {@link javax.jcr.nodetype.NodeTypeManager} of <code>session</code>.
      *
      * @param node    the node.
      * @param session the session.
-     * @return the {@link NodeType} of <code>node</code>.
+     * @return the {@link javax.jcr.nodetype.NodeType} of <code>node</code>.
      * @throws ItemStateException if the nodetype cannot be resolved.
      */
     private NodeTypeImpl getNodeType(NodeState node, SessionImpl session)
