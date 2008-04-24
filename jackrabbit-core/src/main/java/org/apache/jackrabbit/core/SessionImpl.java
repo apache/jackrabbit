@@ -295,7 +295,7 @@ public class SessionImpl extends AbstractSession
         itemStateMgr = createSessionItemStateManager(wsp.getItemStateManager());
         hierMgr = itemStateMgr.getHierarchyMgr();
         itemMgr = createItemManager(itemStateMgr, hierMgr);
-        accessMgr = createAccessManager(subject, itemStateMgr.getAtticAwareHierarchyMgr());
+        accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
         versionMgr = createVersionManager(rep);
     }
 
@@ -350,20 +350,22 @@ public class SessionImpl extends AbstractSession
     /**
      * Create the access manager.
      *
+     * @param subject
+     * @param hierarchyManager
      * @return access manager
      * @throws AccessDeniedException if the current subject is not granted access
      *                               to the current workspace
      * @throws RepositoryException   if the access manager cannot be instantiated
      */
     protected AccessManager createAccessManager(Subject subject,
-                                                HierarchyManager hierMgr)
+                                                HierarchyManager hierarchyManager)
             throws AccessDeniedException, RepositoryException {
         String wspName = getWorkspace().getName();
         AMContext ctx = new AMContext(new File(rep.getConfig().getHomeDir()),
                 rep.getFileSystem(),
                 this,
                 getSubject(),
-                getItemStateManager().getAtticAwareHierarchyMgr(),
+                hierarchyManager,
                 getNamePathResolver(),
                 wspName);
         return rep.getSecurityManager().getAccessManager(this, ctx);
