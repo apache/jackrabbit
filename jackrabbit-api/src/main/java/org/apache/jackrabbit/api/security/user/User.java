@@ -15,9 +15,6 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.Impersonation;
-
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
