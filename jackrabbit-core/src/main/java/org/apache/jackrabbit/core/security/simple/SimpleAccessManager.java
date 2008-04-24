@@ -37,8 +37,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -121,8 +119,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      * {@inheritDoc}
      */
     public void checkPermission(ItemId id, int permissions)
-            throws AccessDeniedException, ItemNotFoundException,
-            RepositoryException {
+            throws AccessDeniedException, RepositoryException {
         if (!isGranted(id, permissions)) {
             throw new AccessDeniedException("Access denied");
         }
@@ -131,8 +128,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * {@inheritDoc}
      */
-    public boolean isGranted(ItemId id, int permissions)
-            throws ItemNotFoundException, RepositoryException {
+    public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         checkInitialized();
         if (system) {
             // system has always all permissions
@@ -153,15 +149,15 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         return internalIsGranted(absPath, permissions);
     }
 
-    public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
+    public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
         return internalIsGranted(parentPath, permissions);
     }
 
-    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+    public boolean canRead(Path itemPath) throws RepositoryException {
         return true;
     }
 
-    private boolean internalIsGranted(Path absPath, int permissions) throws ItemNotFoundException, RepositoryException {
+    private boolean internalIsGranted(Path absPath, int permissions) throws RepositoryException {
         if (!absPath.isAbsolute()) {
             throw new RepositoryException("Absolute path expected");
         }
@@ -181,7 +177,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * {@inheritDoc}
      */
-    public boolean canAccess(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
+    public boolean canAccess(String workspaceName) throws RepositoryException {
         if (system || wspAccessMgr == null) {
             return true;
         }

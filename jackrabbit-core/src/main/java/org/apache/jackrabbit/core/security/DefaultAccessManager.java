@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -227,7 +226,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         return compiledPermissions.grants(absPath, permissions);
     }
 
-    public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
+    public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
         Path p = PathFactoryImpl.getInstance().create(parentPath, childName, true);
         return isGranted(p, permissions);
     }
@@ -235,7 +234,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AccessManager#canRead(Path)
      */
-    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+    public boolean canRead(Path itemPath) throws RepositoryException {
         Path path;
         if (compiledPermissions.canReadAll()) {
             return true;
@@ -247,7 +246,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     /**
      * @see AccessManager#canAccess(String)
      */
-    public boolean canAccess(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
+    public boolean canAccess(String workspaceName) throws RepositoryException {
         checkInitialized();
         return wspAccess.canAccess(workspaceName);
     }

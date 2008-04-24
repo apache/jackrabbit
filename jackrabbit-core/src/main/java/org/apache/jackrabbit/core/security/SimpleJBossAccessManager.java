@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.security.Principal;
@@ -99,13 +98,13 @@ public class SimpleJBossAccessManager implements AccessManager {
     }
 
     public void checkPermission(ItemId id, int permissions)
-            throws AccessDeniedException {
+            throws AccessDeniedException, RepositoryException {
         if (!isGranted(id, permissions)) {
             throw new AccessDeniedException("Access denied");
         }
     }
 
-    public boolean isGranted(ItemId id, int permissions) {
+    public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         // system has always all permissions
         // anonymous has only READ premissions
         return system || (anonymous && ((permissions & (WRITE | REMOVE)) == 0));
@@ -115,15 +114,15 @@ public class SimpleJBossAccessManager implements AccessManager {
         return internalIsGranted(permissions);
     }
 
-    public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
+    public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
         return internalIsGranted(permissions);
     }
 
-    public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+    public boolean canRead(Path itemPath) throws RepositoryException {
         return true;
     }
 
-    public boolean canAccess(String workspaceName) {
+    public boolean canAccess(String workspaceName) throws RepositoryException {
         return system || anonymous;
     }
 
