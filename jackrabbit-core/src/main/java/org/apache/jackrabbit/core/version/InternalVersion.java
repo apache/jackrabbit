@@ -49,21 +49,21 @@ public interface InternalVersion extends InternalVersionItem {
     NodeId getFrozenNodeId();
 
     /**
-     * Equivalent to {@link Version#getCreated()}
+     * Equivalent to {@link javax.jcr.version.Version#getCreated()}
      *
      * @see javax.jcr.version.Version#getCreated()
      */
     Calendar getCreated();
 
     /**
-     * Equivalent to {@link Version#getSuccessors()}}
+     * Equivalent to {@link javax.jcr.version.Version#getSuccessors()}}
      *
      * @see javax.jcr.version.Version#getSuccessors()
      */
     InternalVersion[] getSuccessors();
 
     /**
-     * Equivalent to {@link Version#getPredecessors()}}
+     * Equivalent to {@link javax.jcr.version.Version#getPredecessors()}}
      *
      * @see javax.jcr.version.Version#getPredecessors()
      */
