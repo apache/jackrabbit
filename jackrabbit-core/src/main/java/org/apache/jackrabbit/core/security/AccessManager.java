@@ -142,6 +142,7 @@ public interface AccessManager {
      * </ul>
      * @return <code>true</code> if the specified permissions are granted;
      * otherwise <code>false</code>.
+     * @throws RepositoryException if an error occurs.
      */
     boolean isGranted(Path absPath, int permissions) throws RepositoryException;
 
@@ -164,20 +165,18 @@ public interface AccessManager {
      * </ul>
      * @return <code>true</code> if the specified permissions are granted;
      * otherwise <code>false</code>.
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs.
      */
-    boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException;
+    boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException;
 
     /**
-     * Determines whether the item with the specified id can be read.
+     * Determines whether the item at the specified absolute path can be read.
      *
      * @param itemPath
      * @return <code>true</code> if the item can be read; otherwise <code>false</code>.
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs.
      */
-    boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException;
+    boolean canRead(Path itemPath) throws RepositoryException;
 
     /**
      * Determines whether the subject of the current context is granted access
@@ -189,7 +188,7 @@ public interface AccessManager {
      * @param workspaceName name of workspace
      * @return <code>true</code> if the subject of the current context is
      *         granted access to the given workspace; otherwise <code>false</code>.
-     * @throws RepositoryException if another error occurs.
+     * @throws RepositoryException if an error occurs.
      */
     boolean canAccess(String workspaceName) throws RepositoryException;
 }
