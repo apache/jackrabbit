@@ -108,7 +108,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b = ism.addNode(a, "b");
 
-        Path path = toPath("{}\t{}a\t{}b");
+        Path path = toPath("/a/b");
 
         // /a/b points to node only
         assertIsNodeId(cache.resolvePath(path));
@@ -149,6 +149,25 @@ public class CachingHierarchyManagerTest extends TestCase {
     //------------------------------------------------------------ caching tests
 
     /**
+     * Add a SNS (same name sibling) and verify that cached paths are
+     * adapted accordingly.
+     */
+    public void testAddSNS() throws Exception {
+        StaticItemStateManager ism = new StaticItemStateManager();
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        ism.setContainer(cache);
+        NodeState a = ism.addNode(ism.getRoot(), "a");
+        NodeState b1 = ism.addNode(a, "b");
+        Path path = cache.getPath(b1.getNodeId());
+        assertEquals(toPath("/a/b"), path);
+        NodeState b2 = ism.addNode(a, "b");
+        ism.orderBefore(b2, b1);
+        assertTrue(cache.isCached(b1.getNodeId(), null));
+        path = cache.getPath(b1.getNodeId());
+        assertEquals(toPath("/a/b[2]"), path);
+    }
+
+    /**
      * Clone a node, cache its path and remove it afterwards. Should remove
      * the cached path as well.
      */
@@ -161,13 +180,47 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState b1 = ism.addNode(a1, "b1");
         b1.addShare(b1.getParentId());
         ism.cloneNode(b1, a2, "b2");
-        ItemId id = cache.resolvePath(toPath("{}\t{}a1\t{}b1"));
-        assertEquals(b1.getId(), id);
-        id = cache.resolvePath(toPath("{}\t{}a2\t{}b2"));
+
+        Path path1 = toPath("/a1/b1");
+        Path path2 = toPath("/a2/b2");
+
+        assertNotNull(cache.resolvePath(path1));
+        assertTrue(cache.isCached(b1.getNodeId(), path1));
+
         ism.removeNode(b1);
-        assertNull("Path no longer valid: /a1/b1",
-                cache.resolvePath(toPath("{}\t{}a1\t{}b1")));
-        ism.removeNode((NodeState) ism.getItemState(id));
+
+        assertNull(cache.resolvePath(path1));
+        assertNotNull(cache.resolvePath(path2));
+    }
+
+    /**
+     * Clone a node, create a child and resolve its path in all valid
+     * combinations. Then, move the child away. Should remove the cached
+     * paths as well.
+     */
+    public void testCloneAndAddChildAndMove() throws Exception {
+        StaticItemStateManager ism = new StaticItemStateManager();
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        ism.setContainer(cache);
+        NodeState a1 = ism.addNode(ism.getRoot(), "a1");
+        NodeState a2 = ism.addNode(ism.getRoot(), "a2");
+        NodeState b1 = ism.addNode(a1, "b1");
+        b1.addShare(b1.getParentId());
+        ism.cloneNode(b1, a2, "b2");
+        NodeState c = ism.addNode(b1, "c");
+
+        Path path1 = toPath("/a1/b1/c");
+        Path path2 = toPath("/a2/b2/c");
+
+        assertNotNull(cache.resolvePath(path1));
+        assertTrue(cache.isCached(c.getNodeId(), path1));
+        assertNotNull(cache.resolvePath(path2));
+        assertTrue(cache.isCached(c.getNodeId(), path2));
+
+        ism.moveNode(c, a1, "c");
+
+        assertNull(cache.resolvePath(path1));
+        assertNull(cache.resolvePath(path2));
     }
 
     /**
@@ -181,10 +234,10 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState a2 = ism.addNode(ism.getRoot(), "a2");
         NodeState b1 = ism.addNode(a1, "b1");
         Path path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a1\t{}b1", path.toString());
+        assertEquals(toPath("/a1/b1"), path);
         ism.moveNode(b1, a2, "b2");
         path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a2\t{}b2", path.toString());
+        assertEquals(toPath("/a2/b2"), path);
     }
 
     /**
@@ -199,11 +252,11 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState b2 = ism.addNode(a, "b");
         NodeState b3 = ism.addNode(a, "b");
         Path path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a\t{}b", path.toString());
+        assertEquals(toPath("/a/b"), path);
         ism.orderBefore(b2, b1);
         ism.orderBefore(b1, b3);
         path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a\t{}b[2]", path.toString());
+        assertEquals(toPath("/a/b[2]"), path);
     }
 
     /**
@@ -217,9 +270,46 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState b = ism.addNode(a, "b");
         NodeState c = ism.addNode(b, "c");
         cache.getPath(c.getNodeId());
-        assertTrue(cache.isCached(c.getId()));
+        assertTrue(cache.isCached((NodeId) c.getId(), null));
         ism.removeNode(b);
-        assertFalse(cache.isCached(c.getId()));
+        assertFalse(cache.isCached((NodeId) c.getId(), null));
+    }
+
+    /**
+     * Remove a SNS (same name sibling) and verify that cached paths are
+     * adapted accordingly. The removed SNS's path is not cached.
+     */
+    public void testRemoveSNS() throws Exception {
+        StaticItemStateManager ism = new StaticItemStateManager();
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        ism.setContainer(cache);
+        NodeState a = ism.addNode(ism.getRoot(), "a");
+        NodeState b1 = ism.addNode(a, "b");
+        NodeState b2 = ism.addNode(a, "b");
+        Path path = cache.getPath(b2.getNodeId());
+        assertEquals(toPath("/a/b[2]"), path);
+        ism.removeNode(b1);
+        path = cache.getPath(b2.getNodeId());
+        assertEquals(toPath("/a/b"), path);
+    }
+
+    /**
+     * Remove a SNS (same name sibling) and verify that cached paths are
+     * adapted accordingly. The removed SNS's path is cached.
+     */
+    public void testRemoveSNSWithCachedPath() throws Exception {
+        StaticItemStateManager ism = new StaticItemStateManager();
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        ism.setContainer(cache);
+        NodeState a = ism.addNode(ism.getRoot(), "a");
+        NodeState b1 = ism.addNode(a, "b");
+        NodeState b2 = ism.addNode(a, "b");
+        cache.getPath(b1.getNodeId());
+        Path path = cache.getPath(b2.getNodeId());
+        assertEquals(toPath("/a/b[2]"), path);
+        ism.removeNode(b1);
+        path = cache.getPath(b2.getNodeId());
+        assertEquals(toPath("/a/b"), path);
     }
 
     /**
@@ -233,14 +323,14 @@ public class CachingHierarchyManagerTest extends TestCase {
         NodeState b1 = ism.addNode(a1, "b");
         NodeState b2 = ism.addNode(a1, "b");
         Path path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a1\t{}b", path.toString());
+        assertEquals(toPath("/a1/b"), path);
         path = cache.getPath(b2.getNodeId());
-        assertEquals("{}\t{}a1\t{}b[2]", path.toString());
+        assertEquals(toPath("/a1/b[2]"), path);
         ism.renameNode(b1, "b1");
-        assertTrue(cache.isCached(b1.getNodeId()));
-        assertTrue(cache.isCached(b2.getNodeId()));
+        assertTrue(cache.isCached(b1.getNodeId(), null));
+        assertTrue(cache.isCached(b2.getNodeId(), null));
         path = cache.getPath(b1.getNodeId());
-        assertEquals("{}\t{}a1\t{}b1", path.toString());
+        assertEquals(toPath("/a1/b1"), path);
     }
 
     /**
@@ -506,7 +596,21 @@ public class CachingHierarchyManagerTest extends TestCase {
      * @return path
      */
     private static Path toPath(String s) {
-        return PathFactoryImpl.getInstance().create(s);
+        StringBuffer buf = new StringBuffer("{}");
+        int start = 1, length = s.length();
+        while (start < length) {
+            int end = s.indexOf('/', start);
+            if (end == -1) {
+                end = length;
+            }
+            String name = s.substring(start, end);
+            if (name.length() > 0) {
+                buf.append("\t{}");
+                buf.append(name);
+            }
+            start = end + 1;
+        }
+        return PathFactoryImpl.getInstance().create(buf.toString());
     }
 
     /**

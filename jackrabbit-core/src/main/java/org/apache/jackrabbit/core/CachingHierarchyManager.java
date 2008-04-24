@@ -146,7 +146,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     protected void pathResolved(ItemId id, PathBuilder builder)
             throws MalformedPathException {
 
-        if (id.denotesNode() && !isCached(id)) {
+        if (id.denotesNode()) {
             cache((NodeId) id, builder.getPath());
         }
     }
@@ -295,26 +295,24 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 // Item not cached, ignore
                 return;
             }
+            PathMap.Element[] elements = entry.getElements();
+            for (int i = 0; i < elements.length; i++) {
+                Iterator iter = elements[i].getChildren();
+                while (iter.hasNext()) {
+                    PathMap.Element child = (PathMap.Element) iter.next();
+                    NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
+                            child.getName(), child.getNormalizedIndex());
+                    if (cne == null) {
+                        // Item does not exist, remove
+                        evict(child, true);
+                        return;
+                    }
 
-            PathMap.Element element = entry.getElement();
-
-            Iterator iter = element.getChildren();
-            while (iter.hasNext()) {
-                PathMap.Element child = (PathMap.Element) iter.next();
-                NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
-                        child.getName(), child.getNormalizedIndex());
-                if (cne == null) {
-                    // Item does not exist, remove
-                    child.remove();
-                    remove(child);
-                    return;
-                }
-
-                LRUEntry childEntry = (LRUEntry) child.get();
-                if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
-                    // Different child item, remove
-                    child.remove();
-                    remove(child);
+                    LRUEntry childEntry = (LRUEntry) child.get();
+                    if (childEntry != null && !cne.getId().equals(childEntry.getId())) {
+                        // Different child item, remove
+                        evict(child, true);
+                    }
                 }
             }
         }
@@ -324,7 +322,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void stateDestroyed(ItemState destroyed) {
-        remove(destroyed.getId());
+        evictAll(destroyed.getId(), true);
     }
 
     /**
@@ -334,11 +332,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         if (discarded.isTransient() && !discarded.hasOverlayedState()
                 && discarded.getStatus() == ItemState.STATUS_NEW) {
             // a new node has been discarded -> remove from cache
-            remove(discarded.getId());
+            evictAll(discarded.getId(), true);
         } else if (provider.hasItemState(discarded.getId())) {
-            evict(discarded.getId());
+            evictAll(discarded.getId(), false);
         } else {
-            remove(discarded.getId());
+            evictAll(discarded.getId(), true);
         }
     }
 
@@ -377,12 +375,15 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     public void nodesReplaced(NodeState state) {
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(state.getNodeId());
-            if (entry != null) {
-                PathMap.Element parent = entry.getElement();
+            if (entry == null) {
+                return;
+            }
+            PathMap.Element[] parents = entry.getElements();
+            for (int i = 0; i < parents.length; i++) {
                 HashMap newChildrenOrder = new HashMap();
                 boolean orderChanged = false;
 
-                Iterator iter = parent.getChildren();
+                Iterator iter = parents[i].getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     LRUEntry childEntry = (LRUEntry) child.get();
@@ -393,16 +394,14 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                          * position is still accurate and have to assume
                          * the worst and remove it.
                          */
-                        child.remove(false);
-                        remove(child);
+                        evict(child, false);
                         continue;
                     }
                     NodeId childId = childEntry.getId();
                     NodeState.ChildNodeEntry cne = state.getChildNodeEntry(childId);
                     if (cne == null) {
                         /* Child no longer in parent node state, so remove it */
-                        child.remove(false);
-                        remove(child);
+                        evict(child, false);
                         continue;
                     }
 
@@ -422,7 +421,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
                 if (orderChanged) {
                     /* If at least one child changed its position, reorder */
-                    parent.setChildren(newChildrenOrder);
+                    parents[i].setChildren(newChildrenOrder);
                 }
             }
         }
@@ -443,6 +442,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                             + ", event ignored.");
                 } catch (MalformedPathException e) {
                     log.warn("Unable to create path of " + id, e);
+                } catch (ItemStateException e) {
+                    log.warn("Unable to find item " + id, e);
                 } catch (ItemNotFoundException e) {
                     log.warn("Unable to get path of " + state.getNodeId(), e);
                 } catch (RepositoryException e) {
@@ -455,7 +456,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     //------------------------------------------------------< private methods >
 
     /**
-     * Return a cached element in the path map, given its id
+     * Return the first cached path that is mapped to given id.
      *
      * @param id node id
      * @return cached element, <code>null</code> if not found
@@ -465,7 +466,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
                 entry.touch();
-                return entry.getElement();
+                return entry.getElements()[0];
             }
             return null;
         }
@@ -502,150 +503,138 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     private void cache(NodeId id, Path path) {
         synchronized (cacheMonitor) {
-            if (idCache.get(id) != null) {
+            if (isCached(id, path)) {
                 return;
             }
             if (idCache.size() >= upperLimit) {
                 /**
-                 * Remove least recently used item. Scans the LRU list from head to tail
-                 * and removes the first item that has no children.
+                 * Remove least recently used item. Scans the LRU list from
+                 * head to tail and removes the first item that has no children.
                  */
                 LRUEntry entry = head;
                 while (entry != null) {
-                    PathMap.Element element = entry.getElement();
-                    if (element.getChildrenCount() == 0) {
-                        evict(entry, true);
+                    PathMap.Element[] elements = entry.getElements();
+                    int childrenCount = 0;
+                    for (int i = 0; i < elements.length; i++) {
+                        childrenCount += elements[i].getChildrenCount();
+                    }
+                    if (childrenCount == 0) {
+                        evictAll(entry.getId(), false);
                         return;
                     }
                     entry = entry.getNext();
                 }
             }
-
             PathMap.Element element = pathCache.put(path);
             if (element.get() != null) {
                 if (!id.equals(((LRUEntry) element.get()).getId())) {
                     log.warn("overwriting PathMap.Element");
                 }
             }
-            LRUEntry entry = new LRUEntry(id, element);
+            LRUEntry entry = (LRUEntry) idCache.get(id);
+            if (entry == null) {
+                entry = new LRUEntry(id, element);
+                idCache.put(id, entry);
+            } else {
+                entry.addElement(element);
+            }
             element.set(entry);
-            idCache.put(id, entry);
         }
     }
 
     /**
-     * Return a flag indicating whether a certain element is cached.
+     * Return a flag indicating whether a certain node and/or path is cached.
+     * If <code>path</code> is <code>null</code>, check whether the item is
+     * cached at all. If <code>path</code> is <b>not</b> <code>null</code>,
+     * check whether the item is cached with that path.
+     *
+     * @param id item id
+     * @param path path, may be <code>null</code>
+     * @return <code>true</code> if the item is already cached;
+     *         <code>false</code> otherwise
+     */
+    boolean isCached(NodeId id, Path path) {
+        synchronized (cacheMonitor) {
+            LRUEntry entry = (LRUEntry) idCache.get(id);
+            if (entry == null) {
+                return false;
+            }
+            if (path == null) {
+                return true;
+            }
+            PathMap.Element[] elements = entry.getElements();
+            for (int i = 0; i < elements.length; i++) {
+                if (elements[i].hasPath(path)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Return a flag indicating whether a certain path is cached.
      *
      * @param id item id
      * @return <code>true</code> if the item is already cached;
      *         <code>false</code> otherwise
      */
-    boolean isCached(ItemId id) {
+    boolean isCached(Path path) {
         synchronized (cacheMonitor) {
-            return idCache.get(id) != null;
+            PathMap.Element element = pathCache.map(path, true);
+            if (element != null) {
+                return element.get() != null;
+            }
+            return false;
         }
     }
 
     /**
-     * Remove item from cache. Removes the associated <code>LRUEntry</code>
-     * and the <code>PathMap.Element</code> with it. Indexes of same name
-     * sibling elements are shifted!
+     * Remove all path mapping for a given item id. Removes the associated
+     * <code>LRUEntry</code> and the <code>PathMap.Element</code> with it.
+     * Indexes of same name sibling elements are shifted!
      *
      * @param id item id
      */
-    private void remove(ItemId id) {
+    private void evictAll(ItemId id, boolean shift) {
         synchronized (cacheMonitor) {
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
-                remove(entry, true);
-            }
-        }
-    }
-
-    /**
-     * Remove item from cache. Index of same name sibling items are shifted!
-     * If <code>removeFromPathCache</code> is <code>true</code>, the path map
-     * element associated with <code>entry</code> is deleted recursively and
-     * every associated element is removed.
-     * If <code>removeFromPathCache</code> is <code>false</code>, only the
-     * LRU entry is removed from the cache.
-     *
-     * @param entry               LRU entry
-     * @param removeFromPathCache whether to remove from path cache
-     */
-    private void remove(LRUEntry entry, boolean removeFromPathCache) {
-        // assert: synchronized (cacheMonitor)
-        if (removeFromPathCache) {
-            PathMap.Element element = entry.getElement();
-            remove(element);
-            element.remove();
-        } else {
-            idCache.remove(entry.getId());
-            entry.remove();
-        }
-    }
-
-    /**
-     * Evict item from cache. Index of same name sibling items are <b>not</b>
-     * shifted!
-     *
-     * @param entry               LRU entry
-     * @param removeFromPathCache whether to remove from path cache
-     */
-    private void evict(LRUEntry entry, boolean removeFromPathCache) {
-        // assert: synchronized (cacheMonitor)
-        if (removeFromPathCache) {
-            PathMap.Element element = entry.getElement();
-            element.traverse(new PathMap.ElementVisitor() {
-                public void elementVisited(PathMap.Element element) {
-                    evict((LRUEntry) element.get(), false);
+                PathMap.Element[] elements = entry.getElements();
+                for (int i = 0; i < elements.length; i++) {
+                    evict(elements[i], shift);
                 }
-            }, false);
-            element.remove(false);
-        } else {
-            idCache.remove(entry.getId());
-            entry.remove();
-        }
-    }
-
-    /**
-     * Evict item from cache. Evicts the associated <code>LRUEntry</code>
-     * and the <code>PathMap.Element</code> with it. Indexes of same name
-     * sibling elements are <b>not</b> shifted!
-     *
-     * @param id item id
-     */
-    private void evict(ItemId id) {
-        synchronized (cacheMonitor) {
-            LRUEntry entry = (LRUEntry) idCache.get(id);
-            if (entry != null) {
-                evict(entry, true);
             }
         }
     }
 
     /**
-     * Remove path map element from cache. This will traverse all children
+     * Evict path map element from cache. This will traverse all children
      * of this element and remove the objects associated with them.
      * Index of same name sibling items are shifted!
      *
      * @param element path map element
      */
-    private void remove(PathMap.Element element) {
+    private void evict(PathMap.Element element, boolean shift) {
         // assert: synchronized (cacheMonitor)
         element.traverse(new PathMap.ElementVisitor() {
             public void elementVisited(PathMap.Element element) {
-                remove((LRUEntry) element.get(), false);
+                LRUEntry entry = (LRUEntry) element.get();
+                if (entry.removeElement(element) == 0) {
+                    idCache.remove(entry.getId());
+                    entry.remove();
+                }
             }
         }, false);
+        element.remove(shift);
     }
 
     /**
      * Invoked when a notification about a child node addition has been received.
      *
-     * @param state node state
-     * @param path  node path
-     * @param id    node id
+     * @param state node state where child was added
+     * @param path  path to child node
+     * @param id    child node id
      *
      * @throws PathNotFoundException if the path was not found
      */
@@ -657,21 +646,28 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
             LRUEntry entry = (LRUEntry) idCache.get(id);
             if (entry != null) {
-                element = entry.getElement();
-
-                NodeState child = (NodeState) getItemState(id);
-                if (!child.isShareable()) {
-                    element.remove();
-                } else {
-                    element = null;
+                // child node already cached: this can have the following
+                // reasons:
+                //    1) node was moved, cached path is outdated
+                //    2) node was cloned, cached path is still valid
+                NodeState child = null;
+                if (hasItemState(id)) {
+                    child = (NodeState) getItemState(id);
+                }
+                if (child == null || !child.isShareable()) {
+                    PathMap.Element[] elements = entry.getElements();
+                    element = elements[0];
+                    for (int i = 0; i < elements.length; i++) {
+                        elements[i].remove();
+                    }
                 }
             }
-
             PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
             if (parent != null) {
                 parent.insert(path.getNameElement());
             }
             if (element != null) {
+                // store remembered element at new position
                 pathCache.put(path, element);
             }
         }
@@ -687,26 +683,38 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @throws PathNotFoundException if the path was not found
      */
     private void nodeRemoved(NodeState state, Path path, NodeId id)
-            throws PathNotFoundException {
+            throws PathNotFoundException, ItemStateException {
 
         synchronized (cacheMonitor) {
             PathMap.Element parent = pathCache.map(path.getAncestor(1), true);
-            if (parent != null) {
+            if (parent == null) {
+                return;
+            }
+            PathMap.Element element = parent.getDescendant(PathFactoryImpl.getInstance().create(
+                    new Path.Element[] { path.getNameElement() }), true);
+            if (element != null) {
                 // with SNS, this might evict a child that is NOT the one
                 // having <code>id</code>, check first whether item has
                 // the id passed as argument
-                PathMap.Element child = parent.getDescendant(PathFactoryImpl.getInstance().create(
-                        new Path.Element[] { path.getNameElement() }), true);
-                if (child != null) {
-                    LRUEntry entry = (LRUEntry) child.get();
-                    if (entry != null && !entry.getId().equals(id)) {
-                        return;
-                    }
+                LRUEntry entry = (LRUEntry) element.get();
+                if (entry != null && !entry.getId().equals(id)) {
+                    return;
                 }
-                PathMap.Element element = parent.remove(path.getNameElement());
-                if (element != null) {
-                    remove(element);
+                // if item is shareable, remove this path only, otherwise
+                // every path this item has been mapped to
+                NodeState child = null;
+                if (hasItemState(id)) {
+                    child = (NodeState) getItemState(id);
                 }
+                if (child == null || !child.isShareable()) {
+                    evictAll(id, true);
+                } else {
+                    evict(element, true);
+                }
+            } else {
+                // element itself is not cached, but removal might cause SNS
+                // index shifting
+                parent.remove(path.getNameElement());
             }
         }
     }
@@ -760,9 +768,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         private final NodeId id;
 
         /**
-         * Element in path map
+         * Elements in path map
          */
-        private final PathMap.Element element;
+        private PathMap.Element[] elements;
 
         /**
          * Create a new instance of this class
@@ -772,7 +780,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
          */
         public LRUEntry(NodeId id, PathMap.Element element) {
             this.id = id;
-            this.element = element;
+            this.elements = new PathMap.Element[] { element };
 
             append();
         }
@@ -848,12 +856,46 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         }
 
         /**
-         * Return element in path map
+         * Return elements in path map that are mapped to <code>id</code>. If
+         * this entry is a shareable node or one of its descendant, it can
+         * be reached by more than one path.
          *
          * @return element in path map
          */
-        public PathMap.Element getElement() {
-            return element;
+        public PathMap.Element[] getElements() {
+            return elements;
+        }
+
+        /**
+         * Add a mapping to some element.
+         */
+        public void addElement(PathMap.Element element) {
+            PathMap.Element[] tmp = new PathMap.Element[elements.length + 1];
+            System.arraycopy(elements, 0, tmp, 0, elements.length);
+            tmp[elements.length] = element;
+            elements = tmp;
+        }
+
+        /**
+         * Remove a mapping to some element from this entry.
+         *
+         * @return number of mappings left
+         */
+        public int removeElement(PathMap.Element element) {
+            boolean found = false;
+            for (int i = 0; i < elements.length; i++) {
+                if (found) {
+                    elements[i - 1] = elements[i];
+                } else if (elements[i] == element) {
+                    found = true;
+                }
+            }
+            if (found) {
+                PathMap.Element[] tmp = new PathMap.Element[elements.length - 1];
+                System.arraycopy(elements, 0, tmp, 0, tmp.length);
+                elements = tmp;
+            }
+            return elements.length;
         }
 
         /**
