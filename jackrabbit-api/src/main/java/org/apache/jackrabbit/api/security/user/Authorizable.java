@@ -65,6 +65,7 @@ public interface Authorizable  {
      * principal name.
      *
      * @return Name of this <code>Authorizable</code>.
+     * @throws RepositoryException if an error occurs.
      */
     String getID() throws RepositoryException;
 
@@ -126,6 +127,16 @@ public interface Authorizable  {
      * <code>Authorizable</code> could not be removed.
      */
     void remove() throws RepositoryException;
+
+    /**
+     * Returns the names of properties present with <code>this</code> Authorizable.
+     *
+     * @return names of properties.
+     * @throws RepositoryException If an error occurs.
+     * @see #getProperty(String)
+     * @see #hasProperty(String)
+     */
+    Iterator getPropertyNames() throws RepositoryException;
 
     /**
 	 * Tests if a the property with specified name exists.

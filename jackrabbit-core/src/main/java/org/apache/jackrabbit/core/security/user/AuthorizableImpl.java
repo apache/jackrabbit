@@ -149,11 +149,18 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     /**
-     * Tests if a Value exists for a property at the given name.
-     *
-     * @param name
-     * @return
-     * @throws javax.jcr.RepositoryException
+     * @see Authorizable#getPropertyNames()
+     */
+    public Iterator getPropertyNames() throws RepositoryException {
+        List l = new ArrayList();
+        for (PropertyIterator it = node.getProperties(); it.hasNext();) {
+            String propName = it.nextProperty().getName();
+            l.add(propName);
+        }
+        return l.iterator();
+    }
+
+    /**
      * @see #getProperty(String)
      */
     public boolean hasProperty(String name) throws RepositoryException {
@@ -161,9 +168,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     /**
-     * @param name
-     * @return the value or <code>null</code> if no value exists for the given name
-     * @throws javax.jcr.RepositoryException
      * @see #hasProperty(String)
      * @see Authorizable#getProperty(String)
      */
@@ -188,7 +192,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#setProperty(String, Value)
      */
     public synchronized void setProperty(String name, Value value) throws RepositoryException {
-        checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(name);
         try {
             node.setProperty(name, value);
             node.save();
@@ -208,7 +212,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#setProperty(String, Value[])
      */
     public synchronized void setProperty(String name, Value[] values) throws RepositoryException {
-        checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(name);
         try {
             node.setProperty(name, values);
             node.save();
@@ -222,7 +226,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#removeProperty(String)
      */
     public synchronized boolean removeProperty(String name) throws RepositoryException {
-        checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(name);
         try {
             if (node.hasProperty(name)) {
                 // 'node' is protected -> use setValue instead of Property.remove()
@@ -270,8 +274,10 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     /**
-     * Check if the property to be modified/removed is one of the following that
-     * has a special meaning and must be altered using this user API:
+     * Test if the JCR property to be modified/removed is one of the
+     * following that has a special meaning and must be altered using this
+     * user API:
+     * <ul>
      * <ul>
      * <li>rep:principalName</li>
      * <li>rep:userId</li>
@@ -279,20 +285,36 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * <li>rep:members</li>
      * <li>rep:impersonators</li>
      * </ul>
-     * Basically these properties are marked 'protected' in their property
-     * definition. This method is a simple utility in order to save the
-     * extra effort to modify the props just to find out later that they
-     * are in fact protected.
+     * Those properties are 'protected' in their property definition. This
+     * method is a simple utility in order to save the extra effort to modify
+     * the props just to find out later that they are in fact protected.
      *
-     * @param pName
+     * @param propertyName
+     * @return
      * @throws RepositoryException
      */
-    private void checkProtectedProperty(Name pName) throws RepositoryException {
-        if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
-                || P_REFEREES.equals(pName) || P_MEMBERS.equals(pName)
-                || P_IMPERSONATORS.equals(pName)) {
-            throw new ConstraintViolationException("Attempt to modify protected property " + getSession().getJCRName(pName) + " of an Authorizable.");
-        }
+    private boolean isProtectedProperty(String propertyName) throws RepositoryException {
+        Name pName = getSession().getQName(propertyName);
+         if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
+                 || P_REFEREES.equals(pName) || P_MEMBERS.equals(pName)
+                 || P_IMPERSONATORS.equals(pName)) {
+             return true;
+         } else {
+             return false;
+         }
+     }
+
+    /**
+     * Throws ConstraintViolationException if {@link #isProtectedProperty(String)}
+     * returns <code>true</code>.
+     *
+     * @param propertyName
+     * @throws RepositoryException
+     */
+    private void checkProtectedProperty(String propertyName) throws RepositoryException {
+        if (isProtectedProperty(propertyName)) {
+             throw new ConstraintViolationException("Attempt to modify protected property " + propertyName + " of an Authorizable.");
+         }
     }
 
     private List getRefereeValues() throws RepositoryException {

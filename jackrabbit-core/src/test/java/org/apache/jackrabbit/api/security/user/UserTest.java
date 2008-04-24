@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import java.util.Iterator;
+import javax.jcr.Credentials;
 
 /**
  * <code>UserTest</code>...
@@ -47,7 +47,7 @@ public class UserTest extends AbstractUserTest {
 
     public void testUserHasCredentials() throws RepositoryException, NotExecutableException {
         User user = getTestUser(superuser);
-        Iterator it = user.getCredentials();
-        assertTrue(it.hasNext());
+        Credentials creds = user.getCredentials();
+        assertTrue(creds != null);
     }
 }

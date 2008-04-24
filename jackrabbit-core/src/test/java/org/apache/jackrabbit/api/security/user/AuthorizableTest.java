@@ -93,6 +93,11 @@ public class AuthorizableTest extends AbstractUserTest {
         }
 
         try {
+            boolean found = false;
+            for (Iterator it = auth.getPropertyNames(); it.hasNext() && !found;) {
+                found = propName.equals(it.next().toString());
+            }
+            assertTrue(found);
             assertTrue(auth.hasProperty(propName));
             assertTrue(auth.getProperty(propName).length == 1);
             assertEquals(v, auth.getProperty(propName)[0]);
@@ -116,9 +121,38 @@ public class AuthorizableTest extends AbstractUserTest {
         }
 
         try {
+            boolean found = false;
+            for (Iterator it = auth.getPropertyNames(); it.hasNext() && !found;) {
+                found = propName.equals(it.next().toString());
+            }
+            assertTrue(found);
             assertTrue(auth.hasProperty(propName));
             assertEquals(Arrays.asList(v), Arrays.asList(auth.getProperty(propName)));
             assertTrue(auth.removeProperty(propName));
+        } finally {
+            // try to remove the property again even if previous calls failed.
+            auth.removeProperty(propName);
+        }
+    }
+
+    public void testGetPropertyNames() throws NotExecutableException, RepositoryException {
+        Authorizable auth = getTestUser(superuser);
+
+        // TODO: retrieve propname and value from config
+        String propName = "Fullname";
+        Value v = superuser.getValueFactory().createValue("Super User");
+        try {
+            auth.setProperty(propName, v);
+        } catch (RepositoryException e) {
+            throw new NotExecutableException("Cannot test 'Authorizable.setProperty'.");
+        }
+
+        try {
+            for (Iterator it = auth.getPropertyNames(); it.hasNext();) {
+                String name = it.next().toString();
+                assertTrue(auth.hasProperty(name));
+                assertNotNull(auth.getProperty(name));
+            }
         } finally {
             // try to remove the property again even if previous calls failed.
             auth.removeProperty(propName);
@@ -135,6 +169,7 @@ public class AuthorizableTest extends AbstractUserTest {
             i++;
         }
         assertNull(auth.getProperty(propName));
+        assertFalse(auth.hasProperty(propName));
     }
 
     public void testRemoveNotExistingProperty() throws RepositoryException, NotExecutableException {

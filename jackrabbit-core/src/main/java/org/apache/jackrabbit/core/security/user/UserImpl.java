@@ -29,8 +29,6 @@ import javax.jcr.RepositoryException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * UserImpl
@@ -64,7 +62,7 @@ class UserImpl extends AuthorizableImpl implements User {
         }
         return new UserImpl(node, userManager);
     }
-    
+
     //-------------------------------------------------------< Authorizable >---
     /**
      * @see Authorizable#getID()
@@ -84,11 +82,11 @@ class UserImpl extends AuthorizableImpl implements User {
     /**
      * @see User#getCredentials()
      */
-    public Iterator getCredentials() throws RepositoryException {
+    public Credentials getCredentials() throws RepositoryException {
         try {
             String password = getNode().getProperty(P_PASSWORD).getString();
             Credentials creds = new CryptedSimpleCredentials(getID(), password);
-            return Collections.singletonList(creds).iterator();
+            return creds;
         } catch (NoSuchAlgorithmException e) {
             throw new RepositoryException(e);
         } catch (UnsupportedEncodingException e) {
