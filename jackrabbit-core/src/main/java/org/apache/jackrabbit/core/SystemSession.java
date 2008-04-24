@@ -127,8 +127,7 @@ class SystemSession extends SessionImpl {
          * @throws RepositoryException   is never thrown
          */
         public void checkPermission(ItemId id, int permissions)
-                throws AccessDeniedException, ItemNotFoundException,
-                RepositoryException {
+                throws AccessDeniedException, RepositoryException {
             // allow everything
         }
 
@@ -139,8 +138,7 @@ class SystemSession extends SessionImpl {
          * @throws ItemNotFoundException is never thrown
          * @throws RepositoryException   is never thrown
          */
-        public boolean isGranted(ItemId id, int permissions)
-                throws ItemNotFoundException, RepositoryException {
+        public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
             // allow everything
             return true;
         }
@@ -160,7 +158,7 @@ class SystemSession extends SessionImpl {
          *
          * @see AccessManager#isGranted(Path, Name, int) 
          */
-        public boolean isGranted(Path parentPath, Name childName, int permissions) throws ItemNotFoundException, RepositoryException {
+        public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
             // allow everything
             return true;
         }
@@ -171,7 +169,7 @@ class SystemSession extends SessionImpl {
          * @see AccessManager#canRead(Path)
          * @param itemPath
          */
-        public boolean canRead(Path itemPath) throws ItemNotFoundException, RepositoryException {
+        public boolean canRead(Path itemPath) throws RepositoryException {
             return true;
         }
 
@@ -182,8 +180,7 @@ class SystemSession extends SessionImpl {
          * @throws NoSuchWorkspaceException is never thrown
          * @throws RepositoryException      is never thrown
          */
-        public boolean canAccess(String workspaceName)
-                throws NoSuchWorkspaceException, RepositoryException {
+        public boolean canAccess(String workspaceName) throws RepositoryException {
             return true;
         }
     }
