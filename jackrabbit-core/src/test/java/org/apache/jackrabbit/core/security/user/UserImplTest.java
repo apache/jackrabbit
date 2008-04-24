@@ -30,7 +30,6 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.security.Principal;
-import java.util.Iterator;
 
 /**
  * <code>UserImplTest</code>...
@@ -66,12 +65,11 @@ public class UserImplTest extends AbstractUserTest {
 
     public void testUserImplHasCryptedSimplCredentials() throws RepositoryException, NotExecutableException {
         User user = getTestUser(superuser);
-        Iterator it = user.getCredentials();
-        assertTrue(it.hasNext());
+        Credentials creds = user.getCredentials();
+        assertNotNull(creds);
 
-        Credentials crds = (Credentials) it.next();
-        assertTrue(crds instanceof CryptedSimpleCredentials);
-        assertEquals(((CryptedSimpleCredentials) crds).getUserID(), user.getID());
+        assertTrue(creds instanceof CryptedSimpleCredentials);
+        assertEquals(((CryptedSimpleCredentials) creds).getUserID(), user.getID());
     }
 
     public void testIsUser() throws RepositoryException {

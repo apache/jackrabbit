@@ -16,7 +16,7 @@
 package org.apache.jackrabbit.api.security.user;
 
 import javax.jcr.RepositoryException;
-import java.util.Iterator;
+import javax.jcr.Credentials;
 
 /**
  * User is a special {@link Authorizable} that can be authenticated and
@@ -33,13 +33,11 @@ public interface User extends Authorizable {
     boolean isAdmin();
 
     /**
-     * Returns an iterator of <code>Credentials</code> object that belong
-     * to this user. The iterator's size must be greater than zero.
+     * Returns <code>Credentials</code> for this user.
      *
-     * @return an iterator over <code>Credentials</code> that contains
-     * at least a single <code>Credentials</code> object.
+     * @return <code>Credentials</code> for this user.
      */
-    Iterator getCredentials() throws RepositoryException;
+    Credentials getCredentials() throws RepositoryException;
 
     /**
      * @return <code>Impersonation</code> for this <code>User</code>.

@@ -25,9 +25,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 
 /**
  * This {@link Authentication} implementation handles all
@@ -45,7 +42,7 @@ class SimpleCredentialsAuthentication implements Authentication {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleCredentialsAuthentication.class);
 
-    private final Collection credentialSet = new HashSet();
+    private final CryptedSimpleCredentials creds;
 
     /**
      * Create an Authentication for this User
@@ -54,19 +51,20 @@ class SimpleCredentialsAuthentication implements Authentication {
      * @throws javax.jcr.RepositoryException
      */
     SimpleCredentialsAuthentication(User user) throws RepositoryException {
-        for(Iterator it = user.getCredentials(); it.hasNext();) {
-            Credentials creds = (Credentials) it.next();
-            if (creds instanceof CryptedSimpleCredentials) {
-                credentialSet.add(creds);
-            } else if (creds instanceof SimpleCredentials) {
-                try {
-                    credentialSet.add(new CryptedSimpleCredentials((SimpleCredentials) creds));
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RepositoryException(e);
-                } catch (UnsupportedEncodingException e) {
-                    throw new RepositoryException(e);
-                }
+        Credentials creds = user.getCredentials();
+        if (creds instanceof CryptedSimpleCredentials) {
+            this.creds = (CryptedSimpleCredentials) creds;
+        } else if (creds instanceof SimpleCredentials) {
+            try {
+                this.creds = new CryptedSimpleCredentials((SimpleCredentials) creds);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RepositoryException(e);
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(e);
             }
+        } else {
+            log.warn("No Credentials found with user " + user.getID());
+            this.creds = null;
         }
     }
 
@@ -82,7 +80,7 @@ class SimpleCredentialsAuthentication implements Authentication {
      * @see Authentication#canHandle(Credentials)
      */
     public boolean canHandle(Credentials credentials) {
-        return !credentialSet.isEmpty() && credentials instanceof SimpleCredentials;
+        return creds != null && credentials instanceof SimpleCredentials;
     }
 
     /**
@@ -101,18 +99,14 @@ class SimpleCredentialsAuthentication implements Authentication {
         if (!(credentials instanceof SimpleCredentials)) {
             throw new RepositoryException("SimpleCredentials expected. Cannot handle " + credentials.getClass().getName());
         }
-
-        for (Iterator it = credentialSet.iterator(); it.hasNext();) {
-            try {
-                CryptedSimpleCredentials creds = (CryptedSimpleCredentials) it.next();
-                if (creds.matches((SimpleCredentials) credentials)) {
-                    return true;
-                }
-            } catch (NoSuchAlgorithmException e) {
-                log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
-            } catch (UnsupportedEncodingException e) {
-                log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+        try {
+            if (creds != null && creds.matches((SimpleCredentials) credentials)) {
+                return true;
             }
+        } catch (NoSuchAlgorithmException e) {
+            log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
+        } catch (UnsupportedEncodingException e) {
+            log.debug("Failed to verify Credentials with {}: {} -> test next", credentials.toString(), e);
         }
         return false;
     }

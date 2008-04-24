@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.value.StringValue;
 import org.slf4j.Logger;
