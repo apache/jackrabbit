@@ -188,11 +188,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#setProperty(String, Value)
      */
     public synchronized void setProperty(String name, Value value) throws RepositoryException {
-		checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(getSession().getQName(name));
         try {
-			node.setProperty(name, value);
-			node.save();
-		} catch (RepositoryException e) {
+            node.setProperty(name, value);
+            node.save();
+        } catch (RepositoryException e) {
             log.warn("Failed to set Property " + name + " for Authorizable " + getID());
             node.refresh(false);
             throw e;
@@ -208,11 +208,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#setProperty(String, Value[])
      */
     public synchronized void setProperty(String name, Value[] values) throws RepositoryException {
-		checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(getSession().getQName(name));
         try {
-			node.setProperty(name, values);
-			node.save();
-		} catch (RepositoryException e) {
+            node.setProperty(name, values);
+            node.save();
+        } catch (RepositoryException e) {
             log.warn("Failed to set Property " + name + " for Authorizable " + getID());
             node.refresh(false);
             throw e;
@@ -222,7 +222,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#removeProperty(String)
      */
     public synchronized boolean removeProperty(String name) throws RepositoryException {
-		checkProtectedProperty(getSession().getQName(name));
+        checkProtectedProperty(getSession().getQName(name));
         try {
             if (node.hasProperty(name)) {
                 // 'node' is protected -> use setValue instead of Property.remove()
