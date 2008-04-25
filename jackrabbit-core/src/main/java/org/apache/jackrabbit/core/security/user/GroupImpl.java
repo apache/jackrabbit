@@ -16,30 +16,25 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -98,10 +93,17 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     //--------------------------------------------------------------< Group >---
     /**
+     * @see Group#getDeclaredMembers()
+     */
+    public Iterator getDeclaredMembers() throws RepositoryException {
+        return getMembers(false).iterator();
+    }
+
+    /**
      * @see Group#getMembers()
      */
     public Iterator getMembers() throws RepositoryException {
-        return new MemberIterator(memberUUIDs().iterator());
+        return getMembers(true).iterator();
     }
 
     /**
@@ -111,9 +113,14 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (authorizable == null || !(authorizable instanceof AuthorizableImpl)) {
             return false;
         } else {
+            String thisID = getID();
             AuthorizableImpl impl = (AuthorizableImpl) authorizable;
-            String uuid = impl.getNode().getUUID();
-            return memberUUIDs().contains(uuid);
+            for (Iterator it = impl.memberOf(); it.hasNext();) {
+                if (thisID.equals(((GroupImpl) it.next()).getID())) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -130,27 +137,16 @@ class GroupImpl extends AuthorizableImpl implements Group {
             return false;
         }
 
-        Node memberNode = ((AuthorizableImpl) authorizable).getNode();
+        AuthorizableImpl authImpl = ((AuthorizableImpl) authorizable);
+        Node memberNode = authImpl.getNode();
         if (memberNode.isSame(getNode())) {
             String msg = "Attempt to add a Group as member of itself (" + getID() + ").";
             log.warn(msg);
             return false;
         }
 
-        Value[] values;
-        // TODO: replace by weak-refs
-        Value added = getSession().getValueFactory().createValue(memberNode);
-        NodeImpl node = getNode();
-        if (node.hasProperty(P_MEMBERS)) {
-            Value[] old = node.getProperty(P_MEMBERS).getValues();
-            values = new Value[old.length + 1];
-            System.arraycopy(old, 0, values, 0, old.length);
-        } else {
-            values = new Value[1];
-        }
-        values[values.length - 1] = added;
-        userManager.setProtectedProperty(node, P_MEMBERS, values);
-        return true;
+        // preconditions are met -> delegate to authorizableImpl
+        return authImpl.addToGroup(this);
     }
 
     /**
@@ -160,61 +156,40 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (!isMember(authorizable) || !(authorizable instanceof AuthorizableImpl)) {
             return false;
         }
-        NodeImpl node = getNode();
-        if (!node.hasProperty(P_MEMBERS)) {
-            log.debug("Group has no members -> cannot remove member " + authorizable.getID());
-            return false;
-        }
-
-        Value toRemove = getSession().getValueFactory().createValue(((AuthorizableImpl)authorizable).getNode());
-
-        PropertyImpl property = node.getProperty(P_MEMBERS);
-        List valList = new ArrayList(Arrays.asList(property.getValues()));
-
-        if (valList.remove(toRemove)) {
-            try {
-                if (valList.isEmpty()) {
-                    userManager.removeProtectedItem(property, node);
-                } else {
-                    Value[] values = (Value[]) valList.toArray(new Value[valList.size()]);
-                    userManager.setProtectedProperty(node, P_MEMBERS, values);
-                }
-                return true;
-            } catch (RepositoryException e) {
-                // modification failed -> revert all pending changes.
-                node.refresh(false);
-                throw e;
-            }
-        } else {
-            // nothing changed
-            log.debug("Authorizable " + authorizable.getID() + " was not member of " + getID());
-            return false;
-        }
+        return ((AuthorizableImpl) authorizable).removeFromGroup(this);
     }
 
     //--------------------------------------------------------------------------
-
     /**
      *
      * @return
      * @throws RepositoryException
      */
-    private Collection memberUUIDs() throws RepositoryException {
-        Collection tmp = new HashSet();
-        if (getNode().hasProperty(P_MEMBERS)) {
-            Property prop = getNode().getProperty(P_MEMBERS);
-            Value[] val = prop.getValues();
-            for (int i = 0; i < val.length; i++) {
-                tmp.add(val[i].getString());
+    private Collection getMembers(boolean includeIndirect) throws RepositoryException {
+        // TODO: replace by weak-refs
+        PropertyIterator itr = getNode().getReferences();
+        Collection members = new HashSet((int) itr.getSize());
+        while (itr.hasNext()) {
+            NodeImpl n = (NodeImpl) itr.nextProperty().getParent();
+            if (n.isNodeType(NT_REP_GROUP)) {
+                Group group = create(n, userManager);
+                // only retrieve indirect group-members if the group is not
+                // yet present (detected eventual circular membership).
+                if (members.add(group) && includeIndirect) {
+                    members.addAll(((GroupImpl) group).getMembers(true));
+                }
+            } else if (n.isNodeType(NT_REP_USER)) {
+                User user = UserImpl.create(n, userManager);
+                members.add(user);
             }
         }
-        return tmp;
+        return members;
     }
 
     /**
-     * Since {@link #isMember(Authorizable)} only detects the declared
-     * members of this group, this methods is used to avoid cyclic membership
-     * declarations.
+     * Since {@link #isMember(Authorizable)} detects declared and inherited
+     * membership this method simply checks if the potential new member is
+     * a group that would in turn have <code>this</code> as a member.
      *
      * @param newMember
      * @return true if the 'newMember' is a group and 'this' is an declared or
@@ -225,13 +200,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (newMember.isGroup()) {
             Group gr = (Group) newMember;
             cyclic = gr.isMember(this);
-            if (!cyclic) {
-                PrincipalManager pmgr = getSession().getPrincipalManager();
-                for (Iterator it = pmgr.getGroupMembership(getPrincipal());
-                     it.hasNext() && !cyclic;) {
-                    cyclic = newMember.getPrincipal().equals(it.next());
-                }
-            }
         }
         return cyclic;
     }
@@ -370,9 +338,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 try {
                     for (Iterator it = GroupImpl.this.getMembers(); it.hasNext();) {
                         Authorizable authrz = (Authorizable) it.next();
-                        // TODO: check again. only add main principal, since
-                        // 'referees' belong to a different provider and should
-                        // not be exposed here
+                        // NOTE: only add main principal, since 'referees' belong
+                        // to a different provider and should not be exposed here
                         members.add(authrz.getPrincipal());
                     }
                 } catch (RepositoryException e) {

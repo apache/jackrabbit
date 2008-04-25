@@ -25,6 +25,9 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +70,8 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
 
     private final EveryonePrincipal everyonePrincipal;
 
+    private final String pGroupName;
+
     /**
      * Creates a new DefaultPrincipalProvider reading the principals from the
      * storage below the given security root node.
@@ -81,13 +86,22 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         everyonePrincipal = EveryonePrincipal.getInstance();
         membershipCache = new LRUMap();
 
-        // listen to any modifications for users and groups
+        // listen to modifications of group-membership
+        String[] ntNames = new String[1];
+        if (securitySession instanceof SessionImpl) {
+            NameResolver resolver = (SessionImpl) securitySession;
+            ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_USER);
+            pGroupName = resolver.getJCRName(UserManagerImpl.P_GROUPS);
+        } else {
+            ntNames[0] = "rep:User";
+            pGroupName = "rep:groups";
+        }
         securitySession.getWorkspace().getObservationManager().addEventListener(this,
-                Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
+                Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
                 UserManagerImpl.SECURITY_ROOT_PATH,
                 true,
                 null,
-                null,
+                ntNames,
                 false);
     }
 
@@ -220,10 +234,27 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * @see EventListener#onEvent(EventIterator)
      */
     public void onEvent(EventIterator eventIterator) {
-        // simple rule: flush all cached
+        // superclass: flush all cached
         clearCache();
-        synchronized (membershipCache) {
-            membershipCache.clear();
+
+        // membership cache:
+        while (eventIterator.hasNext()) {
+            Event ev = eventIterator.nextEvent();
+            int type = ev.getType();
+            if (type == Event.PROPERTY_ADDED || type == Event.PROPERTY_CHANGED
+                    || type == Event.PROPERTY_REMOVED) {
+                try {
+                    if (pGroupName.equals(Text.getName(ev.getPath()))) {
+                        synchronized (membershipCache) {
+                            membershipCache.clear();
+                        }
+                        break;
+                    }
+                } catch (RepositoryException e) {
+                    // should never get here
+                    log.warn(e.getMessage());
+                }
+            }
         }
     }
 
@@ -247,13 +278,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                 Iterator itr = auth.memberOf();
                 while (itr.hasNext()) {
                     Group group = (Group) itr.next();
-                    Principal groupPrinc = group.getPrincipal();
-                    if (membership.add(groupPrinc)) {
-                        membership.addAll(collectGroupMembership(groupPrinc, membership));
-                    } else {
-                        String msg = "Cyclic group membership detected with Group " + groupPrinc.getName();
-                        log.error(msg);
-                    }
+                    membership.add(group.getPrincipal());
                 }
             } else {
                 log.debug("Cannot find authorizable for principal " + princ.getName());

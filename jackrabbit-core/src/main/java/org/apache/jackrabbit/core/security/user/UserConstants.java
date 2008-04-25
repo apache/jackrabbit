@@ -52,7 +52,7 @@ interface UserConstants {
     Name P_USERID = NF.create(Name.NS_REP_URI, "userId");
     Name P_PASSWORD = NF.create(Name.NS_REP_URI, "password");
 
-    Name P_MEMBERS = NF.create(Name.NS_REP_URI, "members");
+    Name P_GROUPS = NF.create(Name.NS_REP_URI, "groups");
 
     /**
      * Name of the user property containing the principal names of those allowed

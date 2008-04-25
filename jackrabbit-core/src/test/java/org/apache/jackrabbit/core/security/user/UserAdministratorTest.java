@@ -143,8 +143,6 @@ public class UserAdministratorTest extends AbstractUserTest {
         }
     }
 
-    // TODO: uncomment as soon as group-members are stored as weak references
-    /*
     public void testRemoveHimSelf() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);
 
@@ -156,7 +154,6 @@ public class UserAdministratorTest extends AbstractUserTest {
             // success
         }
     }
-    */
 
     public void testRemoveParentUser() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(otherSession);

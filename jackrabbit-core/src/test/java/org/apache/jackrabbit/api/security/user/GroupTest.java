@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>GroupTest</code>...
@@ -30,9 +32,29 @@ public class GroupTest extends AbstractUserTest {
 
     private static Logger log = LoggerFactory.getLogger(GroupTest.class);
 
-    private static void assertTrueMemberOfContainsGroup(Authorizable auth, Group gr) throws RepositoryException {
+    private static void assertTrueIsMember(Iterator members, Authorizable auth) throws RepositoryException {
         boolean contained = false;
-        for (Iterator groups = auth.memberOf(); groups.hasNext() && !contained;) {
+        while (members.hasNext() && !contained) {
+            Object next = members.next();
+            assertTrue(next instanceof Authorizable);
+            contained = ((Authorizable)next).getID().equals(auth.getID());
+        }
+        assertTrue("The given set of members must contain " + auth.getID(), contained);
+    }
+
+    private static void assertFalseIsMember(Iterator members, Authorizable auth) throws RepositoryException {
+        boolean contained = false;
+        while (members.hasNext() && !contained) {
+            Object next = members.next();
+            assertTrue(next instanceof Authorizable);
+            contained = ((Authorizable)next).getID().equals(auth.getID());
+        }
+        assertFalse("The given set of members must not contain " + auth.getID(), contained);
+    }
+
+    private static void assertTrueMemberOfContainsGroup(Iterator groups, Group gr) throws RepositoryException {
+        boolean contained = false;
+        while (groups.hasNext() && !contained) {
             Object next = groups.next();
             assertTrue(next instanceof Group);
             contained = ((Group)next).getID().equals(gr.getID());
@@ -40,9 +62,9 @@ public class GroupTest extends AbstractUserTest {
         assertTrue("All members of a group must contain that group upon 'memberOf'.", contained);
     }
 
-    private static void assertFalseMemberOfContainsGroup(Authorizable auth, Group gr) throws RepositoryException {
+    private static void assertFalseMemberOfContainsGroup(Iterator groups, Group gr) throws RepositoryException {
         boolean contained = false;
-        for (Iterator groups = auth.memberOf(); groups.hasNext() && !contained;) {
+        while (groups.hasNext() && !contained) {
             Object next = groups.next();
             assertTrue(next instanceof Group);
             contained = ((Group)next).getID().equals(gr.getID());
@@ -55,14 +77,20 @@ public class GroupTest extends AbstractUserTest {
         assertTrue(gr.isGroup());
     }
 
-    public void testGetMembersNotNull() throws NotExecutableException, RepositoryException {
+    public void testGetDeclaredMembers() throws NotExecutableException, RepositoryException {
         Group gr = getTestGroup(superuser);
-        assertNotNull(gr.getMembers());
+        Iterator it = gr.getDeclaredMembers();
+        assertNotNull(it);
+        while (it.hasNext()) {
+            assertTrue(it.next() instanceof Authorizable);
+        }
     }
 
-    public void testGetMembersAreAuthorizable() throws NotExecutableException, RepositoryException {
+    public void testGetMembers() throws NotExecutableException, RepositoryException {
         Group gr = getTestGroup(superuser);
-        for (Iterator it = gr.getMembers(); it.hasNext();) {
+        Iterator it = gr.getMembers();
+        assertNotNull(it);
+        while (it.hasNext()) {
             assertTrue(it.next() instanceof Authorizable);
         }
     }
@@ -83,7 +111,29 @@ public class GroupTest extends AbstractUserTest {
         Iterator it = gr.getMembers();
         while (it.hasNext()) {
             Authorizable auth = (Authorizable) it.next();
-            assertTrueMemberOfContainsGroup(auth, gr);
+            assertTrueMemberOfContainsGroup(auth.memberOf(), gr);
+        }
+    }
+
+    public void testGetDeclaredMembersAgainstDeclaredMemberOf() throws NotExecutableException, RepositoryException {
+        Group gr = getTestGroup(superuser);
+
+        Iterator it = gr.getDeclaredMembers();
+        while (it.hasNext()) {
+            Authorizable auth = (Authorizable) it.next();
+            assertTrueMemberOfContainsGroup(auth.declaredMemberOf(), gr);
+        }
+    }
+
+    public void testGetMembersContainsDeclaredMembers() throws NotExecutableException, RepositoryException {
+        Group gr = getTestGroup(superuser);
+        List l = new ArrayList();
+        for (Iterator it = gr.getMembers(); it.hasNext();) {
+            l.add(((Authorizable) it.next()).getID());
+        }
+        for (Iterator it = gr.getDeclaredMembers(); it.hasNext();) {
+            assertTrue("All declared members must also be part of the Iterator " +
+                    "returned upon getMembers()",l.contains(((Authorizable) it.next()).getID()));
         }
     }
 
@@ -132,13 +182,68 @@ public class GroupTest extends AbstractUserTest {
         try {
             newGroup = userMgr.createGroup(getTestPrincipal());
 
-            assertFalseMemberOfContainsGroup(auth, newGroup);
+            assertFalseMemberOfContainsGroup(auth.memberOf(), newGroup);
             assertTrue(newGroup.addMember(auth));
-            assertTrueMemberOfContainsGroup(auth, newGroup);
+            assertTrueMemberOfContainsGroup(auth.declaredMemberOf(), newGroup);
+            assertTrueMemberOfContainsGroup(auth.memberOf(), newGroup);
         } finally {
             if (newGroup != null) {
                 newGroup.removeMember(auth);
                 newGroup.remove();
+            }
+        }
+    }
+
+    public void testAddMemberModifiesGetMembers() throws NotExecutableException, RepositoryException {
+        User auth = getTestUser(superuser);
+        Group newGroup = null;
+        try {
+            newGroup = userMgr.createGroup(getTestPrincipal());
+
+            assertFalseIsMember(newGroup.getMembers(), auth);
+            assertFalseIsMember(newGroup.getDeclaredMembers(), auth);
+            assertTrue(newGroup.addMember(auth));
+            assertTrueIsMember(newGroup.getMembers(), auth);
+            assertTrueIsMember(newGroup.getDeclaredMembers(), auth);
+        } finally {
+            if (newGroup != null) {
+                newGroup.removeMember(auth);
+                newGroup.remove();
+            }
+        }
+    }
+
+    public void testIndirectMembers() throws NotExecutableException, RepositoryException {
+        User auth = getTestUser(superuser);
+        Group newGroup = null;
+        Group newGroup2 = null;
+        try {
+            newGroup = userMgr.createGroup(getTestPrincipal());
+            newGroup2 = userMgr.createGroup(getTestPrincipal());
+
+            newGroup.addMember(newGroup2);
+            assertTrue(newGroup.isMember(newGroup2));
+
+            newGroup2.addMember(auth);
+
+            // testuser must not be declared member of 'newGroup'
+            assertFalseIsMember(newGroup.getDeclaredMembers(), auth);
+            assertFalseMemberOfContainsGroup(auth.declaredMemberOf(), newGroup);
+
+            // testuser must however be member of 'newGroup' (indirect).
+            assertTrueIsMember(newGroup.getMembers(), auth);
+            assertTrueMemberOfContainsGroup(auth.memberOf(), newGroup);
+
+            // testuser cannot be removed from 'newGroup'
+            assertFalse(newGroup.removeMember(auth));
+        } finally {
+            if (newGroup != null) {
+                newGroup.removeMember(newGroup2);
+                newGroup.remove();
+            }
+            if (newGroup2 != null) {
+                newGroup2.removeMember(auth);
+                newGroup2.remove();
             }
         }
     }
@@ -174,12 +279,14 @@ public class GroupTest extends AbstractUserTest {
     }
 
     /**
-     * Removing a GroupImpl must be possible even if there are still exiting
+     * TODO: uncomment once membership-relation is stored as weak ref.
+     * Removing a GroupImpl must be possible even if there are still existing
      * members present.
      *
      * @throws RepositoryException
      * @throws NotExecutableException
      */
+    /*
     public void testRemoveGroupIfMemberExist() throws RepositoryException, NotExecutableException {
         User auth = getTestUser(superuser);
         String newGroupId = null;
@@ -199,4 +306,5 @@ public class GroupTest extends AbstractUserTest {
             }
         }
     }
+    */
 }

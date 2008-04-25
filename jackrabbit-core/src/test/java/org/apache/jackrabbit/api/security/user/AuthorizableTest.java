@@ -194,6 +194,16 @@ public class AuthorizableTest extends AbstractUserTest {
         }
     }
 
+    public void testDeclaredMemberOf() throws NotExecutableException, RepositoryException {
+        Authorizable auth = getTestUser(superuser);
+
+        Iterator it = auth.declaredMemberOf();
+        while (it.hasNext()) {
+            Object group = it.next();
+            assertTrue(group instanceof Group);
+        }
+    }
+
     public void testAddReferee() throws NotExecutableException, RepositoryException {
         Authorizable auth = getTestUser(superuser);
 
