@@ -476,6 +476,11 @@ commented out by default.
         </childNodeDefinition>
         <propertyDefinition name="rep:principalName" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
         <propertyDefinition name="rep:referees" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="true" />
+        <propertyDefinition name="rep:groups" requiredType="Reference" autoCreated="false" onParentVersion="COPY" protected="true" multiple="true">
+            <valueConstraints>
+                <valueConstraint>rep:Group</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
         <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
         <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false" multiple="true" />
     </nodeType>
@@ -497,11 +502,6 @@ commented out by default.
         <supertypes>
             <supertype>rep:Authorizable</supertype>
         </supertypes>
-        <propertyDefinition name="rep:members" requiredType="Reference" autoCreated="false" onParentVersion="COPY" protected="true" multiple="true">
-            <valueConstraints>
-                <valueConstraint>rep:Authorizable</valueConstraint>
-            </valueConstraints>
-        </propertyDefinition>
     </nodeType>
 
     <nodeType name="rep:AuthorizableFolder" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">

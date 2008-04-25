@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
@@ -39,8 +40,8 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -132,20 +133,21 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     /**
+     * @see Authorizable#declaredMemberOf()
+     */
+    public Iterator declaredMemberOf() throws RepositoryException {
+        List memberShip = new ArrayList();
+        collectMembership(memberShip, false);
+        return memberShip.iterator();
+    }
+
+    /**
      * @see Authorizable#memberOf()
      */
     public Iterator memberOf() throws RepositoryException {
-        // TODO: replace by weak-refs
-        PropertyIterator itr = node.getReferences();
-        Collection tmp = new HashSet((int) itr.getSize());
-        while (itr.hasNext()) {
-            NodeImpl groupNode = (NodeImpl) itr.nextProperty().getParent();
-            if (groupNode.isNodeType(NT_REP_GROUP)) {
-                Group group = GroupImpl.create(groupNode, userManager);
-                tmp.add(group);
-            }
-        }
-        return tmp.iterator();
+        List memberShip = new ArrayList();
+        collectMembership(memberShip, true);
+        return memberShip.iterator();
     }
 
     /**
@@ -252,7 +254,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see Authorizable#remove()
      */
     public synchronized void remove() throws RepositoryException {
-        // TODO: ev. remove group-memberships first?
+        // don't allow for removal of the administrator even if the executing
+        // session has all permissions.
+        if (!isGroup() && ((User) this).isAdmin()) {
+            throw new RepositoryException("The administrator cannot be removed.");
+        }
         userManager.removeProtectedItem(node, node.getParent());
     }
 
@@ -273,6 +279,77 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         return node.getProperty(P_PRINCIPAL_NAME).getString();
     }
 
+    boolean addToGroup(GroupImpl group) throws RepositoryException {
+        try {
+            Value[] values;
+            // TODO: replace by weak-refs
+            Value added = getSession().getValueFactory().createValue(group.getNode());
+            NodeImpl node = getNode();
+            if (node.hasProperty(P_GROUPS)) {
+                Value[] old = node.getProperty(P_GROUPS).getValues();
+                values = new Value[old.length + 1];
+                System.arraycopy(old, 0, values, 0, old.length);
+            } else {
+                values = new Value[1];
+            }
+            values[values.length - 1] = added;
+            userManager.setProtectedProperty(node, P_GROUPS, values);
+            return true;
+        } catch (RepositoryException e) {
+            // revert all pending changes and rethrow.
+            log.error("Error while editing group membership:", e.getMessage());
+            getSession().refresh(false);
+            throw e;
+        }
+    }
+
+    boolean removeFromGroup(GroupImpl group) throws RepositoryException {
+        NodeImpl node = getNode();
+        String message = "Authorizable " + getID() + " is not member of " + group.getID();
+        if (!node.hasProperty(P_GROUPS)) {
+            log.debug(message);
+            return false;
+        }
+
+        Value toRemove = getSession().getValueFactory().createValue(group.getNode());
+        PropertyImpl property = node.getProperty(P_GROUPS);
+        List valList = new ArrayList(Arrays.asList(property.getValues()));
+        if (valList.remove(toRemove)) {
+            try {
+                if (valList.isEmpty()) {
+                    userManager.removeProtectedItem(property, node);
+                } else {
+                    Value[] values = (Value[]) valList.toArray(new Value[valList.size()]);
+                    userManager.setProtectedProperty(node, P_GROUPS, values);
+                }
+                return true;
+            } catch (RepositoryException e) {
+                // modification failed -> revert all pending changes.
+                node.refresh(false);
+                throw e;
+            }
+        } else {
+            // nothing changed
+            log.debug(message);
+            return false;
+        }
+    }
+
+    private void collectMembership(List groups, boolean includedIndirect) throws RepositoryException {
+        NodeImpl node = getNode();
+        if (!node.hasProperty(P_GROUPS)) {
+            return;
+        }
+        Value[] refs = node.getProperty(P_GROUPS).getValues();
+        for (int i = 0; i < refs.length; i++) {
+            NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
+            Group group = GroupImpl.create(groupNode, userManager);
+            if (groups.add(group) && includedIndirect) {
+                ((AuthorizableImpl) group).collectMembership(groups, true);
+            }
+        }
+    }
+
     /**
      * Test if the JCR property to be modified/removed is one of the
      * following that has a special meaning and must be altered using this
@@ -282,7 +359,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * <li>rep:principalName</li>
      * <li>rep:userId</li>
      * <li>rep:referees</li>
-     * <li>rep:members</li>
+     * <li>rep:groups</li>
      * <li>rep:impersonators</li>
      * </ul>
      * Those properties are 'protected' in their property definition. This
@@ -296,7 +373,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     private boolean isProtectedProperty(String propertyName) throws RepositoryException {
         Name pName = getSession().getQName(propertyName);
          if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
-                 || P_REFEREES.equals(pName) || P_MEMBERS.equals(pName)
+                 || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
                  || P_IMPERSONATORS.equals(pName)) {
              return true;
          } else {

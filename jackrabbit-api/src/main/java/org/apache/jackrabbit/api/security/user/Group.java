@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import org.apache.jackrabbit.api.security.user.Authorizable;
-
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
 
@@ -27,14 +25,23 @@ import java.util.Iterator;
 public interface Group extends Authorizable {
 
     /**
-     * @return Iterator of <code>Authorizable</code>s which are getMembers of
-     * this Group.
+     * @return Iterator of <code>Authorizable</code>s which are declared
+     * members of this Group.
+     * @throws RepositoryException
+     */
+    Iterator getDeclaredMembers() throws RepositoryException;
+
+    /**
+     * @return Iterator of <code>Authorizable</code>s which are members of
+     * this Group. This includes both declared members and all authorizables
+     * that are indirect group members.
      * @throws RepositoryException
      */
     Iterator getMembers() throws RepositoryException;
 
     /**
-     * @return true if the Authorizable to test is a member of this Group.
+     * @return true if the Authorizable to test is a direct or indirect member
+     * of this Group.
      * @throws RepositoryException
      */
     boolean isMember(Authorizable authorizable) throws RepositoryException;
@@ -45,14 +52,14 @@ public interface Group extends Authorizable {
      *
      * @return true if the <code>Authorizable</code> has successfully been added
      * to this Group, false otherwise (e.g. unknown implemention
-     * or if it already is a member or if the passed authorizable is the
+     * or if it already is a member or if the passed authorizable is this
      * group itself or for some implementation specific constraint).
      * @throws RepositoryException If an error occurs.
      */
     boolean addMember(Authorizable authorizable) throws RepositoryException;
 
     /**
-     * Remove a member to this Group.<br>
+     * Remove a member from this Group.<br>
      * Changes will be persisted immediately.
      *
      * @return true if the Authorizable was successfully removed. False otherwise.

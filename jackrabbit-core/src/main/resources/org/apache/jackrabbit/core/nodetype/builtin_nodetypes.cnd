@@ -205,6 +205,7 @@
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected version
   - rep:principalName (string) protected mandatory
   - rep:referees (string) protected multiple
+  - rep:groups (reference) protected multiple < 'rep:Group'
   - * (undefined)
   - * (undefined) multiple
 
@@ -217,8 +218,6 @@
   - rep:password (string) mandatory
 
 [rep:Group] > rep:Authorizable
-  - rep:members (reference) protected multiple
-    < 'rep:Authorizable'
 
 [rep:AuthorizableFolder] > nt:base, mix:referenceable
   + * (rep:Authorizable) = rep:User protected version

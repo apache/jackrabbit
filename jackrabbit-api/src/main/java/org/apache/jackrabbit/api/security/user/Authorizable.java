@@ -112,7 +112,14 @@ public interface Authorizable  {
     PrincipalIterator getPrincipals() throws RepositoryException;
 
     /**
-     * @return all {@link Group}s, this Authorizable is member of
+     * @return all {@link Group}s, this Authorizable is declared member of.
+     * @throws RepositoryException
+     */
+    Iterator declaredMemberOf() throws RepositoryException;
+
+    /**
+     * @return all {@link Group}s, this Authorizable is member of included
+     * indirect group membership.
      * @throws RepositoryException
      */
     Iterator memberOf() throws RepositoryException;
