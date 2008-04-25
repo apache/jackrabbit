@@ -30,11 +30,6 @@ import java.io.Serializable;
 public abstract class ItemInfoImpl implements ItemInfo, Serializable {
 
     /**
-     * The name of this item info.
-     */
-    private final Name name;
-
-    /**
      * The path of this item info.
      */
     private final Path path;
@@ -51,32 +46,23 @@ public abstract class ItemInfoImpl implements ItemInfo, Serializable {
      * @param name     the name of this item.
      * @param path     the path to this item.
      * @param isNode   if this item is a node.
-     * @deprecated Use {@link #ItemInfoImpl(Name, Path, boolean)} instead. The
+     * @deprecated Use {@link #ItemInfoImpl(Path, boolean)} instead. The
      * parentId is not used any more and the corresponding getter has been
      * removed.
      */
     public ItemInfoImpl(NodeId parentId, Name name, Path path, boolean isNode) {
-        this(name, path, isNode);
+        this(path, isNode);
     }
     
     /**
      * Creates a new item info from the given name, path and boolean flag.
      *
-     * @param name     the name of this item.
      * @param path     the path to this item.
      * @param isNode   if this item is a node.
      */
-    public ItemInfoImpl(Name name, Path path, boolean isNode) {
-        this.name = name;
+    public ItemInfoImpl(Path path, boolean isNode) {
         this.path = path;
         this.isNode = isNode;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Name getName() {
-        return name;
     }
 
     /**

@@ -86,8 +86,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
             final Iterator propIds = nodeInfo.getPropertyIds();
-            return new NodeInfoImpl(nodeInfo.getName(),
-                    nodeInfo.getPath(), nodeId,
+            return new NodeInfoImpl(nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
                     new Iterator() {
@@ -127,13 +126,12 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
                         int index, Name primaryTypeName, Name[] mixinNames,
                         Iterator references, Iterator propertyIds) {
-         this(name, path, id, index, primaryTypeName, mixinNames, references, propertyIds);
+         this(path, id, index, primaryTypeName, mixinNames, references, propertyIds);
     }
 
     /**
      * Creates a new node info from the given parameters.
      *
-     * @param name            the name of this item.
      * @param path            the path to this item.
      * @param id              the id of this item.
      * @param index           the index of this item.
@@ -142,10 +140,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
      */
-    public NodeInfoImpl(Name name, Path path, NodeId id,
-                        int index, Name primaryTypeName, Name[] mixinNames,
-                        Iterator references, Iterator propertyIds) {
-        super(name, path, true);
+    public NodeInfoImpl(Path path, NodeId id, int index, Name primaryTypeName,
+                        Name[] mixinNames, Iterator references, Iterator propertyIds) {
+        super(path, true);
         this.id = id;
         this.index = index;
         this.primaryTypeName = primaryTypeName;

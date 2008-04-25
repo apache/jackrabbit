@@ -68,8 +68,8 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
                     parentId.getUniqueID(), parentId.getPath());
             PropertyId propId = idFactory.createPropertyId(
                     parentId, propertyInfo.getId().getName());
-            return new PropertyInfoImpl(propertyInfo.getName(),
-                    propertyInfo.getPath(), propId, propertyInfo.getType(),
+            return new PropertyInfoImpl(propertyInfo.getPath(),
+                    propId, propertyInfo.getType(),
                     propertyInfo.isMultiValued(), propertyInfo.getValues());
         }
     }
@@ -84,29 +84,27 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
      * @param type          the type of this property.
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
-     * @deprecated Use {@link #PropertyInfoImpl(Name, Path, PropertyId, int, boolean, QValue[])}
+     * @deprecated Use {@link #PropertyInfoImpl(Path, PropertyId, int, boolean, QValue[])}
      * instead. The parentId is not used any more.
      */
     public PropertyInfoImpl(NodeId parentId, Name name, Path path,
                             PropertyId id, int type, boolean isMultiValued,
                             QValue[] values) {
-        this(name, path, id, type, isMultiValued, values);
+        this(path, id, type, isMultiValued, values);
     }
 
     /**
      * Creates a new property info for the given parameters.
      *
-     * @param name          the name of this property.
      * @param path          the path to this property.
      * @param id            the id of this property.
      * @param type          the type of this property.
      * @param isMultiValued whether this property is multi-valued.
      * @param values        the values.
      */
-    public PropertyInfoImpl(Name name, Path path,
-                            PropertyId id, int type, boolean isMultiValued,
-                            QValue[] values) {
-        super(name, path, false);
+    public PropertyInfoImpl(Path path, PropertyId id, int type,
+                            boolean isMultiValued, QValue[] values) {
+        super(path, false);
         this.propertyId = id;
         this.type = type;
         this.isMultiValued = isMultiValued;
