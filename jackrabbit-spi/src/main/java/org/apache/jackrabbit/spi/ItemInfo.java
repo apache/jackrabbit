@@ -23,14 +23,6 @@ package org.apache.jackrabbit.spi;
 public interface ItemInfo {
 
     /**
-     * Returns the qualified representation of the item name. For the root node
-     * expected return value is <code>{""}""</code>.
-     *
-     * @return the qualified representation of the item name.
-     */
-    public Name getName();
-
-    /**
      * Returns true if this <code>ItemInfo</code> denotes a node, false otherwise.
      *
      * @return true if this <code>ItemInfo</code> denotes a node, false otherwise.

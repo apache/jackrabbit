@@ -18,7 +18,6 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.RepositoryException;
@@ -49,8 +48,7 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
                         IdFactoryImpl idFactory,
                         NamePathResolver resolver)
             throws RepositoryException, NameException {
-        super(node.getName().length() == 0 ? NameConstants.ROOT : resolver.getQName(node.getName()),
-                resolver.getQPath(node.getPath()),
+        super(resolver.getQPath(node.getPath()),
                 idFactory.createNodeId(node, resolver), node.getIndex(),
                 resolver.getQName(node.getPrimaryNodeType().getName()),
                 getNodeTypeNames(node.getMixinNodeTypes(), resolver),
