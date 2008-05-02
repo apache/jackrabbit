@@ -19,8 +19,11 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -61,10 +64,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      *
      * @param itemMgr    the <code>ItemManager</code> that created this <code>Property</code>
      * @param session    the <code>Session</code> through which this <code>Property</code> is acquired
-     * @param id         id of this <code>Property</code>
-     * @param state      state associated with this <code>Property</code>
-     * @param definition definition of <i>this</i> <code>Property</code>
-     * @param listeners  listeners on life cylce changes of this <code>PropertyImpl</code>
+     * @param data       the property data
      */
     PropertyImpl(ItemManager itemMgr, SessionImpl session, PropertyData data) {
         super(itemMgr, session, data);
@@ -160,6 +160,16 @@ public class PropertyImpl extends ItemImpl implements Property {
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
         thisState.setValues(transientState.getValues());
+    }
+
+    protected void onRedefine(PropDefId defId) throws RepositoryException {
+        PropertyDefinitionImpl newDef =
+                session.getNodeTypeManager().getPropertyDefinition(defId);
+        // modify the state of 'this', i.e. the target property
+        PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
+        // set id of new definition
+        thisState.setDefinitionId(defId);
+        data.setDefinition(newDef);
     }
 
     /**

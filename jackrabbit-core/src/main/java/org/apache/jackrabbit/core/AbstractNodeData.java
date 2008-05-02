@@ -62,10 +62,19 @@ public abstract class AbstractNodeData extends ItemData {
     /**
      * Return the associated node defintion.
      *
-     * @return node defintion
+     * @return node definition
      */
     public NodeDefinition getNodeDefinition() {
         return (NodeDefinition) getDefinition();
+    }
+
+    /**
+     * Sets the associated node defintion.
+     *
+     * @param definition new node definition
+     */
+    public void setNodeDefinition(NodeDefinition definition) {
+        setDefinition(definition);
     }
 
     /**
