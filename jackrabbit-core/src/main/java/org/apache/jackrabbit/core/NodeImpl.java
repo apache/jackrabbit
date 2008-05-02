@@ -105,12 +105,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
-    /** same as ((NodeState) state).getNodeTypeName(); cached to avoid type casts */
-    protected final Name primaryTypeName;
-
-    /** the definition of this node */
-    protected NodeDefinition definition;
-
     // flag set in status passed to getOrCreateProperty if property was created
     protected static final short CREATED = 0;
 
@@ -130,16 +124,14 @@ public class NodeImpl extends ItemImpl implements Node {
         // paranoid sanity check
         NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
         final NodeState state = data.getNodeState();
-        if (ntReg.isRegistered(state.getNodeTypeName())) {
-            primaryTypeName = state.getNodeTypeName();
-        } else {
+        if (!ntReg.isRegistered(state.getNodeTypeName())) {
             /**
              * todo need proper way of handling inconsistent/corrupt node type references
              * e.g. 'flag' nodes that refer to non-registered node types
              */
             log.warn("Fallback to nt:unstructured due to unknown node type '"
                     + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
-            primaryTypeName = NameConstants.NT_UNSTRUCTURED;
+            data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
     }
 
@@ -347,7 +339,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // nt:base node type
             if (name.equals(NameConstants.JCR_PRIMARYTYPE)) {
                 // jcr:primaryType property
-                genValues = new InternalValue[]{InternalValue.create(primaryTypeName)};
+                genValues = new InternalValue[]{InternalValue.create(thisState.getNodeTypeName())};
             } else if (name.equals(NameConstants.JCR_MIXINTYPES)) {
                 // jcr:mixinTypes property
                 Set mixins = thisState.getMixinTypeNames();
@@ -874,7 +866,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Name[] types = new Name[mixins.size() + 1];
         mixins.toArray(types);
         // primary type
-        types[types.length - 1] = primaryTypeName;
+        types[types.length - 1] = data.getNodeState().getNodeTypeName();
         try {
             return ntReg.getEffectiveNodeType(types);
         } catch (NodeTypeConflictException ntce) {
@@ -966,6 +958,8 @@ public class NodeImpl extends ItemImpl implements Node {
             // copy state from transient state:
             // parent id's
             persistentState.setParentId(transientState.getParentId());
+            // primary type
+            persistentState.setNodeTypeName(transientState.getNodeTypeName());
             // mixin types
             persistentState.setMixinTypeNames(transientState.getMixinTypeNames());
             // id of definition
@@ -1003,6 +997,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
         // re-apply transient changes
         thisState.setParentId(transientState.getParentId());
+        thisState.setNodeTypeName(transientState.getNodeTypeName());
         thisState.setMixinTypeNames(transientState.getMixinTypeNames());
         thisState.setDefinitionId(transientState.getDefinitionId());
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
@@ -1046,6 +1041,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(mixinName + ": not a mixin node type");
         }
 
+        final Name primaryTypeName = data.getNodeState().getNodeTypeName();
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isDerivedFrom(mixinName)) {
             // new mixin is already included in primary type
@@ -1172,7 +1168,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // remaining mixin's
             HashSet set = new HashSet(remainingMixins);
             // primary type
-            set.add(primaryTypeName);
+            set.add(state.getNodeTypeName());
             // build effective node type representing primary type including remaining mixin's
             entRemaining = ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
         } catch (NodeTypeConflictException ntce) {
@@ -1260,7 +1256,7 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         // first do trivial checks without using type hierarchy
-        if (ntName.equals(primaryTypeName)) {
+        if (ntName.equals(data.getNodeState().getNodeTypeName())) {
             return true;
         }
         Set mixins = data.getNodeState().getMixinTypeNames();
@@ -2763,7 +2759,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        return session.getNodeTypeManager().getNodeType(primaryTypeName);
+        return session.getNodeTypeManager().getNodeType(
+                data.getNodeState().getNodeTypeName());
     }
 
     /**
@@ -2852,6 +2849,9 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             return false;
         }
+
+        final Name primaryTypeName = data.getNodeState().getNodeTypeName();
+
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isDerivedFrom(ntName)) {
             return false;
@@ -4224,7 +4224,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check primary type
-        if (!freeze.getFrozenPrimaryType().equals(primaryTypeName)) {
+        if (!freeze.getFrozenPrimaryType().equals(data.getNodeState().getNodeTypeName())) {
             // todo: check with spec what should happen here
             throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". PrimaryType changed.");
         }
@@ -4759,7 +4759,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     "invalid node type name: " + nodeTypeName, e);
         }
 
-        if (ntName.equals(primaryTypeName)) {
+        if (ntName.equals(state.getNodeTypeName())) {
             return;
         }
 
@@ -4774,7 +4774,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entNew, entOld;
         try {
             entNew = ntReg.getEffectiveNodeType(ntName);
-            entOld = ntReg.getEffectiveNodeType(primaryTypeName);
+            entOld = ntReg.getEffectiveNodeType(state.getNodeTypeName());
 
             // existing mixin's
             HashSet set = new HashSet(state.getMixinTypeNames());
@@ -4801,14 +4801,10 @@ public class NodeImpl extends ItemImpl implements Node {
             onRedefine(defId);
         }
 
-
-        // build change set: removed/added child items
         Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
         Set newDefs = new HashSet(Arrays.asList(entNew.getAllItemDefs()));
 
-        Set removedDefs = new HashSet(oldDefs);
-        removedDefs.removeAll(newDefs);
-
+        // added child item definitions
         Set addedDefs = new HashSet(newDefs);
         addedDefs.removeAll(oldDefs);
 
@@ -4836,42 +4832,107 @@ public class NodeImpl extends ItemImpl implements Node {
         // set jcr:primaryType property
         internalSetProperty(NameConstants.JCR_PRIMARYTYPE, InternalValue.create(ntName));
 
-        // walk through properties and child nodes and remove those that
-        // are not included in the new node type
-        if (!removedDefs.isEmpty()) {
-            // use temp set to avoid ConcurrentModificationException
-            HashSet set = new HashSet(thisState.getPropertyNames());
-            for (Iterator iter = set.iterator(); iter.hasNext();) {
-                Name propName = (Name) iter.next();
-                try {
-                    PropertyState propState =
-                            (PropertyState) stateMgr.getItemState(
-                                    new PropertyId(thisState.getNodeId(), propName));
-                    if (removedDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+        // walk through properties and child nodes and change definition as necessary
+
+        // use temp set to avoid ConcurrentModificationException
+        HashSet set = new HashSet(thisState.getPropertyNames());
+        for (Iterator iter = set.iterator(); iter.hasNext();) {
+            Name propName = (Name) iter.next();
+            try {
+                PropertyState propState =
+                        (PropertyState) stateMgr.getItemState(
+                                new PropertyId(thisState.getNodeId(), propName));
+                if (!newDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+                    // try to find new applicable definition first and
+                    // redefine property if possible
+
+                    PropertyDefinitionImpl pdi = null;
+                    try {
+                        PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
+                        pdi = getApplicablePropertyDefinition(
+                                propName, propState.getType(),
+                                propState.isMultiValued(), false);
+                        if (pdi.getRequiredType() != PropertyType.UNDEFINED
+                                && pdi.getRequiredType() != propState.getType()) {
+                            // value conversion required
+                            if (propState.isMultiValued()) {
+                                // convert value
+                                Value[] values =
+                                        ValueHelper.convert(
+                                                prop.getValues(),
+                                                pdi.getRequiredType(),
+                                                session.getValueFactory());
+                                // redefine property
+                                prop.onRedefine(pdi.unwrap().getId());
+                                // set converted values
+                                prop.setValue(values);
+                            } else {
+                                // convert value
+                                Value value =
+                                        ValueHelper.convert(
+                                                prop.getValue(),
+                                                pdi.getRequiredType(),
+                                                session.getValueFactory());
+                                // redefine property
+                                prop.onRedefine(pdi.unwrap().getId());
+                                // set converted values
+                                prop.setValue(value);
+                            }
+                        } else {
+                            // redefine property
+                            prop.onRedefine(pdi.unwrap().getId());
+                        }
+                        // update collection of added definitions
+                        addedDefs.remove(pdi.unwrap());
+                    } catch (ValueFormatException vfe) {
+                        // value conversion failed,
+                        // remove it
+                        removeChildProperty(propName);
+                    } catch (ConstraintViolationException cve) {
+                        // no suitable definition found for this property,
+                        // remove it
                         removeChildProperty(propName);
                     }
-                } catch (ItemStateException ise) {
-                    String msg = propName + ": failed to retrieve property state";
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
                 }
+            } catch (ItemStateException ise) {
+                String msg = propName + ": failed to retrieve property state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
             }
-            // use temp array to avoid ConcurrentModificationException
-            ArrayList list = new ArrayList(thisState.getChildNodeEntries());
-            // start from tail to avoid problems with same-name siblings
-            for (int i = list.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
-                try {
-                    NodeState nodeState =
-                            (NodeState) stateMgr.getItemState(entry.getId());
-                    if (removedDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+        }
+
+        // use temp array to avoid ConcurrentModificationException
+        ArrayList list = new ArrayList(thisState.getChildNodeEntries());
+        // start from tail to avoid problems with same-name siblings
+        for (int i = list.size() - 1; i >= 0; i--) {
+            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            try {
+                NodeState nodeState =
+                        (NodeState) stateMgr.getItemState(entry.getId());
+                if (!newDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+                    // try to find new applicable definition first and
+                    // redefine node if possible
+
+                    NodeDefinitionImpl ndi = null;
+                    try {
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
+                        ndi = getApplicableChildNodeDefinition(
+                                entry.getName(),
+                                nodeState.getNodeTypeName());
+                        // redefine property
+                        node.onRedefine(ndi.unwrap().getId());
+                        // update collection of added definitions
+                        addedDefs.remove(ndi.unwrap());
+                    } catch (ConstraintViolationException cve) {
+                        // no suitable definition found for this child node,
+                        // remove it
                         removeChildNode(entry.getName(), entry.getIndex());
                     }
-                } catch (ItemStateException ise) {
-                    String msg = entry.getName() + ": failed to retrieve node state";
-                    log.error(msg, ise);
-                    throw new RepositoryException(msg, ise);
                 }
+            } catch (ItemStateException ise) {
+                String msg = entry.getName() + ": failed to retrieve node state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
             }
         }
 
@@ -4880,11 +4941,11 @@ public class NodeImpl extends ItemImpl implements Node {
             ItemDef def = (ItemDef) iter.next();
             if (def.isAutoCreated()) {
                 if (def.definesNode()) {
-                    NodeDefinitionImpl nd = ntMgr.getNodeDefinition(((NodeDef) def).getId());
-                    createChildNode(nd.getQName(), nd, (NodeTypeImpl) nd.getDefaultPrimaryType(), null);
+                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition(((NodeDef) def).getId());
+                    createChildNode(ndi.getQName(), ndi, (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
                 } else {
-                    PropertyDefinitionImpl pd = ntMgr.getPropertyDefinition(((PropDef) def).getId());
-                    createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
+                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition(((PropDef) def).getId());
+                    createChildProperty(pdi.getQName(), pdi.getRequiredType(), pdi);
                 }
             }
         }
