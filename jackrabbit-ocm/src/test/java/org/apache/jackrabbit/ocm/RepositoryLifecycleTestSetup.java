@@ -37,7 +37,7 @@ public class RepositoryLifecycleTestSetup extends TestSetup {
         super.setUp();
         System.out.println("registering repository ... ");
         RepositoryUtil.registerRepository("repositoryTest",
-                "./src/test/test-config/repository-derby.xml", "./target/repository");
+                "./src/test/test-config/repository.xml", "./target/repository");
     }
 
     /**
