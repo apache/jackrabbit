@@ -72,7 +72,7 @@ public class RepositoryUtilTest extends TestCase
         return new TestSetup(suite) {
             protected void setUp() throws Exception {
                 super.setUp();
-                RepositoryUtil.registerRepository("repositoryTest", "./src/test/test-config/repository-derby.xml", "target/repository");
+                RepositoryUtil.registerRepository("repositoryTest", "./src/test/test-config/repository.xml", "target/repository");
             }
 
             protected void tearDown() throws Exception {
