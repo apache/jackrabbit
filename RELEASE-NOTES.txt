@@ -21,18 +21,18 @@ Unlike previous Jackrabbit releases that contained a full set of components,
 this patch release only contains the jackrabbit-core component. The component
 is distributed both as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.3-src.jar)
+    * Source archive (jackrabbit-core-1.4.4-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.3" directory. Use the following commands
+        in a "jackrabbit-core-1.4.4" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.3-src.jar
-          $ cd jackrabbit-1.4.3
+          $ jar xf jackrabbit-core-1.4.4-src.jar
+          $ cd jackrabbit-1.4.4
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.3.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.4.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
