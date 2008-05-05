@@ -426,14 +426,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             Statement stmt = connectionManager.getConnection().createStatement();
+            String sql = null;
             try {
-                String sql = reader.readLine();
+                sql = reader.readLine();
                 while (sql != null) {
-                    sql = createSchemaSQL(sql);
                     if (!sql.startsWith("#") && sql.length() > 0
                             && (sql.indexOf("BINVAL") < 0 || useDbBlobStore())) {
                         // only create blob related tables of db blob store configured
                         // execute sql stmt
+                        sql = createSchemaSQL(sql);
                         stmt.executeUpdate(sql);
                     }
                     // read next sql stmt
@@ -443,6 +444,11 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 String msg = "Configuration error: unable to read the resource '" + schema + ".ddl': " + e;
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
+            } catch (SQLException e) {
+                String msg = "Schema generation error: Issuing statement: " + sql;
+                SQLException se = new SQLException(msg);
+                se.initCause(e);
+                throw se;
             } finally {
                 IOUtils.closeQuietly(in);
                 stmt.close();
@@ -1086,7 +1092,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             throws ItemStateException {
         return loadBundle(id, false);
     }
-    
+
     /**
      * Reads the blob's bytes and returns it. this is a helper method to
      * circumvent issue JCR-1039 and JCR-1474
@@ -1135,7 +1141,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             Blob b = rs.getBlob(1);
             byte[] bytes = getBytes(b);
             DataInputStream din = new DataInputStream(new ByteArrayInputStream(bytes));
-            
+
             if (checkBeforeLoading) {
                 if (binding.checkBundle(din)) {
                     // reset stream for readBundle()
@@ -1145,7 +1151,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     throw new Exception("invalid bundle, see previous BundleBinding error log entry");
                 }
             }
-            
+
             NodePropBundle bundle = binding.readBundle(din, id);
             bundle.setSize(bytes.length);
             return bundle;
