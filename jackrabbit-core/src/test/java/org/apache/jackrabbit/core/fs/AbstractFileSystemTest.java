@@ -214,6 +214,61 @@ public abstract class AbstractFileSystemTest extends TestCase {
         assertEquals("subfolder", list[0]);
     }
 
+    public void testMoveFile_destFolderDoesNotExist() throws Exception {
+        // Create a folder with a file
+        fs.createFolder("/folder");
+        createFile("/folder/file", sampleBytes);
+
+        // Check that the destination folder and file do not exist
+        assertFalse(fs.exists("/folder2"));
+        assertFalse(fs.exists("/folder2/file"));
+
+        // Move the file into a non-existent directory
+        fs.move("/folder/file", "/folder2/file");
+
+        // Check that the file has been moved
+        assertFalse(fs.exists("/folder/file"));
+        assertFalse(fs.isFolder("/folder/file"));
+        assertFalse(fs.isFile("/folder/file"));
+        assertTrue(fs.exists("/folder2/file"));
+        assertFalse(fs.isFolder("/folder2/file"));
+        assertTrue(fs.isFile("/folder2/file"));
+
+        // Check that folder2 has been silently created
+        assertTrue(fs.exists("/folder2"));
+        assertTrue(fs.isFolder("/folder2"));
+        assertFalse(fs.isFile("/folder2"));
+    }
+    
+    public void testMoveFolder_destFolderDoesNotExist() throws Exception {
+        // Create a folder with a file
+        fs.createFolder("/folder");
+        createFile("/folder/file", sampleBytes);
+        // Check that the destination folder and file do not exist
+        assertFalse(fs.exists("/folder2"));
+        assertFalse(fs.exists("/folder2/folder3"));
+        assertFalse(fs.exists("/folder2/folder3/file"));
+
+        // Move the folder into a non-existent directory
+        fs.move("/folder", "/folder2/folder3");
+
+        // Assert
+        assertFalse(fs.exists("/folder"));
+        assertFalse(fs.exists("/folder/file"));
+        
+        assertTrue(fs.exists("/folder2"));
+        assertTrue(fs.isFolder("/folder2"));
+        assertFalse(fs.isFile("/folder2"));
+
+        assertTrue(fs.exists("/folder2/folder3"));
+        assertTrue(fs.isFolder("/folder2/folder3"));
+        assertFalse(fs.isFile("/folder2/folder3"));
+
+        assertTrue(fs.exists("/folder2/folder3/file"));
+        assertFalse(fs.isFolder("/folder2/folder3/file"));
+        assertTrue(fs.isFile("/folder2/folder3/file"));
+    }
+
     private void verifyStreamInput(
             InputStream inputStream, byte[] expectedBytes) throws IOException {
         byte[] resultBytes = new byte[3];
