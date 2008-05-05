@@ -136,4 +136,8 @@ public class BLOBInDataStore extends BLOBFileValue {
         return store.getRecord(identifier);
     }
 
+    public boolean isSmall() {
+        return false;
+    }
+
 }

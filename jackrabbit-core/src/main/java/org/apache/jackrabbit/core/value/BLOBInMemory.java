@@ -194,4 +194,8 @@ public class BLOBInMemory extends BLOBFileValue {
         return 0;
     }
 
+    public boolean isSmall() {
+        return true;
+    }
+
 }

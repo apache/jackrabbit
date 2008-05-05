@@ -159,4 +159,11 @@ public class BLOBInResource extends BLOBFileValue {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSmall() {
+        return false;
+    }
+
 }

@@ -48,6 +48,9 @@ import javax.jcr.RepositoryException;
  */
 public class BundleBinding extends ItemStateBinding {
 
+    private static final int BINARY_IN_BLOB_STORE = -1;
+    private static final int BINARY_IN_DATA_STORE = -2;
+
     /**
      * default logger
      */
@@ -131,7 +134,7 @@ public class BundleBinding extends ItemStateBinding {
         if (version >= VERSION_1) {
             bundle.setModCount(readModCount(in));
         }
-        
+
         // read shared set, since version 2.0
         Set sharedSet = new HashSet();
         if (version >= VERSION_2) {
@@ -143,7 +146,7 @@ public class BundleBinding extends ItemStateBinding {
             }
         }
         bundle.setSharedSet(sharedSet);
-        
+
         return bundle;
     }
 
@@ -299,7 +302,7 @@ public class BundleBinding extends ItemStateBinding {
 
         // write mod count
         writeModCount(out, bundle.getModCount());
-        
+
         // write shared set
         iter = bundle.getSharedSet().iterator();
         while (iter.hasNext()) {
@@ -341,9 +344,9 @@ public class BundleBinding extends ItemStateBinding {
             switch (type) {
                 case PropertyType.BINARY:
                     int size = in.readInt();
-                    if (InternalValue.USE_DATA_STORE && size == -2) {
+                    if (size == BINARY_IN_DATA_STORE) {
                         val = InternalValue.create(dataStore, in.readUTF());
-                    } else if (size == -1) {
+                    } else if (size == BINARY_IN_BLOB_STORE) {
                         blobIds[i] = in.readUTF();
                         try {
                             if (blobStore instanceof ResourceBasedBLOBStore) {
@@ -452,7 +455,7 @@ public class BundleBinding extends ItemStateBinding {
                         log.error("Error while reading size of binary: " + e);
                         return false;
                     }
-                    if (InternalValue.USE_DATA_STORE && size == -2) {
+                    if (size == BINARY_IN_DATA_STORE) {
                         try {
                             String s = in.readUTF();
                             // truncate log output
@@ -464,7 +467,7 @@ public class BundleBinding extends ItemStateBinding {
                             log.error("Error while reading blob id: " + e);
                             return false;
                         }
-                    } else if (size == -1) {
+                    } else if (size == BINARY_IN_BLOB_STORE) {
                         try {
                             String s = in.readUTF();
                             log.debug("  blobid: " + s);
@@ -581,22 +584,26 @@ public class BundleBinding extends ItemStateBinding {
             InternalValue val = values[i];
             switch (state.getType()) {
                 case PropertyType.BINARY:
+                    BLOBFileValue blobVal = val.getBLOBFileValue();
                     if (InternalValue.USE_DATA_STORE && dataStore != null) {
-                        out.writeInt(-2);
-                        try {
-                            val.store(dataStore);
-                        } catch (RepositoryException e) {
-                            String msg = "Error while storing blob. id="
-                                + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
-                            log.error(msg, e);
-                            throw new IOException(msg);
+                        if (blobVal.isSmall()) {
+                            writeSmallBinary(out, blobVal, state, i);
+                        } else {
+                            out.writeInt(BINARY_IN_DATA_STORE);
+                            try {
+                                val.store(dataStore);
+                            } catch (RepositoryException e) {
+                                String msg = "Error while storing blob. id="
+                                    + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
+                                log.error(msg, e);
+                                throw new IOException(msg);
+                            }
+                            out.writeUTF(val.toString());
                         }
-                        out.writeUTF(val.toString());
                         break;
                     }
                     // special handling required for binary value:
                     // spool binary value to file in blob store
-                    BLOBFileValue blobVal = val.getBLOBFileValue();
                     long size = blobVal.getLength();
                     if (size < 0) {
                         log.warn("Blob has negative size. Potential loss of data. "
@@ -605,7 +612,7 @@ public class BundleBinding extends ItemStateBinding {
                         values[i] = InternalValue.create(new byte[0]);
                         blobVal.discard();
                     } else if (size > minBlobSize) {
-                        out.writeInt(-1);
+                        out.writeInt(BINARY_IN_BLOB_STORE);
                         String blobId = state.getBlobId(i);
                         if (blobId == null) {
                             try {
@@ -642,23 +649,7 @@ public class BundleBinding extends ItemStateBinding {
                         out.writeUTF(blobId);   // value
                     } else {
                         // delete evt. blob
-                        out.writeInt((int) size);
-                        byte[] data = new byte[(int) size];
-                        try {
-                            DataInputStream in =
-                                new DataInputStream(blobVal.getStream());
-                            try {
-                                in.readFully(data);
-                            } finally {
-                                IOUtils.closeQuietly(in);
-                            }
-                        } catch (Exception e) {
-                            String msg = "Error while storing blob. id="
-                                    + state.getId() + " idx=" + i + " size=" + size;
-                            log.error(msg, e);
-                            throw new IOException(msg);
-                        }
-                        out.write(data, 0, data.length);
+                        byte[] data = writeSmallBinary(out, blobVal, state, i);
                         // replace value instance with value
                         // backed by resource in blob store and delete temp file
                         values[i] = InternalValue.create(data);
@@ -688,5 +679,38 @@ public class BundleBinding extends ItemStateBinding {
                     out.write(bytes);   // byte[]
             }
         }
+    }
+
+    /**
+     * Write a small binary value and return the data.
+     *
+     * @param out the output stream to write
+     * @param size the size
+     * @param blobVal the binary value
+     * @param state the property state (for error messages)
+     * @param i the index (for error messages)
+     * @return the data
+     * @throws IOException if the data could not be read
+     */
+    private byte[] writeSmallBinary(DataOutputStream out, BLOBFileValue blobVal, NodePropBundle.PropertyEntry state, int i) throws IOException {
+        int size = (int) blobVal.getLength();
+        out.writeInt(size);
+        byte[] data = new byte[size];
+        try {
+            DataInputStream in =
+                new DataInputStream(blobVal.getStream());
+            try {
+                in.readFully(data);
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
+        } catch (Exception e) {
+            String msg = "Error while storing blob. id="
+                    + state.getId() + " idx=" + i + " size=" + size;
+            log.error(msg, e);
+            throw new IOException(msg);
+        }
+        out.write(data, 0, data.length);
+        return data;
     }
 }
