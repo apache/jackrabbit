@@ -197,6 +197,8 @@ public interface PersistenceManager {
      *            repaired. if false, no data will be modified, instead all
      *            inconsistencies will only get logged
      */
-    void checkConsistency(String[] uuids, boolean recursive, boolean fix);
+    // JCR-1556: This method will be introduced in 1.5
+    //           If you need it before, cast to AbstractPersistenceManager
+    // void checkConsistency(String[] uuids, boolean recursive, boolean fix);
 
 }
