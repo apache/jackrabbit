@@ -111,4 +111,12 @@ public abstract class BLOBFileValue {
      */
     public abstract int hashCode();
 
+    /**
+     * Check if the value is small (contains a low number of bytes) and should
+     * be stored inline.
+     *
+     * @return true if the value is small
+     */
+    public abstract boolean isSmall();
+
 }

@@ -237,7 +237,7 @@ public class BLOBValue extends BLOBFileValue {
      * @see #delete(boolean)
      */
     public void discard() {
-        if (!temp){
+        if (!temp) {
             // do nothing if this instance is not backed by temporarily
             // allocated resource/buffer
             return;
@@ -365,6 +365,13 @@ public class BLOBValue extends BLOBFileValue {
         } else {
             return new ByteArrayInputStream(buffer);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSmall() {
+        return false;
     }
 
 }

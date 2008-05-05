@@ -177,4 +177,11 @@ public class BLOBInTempFile extends BLOBFileValue {
         return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isSmall() {
+        return false;
+    }
+
 }
