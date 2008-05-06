@@ -92,7 +92,7 @@ public abstract class SecurityItemModifier {
         synchronized (parentImpl) {
             // validation: make sure Node is not locked or checked-in.
             parentImpl.checkSetProperty();
-            InternalValue intVs = InternalValue.create(value, parentImpl.session.getNamePathResolver());
+            InternalValue intVs = InternalValue.create(value, parentImpl.session);
             return parentImpl.internalSetProperty(name, intVs);
         }
     }
@@ -103,7 +103,7 @@ public abstract class SecurityItemModifier {
             parentImpl.checkSetProperty();
             InternalValue[] intVs = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                intVs[i] = InternalValue.create(values[i], parentImpl.session.getNamePathResolver());
+                intVs[i] = InternalValue.create(values[i], parentImpl.session);
             }
             return parentImpl.internalSetProperty(name, intVs);
         }

@@ -157,8 +157,7 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         if (editingSession instanceof SessionImpl) {
             try {
                 return new CombinedEditor((SessionImpl) editingSession,
-                        session.getNamePathResolver(),
-                        session.getQPath(acRoot.getPath()));
+                        session, session.getQPath(acRoot.getPath()));
             } catch (RepositoryException e) {
                 // should never get here
                 log.error("Internal error:", e.getMessage());

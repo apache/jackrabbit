@@ -247,7 +247,7 @@ public class SessionImporter implements Importer {
         Iterator iter = propInfos.iterator();
         while (iter.hasNext()) {
             PropInfo pi = (PropInfo) iter.next();
-            pi.apply(node, session.getNamePathResolver(), refTracker);
+            pi.apply(node, session, refTracker);
         }
 
         parents.push(node);
