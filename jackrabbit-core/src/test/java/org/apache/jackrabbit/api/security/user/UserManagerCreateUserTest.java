@@ -19,7 +19,6 @@ package org.apache.jackrabbit.api.security.user;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
     public void testCreateUser() throws RepositoryException {
         Principal p = getTestPrincipal();
         String uid = p.getName();
-        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+        User user = userMgr.createUser(uid, buildPassword(uid, false));
         createdUsers.add(user);
 
         assertNotNull(user.getID());
@@ -61,7 +60,17 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
     public void testCreateUserWithPath() throws RepositoryException {
         Principal p = getTestPrincipal();
         String uid = p.getName();
-        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p, "/any/path/to/the/new/user");
+        User user = userMgr.createUser(uid, buildPassword(uid, true), p, "/any/path/to/the/new/user");
+        createdUsers.add(user);
+
+        assertNotNull(user.getID());
+        assertEquals(p.getName(), user.getPrincipal().getName());
+    }
+
+    public void testCreateUserWithDifferentPrincipalName() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = getTestPrincipal().getName();
+        User user = userMgr.createUser(uid, buildPassword(uid, true), p, "/any/path/to/the/new/user");
         createdUsers.add(user);
 
         assertNotNull(user.getID());
@@ -70,7 +79,16 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
 
     public void testCreateUserWithNullParamerters() throws RepositoryException {
         try {
-            User user = userMgr.createUser(null, null, null);
+            User user = userMgr.createUser(null, null);
+            createdUsers.add(user);
+
+            fail("A User cannot be built from 'null' parameters");
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            User user = userMgr.createUser(null, null, null, null);
             createdUsers.add(user);
 
             fail("A User cannot be built from 'null' parameters");
@@ -82,8 +100,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
     public void testCreateUserWithNullUserID() throws RepositoryException {
         try {
             Principal p = getTestPrincipal();
-            Credentials creds = buildCredentials(p.getName(), "");
-            User user = userMgr.createUser(null, creds, p);
+            User user = userMgr.createUser(null, "anyPW");
             createdUsers.add(user);
 
             fail("A User cannot be built with 'null' userID");
@@ -92,11 +109,48 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
         }
     }
 
+    public void testCreateUserWithEmptyUserID() throws RepositoryException {
+        try {
+            User user = userMgr.createUser("", "anyPW");
+            createdUsers.add(user);
+
+            fail("A User cannot be built with 'null' userID");
+        } catch (Exception e) {
+            // ok
+        }
+        try {
+            User user = userMgr.createUser("", "anyPW", getTestPrincipal(), null);
+            createdUsers.add(user);
+
+            fail("A User cannot be built with 'null' userID");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateUserWithNullPassword() throws RepositoryException {
+        try {
+            Principal p = getTestPrincipal();
+            User user = userMgr.createUser(p.getName(), null);
+            createdUsers.add(user);
+
+            fail("A User cannot be built with 'null' password");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateUserWithEmptyPassword() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        User user = userMgr.createUser(p.getName(), "");
+        createdUsers.add(user);
+    }
+
     public void testCreateUserWithNullPrincipal() throws RepositoryException {
         try {
             Principal p = getTestPrincipal();
             String uid = p.getName();
-            User user = userMgr.createUser(uid, buildCredentials(uid, uid), null);
+            User user = userMgr.createUser(uid, buildPassword(uid, true), null, "/a/b/c");
             createdUsers.add(user);
 
             fail("A User cannot be built with 'null' Principal");
@@ -106,15 +160,12 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
     }
 
     public void testCreateTwiceWithSameUserID() throws RepositoryException {
-        Principal p = getTestPrincipal();
-        String uid = p.getName();
-        Credentials creds = buildCredentials(uid, uid);
-        User user = userMgr.createUser(uid, creds, p);
+        String uid = getTestPrincipal().getName();
+        User user = userMgr.createUser(uid, buildPassword(uid, false));
         createdUsers.add(user);
 
         try {
-            p = getTestPrincipal();
-            User user2 = userMgr.createUser(uid, creds, p);
+            User user2 = userMgr.createUser(uid, buildPassword("anyPW", true));
             createdUsers.add(user2);
 
             fail("Creating 2 users with the same UserID should throw AuthorizableExistsException.");
@@ -126,15 +177,12 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
     public void testCreateTwiceWithSamePrincipal() throws RepositoryException {
         Principal p = getTestPrincipal();
         String uid = p.getName();
-        Credentials creds = buildCredentials(uid, uid);
-        User user = userMgr.createUser(uid, creds, p);
+        User user = userMgr.createUser(uid, buildPassword(uid, true), p, "a/b/c");
         createdUsers.add(user);
 
         try {
             uid = getTestPrincipal().getName();
-            creds = buildCredentials(uid, uid);
-
-            User user2 = userMgr.createUser(uid, creds, p);
+            User user2 = userMgr.createUser(uid, buildPassword(uid, false), p, null);
             createdUsers.add(user2);
 
             fail("Creating 2 users with the same Principal should throw AuthorizableExistsException.");
@@ -147,7 +195,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
         Principal p = getTestPrincipal();
         String uid = p.getName();
 
-        User user = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+        User user = userMgr.createUser(uid, buildPassword(uid, false));
         createdUsers.add(user);
 
         assertNotNull(userMgr.getAuthorizable(user.getID()));

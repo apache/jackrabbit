@@ -51,16 +51,18 @@ public class ImpersonationImplTest extends AbstractUserTest {
         // create a first user and retrieve the UserManager from the session
         // created for that new user.
         Principal p = getTestPrincipal();
-        creds = buildCredentials(p);
-        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), creds, p);
+        String pw = buildPassword(p);
+        creds = buildCredentials(p.getName(), pw);
+        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), pw);
         uID = u.getID();
         uSession = helper.getRepository().login(creds);
         uMgr = getUserManager(uSession);
 
         // create a second user 'below' the first user.
         p = getTestPrincipal();
-        otherCreds = buildCredentials(p);
-        User u2 = userMgr.createUser(p.getName(), otherCreds, p, u.getNode().getPath());
+        pw = buildPassword(p);
+        otherCreds = buildCredentials(p.getName(), pw);
+        User u2 = userMgr.createUser(p.getName(), pw, p, u.getNode().getPath());
         otherUID = u2.getID();
     }
 

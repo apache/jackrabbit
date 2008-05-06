@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.SecurityItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.util.Text;
@@ -34,13 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -147,7 +146,6 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     /**
      * Creates a new Node on the repository with the specified
      * <code>userName</code>.<br>
-     * The <code>userID</code> is expected to be a valid JCR-<code>Name</code>.
      * The User will be created relative to path of the User who represents the
      * Session this UserManager has been created for.<br>
      * If the {@link javax.jcr.Credentials Credentials} are of type
@@ -155,29 +153,28 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
      * crypted.
      *
      * @param userID
-     * @param credentials
-     * @see UserManager#createUser(String, Credentials, Principal principal)
+     * @param password
+     * @see UserManager#createUser(String,String)
      * @inheritDoc
      */
-    public User createUser(String userID, Credentials credentials,
-                           Principal principal) throws RepositoryException {
-        return createUser(userID, credentials, principal, null);
+    public User createUser(String userID, String password) throws RepositoryException {
+        return createUser(userID, password, new PrincipalImpl(userID), null);
     }
 
     /**
      *
      * @param userID
-     * @param credentials
+     * @param password
      * @param principal
      * @param intermediatePath
      * @return
      * @throws AuthorizableExistsException
      * @throws RepositoryException
      */
-    public User createUser(String userID, Credentials credentials,
+    public User createUser(String userID, String password,
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
-        if (userID == null || credentials == null || principal == null) {
+        if (userID == null || password == null || principal == null) {
             throw new IllegalArgumentException("Not possible to create user with null parameters");
         }
         if (getAuthorizable(userID) != null) {
@@ -185,11 +182,6 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
         }
         if (hasAuthorizableOrReferee(principal)) {
             throw new AuthorizableExistsException("Authorizable for '" + principal.getName() + "' already exists");
-        }
-        if (!(credentials instanceof SimpleCredentials)) {
-            throw new RepositoryException("SimpleCredentials required. Found " + credentials.getClass());
-        } else if (!userID.equals(((SimpleCredentials) credentials).getUserID())) {
-            throw new RepositoryException("UserID mismatch: " + userID + " <-> " + ((SimpleCredentials) credentials).getUserID());
         }
 
         NodeImpl parent = null;
@@ -200,8 +192,8 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             Name nodeName = session.getQName(Text.escapeIllegalJcrChars(userID));
             NodeImpl userNode = addSecurityNode(parent, nodeName, NT_REP_USER);
 
-            setSecurityProperty(userNode, P_USERID, getValue(userID));
-            CryptedSimpleCredentials creds = new CryptedSimpleCredentials((SimpleCredentials) credentials);
+            CryptedSimpleCredentials creds = new CryptedSimpleCredentials(userID, password);
+            setSecurityProperty(userNode, P_USERID, getValue(creds.getUserID()));
             setSecurityProperty(userNode, P_PASSWORD, getValue(creds.getPassword()));
             setSecurityProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
             parent.save();

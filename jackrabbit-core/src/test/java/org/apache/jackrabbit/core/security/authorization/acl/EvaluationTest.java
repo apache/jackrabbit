@@ -131,6 +131,7 @@ public class EvaluationTest extends AbstractEvaluationTest {
                 testUser.getPrincipal(),
                 new Privilege[] {PrivilegeRegistry.WRITE_PRIVILEGE});
         testSession.save();
+
         assertTrue(testAcMgr.hasPrivileges(path,
                 new Privilege[] {PrivilegeRegistry.REMOVE_CHILD_NODES_PRIVILEGE}));
 

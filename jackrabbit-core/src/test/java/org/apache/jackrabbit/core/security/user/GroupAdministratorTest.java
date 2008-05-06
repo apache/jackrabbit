@@ -56,19 +56,20 @@ public class GroupAdministratorTest extends AbstractUserTest {
 
         // create a first user
         Principal p = getTestPrincipal();
-        UserImpl pUser = (UserImpl) userMgr.createUser(p.getName(), buildCredentials(p), p);
+        UserImpl pUser = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
         parentUID = pUser.getID();
 
         // create a second user 'below' the first user and make it group-admin
         p = getTestPrincipal();
-        Credentials creds = buildCredentials(p);
-        User u = userMgr.createUser(p.getName(), creds, p, pUser.getNode().getPath());
+        String pw = buildPassword(p);
+        Credentials creds = buildCredentials(p.getName(), pw);
+        User u = userMgr.createUser(p.getName(), pw, p, pUser.getNode().getPath());
         uID = u.getID();
         uPath = ((UserImpl) u).getNode().getPath();
 
         // create a third child user below
         p = getTestPrincipal();
-        childUID = userMgr.createUser(p.getName(), buildCredentials(p), p, uPath).getID();
+        childUID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
 
         // make other user a group-administrator:
         Authorizable groupAdmin = userMgr.getAuthorizable(UserConstants.GROUP_ADMIN_GROUP_NAME);
@@ -116,7 +117,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         // create a new user -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
-            u = (UserImpl) umgr.createUser(p.getName(), buildCredentials(p), p);
+            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
             fail("Group administrator should not be allowed to create a new user.");
             u.remove();
         } catch (AccessDeniedException e) {
@@ -339,9 +340,9 @@ public class GroupAdministratorTest extends AbstractUserTest {
             // let superuser create a group and a user a make user member of group
             nGr = userMgr.createGroup(getTestPrincipal());
             Principal p = getTestPrincipal();
-            nUs = userMgr.createUser(p.getName(), buildCredentials(p), p);
+            nUs = userMgr.createUser(p.getName(), buildPassword(p));
             p = getTestPrincipal();
-            nUs2 = userMgr.createUser(p.getName(), buildCredentials(p), p);
+            nUs2 = userMgr.createUser(p.getName(), buildPassword(p));
             nGr.addMember(nUs);
             nGr.addMember(nUs2);
 
@@ -380,7 +381,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
             // let superuser create a group and a user a make user member of group
             nGr = userMgr.createGroup(getTestPrincipal());
             Principal p = getTestPrincipal();
-            nUs = userMgr.createUser(p.getName(), buildCredentials(p), p);
+            nUs = userMgr.createUser(p.getName(), buildPassword(p));
             nGr.addMember(nUs);
 
             Group gr = (Group) getUserManager(uSession).getAuthorizable(nGr.getID());

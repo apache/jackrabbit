@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.security.Principal;
 
 /**
@@ -47,8 +48,9 @@ public class UserImplTest extends AbstractUserTest {
         super.setUp();
 
         Principal p = getTestPrincipal();
-        creds = buildCredentials(p);
-        User u = userMgr.createUser(p.getName(), creds, p);
+        String pw = buildPassword(p);
+        creds = new SimpleCredentials(p.getName(), pw.toCharArray());
+        User u = userMgr.createUser(p.getName(), pw);
         uID = u.getID();
         uSession = helper.getRepository().login(creds);
         uMgr = getUserManager(uSession);

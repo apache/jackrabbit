@@ -49,7 +49,7 @@ import java.security.Principal;
  */
 public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
-    protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
+    protected static final long DEFAULT_WAIT_TIMEOUT = 50;
 
     protected Credentials creds;
     protected User testUser;
@@ -72,11 +72,13 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
         UserManager uMgr = getUserManager(superuser);
         Principal princ = new TestPrincipal("anyUser");
-        creds = new SimpleCredentials("anyUser", "anyUser".toCharArray());
+        String uid = "anyUser";
+        String pw = "anyUser";
+        creds = new SimpleCredentials(uid, pw.toCharArray());
 
         Authorizable a = uMgr.getAuthorizable(princ);
         if (a == null) {
-            testUser = uMgr.createUser("anyUser", creds, princ);
+            testUser = uMgr.createUser(uid, pw);
         } else if (a.isGroup()) {
             throw new NotExecutableException();
         } else {
@@ -140,19 +142,45 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     protected abstract String[] getRestrictions(String path);
 
     protected PolicyTemplate givePrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-        tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, true, restrictions));
-        acMgr.setPolicy(tmpl.getPath(), tmpl);
-        superuser.save();
-        return tmpl;
+        ObservationManager obsMgr = superuser.getWorkspace().getObservationManager();
+        EventResult listener = new EventResult(((JUnitTest) this).log);
+        try {
+            obsMgr.addEventListener(listener, Event.PROPERTY_CHANGED, nPath,
+                    true, new String[0], new String[] {"rep:ACE"}, false);
+
+            PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
+            tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, true, restrictions));
+            acMgr.setPolicy(tmpl.getPath(), tmpl);
+            superuser.save();
+
+            obsMgr.removeEventListener(listener);
+            Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+
+            return tmpl;
+        } finally {
+            obsMgr.removeEventListener(listener);
+        }
     }
 
     protected PolicyTemplate withdrawPrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-        tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, false, restrictions));
-        acMgr.setPolicy(tmpl.getPath(), tmpl);
-        superuser.save();
-        return tmpl;
+        ObservationManager obsMgr = superuser.getWorkspace().getObservationManager();
+        EventResult listener = new EventResult(((JUnitTest) this).log);
+        try {
+            obsMgr.addEventListener(listener, Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED, nPath,
+                    true, new String[0], new String[] {"rep:ACE"}, false);
+
+            PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
+            tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, false, restrictions));
+            acMgr.setPolicy(tmpl.getPath(), tmpl);
+            superuser.save();
+
+            obsMgr.removeEventListener(listener);
+            Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+
+            return tmpl;
+        } finally {
+            obsMgr.removeEventListener(listener);
+        }
     }
 
     protected void checkReadOnly(String path) throws RepositoryException {

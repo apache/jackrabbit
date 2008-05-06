@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.api.security.user;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Credentials;
 import java.security.Principal;
 import java.util.Iterator;
 
@@ -63,19 +62,20 @@ public interface UserManager {
     Iterator findAuthorizable(String propertyName, String value) throws RepositoryException;
 
     /**
-     * Creates an User for the given userID that authenitcates with the given
-     * {@link javax.jcr.Credentials Credentials}.<br>
-     * Neither of the specified parameters can be <code>null</code>.
+     * Creates an User for the given userID / password pair; neither of the
+     * specified parameters can be <code>null</code>.<br>
+     * Same as {@link #createUser(String,String,Principal,String)} where
+     * the specified userID is equal to the principal name and the intermediate
+     * path is <code>null</code>.
      *
      * @param userID
-     * @param credentials
-     * @param principal
+     * @param password The initial password of this user.
      * @return The new <code>User</code>.
      * @throws AuthorizableExistsException in case the given userID is already
      * in use or another Authorizable with the same principal name exists.
      * @throws RepositoryException If another error occurs.
      */
-    User createUser(String userID, Credentials credentials, Principal principal) throws AuthorizableExistsException, RepositoryException;
+    User createUser(String userID, String password) throws AuthorizableExistsException, RepositoryException;
 
     /**
      * Creates an User for the given userID that authenitcates with the given
@@ -87,7 +87,7 @@ public interface UserManager {
      * parameters can be <code>null</code>.
      *
      * @param userID
-     * @param credentials
+     * @param password
      * @param principal
      * @param intermediatePath
      * @return The new <code>User</code>.
@@ -96,7 +96,7 @@ public interface UserManager {
      * @throws RepositoryException If the current Session is
      * not allowed to create users or some another error occurs.
      */
-    User createUser(String userID, Credentials credentials, Principal principal,
+    User createUser(String userID, String password, Principal principal,
                     String intermediatePath) throws AuthorizableExistsException, RepositoryException;
 
     /**

@@ -41,8 +41,9 @@ public class ImpersonationTest extends AbstractUserTest {
         super.setUp();
 
         Principal test = getTestPrincipal();
-        Credentials creds = buildCredentials(test);
-        newUser = userMgr.createUser(test.getName(), creds, test);
+        String pw = buildPassword(test);
+        Credentials creds = buildCredentials(test.getName(), pw);
+        newUser = userMgr.createUser(test.getName(), pw);
         impersonation = newUser.getImpersonation();
     }
 
@@ -85,7 +86,7 @@ public class ImpersonationTest extends AbstractUserTest {
         User u = null;
         Principal test = getTestPrincipal();
         try {
-            u = userMgr.createUser(test.getName(), buildCredentials(test), test);
+            u = userMgr.createUser(test.getName(), buildPassword(test));
             assertTrue("Admin should be allowed to edit impersonation and grant to another test-user.", impersonation.grantImpersonation(test));
         }  finally {
             impersonation.revokeImpersonation(test);
@@ -99,7 +100,7 @@ public class ImpersonationTest extends AbstractUserTest {
         Principal test = getTestPrincipal();
         User u = null;
         try {
-            u = userMgr.createUser(test.getName(), buildCredentials(test), test);
+            u = userMgr.createUser(test.getName(), buildPassword(test));
             impersonation.grantImpersonation(test);
             // try again
             assertFalse("Granting impersonation twice should not succeed.", impersonation.grantImpersonation(test));
@@ -115,7 +116,7 @@ public class ImpersonationTest extends AbstractUserTest {
         User u = null;
         Principal test = getTestPrincipal();
         try {
-            u = userMgr.createUser(test.getName(), buildCredentials(test), test);
+            u = userMgr.createUser(test.getName(), buildPassword(test));
             impersonation.grantImpersonation(test);
 
             assertTrue(impersonation.revokeImpersonation(test));
@@ -130,7 +131,7 @@ public class ImpersonationTest extends AbstractUserTest {
         User u = null;
         Principal test = getTestPrincipal();
         try {
-            u = userMgr.createUser(test.getName(), buildCredentials(test), test);
+            u = userMgr.createUser(test.getName(), buildPassword(test));
             impersonation.grantImpersonation(test);
             impersonation.revokeImpersonation(test);
             // try again
@@ -187,7 +188,7 @@ public class ImpersonationTest extends AbstractUserTest {
     }
 
     private Subject createSubject(Principal p) throws RepositoryException {
-        Set creds = Collections.singleton(buildCredentials(p));
+        Set creds = Collections.singleton(buildCredentials(p.getName(), buildPassword(p)));
         Subject subject = new Subject(true, Collections.singleton(p), creds, creds);
         return subject;
     }

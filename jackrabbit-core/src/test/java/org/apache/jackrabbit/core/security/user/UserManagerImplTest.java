@@ -26,9 +26,11 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.Credentials;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Session;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.security.Principal;
 import java.util.Iterator;
@@ -95,10 +97,10 @@ public class UserManagerImplTest extends AbstractUserTest {
     public void testRemoveUserRemovesTree() throws RepositoryException {
         // create 2 new users. the second as child of the first.
         Principal p = getTestPrincipal();
-        User u = userMgr.createUser(p.getName(), buildCredentials(p), p);
+        User u = userMgr.createUser(p.getName(), buildPassword(p));
         String uID = u.getID();
         p = getTestPrincipal();
-        User u2 = userMgr.createUser(p.getName(), buildCredentials(p), p, ((UserImpl)u).getNode().getPath());
+        User u2 = userMgr.createUser(p.getName(), buildPassword(p), p, ((UserImpl)u).getNode().getPath());
         String u2ID = u2.getID();
 
         // removing the first user must also remove the child-users.
@@ -109,35 +111,11 @@ public class UserManagerImplTest extends AbstractUserTest {
         assertNull(userMgr.getAuthorizable(u2ID));
     }
 
-    public void testCreateUserWithInvalidCredentials() throws RepositoryException {
-        Principal p = getTestPrincipal();
-        try {
-            Credentials creds = new Credentials() {};
-            User u = userMgr.createUser(p.getName(), creds, p);
-            u.remove();
-            fail("creating a user with 'unknown' credentials must fail.");
-        } catch (RepositoryException e) {
-            // success
-        }
-    }
-
-    public void testCreateUserWithUserIDNotMatchingCredentials() throws RepositoryException {
-        Principal p = getTestPrincipal();
-        String uid = getTestUserId(p);
-        try {
-            User u = userMgr.createUser(uid, buildCredentials(p), p);
-            u.remove();
-            fail("creating a user with UserID not matching uid from credentials must fail.");
-        } catch (RepositoryException e) {
-            // success
-        }
-    }
-
-    public void testCreateUserIdEqualsUserId() throws RepositoryException {
+    public void testPrincipalNameEqualsUserID() throws RepositoryException {
         Principal p = getTestPrincipal();
         User u = null;
         try {
-            u = userMgr.createUser(p.getName(), buildCredentials(p), p);
+            u = userMgr.createUser(p.getName(), buildPassword(p));
 
             String msg = "Implementation specific: User.getID() must return the userID pass to createUser.";
             assertEquals(msg, u.getID(), p.getName());
@@ -154,7 +132,7 @@ public class UserManagerImplTest extends AbstractUserTest {
 
         User u = null;
         try {
-            u = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+            u = userMgr.createUser(uid, buildPassword(uid, true), p, null);
 
             String msg = "Creating a User with principal-name distinct from Principal-name must succeed as long as both are unique.";
             assertEquals(msg, u.getID(), uid);
@@ -174,7 +152,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         User u = null;
         Group gr = null;
         try {
-            u = userMgr.createUser(uid, buildCredentials(uid, uid), p);
+            u = userMgr.createUser(uid, buildPassword(uid, true), p, null);
             gr = userMgr.createGroup(new TestPrincipal(uid));
 
             String msg = "Creating a Group with a principal-name that exists as UserID -> must create new GroupID but keep PrincipalName.";
@@ -248,8 +226,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         try {
             Principal p = getTestPrincipal();
             String uid = "UID" + p.getName();
-            Credentials c = buildCredentials(uid, uid);
-            u = userMgr.createUser(uid, c, p);
+            u = userMgr.createUser(uid, buildPassword(uid, false), p, null);
 
             boolean found = false;
             Iterator it = ((UserManagerImpl)userMgr).findUsers("");
@@ -342,6 +319,39 @@ public class UserManagerImplTest extends AbstractUserTest {
         Iterator it = ((UserManagerImpl)userMgr).findGroups("");
         while (it.hasNext()) {
             assertTrue(((Authorizable) it.next()).isGroup());
+        }
+    }
+
+    public void testNewUserCanLogin() throws RepositoryException {
+        String uid = getTestPrincipal().getName();
+        String pw = buildPassword(uid, false);
+
+        User u = null;
+        Session s = null;
+        try {
+            u = userMgr.createUser(uid, pw);
+            Credentials creds = new SimpleCredentials(uid, pw.toCharArray());
+            s = superuser.getRepository().login(creds);
+        } finally {
+            if (u != null) {
+                u.remove();
+            }
+            if (s != null) {
+                s.logout();
+            }
+        }
+    }
+
+    public void testUnknownUserLogin() throws RepositoryException {
+        String uid = getTestPrincipal().getName();
+        assertNull(userMgr.getAuthorizable(uid));
+        try {
+            Session s = superuser.getRepository().login(new SimpleCredentials(uid, uid.toCharArray()));
+            s.logout();
+
+            fail("An unknown user should not be allowed to execute the login.");
+        } catch (Exception e) {
+            // ok.
         }
     }
 }

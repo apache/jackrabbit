@@ -28,9 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.security.Principal;
 import java.util.Iterator;
 
@@ -53,13 +53,13 @@ public class NotUserAdministratorTest extends AbstractUserTest {
         // create a first user and retrieve the UserManager from the session
         // created for that new user.
         Principal p = getTestPrincipal();
-        Credentials creds = buildCredentials(p);
-        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), creds, p);
+        String pw = buildPassword(p);
+        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), pw);
         uID = u.getID();
         uPath = u.getNode().getPath();
 
         // create a session for the other user.
-        uSession = helper.getRepository().login(creds);
+        uSession = helper.getRepository().login(new SimpleCredentials(uID, pw.toCharArray()));
         uMgr = getUserManager(uSession);
     }
 
@@ -80,7 +80,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testCreateUser() {
         try {
             Principal p = getTestPrincipal();
-            User u = uMgr.createUser(p.getName(), buildCredentials(p), p);
+            User u = uMgr.createUser(p.getName(), buildPassword(p));
             fail("A non-UserAdmin should not be allowed to create a new User.");
 
             // clean-up: let superuser remove the user created by fault.
@@ -96,7 +96,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testCreateUserWithItermediatePath() {
         try {
             Principal p = getTestPrincipal();
-            User u = uMgr.createUser(p.getName(), buildCredentials(p), p, "/any/intermediate/path");
+            User u = uMgr.createUser(p.getName(), buildPassword(p), p, "/any/intermediate/path");
             fail("A non-UserAdmin should not be allowed to create a new User.");
 
             // clean-up: let superuser remove the user created by fault.
@@ -122,7 +122,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testRemoveChildUser() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildCredentials(p), p, uPath).getID();
+        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
         try {
             Authorizable a = uMgr.getAuthorizable(childID);
             a.remove();
@@ -141,7 +141,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testRemoveOtherUser() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildCredentials(p), p, "/any/intermediate/path").getID();
+        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, "/any/intermediate/path").getID();
         try {
             Authorizable a = uMgr.getAuthorizable(childID);
             a.remove();
@@ -160,7 +160,7 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testModifyImpersonation() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        Authorizable child = userMgr.createUser(p.getName(), buildCredentials(p), p, uPath);
+        Authorizable child = userMgr.createUser(p.getName(), buildPassword(p), p, uPath);
         try {
             p = child.getPrincipal();
 
@@ -182,15 +182,14 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     public void testModifyImpersonationOfChildUser() throws RepositoryException {
         // let superuser create a child-user.
         Principal p = getTestPrincipal();
-        String childID = userMgr.createUser(p.getName(), buildCredentials(p), p, uPath).getID();
+        String childID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
         try {
-            Authorizable a = uMgr.getAuthorizable(childID);
+            Authorizable child = uMgr.getAuthorizable(childID);
 
-            Impersonation impers = ((User) a).getImpersonation();
+            Impersonation impers = ((User) child).getImpersonation();
             Principal himselfP = uMgr.getAuthorizable(uID).getPrincipal();
             assertFalse(impers.allows(buildSubject(himselfP)));
-            assertTrue(impers.grantImpersonation(himselfP));
-            assertFalse(impers.allows(buildSubject(himselfP)));
+            impers.grantImpersonation(himselfP);
             fail("A non-administrator user should not be allowed modify Impersonation of a child user.");
         } catch (AccessDeniedException e) {
             // success
