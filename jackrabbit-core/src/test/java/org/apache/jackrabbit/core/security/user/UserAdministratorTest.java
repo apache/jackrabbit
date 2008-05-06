@@ -56,13 +56,14 @@ public class UserAdministratorTest extends AbstractUserTest {
         // create a first user and retrieve the UserManager from the session
         // created for that new user.
         Principal p = getTestPrincipal();
-        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), buildCredentials(p), p);
+        UserImpl u = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
         uID = u.getID();
 
         // create a second user 'below' the first user.
         p = getTestPrincipal();
-        Credentials otherCreds = buildCredentials(p);
-        User other = userMgr.createUser(p.getName(), otherCreds, p, u.getNode().getPath());
+        String pw = buildPassword(p);
+        Credentials otherCreds = buildCredentials(p.getName(), pw);
+        User other = userMgr.createUser(p.getName(), pw, p, u.getNode().getPath());
         otherUID = other.getID();
         otherPath = ((UserImpl) other).getNode().getPath();
 
@@ -117,7 +118,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         // create a new user -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
-            u = (UserImpl) umgr.createUser(p.getName(), buildCredentials(p), p);
+            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p));
             assertTrue(Text.isDescendant(otherPath, u.getNode().getPath()));
         } finally {
             if (u != null) {
@@ -133,7 +134,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         // -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
-            u = (UserImpl) umgr.createUser(p.getName(), buildCredentials(p), p, "/some/intermediate/path");
+            u = (UserImpl) umgr.createUser(p.getName(), buildPassword(p), p, "/some/intermediate/path");
             assertTrue(Text.isDescendant(otherPath, u.getNode().getPath()));
             assertTrue(Text.isDescendant(otherPath + "/some/intermediate/path", u.getNode().getPath()));
         } finally {
@@ -175,7 +176,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         // create a new user -> must succeed and user must be create below 'other'
         try {
             Principal p = getTestPrincipal();
-            u = umgr.createUser(p.getName(), buildCredentials(p), p);
+            u = umgr.createUser(p.getName(), buildPassword(p));
 
             Impersonation impers = u.getImpersonation();
             assertFalse(impers.allows(buildSubject(otherP)));
@@ -248,7 +249,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         Principal cp = getTestPrincipal();
         User childU = null;
         try {
-            childU = umgr.createUser(cp.getName(), buildCredentials(cp), cp);
+            childU = umgr.createUser(cp.getName(), buildPassword(cp));
             for (Iterator it = ((UserManagerImpl) umgr).findGroups(""); it.hasNext();) {
                 Group gr = (Group) it.next();
                 try {

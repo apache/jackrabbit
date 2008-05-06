@@ -19,22 +19,26 @@ package org.apache.jackrabbit.api.security.user;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Credentials;
+import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 import java.security.Principal;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
+import java.io.UnsupportedEncodingException;
 
 /**
  * <code>AbstractUserTest</code>...
@@ -74,13 +78,29 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
         return p;
     }
 
-    protected Credentials buildCredentials(String uid, String pw) {
-        // todo: retrieve creds impl from config
-        return new SimpleCredentials(uid, pw.toCharArray());
+    protected String buildPassword(String uid, boolean createDigest) throws IllegalArgumentException {
+        if (createDigest) {
+            try {
+                StringBuffer password = new StringBuffer();
+                password.append("{").append(SecurityConstants.DEFAULT_DIGEST).append("}");
+                password.append(Text.digest(SecurityConstants.DEFAULT_DIGEST, uid.getBytes("UTF-8")));
+                return password.toString();
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalArgumentException(e);
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalArgumentException(e);
+            }
+        } else {
+            return uid;
+        }
     }
 
-    protected Credentials buildCredentials(Principal p) {
-        return buildCredentials(p.getName(), p.getName());
+    protected String buildPassword(Principal p) {
+        return buildPassword(p.getName(), false);
+    }
+
+    protected Credentials buildCredentials(String uID, String pw) {
+        return new SimpleCredentials(uID, pw.toCharArray());
     }
 
     protected static Set getPrincipalSetFromSession(Session session) throws NotExecutableException {

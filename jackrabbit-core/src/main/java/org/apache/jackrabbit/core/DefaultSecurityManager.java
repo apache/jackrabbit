@@ -53,7 +53,6 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.HashMap;
@@ -408,8 +407,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         if (adminId != null) {
             Authorizable admin = systemUserManager.getAuthorizable(adminId);
             if (admin == null) {
-                Credentials creds = new SimpleCredentials(adminId, adminId.toCharArray());
-                admin = systemUserManager.createUser(adminId, creds, new PrincipalImpl(adminId));
+                admin = systemUserManager.createUser(adminId, adminId);
                 log.info("...created admin-user with id \'" + adminId + "\' ...");
                 admins.addMember(admin);
                 log.info("...added admin \'" + adminId + "\' as member of the administrators group.");
@@ -419,8 +417,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         if (anonymousId != null) {
             Authorizable anonymous = systemUserManager.getAuthorizable(anonymousId);
             if (anonymous == null) {
-                Credentials creds = new SimpleCredentials(anonymousId, new char[0]);
-                systemUserManager.createUser(anonymousId, creds, new PrincipalImpl(anonymousId));
+                systemUserManager.createUser(anonymousId, "");
                 log.info("...created anonymous-user with id \'" + anonymousId + "\' ...");
             }
         }

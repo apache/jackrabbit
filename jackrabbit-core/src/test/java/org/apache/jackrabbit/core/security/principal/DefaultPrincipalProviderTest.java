@@ -75,7 +75,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
         Group gr1 = null;
         Group gr2 = null;
         try {
-            u = userMgr.createUser(up.getName(), buildCredentials(up), up);
+            u = userMgr.createUser(up.getName(), buildPassword(up));
             gr1 = userMgr.createGroup(getTestPrincipal());
             gr2 = userMgr.createGroup(getTestPrincipal());
 

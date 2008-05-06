@@ -60,7 +60,7 @@ public class CryptedSimpleCredentials implements Credentials {
         if (algo == null) {
             // password is plain text
             algorithm = SecurityConstants.DEFAULT_DIGEST;
-            cryptedPassword = crypt(algorithm, password);
+            cryptedPassword = crypt(password, algorithm);
         } else {
             // password is already encrypted
             algorithm = algo;
@@ -75,18 +75,15 @@ public class CryptedSimpleCredentials implements Credentials {
     }
 
     public CryptedSimpleCredentials(String userId, String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        if (userId == null || userId.length() == 0) {
-            throw new IllegalArgumentException();
-        }
-        if (password == null) {
-            throw new IllegalArgumentException();
+        if (userId == null || userId.length() == 0 || password == null) {
+            throw new IllegalArgumentException("Invalid userID or password. Neither may be null, the userID must have a length > 0.");
         }
         this.userId = userId;
         String algo =  getAlgorithm(password);
         if (algo == null) {
             // password is plain text
             algorithm = SecurityConstants.DEFAULT_DIGEST;
-            cryptedPassword = crypt(algorithm, password);
+            cryptedPassword = crypt(password, algorithm);
         } else {
             // password is already encrypted
             algorithm = algo;
@@ -121,8 +118,8 @@ public class CryptedSimpleCredentials implements Credentials {
      * it with the current Digest.
      *
      * @param credentials
-     * @return true if {@link SimpleCredentials#getUserID() UserID}
-     *              and {@link SimpleCredentials#getPassword() Password} match
+     * @return true if {@link SimpleCredentials#getUserID() UserID} and
+     * {@link SimpleCredentials#getPassword() Password} match.
      * @throws NoSuchAlgorithmException
      * @throws UnsupportedEncodingException
      */
@@ -135,10 +132,10 @@ public class CryptedSimpleCredentials implements Credentials {
 
             if (algr == null && algorithm != null) {
                 // uncrypted pw to match -> crypt with algorithm present here.
-                return crypt(algorithm, toMatch).equals(cryptedPassword);
+                return crypt(toMatch, algorithm).equals(cryptedPassword);
             } else if (algr != null && algorithm == null) {
                 // crypted pw to match but unkown algorithm here -> crypt this pw
-                return crypt(cryptedPassword, algr).equals(toMatch);
+                return crypt(algr, cryptedPassword).equals(toMatch);
             }
 
             // both pw to compare define a algorithm and are crypted
@@ -148,7 +145,7 @@ public class CryptedSimpleCredentials implements Credentials {
         return false;
     }
 
-    private static String crypt(String algorithm, String pwd)
+    private static String crypt(String pwd, String algorithm)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
         StringBuffer password = new StringBuffer();
