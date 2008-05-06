@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -44,8 +43,6 @@ import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -192,9 +189,8 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             Name nodeName = session.getQName(Text.escapeIllegalJcrChars(userID));
             NodeImpl userNode = addSecurityNode(parent, nodeName, NT_REP_USER);
 
-            CryptedSimpleCredentials creds = new CryptedSimpleCredentials(userID, password);
-            setSecurityProperty(userNode, P_USERID, getValue(creds.getUserID()));
-            setSecurityProperty(userNode, P_PASSWORD, getValue(creds.getPassword()));
+            setSecurityProperty(userNode, P_USERID, getValue(userID));
+            setSecurityProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)));
             setSecurityProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
             parent.save();
 
@@ -207,10 +203,6 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
                 log.debug("Failed to create new User, reverting changes.");
             }
             throw e;
-        } catch (NoSuchAlgorithmException e) {
-            throw new RepositoryException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException(e);
         }
     }
 
@@ -311,6 +303,11 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
         s.add(P_REFEREES);
         NodeIterator res = authResolver.findNodes(s, principal.getName(), NT_REP_AUTHORIZABLE, true, 1);
         return res.hasNext();
+    }
+
+    void setProtectedProperty(NodeImpl node, Name propName, Value value) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
+        setSecurityProperty(node, propName, value);
+        node.save();
     }
 
     void setProtectedProperty(NodeImpl node, Name propName, Value[] values) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {

@@ -361,6 +361,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * <li>rep:referees</li>
      * <li>rep:groups</li>
      * <li>rep:impersonators</li>
+     * <li>rep:password</li>
      * </ul>
      * Those properties are 'protected' in their property definition. This
      * method is a simple utility in order to save the extra effort to modify
@@ -374,7 +375,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         Name pName = getSession().getQName(propertyName);
          if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
                  || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
-                 || P_IMPERSONATORS.equals(pName)) {
+                 || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName)) {
              return true;
          } else {
              return false;

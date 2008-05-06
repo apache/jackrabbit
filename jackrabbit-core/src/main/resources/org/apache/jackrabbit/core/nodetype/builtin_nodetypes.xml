@@ -495,7 +495,7 @@ commented out by default.
             <supertype>rep:Impersonatable</supertype>
         </supertypes>
         <propertyDefinition name="rep:userId" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
-        <propertyDefinition name="rep:password" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="rep:password" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
     </nodeType>
 
     <nodeType name="rep:Group" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">

@@ -52,6 +52,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
         if (superuser instanceof SessionImpl) {
             NameResolver resolver = ((SessionImpl) superuser).getNamePathResolver();
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_USERID));
+            protectedUserProps.add(resolver.getJCRName(UserConstants.P_PASSWORD));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_IMPERSONATORS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
