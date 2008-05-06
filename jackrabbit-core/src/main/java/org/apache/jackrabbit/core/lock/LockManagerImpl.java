@@ -20,7 +20,6 @@ import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -101,11 +100,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     private boolean savingDisabled;
 
     /**
-     * Name and Path resolver
-     */
-    private final NamePathResolver resolver;
-
-    /**
      * Lock event channel.
      */
     private LockEventChannel eventChannel;
@@ -121,7 +115,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             throws RepositoryException {
 
         this.session = session;
-        this.resolver = session.getNamePathResolver();
         this.locksFile = new FileSystemResource(fs, FileSystem.SEPARATOR + LOCKS_FILE);
 
         session.getWorkspace().getObservationManager().
@@ -813,7 +806,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
             try {
                 he = new HierarchyEvent(event.getChildId(),
-                        resolver.getQPath(event.getPath()).getNormalizedPath(),
+                        session.getQPath(event.getPath()).getNormalizedPath(),
                         event.getType());
             } catch (MalformedPathException e) {
                 log.info("Unable to get event's path: " + e.getMessage());

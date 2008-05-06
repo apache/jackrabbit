@@ -108,7 +108,7 @@ import java.util.Arrays;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements JackrabbitSession, NamePathResolver, Dumpable {
+        implements JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -288,7 +288,7 @@ public class SessionImpl extends AbstractSession
 
         nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
         namePathResolver = new DefaultNamePathResolver(nsMappings, true);
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), getNamespaceResolver(), getNamePathResolver(), rep.getDataStore());
+        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), this, this, rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
                 rep.getWorkspaceStateManager(wspName), rep, this);
@@ -366,7 +366,7 @@ public class SessionImpl extends AbstractSession
                 this,
                 getSubject(),
                 hierarchyManager,
-                getNamePathResolver(),
+                this,
                 wspName);
         return rep.getSecurityManager().getAccessManager(this, ctx);
     }
@@ -447,24 +447,6 @@ public class SessionImpl extends AbstractSession
      */
     public ItemManager getItemManager() {
         return itemMgr;
-    }
-
-    /**
-     * Returns the <code>NamespaceResolver</code> of this session.
-     *
-     * @return the <code>NamespaceResolver</code> of this session
-     */
-    public NamespaceResolver getNamespaceResolver() {
-        return nsMappings;
-    }
-
-    /**
-     * Returns the <code>NamePathResolver</code> of this session.
-     *
-     * @return the <code>NamePathResolver</code> of this session
-     */
-    public NamePathResolver getNamePathResolver() {
-        return namePathResolver;
     }
 
     /**
@@ -680,6 +662,16 @@ public class SessionImpl extends AbstractSession
         }
         GarbageCollector gc = new GarbageCollector(this, ipmList, sysSessions);
         return gc;
+    }
+
+    //---------------------------------------------------< NamespaceResolver >
+
+    public String getPrefix(String uri) throws NamespaceException {
+        return nsMappings.getPrefix(uri);
+    }
+
+    public String getURI(String prefix) throws NamespaceException {
+        return nsMappings.getURI(prefix);
     }
 
     //--------------------------------------------------------< NameResolver >
@@ -929,7 +921,7 @@ public class SessionImpl extends AbstractSession
         parent.checkLock();
 
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
-        return new ImportHandler(importer, getNamespaceResolver(), rep.getNamespaceRegistry());
+        return new ImportHandler(importer, this, rep.getNamespaceRegistry());
     }
 
     /**

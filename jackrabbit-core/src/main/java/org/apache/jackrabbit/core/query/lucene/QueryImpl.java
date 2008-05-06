@@ -88,8 +88,7 @@ public class QueryImpl extends AbstractQueryImpl {
         super(session, itemMgr, index, propReg);
         // parse query according to language
         // build query tree using the passed factory
-        this.root = QueryParser.parse(statement, language,
-                session.getNamePathResolver(), factory);
+        this.root = QueryParser.parse(statement, language, session, factory);
     }
 
     /**

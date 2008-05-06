@@ -353,10 +353,10 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != PropertyType.NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
-                    InternalValue.create(name).toJCRValue(session.getNamePathResolver()),
+                    InternalValue.create(name).toJCRValue(session),
                     reqType,
                     ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
         } else {
             // no type conversion required
             internalValue = InternalValue.create(name);
@@ -405,10 +405,10 @@ public class PropertyImpl extends ItemImpl implements Property {
                     if (reqType != PropertyType.NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
-                                InternalValue.create(name).toJCRValue(session.getNamePathResolver()),
+                                InternalValue.create(name).toJCRValue(session),
                                 reqType,
                                 ValueFactoryImpl.getInstance());
-                        internalValue = InternalValue.create(targetValue, session.getNamePathResolver(), rep.getDataStore());
+                        internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
                     } else {
                         // no type conversion required
                         internalValue = InternalValue.create(name);
@@ -622,10 +622,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             Value targetVal = ValueHelper.convert(
                     value, reqType,
                     ValueFactoryImpl.getInstance());
-            internalValue = InternalValue.create(targetVal, session.getNamePathResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(targetVal, session, rep.getDataStore());
         } else {
             // no type conversion required
-            internalValue = InternalValue.create(value, session.getNamePathResolver(), rep.getDataStore());
+            internalValue = InternalValue.create(value, session, rep.getDataStore());
         }
         internalSetValue(new InternalValue[]{internalValue}, reqType);
     }
