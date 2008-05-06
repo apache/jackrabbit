@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QueryInfo;
@@ -48,11 +50,6 @@ public class QueryImpl implements Query {
      * The session of the user executing this query
      */
     private final Session session;
-
-    /**
-     * The namespace mappings of the session that executes this query.
-     */
-    private final LocalNamespaceMappings nsResolver;
 
     /**
      * Name and Path resolver
@@ -104,20 +101,29 @@ public class QueryImpl implements Query {
      * @param language         the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
-    public QueryImpl(Session session, LocalNamespaceMappings nsResolver, NamePathResolver resolver,
+    public QueryImpl(Session session, NamePathResolver resolver,
                      ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager,
                      String statement, String language)
             throws InvalidQueryException, RepositoryException {
         this.session = session;
         this.resolver = resolver;
-        this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
         this.hierarchyManager = hierarchyManager;
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
-        this.wspManager.checkQueryStatement(statement, language, nsResolver.getLocalNamespaceMappings());
+        this.wspManager.checkQueryStatement(
+                statement, language, getNamespaceMappings());
+    }
+
+    private Map getNamespaceMappings() throws RepositoryException {
+        Map map = new HashMap();
+        String[] prefixes = session.getNamespacePrefixes();
+        for (int i = 0; i < prefixes.length; i++) {
+            map.put(prefixes[i], session.getNamespaceURI(prefixes[i]));
+        }
+        return map;
     }
 
     /**
@@ -134,14 +140,12 @@ public class QueryImpl implements Query {
      * @throws RepositoryException   if another error occurs while reading from
      *                               the node.
      */
-    public QueryImpl(Session session, LocalNamespaceMappings nsResolver, NamePathResolver resolver,
+    public QueryImpl(Session session, NamePathResolver resolver,
                      ItemManager itemMgr, HierarchyManager hierarchyManager,
                      WorkspaceManager wspManager, Node node)
-        throws InvalidQueryException, RepositoryException {
-
+            throws InvalidQueryException, RepositoryException {
         this.session = session;
         this.resolver = resolver;
-        this.nsResolver = nsResolver;
         this.itemManager = itemMgr;
         this.hierarchyManager = hierarchyManager;
         this.node = node;
@@ -155,16 +159,16 @@ public class QueryImpl implements Query {
         }
         statement = node.getProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT)).getString();
         language = node.getProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
-        this.wspManager.checkQueryStatement(statement, language,
-                    nsResolver.getLocalNamespaceMappings());
+        this.wspManager.checkQueryStatement(
+                statement, language, getNamespaceMappings());
     }
 
     /**
      * @see Query#execute()
      */
     public QueryResult execute() throws RepositoryException {
-        QueryInfo qI = wspManager.executeQuery(statement, language,
-                nsResolver.getLocalNamespaceMappings());
+        QueryInfo qI = wspManager.executeQuery(
+                statement, language, getNamespaceMappings());
         return new QueryResultImpl(itemManager, hierarchyManager,
                 qI, resolver, session.getValueFactory());
     }
