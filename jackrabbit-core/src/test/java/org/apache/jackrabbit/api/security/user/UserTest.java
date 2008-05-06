@@ -22,6 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Session;
+import javax.jcr.LoginException;
 
 /**
  * <code>UserTest</code>...
@@ -49,5 +52,44 @@ public class UserTest extends AbstractUserTest {
         User user = getTestUser(superuser);
         Credentials creds = user.getCredentials();
         assertTrue(creds != null);
+    }
+
+    public void testChangePassword() throws RepositoryException, NotExecutableException {
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
+        if (oldPw == null) {
+            // missing property
+            throw new NotExecutableException();
+        }
+
+        User user = getTestUser(superuser);
+        try {
+            user.changePassword("pw");
+            // make sure the user can login with the new pw
+            Session s = helper.getRepository().login(new SimpleCredentials(user.getID(), "pw".toCharArray()));
+            s.logout();
+        } finally {
+            user.changePassword(oldPw);
+        }
+    }
+
+    public void testChangePassword2() throws RepositoryException, NotExecutableException {
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
+        if (oldPw == null) {
+            // missing property
+            throw new NotExecutableException();
+        }
+
+        User user = getTestUser(superuser);
+        try {
+            user.changePassword("pw");
+
+            Session s = helper.getRepository().login(new SimpleCredentials(user.getID(), oldPw.toCharArray()));
+            s.logout();
+            fail("superuser pw has changed. login must fail.");
+        } catch (LoginException e) {
+            // success
+        } finally {
+            user.changePassword(oldPw);
+        }
     }
 }

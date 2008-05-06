@@ -26,6 +26,7 @@ import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
@@ -61,6 +62,23 @@ class UserImpl extends AuthorizableImpl implements User {
             throw new IllegalArgumentException("User has to be within the User Path");
         }
         return new UserImpl(node, userManager);
+    }
+
+    /**
+     * 
+     * @param password
+     * @return
+     * @throws RepositoryException
+     */
+    static String buildPasswordValue(String password) throws RepositoryException {
+        try {
+            CryptedSimpleCredentials creds = new CryptedSimpleCredentials("_", password);
+            return creds.getPassword();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RepositoryException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     //-------------------------------------------------------< Authorizable >---
@@ -122,5 +140,16 @@ class UserImpl extends AuthorizableImpl implements User {
             impersonation = new ImpersonationImpl(this, userManager);
         }
         return impersonation;
+    }
+
+    /**
+     * @see User#changePassword(String)
+     */
+    public void changePassword(String password) throws RepositoryException {
+        if (password == null) {
+            throw new IllegalArgumentException("The password may never be null.");
+        }
+        Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
+        userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
     }
 }

@@ -31,6 +31,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import java.security.Principal;
+import java.security.NoSuchAlgorithmException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * <code>UserImplTest</code>...
@@ -81,7 +83,6 @@ public class UserImplTest extends AbstractUserTest {
 
     public void testUserCanModifyItsOwnProperties() throws RepositoryException {
         User u = (User) uMgr.getAuthorizable(uID);
-
         if (u == null) {
             fail("User " +uID+ "hast not been removed and must be visible to the Session created with its credentials.");
         }
@@ -91,5 +92,23 @@ public class UserImplTest extends AbstractUserTest {
 
         u.removeProperty("Email");
         assertNull(u.getProperty("Email"));
+    }
+
+    public void testChangePassword() throws RepositoryException, NotExecutableException, NoSuchAlgorithmException, UnsupportedEncodingException {
+        String oldPw = helper.getProperty("javax.jcr.tck.superuser.pwd");
+        if (oldPw == null) {
+            // missing property
+            throw new NotExecutableException();
+        }
+
+        User user = getTestUser(superuser);
+        try {
+            user.changePassword("pw");
+
+            SimpleCredentials creds = new SimpleCredentials(user.getID(), "pw".toCharArray());
+            assertTrue(((CryptedSimpleCredentials) user.getCredentials()).matches(creds));
+        } finally {
+            user.changePassword(oldPw);
+        }
     }
 }

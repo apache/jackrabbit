@@ -215,7 +215,7 @@
 
 [rep:User] > rep:Authorizable, rep:Impersonatable
   - rep:userId (string) protected mandatory
-  - rep:password (string) mandatory
+  - rep:password (string) protected mandatory
 
 [rep:Group] > rep:Authorizable
 

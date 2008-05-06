@@ -44,4 +44,11 @@ public interface User extends Authorizable {
      */
     Impersonation getImpersonation() throws RepositoryException;
 
+    /**
+     * Change the password of this user.
+     *
+     * @param password The new password.
+     * @throws RepositoryException
+     */
+    void changePassword(String password) throws RepositoryException;
 }
