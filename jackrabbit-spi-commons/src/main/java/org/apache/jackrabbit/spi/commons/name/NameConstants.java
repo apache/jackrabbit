@@ -419,7 +419,7 @@ public class NameConstants {
     public static final Name REP_VERSIONSTORAGE = FACTORY.create(Name.NS_REP_URI, "versionStorage");
 
     /**
-     * rep:versionStorage
+     * rep:nodeTypes
      */
     public static final Name REP_NODETYPES = FACTORY.create(Name.NS_REP_URI, "nodeTypes");
 
