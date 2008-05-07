@@ -1131,7 +1131,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected synchronized NodePropBundle loadBundle(NodeId id, boolean checkBeforeLoading)
             throws ItemStateException {
         ResultSet rs = null;
-        InputStream in = null;
         try {
             Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
             rs = stmt.getResultSet();
@@ -1160,7 +1159,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             log.error(msg);
             throw new ItemStateException(msg, e);
         } finally {
-            IOUtils.closeQuietly(in);
             closeResultSet(rs);
         }
     }
