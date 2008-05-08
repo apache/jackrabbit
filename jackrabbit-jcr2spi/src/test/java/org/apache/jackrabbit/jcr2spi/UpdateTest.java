@@ -30,6 +30,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.Session;
 import javax.jcr.Property;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -45,17 +46,16 @@ public class UpdateTest extends AbstractJCRTest {
     private static Logger log = LoggerFactory.getLogger(UpdateTest.class);
 
     private String currentWorkspace;
-    private String[] accessibleWorkspaces;
 
     protected void setUp() throws Exception {
         super.setUp();
 
         currentWorkspace = testRootNode.getSession().getWorkspace().getName();
-        accessibleWorkspaces = testRootNode.getSession().getWorkspace().getAccessibleWorkspaceNames();
     }
 
     public void testInvalidSrcWorkspace() throws RepositoryException, InvalidItemStateException, AccessDeniedException {
         String nonExistingWorkspace = "nonExistingWorkspace";
+        String[] accessibleWorkspaces = testRootNode.getSession().getWorkspace().getAccessibleWorkspaceNames();
         List l = Arrays.asList(accessibleWorkspaces);
         while (l.contains(nonExistingWorkspace)) {
             nonExistingWorkspace = nonExistingWorkspace + "_";
@@ -73,14 +73,16 @@ public class UpdateTest extends AbstractJCRTest {
         testRootNode.save();
 
         String srcWorkspace = null;
-        for (int i = 0; i < accessibleWorkspaces.length; i++) {
-            if (!accessibleWorkspaces[i].equals(currentWorkspace)) {
-                try {
-                    n.getCorrespondingNodePath(accessibleWorkspaces[i]);
-                } catch (ItemNotFoundException e) {
-                    srcWorkspace = accessibleWorkspaces[i];
-                }
-            }
+        String wspName = helper.getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");
+        if (wspName == null) {
+            throw new NotExecutableException("Cannot run update. Missing config param.");
+        }
+        try {
+            n.getCorrespondingNodePath(wspName);
+        } catch (ItemNotFoundException e) {
+            srcWorkspace = wspName;
+        } catch (RepositoryException e) {
+            throw new NotExecutableException("Cannot run update. Workspace " + srcWorkspace + " does not exist or is not accessible.");
         }
         if (srcWorkspace == null) {
             throw new NotExecutableException("Cannot run update. No workspace found, that misses the corresponding node.");
@@ -132,8 +134,8 @@ public class UpdateTest extends AbstractJCRTest {
             if (root.isSame(testRootNode)) {
                 throw new NotExecutableException();
             }
-            if (root.canAddMixin("mixLockable")) {
-                root.addMixin("mixLockable");
+            if (root.canAddMixin(mixLockable)) {
+                root.addMixin(mixLockable);
             } else {
                 root.setProperty(propertyName1, "anyValue");
             }
@@ -170,6 +172,10 @@ public class UpdateTest extends AbstractJCRTest {
 
             // ok first check if node has no longer propertis
             assertFalse("Node updated with Node.update() should have property removed", testRootNode.hasProperty(propertyName2));
+        } catch (PathNotFoundException e) {
+            throw new NotExecutableException();
+        } catch (ItemNotFoundException e) {
+            throw new NotExecutableException();
         } finally {
             session2.logout();
         }
@@ -199,21 +205,27 @@ public class UpdateTest extends AbstractJCRTest {
                     testRootNode.hasProperty(nodeName1+"/"+propertyName2) &&
                     testRootNode.hasProperty(propertyName1);
             assertTrue("Node updated with Node.update() should have received childrens", allPresent);
+        } catch (PathNotFoundException e) {
+            throw new NotExecutableException();
+        } catch (ItemNotFoundException e) {
+            throw new NotExecutableException();
         } finally {
             session2.logout();
         }
     }
 
-    private String getAnotherWorkspace() throws NotExecutableException {
-        String srcWorkspace = null;
-        for (int i = 0; i < accessibleWorkspaces.length; i++) {
-            if (!accessibleWorkspaces[i].equals(currentWorkspace)) {
-                srcWorkspace = accessibleWorkspaces[i];
+    private String getAnotherWorkspace() throws NotExecutableException, RepositoryException {
+        String srcWorkspace = helper.getProperty("org.apache.jackrabbit.jcr2spi.workspace2.name");;
+        if (srcWorkspace == null || srcWorkspace.equals(currentWorkspace)) {
+            throw new NotExecutableException("no alternative workspace configured");
+        }
+
+        String[] accessible = testRootNode.getSession().getWorkspace().getAccessibleWorkspaceNames();
+        for (int i = 0; i < accessible.length; i++) {
+            if (accessible[i].equals(srcWorkspace)) {
+                return srcWorkspace;
             }
         }
-        if (srcWorkspace == null) {
-            throw new NotExecutableException("Cannot run update. No workspace found, that misses the corresponding node.");
-        }
-        return srcWorkspace;
+        throw new NotExecutableException("configured workspace does not exist.");
     }
 }
