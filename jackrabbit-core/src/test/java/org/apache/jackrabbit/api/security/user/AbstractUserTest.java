@@ -86,9 +86,9 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
                 password.append(Text.digest(SecurityConstants.DEFAULT_DIGEST, uid.getBytes("UTF-8")));
                 return password.toString();
             } catch (NoSuchAlgorithmException e) {
-                throw new IllegalArgumentException(e);
+                throw new IllegalArgumentException(e.toString());
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(e);
+                throw new IllegalArgumentException(e.toString());
             }
         } else {
             return uid;
