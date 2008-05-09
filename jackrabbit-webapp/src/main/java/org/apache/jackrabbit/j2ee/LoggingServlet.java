@@ -60,7 +60,7 @@ import java.util.Properties;
  *           Webapp1  Webapp2 ...
  *
  * </xmp>
- * Classes are searched in the classloader hierarchy by aksing the parent
+ * Classes are searched in the classloader hierarchy by asking the parent
  * classloader first. so if you put the log4j.jar in the 'shared' classloader,
  * all webapps will shared the same log4j logger repository. if every webapp
  * should use it's own hierarchy, the log4j.jar must be put in the classpath
