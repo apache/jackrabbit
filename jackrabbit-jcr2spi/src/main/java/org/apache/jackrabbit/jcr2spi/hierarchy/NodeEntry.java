@@ -177,6 +177,14 @@ public interface NodeEntry extends HierarchyEntry {
     public List getNodeEntries(Name nodeName) throws RepositoryException;
 
     /**
+     * Creates or updates the <code>ChildNodeEntries</code> of this node.
+     *
+     * @param childInfos
+     * @throws RepositoryException
+     */
+    public void setNodeEntries(Iterator childInfos) throws RepositoryException;
+
+    /**
      * Adds a new child NodeEntry to this entry.
      *
      * @param nodeName

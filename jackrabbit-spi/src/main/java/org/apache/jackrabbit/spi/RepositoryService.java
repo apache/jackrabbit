@@ -16,30 +16,31 @@
  */
 package org.apache.jackrabbit.spi;
 
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.version.Version;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Credentials;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.Map;
+
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Credentials;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.LoginException;
 import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ValueFormatException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
-import javax.jcr.LoginException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
-import java.util.Map;
-import java.util.Iterator;
-import java.io.InputStream;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
 
 /**
  * The <code>RepositoryService</code> interface defines methods used to
@@ -206,20 +207,6 @@ public interface RepositoryService {
 
     //------------------------------------------------------< Reading items >---
     /**
-     * The <code>NodeId</code> of the root node may basically have two
-     * characteristics. If the root node can be identified with a unique ID the
-     * returned <code>NodeId</code> simply has a uniqueID part and the path
-     * part is <code>null</code>. If the root node cannot be identified with a
-     * unique ID the uniqueID part is <code>null</code> and the path part will be set
-     * to "/".
-     *
-     * @param sessionInfo
-     * @return The <code>NodeId</code> of the root <code>Node</code>.
-     * @throws javax.jcr.RepositoryException
-     */
-    public NodeId getRootId(SessionInfo sessionInfo) throws RepositoryException;
-
-    /**
      * Returns the <code>QNodeDefinition</code> for the <code>Node</code>
      * identified by the given id. This method should only be used if the
      * caller is not able to unambiguously determine the applicable definition
@@ -247,20 +234,6 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      */
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException;
-
-    /**
-     * Returns <code>true</code> if an <code>Item</code> with the given
-     * <code>ItemId</code> exists. Note, that the implementation must be able to
-     * deal with the various formats of an <code>ItemId</code>. The caller might
-     * not be aware of the uniqueID part the ItemId may have.
-     *
-     * @param sessionInfo
-     * @param itemId
-     * @return true if the item with the given id exists.
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.Session#itemExists(String)
-     */
-    public boolean exists(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException;
 
     /**
      * Retrieve the <code>NodeInfo</code> for the node identified by the given

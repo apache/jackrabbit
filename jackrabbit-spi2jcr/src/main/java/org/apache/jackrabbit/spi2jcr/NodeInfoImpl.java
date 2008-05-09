@@ -16,18 +16,19 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.PropertyIterator;
 import javax.jcr.NamespaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PropertyIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>NodeInfoImpl</code> implements a <code>NodeInfo</code> on top of a JCR
@@ -53,7 +54,8 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
                 resolver.getQName(node.getPrimaryNodeType().getName()),
                 getNodeTypeNames(node.getMixinNodeTypes(), resolver),
                 getPropertyIds(node.getReferences(), resolver, idFactory),
-                getPropertyIds(node.getProperties(), resolver, idFactory));
+                getPropertyIds(node.getProperties(), resolver, idFactory),
+                getChildInfos(node.getNodes(), resolver));
     }
 
     /**
@@ -97,5 +99,14 @@ class NodeInfoImpl extends org.apache.jackrabbit.spi.commons.NodeInfoImpl {
             references.add(idFactory.createPropertyId(props.nextProperty(), resolver));
         }
         return references.iterator();
+    }
+
+    private static Iterator getChildInfos(NodeIterator childNodes,
+                                          NamePathResolver resolver) throws RepositoryException {
+        List childInfos = new ArrayList();
+        while (childNodes.hasNext()) {
+            childInfos.add(new ChildInfoImpl(childNodes.nextNode(), resolver));
+        }
+        return childInfos.iterator();
     }
 }

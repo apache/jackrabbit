@@ -16,31 +16,34 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.PropertyInfo;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.ItemInfo;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
+import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>WorkspaceItemStateFactory</code>...
@@ -65,7 +68,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @see ItemStateFactory#createRootState(NodeEntry)
      */
     public NodeState createRootState(NodeEntry entry) throws ItemNotFoundException, RepositoryException {
-        return createNodeState(service.getRootId(sessionInfo), entry);
+        IdFactory idFactory = service.getIdFactory();
+        PathFactory pf = service.getPathFactory();
+
+        return createNodeState(idFactory.createNodeId((String) null, pf.getRootPath()), entry);
     }
 
     /**
@@ -268,6 +274,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         } catch (ItemExistsException e) {
             // should not get here
             log.warn("Internal error", e);
+        }
+
+        // unless the child-info are omitted by the SPI impl -> make sure
+        // the childentries the nodeentry are initialized or updated.
+        Iterator childInfos = info.getChildInfos();
+        if (childInfos != null) {
+            entry.setNodeEntries(childInfos);
         }
 
         notifyCreated(state);

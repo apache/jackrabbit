@@ -272,17 +272,6 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public NodeId getRootId(SessionInfo sessionInfo)
-            throws RepositoryException {
-
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        return idFactory.createNodeId(sInfo.getSession().getRootNode(),
-                sInfo.getNamePathResolver());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public QNodeDefinition getNodeDefinition(SessionInfo sessionInfo,
                                              NodeId nodeId)
             throws RepositoryException {
@@ -310,26 +299,6 @@ public class RepositoryServiceImpl implements RepositoryService {
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean exists(SessionInfo sessionInfo, ItemId itemId)
-            throws RepositoryException {
-        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        try {
-            if (itemId.denotesNode()) {
-                getNode((NodeId) itemId, sInfo);
-            } else {
-                getProperty((PropertyId) itemId, sInfo);
-            }
-        } catch (ItemNotFoundException e) {
-            return false;
-        } catch (PathNotFoundException e) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -684,7 +653,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 Version v = (Version) getNode(versionId, sInfo);
-                if (exists(sessionInfo, nodeId)) {
+                if (hasNode(sessionInfo, nodeId)) {
                     Node n = getNode(nodeId, sInfo);
                     n.restore(v, removeExisting);
                 } else {
@@ -700,7 +669,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                         while (degree < path.getLength()) {
                             Path ancestorPath = path.getAncestor(degree);
                             NodeId parentId = idFactory.createNodeId(nodeId.getUniqueID(), ancestorPath);
-                            if (exists(sessionInfo, parentId)) {
+                            if (hasNode(sessionInfo, parentId)) {
                                 n = getNode(parentId, sInfo);
                                 relPath = ancestorPath.computeRelativePath(path);
                             }
@@ -716,6 +685,18 @@ public class RepositoryServiceImpl implements RepositoryService {
                 return null;
             }
         }, sInfo);
+    }
+
+    private boolean hasNode(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        try {
+            getNode(nodeId, sInfo);
+        } catch (ItemNotFoundException e) {
+            return false;
+        } catch (PathNotFoundException e) {
+            return false;
+        }
+        return true;
     }
 
     /**

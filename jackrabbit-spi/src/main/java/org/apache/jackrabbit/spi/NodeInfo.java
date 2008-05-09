@@ -73,4 +73,22 @@ public interface NodeInfo extends ItemInfo {
      * @see PropertyInfo#getId()
      */
     public Iterator getPropertyIds();
+
+    /**
+     * Return the all <code>ChildInfo</code>s of the node represent by
+     * this info, an empty iterator if that node doesn't have any child nodes
+     * or <code>null</code> if the implementation is not able or for some
+     * internal reasons not willing to compute the <code>ChildInfo</code>
+     * iterator. In the latter case the user of this API must call
+     * {@link RepositoryService#getChildInfos(SessionInfo, NodeId)} in order
+     * to determine the existence and identity of the child nodes.
+     *
+     * @return An iterator of <code>ChildInfo</code>s or <code>null</code> if
+     * the implementation is not able or willing to compute the set of
+     * <code>ChildInfo</code>s (e.g. an implementation may choose to return
+     * <code>null</code> if there is a huge amount of child nodes). In this
+     * case {@link RepositoryService#getChildInfos(SessionInfo, NodeId)} will
+     * be used to load the <code>ChildInfo</code>s.
+     */
+    public Iterator getChildInfos();
 }

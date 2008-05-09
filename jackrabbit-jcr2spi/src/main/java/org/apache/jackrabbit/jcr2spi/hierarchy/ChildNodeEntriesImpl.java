@@ -62,7 +62,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     private final EntryFactory factory;
 
     /**
-     * Create a new <code>ChildNodeEntries</code> collection
+     * Create a new <code>ChildNodeEntries</code> collection and retrieve
+     * the entries from the persistent layer if the parent is neither
+     * NEW nor in a terminal status.
      */
     ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory) throws ItemNotFoundException, RepositoryException {
         entriesByName = new NameMap();
@@ -71,15 +73,38 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         this.parent = parent;
         this.factory = factory;
 
-        if (parent.getStatus() == Status.NEW || Status.isTerminal(parent.getStatus())) {
-            return; // cannot retrieve child-entries from persistent layer
-        }
+        if (parent.getStatus() != Status.NEW && !Status.isTerminal(parent.getStatus())) {
+            NodeId id = parent.getWorkspaceId();
+            Iterator childNodeInfos = factory.getItemStateFactory().getChildNodeInfos(id);
+            // simply add all child entries to the empty collection
+            while (childNodeInfos.hasNext()) {
+                ChildInfo ci = (ChildInfo) childNodeInfos.next();
+                NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
+                add(entry, ci.getIndex());
+            }
+        } /* else: cannot retrieve child-entries from persistent layer. the parent
+           * is NEW (transient only) or already removed from the persistent layer.
+           */
+    }
 
-        NodeId id = parent.getWorkspaceId();
-        Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
-        // simply add all child entries to the empty collection
-        while (it.hasNext()) {
-            ChildInfo ci = (ChildInfo) it.next();
+    /**
+     * Create a new <code>ChildNodeEntries</code> collection from the given
+     * <code>childNodeInfos</code> instead of retrieving them from the
+     * persistent layer.
+     *
+     * @param parent
+     * @param factory
+     * @param childNodeInfos
+     */
+    ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory, Iterator childNodeInfos) {
+        entriesByName = new NameMap();
+        entries = new LinkedEntries();
+
+        this.parent = parent;
+        this.factory = factory;
+
+        while (childNodeInfos.hasNext()) {
+            ChildInfo ci = (ChildInfo) childNodeInfos.next();
             NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
             add(entry, ci.getIndex());
         }
@@ -117,15 +142,20 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
 
         NodeId id = parent.getWorkspaceId();
-        Iterator it = factory.getItemStateFactory().getChildNodeInfos(id);
+        Iterator childNodeInfos = factory.getItemStateFactory().getChildNodeInfos(id);
+        reload(childNodeInfos);
+    }
+
+    void reload(Iterator childNodeInfos) {
+        // TODO: should existing (not-new) entries that are not present in the childInfos be removed?
         // create list from all ChildInfos (for multiple loop)
         List cInfos = new ArrayList();
-        while (it.hasNext()) {
-            cInfos.add(it.next());
+        while (childNodeInfos.hasNext()) {
+            cInfos.add(childNodeInfos.next());
         }
         // first make sure the ordering of all existing entries is ok
         NodeEntry entry = null;
-        for (it = cInfos.iterator(); it.hasNext();) {
+        for (Iterator it = cInfos.iterator(); it.hasNext();) {
             ChildInfo ci = (ChildInfo) it.next();
             NodeEntry nextEntry = get(ci);
             if (nextEntry != null) {
@@ -137,7 +167,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
         // then insert the 'new' entries
         List newEntries = new ArrayList();
-        for (it = cInfos.iterator(); it.hasNext();) {
+        for (Iterator it = cInfos.iterator(); it.hasNext();) {
             ChildInfo ci = (ChildInfo) it.next();
             NodeEntry beforeEntry = get(ci);
             if (beforeEntry == null) {
@@ -325,8 +355,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * <code>null</code> <code>insertNode</code> is moved to the end of the
      * child node entries.
      *
-     * @param insertNode the NodeEntry to move.
-     * @param beforeNode the NodeEntry where <code>insertNode</code> is
+     * @param insertEntry the NodeEntry to move.
+     * @param beforeEntry the NodeEntry where <code>insertNode</code> is
      * reordered to.
      * @return the NodeEntry that followed the 'insertNode' before the reordering.
      * @throws NoSuchElementException if <code>insertNode</code> or
@@ -355,11 +385,12 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     /**
      *
-     * @param insertObj
+     * @param insertName
      * @param insertLN
      * @param beforeLN
      */
-    private void reorder(Name insertName, LinkedEntries.LinkNode insertLN, LinkedEntries.LinkNode beforeLN) {
+    private void reorder(Name insertName, LinkedEntries.LinkNode insertLN,
+                         LinkedEntries.LinkNode beforeLN) {
         // reorder named map
         if (entriesByName.containsSiblings(insertName)) {
             int position;
@@ -731,7 +762,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          *
          * @param siblings
          * @param index
-         * @param checkValidity
          * @return
          */
         private static NodeEntry findMatchingEntry(List siblings, int index) {

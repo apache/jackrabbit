@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
-import org.apache.jackrabbit.spi.NodeInfo;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PropertyId;
 
-import java.util.List;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.io.Serializable;
+import java.util.List;
 
 /**
  * <code>NodeInfoImpl</code> implements a serializable <code>NodeInfo</code>
@@ -65,6 +66,11 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
     private final List propertyIds;
 
     /**
+     * The list of {@link ChildInfo}s of this node info.
+     */
+    private final List childInfos;
+
+    /**
      * Creates a new serializable <code>NodeInfo</code> for the given
      * <code>NodeInfo</code>.
      *
@@ -86,6 +92,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             NodeId nodeId = nodeInfo.getId();
             nodeId = idFactory.createNodeId(nodeId.getUniqueID(), nodeId.getPath());
             final Iterator propIds = nodeInfo.getPropertyIds();
+            final Iterator childInfos = nodeInfo.getChildInfos();
             return new NodeInfoImpl(nodeInfo.getPath(), nodeId,
                     nodeInfo.getIndex(), nodeInfo.getNodetype(),
                     nodeInfo.getMixins(), serRefs.iterator(),
@@ -104,7 +111,25 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
                         public void remove() {
                             throw new UnsupportedOperationException();
                         }
-                    });
+                    },
+                    ((childInfos == null) ? null :
+                    new Iterator() {
+                        public boolean hasNext() {
+                            return childInfos.hasNext();
+                        }
+                        public Object next() {
+                            ChildInfo cInfo = (ChildInfo) childInfos.next();
+                            if (cInfo instanceof Serializable) {
+                                return cInfo;
+                            } else {
+                                return new ChildInfoImpl(cInfo.getName(), cInfo.getUniqueID(), cInfo.getIndex());
+                            }
+                        }
+                        public void remove() {
+                            throw new UnsupportedOperationException();
+                        }
+                    })
+            );
         }
     }
 
@@ -120,13 +145,15 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param mixinNames      the names of the assigned mixins.
      * @param references      the references to this node.
      * @param propertyIds     the properties of this node.
+     * @param childInfos      the child infos of this node or <code>null</code>.
      * @deprecated Use {@link #NodeInfoImpl(Name, Path, NodeId, int, Name, Name[], Iterator, Iterator)}
      * instead. The parentId is not used any more.
      */
     public NodeInfoImpl(NodeId parentId, Name name, Path path, NodeId id,
                         int index, Name primaryTypeName, Name[] mixinNames,
-                        Iterator references, Iterator propertyIds) {
-         this(path, id, index, primaryTypeName, mixinNames, references, propertyIds);
+                        Iterator references, Iterator propertyIds,
+                        Iterator childInfos) {
+         this(path, id, index, primaryTypeName, mixinNames, references, propertyIds, childInfos);
     }
 
     /**
@@ -141,7 +168,8 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      * @param propertyIds     the properties of this node.
      */
     public NodeInfoImpl(Path path, NodeId id, int index, Name primaryTypeName,
-                        Name[] mixinNames, Iterator references, Iterator propertyIds) {
+                        Name[] mixinNames, Iterator references, Iterator propertyIds,
+                        Iterator childInfos) {
         super(path, true);
         this.id = id;
         this.index = index;
@@ -154,6 +182,14 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         this.propertyIds = new ArrayList();
         while (propertyIds.hasNext()) {
             this.propertyIds.add(propertyIds.next());
+        }
+        if (childInfos == null) {
+            this.childInfos = null;
+        } else {
+            this.childInfos = new ArrayList();
+            while (childInfos.hasNext()) {
+                this.childInfos.add(childInfos.next());
+            }
         }
     }
 
@@ -201,5 +237,12 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
      */
     public Iterator getPropertyIds() {
         return propertyIds.iterator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator getChildInfos() {
+        return (childInfos == null) ? null : childInfos.iterator();
     }
 }
