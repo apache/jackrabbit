@@ -38,6 +38,17 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     private OnWorkspaceInconsistency owi = OnWorkspaceInconsistency.FAIL;
 
     /**
+     * The name of a class that extends {@link AbstractQueryImpl}.
+     */
+    private String queryClass;
+
+    /**
+     * The max idle time for this query handler until it is stopped. This
+     * property is actually not used anymore.
+     */
+    private String idleTime;
+
+    /**
      * Initializes this query handler by setting all properties in this class
      * with appropriate parameter values.
      *
@@ -112,5 +123,37 @@ public abstract class AbstractQueryHandler implements QueryHandler {
      */
     public String getOnWorkspaceInconsistency() {
         return owi.getName();
+    }
+
+    /**
+     * Sets the name of the query class to use.
+     *
+     * @param queryClass the name of the query class to use.
+     */
+    public void setQueryClass(String queryClass) {
+        this.queryClass = queryClass;
+    }
+
+    /**
+     * @return the name of the query class to use.
+     */
+    public String getQueryClass() {
+        return queryClass;
+    }
+
+    /**
+     * Sets the query handler idle time.
+     *
+     * @param idleTime the query handler idle time.
+     */
+    public void setIdleTime(String idleTime) {
+        this.idleTime = idleTime;
+    }
+
+    /**
+     * @return the query handler idle tim.
+     */
+    public String getIdleTime() {
+        return idleTime;
     }
 }
