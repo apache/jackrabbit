@@ -590,6 +590,19 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
+     *
+     * @param childInfos
+     * @throws RepositoryException
+     */
+    public void setNodeEntries(Iterator childInfos) throws RepositoryException {
+        if (childNodeEntries == null) {
+            childNodeEntries = new ChildNodeEntriesImpl(this, factory, childInfos);
+        } else {
+            ((ChildNodeEntriesImpl) childNodeEntries).reload(childInfos);
+        }
+    }
+
+    /**
      * @inheritDoc
      * @see NodeEntry#addNodeEntry(Name, String, int)
      */

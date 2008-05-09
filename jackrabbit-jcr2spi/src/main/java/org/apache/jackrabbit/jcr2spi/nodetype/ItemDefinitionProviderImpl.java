@@ -16,21 +16,23 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.NodeId;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ItemDefinitionManagerImpl</code>...
@@ -57,8 +59,11 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
      */
     public QNodeDefinition getRootNodeDefinition() throws RepositoryException {
         if (rootNodeDefinition == null) {
+            IdFactory idFactory = service.getIdFactory();
+            PathFactory pf = service.getPathFactory();
+
             rootNodeDefinition = service.getNodeDefinition(
-                    sessionInfo, service.getRootId(sessionInfo));
+                    sessionInfo, idFactory.createNodeId((String) null, pf.getRootPath()));
         }
         return rootNodeDefinition;
     }
