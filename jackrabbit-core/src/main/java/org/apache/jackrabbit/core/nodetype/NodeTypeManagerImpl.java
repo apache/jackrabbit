@@ -703,11 +703,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             ArrayList result = new ArrayList();
 
             // register new node types
-            Collection registeredDefs = registerNodeTypes(addedDefs);
-            for (Iterator iter = registeredDefs.iterator(); iter.hasNext();) {
-                NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
-                result.add(getNodeType(nodeTypeDef.getName()));
-            }
+            result.addAll(registerNodeTypes(addedDefs));
 
             // reregister already existing node types
             for (Iterator iter = modifiedDefs.iterator(); iter.hasNext();) {
