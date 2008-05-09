@@ -81,7 +81,7 @@ public interface PropertyDefinitionTemplate extends PropertyDefinition {
      *
      * @param constraints a <code>String</code> array.
      */
-    void setValueConstarints(String[] constraints);
+    void setValueConstraints(String[] constraints);
 
     /**
      * Sets the default value (or values, in the case of a multi-value property) of the property.

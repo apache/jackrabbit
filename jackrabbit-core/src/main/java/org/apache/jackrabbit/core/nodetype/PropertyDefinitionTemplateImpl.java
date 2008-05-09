@@ -65,7 +65,7 @@ class PropertyDefinitionTemplateImpl
     /**
      * {@inheritDoc}
      */
-    public void setValueConstarints(String[] constraints) {
+    public void setValueConstraints(String[] constraints) {
         this.constraints = constraints;
     }
 
