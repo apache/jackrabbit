@@ -23,7 +23,6 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeCache;
-import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
@@ -88,7 +87,6 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.NamespaceException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
@@ -119,7 +117,7 @@ import EDU.oswego.cs.dl.util.concurrent.Mutex;
 /**
  * <code>WorkspaceManager</code>...
  */
-public class WorkspaceManager implements UpdatableItemStateManager, NamespaceStorage, AccessManager {
+public class WorkspaceManager implements UpdatableItemStateManager, AccessManager {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
@@ -172,7 +170,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.pathFactory = service.getPathFactory();
 
         idFactory = service.getIdFactory();
-        nsRegistry = new NamespaceRegistryImpl(this);
+        nsRegistry = new NamespaceRegistryImpl(service, sessionInfo);
         ntRegistry = createNodeTypeRegistry(nsRegistry);
         changeFeed = createChangeFeed(pollTimeout, enableObservation);
         definitionProvider = createDefinitionProvider(getEffectiveNodeTypeProvider());
@@ -621,40 +619,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
             }
         }
         return false;
-    }
-
-    //---------------------------------------------------< NamespaceStorage >---
-
-    public Map getRegisteredNamespaces() throws RepositoryException {
-        return service.getRegisteredNamespaces(sessionInfo);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getPrefix(String uri) throws NamespaceException, RepositoryException {
-        return service.getNamespacePrefix(sessionInfo, uri);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getURI(String prefix) throws NamespaceException, RepositoryException {
-        return service.getNamespaceURI(sessionInfo, prefix);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
-        service.registerNamespace(sessionInfo, prefix, uri);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
-        service.unregisterNamespace(sessionInfo, uri);
     }
 
     //--------------------------------------------------------------------------
