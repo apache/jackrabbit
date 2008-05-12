@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
@@ -38,7 +39,6 @@ import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -104,7 +104,8 @@ import java.util.Map;
 /**
  * <code>SessionImpl</code>...
  */
-public class SessionImpl implements Session, ManagerProvider {
+public class SessionImpl extends AbstractSession
+        implements NamespaceResolver, ManagerProvider {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -121,8 +122,7 @@ public class SessionImpl implements Session, ManagerProvider {
 
     private final SessionInfo sessionInfo;
 
-    private final LocalNamespaceMappings nsMappings;
-    private final NamePathResolver npResolver;
+    private NamePathResolver npResolver;
     private final NodeTypeManagerImpl ntManager;
 
     private final ValueFactory valueFactory;
@@ -142,8 +142,7 @@ public class SessionImpl implements Session, ManagerProvider {
         workspace = createWorkspaceInstance(config, sessionInfo);
 
         // build local name-mapping
-        nsMappings = new LocalNamespaceMappings(workspace.getNamespaceRegistryImpl());
-        npResolver = new DefaultNamePathResolver(nsMappings, true);
+        npResolver = new DefaultNamePathResolver(this, true);
 
         // build ValueFactory
         valueFactory = new ValueFactoryQImpl(config.getRepositoryService().getQValueFactory(), npResolver);
@@ -491,34 +490,12 @@ public class SessionImpl implements Session, ManagerProvider {
 
     /**
      * @see javax.jcr.Session#setNamespacePrefix(String, String)
-     * @see LocalNamespaceMappings#setNamespacePrefix(String, String)
      */
-    public void setNamespacePrefix(String prefix, String uri) throws NamespaceException, RepositoryException {
-        nsMappings.setNamespacePrefix(prefix, uri);
-    }
-
-    /**
-     * @see javax.jcr.Session#getNamespacePrefixes()
-     * @see LocalNamespaceMappings#getPrefixes()
-     */
-    public String[] getNamespacePrefixes() throws RepositoryException {
-        return nsMappings.getPrefixes();
-    }
-
-    /**
-     * @see javax.jcr.Session#getNamespaceURI(String)
-     * @see NamespaceResolver#getURI(String)
-     */
-    public String getNamespaceURI(String prefix) throws NamespaceException, RepositoryException {
-        return nsMappings.getURI(prefix);
-    }
-
-    /**
-     * @see javax.jcr.Session#getNamespacePrefix(String)
-     * @see NamespaceResolver#getPrefix(String)
-     */
-    public String getNamespacePrefix(String uri) throws NamespaceException, RepositoryException {
-        return nsMappings.getPrefix(uri);
+    public void setNamespacePrefix(String prefix, String uri)
+            throws RepositoryException {
+        super.setNamespacePrefix(prefix, uri);
+        // Reset name and path caches
+        npResolver = new DefaultNamePathResolver(this, true);
     }
 
     /**
@@ -533,8 +510,6 @@ public class SessionImpl implements Session, ManagerProvider {
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
-        // dispose name nsResolver
-        nsMappings.dispose();
         // dispose session item state manager
         itemStateManager.dispose();
         // dispose item manager
@@ -581,6 +556,28 @@ public class SessionImpl implements Session, ManagerProvider {
             getLockManager().removeLockToken(lt);
         } catch (RepositoryException e) {
             log.warn("Unable to remove lock token '" +lt+ "' from this session. (" + e.getMessage() + ")");
+        }
+    }
+
+    //-------------------------------------------------< NamespaceResolver >--
+
+    public String getPrefix(String uri) throws NamespaceException {
+        try {
+            return getNamespacePrefix(uri);
+        } catch (NamespaceException e) {
+            throw e;
+        } catch (RepositoryException e) {
+            throw new NamespaceException("Namespace not found: " + uri, e);
+        }
+    }
+
+    public String getURI(String prefix) throws NamespaceException {
+        try {
+            return getNamespaceURI(prefix);
+        } catch (NamespaceException e) {
+            throw e;
+        } catch (RepositoryException e) {
+            throw new NamespaceException("Namespace not found: " + prefix, e);
         }
     }
 
@@ -670,7 +667,7 @@ public class SessionImpl implements Session, ManagerProvider {
      * @see ManagerProvider#getNamespaceResolver()
      */
     public NamespaceResolver getNamespaceResolver() {
-        return nsMappings;
+        return this;
     }
 
     /**
@@ -730,10 +727,6 @@ public class SessionImpl implements Session, ManagerProvider {
     }
 
     //--------------------------------------------------------------------------
-
-    LocalNamespaceMappings getLocalNamespaceMappings() {
-        return nsMappings;
-    }
 
     ItemManager getItemManager() {
         return itemManager;
