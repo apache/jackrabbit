@@ -18,13 +18,11 @@ package org.apache.jackrabbit.jcr2spi.name;
 
 import java.util.Collection;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.NamespaceRegistry;
-import javax.jcr.NamespaceException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.RepositoryService;
+import org.apache.jackrabbit.spi.SessionInfo;
 
 /**
  * <code>NamespaceRegistryImpl</code> implements the JCR client facing
@@ -32,17 +30,25 @@ import javax.jcr.RepositoryException;
  */
 public class NamespaceRegistryImpl implements NamespaceRegistry {
 
-    private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
+    /**
+     * Repository service.
+     */
+    private final RepositoryService service;
 
-    private final NamespaceStorage storage;
+    /**
+     * Session info.
+     */
+    private final SessionInfo info;
 
     /**
      * Create a new <code>NamespaceRegistryImpl</code>.
      *
-     * @param storage
+     * @param service repository service
+     * @param info session info
      */
-    public NamespaceRegistryImpl(NamespaceStorage storage) {
-        this.storage = storage;
+    public NamespaceRegistryImpl(RepositoryService service, SessionInfo info) {
+        this.service = service;
+        this.info = info;
     }
 
     //--------------------------------------------------< NamespaceRegistry >---
@@ -50,22 +56,23 @@ public class NamespaceRegistryImpl implements NamespaceRegistry {
     /**
      * @see NamespaceRegistry#registerNamespace(String, String)
      */
-    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        storage.registerNamespace(prefix, uri);
+    public void registerNamespace(String prefix, String uri)
+            throws RepositoryException {
+        service.registerNamespace(info, prefix, uri);
     }
 
     /**
      * @see NamespaceRegistry#unregisterNamespace(String)
      */
-    public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        storage.unregisterNamespace(prefix);
+    public void unregisterNamespace(String prefix) throws RepositoryException {
+        service.unregisterNamespace(info, getURI(prefix));
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      */
     public String[] getPrefixes() throws RepositoryException {
-        Collection prefixes = storage.getRegisteredNamespaces().keySet();
+        Collection prefixes = service.getRegisteredNamespaces(info).keySet();
         return (String[]) prefixes.toArray(new String[prefixes.size()]);
     }
 
@@ -73,36 +80,22 @@ public class NamespaceRegistryImpl implements NamespaceRegistry {
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
     public String[] getURIs() throws RepositoryException {
-        Collection uris = storage.getRegisteredNamespaces().values();
+        Collection uris = service.getRegisteredNamespaces(info).values();
         return (String[]) uris.toArray(new String[uris.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURI(String)
-     * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getURI(String)
      */
-    public String getURI(String prefix) throws NamespaceException {
-        // try to load the uri
-        try {
-            return storage.getURI(prefix);
-        } catch (RepositoryException ex) {
-            log.debug("Internal error while loading registered namespaces.");
-            throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
-        }
+    public String getURI(String prefix) throws RepositoryException {
+        return service.getNamespaceURI(info, prefix);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefix(String)
-     * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getPrefix(String)
      */
-    public String getPrefix(String uri) throws NamespaceException {
-        // try to load the prefix
-        try {
-            return storage.getPrefix(uri);
-        } catch (RepositoryException ex) {
-            log.debug("Internal error while loading registered namespaces.");
-            throw new NamespaceException(uri + ": is not a registered namespace uri.");
-        }
+    public String getPrefix(String uri) throws RepositoryException {
+        return service.getNamespacePrefix(info, uri);
     }
 
 }
