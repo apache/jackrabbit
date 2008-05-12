@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.query;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.name.LocalNamespaceMappings;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Node;
@@ -38,11 +37,6 @@ public class QueryManagerImpl implements QueryManager {
      * The <code>Session</code> for this QueryManager.
      */
     private final Session session;
-
-    /**
-     * The local namespace mappings for this query manager.
-     */
-    private final LocalNamespaceMappings nsResolver;
 
     /**
      * Name and Path resolver
@@ -69,19 +63,16 @@ public class QueryManagerImpl implements QueryManager {
      * <code>Session</code>.
      *
      * @param session
-     * @param nsResolver
      * @param itemMgr
      * @param hierarchyManager
      * @param wspManager
      */
     public QueryManagerImpl(Session session,
-                            LocalNamespaceMappings nsResolver,
                             NamePathResolver resolver,
                             ItemManager itemMgr,
                             HierarchyManager hierarchyManager,
                             WorkspaceManager wspManager) {
         this.session = session;
-        this.nsResolver = nsResolver;
         this.resolver = resolver;
         this.itemMgr = itemMgr;
         this.hierarchyManager = hierarchyManager;
@@ -94,7 +85,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
         checkIsAlive();
-        QueryImpl query = new QueryImpl(session, nsResolver, resolver, itemMgr, hierarchyManager, wspManager, statement, language);
+        QueryImpl query = new QueryImpl(session, resolver, itemMgr, hierarchyManager, wspManager, statement, language);
         return query;
     }
 
@@ -104,7 +95,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
         checkIsAlive();
-        QueryImpl query = new QueryImpl(session, nsResolver, resolver, itemMgr, hierarchyManager, wspManager, node);
+        QueryImpl query = new QueryImpl(session, resolver, itemMgr, hierarchyManager, wspManager, node);
         return query;
     }
 
