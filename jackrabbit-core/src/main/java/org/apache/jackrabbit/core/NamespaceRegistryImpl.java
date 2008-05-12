@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.Name;
@@ -44,8 +44,8 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 /**
  * A <code>NamespaceRegistryImpl</code> ...
  */
-public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-        implements NamespaceRegistry, NamespaceEventListener {
+public class NamespaceRegistryImpl
+        implements NamespaceRegistry, NamespaceResolver, NamespaceEventListener {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -103,7 +103,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
      */
     protected NamespaceRegistryImpl(FileSystem nsRegStore)
             throws RepositoryException {
-        super(true); // enable listener support
         this.nsRegStore = nsRegStore;
         load();
     }
@@ -461,15 +460,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // persist mappings
         store();
-
-        // notify listeners
-        if (oldPrefix != null) {
-            // remapped existing namespace uri to new prefix
-            notifyNamespaceRemapped(oldPrefix, prefix, uri);
-        } else {
-            // added new namespace uri mapped to prefix
-            notifyNamespaceAdded(prefix, uri);
-        }
     }
 
     /**
@@ -559,15 +549,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
 
         // persist mappings
         store();
-
-        // notify listeners
-        if (oldPrefix != null) {
-            // remapped existing namespace uri to new prefix
-            notifyNamespaceRemapped(oldPrefix, newPrefix, uri);
-        } else {
-            // added new namespace uri mapped to prefix
-            notifyNamespaceAdded(newPrefix, uri);
-        }
-
     }
+
 }
