@@ -1436,22 +1436,79 @@ public class RepositoryServiceImpl implements RepositoryService {
                               String language,
                               Map namespaces)
             throws InvalidQueryException, RepositoryException {
-        NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
         QueryManager qMgr = session.getWorkspace().getQueryManager();
+
+        // apply namespace mappings to session
+        Map previous = setNamespaceMappings(session, namespaces);
         try {
-            // apply namespace mappings to session
-            for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
-                String prefix = (String) it.next();
-                String uri = (String) namespaces.get(prefix);
-                session.setNamespacePrefix(prefix, uri);
-            }
             return qMgr.createQuery(statement, language);
         } finally {
             // reset namespace mappings
-            for (Iterator it = namespaces.values().iterator(); it.hasNext(); ) {
-                String uri = (String) it.next();
-                session.setNamespacePrefix(nsReg.getPrefix(uri), uri);
+            setNamespaceMappings(session, previous);
+        }
+    }
+
+    /**
+     * Utility method that changes the namespace mappings of the
+     * given sessions to include the given prefix to URI mappings.
+     * 
+     * @param session current session
+     * @param namespaces prefix to URI mappings
+     * @return the previous namespace mappings that were modified
+     * @throws RepositoryException if a repository error occurs
+     */
+    private Map setNamespaceMappings(Session session, Map namespaces)
+            throws RepositoryException {
+        Map previous = new HashMap();
+
+        Iterator iterator = namespaces.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            String uri = (String) entry.getValue();
+            String prefix = (String) entry.getKey();
+
+            // Get the previous prefix for this URI, throws if
+            // URI not found (which is OK, as that's an error)
+            String oldPrefix = session.getNamespacePrefix(uri);
+            // If the prefixes are different, we need to remap the namespace
+            if (!prefix.equals(oldPrefix)) {
+                // Check if the new prefix is mapped to some other URI
+                String oldURI = safeGetURI(session, prefix);
+                if (oldURI != null) {
+                    // Find an unused prefix and map the old URI to it
+                    int i = 2;
+                    String tmpPrefix = oldPrefix + i++;
+                    while (safeGetURI(session, tmpPrefix) != null
+                            || namespaces.containsKey(tmpPrefix)) {
+                        tmpPrefix = oldPrefix + i++;
+                    }
+                    session.setNamespacePrefix(tmpPrefix, oldURI);
+                    previous.put(prefix, oldURI); // remember the old URI
+                }
+                // It's now safe to remap
+                session.setNamespacePrefix(prefix, uri);
+                previous.put(oldPrefix, uri); // remember the old prefix
             }
+        }
+
+        return previous;
+    }
+
+    /**
+     * Utility method that returns the namespace URI mapped to the given
+     * prefix, or <code>null</code> if the prefix is not mapped.
+     *
+     * @param session current session
+     * @param prefix namespace prefix
+     * @return namespace URI or <code>null</code>
+     * @throws RepositoryException if a repository error occurs
+     */
+    private String safeGetURI(Session session, String prefix)
+            throws RepositoryException {
+        try {
+            return session.getNamespaceURI(prefix);
+        } catch (NamespaceException e) {
+            return null;
         }
     }
 
