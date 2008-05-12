@@ -194,14 +194,9 @@ public class SessionImpl extends AbstractSession
     protected final WorkspaceImpl wsp;
 
     /**
-     * the transient prefix/namespace mappings with session scope
-     */
-    protected final LocalNamespaceMappings nsMappings;
-
-    /**
      * Name and Path resolver
      */
-    protected final NamePathResolver namePathResolver;
+    protected NamePathResolver namePathResolver;
 
     /**
      * The version manager for this session
@@ -286,8 +281,7 @@ public class SessionImpl extends AbstractSession
         }
         userId = uid;
 
-        nsMappings = new LocalNamespaceMappings(rep.getNamespaceRegistry());
-        namePathResolver = new DefaultNamePathResolver(nsMappings, true);
+        namePathResolver = new DefaultNamePathResolver(this, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), this, this, rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
@@ -667,11 +661,23 @@ public class SessionImpl extends AbstractSession
     //---------------------------------------------------< NamespaceResolver >
 
     public String getPrefix(String uri) throws NamespaceException {
-        return nsMappings.getPrefix(uri);
+        try {
+            return getNamespacePrefix(uri);
+        } catch (NamespaceException e) {
+            throw e;
+        } catch (RepositoryException e) {
+            throw new NamespaceException("Namespace not found: " + uri, e);
+        }
     }
 
     public String getURI(String prefix) throws NamespaceException {
-        return nsMappings.getURI(prefix);
+        try {
+            return getNamespaceURI(prefix);
+        } catch (NamespaceException e) {
+            throw e;
+        } catch (RepositoryException e) {
+            throw new NamespaceException("Namespace not found: " + prefix, e);
+        }
     }
 
     //--------------------------------------------------------< NameResolver >
@@ -1011,8 +1017,6 @@ public class SessionImpl extends AbstractSession
         // notify listeners that session is about to be closed
         notifyLoggingOut();
 
-        // dispose name resolver
-        nsMappings.dispose();
         // dispose session item state manager
         itemStateMgr.dispose();
         // dispose item manager
@@ -1087,32 +1091,11 @@ public class SessionImpl extends AbstractSession
      */
     public void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
-        nsMappings.setNamespacePrefix(prefix, uri);
+        super.setNamespacePrefix(prefix, uri);
+        // Clear name and path caches
+        namePathResolver = new DefaultNamePathResolver(this, true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String[] getNamespacePrefixes()
-            throws NamespaceException, RepositoryException {
-        return nsMappings.getPrefixes();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getNamespaceURI(String prefix)
-            throws NamespaceException, RepositoryException {
-        return nsMappings.getURI(prefix);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getNamespacePrefix(String uri)
-            throws NamespaceException, RepositoryException {
-        return nsMappings.getPrefix(uri);
-    }
 
     //------------------------------------------------------< locking support >
     /**
