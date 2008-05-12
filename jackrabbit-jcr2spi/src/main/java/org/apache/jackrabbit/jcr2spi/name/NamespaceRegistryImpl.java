@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi.name;
 
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceListener;
+import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,56 +30,51 @@ import javax.jcr.RepositoryException;
  * <code>NamespaceRegistryImpl</code> implements the JCR client facing
  * NamespaceRegistry.
  */
-public class NamespaceRegistryImpl extends AbstractNamespaceResolver
-    implements NamespaceRegistry {
+public class NamespaceRegistryImpl implements NamespaceRegistry {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
     private final NamespaceStorage storage;
-    private final NamespaceCache nsCache;
 
     /**
      * Create a new <code>NamespaceRegistryImpl</code>.
      *
      * @param storage
-     * @param nsCache
      */
-    public NamespaceRegistryImpl(NamespaceStorage storage,
-                                 NamespaceCache nsCache) {
-        // listener support in AbstractNamespaceResolver is not needed
-        // because we delegate listeners to NamespaceCache
-        super(false);
+    public NamespaceRegistryImpl(NamespaceStorage storage) {
         this.storage = storage;
-        this.nsCache = nsCache;
     }
 
     //--------------------------------------------------< NamespaceRegistry >---
+
     /**
      * @see NamespaceRegistry#registerNamespace(String, String)
      */
     public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        nsCache.registerNamespace(storage, prefix, uri);
+        storage.registerNamespace(prefix, uri);
     }
 
     /**
      * @see NamespaceRegistry#unregisterNamespace(String)
      */
     public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        nsCache.unregisterNamespace(storage, prefix);
+        storage.unregisterNamespace(prefix);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      */
     public String[] getPrefixes() throws RepositoryException {
-        return nsCache.getPrefixes(storage);
+        Collection prefixes = storage.getRegisteredNamespaces().keySet();
+        return (String[]) prefixes.toArray(new String[prefixes.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
     public String[] getURIs() throws RepositoryException {
-        return nsCache.getURIs(storage);
+        Collection uris = storage.getRegisteredNamespaces().values();
+        return (String[]) uris.toArray(new String[uris.size()]);
     }
 
     /**
@@ -89,7 +84,7 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     public String getURI(String prefix) throws NamespaceException {
         // try to load the uri
         try {
-            return nsCache.getURI(storage, prefix);
+            return storage.getURI(prefix);
         } catch (RepositoryException ex) {
             log.debug("Internal error while loading registered namespaces.");
             throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
@@ -103,28 +98,11 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     public String getPrefix(String uri) throws NamespaceException {
         // try to load the prefix
         try {
-            return nsCache.getPrefix(storage, uri);
+            return storage.getPrefix(uri);
         } catch (RepositoryException ex) {
             log.debug("Internal error while loading registered namespaces.");
             throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }
     }
 
-    //-----------------------< AbstractNamespaceResolver >----------------------
-
-    /**
-     * Unregister on <code>NamespaceCache</code>.
-     * @param listener the namespace listener.
-     */
-    public void removeListener(NamespaceListener listener) {
-        nsCache.removeListener(listener);
-    }
-
-    /**
-     * Register on <code>NamespaceCache</code>.
-     * @param listener the namespace listener.
-     */
-    public void addListener(NamespaceListener listener) {
-        nsCache.addListener(listener);
-    }
 }

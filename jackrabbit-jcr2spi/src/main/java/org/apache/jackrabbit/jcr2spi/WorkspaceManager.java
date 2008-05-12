@@ -25,7 +25,6 @@ import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeCache;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceStorage;
 import org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryImpl;
-import org.apache.jackrabbit.jcr2spi.name.NamespaceCache;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
@@ -173,7 +172,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
         this.pathFactory = service.getPathFactory();
 
         idFactory = service.getIdFactory();
-        nsRegistry = createNamespaceRegistry(NamespaceCache.getInstance(service));
+        nsRegistry = new NamespaceRegistryImpl(this);
         ntRegistry = createNodeTypeRegistry(nsRegistry);
         changeFeed = createChangeFeed(pollTimeout, enableObservation);
         definitionProvider = createDefinitionProvider(getEffectiveNodeTypeProvider());
@@ -430,15 +429,6 @@ public class WorkspaceManager implements UpdatableItemStateManager, NamespaceSto
     private InternalEventListener createHierarchyListener(HierarchyManager hierarchyMgr) {
         InternalEventListener listener = new HierarchyEventListener(this, hierarchyMgr, cacheBehaviour);
         return listener;
-    }
-
-    /**
-     *
-     * @param nsCache the namespace cache.
-     * @return
-     */
-    private NamespaceRegistryImpl createNamespaceRegistry(NamespaceCache nsCache) throws RepositoryException {
-        return new NamespaceRegistryImpl(this, nsCache);
     }
 
     /**
