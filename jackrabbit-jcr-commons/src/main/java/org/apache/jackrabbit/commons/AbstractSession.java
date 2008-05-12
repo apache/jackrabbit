@@ -19,10 +19,15 @@ package org.apache.jackrabbit.commons;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
@@ -38,6 +43,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
+import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -45,6 +51,159 @@ import org.xml.sax.SAXException;
  * Abstract base class for implementing the JCR {@link Session} interface.
  */
 public abstract class AbstractSession implements Session {
+
+    /**
+     * Local namespace mappings. Prefixes as keys and namespace URIs as values.
+     */
+    private final Map namespaces = new HashMap();
+
+    //------------------------------------------------< Namespace handling >--
+
+    /**
+     * Returns the namespace prefix mapped to the given URI. The mapping is
+     * added to the set of session-local namespace mappings unless it already
+     * exists there.
+     * <p>
+     * This behaviour is based on JSR 283 (JCR 2.0), but remains backwards
+     * compatible with JCR 1.0.
+     *
+     * @param uri namespace URI
+     * @return namespace prefix
+     * @throws NamespaceException if the namespace is not found
+     * @throws RepositoryException if a repository error occurs
+     */
+    public String getNamespacePrefix(String uri)
+            throws NamespaceException, RepositoryException {
+        Iterator iterator = namespaces.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            if (entry.getValue().equals(uri)) {
+                return (String) entry.getKey();
+            }
+        }
+
+        // The following throws an exception if the URI is not found, that's OK
+        String prefix = getWorkspace().getNamespaceRegistry().getPrefix(uri);
+
+        // Generate a new prefix if the global mapping is already taken
+        String base = prefix;
+        for (int i = 2; namespaces.containsKey(prefix); i++) {
+            prefix = base + i;
+        }
+
+        namespaces.put(prefix, uri);
+        return prefix;
+    }
+
+    /**
+     * Returns the namespace URI mapped to the given prefix. The mapping is
+     * added to the set of session-local namespace mappings unless it already
+     * exists there.
+     * <p>
+     * This behaviour is based on JSR 283 (JCR 2.0), but remains backwards
+     * compatible with JCR 1.0.
+     *
+     * @param prefix namespace prefix
+     * @return namespace URI
+     * @throws NamespaceException if the namespace is not found
+     * @throws RepositoryException if a repository error occurs
+     */
+    public String getNamespaceURI(String prefix)
+            throws NamespaceException, RepositoryException {
+        String uri = (String) namespaces.get(prefix);
+
+        if (uri == null) {
+            // Not in local mappings, try the global ones
+            uri = getWorkspace().getNamespaceRegistry().getURI(prefix);
+            if (namespaces.containsValue(uri)) {
+                // The global URI is locally mapped to some other prefix,
+                // so there are no mappings for this prefix
+                throw new NamespaceException("Namespace not found: " + prefix);
+            }
+            // Add the mapping to the local set, we already know that
+            // the prefix is not taken
+            namespaces.put(prefix, uri);
+        }
+
+        return uri;
+    }
+
+    /**
+     * Returns the prefixes of all known namespace mappings. All global
+     * mappings not already included in the local set of namespace mappings
+     * are added there.
+     * <p>
+     * This behaviour is based on JSR 283 (JCR 2.0), but remains backwards
+     * compatible with JCR 1.0.
+     *
+     * @return namespace prefixes
+     * @throws RepositoryException if a repository error occurs
+     */
+    public String[] getNamespacePrefixes() throws RepositoryException {
+        NamespaceRegistry registry = getWorkspace().getNamespaceRegistry();
+        String[] uris = registry.getURIs();
+        for (int i = 0; i < uris.length; i++) {
+            getNamespacePrefix(uris[i]);
+        }
+
+        return (String[])
+            namespaces.keySet().toArray(new String[namespaces.size()]);
+    }
+
+    /**
+     * Modifies the session local namespace mappings to contain the given
+     * prefix to URI mapping.
+     * <p>
+     * This behaviour is based on JSR 283 (JCR 2.0), but remains backwards
+     * compatible with JCR 1.0.
+     *
+     * @param prefix namespace prefix
+     * @param uri namespace URI
+     * @throws NamespaceException if the mapping is illegal
+     * @throws RepositoryException if a repository error occurs
+     */
+    public void setNamespacePrefix(String prefix, String uri)
+            throws NamespaceException, RepositoryException {
+        if (prefix == null) {
+            throw new IllegalArgumentException("Prefix must not be null");
+        } else if (uri == null) {
+            throw new IllegalArgumentException("Namespace must not be null");
+        } else if (prefix.length() == 0) {
+            throw new NamespaceException(
+                    "Empty prefix is reserved and can not be remapped");
+        } else if (uri.length() == 0) {
+            throw new NamespaceException(
+                    "Default namespace is reserved and can not be remapped");
+        } else if (prefix.toLowerCase().startsWith("xml")) {
+            throw new NamespaceException(
+                    "XML prefixes are reserved: " + prefix);
+        } else if (!XMLChar.isValidNCName(prefix)) {
+            throw new NamespaceException(
+                    "Prefix is not a valid XML NCName: " + prefix);
+        }
+
+        // FIXME Figure out how this should be handled
+        // Currently JSR 283 does not specify this exception, but for
+        // compatibility with JCR 1.0 TCK it probably should.
+        // Note that the solution here also affects the remove() code below
+        String previous = (String) namespaces.get(prefix);
+        if (previous != null && !previous.equals(uri)) {
+            throw new NamespaceException("Namespace already mapped");
+        }
+
+        namespaces.remove(prefix);
+        Iterator iterator = namespaces.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            if (entry.getValue().equals(uri)) {
+                iterator.remove();
+            }
+        }
+
+        namespaces.put(prefix, uri);
+    }
+
+    //---------------------------------------------< XML export and import >--
 
     /**
      * Calls {@link Session#exportDocumentView(String, ContentHandler, boolean, boolean)}
@@ -142,6 +301,8 @@ public abstract class AbstractSession implements Session {
         }
     }
 
+    //-----------------------------------------------------< Item handling >--
+
     /**
      * Returns the node or property at the given path.
      * <p>
@@ -199,6 +360,8 @@ public abstract class AbstractSession implements Session {
             return false;
         }
     }
+
+    //--------------------------------------------------< Session handling >--
 
     /**
      * Logs in the same workspace with the given credentials.
