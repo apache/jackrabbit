@@ -49,9 +49,11 @@
         String q = request.getParameter("q");
         if (q == null) {
             q = "";
+        } else {
+            q = new String(q.getBytes("ISO-8859-1"), "UTF-8");
         }
         if (request.getParameter("as_q") != null) {
-            q += " " + request.getParameter("as_q");
+            q += " " + new String(request.getParameter("as_q").getBytes("ISO-8859-1"), "UTF-8");
         }
         String executedIn = "";
         String queryTerms = "";

@@ -57,6 +57,9 @@
     }
     try {
         String seedWord = request.getParameter("seed");
+        if (seedWord != null) {
+            seedWord = new String(seedWord.getBytes("ISO-8859-1"), "UTF-8");
+        }
         int numDocs = 0;
         List filetypes = new ArrayList();
         if (request.getParameter("num") != null) {

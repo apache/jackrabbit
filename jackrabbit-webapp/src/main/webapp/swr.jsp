@@ -31,7 +31,7 @@
         return;
     }
     try {
-        String q = request.getParameter("q");
+        String q = new String(request.getParameter("q").getBytes("ISO-8859-1"), "UTF-8");
         String swrnum = request.getParameter("swrnum");
         String numResults = null;
         try {
