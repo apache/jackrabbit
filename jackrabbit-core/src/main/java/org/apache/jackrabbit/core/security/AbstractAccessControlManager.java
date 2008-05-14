@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicyIt
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.core.security.jsr283.security.Hold;
+import org.apache.jackrabbit.core.security.jsr283.security.RetentionPolicy;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 
@@ -31,6 +33,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+import javax.jcr.lock.LockException;
 import java.security.Principal;
 
 /**
@@ -144,6 +148,49 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new AccessControlException("Invalid access control entry, that has not been applied through this API.");
+    }
+
+    public Hold[] getHolds(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+    }
+
+    public Hold addHold(String absPath, String name, boolean isDeep) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+    }
+
+    public void removeHold(String absPath, Hold hold) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+    }
+
+    public RetentionPolicy getRetentionPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+
+    }
+
+    public void setRetentionPolicy(String absPath, RetentionPolicy retentionPolicy) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+    }
+
+    public void removeRetentionPolicy(String absPath) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        checkInitialized();
+        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+
+        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
     }
 
     //--------------------------------------------------------------------------
