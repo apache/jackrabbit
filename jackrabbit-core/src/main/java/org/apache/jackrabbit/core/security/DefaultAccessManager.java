@@ -32,6 +32,8 @@ import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
+import org.apache.jackrabbit.core.security.jsr283.security.Hold;
+import org.apache.jackrabbit.core.security.jsr283.security.RetentionPolicy;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
@@ -45,6 +47,8 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+import javax.jcr.lock.LockException;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.Collections;
@@ -400,6 +404,53 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         }
     }
 
+    /**
+     * @see AccessControlManager#getHolds(String)
+     */
+    public Hold[] getHolds(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO: add implementation
+        return super.getHolds(absPath);
+    }
+
+    /**
+     * @see AccessControlManager#addHold(String, String, boolean)
+     */
+    public Hold addHold(String absPath, String name, boolean isDeep) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        // TODO: add implementation
+        return super.addHold(absPath, name, isDeep);
+    }
+
+    /**
+     * @see AccessControlManager#removeHold(String, Hold)
+     */
+    public void removeHold(String absPath, Hold hold) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        // TODO: add implementation
+        super.removeHold(absPath, hold);
+    }
+
+    /**
+     * @see AccessControlManager#getRetentionPolicy(String)
+     */
+    public RetentionPolicy getRetentionPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO: add implementation
+        return super.getRetentionPolicy(absPath);
+    }
+
+    /**
+     * @see AccessControlManager#setRetentionPolicy(String, RetentionPolicy)
+     */
+    public void setRetentionPolicy(String absPath, RetentionPolicy retentionPolicy) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        // TODO: add implementation
+        super.setRetentionPolicy(absPath, retentionPolicy);
+    }
+
+    /**
+     * @see AccessControlManager#removeRetentionPolicy(String)
+     */
+    public void removeRetentionPolicy(String absPath) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
+        // TODO: add implementation
+        super.removeRetentionPolicy(absPath);
+    }
     //-------------------------------------< JackrabbitAccessControlManager >---
     /**
      * @see JackrabbitAccessControlManager#editPolicy(String)
