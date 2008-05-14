@@ -37,6 +37,21 @@ import java.util.Stack;
  */
 class SysViewImportHandler extends TargetImportHandler {
 
+    /** Local part of <code>sv:node</code>. */
+    private static final String NODE = "node";
+
+    /** Local part of <code>sv:property</code>. */
+    private static final String PROPERTY = "property";
+
+    /** Local part of <code>sv:value</code>. */
+    private static final String VALUE = "value";
+
+    /** Local part of <code>sv:name</code>. */
+    private static final String NAME = "name";
+
+    /** Local part of <code>sv:type</code>. */
+    private static final String TYPE = "type";
+
     /**
      * stack of ImportState instances; an instance is pushed onto the stack
      * in the startElement method every time a sv:node element is encountered;
@@ -109,11 +124,11 @@ class SysViewImportHandler extends TargetImportHandler {
                     + namespaceURI));
         }
         // check element name
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
+        if (NODE.equals(localName)) {
             // sv:node element
 
             // node name (value of sv:name attribute)
-            String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
+            String name = atts.getValue(Name.NS_SV_URI, NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:node"));
@@ -139,14 +154,14 @@ class SysViewImportHandler extends TargetImportHandler {
                 throw new SAXException(new InvalidSerializedDataException("illegal node name: " + name, e));
             }
             stack.push(state);
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
+        } else if (PROPERTY.equals(localName)) {
             // sv:property element
 
             // reset temp fields
             currentPropValues.clear();
 
             // property name (value of sv:name attribute)
-            String name = atts.getValue(SysViewSAXEventGenerator.PREFIXED_NAME_ATTRIBUTE);
+            String name = atts.getValue(Name.NS_SV_URI, NAME);
             if (name == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:property"));
@@ -159,13 +174,13 @@ class SysViewImportHandler extends TargetImportHandler {
                 throw new SAXException(new InvalidSerializedDataException("illegal property name: " + name, e));
             }
             // property type (sv:type attribute)
-            String type = atts.getValue(SysViewSAXEventGenerator.PREFIXED_TYPE_ATTRIBUTE);
+            String type = atts.getValue(Name.NS_SV_URI, TYPE);
             if (type == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:type attribute of element sv:property"));
             }
             currentPropType = PropertyType.valueFromName(type);
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
+        } else if (VALUE.equals(localName)) {
             // sv:value element
 
             // reset temp fields
@@ -218,7 +233,7 @@ class SysViewImportHandler extends TargetImportHandler {
             throws SAXException {
         // check element name
         ImportState state = (ImportState) stack.peek();
-        if (SysViewSAXEventGenerator.NODE_ELEMENT.equals(localName)) {
+        if (NODE.equals(localName)) {
             // sv:node element
             if (!state.started) {
                 // need to start & end current node
@@ -230,7 +245,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // pop current state from stack
             stack.pop();
-        } else if (SysViewSAXEventGenerator.PROPERTY_ELEMENT.equals(localName)) {
+        } else if (PROPERTY.equals(localName)) {
             // sv:property element
 
             // check if all system properties (jcr:primaryType, jcr:uuid etc.)
@@ -282,7 +297,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
             // reset temp fields
             currentPropValues.clear();
-        } else if (SysViewSAXEventGenerator.VALUE_ELEMENT.equals(localName)) {
+        } else if (VALUE.equals(localName)) {
             // sv:value element
             currentPropValues.add(currentPropValue);
             // reset temp fields

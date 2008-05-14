@@ -30,8 +30,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.xml.DocViewSAXEventGenerator;
-import org.apache.jackrabbit.jcr2spi.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
 import org.apache.jackrabbit.jcr2spi.xml.SessionImporter;
 import org.apache.jackrabbit.jcr2spi.xml.Importer;
@@ -86,18 +84,12 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.AccessControlException;
 import java.util.Map;
 
@@ -419,72 +411,6 @@ public class SessionImpl extends AbstractSession
             }
         } catch (ParserConfigurationException e) {
             throw new RepositoryException("SAX parser configuration error", e);
-        }
-    }
-
-    /**
-     * @see javax.jcr.Session#exportSystemView(String, org.xml.sax.ContentHandler, boolean, boolean)
-     */
-    public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws PathNotFoundException, SAXException, RepositoryException {
-        checkIsAlive();
-        Item item = getItem(absPath);
-        if (!item.isNode()) {
-            // a property instead of a node exists at the specified path
-            throw new PathNotFoundException(absPath);
-        }
-        new SysViewSAXEventGenerator((Node)item, noRecurse, skipBinary, contentHandler).serialize();
-    }
-
-    /**
-     * @see javax.jcr.Session#exportSystemView(String, OutputStream, boolean, boolean)
-     */
-    public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws IOException, PathNotFoundException, RepositoryException {
-        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-        try {
-            TransformerHandler th = stf.newTransformerHandler();
-            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
-            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
-            th.setResult(new StreamResult(out));
-
-            exportSystemView(absPath, th, skipBinary, noRecurse);
-        } catch (TransformerException te) {
-            throw new RepositoryException(te);
-        } catch (SAXException se) {
-            throw new RepositoryException(se);
-        }
-    }
-
-    /**
-     * @see javax.jcr.Session#exportDocumentView(String, org.xml.sax.ContentHandler, boolean, boolean)
-     */
-    public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, PathNotFoundException, SAXException, RepositoryException {
-        checkIsAlive();
-        Item item = getItem(absPath);
-        if (!item.isNode()) {
-            // a property instead of a node exists at the specified path
-            throw new PathNotFoundException(absPath);
-        }
-        new DocViewSAXEventGenerator((Node) item, noRecurse, skipBinary, contentHandler).serialize();
-    }
-
-    /**
-     * @see javax.jcr.Session#exportDocumentView(String, OutputStream, boolean, boolean)
-     */
-    public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) throws InvalidSerializedDataException, IOException, PathNotFoundException, RepositoryException {
-        SAXTransformerFactory stf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-        try {
-            TransformerHandler th = stf.newTransformerHandler();
-            th.getTransformer().setOutputProperty(OutputKeys.METHOD, "xml");
-            th.getTransformer().setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            th.getTransformer().setOutputProperty(OutputKeys.INDENT, "no");
-            th.setResult(new StreamResult(out));
-
-            exportDocumentView(absPath, th, skipBinary, noRecurse);
-        } catch (TransformerException te) {
-            throw new RepositoryException(te);
-        } catch (SAXException se) {
-            throw new RepositoryException(se);
         }
     }
 
