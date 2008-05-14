@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
@@ -310,7 +311,12 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws RepositoryException
      */
     private boolean canRead(ItemData data, Path path) throws AccessDeniedException, RepositoryException {
-        if (data.getState().getStatus() == ItemState.STATUS_NEW &&
+        // JCR-1601: cached item may just have been invalidated
+        ItemState state = data.getState();
+        if (state == null) {
+            throw new InvalidItemStateException(data.getId() + ": the item does not exist anymore");
+        }
+        if (state.getStatus() == ItemState.STATUS_NEW &&
                 !data.getDefinition().isProtected()) {
             // NEW items can always be read as long they have been added
             // through the API and NOT by the system (i.e. protected props).
