@@ -21,6 +21,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
@@ -405,7 +406,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      *
      */
-    private class AclPermissions extends AbstractCompiledPermissions implements EventListener {
+    private class AclPermissions extends AbstractCompiledPermissions implements SynchronousEventListener {
 
         private final Set principalNames;
 
