@@ -42,7 +42,10 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.jackrabbit.commons.xml.DocumentViewExporter;
+import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
+import org.apache.jackrabbit.commons.xml.SystemViewExporter;
 import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -204,6 +207,46 @@ public abstract class AbstractSession implements Session {
     }
 
     //---------------------------------------------< XML export and import >--
+
+    /**
+     * Generates a document view export using a {@link DocumentViewExporter}
+     * instance.
+     *
+     * @param path of the node to be exported
+     * @param handler handler for the SAX events of the export
+     * @param skipBinary whether binary values should be skipped
+     * @param noRecurse whether to export just the identified node
+     * @throws PathNotFoundException if a node at the given path does not exist
+     * @throws SAXException if the SAX event handler failed
+     * @throws RepositoryException if another error occurs
+     */
+    public void exportDocumentView(
+            String path, ContentHandler handler,
+            boolean skipBinary, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        export(path, new DocumentViewExporter(
+                this, handler, !noRecurse, !skipBinary));
+    }
+
+    /**
+     * Generates a system view export using a {@link SystemViewExporter}
+     * instance.
+     *
+     * @param path of the node to be exported
+     * @param handler handler for the SAX events of the export
+     * @param skipBinary whether binary values should be skipped
+     * @param noRecurse whether to export just the identified node
+     * @throws PathNotFoundException if a node at the given path does not exist
+     * @throws SAXException if the SAX event handler failed
+     * @throws RepositoryException if another error occurs
+     */
+    public void exportSystemView(
+            String path, ContentHandler handler,
+            boolean skipBinary, boolean noRecurse)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        export(path, new SystemViewExporter(
+                this, handler, !noRecurse, !skipBinary));
+    }
 
     /**
      * Calls {@link Session#exportDocumentView(String, ContentHandler, boolean, boolean)}
@@ -388,6 +431,25 @@ public abstract class AbstractSession implements Session {
     }
 
     //-------------------------------------------------------------< private >
+
+    /**
+     * Exports content at the given path using the given exporter.
+     *
+     * @param path of the node to be exported
+     * @param exporter document or system view exporter
+     * @throws SAXException if the SAX event handler failed
+     * @throws RepositoryException if another error occurs
+     */
+    private void export(String path, Exporter exporter)
+            throws PathNotFoundException, SAXException, RepositoryException {
+        Item item = getItem(path);
+        if (item.isNode()) {
+            exporter.export((Node) item);
+        } else {
+            throw new PathNotFoundException(
+                    "XML export is not defined for properties: " + path);
+        }
+    }
 
     /**
      * Creates a {@link ContentHandler} instance that serializes the
