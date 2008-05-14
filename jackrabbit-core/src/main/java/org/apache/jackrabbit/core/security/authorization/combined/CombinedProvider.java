@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.authorization.combined;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
@@ -199,7 +200,7 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
      *
      */
     private class CompiledPermissionImpl extends AbstractCompiledPermissions
-            implements EventListener {
+            implements SynchronousEventListener {
 
         private final Set principals;
         private final Set acPaths;
@@ -426,7 +427,7 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         }
 
         private int getPrivileges(String nodePath) throws RepositoryException {
-            // TODO: improve. avoid duplicate evaluation...            
+            // TODO: improve. avoid duplicate evaluation ...            
             int allows = 0;
             int denies = 0;
             for (Iterator it = entries.iterator(); it.hasNext() && allows != Permission.ALL;) {

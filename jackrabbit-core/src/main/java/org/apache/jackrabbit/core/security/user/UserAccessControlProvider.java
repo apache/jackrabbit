@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
@@ -41,7 +42,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventIterator;
 import java.security.Principal;
 import java.security.acl.Group;
@@ -285,7 +285,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      *
      */
     private class CompiledPermissionsImpl extends AbstractCompiledPermissions
-            implements EventListener {
+            implements SynchronousEventListener {
 
         private final NodeImpl userNode;
 
