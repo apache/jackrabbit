@@ -126,6 +126,16 @@ public class LocalItemStateManager
         return state;
     }
 
+    /**
+     * Returns the change log that contains the current changes in this local
+     * item state manager.
+     *
+     * @return the change log with the current changes.
+     */
+    protected ChangeLog getChanges() {
+        return changeLog;
+    }
+
     //-----------------------------------------------------< ItemStateManager >
     /**
      * {@inheritDoc}
