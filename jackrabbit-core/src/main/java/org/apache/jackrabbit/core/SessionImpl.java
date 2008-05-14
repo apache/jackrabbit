@@ -45,10 +45,8 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.xml.DocViewSAXEventGenerator;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.xml.SysViewSAXEventGenerator;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -63,7 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -928,42 +925,6 @@ public class SessionImpl extends AbstractSession
 
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
         return new ImportHandler(importer, this, rep.getNamespaceRegistry());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void exportDocumentView(String absPath, ContentHandler contentHandler,
-                                   boolean skipBinary, boolean noRecurse)
-            throws PathNotFoundException, SAXException, RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        Item item = getItem(absPath);
-        if (!item.isNode()) {
-            // there's a property, though not a node at the specified path
-            throw new PathNotFoundException(absPath);
-        }
-        new DocViewSAXEventGenerator((Node) item, noRecurse, skipBinary,
-                contentHandler).serialize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void exportSystemView(String absPath, ContentHandler contentHandler,
-                                 boolean skipBinary, boolean noRecurse)
-            throws PathNotFoundException, SAXException, RepositoryException {
-        // check sanity of this session
-        sanityCheck();
-
-        Item item = getItem(absPath);
-        if (!item.isNode()) {
-            // there's a property, though not a node at the specified path
-            throw new PathNotFoundException(absPath);
-        }
-        new SysViewSAXEventGenerator((Node) item, noRecurse, skipBinary,
-                contentHandler).serialize();
     }
 
     /**
