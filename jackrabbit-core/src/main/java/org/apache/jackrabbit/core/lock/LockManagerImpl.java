@@ -934,7 +934,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
     /**
      * Contains information about a lock and gets placed inside the child
-     * information of a {@link org.apache.jackrabbit.name.PathMap}.
+     * information of a {@link org.apache.jackrabbit.spi.commons.name.PathMap}.
      */
     class LockInfo extends AbstractLockInfo implements SessionListener {
 
