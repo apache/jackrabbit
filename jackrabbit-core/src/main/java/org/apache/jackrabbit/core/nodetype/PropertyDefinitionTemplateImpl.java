@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.nodetype.jsr283.PropertyDefinitionTemplate;
+import org.apache.jackrabbit.api.jsr283.nodetype.PropertyDefinitionTemplate;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
