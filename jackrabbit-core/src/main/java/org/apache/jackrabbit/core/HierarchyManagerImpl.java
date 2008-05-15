@@ -64,57 +64,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
     static final int RETURN_PROPERTY = 2;
     static final int RETURN_ANY = (RETURN_NODE | RETURN_PROPERTY);
 
-    /**
-     * Path resolver for outputting user-friendly paths in error messages.
-     */
-    protected final PathResolver resolver;
-
     public HierarchyManagerImpl(NodeId rootNodeId,
-                                ItemStateManager provider,
-                                PathResolver resolver) {
+                                ItemStateManager provider) {
         this.rootNodeId = rootNodeId;
         this.provider = provider;
-        this.resolver = resolver;
     }
 
     public NodeId getRootNodeId() {
         return rootNodeId;
-    }
-
-    //-------------------------------------------------< misc. helper methods >
-
-    /**
-     * Failsafe conversion of internal <code>Path</code> to JCR path for use in
-     * error messages etc.
-     *
-     * @param path path to convert
-     * @return JCR path
-     */
-    public String safeGetJCRPath(Path path) {
-        try {
-            return resolver.getJCRPath(path);
-        } catch (NamespaceException e) {
-            log.error("failed to convert {} to a JCR path", path);
-            // return string representation of internal path as a fallback
-            return path.toString();
-        }
-    }
-
-    /**
-     * Failsafe translation of internal <code>ItemId</code> to JCR path for use
-     * in error messages etc.
-     *
-     * @param id id to translate
-     * @return JCR path
-     */
-    public String safeGetJCRPath(ItemId id) {
-        try {
-            return safeGetJCRPath(getPath(id));
-        } catch (RepositoryException re) {
-            log.error(id + ": failed to determine path to");
-            // return string representation if id as a fallback
-            return id.toString();
-        }
     }
 
     //-------------------------------------------------------< implementation >

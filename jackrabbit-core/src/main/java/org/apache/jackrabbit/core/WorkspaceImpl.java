@@ -126,8 +126,8 @@ public class WorkspaceImpl extends AbstractWorkspace
         this.wspConfig = wspConfig;
         this.rep = rep;
         this.stateMgr = createItemStateManager(stateMgr);
-        this.hierMgr = new CachingHierarchyManager(
-                rep.getRootNodeId(), this.stateMgr, session);
+        this.hierMgr =
+            new CachingHierarchyManager(rep.getRootNodeId(), this.stateMgr);
         this.stateMgr.addListener(hierMgr);
         this.session = session;
     }

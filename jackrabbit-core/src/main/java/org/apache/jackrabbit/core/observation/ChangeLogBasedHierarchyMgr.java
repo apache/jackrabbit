@@ -60,11 +60,8 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
      */
     ChangeLogBasedHierarchyMgr(NodeId rootNodeId,
                                ItemStateManager manager,
-                               ChangeLog changes,
-                               PathResolver resolver) {
-        super(rootNodeId,
-                new ChangeLogItemStateManager(manager, changes),
-                resolver);
+                               ChangeLog changes) {
+        super(rootNodeId, new ChangeLogItemStateManager(manager, changes));
         zombieHierMgr = new ZombieHierarchyManager(
                 this, provider, new AtticItemStateManager(changes));
     }

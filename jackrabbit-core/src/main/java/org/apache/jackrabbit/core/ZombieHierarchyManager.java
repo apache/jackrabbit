@@ -42,7 +42,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     public ZombieHierarchyManager(HierarchyManagerImpl parent,
                                   ItemStateManager provider,
                                   ItemStateManager attic) {
-        super(parent.getRootNodeId(), provider, parent.resolver);
+        super(parent.getRootNodeId(), provider);
         this.attic = attic;
     }
 

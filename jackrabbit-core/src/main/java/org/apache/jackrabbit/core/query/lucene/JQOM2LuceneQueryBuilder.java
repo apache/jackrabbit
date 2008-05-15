@@ -230,7 +230,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
             throws RepositoryException {
 
         HierarchyManager hmgr = new HierarchyManagerImpl(
-                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr, session);
+                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr);
         JQOM2LuceneQueryBuilder builder = new JQOM2LuceneQueryBuilder(
                 qomTree, session, sharedItemMgr, hmgr, nsMappings, analyzer,
                 propReg, synonymProvider, bindVariableValues, version);
