@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(PersistenceManagerIteratorTest.class);
         suite.addTestSuite(CopyValueTest.class);
         suite.addTestSuite(TestTwoGetStreams.class);
+        suite.addTestSuite(TempFileInputStreamTest.class);
         return suite;
     }
 
