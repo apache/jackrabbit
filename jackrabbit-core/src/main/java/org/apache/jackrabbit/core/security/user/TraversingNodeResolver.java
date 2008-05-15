@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Property;
+import javax.jcr.Value;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -58,25 +61,42 @@ class TraversingNodeResolver extends NodeResolver {
      * @inheritDoc
      */
     public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
-        Node root = (Node) getSession().getItem(getSearchRoot(ntName));
-        return collectNode(nodeName, ntName, root.getNodes());
+        String sr = getSearchRoot(ntName);
+        // TODO: remove cast once 283 is released
+        SessionImpl sImpl = (SessionImpl) getSession();
+        if (sImpl.nodeExists(sr)) {
+            try {
+                Node root = sImpl.getNode(sr);
+                return collectNode(nodeName, ntName, root.getNodes());
+            } catch (PathNotFoundException e) {
+                // should not get here
+                log.warn("Error while retrieving node " + sr);
+            }
+        } // else: searchRoot does not exist yet -> omit the search
+        return null;
     }
 
     /**
      * @inheritDoc
      */
     public Node findNode(Name propertyName, String value, Name ntName) throws RepositoryException {
-        try {
-            Node root = (Node) getSession().getItem(getSearchRoot(ntName));
-            NodeIterator nodes = collectNodes(value, Collections.singleton(propertyName), ntName,
-                    root.getNodes(), true, 1);
-            if (nodes.hasNext()) {
-                return nodes.nextNode();
+        String sr = getSearchRoot(ntName);
+        // TODO: remove cast once 283 is released
+        SessionImpl sImpl = (SessionImpl) getSession();
+        if (sImpl.nodeExists(sr)) {
+            try {
+                Node root = sImpl.getNode(sr);
+                NodeIterator nodes = collectNodes(value,
+                        Collections.singleton(propertyName), ntName,
+                        root.getNodes(), true, 1);
+                if (nodes.hasNext()) {
+                    return nodes.nextNode();
+                }
+            } catch (PathNotFoundException e) {
+                // should not get here
+                log.warn("Error while retrieving node " + sr);
             }
-        } catch (PathNotFoundException e) {
-            log.warn("Error while searching for node having a property " + propertyName + " with value " + value);
-        }
-
+        } // else: searchRoot does not exist yet -> omit the search
         return null;
     }
 
@@ -85,29 +105,44 @@ class TraversingNodeResolver extends NodeResolver {
      */
     public NodeIterator findNodes(Set propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
-
-        NodeImpl root = (NodeImpl) getSession().getItem(getSearchRoot(ntName));
-        return collectNodes(value, propertyNames, ntName, root.getNodes(), exact, maxSize);
+        String sr = getSearchRoot(ntName);
+        // TODO: remove cast once 283 is released
+        SessionImpl sImpl = (SessionImpl) getSession();
+        if (sImpl.nodeExists(sr)) {
+            try {
+                Node root = sImpl.getNode(sr);
+                return collectNodes(value, propertyNames, ntName, root.getNodes(), exact, maxSize);
+            } catch (PathNotFoundException e) {
+                // should not get here
+                log.warn("Error while retrieving node " + sr);
+            }
+        } // else: searchRoot does not exist yet -> omit the search
+        return NodeIteratorAdapter.EMPTY;
     }
 
     //--------------------------------------------------------------------------
-
+    /**
+     *
+     * @param nodeName
+     * @param ntName
+     * @param nodes
+     * @return The first matching node or <code>null</code>.
+     */
     private Node collectNode(Name nodeName, Name ntName, NodeIterator nodes) {
-        while (nodes.hasNext()) {
+        Node match = null;
+        while (match == null && nodes.hasNext()) {
             NodeImpl node = (NodeImpl) nodes.nextNode();
             try {
                 if (node.isNodeType(ntName) && nodeName.equals(node.getQName())) {
-                    return node;
-                }
-                if (node.hasNodes()) {
-                    return collectNode(nodeName, ntName, node.getNodes());
+                    match = node;
+                } else if (node.hasNodes()) {
+                    match = collectNode(nodeName, ntName, node.getNodes());
                 }
             } catch (RepositoryException e) {
                 log.warn("Internal error while accessing node", e);
             }
         }
-        log.debug("Could not find a node matching name '" + nodeName + " and nodetype " + ntName);
-        return null;
+        return match;
     }
 
     /**
@@ -125,9 +160,9 @@ class TraversingNodeResolver extends NodeResolver {
     private NodeIterator collectNodes(String value, Set props, Name ntName,
                                       NodeIterator nodes, boolean exact,
                                       long maxSize) {
-        Set matches = new HashSet();
-        collectNodes(value, props, ntName, nodes, matches, exact, maxSize);
-        return new NodeIteratorAdapter(matches);
+        Set matchSet = new HashSet();
+        collectNodes(value, props, ntName, nodes, matchSet, exact, maxSize);
+        return new NodeIteratorAdapter(matchSet);
     }
 
     /**
@@ -138,23 +173,23 @@ class TraversingNodeResolver extends NodeResolver {
      * @param propertyNames property to be searched, or null if {@link javax.jcr.Item#getName()}
      * @param nodeTypeName  name of nodetypes to search
      * @param itr           range of nodes and descendants to be searched
-     * @param matches       Set of found matches to append results
+     * @param matchSet      Set of found matches to append results
      * @param exact         if set to true the value has to match exact
      * @param maxSize
      */
     private void collectNodes(String value, Set propertyNames,
                               Name nodeTypeName, NodeIterator itr,
-                              Set matches, boolean exact, long maxSize) {
+                              Set matchSet, boolean exact, long maxSize) {
         while (itr.hasNext()) {
             NodeImpl node = (NodeImpl) itr.nextNode();
             try {
                 if (matches(node, nodeTypeName, propertyNames, value, exact)) {
-                    matches.add(node);
+                    matchSet.add(node);
                     maxSize--;
                 }
                 if (node.hasNodes() && maxSize > 0) {
                     collectNodes(value, propertyNames, nodeTypeName,
-                            node.getNodes(), matches, exact, maxSize);
+                            node.getNodes(), matchSet, exact, maxSize);
                 }
             } catch (RepositoryException e) {
                 log.warn("Internal error while accessing node", e);
@@ -172,7 +207,7 @@ class TraversingNodeResolver extends NodeResolver {
      * @return
      * @throws RepositoryException
      */
-    private boolean matches(NodeImpl node, Name nodeTypeName,
+    private static boolean matches(NodeImpl node, Name nodeTypeName,
                             Collection propertyNames, String value,
                             boolean exact) throws RepositoryException {
 
@@ -187,10 +222,15 @@ class TraversingNodeResolver extends NodeResolver {
                     while (!match && pItr.hasNext()) {
                         Name propertyName = (Name) pItr.next();
                         if (node.hasProperty(propertyName)) {
-                            String toMatch = node.getProperty(propertyName).getString();
-                            match = (exact) ?
-                                    toMatch.equals(value) :
-                                    toMatch.matches(".*"+value+".*");
+                            Property prop = node.getProperty(propertyName);
+                            if (prop.getDefinition().isMultiple()) {
+                                Value[] values = prop.getValues();
+                                for (int i = 0; i < values.length && !match; i++) {
+                                    match = matches(value, values[i].getString(), exact);
+                                }
+                            } else {
+                                match = matches(value, prop.getString(), exact);
+                            }
                         }
                     }
                 }
@@ -200,5 +240,9 @@ class TraversingNodeResolver extends NodeResolver {
             }
         }
         return match;
+    }
+
+    private static boolean matches(String value, String toMatch, boolean exact) {
+        return (exact) ? toMatch.equals(value) : toMatch.matches(".*"+value+".*");
     }
 }
