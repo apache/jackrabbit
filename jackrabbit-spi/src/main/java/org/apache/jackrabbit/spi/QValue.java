@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.spi;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.Property;
 import java.io.InputStream;
 import java.util.Calendar;
+
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>QValue</code> is the qualified SPI representation of a
@@ -105,6 +106,15 @@ public interface QValue {
      * @throws RepositoryException if an error occurs.
      */
     public long getLong() throws RepositoryException;
+
+    /**
+     * Returns a <code>boolean</code> representation of this value.
+     *
+     * @return A <code>boolean</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public boolean getBoolean() throws RepositoryException;
+
 
     /**
      * Returns a <code>Name</code> representation of this value.

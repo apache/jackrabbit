@@ -16,34 +16,34 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import junit.framework.TestCase;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Calendar;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
-import java.util.Calendar;
-import java.util.Arrays;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
-import java.io.BufferedInputStream;
+import junit.framework.TestCase;
 
-import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>QValueTest</code>...
@@ -66,6 +66,7 @@ public class QValueTest extends TestCase {
     }
 
     //-------------------------------------------------------------< DOUBLE >---
+
     public void testCreateInvalidDoubleValue() throws RepositoryException {
         try {
             factory.create("any", PropertyType.DOUBLE);
@@ -77,7 +78,7 @@ public class QValueTest extends TestCase {
 
     public void testGetDoubleOnBooleanValue() throws RepositoryException {
         try {
-            QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
+            QValue v = factory.create(true);
             v.getDouble();
             fail("'true' cannot be converted to a valid double value.");
         } catch (ValueFormatException e) {
@@ -98,12 +99,77 @@ public class QValueTest extends TestCase {
 
     public void testGetLongOnBooleanValue() throws RepositoryException {
         try {
-            QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
+            QValue v = factory.create(true);
             v.getLong();
             fail("'true' cannot be converted to a valid long value.");
         } catch (ValueFormatException e) {
             // ok
         }
+    }
+
+    //------------------------------------------------------------< BOOLEAN >---
+    /**
+     * QValueImpl has a final static constant for the TRUE and the FALSE boolean
+     * values. Test if the various create methods use the constants (thus always
+     * return the 'same' object.
+     *
+     * @throws RepositoryException
+     */
+    public void testFinalBooleanValue() throws RepositoryException {
+        assertSame(factory.create(true), factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN));
+        assertSame(factory.create(true), factory.create(true));
+
+        assertSame(factory.create(false), factory.create(Boolean.FALSE.toString(), PropertyType.BOOLEAN));
+        assertSame(factory.create(false), factory.create(false));
+    }
+
+    /**
+     * Test if creating Boolean QValue from boolean and from String with boolean
+     * type return equal objects.
+     * 
+     * @throws RepositoryException
+     */
+    public void testCreateBooleanValueFromString() throws RepositoryException {
+        QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
+        assertEquals("Creating boolean type QValue from boolean or String must be equal.",
+                factory.create(true), v);
+
+        v = factory.create(Boolean.FALSE.toString(), PropertyType.BOOLEAN);
+        assertEquals("Creating boolean type QValue from boolean or String must be equal.",
+                factory.create(false), v);
+    }
+
+    public void testCreateTrueBooleanValue() throws RepositoryException {
+        QValue v = factory.create(true);
+        assertEquals("Boolean value must be true", Boolean.TRUE.toString(), v.getString());
+        assertEquals("Boolean value must be true", true, v.getBoolean());
+    }
+
+    public void testCreateFalseBooleanValue() throws RepositoryException {
+        QValue v = factory.create(false);
+        assertEquals("Boolean value must be false", Boolean.FALSE.toString(), v.getString());
+        assertEquals("Boolean value must be false", false, v.getBoolean());
+    }
+
+    public void testCreateTrueFromString() throws ValueFormatException, RepositoryException {
+        QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.STRING);
+        assertEquals("Boolean value must be true", true, v.getBoolean());
+    }
+
+    public void testCreateFalseFromString() throws ValueFormatException, RepositoryException {
+        QValue v = factory.create("any", PropertyType.STRING);
+        assertEquals("Boolean value must be false", false, v.getBoolean());
+    }
+
+    public void testReadBooleanAsLong() throws RepositoryException {
+        try {
+            QValue v = factory.create(true);
+            v.getLong();
+        }
+        catch (ValueFormatException e) {
+            return; // ok
+        }
+        assertTrue("Cannot convert value to long", false);
     }
 
     //---------------------------------------------------------------< DATE >---
@@ -145,6 +211,7 @@ public class QValueTest extends TestCase {
     }
 
     //----------------------------------------------------------< REFERENCE >---
+
     public void testNullReferenceValue() throws IOException, RepositoryException {
         try {
             factory.create(null, PropertyType.REFERENCE);
@@ -173,6 +240,7 @@ public class QValueTest extends TestCase {
 
 
     //---------------------------------------------------------------< Name >---
+
     public void testNullNameValue() throws IOException, RepositoryException {
         try {
             factory.create((Name) null);
@@ -224,6 +292,7 @@ public class QValueTest extends TestCase {
     }
 
     //---------------------------------------------------------------< Path >---
+
     public void testNullPathValue() throws IOException, RepositoryException {
         try {
             factory.create((Path) null);
@@ -274,7 +343,9 @@ public class QValueTest extends TestCase {
             // ok
         }
     }
+
     //-------------------------------------------------------------< BINARY >---
+
     public void testNullBinaryValue() throws IOException, RepositoryException {
         try {
             factory.create((byte[]) null);

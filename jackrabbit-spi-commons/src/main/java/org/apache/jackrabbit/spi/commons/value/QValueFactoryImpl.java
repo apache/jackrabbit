@@ -16,39 +16,40 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.util.TransientFileFactory;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.PropertyType;
-import java.util.Calendar;
-import java.util.Arrays;
-import java.util.TimeZone;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.File;
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * <code>QValueFactoryImpl</code>...
@@ -84,7 +85,9 @@ public final class QValueFactoryImpl implements QValueFactory {
         try {
             switch (type) {
                 case PropertyType.BOOLEAN:
-                    return new QValueImpl(Boolean.valueOf(value));
+                    return (Boolean.valueOf(value).booleanValue()) ?
+                            QValueImpl.TRUE :
+                            QValueImpl.FALSE;
                 case PropertyType.DATE: {
                         Calendar cal = ISO8601.parse(value);
                         if (cal == null) {
@@ -141,6 +144,17 @@ public final class QValueFactoryImpl implements QValueFactory {
      */
     public QValue create(long value) {
         return new QValueImpl(new Long(value));
+    }
+
+    /**
+     * @see QValueFactory#create(boolean)
+     */
+    public QValue create(boolean value) {
+        if (value) {
+            return QValueImpl.TRUE;
+        } else {
+            return QValueImpl.FALSE;
+        }
     }
 
     /**
@@ -218,6 +232,10 @@ public final class QValueFactoryImpl implements QValueFactory {
      * @see QValueFactoryImpl.BinaryQValue
      */
     private static class QValueImpl implements QValue, Serializable {
+
+        private static final QValue TRUE = new QValueImpl(Boolean.TRUE);
+
+        private static final QValue FALSE = new QValueImpl(Boolean.FALSE);
 
         private final Object val;
         private final int type;
@@ -371,6 +389,18 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         /**
+         * @throws RepositoryException
+         * @see QValue#getBoolean()
+         */
+        public boolean getBoolean() throws RepositoryException {
+            if (type == PropertyType.BOOLEAN) {
+                return ((Boolean) val).booleanValue();
+            } else {
+                return Boolean.valueOf(getString()).booleanValue();
+            }
+        }
+
+        /**
          * @see QValue#getPath()
          */
         public Path getPath() throws RepositoryException {
@@ -425,6 +455,7 @@ public final class QValueFactoryImpl implements QValueFactory {
         public int hashCode() {
             return val.hashCode();
         }
+
     }
 
     //--------------------------------------------------------< Inner Class >---
@@ -744,6 +775,13 @@ public final class QValueFactoryImpl implements QValueFactory {
         }
 
         /**
+         * @see QValue#getBoolean()
+         */
+        public boolean getBoolean() throws RepositoryException {
+            return Boolean.valueOf(getString()).booleanValue();
+        }
+
+        /**
          * @see QValue#getPath()
          */
         public Path getPath() throws RepositoryException {
@@ -903,5 +941,7 @@ public final class QValueFactoryImpl implements QValueFactory {
             // deserialized value is always temp
             temp = true;
         }
+
     }
+
 }

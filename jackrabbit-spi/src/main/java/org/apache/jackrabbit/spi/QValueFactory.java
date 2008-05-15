@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.spi;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 
@@ -71,6 +71,15 @@ public interface QValueFactory {
      * @return a new <code>QValue</code>.
      */
     public QValue create(long value) throws RepositoryException;
+
+    /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#BOOLEAN}.
+     *
+     * @param value A <code>boolean</code> containing the value
+     * of the new <code>QValue</code>.
+     * @return a new <code>QValue</code>.
+     */
+    public QValue create(boolean value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#NAME}.
