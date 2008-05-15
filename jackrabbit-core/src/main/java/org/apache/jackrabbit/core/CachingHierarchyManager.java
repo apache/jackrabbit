@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
@@ -97,12 +96,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      *
      * @param rootNodeId   root node id
      * @param provider     item state manager
-     * @param resolver   namespace resolver
      */
     public CachingHierarchyManager(NodeId rootNodeId,
-                                   ItemStateManager provider,
-                                   PathResolver resolver) {
-        super(rootNodeId, provider, resolver);
+                                   ItemStateManager provider) {
+        super(rootNodeId, provider);
         upperLimit = DEFAULT_UPPER_LIMIT;
     }
 

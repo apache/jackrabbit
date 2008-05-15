@@ -208,9 +208,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     SynonymProvider synonymProvider,
                                     IndexFormatVersion indexFormatVersion)
             throws RepositoryException {
-
         HierarchyManager hmgr = new HierarchyManagerImpl(
-                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr, session);
+                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr);
         LuceneQueryBuilder builder = new LuceneQueryBuilder(
                 root, session, sharedItemMgr, hmgr, nsMappings,
                 analyzer, propReg, synonymProvider, indexFormatVersion);

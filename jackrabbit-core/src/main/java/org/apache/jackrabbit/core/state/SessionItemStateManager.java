@@ -94,12 +94,10 @@ public class SessionItemStateManager
      *
      * @param rootNodeId the root node id
      * @param stateMgr the local item state manager
-     * @param resolver path resolver for outputting user-friendly paths
      * @param ntReg node type registry
      */
     public SessionItemStateManager(NodeId rootNodeId,
                                    LocalItemStateManager stateMgr,
-                                   PathResolver resolver,
                                    NodeTypeRegistry ntReg) {
         transientStore = new ItemStateMap();
         atticStore = new ItemStateMap();
@@ -108,7 +106,7 @@ public class SessionItemStateManager
         stateMgr.addListener(this);
 
         // create hierarchy manager that uses both transient and persistent state
-        hierMgr = new CachingHierarchyManager(rootNodeId, this, resolver);
+        hierMgr = new CachingHierarchyManager(rootNodeId, this);
         addListener(hierMgr);
 
         this.ntReg = ntReg;

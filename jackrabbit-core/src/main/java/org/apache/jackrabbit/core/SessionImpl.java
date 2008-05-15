@@ -297,7 +297,7 @@ public class SessionImpl extends AbstractSession
      */
     protected SessionItemStateManager createSessionItemStateManager(LocalItemStateManager manager) {
         return new SessionItemStateManager(
-                rep.getRootNodeId(), manager, this, rep.getNodeTypeRegistry());
+                rep.getRootNodeId(), manager, rep.getNodeTypeRegistry());
     }
 
     /**

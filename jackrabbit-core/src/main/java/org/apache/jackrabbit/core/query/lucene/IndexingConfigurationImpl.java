@@ -20,8 +20,6 @@ import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -34,7 +32,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -106,11 +103,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      */
     public void init(Element config, QueryHandlerContext context, NamespaceMappings nsMappings) throws Exception {
         ism = context.getItemStateManager();
-        NameResolver nameResolver = new ParsingNameResolver(NameFactoryImpl.getInstance(),
-                context.getNamespaceRegistry());
-        PathResolver pathResolver = new ParsingPathResolver(PathFactoryImpl.getInstance(),
-                nameResolver);
-        hmgr = new HierarchyManagerImpl(context.getRootId(), ism, pathResolver);
+        hmgr = new HierarchyManagerImpl(context.getRootId(), ism);
 
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(getNamespaces(config));
         resolver = new ParsingNameResolver(NameFactoryImpl.getInstance(), nsResolver);

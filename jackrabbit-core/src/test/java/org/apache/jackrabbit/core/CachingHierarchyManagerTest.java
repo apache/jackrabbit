@@ -48,7 +48,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testResolveNodePath() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         ism.addNode(ism.getRoot(), "a");
         ism.addNode(ism.getRoot(), "b");
@@ -82,7 +82,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testResolveNodePropertyPath() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b = ism.addNode(a, "b");
@@ -133,7 +133,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testAddSNS() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b1 = ism.addNode(a, "b");
@@ -152,7 +152,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testCloneAndRemove() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a1 = ism.addNode(ism.getRoot(), "a1");
         NodeState a2 = ism.addNode(ism.getRoot(), "a2");
@@ -179,7 +179,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testCloneAndAddChildAndMove() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a1 = ism.addNode(ism.getRoot(), "a1");
         NodeState a2 = ism.addNode(ism.getRoot(), "a2");
@@ -207,7 +207,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testMove() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a1 = ism.addNode(ism.getRoot(), "a1");
         NodeState a2 = ism.addNode(ism.getRoot(), "a2");
@@ -224,7 +224,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testOrderBefore() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b1 = ism.addNode(a, "b");
@@ -243,7 +243,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testRemove() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b = ism.addNode(a, "b");
@@ -260,7 +260,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testRemoveSNS() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b1 = ism.addNode(a, "b");
@@ -278,7 +278,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testRemoveSNSWithCachedPath() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a = ism.addNode(ism.getRoot(), "a");
         NodeState b1 = ism.addNode(a, "b");
@@ -296,7 +296,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      */
     public void testRename() throws Exception {
         StaticItemStateManager ism = new StaticItemStateManager();
-        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism, null);
+        cache = new CachingHierarchyManager(ism.getRootNodeId(), ism);
         ism.setContainer(cache);
         NodeState a1 = ism.addNode(ism.getRoot(), "a1");
         NodeState b1 = ism.addNode(a1, "b");
