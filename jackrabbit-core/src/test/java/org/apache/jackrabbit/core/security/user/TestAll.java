@@ -39,6 +39,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NotUserAdministratorTest.class);
         suite.addTestSuite(GroupAdministratorTest.class);
 
+        suite.addTestSuite(IndexNodeResolverTest.class);
+        suite.addTestSuite(TraversingNodeResolverTest.class);
+
         return suite;
     }
 }
