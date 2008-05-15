@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype.jsr283;
+package org.apache.jackrabbit.api.jsr283.nodetype;
 
 import java.util.List;
 

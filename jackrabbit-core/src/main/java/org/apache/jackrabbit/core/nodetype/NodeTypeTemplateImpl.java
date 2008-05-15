@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.list.TypedList;
-import org.apache.jackrabbit.core.nodetype.jsr283.NodeDefinitionTemplate;
-import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeDefinition;
-import org.apache.jackrabbit.core.nodetype.jsr283.NodeTypeTemplate;
-import org.apache.jackrabbit.core.nodetype.jsr283.PropertyDefinitionTemplate;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeDefinitionTemplate;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeTemplate;
+import org.apache.jackrabbit.api.jsr283.nodetype.PropertyDefinitionTemplate;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
