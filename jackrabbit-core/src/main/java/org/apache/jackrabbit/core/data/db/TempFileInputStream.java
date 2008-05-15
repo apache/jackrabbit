@@ -58,7 +58,7 @@ public class TempFileInputStream extends InputStream {
      *
      * @param file the temporary file
      */
-    TempFileInputStream(File file) throws FileNotFoundException {
+    public TempFileInputStream(File file) throws FileNotFoundException {
         this.file = file;
         in = new BufferedInputStream(new FileInputStream(file));
     }
@@ -99,14 +99,23 @@ public class TempFileInputStream extends InputStream {
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
+        if (closed) {
+            return -1;
+        }
         return closeIfEOF(in.read(b, off, len));
     }
 
     public int read(byte[] b) throws IOException {
+        if (closed) {
+            return -1;
+        }
         return closeIfEOF(in.read(b));
     }
 
     public int read() throws IOException {
+        if (closed) {
+            return -1;
+        }
         return closeIfEOF(in.read());
     }
 
