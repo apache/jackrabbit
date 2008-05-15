@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -55,7 +56,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
     private MultiStatus multiStatus;
 
     public DavMethodBase(String uri) {
-	super(uri);
+        super(uri);
     }
 
     //---------------------------------------------------------< HttpMethod >---
@@ -107,14 +108,14 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
         if (responseDocument != null) {
             // response has already been read
             return responseDocument;
-        } else {
+        }
+
+        InputStream in = getResponseBodyAsStream();
+        if (in != null) {
             // read response and try to build a xml document
-            InputStream in = getResponseBodyAsStream();
-            if (in == null) {
-                return null;
-            }
             try {
                 DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
+                docBuilder.setErrorHandler(new DefaultHandler());
                 responseDocument = docBuilder.parse(in);
                 return responseDocument;
             } catch (ParserConfigurationException e) {
@@ -125,6 +126,8 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
                 in.close();
             }
         }
+        // no body or no parseable.
+        return null;
     }
 
     /**
@@ -144,14 +147,19 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * @see DavMethod#getResponseException()
      */
     public DavException getResponseException() throws IOException {
-	checkUsed();
-	if (success) {
+        checkUsed();
+        if (success) {
             String msg = "Cannot retrieve exception from successful response.";
-	    log.warn(msg);
-	    throw new IllegalStateException(msg);
-	}
+            log.warn(msg);
+            throw new IllegalStateException(msg);
+        }
 
-        Element responseRoot = getRootElement();
+        Element responseRoot = null;
+        try  {
+            responseRoot = getRootElement();
+        } catch (IOException e) {
+            // unparsable body -> use null element
+        }
         if (responseRoot != null) {
             return new DavException(getStatusCode(), getStatusText(), null, responseRoot);
         } else {
@@ -205,7 +213,8 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
     /**
      *
      * @param statusCode
-     * @return
+     * @return true if the specified status code corresponds to a successfully
+     * completed request.
      */
     abstract protected boolean isSuccess(int statusCode);
 
@@ -218,8 +227,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
     }
 
     /**
-     *
-     * @return
+     * @return true if this method was successfully executed; false otherwise.
      */
     protected boolean getSuccess() {
         return success;

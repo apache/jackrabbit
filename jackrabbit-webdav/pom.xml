@@ -54,6 +54,18 @@
         </includes>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+          <forkMode>once</forkMode>
+          <argLine>-Xmx128m -enableassertions</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>
