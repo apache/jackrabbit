@@ -148,13 +148,11 @@ public class ValueFormat {
                                     ValueFactory factory) throws RepositoryException {
         if (factory instanceof ValueFactoryQImpl) {
             return ((ValueFactoryQImpl)factory).createValue(qualifiedValue);
-        }
-        else {
+        } else {
             Value jcrValue;
             int propertyType = qualifiedValue.getType();
             switch (propertyType) {
                 case PropertyType.STRING:
-                case PropertyType.BOOLEAN:
                 case PropertyType.REFERENCE:
                     jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
                     break;
@@ -166,6 +164,9 @@ public class ValueFormat {
                     Name qName = qualifiedValue.getName();
                     jcrValue = factory.createValue(resolver.getJCRName(qName), propertyType);
                     break;
+                case PropertyType.BOOLEAN:
+                    jcrValue = factory.createValue(qualifiedValue.getBoolean());
+                    break;
                 case PropertyType.BINARY:
                     jcrValue = factory.createValue(qualifiedValue.getStream());
                     break;
@@ -173,8 +174,8 @@ public class ValueFormat {
                     jcrValue = factory.createValue(qualifiedValue.getCalendar());
                     break;
                 case PropertyType.DOUBLE:
-                  jcrValue = factory.createValue(qualifiedValue.getDouble());
-                  break;
+                    jcrValue = factory.createValue(qualifiedValue.getDouble());
+                    break;
                 case PropertyType.LONG:
                     jcrValue = factory.createValue(qualifiedValue.getLong());
                     break;

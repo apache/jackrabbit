@@ -57,8 +57,8 @@ public class BooleanConstraintTest extends ValueConstraintTest {
 
     protected QValue[] createNonMatchingValues() throws RepositoryException {
         return new QValue[] {
-                valueFactory.create(Boolean.FALSE.toString(), PropertyType.BOOLEAN),
-                valueFactory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN)
+                valueFactory.create(Boolean.FALSE.booleanValue()),
+                valueFactory.create(Boolean.TRUE.booleanValue())
         };
     }
 
@@ -68,9 +68,9 @@ public class BooleanConstraintTest extends ValueConstraintTest {
 
     public void testTrueConstraint() throws RepositoryException, ConstraintViolationException {
         ValueConstraint vc = new BooleanConstraint(Boolean.TRUE.toString());
-        vc.check(valueFactory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN));
+        vc.check(valueFactory.create(true));
         try {
-           vc.check(valueFactory.create(Boolean.FALSE.toString(), PropertyType.BOOLEAN));
+            vc.check(valueFactory.create(false));
             fail();
         } catch (ConstraintViolationException e) {
             // ok

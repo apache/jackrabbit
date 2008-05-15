@@ -114,7 +114,7 @@ public class ValueFactoryQImpl implements ValueFactory {
      */
     public Value createValue(boolean value) {
         try {
-            QValue qvalue = qfactory.create(Boolean.toString(value), PropertyType.BOOLEAN);
+            QValue qvalue = qfactory.create(value);
             return new QValueValue(qvalue, resolver);
         } catch (RepositoryException ex) {
             throw new RuntimeException(ex);
