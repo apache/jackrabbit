@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.server.io;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -33,8 +34,6 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Session;
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
@@ -647,8 +646,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
     /**
      * Build jcr property name from dav property name. If the property name
      * defines a namespace uri, that has not been registered yet, an attempt
-     * is made to register the uri with the prefix defined. Note, that no
-     * extra effort is made to generated a unique prefix.
+     * is made to register the uri with the prefix defined.
      *
      * @param propName
      * @return jcr name
@@ -659,25 +657,10 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
         String pName = ISO9075.decode(propName.getName());
         Namespace propNamespace = propName.getNamespace();
         if (!Namespace.EMPTY_NAMESPACE.equals(propNamespace)) {
-            String prefix;
-            String emptyPrefix = Namespace.EMPTY_NAMESPACE.getPrefix();
-            try {
-                // lookup 'prefix' in the session-ns-mappings / namespace-registry
-                prefix = session.getNamespacePrefix(propNamespace.getURI());
-            } catch (NamespaceException e) {
-                // namespace uri has not been registered yet
-                NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
-                prefix = propNamespace.getPrefix();
-                // avoid trouble with default namespace
-                if (emptyPrefix.equals(prefix)) {
-                    prefix = "_pre" + nsReg.getPrefixes().length + 1;
-                }
-                // NOTE: will fail if prefix is already in use in the namespace registry
-                nsReg.registerNamespace(prefix, propNamespace.getURI());
-            }
-            if (prefix != null && !emptyPrefix.equals(prefix)) {
-                pName = prefix + ":" + pName;
-            }
+            NamespaceHelper helper = new NamespaceHelper(session);
+            String prefix = helper.registerNamespace(
+                    propNamespace.getPrefix(), propNamespace.getURI());
+            pName = prefix + ":" + pName;
         }
         return pName;
     }
