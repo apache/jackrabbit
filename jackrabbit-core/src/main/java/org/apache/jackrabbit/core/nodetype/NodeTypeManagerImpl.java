@@ -19,10 +19,10 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.jsr283.nodetype.InvalidNodeTypeDefinitionException;
+import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
@@ -35,7 +35,6 @@ import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -79,26 +78,14 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     private final NodeTypeRegistry ntReg;
 
     /**
-     * The persistent namespace registry where any new namespaces are
-     * automatically registered when new node type definition files are
-     * read.
+     * Current session.
      */
-    private final NamespaceRegistryImpl nsReg;
+    private final SessionImpl session;
 
     /**
      * The root node definition.
      */
     private final NodeDefinitionImpl rootNodeDef;
-
-    /**
-     * The namespace resolver
-     */
-    private final NamespaceResolver nsResolver;
-
-    /**
-     * The resolver used to translate qualified names to JCR names.
-     */
-    private final NamePathResolver resolver;
 
     /**
      * A cache for <code>NodeType</code> instances created by this
@@ -124,16 +111,12 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
      *
      * @param ntReg      node type registry
-     * @param nsReg      namespace registry
-     * @param resolver
+     * @param session    current session
      */
     public NodeTypeManagerImpl(
-            NodeTypeRegistry ntReg, NamespaceRegistryImpl nsReg,
-            NamespaceResolver nsResolver, NamePathResolver resolver, DataStore store) {
-        this.nsResolver = nsResolver;
-        this.resolver = resolver;
+            NodeTypeRegistry ntReg, SessionImpl session, DataStore store) {
         this.ntReg = ntReg;
-        this.nsReg = nsReg;
+        this.session = session;
         this.ntReg.addListener(this);
         this.store = store;
 
@@ -143,8 +126,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         pdCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         ndCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
-        rootNodeDef = new NodeDefinitionImpl(ntReg.getRootNodeDef(), this,
-                resolver);
+        rootNodeDef =
+            new NodeDefinitionImpl(ntReg.getRootNodeDef(), this, session);
         ndCache.put(rootNodeDef.unwrap().getId(), rootNodeDef);
     }
 
@@ -165,7 +148,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (ndi == null) {
                 NodeDef nd = ntReg.getNodeDef(id);
                 if (nd != null) {
-                    ndi = new NodeDefinitionImpl(nd, this, resolver);
+                    ndi = new NodeDefinitionImpl(nd, this, session);
                     ndCache.put(id, ndi);
                 }
             }
@@ -183,7 +166,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (pdi == null) {
                 PropDef pd = ntReg.getPropDef(id);
                 if (pd != null) {
-                    pdi = new PropertyDefinitionImpl(pd, this, resolver);
+                    pdi = new PropertyDefinitionImpl(pd, this, session);
                     pdCache.put(id, pdi);
                 }
             }
@@ -202,7 +185,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 NodeTypeDef def = ntReg.getNodeTypeDef(name);
-                nt = new NodeTypeImpl(ent, def, this, resolver, store);
+                nt = new NodeTypeImpl(ent, def, this, session, store);
                 ntCache.put(name, nt);
             }
             return nt;
@@ -261,7 +244,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 }
             } else if (contentType.equalsIgnoreCase(TEXT_X_JCR_CND)) {
                 try {
-                    NamespaceMapping mapping = new NamespaceMapping(nsResolver);
+                    NamespaceMapping mapping = new NamespaceMapping(session);
                     CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
                             new InputStreamReader(in), "cnd input stream", mapping);
 
@@ -276,12 +259,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                         "Unsupported content type: " + contentType);
             }
 
-            Iterator iterator = namespaceMap.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry entry = (Map.Entry) iterator.next();
-                nsReg.safeRegisterNamespace((String) entry.getKey(),
-                        (String) entry.getValue());
-            }
+            new NamespaceHelper(session).registerNamespaces(namespaceMap);
 
             if (reregisterExisting) {
                 // split the node types into new and already registered node types.
@@ -429,7 +407,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     public NodeType getNodeType(String nodeTypeName)
             throws NoSuchNodeTypeException {
         try {
-            return getNodeType(resolver.getQName(nodeTypeName));
+            return getNodeType(session.getQName(nodeTypeName));
         } catch (NameException e) {
             throw new NoSuchNodeTypeException(nodeTypeName, e);
         } catch (NamespaceException e) {
@@ -509,7 +487,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      */
     public boolean hasNodeType(String name) throws RepositoryException {
         try {
-            Name qname = resolver.getQName(name);
+            Name qname = session.getQName(name);
             return getNodeTypeRegistry().isRegistered(qname);
         } catch (NamespaceException e) {
             return false;
@@ -758,7 +736,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         HashSet ntNames = new HashSet();
         for (int i = 0; i < names.length; i++) {
             try {
-                ntNames.add(resolver.getQName(names[i]));
+                ntNames.add(session.getQName(names[i]));
             } catch (NamespaceException e) {
                 throw new RepositoryException("Invalid name: " + names[i], e);
             } catch (NameException e) {
@@ -788,7 +766,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             throw new InvalidNodeTypeDefinitionException("No node type name specified");
         }
         try {
-            def.setName(resolver.getQName(name));
+            def.setName(session.getQName(name));
         } catch (NamespaceException e) {
             throw new InvalidNodeTypeDefinitionException("Invalid name: " + name, e);
         } catch (NameException e) {
@@ -800,7 +778,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         Name[] qnames = new Name[names.length];
         for (int i = 0; i < names.length; i++) {
             try {
-                qnames[i] = resolver.getQName(names[i]);
+                qnames[i] = session.getQName(names[i]);
             } catch (NamespaceException e) {
                 throw new InvalidNodeTypeDefinitionException("Invalid supertype name: " + names[i], e);
             } catch (NameException e) {
@@ -813,7 +791,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         name = definition.getPrimaryItemName();
         if (name != null) {
             try {
-                def.setPrimaryItemName(resolver.getQName(name));
+                def.setPrimaryItemName(session.getQName(name));
             } catch (NamespaceException e) {
                 throw new InvalidNodeTypeDefinitionException("Invalid primary item name: " + name, e);
             } catch (NameException e) {
@@ -839,7 +817,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                         qndef.setName(ItemDef.ANY_NAME);
                     } else {
                         try {
-                            qndef.setName(resolver.getQName(name));
+                            qndef.setName(session.getQName(name));
                         } catch (NamespaceException e) {
                             throw new InvalidNodeTypeDefinitionException("Invalid node name: " + name, e);
                         } catch (NameException e) {
@@ -853,7 +831,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 name = ((NodeDefinitionTemplateImpl) ndefs[i]).getDefaultPrimaryTypeName();
                 if (name != null) {
                     try {
-                        qndef.setDefaultPrimaryType(resolver.getQName(name));
+                        qndef.setDefaultPrimaryType(session.getQName(name));
                     } catch (NamespaceException e) {
                         throw new InvalidNodeTypeDefinitionException("Invalid default primary type: " + name, e);
                     } catch (NameException e) {
@@ -867,7 +845,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 qnames = new Name[names.length];
                 for (int j = 0; i < names.length; j++) {
                     try {
-                        qnames[i] = resolver.getQName(names[i]);
+                        qnames[i] = session.getQName(names[i]);
                     } catch (NamespaceException e) {
                         throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[i], e);
                     } catch (NameException e) {
@@ -901,7 +879,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                         qpdef.setName(ItemDef.ANY_NAME);
                     } else {
                         try {
-                            qpdef.setName(resolver.getQName(name));
+                            qpdef.setName(session.getQName(name));
                         } catch (NamespaceException e) {
                             throw new InvalidNodeTypeDefinitionException("Invalid property name: " + name, e);
                         } catch (NameException e) {
@@ -923,7 +901,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     ValueConstraint[] qconstraints = new ValueConstraint[constraints.length];
                     for (int j = 0; j < constraints.length; j++) {
                         try {
-                            qconstraints[j] = ValueConstraint.create(type, constraints[i], resolver);
+                            qconstraints[j] = ValueConstraint.create(type, constraints[i], session);
                         } catch (InvalidConstraintException e) {
                             throw new InvalidNodeTypeDefinitionException(
                                     "Invalid value constraint " + constraints[i], e);
@@ -937,7 +915,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     InternalValue[] qvalues = new InternalValue[values.length];
                     for (int j = 0; j < values.length; j++) {
                         try {
-                            qvalues[j] = InternalValue.create(values[i], resolver);
+                            qvalues[j] = InternalValue.create(values[i], session);
                         } catch (ValueFormatException e) {
                             throw new InvalidNodeTypeDefinitionException(
                                     "Invalid default value format", e);

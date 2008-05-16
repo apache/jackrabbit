@@ -751,7 +751,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
         Importer importer = new WorkspaceImporter(parentPath, this,
                 rep.getNodeTypeRegistry(), uuidBehavior);
-        return new ImportHandler(importer, session, rep.getNamespaceRegistry());
+        return new ImportHandler(importer, session);
     }
 
     /**

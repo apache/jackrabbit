@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +52,12 @@ public class ImportHandler extends DefaultHandler {
     private static Logger log = LoggerFactory.getLogger(ImportHandler.class);
 
     protected final Importer importer;
-    protected final NamespaceRegistryImpl nsReg;
-    protected final NamespaceResolver nsResolver;
+
+    private final NamespaceHelper helper;
 
     protected Locator locator;
 
-    private TargetImportHandler targetHandler;
+    private TargetImportHandler targetHandler = null;
 
     /**
      * The local namespace mappings reported by
@@ -68,11 +67,11 @@ public class ImportHandler extends DefaultHandler {
      */
     private Map localNamespaceMappings;
 
-    public ImportHandler(Importer importer, NamespaceResolver nsResolver,
-                         NamespaceRegistryImpl nsReg) {
+    public ImportHandler(Importer importer, Session session)
+            throws RepositoryException {
         this.importer = importer;
-        this.nsResolver = nsResolver;
-        this.nsReg = nsReg;
+        this.helper = new NamespaceHelper(session);
+        this.localNamespaceMappings = helper.getNamespaces();
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -108,30 +107,15 @@ public class ImportHandler extends DefaultHandler {
     }
 
     //-------------------------------------------------------< ContentHandler >
-    /**
-     * {@inheritDoc}
-     */
-    public void startDocument() throws SAXException {
-        targetHandler = null;
-
-        try {
-            localNamespaceMappings = new HashMap();
-            String[] uris = nsReg.getURIs();
-            for (int i = 0; i < uris.length; i++) {
-                localNamespaceMappings.put(
-                        nsResolver.getPrefix(uris[i]), uris[i]);
-            }
-        } catch (RepositoryException re) {
-            throw new SAXException(re);
-        }
-    }
 
     /**
      * {@inheritDoc}
      */
     public void endDocument() throws SAXException {
         // delegate to target handler
-        targetHandler.endDocument();
+        if (targetHandler != null) {
+            targetHandler.endDocument();
+        }
     }
 
     /**
@@ -150,21 +134,10 @@ public class ImportHandler extends DefaultHandler {
             throws SAXException {
         localNamespaceMappings.put(prefix, uri);
         try {
-            // Register the namespace unless already registered
-            nsReg.safeRegisterNamespace(prefix, uri);
+            helper.registerNamespace(prefix, uri);
         } catch (RepositoryException re) {
             throw new SAXException(re);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void endPrefixMapping(String prefix) throws SAXException {
-        /**
-         * nothing to do here as namespace context has already been popped
-         * in endElement event
-         */
     }
 
     /**
@@ -217,4 +190,5 @@ public class ImportHandler extends DefaultHandler {
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
     }
+
 }
