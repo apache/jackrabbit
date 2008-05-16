@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.ItemId;
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
@@ -29,33 +28,9 @@ import EDU.oswego.cs.dl.util.concurrent.Sync;
 public class DefaultISMLocking implements ISMLocking {
 
     /**
-     * JCR-447: deadlock might occur when this manager is still write-locked and events are dispatched.
-     */
-    private boolean noLockHack = false;
-
-    /**
      * The internal read-write lock.
      */
-    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock() {
-        /**
-         * Allow reader when there is no active writer, or current thread owns
-         * the write lock (reentrant).
-         */
-        protected boolean allowReader() {
-            return activeWriter_ == null
-                    || activeWriter_ == Thread.currentThread()
-                    || noLockHack;
-        }
-    };
-
-    /**
-     * enables or disables the write-lock hack.
-     *
-     * @param noLockHack
-     */
-    public void setNoLockHack(boolean noLockHack) {
-        this.noLockHack = noLockHack;
-    }
+    private final RWLock rwLock = new RWLock();
 
     /**
      * {@inheritDoc}
@@ -108,6 +83,18 @@ public class DefaultISMLocking implements ISMLocking {
          */
         public void release() {
             readLock.release();
+        }
+    }
+
+    private static final class RWLock extends ReentrantWriterPreferenceReadWriteLock {
+
+        /**
+         * Allow reader when there is no active writer, or current thread owns
+         * the write lock (reentrant).
+         */
+        protected boolean allowReader() {
+            return activeWriter_ == null
+                    || activeWriter_ == Thread.currentThread();
         }
     }
 }

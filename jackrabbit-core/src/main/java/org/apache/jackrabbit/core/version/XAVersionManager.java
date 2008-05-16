@@ -521,7 +521,6 @@ public class XAVersionManager extends AbstractVersionManager
                 Map vItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
                 if (!vItems.isEmpty()) {
                     vMgr.acquireWriteLock();
-                    vMgr.getSharedStateMgr().setNoLockHack(true);
                     vmgrLocked = true;
                 }
             }
@@ -568,7 +567,6 @@ public class XAVersionManager extends AbstractVersionManager
 
             private void internalReleaseWriteLock() {
                 if (vmgrLocked) {
-                    vMgr.getSharedStateMgr().setNoLockHack(false);
                     vMgr.releaseWriteLock();
                     vmgrLocked = false;
                 }

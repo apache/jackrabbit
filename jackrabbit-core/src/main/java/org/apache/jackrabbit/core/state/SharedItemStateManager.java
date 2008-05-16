@@ -216,18 +216,6 @@ public class SharedItemStateManager
     }
 
     /**
-     * enables or disables the write-lock hack. this should only be called by
-     * the {@link XAVersionManager}.
-     *
-     * @param noLockHack
-     */
-    public void setNoLockHack(boolean noLockHack) {
-        if (ismLocking instanceof DefaultISMLocking) {
-            ((DefaultISMLocking) ismLocking).setNoLockHack(noLockHack);
-        }
-    }
-
-    /**
      * Set an update event channel
      *
      * @param eventChannel update event channel
