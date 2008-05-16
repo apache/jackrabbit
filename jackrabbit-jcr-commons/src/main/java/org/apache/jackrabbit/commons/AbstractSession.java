@@ -60,6 +60,16 @@ public abstract class AbstractSession implements Session {
      */
     private final Map namespaces = new HashMap();
 
+    /**
+     * Clears the local namespace mappings. Subclasses that for example
+     * want to participate in a session pools should remember to call
+     * <code>super.logout()</code> when overriding this method to avoid
+     * namespace mappings to be carried over to a new session.
+     */
+    public void logout() {
+        namespaces.clear();
+    }
+
     //------------------------------------------------< Namespace handling >--
 
     /**
