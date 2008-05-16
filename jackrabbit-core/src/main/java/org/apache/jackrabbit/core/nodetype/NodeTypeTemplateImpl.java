@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.commons.collections.list.TypedList;
-import org.apache.jackrabbit.api.jsr283.nodetype.NodeDefinitionTemplate;
-import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeTemplate;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
+import org.apache.jackrabbit.api.jsr283.nodetype.NodeDefinitionTemplate;
 import org.apache.jackrabbit.api.jsr283.nodetype.PropertyDefinitionTemplate;
 
 import javax.jcr.nodetype.NodeDefinition;
@@ -45,10 +45,6 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * Package private constructor
      */
     NodeTypeTemplateImpl() {
-        nodeDefinitionTemplates = TypedList.decorate(
-                new ArrayList(), NodeDefinitionTemplate.class);
-        propertyDefinitionTemplates = TypedList.decorate(
-                new ArrayList(), PropertyDefinitionTemplate.class);
     }
 
     /**
@@ -64,12 +60,18 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         mixin = def.isMixin();
         orderableChildNodes = def.hasOrderableChildNodes();
         NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
-        for (int i = 0; i < nodeDefs.length; i++) {
-            nodeDefinitionTemplates.add(new NodeDefinitionTemplateImpl(nodeDefs[i]));
+        if (nodeDefs != null) {
+            List list = getNodeDefinitionTemplates();
+            for (int i = 0; i < nodeDefs.length; i++) {
+                list.add(new NodeDefinitionTemplateImpl(nodeDefs[i]));
+            }
         }
         PropertyDefinition[] propDefs = def.getDeclaredPropertyDefinitions();
-        for (int i = 0; i < propDefs.length; i++) {
-            propertyDefinitionTemplates.add(new PropertyDefinitionTemplateImpl(propDefs[i]));
+        if (propDefs != null) {
+            List list = getPropertyDefinitionTemplates();
+            for (int i = 0; i < propDefs.length; i++) {
+                list.add(new PropertyDefinitionTemplateImpl(propDefs[i]));
+            }
         }
     }
 
@@ -120,6 +122,10 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * {@inheritDoc}
      */
     public List getPropertyDefinitionTemplates() {
+        if (propertyDefinitionTemplates == null) {
+            propertyDefinitionTemplates = TypedList.decorate(
+                    new ArrayList(), PropertyDefinitionTemplate.class);
+        }
         return propertyDefinitionTemplates;
     }
 
@@ -127,6 +133,10 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * {@inheritDoc}
      */
     public List getNodeDefinitionTemplates() {
+        if (nodeDefinitionTemplates == null) {
+            nodeDefinitionTemplates = TypedList.decorate(
+                    new ArrayList(), NodeDefinitionTemplate.class);
+        }
         return nodeDefinitionTemplates;
     }
 
@@ -177,15 +187,23 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * {@inheritDoc}
      */
     public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        return (PropertyDefinition[]) propertyDefinitionTemplates.toArray(
-                new PropertyDefinition[propertyDefinitionTemplates.size()]);
+        if (propertyDefinitionTemplates == null) {
+            return null;
+        } else {
+            return (PropertyDefinition[]) propertyDefinitionTemplates.toArray(
+                    new PropertyDefinition[propertyDefinitionTemplates.size()]);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        return (NodeDefinition[]) nodeDefinitionTemplates.toArray(
-                new NodeDefinition[nodeDefinitionTemplates.size()]);
+        if (nodeDefinitionTemplates == null) {
+            return null;
+        } else {
+            return (NodeDefinition[]) nodeDefinitionTemplates.toArray(
+                    new NodeDefinition[nodeDefinitionTemplates.size()]);
+        }
     }
 }

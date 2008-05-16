@@ -64,7 +64,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
      *
      * @param itemDef    item definition
      * @param ntMgr      node type manager
-     * @param resolver
+     * @param resolver   name resolver
      */
     ItemDefinitionImpl(ItemDef itemDef, NodeTypeManagerImpl ntMgr,
                        NamePathResolver resolver) {
