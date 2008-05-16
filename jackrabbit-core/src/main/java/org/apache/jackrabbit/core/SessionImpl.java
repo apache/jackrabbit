@@ -279,7 +279,7 @@ public class SessionImpl extends AbstractSession
         userId = uid;
 
         namePathResolver = new DefaultNamePathResolver(this, true);
-        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), rep.getNamespaceRegistry(), this, this, rep.getDataStore());
+        ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
                 rep.getWorkspaceStateManager(wspName), rep, this);
@@ -924,7 +924,7 @@ public class SessionImpl extends AbstractSession
         parent.checkLock();
 
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
-        return new ImportHandler(importer, this, rep.getNamespaceRegistry());
+        return new ImportHandler(importer, this);
     }
 
     /**
