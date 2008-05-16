@@ -24,10 +24,12 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -46,6 +48,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
@@ -185,6 +188,20 @@ public class CompactNodeTypeDefReader {
      */
     public List getNodeTypeDefs() {
         return nodeTypeDefs;
+    }
+
+    /**
+     * Returns the list of parsed node type definitions.
+     *
+     * @param resolver name resolver
+     * @return a List of NodeTypeDefinitions objects
+     */
+    public List getNodeTypeDefinitions(NamePathResolver resolver) {
+        List l = new ArrayList(nodeTypeDefs.size());
+        for (Iterator iter = nodeTypeDefs.iterator(); iter.hasNext();) {
+            l.add(new NodeTypeDefinitionImpl((NodeTypeDef) iter.next(), resolver));
+        }
+        return l;
     }
 
     /**

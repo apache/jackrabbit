@@ -44,7 +44,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      *
      * @param propDef    property definition
      * @param ntMgr      node type manager
-     * @param resolver
+     * @param resolver   name resolver
      */
     PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
                            NamePathResolver resolver) {

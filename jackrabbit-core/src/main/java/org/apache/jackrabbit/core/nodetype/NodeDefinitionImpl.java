@@ -45,7 +45,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      *
      * @param nodeDef    child node definition
      * @param ntMgr      node type manager
-     * @param resolver
+     * @param resolver   name resolver
      */
     NodeDefinitionImpl(NodeDef nodeDef, NodeTypeManagerImpl ntMgr,
                        NamePathResolver resolver) {
@@ -70,6 +70,9 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
         if (ntName == null) {
             return null;
         }
+        if (ntMgr == null) {
+            return null;
+        }
         try {
             return ntMgr.getNodeType(ntName);
         } catch (NoSuchNodeTypeException e) {
@@ -83,6 +86,9 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
      * {@inheritDoc}
      */
     public NodeType[] getRequiredPrimaryTypes() {
+        if (ntMgr == null) {
+            return null;
+        }
         Name[] ntNames = ((NodeDef) itemDef).getRequiredPrimaryTypes();
         try {
             if (ntNames == null || ntNames.length == 0) {
