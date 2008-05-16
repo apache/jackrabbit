@@ -64,6 +64,7 @@ public class SystemViewExporter extends Exporter {
             Session session, ContentHandler handler,
             boolean recurse, boolean binary) {
         super(session, handler, recurse, binary);
+        addNamespace("sv", SV);
     }
 
     /**
