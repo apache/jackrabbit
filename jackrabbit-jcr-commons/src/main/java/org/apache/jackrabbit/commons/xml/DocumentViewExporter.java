@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
+import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.xml.sax.ContentHandler;
@@ -56,11 +57,11 @@ public class DocumentViewExporter extends Exporter {
      */
     protected void exportNode(String uri, String local, Node node)
             throws RepositoryException, SAXException {
-        if (JCR.equals(uri) && "xmltext".equals(local)) {
+        if (NamespaceHelper.JCR.equals(uri) && "xmltext".equals(local)) {
             try {
                 // assume jcr:xmlcharacters is single-valued
                 Property property =
-                    node.getProperty(getJCRName(JCR, "xmlcharacters"));
+                    node.getProperty(helper.getJcrName("jcr:xmlcharacters"));
                 char[] ch = property.getString().toCharArray();
                 characters(ch, 0, ch.length);
             } catch (PathNotFoundException e) {

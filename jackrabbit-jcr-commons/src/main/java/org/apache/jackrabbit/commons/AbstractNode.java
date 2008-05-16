@@ -89,16 +89,6 @@ import javax.jcr.version.VersionHistory;
  */
 public abstract class AbstractNode extends AbstractItem implements Node {
 
-    /**
-     * The JCR namespace URI.
-     */
-    private static final String JCR = "http://www.jcp.org/jcr/1.0";
-
-    /**
-     * The JCR mix namespace URI.
-     */
-    private static final String MIX = "http://www.jcp.org/jcr/mix/1.0";
-
     //----------------------------------------------------------------< Item >
 
     /**
@@ -169,7 +159,7 @@ public abstract class AbstractNode extends AbstractItem implements Node {
         try {
             NodeTypeManager manager =
                 getSession().getWorkspace().getNodeTypeManager();
-            Property property = getProperty(getName(JCR, "mixinTypes"));
+            Property property = getProperty(getName("jcr:mixinTypes"));
             Value[] values = property.getValues();
             NodeType[] types = new NodeType[values.length];
             for (int i = 0; i < values.length; i++) {
@@ -195,7 +185,7 @@ public abstract class AbstractNode extends AbstractItem implements Node {
     public NodeType getPrimaryNodeType() throws RepositoryException {
         NodeTypeManager manager =
             getSession().getWorkspace().getNodeTypeManager();
-        Property property = getProperty(getName(JCR, "primaryType"));
+        Property property = getProperty(getName("jcr:primaryType"));
         return manager.getNodeType(property.getString());
     }
 
@@ -256,8 +246,8 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      */
     public String getUUID()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        if (isNodeType(getName(MIX, "referenceable"))) {
-            return getProperty(getName(JCR, "uuid")).getString();
+        if (isNodeType(getName("mix:referenceable"))) {
+            return getProperty(getName("jcr:uuid")).getString();
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "This node is not referenceable: " + getPath());
@@ -383,9 +373,9 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      * @throws RepositoryException if an error occurs
      */
     public boolean isCheckedOut() throws RepositoryException {
-        if (isNodeType(getName(MIX, "versionable"))) {
+        if (isNodeType(getName("jcr:versionable"))) {
             // This node is versionable, check the jcr:isCheckedOut property
-            return getProperty(getName(JCR, "isCheckedOut")).getBoolean();
+            return getProperty(getName("jcr:isCheckedOut")).getBoolean();
         } else {
             try {
                 // This node is not versionable, is the parent checked out?
@@ -768,13 +758,8 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      * @return prefixed JCR name
      * @throws RepositoryException if an error occurs
      */
-    private String getName(String uri, String name) throws RepositoryException {
-        String prefix = getSession().getNamespacePrefix(uri);
-        if (prefix.length() > 0) {
-            return prefix + ":" + name;
-        } else {
-            return name;
-        }
+    private String getName(String name) throws RepositoryException {
+        return new NamespaceHelper(getSession()).getJcrName(name);
     }
 
 }

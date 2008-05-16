@@ -35,6 +35,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -52,21 +53,6 @@ import org.xml.sax.helpers.NamespaceSupport;
  * @since Jackrabbit JCR Commons 1.5
  */
 public abstract class Exporter {
-
-    /**
-     * The <code>jcr</code> namespace URI.
-     */
-    protected static final String JCR = "http://www.jcp.org/jcr/1.0";
-
-    /**
-     * The <code>nt</code> namespace URI.
-     */
-    private static final String NT = "http://www.jcp.org/jcr/nt/1.0";
-
-    /**
-     * The <code>mix</code> namespace URI.
-     */
-    private static final String MIX = "http://www.jcp.org/jcr/mix/1.0";
 
     /**
      * Attributes of the next element. This single instance is reused for
@@ -96,6 +82,11 @@ public abstract class Exporter {
     private final Session session;
 
     /**
+     * Namespace helper.
+     */
+    protected final NamespaceHelper helper;
+
+    /**
      * SAX event handler to which the export events are sent.
      */
     private final ContentHandler handler;
@@ -122,6 +113,7 @@ public abstract class Exporter {
             Session session, ContentHandler handler,
             boolean recurse, boolean binary) {
         this.session = session;
+        this.helper = new NamespaceHelper(session);
         this.handler = handler;
         this.recurse = recurse;
         this.binary = binary;
@@ -253,31 +245,28 @@ public abstract class Exporter {
         // and jcr:uuid (mix:shareable is referenceable, so jcr:uuid exists)
         if (share) {
             ValueFactory factory = session.getValueFactory();
-            Value share =
-                factory.createValue(getJCRName(NT, "share"), PropertyType.NAME);
-            exportProperty(JCR, "primaryType", share);
-            exportProperty(JCR, "uuid", factory.createValue(node.getUUID()));
+            exportProperty(
+                    NamespaceHelper.JCR, "primaryType",
+                    factory.createValue(
+                            helper.getJcrName("nt:share"), PropertyType.NAME));
+            exportProperty(
+                    NamespaceHelper.JCR, "uuid",
+                    factory.createValue(node.getUUID()));
         } else {
             // Standard behaviour: return all properties (sorted, see JCR-1084)
             SortedMap properties = getProperties(node);
 
             // serialize jcr:primaryType, jcr:mixinTypes & jcr:uuid first:
-            exportProperty(properties, JCR, "primaryType");
-            exportProperty(properties, JCR, "mixinTypes");
-            exportProperty(properties, JCR, "uuid");
+            exportProperty(properties, helper.getJcrName("jcr:primaryType"));
+            exportProperty(properties, helper.getJcrName("jcr:mixinTypes"));
+            exportProperty(properties, helper.getJcrName("jcr:uuid"));
 
             // serialize remaining properties
             Iterator iterator = properties.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry entry = (Map.Entry) iterator.next();
-                String uri = null;
                 String name = (String) entry.getKey();
-                int colon = name.indexOf(':');
-                if (colon != -1) {
-                    uri = session.getNamespaceURI(name.substring(0, colon));
-                    name = name.substring(colon + 1);
-                }
-                exportProperty(uri, name, (Property) entry.getValue());
+                exportProperty(name, (Property) entry.getValue());
             }
         }
     }
@@ -294,11 +283,11 @@ public abstract class Exporter {
      */
     private void exportNode(Node node)
             throws RepositoryException, SAXException {
-        share = node.isNodeType(getJCRName(MIX, "shareable"))
+        share = node.isNodeType(helper.getJcrName("mix:shareable"))
             && !shareables.add(node.getUUID());
 
         if (node.getDepth() == 0) {
-            exportNode(JCR, "root", node);
+            exportNode(NamespaceHelper.JCR, "root", node);
         } else {
             String name = node.getName();
             int colon = name.indexOf(':');
@@ -335,16 +324,15 @@ public abstract class Exporter {
      * The property is ignored if it does not exist.
      *
      * @param properties map of properties
-     * @param uri property namespace
-     * @param local property name
+     * @param name property name
      * @throws RepositoryException if a repository error occurs
      * @throws SAXException if a SAX error occurs
      */
-    private void exportProperty(Map properties, String uri, String local)
+    private void exportProperty(Map properties, String name)
             throws RepositoryException, SAXException {
-        Property property = (Property) properties.remove(getJCRName(uri, local));
+        Property property = (Property) properties.remove(name);
         if (property != null) {
-            exportProperty(uri, local, property);
+            exportProperty(name, property);
         }
     }
 
@@ -353,14 +341,21 @@ public abstract class Exporter {
      * {@link #exportProperty(Value)} or {@link #exportProperty(int, Value[])}
      * depending on whether the the property is single- or multivalued.
      *
-     * @param uri property namespace
-     * @param local property name
+     * @param name property name
      * @param property property
      * @throws RepositoryException if a repository error occurs
      * @throws SAXException if a SAX error occurs
      */
-    private void exportProperty(String uri, String local, Property property)
+    private void exportProperty(String name, Property property)
             throws RepositoryException, SAXException {
+        String uri = null;
+        String local = name;
+        int colon = name.indexOf(':');
+        if (colon != -1) {
+            uri = session.getNamespaceURI(name.substring(0, colon));
+            local = name.substring(colon + 1);
+        }
+
         int type = property.getType();
         if (type != PropertyType.BINARY || binary) {
             if (property.getDefinition().isMultiple()) {
@@ -465,20 +460,6 @@ public abstract class Exporter {
             handler.endPrefixMapping((String) iterator.next());
         }
         namespaces.clear();
-    }
-
-    /**
-     * Returns the prefixed JCR name for the given namespace URI and local
-     * name.
-     *
-     * @param uri namespace URI (must not be the empty namespace)
-     * @param name local name
-     * @return prefixed JCR name
-     * @throws RepositoryException if a JCR namespace mapping is not available
-     */
-    protected String getJCRName(String uri, String name)
-            throws RepositoryException {
-        return session.getNamespacePrefix(uri) + ":" + name;
     }
 
     /**
