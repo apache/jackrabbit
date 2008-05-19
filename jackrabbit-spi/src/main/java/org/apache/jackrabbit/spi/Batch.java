@@ -63,7 +63,7 @@ import javax.jcr.version.VersionException;
  * minimize calls to the persistent layer, which enables client-server
  * implementations to reduce the number of network roundtrips.<p/>
  *
- * Since the batch records the “delta” of pending changes within the scope of
+ * Since the batch records the delta of pending changes within the scope of
  * an {@link javax.jcr.Item#save()} (or a {@link javax.jcr.Session#save()} it is
  * intended to be constructed upon save (not before) and then submitted to the
  * persistent layer as a single logical operation (see above).<p/>
