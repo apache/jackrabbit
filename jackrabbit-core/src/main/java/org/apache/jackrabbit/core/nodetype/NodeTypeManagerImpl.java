@@ -810,6 +810,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             NodeDef[] qndefs = new NodeDef[ndefs.length];
             for (int i = 0; i < ndefs.length; i++) {
                 NodeDefImpl qndef = new NodeDefImpl();
+                // declaring node type
+                qndef.setDeclaringNodeType(def.getName());
                 // name
                 name = ndefs[i].getName();
                 if (name != null) {
@@ -872,6 +874,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             PropDef[] qpdefs = new PropDef[pdefs.length];
             for (int i = 0; i < pdefs.length; i++) {
                 PropDefImpl qpdef = new PropDefImpl();
+                // declaring node type
+                qpdef.setDeclaringNodeType(def.getName());
                 // name
                 name = pdefs[i].getName();
                 if (name != null) {
