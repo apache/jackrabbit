@@ -20,11 +20,11 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.commons.collections.map.LinkedMap;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -37,7 +37,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * Map collecting the responses for this multistatus, where every href must
      * only occure one single time.
      */
-    private Map responses = new LinkedMap();
+    private Map responses = new LinkedHashMap();
 
     /**
      * A general response description at the multistatus top level is used to
