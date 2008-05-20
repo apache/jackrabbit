@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.jsr283.security;
+package org.apache.jackrabbit.api.jsr283.security;
 
 import javax.jcr.RangeIterator;
 

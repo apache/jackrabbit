@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.config.SecurityConfig;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
 
 import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Repository;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.security.auth.Subject;
 

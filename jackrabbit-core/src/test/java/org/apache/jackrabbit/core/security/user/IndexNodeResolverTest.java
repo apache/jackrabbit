@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

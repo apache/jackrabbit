@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.core.security.authorization.AbstractPolicyTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

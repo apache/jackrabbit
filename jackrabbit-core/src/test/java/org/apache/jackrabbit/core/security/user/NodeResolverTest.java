@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.JackrabbitSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.NodeIterator;
 import javax.jcr.Node;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import java.util.Iterator;
 

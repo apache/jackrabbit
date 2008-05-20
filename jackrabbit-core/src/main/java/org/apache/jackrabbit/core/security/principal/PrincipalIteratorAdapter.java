@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 
 import java.security.Principal;
 import java.util.Collection;

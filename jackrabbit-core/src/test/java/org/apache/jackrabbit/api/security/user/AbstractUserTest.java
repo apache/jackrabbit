@@ -18,27 +18,27 @@ package org.apache.jackrabbit.api.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.security.auth.Subject;
-import java.security.Principal;
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
-import java.io.UnsupportedEncodingException;
 
 /**
  * <code>AbstractUserTest</code>...

@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import junit.framework.TestCase;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 
 import java.util.ArrayList;
 import java.util.Arrays;

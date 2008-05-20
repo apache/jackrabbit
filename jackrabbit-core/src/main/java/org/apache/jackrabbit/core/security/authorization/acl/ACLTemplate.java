@@ -16,29 +16,29 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
+import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.commons.collections.map.ListOrderedMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import java.security.Principal;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
 
 /**
  * {@link PolicyTemplate}-Implementation for the resource-based {@link ACLImpl}.
@@ -259,14 +259,14 @@ class ACLTemplate implements PolicyTemplate {
 
     //------------------------------------------------< AccessControlPolicy >---
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getName()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getName()
      */
     public String getName() throws RepositoryException {
         return name;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getDescription()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getDescription()
      */
     public String getDescription() throws RepositoryException {
         return description;
