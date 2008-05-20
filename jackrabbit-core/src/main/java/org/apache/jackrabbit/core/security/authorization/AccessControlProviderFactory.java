@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
+import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;

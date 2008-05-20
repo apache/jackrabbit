@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 
 /**
  * This is one Entry in an {@link PolicyTemplate} or an
- * {@link org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy}<p>
+ * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy}<p>
  * In the previous case the entry must be detached from the effective ac-content.
  */
 public interface PolicyEntry extends AccessControlEntry {

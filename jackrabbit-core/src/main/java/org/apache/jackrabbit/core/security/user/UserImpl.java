@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.util.Text;

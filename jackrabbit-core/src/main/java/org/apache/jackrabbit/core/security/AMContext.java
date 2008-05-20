@@ -17,13 +17,13 @@
 package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import javax.security.auth.Subject;
 import javax.jcr.Session;
+import javax.security.auth.Subject;
 import java.io.File;
 
 /**

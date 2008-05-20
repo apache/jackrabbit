@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -36,7 +37,6 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactory;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactoryImpl;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;

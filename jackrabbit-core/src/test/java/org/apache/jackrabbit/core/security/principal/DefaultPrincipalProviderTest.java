@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;

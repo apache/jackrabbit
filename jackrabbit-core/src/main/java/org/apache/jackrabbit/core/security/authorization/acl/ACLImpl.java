@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Item;
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -223,14 +223,14 @@ class ACLImpl implements AccessControlPolicy {
     //------------------------------------------------< AccessControlPolicy >---
     /**
      * @return the name of the current ACL,
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getName()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getName()
      */
     public String getName() throws RepositoryException {
         return POLICY_NAME;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getDescription()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getDescription()
      */
     public String getDescription() throws RepositoryException {
         // TODO

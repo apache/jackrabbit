@@ -17,16 +17,16 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
-import org.apache.jackrabbit.core.security.jsr283.security.AbstractAccessControlTest;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.JUnitTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.apache.jackrabbit.util.Text;
 
@@ -39,9 +39,9 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.observation.Event;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
 
 /**

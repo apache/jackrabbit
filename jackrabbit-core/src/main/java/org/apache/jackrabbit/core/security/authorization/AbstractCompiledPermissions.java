@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.commons.collections.map.LRUMap;
 
 import javax.jcr.RepositoryException;
 

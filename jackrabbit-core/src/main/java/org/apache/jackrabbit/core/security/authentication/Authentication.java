@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
 
 /**
  * The <code>Authentication</code> interface defines methods to validate

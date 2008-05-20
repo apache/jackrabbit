@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

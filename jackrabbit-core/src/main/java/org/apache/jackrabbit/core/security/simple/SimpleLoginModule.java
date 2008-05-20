@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.simple;
 
+import org.apache.jackrabbit.core.security.authentication.AbstractLoginModule;
+import org.apache.jackrabbit.core.security.authentication.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.security.authentication.Authentication;
-import org.apache.jackrabbit.core.security.authentication.AbstractLoginModule;
 
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.login.LoginException;
-import javax.security.auth.Subject;
-import javax.jcr.Session;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import java.util.Map;
+import javax.jcr.Session;
+import javax.security.auth.Subject;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.login.LoginException;
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.Map;
 
 /**
  * <code>SimpleLoginModule</code>...

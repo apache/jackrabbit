@@ -16,25 +16,25 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.Hold;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.RetentionPolicy;
+import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.core.security.jsr283.security.Hold;
-import org.apache.jackrabbit.core.security.jsr283.security.RetentionPolicy;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
 import java.security.Principal;
 
 /**

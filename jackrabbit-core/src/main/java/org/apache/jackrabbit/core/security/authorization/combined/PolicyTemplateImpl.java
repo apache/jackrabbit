@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>PolicyTemplateImpl</code>...
@@ -91,14 +91,14 @@ class PolicyTemplateImpl implements PolicyTemplate {
 
     //------------------------------------------------< AccessControlPolicy >---
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getName()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getName()
      */
     public String getName() throws RepositoryException {
         return getClass().getName();
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy#getName()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getName()
      */
     public String getDescription() throws RepositoryException {
         return "Template for the user-based ACL: each ACL defining the access permissions for a single principal.";

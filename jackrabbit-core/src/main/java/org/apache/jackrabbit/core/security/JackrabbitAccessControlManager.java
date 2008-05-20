@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
 

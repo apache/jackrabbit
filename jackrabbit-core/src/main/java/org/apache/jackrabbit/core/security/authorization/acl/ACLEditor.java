@@ -16,35 +16,35 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
-import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.spi.commons.conversion.NameParser;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.AccessDeniedException;
 import java.security.Principal;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>ACLEditor</code>...

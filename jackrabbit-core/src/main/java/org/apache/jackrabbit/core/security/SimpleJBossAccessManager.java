@@ -18,10 +18,10 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

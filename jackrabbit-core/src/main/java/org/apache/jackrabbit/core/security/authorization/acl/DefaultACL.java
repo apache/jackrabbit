@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 
 import javax.jcr.RepositoryException;
 import java.util.Collections;

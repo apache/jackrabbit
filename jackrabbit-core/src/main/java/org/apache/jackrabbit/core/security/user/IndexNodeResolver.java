@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.util.ISO9075;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -26,9 +26,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.Collections;
 
 /**
  * 

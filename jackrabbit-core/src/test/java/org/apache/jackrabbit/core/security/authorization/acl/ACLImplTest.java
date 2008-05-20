@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.uuid.UUID;
 

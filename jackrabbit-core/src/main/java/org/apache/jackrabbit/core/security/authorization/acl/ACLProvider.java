@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -33,9 +36,6 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -44,11 +44,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.Node;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;

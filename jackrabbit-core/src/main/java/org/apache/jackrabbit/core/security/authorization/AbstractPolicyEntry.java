@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
 
 import java.security.Principal;
 
 /**
  * Simple, immutable implementation of the
- * {@link org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry}
+ * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlEntry}
  * and the {@link PolicyEntry} interfaces.
  */
 public abstract class AbstractPolicyEntry implements PolicyEntry {
@@ -80,14 +80,14 @@ public abstract class AbstractPolicyEntry implements PolicyEntry {
 
     //-------------------------------------------------< AccessControlEntry >---
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry#getPrincipal()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrincipal()
      */
     public Principal getPrincipal() {
         return principal;
     }
 
     /**
-     * @see org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry#getPrivileges()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrivileges()
      */
     public Privilege[] getPrivileges() {
         return PrivilegeRegistry.getPrivileges(privileges);

@@ -20,11 +20,11 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Session;
 import javax.jcr.LoginException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 /**
  * <code>UserTest</code>...

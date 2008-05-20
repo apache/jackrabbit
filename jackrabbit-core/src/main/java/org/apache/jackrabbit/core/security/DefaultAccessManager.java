@@ -16,27 +16,27 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.api.jsr283.security.Hold;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.RetentionPolicy;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.core.security.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.jsr283.security.Hold;
-import org.apache.jackrabbit.core.security.jsr283.security.RetentionPolicy;
+import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
@@ -47,14 +47,14 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The <code>DefaultAccessManager</code> controls access by evaluating access

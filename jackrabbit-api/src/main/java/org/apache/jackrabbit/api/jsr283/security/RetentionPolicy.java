@@ -14,22 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.jsr283.security;
+package org.apache.jackrabbit.api.jsr283.security;
 
 import javax.jcr.RepositoryException;
 
 /**
- * An <code>AccessControlPolicy</code> is an object with a name and an optional
- * description. Examples of possible <code>AccessControlPolicy</code> 
- * implementations include access control lists or role-responsibility 
- * assignments.
+ * An <code>RetentionPolicy</code> is an object with a name and an optional
+ * description.
  *
  * @since JCR 2.0
  */
-public interface AccessControlPolicy {
+public interface RetentionPolicy {
     /**
-     * Returns the name of the access control policy, which should be unique
-     * among the choices applicable to any particular node.
+     * Returns the name of the retention policy.
      *
      * @return the name of the access control policy.
      * @throws RepositoryException if an error occurs.
@@ -37,9 +34,9 @@ public interface AccessControlPolicy {
     public String getName() throws RepositoryException;
 
     /**
-     * Returns a human readable description of the access control policy.
+     * Returns a human readable description of the retention policy.
      *
-     * @return a human readable description of the access control policy.
+     * @return a human readable description of the retention policy.
      * @throws RepositoryException if an error occurs.
      */
     public String getDescription() throws RepositoryException;

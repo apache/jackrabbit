@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 
 import javax.jcr.RepositoryException;
 
@@ -25,7 +25,7 @@ import javax.jcr.RepositoryException;
  * PolicyTemplate is the editable view of an AccessControlPolicy and detached
  * from the later. Therefore modifications made to the template will not take
  * effect, until it is
- * {@link org.apache.jackrabbit.core.security.jsr283.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
+ * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
  * written back} and {@link javax.jcr.Session#save() saved}.
  */
 public interface PolicyTemplate extends AccessControlPolicy {
