@@ -26,20 +26,19 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.functors.TruePredicate;
+import org.apache.jackrabbit.commons.predicate.Predicate;
 
 public abstract class FilteringItemVisitor implements ItemVisitor {
 
     /**
      * Predicate that defines which items are included.
      */
-    protected Predicate includePredicate = TruePredicate.INSTANCE;
+    protected Predicate includePredicate = Predicate.TRUE;
 
     /**
      * Predicate that defines which items are traversed.
      */
-    protected Predicate traversalPredicate = TruePredicate.INSTANCE;
+    protected Predicate traversalPredicate = Predicate.TRUE;
 
     /**
      * Do we want to walk all properties of nodes?

@@ -19,8 +19,6 @@ package org.apache.jackrabbit.commons.predicate;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.Predicate;
-
 /**
  * Implements a filter that filters item according to their (passed) depth.
  *

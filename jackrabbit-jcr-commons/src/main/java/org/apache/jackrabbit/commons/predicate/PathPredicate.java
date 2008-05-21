@@ -21,8 +21,6 @@ import java.util.regex.Pattern;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.Predicate;
-
 /**
  * The path filter provides hierarchical filtering.
  *

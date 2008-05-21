@@ -28,8 +28,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.commons.collections.Predicate;
-
+import org.apache.jackrabbit.commons.predicate.Predicate;
 
 public class FilterContentPackage implements ContentPackage {
 
