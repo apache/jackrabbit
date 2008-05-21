@@ -106,7 +106,16 @@ public class DerbyPersistenceManager extends SimpleDbPersistenceManager {
      */
     protected void closeConnection(Connection connection) throws SQLException {
         // prepare connection url for issuing shutdown command
-        String url = connection.getMetaData().getURL();
+        String url;
+        try {
+            url = connection.getMetaData().getURL();
+        } catch (SQLException e) {
+            // JCR-1557: embedded derby db probably already shut down;
+            // this happens when configuring multiple FS/PM instances
+            // to use the same embedded derby db instance.
+            log.debug("failed to retrieve connection url: embedded db probably already shut down", e);
+            return;
+        }
         int pos = url.lastIndexOf(';');
         if (pos != -1) {
             // strip any attributes from connection url
