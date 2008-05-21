@@ -44,7 +44,7 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 {
 	private final static Log log = LogFactory.getLog(DigesterAtomicQueryTest.class);
 	private Date date = new Date();
-	
+
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
@@ -52,7 +52,7 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 	public DigesterAtomicQueryTest(String testName) throws Exception
 	{
 		super(testName);
-		
+
 	}
 
 	public static Test suite()
@@ -60,28 +60,33 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 		// All methods starting with "test" will be executed in the test suite.
 		return new RepositoryLifecycleTestSetup(new TestSuite(DigesterAtomicQueryTest.class));
 	}
-		
+
+	protected void setUp() throws Exception
+	{
+		super.setUp();
+		this.importData(date);
+	}
+
 	public void testQueryAtomicFields()
 	{
 
 		try
 		{
-			
-			this.importData(date);
+
 			ObjectContentManager ocm = this.getObjectContentManager();
-			
+
 			// Test Boolean value
 			QueryManager queryManager = this.getQueryManager();
 			Filter filter = queryManager.createFilter(Atomic.class);
 			filter.addEqualTo("booleanObject", new Boolean(true));
 			Query query = queryManager.createQuery(filter);
-			
+
 			long start = System.currentTimeMillis();
 			Collection result = ocm.getObjects(query);
 			System.out.println("getObjects  : " + (System.currentTimeMillis() - start));
-			
+
 			assertTrue("Invalid number of objects - should be = 50", result.size() == 50);
-			
+
 			filter = queryManager.createFilter(Atomic.class);
 			filter.addEqualTo("booleanPrimitive", new Boolean(false));
 			query = queryManager.createQuery(filter);
@@ -90,32 +95,32 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 			result = ocm.getObjects(query);
 			System.out.println("getObjects 2 : " + (System.currentTimeMillis() - start));
 			assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
-			
-			
+
+
 			// Test int value
 			filter = queryManager.createFilter(Atomic.class);
 			filter.addBetween("integerObject", new Integer(0), new Integer(500));
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 5", result.size() == 5);
-			
+
 			filter = queryManager.createFilter(Atomic.class);
 			filter.addLessOrEqualThan("intPrimitive", new Integer(236));
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 36", result.size() == 36);
 
-			
+
 			//Test Date & Calendar
 			filter = queryManager.createFilter(Atomic.class);
 			Calendar calendar = Calendar.getInstance();
 			calendar.set(2012, Calendar.DECEMBER, 01);
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
 			filter = queryManager.createFilter(Atomic.class);
@@ -123,55 +128,55 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 			calendar.set(1975, Calendar.DECEMBER, 01);
 			filter.addLessThan("calendar", calendar);
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
-			
-			filter = queryManager.createFilter(Atomic.class);			
+
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addEqualTo("date", date);
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
-			filter = queryManager.createFilter(Atomic.class);			
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addBetween("date", date, new Date());
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 100 ", result.size() == 100);
 
-			filter = queryManager.createFilter(Atomic.class);			
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addGreaterThan("date", date);
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
 
 			// Test contains method
-			filter = queryManager.createFilter(Atomic.class);			
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addContains(".", "JCR");
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
-			
-			filter = queryManager.createFilter(Atomic.class);			
+
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addContains("string", "JCR");
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 50 ", result.size() == 50);
-			
-			filter = queryManager.createFilter(Atomic.class);			
+
+			filter = queryManager.createFilter(Atomic.class);
 			filter.addContains("string", "ocm");
 			query = queryManager.createQuery(filter);
-			
-			result = ocm.getObjects(query);			
+
+			result = ocm.getObjects(query);
 			assertTrue("Invalid number of objects - should be = 0 ", result.size() == 0);
 
 
-			
+
 		}
 		catch (Exception e)
 		{
@@ -181,13 +186,30 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 
 	}
 
+	public void testQueryAtomicFieldsWithConverter()
+	{
+		ObjectContentManager ocm = this.getObjectContentManager();
+
+		// Test Boolean value
+		QueryManager queryManager = this.getQueryManager();
+		Filter filter = queryManager.createFilter(Atomic.class);
+		filter.addEqualTo("int2boolean", new Boolean(true));
+		Query query = queryManager.createQuery(filter);
+
+		long start = System.currentTimeMillis();
+		Collection result = ocm.getObjects(query);
+		System.out.println("getObjects  : " + (System.currentTimeMillis() - start));
+
+		assertEquals(50, result.size());
+	}
+
 	private void importData(Date date)
 	{
 		try
 		{
 
 			ObjectContentManager ocm = getObjectContentManager();
-			
+
 			for (int i = 1; i <= 100; i++)
 			{
 				Atomic a = new Atomic();
@@ -195,7 +217,7 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 				a.setBooleanObject(new Boolean(i%2==0));
 				a.setBooleanPrimitive(true);
 				a.setIntegerObject(new Integer(100 * i));
-				a.setIntPrimitive(200 + i);				
+				a.setIntPrimitive(200 + i);
 				a.setDate(date);
 				Calendar calendar = Calendar.getInstance();
 				calendar.set(1976, 4, 20, 15, 40);
@@ -206,19 +228,21 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 				a.setTimestamp(new Timestamp(now));
 				if ((i % 2) == 0)
 				{
-					a.setString("Test String JCR " + i);
+					 a.setString("Test String JCR " + i);
 				     a.setByteArray("This is small object stored in a JCR repository".getBytes());
 				     a.setInputStream(new ByteArrayInputStream("Test inputstream".getBytes()));
+				     a.setInt2boolean(true);
 				}
 				else
 				{
 					 a.setByteArray("This is small object stored in the ocm repository".getBytes());
 					 a.setInputStream(new ByteArrayInputStream("Another Stream".getBytes()));
 					 a.setString("Test String " + i);
+					 a.setInt2boolean(false);
 				}
 				ocm.insert(a);
-				
-				
+
+
 			}
 			ocm.save();
 
@@ -230,5 +254,5 @@ public class DigesterAtomicQueryTest extends DigesterTestBase
 		}
 
 	}
-	
+
 }

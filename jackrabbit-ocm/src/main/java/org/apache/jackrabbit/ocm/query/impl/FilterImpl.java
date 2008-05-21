@@ -26,7 +26,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.FieldDescriptor;
 import org.apache.jackrabbit.ocm.query.Filter;
+import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
 
 /**
  * {@link org.apache.jackrabbit.ocm.query.Filter}
@@ -113,9 +115,9 @@ public class FilterImpl implements Filter {
      */
     public Filter addBetween(String fieldAttributeName, Object value1, Object value2) {
         String jcrExpression = "( @" + this.getJcrFieldName(fieldAttributeName) + " >= "
-            + this.getStringValue(value1)
+            + this.getStringValue(fieldAttributeName, value1)
             + " and @" + this.getJcrFieldName(fieldAttributeName) + " <= "
-            + this.getStringValue(value2) + ")";
+            + this.getStringValue(fieldAttributeName, value2) + ")";
 
         addExpression(jcrExpression);
 
@@ -127,7 +129,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addEqualTo(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " = "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -138,7 +140,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addGreaterOrEqualThan(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " >= "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -149,7 +151,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addGreaterThan(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " > "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -160,7 +162,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addLessOrEqualThan(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " <= "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -171,7 +173,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addLessThan(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " < "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -193,7 +195,7 @@ public class FilterImpl implements Filter {
      */
     public Filter addNotEqualTo(String fieldAttributeName, Object value) {
         String jcrExpression = "@" + this.getJcrFieldName(fieldAttributeName) + " != "
-            + this.getStringValue(value);
+            + this.getStringValue(fieldAttributeName, value);
         addExpression(jcrExpression);
 
         return this;
@@ -228,7 +230,7 @@ public class FilterImpl implements Filter {
         {
     	   if ( null == jcrExpression || "".equals(jcrExpression) )
     	   {
-    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		
+    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;
     	   }
     	   else
     	   {
@@ -247,7 +249,7 @@ public class FilterImpl implements Filter {
         {
      	   if ( null == jcrExpression || "".equals(jcrExpression) )
     	   {
-    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;    		
+    		   jcrExpression =    ((FilterImpl) filter).getJcrExpression() ;
     	   }
     	   else
     	   {
@@ -274,10 +276,30 @@ public class FilterImpl implements Filter {
 
     }
 
-    private String getStringValue(Object value) {
-        AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(
-                value.getClass());
+    private String getStringValue(String fieldName, Object value) {
+    	FieldDescriptor fieldDescriptor = classDescriptor.getFieldDescriptor(fieldName);
+    	AtomicTypeConverter atomicTypeConverter = null ;
+    	// if the attribute is a simple field (primitive data type or wrapper class)
+    	if (fieldDescriptor != null)
+    	{
+	    	String fieldConverterName = fieldDescriptor.getConverter();
 
+	    	// if a field converter is set in the mapping, use this one
+	    	if ( fieldConverterName != null )
+	    	{
+	    		atomicTypeConverter = (AtomicTypeConverter) ReflectionUtils.newInstance(fieldConverterName);
+	    	}
+	    	// else use a default converter in function of the attribute type
+	    	else
+	    	{
+	    		atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(value.getClass());
+	    	}
+    	}
+    	// else it could be a collection (for example, it is a multivalue property)
+    	else
+    	{
+    		atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters.get(value.getClass());
+    	}
         return atomicTypeConverter.getXPathQueryValue(valueFactory, value);
     }
 
