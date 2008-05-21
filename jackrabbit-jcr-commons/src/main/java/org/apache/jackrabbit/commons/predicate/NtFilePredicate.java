@@ -20,8 +20,6 @@ import javax.jcr.Item;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.collections.Predicate;
-
 /**
  * The nt file item filter matches all properties that are defined my the
  * nt:file or nt:resource nodetype. the later only, if the respective nodes

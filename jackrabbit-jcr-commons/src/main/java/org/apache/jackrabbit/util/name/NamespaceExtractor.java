@@ -22,8 +22,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.helpers.DefaultHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
 import java.io.FileInputStream;
@@ -46,7 +44,6 @@ import java.util.HashMap;
  *             the jackrabbit-spi-commons component.
  */
 public class NamespaceExtractor {
-    private static Logger log = LoggerFactory.getLogger(NamespaceExtractor.class);
     private final NamespaceMapping mapping = new NamespaceMapping();
     private final Map basePrefixes = new HashMap();
     private String defaultBasePrefix;
@@ -104,9 +101,8 @@ public class NamespaceExtractor {
                     prefix = prefix + "_" + c;
                 }
                 mapping.setMapping(prefix, uri);
-            } catch(NamespaceException e){
-                String msg = e.getMessage();
-                log.debug(msg);
+            } catch (NamespaceException e) {
+                throw new SAXException(e);
             }
         }
     }
