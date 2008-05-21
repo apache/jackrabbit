@@ -22,7 +22,10 @@ import java.util.Map;
 
 import javax.jcr.ValueFactory;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.ManagerConstant;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 import org.apache.jackrabbit.ocm.query.Filter;
@@ -30,6 +33,8 @@ import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
 
 public class QueryManagerImpl implements QueryManager {
+
+	private final static Log log = LogFactory.getLog(ObjectContentManagerImpl.class);
 
 	private Mapper mapper;
     private Map atomicTypeConverters;
@@ -85,6 +90,7 @@ public class QueryManagerImpl implements QueryManager {
 
         // Add order by
         jcrExp += ((QueryImpl) query).getOrderByExpression();
+        log.debug(jcrExp);
 
         return jcrExp;
 
@@ -118,11 +124,11 @@ public class QueryManagerImpl implements QueryManager {
         String jcrNodeType = classDescriptor.getJcrType();
         if (jcrNodeType == null || jcrNodeType.equals(""))
         	{
-           return ManagerConstant.NT_UNSTRUCTURED;	
+           return ManagerConstant.NT_UNSTRUCTURED;
         	}
         else
         {
-           return jcrNodeType;	
+           return jcrNodeType;
         }
     }
 
