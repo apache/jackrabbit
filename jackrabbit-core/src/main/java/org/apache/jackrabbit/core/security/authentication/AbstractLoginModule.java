@@ -656,9 +656,9 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Sets the anonymous user id.
+     * Sets the administrator's user id.
      *
-     * @param anonymousId anonymous user id
+     * @param adminId the administrator's user id.
      */
     public void setAdminId(String adminId) {
         this.adminId = adminId;
