@@ -124,7 +124,8 @@ public class DomUtil {
      *
      * @param element
      * @param defaultValue
-     * @return
+     * @return the text contained in the specified element or
+     * <code>defaultValue</code> if the element does not contain any text.
      */
     public static String getText(Element element, String defaultValue) {
         String txt = getText(element);
@@ -259,11 +260,12 @@ public class DomUtil {
     }
 
     /**
-     * Return true if the given parent contains any child that is either an
-     * Element, Text or CDATA.
+     * Return <code>true</code> if the given parent contains any child that is
+     * either an Element, Text or CDATA.
      *
      * @param parent
-     * @return
+     * @return <code>true</code> if the given parent contains any child that is
+     * either an Element, Text or CDATA.
      */
     public static boolean hasContent(Node parent) {
         if (parent != null) {
@@ -282,7 +284,7 @@ public class DomUtil {
      * Return a list of all child nodes that are either Element, Text or CDATA.
      *
      * @param parent
-     * @return
+     * @return a list of all child nodes that are either Element, Text or CDATA.
      */
     public static List getContent(Node parent) {
         List content = new ArrayList();
@@ -301,7 +303,7 @@ public class DomUtil {
     /**
      * Build a Namespace from the prefix and uri retrieved from the given element.
      *
-     * @return
+     * @return the <code>Namespace</code> of the given element.
      */
     public static Namespace getNamespace(Element element) {
         String uri = element.getNamespaceURI();
@@ -522,6 +524,15 @@ public class DomUtil {
      * @param uri
      */
     public static void setNamespaceAttribute(Element element, String prefix, String uri) {
+        if (Namespace.EMPTY_NAMESPACE.equals(Namespace.getNamespace(prefix, uri))) {
+            /**
+             * don't try to set the empty namespace which will fail
+             * see {@link org.w3c.dom.DOMException#NAMESPACE_ERR}
+             * TODO: correct?
+             */
+            log.debug("Empty namespace -> omit attribute setting.");
+            return;
+        }
         setAttribute(element, prefix, Namespace.XMLNS_NAMESPACE, uri);
     }
 
@@ -587,7 +598,9 @@ public class DomUtil {
      *
      * @param localName
      * @param namespace
-     * @return
+     * @return the qualified name of a DOM node consisting of "{" + namespace uri + "}"
+     * + localName. If the specified namespace is <code>null</code> or represents
+     * the empty namespace, the local name is returned.
      */
     public static String getQualifiedName(String localName, Namespace namespace) {
         if (namespace == null || namespace.equals(Namespace.EMPTY_NAMESPACE)) {

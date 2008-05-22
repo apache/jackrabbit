@@ -16,28 +16,33 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
+import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
+import org.apache.jackrabbit.webdav.header.Header;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
-import org.apache.jackrabbit.webdav.header.Header;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.ParserConfigurationException;
-
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -146,23 +151,31 @@ public class WebdavResponseImpl implements WebdavResponse {
      */
     public void sendXmlResponse(XmlSerializable serializable, int status) throws IOException {
         httpResponse.setStatus(status);
+
         if (serializable != null) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             try {
                 Document doc = DomUtil.BUILDER_FACTORY.newDocumentBuilder().newDocument();
                 doc.appendChild(serializable.toXml(doc));
 
-                OutputFormat format = new OutputFormat("xml", "UTF-8", false);
-                XMLSerializer serializer = new XMLSerializer(out, format);
-                serializer.setNamespaces(true);
-                serializer.asDOMSerializer().serialize(doc);
+                ContentHandler handler =
+                    SerializingContentHandler.getSerializer(out);
+                TransformerFactory factory = TransformerFactory.newInstance();
+                Transformer transformer = factory.newTransformer();
+                transformer.transform(
+                        new DOMSource(doc), new SAXResult(handler));
 
-                byte[] bytes = out.toByteArray();
-                httpResponse.setContentType("text/xml; charset=UTF-8");
-                httpResponse.setContentLength(bytes.length);
-                httpResponse.getOutputStream().write(bytes);
-
+                // TODO: application/xml?
+                httpResponse.setContentType("text/xml");
+                httpResponse.setContentLength(out.size());
+                out.writeTo(httpResponse.getOutputStream());
             } catch (ParserConfigurationException e) {
+                log.error(e.getMessage());
+                throw new IOException(e.getMessage());
+            } catch (TransformerException e) {
+                log.error(e.getMessage());
+                throw new IOException(e.getMessage());
+            } catch (SAXException e) {
                 log.error(e.getMessage());
                 throw new IOException(e.getMessage());
             }
