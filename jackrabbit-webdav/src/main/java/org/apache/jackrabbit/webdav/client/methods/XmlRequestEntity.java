@@ -16,17 +16,23 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXResult;
+
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.xml.serialize.OutputFormat;
-import org.apache.xml.serialize.XMLSerializer;
 import org.w3c.dom.Document;
-
-import java.io.OutputStream;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * <code>XmlRequestEntity</code>...
@@ -35,31 +41,39 @@ public class XmlRequestEntity implements RequestEntity {
 
     private static Logger log = LoggerFactory.getLogger(XmlRequestEntity.class);
 
-    private final RequestEntity delegatee;
+    private final ByteArrayOutputStream xml = new ByteArrayOutputStream();
 
     public XmlRequestEntity(Document xmlDocument) throws IOException {
-        super();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        OutputFormat format = new OutputFormat("xml", "UTF-8", false);
-        XMLSerializer serializer = new XMLSerializer(out, format);
-        serializer.setNamespaces(true);
-        serializer.asDOMSerializer().serialize(xmlDocument);
-        delegatee = new StringRequestEntity(out.toString(), "text/xml", "UTF-8");
+        try {
+            ContentHandler handler =
+                SerializingContentHandler.getSerializer(xml);
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer transformer = factory.newTransformer();
+            transformer.transform(
+                    new DOMSource(xmlDocument), new SAXResult(handler));
+        } catch (TransformerException e) {
+            log.error(e.getMessage());
+            throw new IOException(e.getMessage());
+        } catch (SAXException e) {
+            log.error(e.getMessage());
+            throw new IOException(e.getMessage());
+        }
     }
 
     public boolean isRepeatable() {
-        return delegatee.isRepeatable();
+        return true;
     }
 
     public String getContentType() {
-        return delegatee.getContentType();
+        return "text/xml"; // TODO: Shouldn't this be application/xml?
     }
 
     public void writeRequest(OutputStream out) throws IOException {
-        delegatee.writeRequest(out);
+        xml.writeTo(out);
     }
 
     public long getContentLength() {
-        return delegatee.getContentLength();
+        return xml.size();
     }
+
 }
