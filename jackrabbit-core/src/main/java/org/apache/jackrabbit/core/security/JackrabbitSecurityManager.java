@@ -100,4 +100,13 @@ public interface JackrabbitSecurityManager {
      */
     public UserManager getUserManager(Session session) throws RepositoryException;
 
+    /**
+     * Retrieve the id to be displayed upon {@link Session#getUserID()} for
+     * the specified subject.
+     *
+     * @param subject
+     * @return userID to be displayed upon {@link Session#getUserID()}.
+     * @throws RepositoryException
+     */
+    public String getUserID(Subject subject) throws RepositoryException;
 }

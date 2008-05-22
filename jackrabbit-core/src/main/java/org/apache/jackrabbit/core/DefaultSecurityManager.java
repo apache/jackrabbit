@@ -21,6 +21,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
@@ -43,6 +44,7 @@ import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
+import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.HashMap;
@@ -315,6 +318,47 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         } else {
             throw new RepositoryException("Internal error: SessionImpl expected.");
         }
+    }
+
+    /**
+     * @see JackrabbitSecurityManager#getUserID(Subject)
+     */
+    public String getUserID(Subject subject) throws RepositoryException {
+        /* shortcut if the subject contains the AdminPrincipal in which case
+           the userID is already known. */
+        if (!subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
+            return adminId;
+        }
+        /*
+         Retrieve userID from the subject.
+         Since the subject may contain multiple principals and the principal
+         name must not be equals to the UserID by definition, the userID
+         may either be obtained from the login-credentials or from the
+         user manager. in the latter case the set of principals present with
+         the specified subject is used to search for the user.
+        */
+        String uid = null;
+        // try simple access to userID over SimpleCredentials first.
+        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
+        if (creds.hasNext()) {
+            SimpleCredentials sc = (SimpleCredentials) creds.next();
+            uid = sc.getUserID();
+        } else {
+            // no SimpleCredentials: retrieve authorizables corresponding to
+            // a non-group principal. the first one present is used to determine
+            // the userID.
+            for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
+                Principal p = (Principal) it.next();
+                if (!(p instanceof Group)) {
+                    Authorizable authorz = systemUserManager.getAuthorizable(p);
+                    if (authorz != null && !authorz.isGroup()) {
+                        uid = ((User) authorz).getID();
+                        break;
+                    }
+                }
+            }
+        }
+        return uid;
     }
 
     /**

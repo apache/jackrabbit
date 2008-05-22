@@ -47,6 +47,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.security.acl.Group;
@@ -56,6 +57,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Iterator;
 
 /**
  * <code>SimpleSecurityManager</code>: simple implementation ignoring both
@@ -206,6 +208,31 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     public UserManager getUserManager(Session session) throws RepositoryException {
         checkInitialized();
         throw new UnsupportedRepositoryOperationException("UserManager not supported.");
+    }
+
+    /**
+     * @see JackrabbitSecurityManager#getUserID(Subject)
+     */
+    public String getUserID(Subject subject) throws RepositoryException {
+        String uid = null;
+        // if SimpleCredentials are present, the UserID can easily be retrieved.
+        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
+        if (creds.hasNext()) {
+            SimpleCredentials sc = (SimpleCredentials) creds.next();
+            uid = sc.getUserID();
+        } else {
+            // no SimpleCredentials: assume that UserID and principal name
+            // are the same (not totally correct) and thus return the name
+            // of the first non-group principal.
+            for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
+                Principal p = (Principal) it.next();
+                if (!(p instanceof Group)) {
+                    uid = p.getName();
+                    break;
+                }
+            }
+        }
+        return uid;
     }
 
     /**
