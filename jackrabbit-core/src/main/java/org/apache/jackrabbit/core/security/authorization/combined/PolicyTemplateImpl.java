@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -68,25 +69,13 @@ class PolicyTemplateImpl implements PolicyTemplate {
     }
 
     public boolean setEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
-        if (entry instanceof PolicyEntryImpl &&
-            principal.equals(entry.getPrincipal())) {
-            // make sure valid privileges are provided.
-            PrivilegeRegistry.getBits(entry.getPrivileges());
-            return internalAddEntry((PolicyEntryImpl) entry);
-        } else {
-            throw new AccessControlException("Invalid entry.");
-        }
+        checkValidEntry(entry);
+        return internalAddEntry((PolicyEntryImpl) entry);
     }
 
     public boolean removeEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
-        if (entry instanceof PolicyEntryImpl &&
-            principal.equals(entry.getPrincipal())) {
-            // make sure valid privileges are provided.
-            PrivilegeRegistry.getBits(entry.getPrivileges());
-            return entries.remove(entry);
-        } else {
-            throw new AccessControlException("Invalid entry.");
-        }
+        checkValidEntry(entry);
+        return entries.remove(entry);
     }
 
     //------------------------------------------------< AccessControlPolicy >---
@@ -105,6 +94,29 @@ class PolicyTemplateImpl implements PolicyTemplate {
     }
 
     //--------------------------------------------------------------------------
+    /**
+     *
+     * @param entry
+     * @throws AccessControlException
+     */
+    private void checkValidEntry(PolicyEntry entry) throws AccessControlException {
+        if (!(entry instanceof PolicyEntryImpl)) {
+            throw new AccessControlException("Invalid PolicyEntry " + entry + ". Expected instanceof ACEImpl.");
+        }
+        if (!principal.equals(entry.getPrincipal())) {
+            throw new AccessControlException("Invalid principal. Expected: " + principal);
+        }
+
+        PolicyEntryImpl ace = (PolicyEntryImpl) entry;
+        // TODO: ev. assert that the principal is known to the repository
+        // make sure valid privileges are provided.
+        PrivilegeRegistry.getBits(ace.getPrivileges());
+
+        if (!entry.isAllow() && entry.getPrincipal() instanceof Group) {
+            throw new AccessControlException("For group principals permissions can only be added but not denied.");
+        }
+    }
+
     /**
      *
      * @param entry

@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Enumeration;
 
 /**
  * <code>AbstractPolicyTemplateTest</code>...
@@ -33,6 +35,7 @@ public abstract class AbstractPolicyTemplateTest extends JUnitTest {
     private static Logger log = LoggerFactory.getLogger(AbstractPolicyTemplateTest.class);
 
     protected Principal testPrincipal;
+    protected Group testGroup;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -41,10 +44,27 @@ public abstract class AbstractPolicyTemplateTest extends JUnitTest {
                 return "TestPrincipal";
             }
         };
+        testGroup = new Group() {
+            public boolean addMember(Principal user) {
+                return false;
+            }
+            public boolean removeMember(Principal user) {
+                return false;
+            }
+            public boolean isMember(Principal member) {
+                return false;
+            }
+            public Enumeration members() {
+                return null;
+            }
+            public String getName() {
+                return "TestGroup";
+            }
+        };
     }
 
     protected abstract String getTestPath();
-    
+
     protected abstract PolicyTemplate createEmptyTemplate(String path);
 
     public void testEmptyTemplate() throws RepositoryException {

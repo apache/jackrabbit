@@ -32,6 +32,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -116,6 +117,10 @@ class ACLTemplate implements PolicyTemplate {
         // TODO: ev. assert that the principal is known to the repository
         // make sure valid privileges are provided.
         PrivilegeRegistry.getBits(ace.getPrivileges());
+
+        if (!entry.isAllow() && entry.getPrincipal() instanceof Group) {
+            throw new AccessControlException("For group principals permissions can only be added but not denied.");
+        }
     }
 
     private List internalGetEntries() {

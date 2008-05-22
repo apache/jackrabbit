@@ -23,6 +23,7 @@ import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.JUnitTest;
@@ -49,10 +50,11 @@ import java.security.Principal;
  */
 public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
-    protected static final long DEFAULT_WAIT_TIMEOUT = 50;
+    protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
 
     protected Credentials creds;
     protected User testUser;
+    protected Group testGroup;
     protected SessionImpl testSession;
     protected AccessControlManager testAcMgr;
 
@@ -71,9 +73,9 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         super.setUp();
 
         UserManager uMgr = getUserManager(superuser);
-        Principal princ = new TestPrincipal("anyUser");
-        String uid = "anyUser";
-        String pw = "anyUser";
+        Principal princ = getTestPrincipal("testUser", uMgr);
+        String uid = princ.getName();
+        String pw = princ.getName();
         creds = new SimpleCredentials(uid, pw.toCharArray());
 
         Authorizable a = uMgr.getAuthorizable(princ);
@@ -84,6 +86,9 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         } else {
             testUser = (User) a;
         }
+
+        testGroup = uMgr.createGroup(getTestPrincipal("testGroup", uMgr));
+        testGroup.addMember(testUser);
 
         // TODO: remove cast once 283 is released.
         testSession = (SessionImpl) helper.getRepository().login(creds);
@@ -114,6 +119,10 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
         // make sure all ac info is removed
         clearACInfo();
+        if (testGroup != null) {
+            testGroup.removeMember(testUser);
+            testGroup.remove();
+        }
         // remove the test user again.
         if (testUser != null) {
             testUser.remove();
@@ -142,45 +151,24 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     protected abstract String[] getRestrictions(String path);
 
     protected PolicyTemplate givePrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        ObservationManager obsMgr = superuser.getWorkspace().getObservationManager();
-        EventResult listener = new EventResult(((JUnitTest) this).log);
-        try {
-            obsMgr.addEventListener(listener, Event.PROPERTY_CHANGED, nPath,
-                    true, new String[0], new String[] {"rep:ACE"}, false);
+        return givePrivileges(nPath, testUser.getPrincipal(), privileges, restrictions);
+    }
 
-            PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-            tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, true, restrictions));
-            acMgr.setPolicy(tmpl.getPath(), tmpl);
-            superuser.save();
-
-            obsMgr.removeEventListener(listener);
-            Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
-
-            return tmpl;
-        } finally {
-            obsMgr.removeEventListener(listener);
-        }
+    protected PolicyTemplate givePrivileges(String nPath, Principal principal,
+                                            int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
+        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
+        tmpl.setEntry(createEntry(principal, privileges, true, restrictions));
+        acMgr.setPolicy(tmpl.getPath(), tmpl);
+        superuser.save();
+        return tmpl;
     }
 
     protected PolicyTemplate withdrawPrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        ObservationManager obsMgr = superuser.getWorkspace().getObservationManager();
-        EventResult listener = new EventResult(((JUnitTest) this).log);
-        try {
-            obsMgr.addEventListener(listener, Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED, nPath,
-                    true, new String[0], new String[] {"rep:ACE"}, false);
-
-            PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-            tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, false, restrictions));
-            acMgr.setPolicy(tmpl.getPath(), tmpl);
-            superuser.save();
-
-            obsMgr.removeEventListener(listener);
-            Event[] evts = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
-
-            return tmpl;
-        } finally {
-            obsMgr.removeEventListener(listener);
-        }
+        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
+        tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, false, restrictions));
+        acMgr.setPolicy(tmpl.getPath(), tmpl);
+        superuser.save();
+        return tmpl;
     }
 
     protected void checkReadOnly(String path) throws RepositoryException {
@@ -491,6 +479,24 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         assertTrue(exptectedPrivs == PrivilegeRegistry.getBits(privs));
     }
 
+    public void testGroupPermissions() throws NotExecutableException, RepositoryException {
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        /* add privileges for the Group the test-user is member of */
+        givePrivileges(path, testGroup.getPrincipal(), PrivilegeRegistry.MODIFY_PROPERTIES, getRestrictions(path));
+
+        /* testuser must get the permissions/privileges inherited from
+           the group it is member of.
+         */
+        String actions = SessionImpl.SET_PROPERTY_ACTION + "," + SessionImpl.READ_ACTION;
+        assertTrue(testSession.hasPermission(path, actions));
+        assertTrue(testAcMgr.hasPrivileges(path, new Privilege[] {PrivilegeRegistry.MODIFY_PROPERTIES_PRIVILEGE}));
+    }
+
     public void testNewNodes() throws RepositoryException {
         /*
          precondition:
@@ -571,5 +577,15 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
             policyNode = findPolicyNode(it.nextNode());
         }
         return policyNode;
+    }
+
+    protected Principal getTestPrincipal(String nameHint, UserManager uMgr) throws RepositoryException {
+        Principal principal = new TestPrincipal(nameHint);
+        int i = 0;
+        while (uMgr.getAuthorizable(principal) != null) {
+            principal = new TestPrincipal(nameHint + i);
+            i++;
+        }
+        return principal;
     }
 }

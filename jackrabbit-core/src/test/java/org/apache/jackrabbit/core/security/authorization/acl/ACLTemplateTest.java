@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.core.security.authorization.AbstractPolicyTemplateTest;
 import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
 import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
@@ -43,7 +44,6 @@ public class ACLTemplateTest extends AbstractPolicyTemplateTest {
 
     public void testAddEntry() throws RepositoryException {
         PolicyTemplate pt = createEmptyTemplate(getTestPath());
-
         assertTrue(pt.setEntry(new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true)));
     }
 
@@ -163,5 +163,22 @@ public class ACLTemplateTest extends AbstractPolicyTemplateTest {
         pt.setEntry(pe2);
 
         assertFalse(pt.removeEntry(pe));
+    }
+
+    public void testSetEntryForGroupPrincipal() throws RepositoryException {
+        PolicyTemplate pt = createEmptyTemplate(getTestPath());
+
+        // adding allow-entry must succeed
+        PolicyEntry pe = new ACEImpl(testGroup, PrivilegeRegistry.READ, true);
+        assertTrue(pt.setEntry(pe));
+
+        // adding deny-entry must succeed
+        pe = new ACEImpl(testGroup, PrivilegeRegistry.READ, false);
+        try {
+            pt.setEntry(pe);
+            fail("Adding DENY-ace for a group principal should fail.");
+        } catch (AccessControlException e) {
+            // success
+        }
     }
 }
