@@ -65,7 +65,8 @@ public class XmlRequestEntity implements RequestEntity {
     }
 
     public String getContentType() {
-        return "text/xml"; // TODO: Shouldn't this be application/xml?
+        // TODO: Shouldn't this be application/xml? See JCR-1621
+        return "text/xml; charset=" + SerializingContentHandler.ENCODING;
     }
 
     public void writeRequest(OutputStream out) throws IOException {
