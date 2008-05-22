@@ -260,23 +260,7 @@ public class SessionImpl extends AbstractSession
         this.rep = rep;
         this.subject = subject;
 
-        /*
-         Retrieve userID from the subject.
-         Since the subject may contain multiple principals and the principal
-         name must not be equals to the UserID by definition, the proper way
-         is to check for known credentials the provide the correct userID.
-         The specification explicitely defines the UserID to be related to
-         the credentials and allows 'null' values in case the credentials do
-         not reveal a userID.
-         TODO: eval alternative approach via UserManager
-        */
-        String uid = null;
-        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
-        if (creds.hasNext()) {
-            SimpleCredentials sc = (SimpleCredentials) creds.next();
-            uid = sc.getUserID();
-        }
-        userId = uid;
+        userId = retrieveUserId(subject);
 
         namePathResolver = new DefaultNamePathResolver(this, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
@@ -288,6 +272,15 @@ public class SessionImpl extends AbstractSession
         itemMgr = createItemManager(itemStateMgr, hierMgr);
         accessMgr = createAccessManager(subject, itemStateMgr.getHierarchyMgr());
         versionMgr = createVersionManager(rep);
+    }
+
+    /**
+     * Retrieve the userID from the specified subject.
+     *
+     * @return the userID.
+     */
+    protected String retrieveUserId(Subject subject) throws RepositoryException {
+        return rep.getSecurityManager().getUserID(subject);
     }
 
     /**

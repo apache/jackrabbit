@@ -71,6 +71,15 @@ class SystemSession extends SessionImpl {
     }
 
     /**
+     * Always returns the name of the <code>SystemPrincipal</code>.
+     *
+     * @return the name of <code>SystemPrincipal</code>.
+     */
+    protected String retrieveUserId(Subject subject) throws RepositoryException {
+        return new SystemPrincipal().getName();
+    }
+
+    /**
      * {@inheritDoc}
      * <p/>
      * Overridden in order to create custom access manager
@@ -156,7 +165,7 @@ class SystemSession extends SessionImpl {
         /**
          * Always returns true.
          *
-         * @see AccessManager#isGranted(Path, Name, int) 
+         * @see AccessManager#isGranted(Path, Name, int)
          */
         public boolean isGranted(Path parentPath, Name childName, int permissions) throws RepositoryException {
             // allow everything

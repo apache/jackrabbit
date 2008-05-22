@@ -126,19 +126,50 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
+    public void testUserIDFromSession() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        User u = null;
+        Session uSession = null;
+        try {
+            String uid = p.getName();
+            String pw = buildPassword(p);
+            u = userMgr.createUser(uid, pw);
+
+            uSession = superuser.getRepository().login(new SimpleCredentials(uid, pw.toCharArray()));
+            assertEquals(u.getID(), uSession.getUserID());
+        } finally {
+            if (uSession != null) {
+                uSession.logout();
+            }
+            if (u != null) {
+                u.remove();
+            }
+        }
+    }
+
     public void testCreateUserIdDifferentFromPrincipalName() throws RepositoryException {
         Principal p = getTestPrincipal();
         String uid = getTestUserId(p);
+        String pw = buildPassword(uid, true);
 
         User u = null;
+        Session uSession = null;
         try {
-            u = userMgr.createUser(uid, buildPassword(uid, true), p, null);
+            u = userMgr.createUser(uid, pw, p, null);
 
             String msg = "Creating a User with principal-name distinct from Principal-name must succeed as long as both are unique.";
             assertEquals(msg, u.getID(), uid);
             assertEquals(msg, p.getName(), u.getPrincipal().getName());
             assertFalse(msg, u.getID().equals(u.getPrincipal().getName()));
+
+            // make sure the userID exposed by a Session corresponding to that
+            // user is equal to the users ID.
+            uSession = superuser.getRepository().login(new SimpleCredentials(uid, pw.toCharArray()));
+            assertEquals(uid, uSession.getUserID());
         } finally {
+            if (uSession != null) {
+                uSession.logout();
+            }
             if (u != null) {
                 u.remove();
             }
