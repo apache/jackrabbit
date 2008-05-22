@@ -24,7 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
@@ -54,6 +56,14 @@ import org.xml.sax.helpers.DefaultHandler;
  * @since Jackrabbit JCR Commons 1.5
  */
 public class SerializingContentHandler extends DefaultContentHandler {
+
+    /**
+     * The character encoding used for serialization (UTF-8).
+     * The encoding is fixed to make the text/xml content type safer to use.
+     *
+     * @see https://issues.apache.org/jira/browse/JCR-1621
+     */
+    public static final String ENCODING = "UTF-8";
 
     /** The URI for xml namespaces */
     private static final String XML = "http://www.w3.org/XML/1998/namespace";
@@ -97,6 +107,14 @@ public class SerializingContentHandler extends DefaultContentHandler {
 
             TransformerHandler handler = factory.newTransformerHandler();
             handler.setResult(result);
+
+            // Specify the output properties to avoid surprises especially in
+            // character encoding or the output method (might be html for some
+            // documents!)
+            Transformer transformer = handler.getTransformer();
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.ENCODING, ENCODING);
+            transformer.setOutputProperty(OutputKeys.INDENT, "no");
 
             // Test whether the NamespaceAsAttributes wrapper is needed
             StringWriter writer = new StringWriter();

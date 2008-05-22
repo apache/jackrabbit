@@ -165,8 +165,9 @@ public class WebdavResponseImpl implements WebdavResponse {
                 transformer.transform(
                         new DOMSource(doc), new SAXResult(handler));
 
-                // TODO: application/xml?
-                httpResponse.setContentType("text/xml");
+                // TODO: Should this be application/xml? See JCR-1621
+                httpResponse.setContentType(
+                        "text/xml; charset=" + SerializingContentHandler.ENCODING);
                 httpResponse.setContentLength(out.size());
                 out.writeTo(httpResponse.getOutputStream());
             } catch (ParserConfigurationException e) {
