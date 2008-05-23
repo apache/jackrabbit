@@ -370,6 +370,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 			Node node = (Node) session.getItem(path);
 			if (!classDescriptor.isInterface()) {
+				node = getActualNode(session,node);
 				checkCompatiblePrimaryNodeTypes(session, node, classDescriptor, true);
 			}
 
@@ -868,6 +869,22 @@ public class ObjectConverterImpl implements ObjectConverter {
 		}
 
 		return classDescriptor;
+	}
+
+	 private Node getActualNode(Session session, Node node) throws RepositoryException
+	 {
+		NodeType type = node.getPrimaryNodeType();
+		if (type.getName().equals("nt:versionedChild")) {
+
+			String uuid = node.getProperty("jcr:childVersionHistory").getValue().getString();
+			Node actualNode = session.getNodeByUUID(uuid);
+			String name = actualNode.getName();
+			actualNode = session.getNodeByUUID(name);
+
+			return actualNode;
+		}
+
+		return node;
 	}
 
 }
