@@ -31,6 +31,8 @@ import org.apache.jackrabbit.ocm.testmodel.Page;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 import org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredPage;
 import org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredParagraph;
+import org.apache.jackrabbit.ocm.testmodel.version.Author;
+import org.apache.jackrabbit.ocm.testmodel.version.PressRelease;
 import org.apache.jackrabbit.ocm.version.Version;
 import org.apache.jackrabbit.ocm.version.VersionIterator;
 
@@ -42,7 +44,7 @@ import org.apache.jackrabbit.ocm.version.VersionIterator;
 public class AnnotationBasicVersionningTest extends AnnotationTestBase
 {
 	private final static Log log = LogFactory.getLog(AnnotationBasicVersionningTest.class);
-		
+
 	/**
 	 * <p>Defines the test case name for junit.</p>
 	 * @param testName The test case name.
@@ -50,7 +52,7 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
 	public AnnotationBasicVersionningTest(String testName) throws Exception
 	{
 		super(testName);
-		
+
 	}
 
 	public static Test suite()
@@ -59,113 +61,113 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
 		return new RepositoryLifecycleTestSetup(
                 new TestSuite(AnnotationBasicVersionningTest.class));
 	}
-	
+
 
 	public void testSimpleVersionWithNodeType()
 	{
 		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
-            	
+
             	 Page page = new Page();
             	 page.setPath("/page");
-            	 page.setTitle("Page Title");            	
+            	 page.setTitle("Page Title");
             	 page.addParagraph(new Paragraph("para1"));
             	 page.addParagraph(new Paragraph("para2"));
             	 ocm.insert(page);
             	 ocm.save();
-            	
+
             	 page.addParagraph(new Paragraph("para3"));
             	 page.setTitle("Page Title 2");
             	 ocm.checkout("/page");
             	 ocm.update(page);
             	 ocm.save();
             	 ocm.checkin("/page");
-            	
+
             	 page.addParagraph(new Paragraph("para4"));
             	 page.setTitle("Page Title 3");
             	 ocm.checkout("/page");
             	 ocm.update(page);
             	 ocm.save();
-            	 ocm.checkin("/page");            	
+            	 ocm.checkin("/page");
 
             	 VersionIterator versionIterator = ocm.getAllVersions("/page");
             	 assertNotNull("VersionIterator is null", versionIterator);
             	 assertTrue("Invalid number of versions found", versionIterator.getSize() == 3);
-            	
+
             	 while (versionIterator.hasNext())
             	 {
             		 Version version = (Version) versionIterator.next();
-            		 log.info("version found : "+ version.getName() + " - " + version.getPath() + " - " +  version.getCreated().getTime());            		 
+            		 log.info("version found : "+ version.getName() + " - " + version.getPath() + " - " +  version.getCreated().getTime());
             		 if (version.getName().equals("jcr:rootVersion"))
             		 {
-            			 continue; 
+            			 continue;
             		 }
-            		 
+
             		 page = (Page) ocm.getObject("/page", version.getName());
             		 assertNotNull("Page is null for version " + version.getName(), page);
-            		 
+
             		 if (version.getName().equals("1.0"))
             		 {
             			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 2");
             		 }
-            		 
+
             		 if (version.getName().equals("1.1"))
             		 {
-            			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 3"); 
-            		 } 
-            		 
+            			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 3");
+            		 }
+
             	 }
-            	
+
             	 Version baseVersion = ocm.getBaseVersion("/page");
             	 System.out.println("Base version : " + baseVersion.getName());
 
             	 Version rootVersion = ocm.getRootVersion("/page");
             	 System.out.println("Root version : " + rootVersion.getName());
             	 //this.exportDocument("/home/christophe/export.xml", "/jcr:system/jcr:versionStorage", true, false);
-            	             	
+
                  //Get the latest version
             	 page = (Page) ocm.getObject( "/page");
             	 assertNotNull("Last version is nulll", page);
             	 assertTrue("Invalid number of paragraph found in the last  version", page.getParagraphs().size() == 4);
 
-            	
+
              }
              catch(Exception e)
              {
             	 e.printStackTrace();
             	 fail(e.getMessage());
-            	
+
              }
 	}
 
-	
+
 	public void testVersionLabels()
 	{
 		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
-            	
+
             	 Page page = new Page();
             	 page.setPath("/page");
-            	 page.setTitle("Page Title");            	
+            	 page.setTitle("Page Title");
             	 page.addParagraph(new Paragraph("para1"));
             	 page.addParagraph(new Paragraph("para2"));
             	 ocm.insert(page);
             	 ocm.save();
-            	
+
 
             	 page.addParagraph(new Paragraph("para3"));
             	 ocm.checkout("/page");
             	 ocm.update(page);
             	 ocm.save();
             	 ocm.checkin("/page", new String[] {"A", "B"});
-            	
+
             	 page.addParagraph(new Paragraph("para4"));
             	 ocm.checkout("/page");
             	 ocm.update(page);
             	 ocm.save();
-            	 ocm.checkin("/page", new String[] {"C", "D"});         	
+            	 ocm.checkin("/page", new String[] {"C", "D"});
 
             	 String[] allLabels = ocm.getAllVersionLabels("/page");
             	 assertTrue("Incorrect number of labels", allLabels.length == 4);
@@ -174,7 +176,7 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
             	 assertTrue("Incorrect number of labels", versionLabels.length == 2);
             	 assertTrue("Incorrect label", versionLabels[0].equals("C") || versionLabels[0].equals("D"));
             	 assertTrue("Incorrect label", versionLabels[1].equals("C") || versionLabels[0].equals("D"));
-            	
+
 
              }
              catch(Exception e)
@@ -189,15 +191,15 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
 		     ObjectContentManager ocm = getObjectContentManager();
              try
              {
-            	
+
             	 UnstructuredPage page = new UnstructuredPage();
             	 page.setPath("/page");
-            	 page.setTitle("Page Title");            	
+            	 page.setTitle("Page Title");
             	 page.addParagraph(new UnstructuredParagraph("para1"));
             	 page.addParagraph(new UnstructuredParagraph("para2"));
             	 ocm.insert(page);
             	 ocm.save();
-            	
+
 
             	 page.addParagraph(new UnstructuredParagraph("para3"));
             	 page.setTitle("Page Title 2");
@@ -205,63 +207,133 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
             	 ocm.update(page);
             	 ocm.save();
             	 ocm.checkin("/page");
-            	
+
             	 page.addParagraph(new UnstructuredParagraph("para4"));
             	 page.setTitle("Page Title 3");
             	 ocm.checkout("/page");
             	 ocm.update(page);
             	 ocm.save();
-            	 ocm.checkin("/page");            	
+            	 ocm.checkin("/page");
 
             	 VersionIterator versionIterator = ocm.getAllVersions("/page");
             	 assertNotNull("VersionIterator is null", versionIterator);
             	 assertTrue("Invalid number of versions found", versionIterator.getSize() == 3);
-            	
+
             	 while (versionIterator.hasNext())
             	 {
             		 Version version = (Version) versionIterator.next();
             		 log.info("version found : "+ version.getName() + " - " + version.getPath() + " - " +  version.getCreated().getTime());
             		 if (version.getName().equals("jcr:rootVersion"))
             		 {
-            			 continue; 
+            			 continue;
             		 }
-            		 
+
             		 page = (UnstructuredPage) ocm.getObject("/page", version.getName());
-            		 
+
             		 assertNotNull("Page is null for version " + version.getName(), page);
-            		 
+
             		 if (version.getName().equals("1.0"))
             		 {
             			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 2");
             		 }
-            		 
+
             		 if (version.getName().equals("1.1"))
             		 {
-            			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 3"); 
-            		 } 
+            			assertEquals("Invalid title for version " + version.getName(),page.getTitle(), "Page Title 3");
+            		 }
 
             	 }
-            	
+
             	 Version baseVersion = ocm.getBaseVersion("/page");
             	 System.out.println("Base version : " + baseVersion.getName());
 
             	 Version rootVersion = ocm.getRootVersion("/page");
             	 System.out.println("Root version : " + rootVersion.getName());
             	 //this.exportDocument("/home/christophe/export.xml", "/jcr:system/jcr:versionStorage", true, false);
-            	             	
+
                  //Get the latest version
             	 page = (UnstructuredPage) ocm.getObject( "/page");
             	 assertNotNull("Last version is nulll", page);
             	 assertTrue("Invalid number of paragraph found in the last  version", page.getParagraphs().size() == 4);
 
-            	
+
              }
              catch(Exception e)
              {
             	 e.printStackTrace();
             	 fail(e.getMessage());
-            	
+
              }
 	}
-	
+
+	public void testVersionedChild() {
+		ObjectContentManager ocm = getObjectContentManager();
+		try {
+
+			PressRelease pressRelease = new PressRelease();
+			pressRelease.setContent("content v1");
+			pressRelease.setPath("/pressrelease1");
+			pressRelease.setPubDate(new Date());
+			pressRelease.setTitle("Title");
+
+			Author author = new Author();
+			author.setName("John");
+			pressRelease.setAuthor(author);
+			ocm.insert(pressRelease);
+			ocm.save();
+
+			pressRelease.setContent("content v2");
+			ocm.checkout("/pressrelease1");
+			ocm.update(pressRelease);
+			ocm.save();
+			ocm.checkin("/pressrelease1");
+
+			pressRelease.setContent("content v3");
+			ocm.checkout("/pressrelease1");
+			ocm.update(pressRelease);
+			ocm.save();
+			ocm.checkin("/pressrelease1");
+
+			VersionIterator versionIterator = ocm
+					.getAllVersions("/pressrelease1");
+			assertNotNull("VersionIterator is null", versionIterator);
+			assertTrue("Invalid number of versions found", versionIterator
+					.getSize() == 3);
+
+			while (versionIterator.hasNext()) {
+				Version version = (Version) versionIterator.next();
+				log.info("version found : " + version.getName() + " - "
+						+ version.getPath() + " - "
+						+ version.getCreated().getTime());
+				if (version.getName().equals("jcr:rootVersion")) {
+					continue;
+				}
+
+				pressRelease = (PressRelease) ocm.getObject("/pressrelease1",
+						version.getName());
+
+				assertNotNull("pressRelease is null for version "
+						+ version.getName(), pressRelease);
+
+				if (version.getName().equals("1.0")) {
+					assertEquals("Invalid content for version "
+							+ version.getName(), pressRelease.getContent(),
+							"content v2");
+				}
+
+				if (version.getName().equals("1.1")) {
+					assertEquals("Invalid title for version "
+							+ version.getName(), pressRelease.getContent(),
+							"content v3");
+				}
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+
+		}
+	}
+
 }

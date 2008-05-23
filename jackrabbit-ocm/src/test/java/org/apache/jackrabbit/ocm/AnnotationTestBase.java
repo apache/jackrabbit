@@ -63,6 +63,8 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.Content;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
+import org.apache.jackrabbit.ocm.testmodel.version.Author;
+import org.apache.jackrabbit.ocm.testmodel.version.PressRelease;
 
 /**
  * Base class for testcases. Provides priviledged access to the jcr test
@@ -92,10 +94,10 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 
 	protected void initObjectContentManager() throws UnsupportedRepositoryOperationException, javax.jcr.RepositoryException
 	{
-		Repository repository = RepositoryUtil.getRepository("repositoryTest");	
+		Repository repository = RepositoryUtil.getRepository("repositoryTest");
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 		List<Class> classes = new ArrayList<Class>();
-		
+
 		// Register content classes used by the unit tests
 		classes.add(Atomic.class);
 		classes.add(Default.class);
@@ -110,12 +112,12 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(Main.class);
 		classes.add(Element.class);
 		classes.add(MultiValue.class);
-		
+
 
 		classes.add(Residual.class);
 		classes.add(ResidualProperties.class);
 		classes.add(ResidualNodes.class);
-		
+
 		classes.add(CmsObject.class);
 		classes.add(Content.class);
 		classes.add(Document.class);
@@ -126,28 +128,28 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(DocumentExtImpl.class);
 		classes.add(DocumentStream.class);
 		classes.add(FolderImpl.class);
-		
+
 		classes.add(Ancestor.class);
 		classes.add(Descendant.class);
 		classes.add(AnotherDescendant.class);
 		classes.add(SubDescendant.class);
 		classes.add(Interface.class);
 		classes.add(AnotherInterface.class);
-		
+
 		classes.add(HierarchyNode.class);
 		classes.add(File.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.Folder.class);
 		classes.add(Resource.class);
 		classes.add(PropertyTest.class);
-		
+
 		classes.add(Lockable.class);
-		
+
 		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Main.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Detail.class);
-		
+
 		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.NTMain.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.NTDetail.class);
-		
+
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.A.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.B.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.B2.class);
@@ -155,9 +157,12 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.Descendant.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredParagraph.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.unstructured.UnstructuredPage.class);
+
+		classes.add(PressRelease.class);
+		classes.add(Author.class);
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);
-		
+
 	}
 
 
