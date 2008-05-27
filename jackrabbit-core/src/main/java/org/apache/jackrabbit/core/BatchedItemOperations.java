@@ -253,7 +253,9 @@ public class BatchedItemOperations extends ItemValidator {
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
-            String msg = "invalid destination path (subscript in name element is not allowed)";
+            String msg =
+                "invalid destination path: " + safeGetJCRPath(destPath)
+                + " (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -302,7 +304,10 @@ public class BatchedItemOperations extends ItemValidator {
 
         // 3. verify that source has mixin mix:shareable
         if (!isShareable(srcState)) {
-            String msg = "Cloning inside a workspace is only allowed for shareable nodes.";
+            String msg =
+                "Cloning inside a workspace is only allowed for shareable"
+                + " nodes. Node with type " + srcState.getNodeTypeName()
+                + " is not shareable.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -311,14 +316,20 @@ public class BatchedItemOperations extends ItemValidator {
         NodeId srcId = srcState.getNodeId();
         NodeId destParentId = destParentState.getNodeId();
         if (destParentId.equals(srcId) || hierMgr.isAncestor(srcId, destParentId)) {
-            String msg = "Share cycle detected.";
+            String msg =
+                "Cloning Node with id " + srcId.getUUID()
+                + " to parent with id " + destParentId.getUUID()
+                + " would create a share cycle.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         // 5. do clone operation (modify and store affected states)
         if (!srcState.addShare(destParentState.getNodeId())) {
-            String msg = "Adding a shareable node twice to the same parent is not supported.";
+            String msg =
+                "Adding a shareable node with id ("
+                + destParentState.getNodeId().getUUID()
+                + ") twice to the same parent is not supported.";
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
@@ -412,7 +423,9 @@ public class BatchedItemOperations extends ItemValidator {
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
-            String msg = "invalid destination path (subscript in name element is not allowed)";
+            String msg =
+                "invalid copy destination path: " + safeGetJCRPath(destPath)
+                + " (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -428,8 +441,9 @@ public class BatchedItemOperations extends ItemValidator {
                 throw new PathNotFoundException(safeGetJCRPath(srcPath));
             }
         } catch (ItemNotFoundException infe) {
-            String msg = "internal error: failed to check access rights for "
-                    + safeGetJCRPath(srcPath);
+            String msg =
+                "internal error: failed to check access rights for "
+                + safeGetJCRPath(srcPath);
             log.debug(msg);
             throw new RepositoryException(msg, infe);
         }
@@ -513,20 +527,23 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check precondition
         if (!stateMgr.inEditMode()) {
-            throw new IllegalStateException("not in edit mode");
+            throw new IllegalStateException(
+                    "cannot move path " + safeGetJCRPath(srcPath)
+                    + " because manager is not in edit mode");
         }
 
         // 1. check paths & retrieve state
 
         try {
             if (srcPath.isAncestorOf(destPath)) {
-                String msg = safeGetJCRPath(destPath)
-                        + ": invalid destination path (cannot be descendant of source path)";
+                String msg =
+                    safeGetJCRPath(destPath) + ": invalid destination path"
+                    + " (cannot be descendant of source path)";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
         } catch (MalformedPathException mpe) {
-            String msg = "invalid path: " + safeGetJCRPath(destPath);
+            String msg = "invalid path for move: " + safeGetJCRPath(destPath);
             log.debug(msg);
             throw new RepositoryException(msg, mpe);
         }
@@ -543,16 +560,18 @@ public class BatchedItemOperations extends ItemValidator {
         int ind = destName.getIndex();
         if (ind > 0) {
             // subscript in name element
-            String msg = safeGetJCRPath(destPath)
-                    + ": invalid destination path (subscript in name element is not allowed)";
+            String msg =
+                safeGetJCRPath(destPath) + ": invalid destination path"
+                + " (subscript in name element is not allowed)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
 
         HierarchyManagerImpl hierMgr = (HierarchyManagerImpl) this.hierMgr;
         if (hierMgr.isShareAncestor(target.getNodeId(), destParent.getNodeId())) {
-            String msg = safeGetJCRPath(destPath)
-                    + ": invalid destination path (share cycle detected)";
+            String msg =
+                safeGetJCRPath(destPath) + ": invalid destination path"
+                + " (share cycle detected)";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -580,7 +599,9 @@ public class BatchedItemOperations extends ItemValidator {
         } else {
             // check shareable case
             if (target.isShareable()) {
-                String msg = "Moving a shareable node is not supported.";
+                String msg =
+                    "Moving a shareable node (" + safeGetJCRPath(srcPath)
+                    + ") is not supported.";
                 log.debug(msg);
                 throw new UnsupportedRepositoryOperationException(msg);
             }
@@ -636,7 +657,9 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check precondition
         if (!stateMgr.inEditMode()) {
-            throw new IllegalStateException("not in edit mode");
+            throw new IllegalStateException(
+                    "cannot remove node (" + safeGetJCRPath(nodePath)
+                    + ") because manager is not in edit mode");
         }
 
         // 1. retrieve affected state
@@ -726,7 +749,8 @@ public class BatchedItemOperations extends ItemValidator {
             NodeDef parentDef = ntReg.getNodeDef(parentState.getDefinitionId());
             // make sure parent node is not protected
             if (parentDef.isProtected()) {
-                throw new ConstraintViolationException(safeGetJCRPath(parentState.getNodeId())
+                throw new ConstraintViolationException(
+                        safeGetJCRPath(parentState.getNodeId())
                         + ": cannot add child node to protected parent node");
             }
             // make sure there's an applicable definition for new child node
@@ -747,8 +771,9 @@ public class BatchedItemOperations extends ItemValidator {
                 try {
                     conflictingState = (NodeState) stateMgr.getItemState(conflictingId);
                 } catch (ItemStateException ise) {
-                    String msg = "internal error: failed to retrieve state of "
-                            + safeGetJCRPath(conflictingId);
+                    String msg =
+                        "internal error: failed to retrieve state of "
+                        + safeGetJCRPath(conflictingId);
                     log.debug(msg);
                     throw new RepositoryException(msg, ise);
                 }
@@ -757,9 +782,9 @@ public class BatchedItemOperations extends ItemValidator {
                 // check same-name sibling setting of both target and existing node
                 if (!conflictingTargetDef.allowsSameNameSiblings()
                         || !newNodeDef.allowsSameNameSiblings()) {
-                    throw new ItemExistsException("cannot add child node '"
-                            + nodeName.getLocalName() + "' to "
-                            + safeGetJCRPath(parentState.getNodeId())
+                    throw new ItemExistsException(
+                            "cannot add child node '" + nodeName.getLocalName()
+                            + "' to " + safeGetJCRPath(parentState.getNodeId())
                             + ": colliding with same-named existing node");
                 }
             }
@@ -1111,7 +1136,9 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check precondition
         if (!stateMgr.inEditMode()) {
-            throw new IllegalStateException("not in edit mode");
+            throw new IllegalStateException(
+                    "cannot create node state for " + nodeName
+                    + " because manager is not in edit mode");
         }
 
         NodeDef def = findApplicableNodeDefinition(nodeName, nodeTypeName, parent);
@@ -1160,8 +1187,9 @@ public class BatchedItemOperations extends ItemValidator {
             // try default primary type from definition
             nodeTypeName = def.getDefaultPrimaryType();
             if (nodeTypeName == null) {
-                String msg = "an applicable node type could not be determined for "
-                        + nodeName;
+                String msg =
+                    "an applicable node type could not be determined for "
+                    + nodeName;
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }
@@ -1238,7 +1266,9 @@ public class BatchedItemOperations extends ItemValidator {
 
         // check precondition
         if (!stateMgr.inEditMode()) {
-            throw new IllegalStateException("not in edit mode");
+            throw new IllegalStateException(
+                    "cannot create property state for " + propName
+                    + " because manager is not in edit mode");
         }
 
         // find applicable definition
@@ -1762,7 +1792,9 @@ public class BatchedItemOperations extends ItemValidator {
                         // or an ancestor thereof
                         if (id.equals(destParentId)
                                 || hierMgr.isAncestor(id, destParentId)) {
-                            String msg = "cannot remove ancestor node";
+                            String msg =
+                                "cannot remove node " + safeGetJCRPath(srcPath)
+                                + " because it is an ancestor of the destination";
                             log.debug(msg);
                             throw new RepositoryException(msg);
                         }
@@ -1780,7 +1812,8 @@ public class BatchedItemOperations extends ItemValidator {
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("unknown flag");
+                    throw new IllegalArgumentException(
+                            "unknown flag for copying node state: " + flag);
             }
             newState = stateMgr.createNew(id, srcState.getNodeTypeName(), destParentId);
             // copy node state
@@ -1820,7 +1853,9 @@ public class BatchedItemOperations extends ItemValidator {
                         if (stateMgr.hasItemState(mappedId)) {
                             NodeState destState = (NodeState) stateMgr.getItemState(mappedId);
                             if (!destState.isShareable()) {
-                                String msg = "Remapped child is not shareable.";
+                                String msg =
+                                    "Remapped child (" + safeGetJCRPath(srcPath)
+                                    + ") is not shareable.";
                                 throw new ItemStateException(msg);
                             }
                             if (!destState.addShare(id)) {
