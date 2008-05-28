@@ -34,6 +34,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.exception.IncorrectPersistentClassException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.ManagerConstant;
@@ -42,9 +43,8 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
 import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
 import org.apache.jackrabbit.ocm.manager.cache.impl.RequestObjectCacheImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
-import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.DefaultCollectionConverterImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableCollectionImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.ManageableMapImpl;
@@ -656,7 +656,6 @@ public class ObjectConverterImpl implements ObjectConverter {
 		{
 			Class beanClass = ReflectionUtils.getPropertyType(object, beanName);
 
-
 			String converterClassName = null;
 			if (null == beanDescriptor.getConverter() || "".equals(beanDescriptor.getConverter()))
 			{
@@ -671,7 +670,24 @@ public class ObjectConverterImpl implements ObjectConverter {
 			BeanConverter beanConverter = (BeanConverter) ReflectionUtils.invokeConstructor(converterClassName, param);
 			if (beanDescriptor.isProxy())
 			{
-				bean = proxyManager.createBeanProxy(session, this, beanClass, beanConverter.getPath(session, beanDescriptor, node));
+				if (beanDescriptor.getJcrType() != null && !"".equals(beanDescriptor.getJcrType())) {
+					// If a mapped jcrType has been set, use it as proxy parent class instead of the bean property type.
+					// This way, we can handle proxies when bean property type is an interface.
+					try {
+						String className = mapper.getClassDescriptorByNodeType(beanDescriptor.getJcrType()).getClassName();
+						if (log.isDebugEnabled()) {
+							log.debug("a mapped jcrType has been specified, switching from <" + beanClass + "> to <" + ReflectionUtils.forName(className));
+						}
+						beanClass = ReflectionUtils.forName(className);
+					
+					} catch (IncorrectPersistentClassException e) {
+						if (log.isDebugEnabled()) {
+							log.debug(beanDescriptor.getClassDescriptor().getJcrType() + " is not mapped");
+						}
+					}					
+				}
+
+				bean = proxyManager.createBeanProxy(beanConverter, beanConverter.getPath(session, beanDescriptor, node), session, node, beanDescriptor,  mapper.getClassDescriptorByClass(beanClass), beanClass, bean);
 			}
 			else
 			{

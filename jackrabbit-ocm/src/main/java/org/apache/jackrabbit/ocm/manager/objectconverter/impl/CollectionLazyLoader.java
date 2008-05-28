@@ -20,26 +20,20 @@ package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import net.sf.cglib.proxy.LazyLoader;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
 import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
-public class CollectionLazyLoader implements LazyLoader {
-
-	private final static Log log = LogFactory.getLog(CollectionLazyLoader.class);
+public class CollectionLazyLoader extends AbstractLazyLoader {
 
 	private CollectionConverter collectionConverter;
 	private Session session;
 	private Node collectionParentNode;
 	private CollectionDescriptor collectionDescriptor;
-	private Class collectionFieldClass;
+	private Class<?> collectionFieldClass;
 
 	public CollectionLazyLoader(CollectionConverter collectionConverter, Session session, Node parentNode,
-			                                               CollectionDescriptor collectionDescriptor, Class collectionFieldClass ) {
+			CollectionDescriptor collectionDescriptor, Class<?> collectionFieldClass) {
 		this.collectionConverter = collectionConverter;
 		this.session = session;
 		this.collectionParentNode = parentNode;
@@ -47,10 +41,22 @@ public class CollectionLazyLoader implements LazyLoader {
 		this.collectionFieldClass = collectionFieldClass;
 	}
 
-	public Object loadObject() {
+	@Override
+	protected Object fetchTarget() {
+		if (isInitialized()) {
+			throw new IllegalStateException("Proxy already initialized");
+		}
+		ManageableObjects objects = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor,
+				collectionFieldClass);
+		Object target = objects.getObjects();
+		clean();
+		return target;
+	}
 
-
-		ManageableObjects objects = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor, collectionFieldClass);
-		return objects.getObjects();
+	private void clean() {
+		collectionConverter = null;
+		session = null;
+		collectionParentNode = null;
+		collectionDescriptor = null;
 	}
 }
