@@ -17,35 +17,51 @@
 
 package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 
+import javax.jcr.Node;
 import javax.jcr.Session;
 
-import net.sf.cglib.proxy.LazyLoader;
+import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
+import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
+public class BeanLazyLoader extends AbstractLazyLoader {
 
-public class BeanLazyLoader implements LazyLoader
-{
+	private BeanConverter beanConverter;
+	private Session session;
+	private Node parentNode;
+	private BeanDescriptor beanDescriptor;
+	private ClassDescriptor beanClassDescriptor;
+	private Class<?> beanClass;
+	private Object parent;
 
-	 private final static Log log = LogFactory.getLog(BeanLazyLoader.class);
-	
-	 private ObjectConverter objectConverter;
-	 private Session session;
-	 private Class beanClass;
-	 private String path;
-	
-	
-	public BeanLazyLoader(ObjectConverter objectConverter, Session session, Class beanClass, String path)
-	{
-	     this.objectConverter = objectConverter;
-	     this.session = session;
-	     this.beanClass = beanClass;
-	     this.path = path;
+	public BeanLazyLoader(BeanConverter beanConverter, Session session, Node parentNode, BeanDescriptor beanDescriptor,
+			ClassDescriptor beanClassDescriptor, Class<?> beanClass, Object parent) {
+		this.beanConverter = beanConverter;
+		this.session = session;
+		this.parentNode = parentNode;
+		this.beanDescriptor = beanDescriptor;
+		this.beanClassDescriptor = beanClassDescriptor;
+		this.beanClass = beanClass;
+		this.parent = parent;
 	}
 
-	public Object loadObject()
-	{				
-		return objectConverter.getObject(session, beanClass, path);		
+	@Override
+	protected Object fetchTarget() {
+		if (isInitialized()) {
+			throw new IllegalStateException("Proxy already initialized");
+		}
+
+		Object target = beanConverter.getObject(session, parentNode, beanDescriptor, beanClassDescriptor, beanClass, parent);
+
+		clean();
+		return target;
+	}
+
+	private void clean() {
+		 beanConverter = null;
+		 session = null;
+		 parentNode = null;
+		 beanDescriptor = null;
+		 parent = null;
 	}
 }
