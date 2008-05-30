@@ -19,9 +19,9 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.query.AndQueryNode;
 import org.apache.jackrabbit.core.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.core.query.DerefQueryNode;
@@ -209,9 +209,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     IndexFormatVersion indexFormatVersion)
             throws RepositoryException {
 
-        NodeId id = ((NodeImpl) session.getRootNode()).getNodeId();
         HierarchyManager hmgr = new HierarchyManagerImpl(
-                id, sharedItemMgr, session);
+                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr, session);
         LuceneQueryBuilder builder = new LuceneQueryBuilder(
                 root, session, sharedItemMgr, hmgr, nsMappings,
                 analyzer, propReg, synonymProvider, indexFormatVersion);
