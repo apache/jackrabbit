@@ -34,8 +34,8 @@ import javax.jcr.RepositoryException;
  *     &lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
  *     &lt;param name="{@link #setDriver(String) driver}" value="org.h2.Driver"/>
  *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:h2:file:${wsp.home}/db/itemState"/>
- *     &lt;param name="{@link #setUser(String) user}" value="sa"/>
- *     &lt;param name="{@link #setPassword(String) password}" value="sa"/>
+ *     &lt;param name="{@link #setUser(String) user}" value=""/>
+ *     &lt;param name="{@link #setPassword(String) password}" value=""/>
  *     &lt;param name="{@link #setSchema(String) schema}" value="h2"/>
  *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  *     &lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
@@ -83,12 +83,6 @@ public class H2PersistenceManager extends BundleDbPersistenceManager {
         }
         if (getUrl() == null) {
             setUrl("jdbc:h2:file:"+ context.getHomeDir().getPath() +"/db/itemState");
-        }
-        if (getUser() == null) {
-            setUser("sa");
-        }
-        if (getPassword() == null) {
-            setPassword("sa");
         }
         if (getSchema() == null) {
             setSchema("h2");
