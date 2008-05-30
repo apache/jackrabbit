@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
  * <li>&lt;param name="{@link #setDriver(String) driver}" value="oracle.jdbc.OracleDriverr"/>
  * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:oracle:thin:@127.0.0.1:1521:xe"/>
- * <li>&lt;param name="{@link #setUser(String) user}" value="crx"/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value="crx"/>
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
  * <li>&lt;param name="{@link #setSchema(String) schema}" value="oracle"/>
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value="${wsp.name}_"/>
  * <li>&lt;param name="{@link #setTableSpace(String) tableSpace}" value=""/>
@@ -97,12 +97,6 @@ public class OraclePersistenceManager extends BundleDbPersistenceManager {
         }
         if (getUrl() == null) {
             setUrl("jdbc:oracle:thin:@127.0.0.1:1521:xe");
-        }
-        if (getUser() == null) {
-            setUser("crx");
-        }
-        if (getPassword() == null) {
-            setPassword("crx");
         }
         if (getSchema() == null) {
             setSchema("oracle");
