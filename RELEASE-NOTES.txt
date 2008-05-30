@@ -1,15 +1,17 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.4
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.5
 
 Introduction
 ------------
 
-This is the 1.4.4 patch release of the jackrabbit-core component of
+This is the 1.4.5 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release fixes the custom persistence manager regression (JCR-1556)
-introduced in the 1.4.3 patch release. Also two database data store fixes
-are included. See below for the full list of changes in this release.
+This release fixes various issues, including a change to some default
+persistence manager configuration settings (JCR-1562). Users who are
+relying on the default username, password, or schema name settings for
+database-based persistence should check their configuration when upgrading
+to this release. See below for the full list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -21,18 +23,18 @@ Unlike previous Jackrabbit releases that contained a full set of components,
 this patch release only contains the jackrabbit-core component. The component
 is distributed both as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.4-src.jar)
+    * Source archive (jackrabbit-core-1.4.5-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.4" directory. Use the following commands
+        in a "jackrabbit-core-1.4.5" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.4-src.jar
-          $ cd jackrabbit-1.4.4
+          $ jar xf jackrabbit-core-1.4.5-src.jar
+          $ cd jackrabbit-1.4.5
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.4.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.5.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
@@ -51,9 +53,13 @@ You can look up individual issues for more details in the Jackrabbit
 issue tracker at http://issues.apache.org/jira/browse/JCR
 
   Bug fixes
-  [JCR-1556] PersistenceManager API change breaks backward compatibility 
-  [JCR-1560] Data Store: Oracle fails to create the table
-  [JCR-1566] Data Store: DB2 fails to create the table
+  [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
+  [JCR-1551] TransientRepository: application doesn't exit quickly
+  [JCR-1557] Avoid exceptions during shutting repository down if several ...
+  [JCR-1562] JNDI data sources with various PersistenceManager: wrong ...
+  [JCR-1587] When trying to reuse version label in transaction, exception ...
+  [JCR-1599] LuceneQueryBuilder assumes readability of root-Node to be ...
+  [JCR-1602] DbDatastore: Problems indexing pdf file
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -96,12 +102,14 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1367] Exception when closing connection under db2
   [JCR-1387] Lock token not removed from session when node is removed
   [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
-  [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
   [JCR-1532] ERROR 40XD0: Container has been closed exception with Derby DB
-  [JCR-1551] TransientRepository: application doesn't exit quickly
   [JCR-1553] ClusterNode not properly shutdown when repository has shutdown
   [JCR-1554] StaleItemStateException with distributed transactions
   [JCR-1558] Namespace not registered yet prevent ...
-  [JCR-1562] JNDI data sources with various PersistenceManager: wrong ...
   [JCR-1563] Data Store: UTFDataFormatException when using large ...
   [JCR-1572] DbDataStore connection does not always reconnect
+  [JCR-1573] Lucene Query Exception: 'attempt to access a deleted ...
+  [JCR-1605] RepositoryLock does not work on NFS sometimes
+  [JCR-1613] REMOVE access is not checked when moving a node
+  [JCR-1626] The resource committed at the first server via WebDAV does not ...
+  [JCR-1632] Mixin type loss
