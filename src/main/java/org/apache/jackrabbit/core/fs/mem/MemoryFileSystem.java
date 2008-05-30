@@ -248,6 +248,16 @@ public class MemoryFileSystem implements FileSystem {
             throw new FileSystemException("Destination exists: " + destPath);
         }
 
+        // Create destination folder if it does not yet exist
+        String[] path = destPath.split(SEPARATOR);
+        String folder = "";
+        for (int i = 1; i < path.length; i++) {
+            folder += SEPARATOR + path[i];
+            if (!exists(folder)) {
+                createFolder(folder);
+            }
+        }
+        
         Map moves = new HashMap();
         moves.put(srcPath, destPath);
         if (getEntry(srcPath).isFolder()) {
