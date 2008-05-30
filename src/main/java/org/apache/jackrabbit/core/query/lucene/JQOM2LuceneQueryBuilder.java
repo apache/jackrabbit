@@ -53,9 +53,9 @@ import org.apache.jackrabbit.core.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -217,9 +217,8 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor {
                                     Map bindVariableValues)
             throws RepositoryException {
 
-        NodeId id = ((NodeImpl) session.getRootNode()).getNodeId();
         HierarchyManager hmgr = new HierarchyManagerImpl(
-                id, sharedItemMgr, session);
+                RepositoryImpl.ROOT_NODE_ID, sharedItemMgr, session);
         JQOM2LuceneQueryBuilder builder = new JQOM2LuceneQueryBuilder(
                 qomTree, session, sharedItemMgr, hmgr, nsMappings,
                 analyzer, propReg, synonymProvider, bindVariableValues);
