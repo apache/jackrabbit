@@ -203,6 +203,13 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         return changeLog;
     }
 
+    /**
+     * @throws UnsupportedOperationException always.
+     */
+    protected ChangeLog getChanges() {
+        throw new UnsupportedOperationException("getChanges");
+    }
+
     //-----------------------------------------------------< ItemStateManager >
     /**
      * {@inheritDoc}
@@ -218,13 +225,21 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (virtualProvider != null && virtualProvider.hasItemState(id)) {
             return virtualProvider.getItemState(id);
         }
-        ChangeLog changeLog = getChangeLog();
+        // 1) check local changes
+        ChangeLog changeLog = super.getChanges();
+        ItemState state = changeLog.get(id);
+        if (state != null) {
+            return state;
+        }
+        // 2) check tx log
+        changeLog = getChangeLog();
         if (changeLog != null) {
-            ItemState state = changeLog.get(id);
+            state = changeLog.get(id);
             if (state != null) {
                 return state;
             }
         }
+        // 3) fallback to base class
         return super.getItemState(id);
     }
 
@@ -240,7 +255,21 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (virtualProvider != null && virtualProvider.hasItemState(id)) {
             return true;
         }
-        ChangeLog changeLog = getChangeLog();
+        // 1) check local changes
+        ChangeLog changeLog = super.getChanges();
+        try {
+            ItemState state = changeLog.get(id);
+            if (state != null) {
+                return true;
+            }
+        } catch (NoSuchItemStateException e) {
+            // marked removed in local ism
+            return false;
+        }
+        // if we get here, then there is no item state with
+        // the given id known to the local ism
+        // 2) check tx log
+        changeLog = getChangeLog();
         if (changeLog != null) {
             try {
                 ItemState state = changeLog.get(id);
@@ -248,10 +277,12 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     return true;
                 }
             } catch (NoSuchItemStateException e) {
+                // marked removed in tx log
                 return false;
             }
         }
-        return super.hasItemState(id);
+        // 3) fallback to shared ism
+        return sharedStateMgr.hasItemState(id);
     }
 
     /**
