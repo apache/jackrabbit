@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GCEventListenerTest.class);
         suite.addTestSuite(PersistenceManagerIteratorTest.class);
         suite.addTestSuite(CopyValueTest.class);
+        suite.addTestSuite(TempFileInputStreamTest.class);
         return suite;
     }
 
