@@ -59,6 +59,11 @@ public class TransientFileFactory {
     private final Thread reaper;
 
     /**
+     * Shutdown hook which removes all files awaiting deletion
+     */
+    private static Thread shutdownHook = null;
+
+    /**
      * Returns the singleton <code>TransientFileFactory</code> instance.
      */
     public static TransientFileFactory getInstance() {
@@ -81,20 +86,12 @@ public class TransientFileFactory {
         reaper.start();
         // register shutdownhook for final cleaning up
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread() {
+            shutdownHook = new Thread() {
                 public void run() {
-                    // synchronize on the list before iterating over it in order
-                    // to avoid ConcurrentModificationException (JCR-549)
-                    // @see java.lang.util.Collections.synchronizedList(java.util.List)
-                    synchronized(trackedRefs) {
-                        for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
-                            MoribundFileReference fileRef = (MoribundFileReference) it.next();
-                            fileRef.delete();
-                        }
-
-                    }
+                    doShutdown();
                 }
-            });
+            };
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
         } catch (IllegalStateException e) {
             // can't register shutdownhook because
             // jvm shutdown sequence has already begun,
@@ -124,6 +121,49 @@ public class TransientFileFactory {
         File f = File.createTempFile(prefix, suffix, directory);
         trackedRefs.add(new MoribundFileReference(f, phantomRefQueue));
         return f;
+    }
+
+    /**
+     * Shuts this factory down removing all temp files and removes shutdown hook.
+     * <p/>
+     * <b>Warning!!!</b>
+     * <p/>
+     * This should be called by a web-application <b><i>IF</b></i> it is unloaded
+     * <b><i>AND IF</i></b> jackrabbit-jcr-commons.jar had been loaded by
+     * the webapp classloader. This must be called after all repositories had
+     * been stopped, so use with great care!
+     * <p/>
+     * See http://issues.apache.org/jira/browse/JCR-1636 for details.
+     */
+    public static void shutdown() {
+        getInstance().doShutdown();
+    }
+
+    /**
+     * Actually shuts factory down removing all temp files. This happens when
+     * VM shutdown hook works or when explicitly requested.
+     * Shutdown hook is removed.
+     */
+    private synchronized void doShutdown() {
+        // synchronize on the list before iterating over it in order
+        // to avoid ConcurrentModificationException (JCR-549)
+        // @see java.lang.util.Collections.synchronizedList(java.util.List)
+        synchronized(trackedRefs) {
+            for (Iterator it = trackedRefs.iterator(); it.hasNext();) {
+                MoribundFileReference fileRef = (MoribundFileReference) it.next();
+                fileRef.delete();
+            }
+
+        }
+        if (shutdownHook != null) {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (IllegalStateException e) {
+                // can't unregister shutdownhook because
+                // jvm shutdown sequence has already begun,
+                // silently ignore... 
+            }
+        }
     }
 
     //--------------------------------------------------------< inner classes >
