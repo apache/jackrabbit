@@ -35,3 +35,6 @@ Portions of this software were originally based on the following:
   - software copyright (c) 1999, IBM Corporation., http://www.ibm.com.
   - software copyright (c) 1999, Sun Microsystems., http://www.sun.com.
   - software copyright (c) 2000 World Wide Web Consortium, http://www.w3.org
+  - voluntary contributions made by Paul Eng on behalf of the 
+    Apache Software Foundation that were originally developed at iClick, Inc.,
+    software copyright (c) 1999.
