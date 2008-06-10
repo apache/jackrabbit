@@ -262,19 +262,6 @@ subject to the terms and conditions of the following licenses.
     any associated documentation will at all times remain with
     copyright holders.
 
-(xml-apis-1.0.3.jar)
-
-    SAX2 is Free!
-
-    I hereby abandon any property rights to SAX 2.0 (the Simple API for
-    XML), and release all of the SAX 2.0 source code, compiled code, and
-    documentation contained in this distribution into the Public Domain.
-    SAX comes with NO WARRANTY or guarantee of fitness for any
-    purpose.
-
-    David Megginson, david@megginson.com
-    2000-05-05
-
 PDFBox library (pdfbox-0.7.3.jar)
 
     Copyright (c) 2003-2005, www.pdfbox.org
