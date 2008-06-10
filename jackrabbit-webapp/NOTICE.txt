@@ -23,3 +23,6 @@ time distributed and are placed here unaltered.
     All rights reserved.
 
     (C) Copyright IBM Corp. 2003. 
+
+This software contains PDF reader functionality from the PDFBox, FontBox, and
+JempBox projects. Copyright (c) 2003-2005, www.pdfbox.org and www.fontbox.org.
