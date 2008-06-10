@@ -38,3 +38,4 @@ Portions of this software were originally based on the following:
   - voluntary contributions made by Paul Eng on behalf of the 
     Apache Software Foundation that were originally developed at iClick, Inc.,
     software copyright (c) 1999.
+  - software copyright (c) 1994-2000 Sun Microsystems, Inc.
