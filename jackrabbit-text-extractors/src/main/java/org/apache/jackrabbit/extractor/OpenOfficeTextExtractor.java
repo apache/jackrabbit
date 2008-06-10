@@ -75,7 +75,7 @@ public class OpenOfficeTextExtractor extends AbstractTextExtractor {
 
             ZipInputStream zis = new ZipInputStream(stream);
             ZipEntry ze = zis.getNextEntry();
-            while (!ze.getName().equals("content.xml")) {
+            while (ze != null && !ze.getName().equals("content.xml")) {
                 ze = zis.getNextEntry();
             }
 
