@@ -26,3 +26,5 @@ time distributed and are placed here unaltered.
 
 This software contains PDF reader functionality from the PDFBox, FontBox, and
 JempBox projects. Copyright (c) 2003-2005, www.pdfbox.org and www.fontbox.org.
+
+This software contains SLF4J libraries. Copyright (c) 2004-2008 QOS.ch
