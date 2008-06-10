@@ -30,3 +30,8 @@ JempBox projects. Copyright (c) 2003-2005, www.pdfbox.org and www.fontbox.org.
 This software contains SLF4J libraries. Copyright (c) 2004-2008 QOS.ch
 
 CyberNeko HTML Parser (C) Copyright 2002-2005, Andy Clark.
+
+Portions of this software were originally based on the following:
+  - software copyright (c) 1999, IBM Corporation., http://www.ibm.com.
+  - software copyright (c) 1999, Sun Microsystems., http://www.sun.com.
+  - software copyright (c) 2000 World Wide Web Consortium, http://www.w3.org
