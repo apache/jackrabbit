@@ -28,3 +28,5 @@ This software contains PDF reader functionality from the PDFBox, FontBox, and
 JempBox projects. Copyright (c) 2003-2005, www.pdfbox.org and www.fontbox.org.
 
 This software contains SLF4J libraries. Copyright (c) 2004-2008 QOS.ch
+
+CyberNeko HTML Parser (C) Copyright 2002-2005, Andy Clark.
