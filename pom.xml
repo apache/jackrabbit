@@ -222,27 +222,6 @@
         <plugins>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <!-- Include the project metadata files in META-INF -->
-              <execution>
-                <id>add-project-files</id>
-                <phase>process-resources</phase>
-                <configuration>
-                  <tasks>
-                    <copy todir="${project.build.outputDirectory}/META-INF">
-                      <fileset dir="${basedir}">
-                        <include name="README.txt"/>
-                        <include name="NOTICE.txt"/>
-                        <include name="LICENSE.txt"/>
-                      </fileset>
-                    </copy>
-                  </tasks>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
             <dependencies>
               <!-- JCR-661: Plugin dependencies are inherited -->
               <dependency>
@@ -253,44 +232,6 @@
                 <systemPath>${java.home}/../lib/tools.jar</systemPath>
               </dependency>
             </dependencies>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>mac</id>
-      <activation>
-        <os>
-          <family>mac</family>
-        </os>
-      </activation>
-      <!-- NOTE: The <build> section below MUST be identical to the one -->
-      <!-- specified above for the "non-mac" profile, except for the    -->
-      <!-- missing tools.jar dependency.                                -->
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add-project-files</id>
-                <phase>process-resources</phase>
-                <configuration>
-                  <tasks>
-                    <copy todir="${project.build.outputDirectory}/META-INF">
-                      <fileset dir="${basedir}">
-                        <include name="README.txt"/>
-                        <include name="NOTICE.txt"/>
-                        <include name="LICENSE.txt"/>
-                      </fileset>
-                    </copy>
-                  </tasks>
-                </configuration>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
