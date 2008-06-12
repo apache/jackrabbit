@@ -214,10 +214,6 @@
           <family>!mac</family>
         </os>
       </activation>
-      <!-- NOTE: If you modify the <build> section below, you MUST also -->
-      <!-- update the version specified below for the "mac" profile.    -->
-      <!-- The only difference between the profiles should be the       -->
-      <!-- <dependencies> section.                                      -->
       <build>
         <plugins>
           <plugin>
