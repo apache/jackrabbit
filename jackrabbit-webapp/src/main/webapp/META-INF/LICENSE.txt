@@ -204,19 +204,22 @@
 
 APACHE JACKRABBIT SUBCOMPONENTS:
 
-Apache Jackrabbit includes an XPath parser subcomponent with separate
-copyright notices and license terms. Your use of this subcomponent is
-subject to the terms and conditions of the following licenses.
+Apache Jackrabbit includes subcomponents with separate copyright notices
+and license terms. Your use of these subcomponents is subject to the terms
+and conditions of the following licenses:
+
+XPath parser (jackrabbit-spi-commons)
 
     XPath 2.0/XQuery 1.0 Parser:
     http://www.w3.org/2002/11/xquery-xpath-applets/xgrammar.zip
 
     Copyright (C) 2002 World Wide Web Consortium, (Massachusetts Institute of
     Technology, European Research Consortium for Informatics and Mathematics,
-    Keio University). All Rights Reserved. This work is distributed under the
-    W3C(R) Software License in the hope that it will be useful, but
-    WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-    or FITNESS FOR A PARTICULAR PURPOSE.
+    Keio University). All Rights Reserved.
+
+    This work is distributed under the W3C(R) Software License in the hope
+    that it will be useful, but WITHOUT ANY WARRANTY; without even the
+    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     W3C(R) SOFTWARE NOTICE AND LICENSE
     http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
