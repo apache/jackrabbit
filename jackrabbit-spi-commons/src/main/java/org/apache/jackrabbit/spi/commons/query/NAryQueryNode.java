@@ -85,7 +85,15 @@ public abstract class NAryQueryNode extends QueryNode {
         if (operands == null) {
             return false;
         }
-        return operands.remove(operand);
+        // JCR-1650 search the operand without relying on Object#equals(Object)
+        Iterator it = operands.iterator();
+        while (it.hasNext()) {
+            if (it.next() == operand) {
+                it.remove();
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
