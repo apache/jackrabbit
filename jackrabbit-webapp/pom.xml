@@ -99,6 +99,7 @@
       <plugin>
          <groupId>org.mortbay.jetty</groupId>
          <artifactId>maven-jetty-plugin</artifactId>
+         <version>6.1.9</version>
          <configuration>
            <scanIntervalSeconds>10</scanIntervalSeconds>
            <connectors>
