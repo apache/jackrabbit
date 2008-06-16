@@ -50,9 +50,9 @@ public class DerefTest extends AbstractQueryTest {
      *            + eric (worksfor -> company/sun)
      *      + frank (worksfor -> company/microsoft)
      *   + company
-     *      + sun
-     *      + microsoft
-     *      + ibm
+     *      + sun (eotm -> andrew)
+     *      + microsoft (eotm -> carl)
+     *      + ibm (eotm -> daren)
      * </pre>
      */
     protected void setUp() throws Exception {
@@ -72,17 +72,25 @@ public class DerefTest extends AbstractQueryTest {
         ibm.setProperty("ceo", "Palmisano");
 
         andrew = people.addNode("andrew");
+        andrew.addMixin(mixReferenceable);
         andrew.setProperty("worksfor", sun);
         bill = andrew.addNode("bill");
         bill.setProperty("worksfor", ibm);
         carl = people.addNode("carl");
+        carl.addMixin(mixReferenceable);
         carl.setProperty("worksfor", microsoft);
         daren = carl.addNode("daren");
+        daren.addMixin(mixReferenceable);
         daren.setProperty("worksfor", ibm);
         eric = daren.addNode("eric");
         eric.setProperty("worksfor", sun);
         frank = people.addNode("frank");
         frank.setProperty("worksfor", microsoft);
+
+        // Employees of the month
+        sun.setProperty("eotm", andrew);
+        microsoft.setProperty("eotm", carl);
+        ibm.setProperty("eotm", daren);
 
         testRootNode.save();
     }
@@ -154,5 +162,28 @@ public class DerefTest extends AbstractQueryTest {
             Node node = (Node) ni.next();
             assertTrue(node.getProperty("jcr:frozenUuid").getString().equals(referenced.getUUID()));
         }
+    }
+
+    /**
+     * Tests various XPath queries with multiple jcr:deref() function.
+     */
+    public void testMultipleDeref() throws RepositoryException {
+        executeXPathQuery(testPath + "/people/frank/jcr:deref(@worksfor, '*')/jcr:deref(@eotm, '*')",
+                new Node[]{carl});
+        executeXPathQuery(testPath + "/people/frank/jcr:deref(@worksfor, '*')/jcr:deref(@eotm, '*')[@jcr:uuid]",
+                new Node[]{carl});
+        executeXPathQuery(testPath + "/people/frank/jcr:deref(@worksfor, '*')[@jcr:uuid]/jcr:deref(@eotm, '*')[@jcr:uuid]",
+                new Node[]{carl});
+        executeXPathQuery(testPath + "/people/frank/jcr:deref(@worksfor, '*')[@jcr:uuid]/jcr:deref(@eotm, '*')",
+                new Node[]{carl});
+
+        executeXPathQuery(testPath + "/people//jcr:deref(@worksfor, '*')/jcr:deref(@eotm, '*')",
+                new Node[]{andrew, carl, daren});
+        executeXPathQuery(testPath + "/people//jcr:deref(@worksfor, '*')/jcr:deref(@eotm, '*')[@jcr:uuid]",
+                new Node[]{andrew, carl, daren});
+        executeXPathQuery(testPath + "/people//jcr:deref(@worksfor, '*')[@jcr:uuid]/jcr:deref(@eotm, '*')[@jcr:uuid]",
+                new Node[]{andrew, carl, daren});
+        executeXPathQuery(testPath + "/people//jcr:deref(@worksfor, '*')[@jcr:uuid]/jcr:deref(@eotm, '*')",
+                new Node[]{andrew, carl, daren});
     }
 }
