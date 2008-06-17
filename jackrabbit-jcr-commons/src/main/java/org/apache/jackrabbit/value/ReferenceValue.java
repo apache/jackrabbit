@@ -71,11 +71,11 @@ public class ReferenceValue extends BaseValue {
             try {
                 UUID.fromString(s);
             } catch (IllegalArgumentException iae) {
-                throw new ValueFormatException("not a valid UUID format");
+                throw new ValueFormatException("not a valid UUID format: " + s);
             }
             return new ReferenceValue(s);
         } else {
-            throw new ValueFormatException("not a valid UUID format");
+            throw new ValueFormatException("not a valid UUID format: " + s);
         }
     }
 

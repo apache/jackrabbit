@@ -81,7 +81,7 @@ public class NameValue extends BaseValue {
             }
             return new NameValue(s);
         } else {
-            throw new ValueFormatException("not a valid name format");
+            throw new ValueFormatException("not a valid name format: " + s);
         }
     }
 
