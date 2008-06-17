@@ -66,7 +66,7 @@ public class DoubleValue extends BaseValue {
         try {
             return new DoubleValue(Double.parseDouble(s));
         } catch (NumberFormatException e) {
-            throw new ValueFormatException("invalid format", e);
+            throw new ValueFormatException("not a valid double format: " + s, e);
         }
     }
 

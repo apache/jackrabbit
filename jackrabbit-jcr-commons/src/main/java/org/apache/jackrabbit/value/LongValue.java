@@ -66,7 +66,7 @@ public class LongValue extends BaseValue {
         try {
             return new LongValue(Long.parseLong(s));
         } catch (NumberFormatException e) {
-            throw new ValueFormatException("invalid format", e);
+            throw new ValueFormatException("not a valid long format: " + s, e);
         }
     }
 

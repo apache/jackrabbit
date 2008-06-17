@@ -57,7 +57,7 @@ public class PathValue extends BaseValue {
             }
             return new PathValue(s);
         } else {
-            throw new ValueFormatException("not a valid path format");
+            throw new ValueFormatException("not a valid path format: " + s);
         }
     }
 
