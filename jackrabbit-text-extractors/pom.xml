@@ -78,20 +78,9 @@
       <artifactId>pdfbox</artifactId>
     </dependency>
     <dependency>
-      <groupId>nekohtml</groupId>
+      <groupId>net.sourceforge.nekohtml</groupId>
       <artifactId>nekohtml</artifactId>
-      <exclusions>
-        <!-- JCR-700: Incomplete dependency from nekohtml 0.9.4 -->
-        <exclusion>
-          <groupId>xerces</groupId>
-          <artifactId>xerces</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- JCR-700: Replacement for the nekohtml xerces dependency -->
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
+      <version>1.9.7</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
