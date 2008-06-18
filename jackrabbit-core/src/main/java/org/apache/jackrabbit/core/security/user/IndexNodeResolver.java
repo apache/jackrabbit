@@ -98,7 +98,7 @@ class IndexNodeResolver extends NodeResolver {
         StringBuffer stmt = new StringBuffer("/jcr:root");
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(");
-        stmt.append(getNamePathResolver().getJCRName(nodeName));
+        stmt.append(ISO9075.encode(getNamePathResolver().getJCRName(nodeName)));
         stmt.append(",");
         stmt.append(getNamePathResolver().getJCRName(ntName));
         stmt.append(")");
