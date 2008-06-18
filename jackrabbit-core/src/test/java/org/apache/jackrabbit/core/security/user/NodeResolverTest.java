@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
@@ -235,5 +236,11 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
 
     public void testGetSession() {
         assertNotNull(nodeResolver.getSession());
+    }
+
+    public void testFindNodeEscape() throws RepositoryException {
+        Name n = NameFactoryImpl.getInstance().create("",
+                "someone" + "@apache.org");
+        nodeResolver.findNode(n, UserConstants.NT_REP_USER);
     }
 }
