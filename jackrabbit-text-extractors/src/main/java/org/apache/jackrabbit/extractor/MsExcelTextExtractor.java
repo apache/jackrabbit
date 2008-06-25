@@ -48,7 +48,11 @@ public class MsExcelTextExtractor extends AbstractTextExtractor {
      * Creates a new <code>MsExcelTextExtractor</code> instance.
      */
     public MsExcelTextExtractor() {
-        super(new String[]{"application/vnd.ms-excel", "application/msexcel"});
+        super(new String[] {
+                "application/vnd.ms-excel",
+                "application/msexcel",
+                "application/excel"
+        });
     }
 
     //-------------------------------------------------------< TextExtractor >
