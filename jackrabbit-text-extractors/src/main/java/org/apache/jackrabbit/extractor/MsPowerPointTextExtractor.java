@@ -48,8 +48,11 @@ public class MsPowerPointTextExtractor extends AbstractTextExtractor {
      * Creates a new <code>MsPowerPointTextExtractor</code> instance.
      */
     public MsPowerPointTextExtractor() {
-        super(new String[]{"application/vnd.ms-powerpoint",
-                           "application/mspowerpoint"});
+        super(new String[]{
+                "application/vnd.ms-powerpoint",
+                "application/mspowerpoint",
+                "application/powerpoint"
+        });
     }
 
     //-------------------------------------------------------< TextExtractor >
