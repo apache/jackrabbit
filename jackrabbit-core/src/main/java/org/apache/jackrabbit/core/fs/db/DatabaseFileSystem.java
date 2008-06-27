@@ -63,7 +63,7 @@ public class DatabaseFileSystem implements FileSystem {
     /**
      * Logger instance
      */
-    private static Logger log = LoggerFactory.getLogger(DbFileSystem.class);
+    private static Logger log = LoggerFactory.getLogger(DatabaseFileSystem.class);
 
     protected static final String SCHEMA_OBJECT_PREFIX_VARIABLE =
             "${schemaObjectPrefix}";
