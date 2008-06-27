@@ -873,7 +873,7 @@ public class DatabaseJournal extends AbstractJournal {
     protected void buildSQLStatements() {
         selectRevisionsStmtSQL =
             "select REVISION_ID, JOURNAL_ID, PRODUCER_ID, REVISION_DATA from "
-            + schemaObjectPrefix + "JOURNAL where REVISION_ID > ?";
+            + schemaObjectPrefix + "JOURNAL where REVISION_ID > ? order by REVISION_ID";
         updateGlobalStmtSQL =
             "update " + schemaObjectPrefix + "GLOBAL_REVISION"
             + " set REVISION_ID = REVISION_ID + 1";
