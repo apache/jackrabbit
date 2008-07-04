@@ -45,7 +45,7 @@ public abstract class AbstractIdFactory implements IdFactory {
      */
     public NodeId createNodeId(NodeId parentId, Path path) {
         try {
-            return new NodeIdImpl(parentId, path);
+            return new NodeIdImpl(parentId, path, getPathFactory());
         } catch (RepositoryException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -73,14 +73,15 @@ public abstract class AbstractIdFactory implements IdFactory {
      */
     public PropertyId createPropertyId(NodeId parentId, Name propertyName) {
         try {
-            return new PropertyIdImpl(parentId, propertyName);
+            return new PropertyIdImpl(parentId, propertyName, getPathFactory());
         } catch (RepositoryException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
     }
 
     //------------------------------------------------------< Inner classes >---
-    private abstract class ItemIdImpl implements ItemId, Serializable {
+
+    private static abstract class ItemIdImpl implements ItemId, Serializable {
 
         private final String uniqueID;
         private final Path path;
@@ -95,16 +96,17 @@ public abstract class AbstractIdFactory implements IdFactory {
             this.path = path;
         }
 
-        private ItemIdImpl(NodeId parentId, Name name) throws RepositoryException {
+        private ItemIdImpl(NodeId parentId, Name name, PathFactory factory)
+                throws RepositoryException {
             if (parentId == null || name == null) {
                 throw new IllegalArgumentException("Invalid ItemIdImpl: parentId and name must not be null.");
             }
             this.uniqueID = parentId.getUniqueID();
             Path parentPath = parentId.getPath();
             if (parentPath != null) {
-                this.path = getPathFactory().create(parentPath, name, true);
+                this.path = factory.create(parentPath, name, true);
             } else {
-                this.path = getPathFactory().create(name);
+                this.path = factory.create(name);
             }
         }
 
@@ -150,7 +152,10 @@ public abstract class AbstractIdFactory implements IdFactory {
         public int hashCode() {
             // since the ItemIdImpl is immutable, store the computed hash code value
             if (hashCode == 0) {
-                hashCode = toString().hashCode();
+                int result = 17;
+                result = 37 * result + (uniqueID != null ? uniqueID.hashCode() : 0);
+                result = 37 * result + (path != null ? path.hashCode() : 0);
+                hashCode = result;
             }
             return hashCode;
         }
@@ -172,7 +177,9 @@ public abstract class AbstractIdFactory implements IdFactory {
         }
     }
 
-    private class NodeIdImpl extends ItemIdImpl implements NodeId {
+    private static class NodeIdImpl extends ItemIdImpl implements NodeId {
+
+        private static final long serialVersionUID = -360276648861146631L;
 
         public NodeIdImpl(String uniqueID) {
             super(uniqueID, null);
@@ -182,8 +189,9 @@ public abstract class AbstractIdFactory implements IdFactory {
             super(uniqueID, path);
         }
 
-        public NodeIdImpl(NodeId parentId, Path path) throws RepositoryException {
-            super(parentId.getUniqueID(), (parentId.getPath() != null) ? getPathFactory().create(parentId.getPath(), path, true) : path);
+        public NodeIdImpl(NodeId parentId, Path path, PathFactory factory)
+                throws RepositoryException {
+            super(parentId.getUniqueID(), (parentId.getPath() != null) ? factory.create(parentId.getPath(), path, true) : path);
         }
 
         public boolean denotesNode() {
@@ -201,12 +209,15 @@ public abstract class AbstractIdFactory implements IdFactory {
         }
     }
 
-    private class PropertyIdImpl extends ItemIdImpl implements PropertyId {
+    private static class PropertyIdImpl extends ItemIdImpl implements PropertyId, Serializable {
+
+        private static final long serialVersionUID = -1953124047770776444L;
 
         private final NodeId parentId;
 
-        private PropertyIdImpl(NodeId parentId, Name name) throws RepositoryException {
-            super(parentId, name);
+        private PropertyIdImpl(NodeId parentId, Name name, PathFactory factory)
+                throws RepositoryException {
+            super(parentId, name, factory);
             this.parentId = parentId;
         }
 
