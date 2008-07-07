@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QueryInfo;
@@ -52,19 +52,14 @@ public class QueryImpl implements Query {
     private final Session session;
 
     /**
-     * Name and Path resolver
+     * Provides various managers.
      */
-    private final NamePathResolver resolver;
+    private final ManagerProvider mgrProvider;
 
     /**
      * The item manager of the session that executes this query.
      */
     private final ItemManager itemManager;
-
-    /**
-     * The hierarchy manager of the session that executes this query.
-     */
-    private final HierarchyManager hierarchyManager;
 
     /**
      * The query statement
@@ -91,24 +86,21 @@ public class QueryImpl implements Query {
      * Creates a new query.
      *
      * @param session          the session that created this query.
-     * @param resolver
+     * @param mgrProvider the manager provider.
      * @param itemMgr          the item manager of that session.
-     * @param hierarchyManager the HierarchyManager of that session.
      * @param wspManager       the workspace manager that belongs to the
      *                         session.
      * @param statement        the query statement.
      * @param language         the language of the query statement.
      * @throws InvalidQueryException if the query is invalid.
      */
-    public QueryImpl(Session session, NamePathResolver resolver,
-                     ItemManager itemMgr, HierarchyManager hierarchyManager,
-                     WorkspaceManager wspManager,
+    public QueryImpl(Session session, ManagerProvider mgrProvider,
+                     ItemManager itemMgr, WorkspaceManager wspManager,
                      String statement, String language)
             throws InvalidQueryException, RepositoryException {
         this.session = session;
-        this.resolver = resolver;
+        this.mgrProvider = mgrProvider;
         this.itemManager = itemMgr;
-        this.hierarchyManager = hierarchyManager;
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
@@ -120,27 +112,26 @@ public class QueryImpl implements Query {
      * Creates a query from a node.
      *
      * @param session    the session that created this query.
-     * @param resolver
+     * @param mgrProvider the manager provider.
      * @param itemMgr    the item manager of that session.
-     * @param hierarchyManager
      * @param wspManager the workspace manager that belongs to the session.
      * @param node       the node from where to read the query.
      * @throws InvalidQueryException if the query is invalid.
      * @throws RepositoryException   if another error occurs while reading from
      *                               the node.
      */
-    public QueryImpl(Session session, NamePathResolver resolver,
-                     ItemManager itemMgr, HierarchyManager hierarchyManager,
-                     WorkspaceManager wspManager, Node node)
+    public QueryImpl(Session session, ManagerProvider mgrProvider,
+                     ItemManager itemMgr, WorkspaceManager wspManager,
+                     Node node)
         throws InvalidQueryException, RepositoryException {
 
         this.session = session;
-        this.resolver = resolver;
+        this.mgrProvider = mgrProvider;
         this.itemManager = itemMgr;
-        this.hierarchyManager = hierarchyManager;
         this.node = node;
         this.wspManager = wspManager;
 
+        NamePathResolver resolver = mgrProvider.getNamePathResolver();
         if (!node.isNodeType(resolver.getJCRName(NameConstants.NT_QUERY))) {
             throw new InvalidQueryException("Node is not of type nt:query");
         }
@@ -159,8 +150,7 @@ public class QueryImpl implements Query {
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(
                 statement, language, getNamespaceMappings());
-        return new QueryResultImpl(itemManager, hierarchyManager,
-                qI, resolver, session.getValueFactory());
+        return new QueryResultImpl(itemManager, mgrProvider, qI);
     }
 
     /***
@@ -210,6 +200,7 @@ public class QueryImpl implements Query {
         PathNotFoundException, VersionException, ConstraintViolationException,
         LockException, UnsupportedRepositoryOperationException, RepositoryException {
 
+        NamePathResolver resolver = mgrProvider.getNamePathResolver();
         try {
             Path p = resolver.getQPath(absPath).getNormalizedPath();
             if (!p.isAbsolute()) {

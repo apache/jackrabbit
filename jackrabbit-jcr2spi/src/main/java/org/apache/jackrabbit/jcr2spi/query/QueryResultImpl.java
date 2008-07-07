@@ -17,16 +17,13 @@
 package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
@@ -36,19 +33,14 @@ import javax.jcr.query.RowIterator;
 class QueryResultImpl implements QueryResult {
 
     /**
-     * The logger instance for this class
-     */
-    private static final Logger log = LoggerFactory.getLogger(QueryResultImpl.class);
-
-    /**
      * The item manager of the session executing the query
      */
     private final ItemManager itemMgr;
 
     /**
-     * The HierarchyManager of the session executing the query
+     * Provides various managers.
      */
-    private final HierarchyManager hierarchyMgr;
+    private final ManagerProvider mgrProvider;
 
     /**
      * The spi query result.
@@ -56,33 +48,18 @@ class QueryResultImpl implements QueryResult {
     private final QueryInfo queryInfo;
 
     /**
-     * The namespace nameResolver of the session executing the query
-     */
-    private final NamePathResolver resolver;
-
-    /**
-     * The JCR value factory.
-     */
-    private final ValueFactory valueFactory;
-
-    /**
      * Creates a new query result.
      *
-     * @param itemMgr      the item manager of the session executing the query.
-     * @param hierarchyMgr the HierarchyManager of the session executing the
-     *                     query.
-     * @param queryInfo    the spi query result.
-     * @param resolver
-     * @param valueFactory the JCR value factory.
+     * @param itemMgr     the item manager of the session executing the query.
+     * @param mgrProvider the manager provider.
+     * @param queryInfo   the spi query result.
      */
-    QueryResultImpl(ItemManager itemMgr, HierarchyManager hierarchyMgr,
-                    QueryInfo queryInfo, NamePathResolver resolver,
-                    ValueFactory valueFactory) {
+    QueryResultImpl(ItemManager itemMgr,
+                    ManagerProvider mgrProvider,
+                    QueryInfo queryInfo) {
         this.itemMgr = itemMgr;
-        this.hierarchyMgr = hierarchyMgr;
+        this.mgrProvider = mgrProvider;
         this.queryInfo = queryInfo;
-        this.resolver = resolver;
-        this.valueFactory = valueFactory;
     }
 
     /**
@@ -91,6 +68,7 @@ class QueryResultImpl implements QueryResult {
     public String[] getColumnNames() throws RepositoryException {
         Name[] names = queryInfo.getColumnNames();
         String[] propNames = new String[names.length];
+        NamePathResolver resolver = mgrProvider.getNamePathResolver();
         for (int i = 0; i < names.length; i++) {
             propNames[i] = resolver.getJCRName(names[i]);
         }
@@ -108,7 +86,8 @@ class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public RowIterator getRows() throws RepositoryException {
-        return new RowIteratorImpl(queryInfo, resolver, valueFactory);
+        return new RowIteratorImpl(queryInfo, mgrProvider.getNamePathResolver(),
+                mgrProvider.getJcrValueFactory());
     }
 
     /**
@@ -116,6 +95,7 @@ class QueryResultImpl implements QueryResult {
      * @return a node iterator over the result nodes.
      */
     private ScoreNodeIterator getNodeIterator() {
-        return new NodeIteratorImpl(itemMgr, hierarchyMgr, queryInfo);
+        return new NodeIteratorImpl(itemMgr,
+                mgrProvider.getHierarchyManager(), queryInfo);
     }
 }
