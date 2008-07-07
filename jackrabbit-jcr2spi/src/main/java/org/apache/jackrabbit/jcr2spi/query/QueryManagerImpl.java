@@ -18,8 +18,7 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -39,19 +38,14 @@ public class QueryManagerImpl implements QueryManager {
     private final Session session;
 
     /**
-     * Name and Path resolver
+     * Provides various managers.
      */
-    private final NamePathResolver resolver;
+    private final ManagerProvider mgrProvider;
 
     /**
      * The <code>ItemManager</code> of for item retrieval in search results
      */
     private final ItemManager itemMgr;
-
-    /**
-     * The <code>HierarchyManager</code> of for item retrieval in search results
-     */
-    private final HierarchyManager hierarchyManager;
 
     /**
      * The <code>WorkspaceManager</code> where queries are executed.
@@ -62,20 +56,18 @@ public class QueryManagerImpl implements QueryManager {
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>Session</code>.
      *
-     * @param session
-     * @param itemMgr
-     * @param hierarchyManager
-     * @param wspManager
+     * @param session the current session.
+     * @param mgrProvider the manager provider.
+     * @param itemMgr the item manager of the current session.
+     * @param wspManager the workspace manager.
      */
     public QueryManagerImpl(Session session,
-                            NamePathResolver resolver,
+                            ManagerProvider mgrProvider,
                             ItemManager itemMgr,
-                            HierarchyManager hierarchyManager,
                             WorkspaceManager wspManager) {
         this.session = session;
-        this.resolver = resolver;
+        this.mgrProvider = mgrProvider;
         this.itemMgr = itemMgr;
-        this.hierarchyManager = hierarchyManager;
         this.wspManager = wspManager;
     }
 
@@ -85,8 +77,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
         checkIsAlive();
-        QueryImpl query = new QueryImpl(session, resolver, itemMgr, hierarchyManager, wspManager, statement, language);
-        return query;
+        return new QueryImpl(session, mgrProvider, itemMgr, wspManager, statement, language);
     }
 
     /**
@@ -95,8 +86,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
         checkIsAlive();
-        QueryImpl query = new QueryImpl(session, resolver, itemMgr, hierarchyManager, wspManager, node);
-        return query;
+        return new QueryImpl(session, mgrProvider, itemMgr, wspManager, node);
     }
 
     /**
