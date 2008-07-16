@@ -16,12 +16,26 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.query.InvalidQueryException;
+
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
 import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
@@ -55,25 +69,12 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.query.InvalidQueryException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Implements a query builder that takes an abstract query tree and creates
@@ -91,57 +92,57 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     /**
      * Root node of the abstract query tree
      */
-    private QueryRootNode root;
+    private final QueryRootNode root;
 
     /**
      * Session of the user executing this query
      */
-    private SessionImpl session;
+    private final SessionImpl session;
 
     /**
      * The shared item state manager of the workspace.
      */
-    private ItemStateManager sharedItemMgr;
+    private final ItemStateManager sharedItemMgr;
 
     /**
      * A hierarchy manager based on {@link #sharedItemMgr} to resolve paths.
      */
-    private HierarchyManager hmgr;
+    private final HierarchyManager hmgr;
 
     /**
      * Namespace mappings to internal prefixes
      */
-    private NamespaceMappings nsMappings;
+    private final NamespaceMappings nsMappings;
 
     /**
      * Name and Path resolver
      */
-    private NamePathResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * The analyzer instance to use for contains function query parsing
      */
-    private Analyzer analyzer;
+    private final Analyzer analyzer;
 
     /**
      * The property type registry.
      */
-    private PropertyTypeRegistry propRegistry;
+    private final PropertyTypeRegistry propRegistry;
 
     /**
      * The synonym provider or <code>null</code> if none is configured.
      */
-    private SynonymProvider synonymProvider;
+    private final SynonymProvider synonymProvider;
 
     /**
      * Wether the index format is new or old.
      */
-    private IndexFormatVersion indexFormatVersion;
+    private final IndexFormatVersion indexFormatVersion;
 
     /**
      * Exceptions thrown during tree translation
      */
-    private List exceptions = new ArrayList();
+    private final List exceptions = new ArrayList();
 
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
@@ -230,14 +231,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * {@link org.apache.lucene.search.Query}.
      *
      * @return the lucene <code>Query</code>.
+     * @throws RepositoryException
      */
-    private Query createLuceneQuery() {
+    private Query createLuceneQuery() throws RepositoryException {
         return (Query) root.accept(this, null);
     }
 
     //---------------------< QueryNodeVisitor interface >-----------------------
 
-    public Object visit(QueryRootNode node, Object data) {
+    public Object visit(QueryRootNode node, Object data) throws RepositoryException {
         BooleanQuery root = new BooleanQuery();
 
         Query wrapped = root;
@@ -248,7 +250,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return wrapped;
     }
 
-    public Object visit(OrQueryNode node, Object data) {
+    public Object visit(OrQueryNode node, Object data) throws RepositoryException {
         BooleanQuery orQuery = new BooleanQuery();
         Object[] result = node.acceptOperands(this, null);
         for (int i = 0; i < result.length; i++) {
@@ -258,7 +260,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return orQuery;
     }
 
-    public Object visit(AndQueryNode node, Object data) {
+    public Object visit(AndQueryNode node, Object data) throws RepositoryException {
         Object[] result = node.acceptOperands(this, null);
         if (result.length == 0) {
             return null;
@@ -271,7 +273,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return andQuery;
     }
 
-    public Object visit(NotQueryNode node, Object data) {
+    public Object visit(NotQueryNode node, Object data) throws RepositoryException {
         Object[] result = node.acceptOperands(this, null);
         if (result.length == 0) {
             return data;
@@ -449,7 +451,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return null;
     }
 
-    public Object visit(PathQueryNode node, Object data) {
+    public Object visit(PathQueryNode node, Object data) throws RepositoryException {
         Query context = null;
         LocationStepQueryNode[] steps = node.getPathSteps();
         if (steps.length > 0) {
@@ -495,7 +497,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return context;
     }
 
-    public Object visit(LocationStepQueryNode node, Object data) {
+    public Object visit(LocationStepQueryNode node, Object data) throws RepositoryException {
         Query context = (Query) data;
         BooleanQuery andQuery = new BooleanQuery();
 
@@ -578,7 +580,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return andQuery;
     }
 
-    public Object visit(DerefQueryNode node, Object data) {
+    public Object visit(DerefQueryNode node, Object data) throws RepositoryException {
         Query context = (Query) data;
         if (context == null) {
             exceptions.add(new IllegalArgumentException("Unsupported query"));
@@ -614,7 +616,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         return context;
     }
 
-    public Object visit(RelationQueryNode node, Object data) {
+    public Object visit(RelationQueryNode node, Object data) throws RepositoryException {
         Query query;
         String[] stringValues = new String[1];
         switch (node.getValueType()) {

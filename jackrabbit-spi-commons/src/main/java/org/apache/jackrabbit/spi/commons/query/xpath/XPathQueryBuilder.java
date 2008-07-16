@@ -16,14 +16,29 @@
  */
 package org.apache.jackrabbit.spi.commons.query.xpath;
 
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.spi.commons.query.DerefQueryNode;
 import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
@@ -39,22 +54,8 @@ import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 import org.apache.jackrabbit.spi.commons.query.RelationQueryNode;
 import org.apache.jackrabbit.spi.commons.query.TextsearchQueryNode;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.commons.collections.map.ReferenceMap;
-
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Query builder that translates a XPath statement into a query tree structure.
@@ -707,18 +708,23 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         node.childrenAccept(this, rqn);
 
         // check if string transformation is valid
-        rqn.acceptOperands(new DefaultQueryNodeVisitor() {
-            public Object visit(PropertyFunctionQueryNode node, Object data) {
-                String functionName = node.getFunctionName();
-                if ((functionName.equals(PropertyFunctionQueryNode.LOWER_CASE)
-                        || functionName.equals(PropertyFunctionQueryNode.UPPER_CASE))
-                            && rqn.getValueType() != QueryConstants.TYPE_STRING) {
-                    String msg = "Upper and lower case function are only supported with String literals";
-                    exceptions.add(new InvalidQueryException(msg));
+        try {
+            rqn.acceptOperands(new DefaultQueryNodeVisitor() {
+                public Object visit(PropertyFunctionQueryNode node, Object data) {
+                    String functionName = node.getFunctionName();
+                    if ((functionName.equals(PropertyFunctionQueryNode.LOWER_CASE)
+                            || functionName.equals(PropertyFunctionQueryNode.UPPER_CASE))
+                                && rqn.getValueType() != QueryConstants.TYPE_STRING) {
+                        String msg = "Upper and lower case function are only supported with String literals";
+                        exceptions.add(new InvalidQueryException(msg));
+                    }
+                    return data;
                 }
-                return data;
-            }
-        }, null);
+            }, null);
+        }
+        catch (RepositoryException e) {
+            exceptions.add(e);
+        }
 
         queryNode.addOperand(rqn);
     }

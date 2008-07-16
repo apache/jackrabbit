@@ -16,6 +16,19 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TimeZone;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
 import org.apache.jackrabbit.spi.commons.query.DerefQueryNode;
@@ -33,18 +46,7 @@ import org.apache.jackrabbit.spi.commons.query.QueryNodeVisitor;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 import org.apache.jackrabbit.spi.commons.query.RelationQueryNode;
 import org.apache.jackrabbit.spi.commons.query.TextsearchQueryNode;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.NamespaceException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TimeZone;
 
 /**
  * Implements the query node tree serialization into a String.
@@ -59,20 +61,20 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
     /**
      * The String representation of the query node tree
      */
-    private String statement;
+    private final String statement;
 
     /**
      * List of exception objects created while creating the SQL string
      */
-    private List exceptions = new ArrayList();
+    private final List exceptions = new ArrayList();
 
     /**
      * List of node types
      */
-    private List nodeTypes = new ArrayList();
+    private final List nodeTypes = new ArrayList();
 
     private QueryFormat(QueryRootNode root, NameResolver resolver)
-            throws InvalidQueryException {
+            throws RepositoryException {
         this.resolver = resolver;
         statement = root.accept(this, new StringBuffer()).toString();
         if (exceptions.size() > 0) {
@@ -93,7 +95,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
      */
     public static String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
-        return new QueryFormat(root, resolver).toString();
+        try {
+            return new QueryFormat(root, resolver).toString();
+        }
+        catch (RepositoryException e) {
+            throw new InvalidQueryException(e);
+        }
     }
 
     /**
@@ -107,7 +114,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
     //-------------< QueryNodeVisitor interface >-------------------------------
 
-    public Object visit(QueryRootNode node, Object data) {
+    public Object visit(QueryRootNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         try {
             sb.append("SELECT");
@@ -192,7 +199,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return sb;
     }
 
-    public Object visit(OrQueryNode node, Object data) {
+    public Object visit(OrQueryNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         boolean bracket = false;
         if (node.getParent() instanceof LocationStepQueryNode
@@ -216,7 +223,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return sb;
     }
 
-    public Object visit(AndQueryNode node, Object data) {
+    public Object visit(AndQueryNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         boolean bracket = false;
         if (node.getParent() instanceof NotQueryNode) {
@@ -245,7 +252,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return sb;
     }
 
-    public Object visit(NotQueryNode node, Object data) {
+    public Object visit(NotQueryNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         QueryNode[] operands = node.getOperands();
         if (operands.length > 0) {
@@ -295,7 +302,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return sb;
     }
 
-    public Object visit(PathQueryNode node, Object data) {
+    public Object visit(PathQueryNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         try {
             if (containsDescendantOrSelf(node)) {
@@ -395,7 +402,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         return data;
     }
 
-    public Object visit(RelationQueryNode node, Object data) {
+    public Object visit(RelationQueryNode node, Object data) throws RepositoryException {
         StringBuffer sb = (StringBuffer) data;
         try {
             StringBuffer propName = new StringBuffer();

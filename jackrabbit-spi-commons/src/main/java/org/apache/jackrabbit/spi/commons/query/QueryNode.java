@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Implements an abstract base class for nodes of a query tree that represents
  * a query. The query tree is independent from the query syntax which is used
@@ -66,7 +68,7 @@ public abstract class QueryNode {
      * References the parent of this <code>QueryNode</code>. If this is the root
      * of a query tree, then <code>parent</code> is <code>null</code>.
      */
-    private QueryNode parent;
+    private final QueryNode parent;
 
     /**
      * Constructs a new <code>QueryNode</code> with a reference to it's parent.
@@ -92,8 +94,9 @@ public abstract class QueryNode {
     /**
      * Dumps this QueryNode and its child nodes to a String.
      * @return the query tree as a String.
+     * @throws RepositoryException
      */
-    public String dump() {
+    public String dump() throws RepositoryException {
         StringBuffer tmp = new StringBuffer();
         QueryTreeDump.dump(this, tmp);
         return tmp.toString();
@@ -107,8 +110,9 @@ public abstract class QueryNode {
      * @param visitor the visitor to call back.
      * @param data    arbitrary data for the visitor.
      * @return the return value of the <code>visitor.visit()</code> call.
+     * @throws RepositoryException
      */
-    public abstract Object accept(QueryNodeVisitor visitor, Object data);
+    public abstract Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException;
 
     /**
      * Returns the type of this query node.

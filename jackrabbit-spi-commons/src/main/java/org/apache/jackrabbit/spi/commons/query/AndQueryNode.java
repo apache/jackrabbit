@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Implements a query node that defines an AND operation between arbitrary
  * other {@link QueryNode}s.
@@ -36,8 +38,9 @@ public class AndQueryNode extends NAryQueryNode {
      * This method can return <code>null</code> to indicate that this
      * <code>AndQueryNode</code> does not contain any operands.
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

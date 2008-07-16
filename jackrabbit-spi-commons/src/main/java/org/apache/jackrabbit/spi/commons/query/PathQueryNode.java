@@ -18,8 +18,10 @@ package org.apache.jackrabbit.spi.commons.query;
 
 import java.util.List;
 
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * Implements a query node that defines a path restriction.
@@ -63,8 +65,9 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

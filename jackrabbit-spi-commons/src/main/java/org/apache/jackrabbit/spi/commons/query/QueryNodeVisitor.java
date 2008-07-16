@@ -16,34 +16,36 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Defines the interface for a <code>QueryNodeVisitor</code>.
  */
 public interface QueryNodeVisitor {
 
-    Object visit(QueryRootNode node, Object data);
+    Object visit(QueryRootNode node, Object data) throws RepositoryException;
 
-    Object visit(OrQueryNode node, Object data);
+    Object visit(OrQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(AndQueryNode node, Object data);
+    Object visit(AndQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(NotQueryNode node, Object data);
+    Object visit(NotQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(ExactQueryNode node, Object data);
+    Object visit(ExactQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(NodeTypeQueryNode node, Object data);
+    Object visit(NodeTypeQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(TextsearchQueryNode node, Object data);
+    Object visit(TextsearchQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(PathQueryNode node, Object data);
+    Object visit(PathQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(LocationStepQueryNode node, Object data);
+    Object visit(LocationStepQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(RelationQueryNode node, Object data);
+    Object visit(RelationQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(OrderQueryNode node, Object data);
+    Object visit(OrderQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(DerefQueryNode node, Object data);
+    Object visit(DerefQueryNode node, Object data) throws RepositoryException;
 
-    Object visit(PropertyFunctionQueryNode node, Object data);
+    Object visit(PropertyFunctionQueryNode node, Object data) throws RepositoryException;
 }

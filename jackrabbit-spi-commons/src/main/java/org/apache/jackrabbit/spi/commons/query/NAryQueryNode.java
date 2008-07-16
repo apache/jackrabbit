@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Defines an abstract query node for nodes that have child nodes.
  */
@@ -129,8 +131,9 @@ public abstract class NAryQueryNode extends QueryNode {
      * @param visitor the visitor to call back.
      * @param data    arbitrary data for the visitor.
      * @return the return values of the <code>visitor.visit()</code> calls.
+     * @throws RepositoryException
      */
-    public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) {
+    public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         if (operands == null) {
             return EMPTY;
         }
