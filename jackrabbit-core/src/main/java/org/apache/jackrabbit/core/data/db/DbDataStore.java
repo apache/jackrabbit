@@ -551,7 +551,8 @@ public class DbDataStore implements DataStore {
             }
             putBack(conn);
         } catch (Exception e) {
-            throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user, e);
+            throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user + 
+                    " tableSQL=" + tableSQL + " createTableSQL=" + createTableSQL, e);
         }
     }
 
