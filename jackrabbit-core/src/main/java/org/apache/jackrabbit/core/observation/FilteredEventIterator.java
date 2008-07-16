@@ -63,6 +63,10 @@ class FilteredEventIterator implements EventIterator {
     private long pos = 0;
 
     /**
+     * Is this a local event listener
+     */
+    private final boolean isLocalEventListener;
+    /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
      * @param c      an unmodifiable Collection of {@link javax.jcr.observation.Event}s.
@@ -74,10 +78,12 @@ class FilteredEventIterator implements EventIterator {
      */
     public FilteredEventIterator(EventStateCollection c,
                                  EventFilter filter,
-                                 Set denied) {
+                                 Set denied,
+                                 boolean isLocalEventListener) {
         actualEvents = c.iterator();
         this.filter = filter;
         this.denied = denied;
+        this.isLocalEventListener = isLocalEventListener;
         fetchNext();
     }
 
@@ -155,12 +161,14 @@ class FilteredEventIterator implements EventIterator {
         next = null;
         while (next == null && actualEvents.hasNext()) {
             state = (EventState) actualEvents.next();
-            // check denied set
-            if (denied == null || !denied.contains(state.getTargetId())) {
-                try {
-                    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(), state);
-                } catch (RepositoryException e) {
-                    log.error("Exception while applying filter.", e);
+            if ( !state.isExternal() || !isLocalEventListener ) {
+                // check denied set
+                if (denied == null || !denied.contains(state.getTargetId())) {
+                    try {
+                        next = filter.blocks(state) ? null : new EventImpl(filter.getSession(), state);
+                    } catch (RepositoryException e) {
+                        log.error("Exception while applying filter.", e);
+                    }
                 }
             }
         }
