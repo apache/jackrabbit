@@ -204,47 +204,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ RelationQueryNode: Op: ");
-        if (node.getOperation() == QueryConstants.OPERATION_BETWEEN) {
-            buffer.append("BETWEEN");
-        } else if (node.getOperation() == QueryConstants.OPERATION_EQ_GENERAL) {
-            buffer.append("= ");
-        } else if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE) {
-            buffer.append("eq");
-        } else if (node.getOperation() == QueryConstants.OPERATION_GE_GENERAL) {
-            buffer.append(">=");
-        } else if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
-            buffer.append("ge");
-        } else if (node.getOperation() == QueryConstants.OPERATION_GT_GENERAL) {
-            buffer.append("> ");
-        } else if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
-            buffer.append("gt");
-        } else if (node.getOperation() == QueryConstants.OPERATION_IN) {
-            buffer.append("IN");
-        } else if (node.getOperation() == QueryConstants.OPERATION_LE_GENERAL) {
-            buffer.append("<=");
-        } else if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
-            buffer.append("le");
-        } else if (node.getOperation() == QueryConstants.OPERATION_LIKE) {
-            buffer.append("LIKE");
-        } else if (node.getOperation() == QueryConstants.OPERATION_LT_GENERAL) {
-            buffer.append("< ");
-        } else if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
-            buffer.append("lt");
-        } else if (node.getOperation() == QueryConstants.OPERATION_NE_GENERAL) {
-            buffer.append("<>");
-        } else if (node.getOperation() == QueryConstants.OPERATION_NE_VALUE) {
-            buffer.append("ne");
-        } else if (node.getOperation() == QueryConstants.OPERATION_NOT_NULL) {
-            buffer.append("NOT NULL");
-        } else if (node.getOperation() == QueryConstants.OPERATION_NULL) {
-            buffer.append("IS NULL");
-        } else if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
-            buffer.append("similarity");
-        } else if (node.getOperation() == QueryConstants.OPERATION_SPELLCHECK) {
-            buffer.append("spellcheck");
-        } else {
-            buffer.append("!!UNKNOWN OPERATION!!");
-        }
+        buffer.append(QueryConstants.OPERATION_NAMES.getName(node.getOperation()));
         buffer.append(" Prop=");
         Path relPath = node.getRelativePath();
         if (relPath == null) {
@@ -261,19 +221,21 @@ public class QueryTreeDump implements QueryNodeVisitor {
                 buffer.append(elements[i]);
             }
         }
+        buffer.append(" Type=").append(QueryConstants.TYPE_NAMES.getName(node.getValueType()));
         if (node.getValueType() == QueryConstants.TYPE_DATE) {
-            buffer.append(" Type=DATE Value=").append(node.getDateValue());
+            buffer.append(" Value=").append(node.getDateValue());
         } else if (node.getValueType() == QueryConstants.TYPE_DOUBLE) {
-            buffer.append(" Type=DOUBLE Value=").append(node.getDoubleValue());
+            buffer.append(" Value=").append(node.getDoubleValue());
         } else if (node.getValueType() == QueryConstants.TYPE_LONG) {
-            buffer.append(" Type=LONG Value=").append(node.getLongValue());
+            buffer.append(" Value=").append(node.getLongValue());
         } else if (node.getValueType() == QueryConstants.TYPE_POSITION) {
-            buffer.append(" Type=POS Value=").append(node.getPositionValue());
+            buffer.append(" Value=").append(node.getPositionValue());
         } else if (node.getValueType() == QueryConstants.TYPE_STRING) {
-            buffer.append(" Type=STRING Value=").append(node.getStringValue());
+            buffer.append(" Value=").append(node.getStringValue());
         } else if (node.getValueType() == QueryConstants.TYPE_TIMESTAMP) {
-            buffer.append(" Type=TIMESTAMP Value=").append(node.getDateValue());
+            buffer.append(" Value=").append(node.getDateValue());
         }
+
         buffer.append("\n");
         traverse(node.getOperands(), buffer);
         return buffer;
