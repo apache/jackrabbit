@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi.commons.query;
 
 import java.util.Arrays;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -49,8 +51,9 @@ public class QueryTreeDump implements QueryNodeVisitor {
      * Dumps the node tree to buffer.
      * @param node the root node.
      * @param buffer where to dump the tree.
+     * @throws RepositoryException
      */
-    private QueryTreeDump(QueryNode node, StringBuffer buffer) {
+    private QueryTreeDump(QueryNode node, StringBuffer buffer) throws RepositoryException {
         node.accept(this, buffer);
     }
 
@@ -58,12 +61,13 @@ public class QueryTreeDump implements QueryNodeVisitor {
      * Dumps a query node tree to the string <code>buffer</code>.
      * @param node the root node of a query tree.
      * @param buffer a string buffer where to dump the tree structure.
+     * @throws RepositoryException
      */
-    public static void dump(QueryNode node, StringBuffer buffer) {
+    public static void dump(QueryNode node, StringBuffer buffer) throws RepositoryException {
         new QueryTreeDump(node, buffer);
     }
 
-    public Object visit(QueryRootNode node, Object data) {
+    public Object visit(QueryRootNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append("+ Root node");
         buffer.append("\n");
@@ -91,7 +95,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(OrQueryNode node, Object data) {
+    public Object visit(OrQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ OrQueryNode");
@@ -100,7 +104,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(AndQueryNode node, Object data) {
+    public Object visit(AndQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ AndQueryNode");
@@ -109,7 +113,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(NotQueryNode node, Object data) {
+    public Object visit(NotQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ NotQueryNode");
@@ -163,7 +167,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(PathQueryNode node, Object data) {
+    public Object visit(PathQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ PathQueryNode");
@@ -172,7 +176,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(LocationStepQueryNode node, Object data) {
+    public Object visit(LocationStepQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ LocationStepQueryNode: ");
@@ -196,7 +200,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(RelationQueryNode node, Object data) {
+    public Object visit(RelationQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ RelationQueryNode: Op: ");
@@ -290,7 +294,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    public Object visit(DerefQueryNode node, Object data) {
+    public Object visit(DerefQueryNode node, Object data) throws RepositoryException {
         StringBuffer buffer = (StringBuffer) data;
         buffer.append(PADDING, 0, indent);
         buffer.append("+ DerefQueryNode: ");
@@ -323,7 +327,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         return buffer;
     }
 
-    private void traverse(QueryNode[] node, StringBuffer buffer) {
+    private void traverse(QueryNode[] node, StringBuffer buffer) throws RepositoryException {
         indent += 2;
         if (indent > PADDING.length) {
             char[] tmp = new char[indent * 2];

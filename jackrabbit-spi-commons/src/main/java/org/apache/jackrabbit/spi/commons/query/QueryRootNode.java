@@ -19,6 +19,8 @@ package org.apache.jackrabbit.spi.commons.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -35,7 +37,7 @@ public class QueryRootNode extends QueryNode {
      * The list of property names (as {@link org.apache.jackrabbit.spi.Name}s
      * to select.
      */
-    private List selectProperties = new ArrayList();
+    private final List selectProperties = new ArrayList();
 
     /**
      * The list of property names to order the result nodes. Might be null
@@ -107,8 +109,9 @@ public class QueryRootNode extends QueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

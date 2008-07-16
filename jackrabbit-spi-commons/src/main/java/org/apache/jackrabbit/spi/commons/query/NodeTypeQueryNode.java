@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * Implements a query node that defines a node type match.
@@ -39,8 +41,9 @@ public class NodeTypeQueryNode extends ExactQueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

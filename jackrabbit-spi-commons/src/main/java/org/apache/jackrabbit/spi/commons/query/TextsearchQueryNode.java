@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
 
 /**
  * Implements a query node that defines a textsearch clause.
@@ -62,8 +64,9 @@ public class TextsearchQueryNode extends QueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

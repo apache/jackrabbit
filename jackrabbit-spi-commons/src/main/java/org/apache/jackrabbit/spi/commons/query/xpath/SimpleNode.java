@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.query.xpath;
 
+
 /**
  * Implements a JavaCC Node interface.
  * This Class was initially created by JavaCC and then adapted for our needs.
@@ -148,4 +149,5 @@ public class SimpleNode implements Node {
     }
 
 }
+
 

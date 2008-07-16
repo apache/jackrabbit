@@ -19,6 +19,8 @@ package org.apache.jackrabbit.spi.commons.query;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
 
 /**
@@ -73,8 +75,9 @@ public class OrderQueryNode extends QueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 
@@ -123,7 +126,7 @@ public class OrderQueryNode extends QueryNode {
         /**
          * The name of the property
          */
-        private Name property;
+        private final Name property;
 
         /**
          * If <code>true</code> this property is orderd ascending

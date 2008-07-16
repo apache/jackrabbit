@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Implements a query node that defines an OR operation between arbitrary
  * other {@link QueryNode}s.
@@ -34,8 +36,9 @@ public class OrQueryNode extends NAryQueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

@@ -16,9 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>PropertyFunctionQueryNode</code> allows to place function calls on properties
@@ -81,8 +83,9 @@ public class PropertyFunctionQueryNode extends QueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

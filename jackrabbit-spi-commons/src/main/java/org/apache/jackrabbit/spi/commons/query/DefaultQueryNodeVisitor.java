@@ -16,61 +16,63 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Implements the <code>QueryNodeVisitor</code> interface with default behaviour.
  * All methods are no-ops and return the <code>data</code> argument.
  */
 public class DefaultQueryNodeVisitor implements QueryNodeVisitor {
 
-    public Object visit(QueryRootNode node, Object data) {
+    public Object visit(QueryRootNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(OrQueryNode node, Object data) {
+    public Object visit(OrQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(AndQueryNode node, Object data) {
+    public Object visit(AndQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(NotQueryNode node, Object data) {
+    public Object visit(NotQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(ExactQueryNode node, Object data) {
+    public Object visit(ExactQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(NodeTypeQueryNode node, Object data) {
+    public Object visit(NodeTypeQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(TextsearchQueryNode node, Object data) {
+    public Object visit(TextsearchQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(PathQueryNode node, Object data) {
+    public Object visit(PathQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(LocationStepQueryNode node, Object data) {
+    public Object visit(LocationStepQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(RelationQueryNode node, Object data) {
+    public Object visit(RelationQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(OrderQueryNode node, Object data) {
+    public Object visit(OrderQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(DerefQueryNode node, Object data) {
+    public Object visit(DerefQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 
-    public Object visit(PropertyFunctionQueryNode node, Object data) {
+    public Object visit(PropertyFunctionQueryNode node, Object data) throws RepositoryException {
         return data;
     }
 }

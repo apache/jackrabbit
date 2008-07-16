@@ -16,6 +16,15 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.QueryResult;
+
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
@@ -32,17 +41,9 @@ import org.apache.jackrabbit.spi.commons.query.OrderQueryNode;
 import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
+import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.lucene.search.Query;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.QueryResult;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Implements the {@link org.apache.jackrabbit.core.query.ExecutableQuery}
@@ -149,7 +150,7 @@ public class QueryImpl extends AbstractQueryImpl {
             final Name[] ntName = new Name[1];
             steps[steps.length - 1].acceptOperands(new DefaultQueryNodeVisitor() {
 
-                public Object visit(AndQueryNode node, Object data) {
+                public Object visit(AndQueryNode node, Object data) throws RepositoryException {
                     return node.acceptOperands(this, data);
                 }
 

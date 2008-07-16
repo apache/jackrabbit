@@ -20,11 +20,11 @@ import java.util.Date;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 
 /**
  * Implements a query node that defines property value relation.
@@ -82,7 +82,7 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
      * The operation type of this relation. One of the operation values defined
      * in {@link QueryConstants}.
      */
-    private int operation;
+    private final int operation;
 
     /**
      * The value type of this relation. One of {@link #TYPE_DATE}, {@link
@@ -103,8 +103,9 @@ public class RelationQueryNode extends NAryQueryNode implements QueryConstants {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 

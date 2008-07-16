@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * Defines a location step for querying the path of a node.
@@ -156,8 +158,9 @@ public class LocationStepQueryNode extends NAryQueryNode {
 
     /**
      * {@inheritDoc}
+     * @throws RepositoryException
      */
-    public Object accept(QueryNodeVisitor visitor, Object data) {
+    public Object accept(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         return visitor.visit(this, data);
     }
 
