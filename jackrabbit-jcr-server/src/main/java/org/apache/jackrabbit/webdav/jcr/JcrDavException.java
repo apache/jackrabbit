@@ -44,7 +44,10 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.LinkedHashMap;
+
 
 /**
  * <code>JcrDavException</code> extends the {@link DavException} in order to
@@ -54,8 +57,8 @@ public class JcrDavException extends DavException {
 
     private static Logger log = LoggerFactory.getLogger(JcrDavException.class);
 
-    // mapping of Jcr exceptions to error codes.
-    private static HashMap codeMap = new HashMap();
+    // ordered mapping of Jcr exceptions to error codes.
+    private static Map codeMap = new LinkedHashMap(20);
     static {
         codeMap.put(AccessDeniedException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
         codeMap.put(ConstraintViolationException.class, new Integer(DavServletResponse.SC_CONFLICT));
@@ -71,13 +74,30 @@ public class JcrDavException extends DavException {
         codeMap.put(NoSuchWorkspaceException.class, new Integer(DavServletResponse.SC_CONFLICT));
         codeMap.put(PathNotFoundException.class, new Integer(DavServletResponse.SC_CONFLICT));
         codeMap.put(ReferentialIntegrityException.class, new Integer(DavServletResponse.SC_CONFLICT));
-        codeMap.put(RepositoryException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
         codeMap.put(LoginException.class, new Integer(DavServletResponse.SC_UNAUTHORIZED));
         codeMap.put(UnsupportedRepositoryOperationException.class, new Integer(DavServletResponse.SC_NOT_IMPLEMENTED));
         codeMap.put(ValueFormatException.class, new Integer(DavServletResponse.SC_CONFLICT));
         codeMap.put(VersionException.class, new Integer(DavServletResponse.SC_CONFLICT));
+        codeMap.put(RepositoryException.class, new Integer(DavServletResponse.SC_FORBIDDEN));
     }
 
+    private static int lookupErrorCode(Class exceptionClass) {
+        Integer code = (Integer) codeMap.get(exceptionClass);
+        if (code == null) {
+            for (Iterator it = codeMap.keySet().iterator(); it.hasNext();) {
+                Class jcrExceptionClass = (Class) it.next();
+                if (jcrExceptionClass.isAssignableFrom(exceptionClass)) {
+                    code = (Integer) codeMap.get(jcrExceptionClass);
+                    break;
+                }
+            }
+            if (code == null) {
+                code = new Integer(DavServletResponse.SC_FORBIDDEN); // fallback
+            }
+        }
+        return code.intValue();
+    }
+    
     private Class exceptionClass;
 
     /**
@@ -108,7 +128,7 @@ public class JcrDavException extends DavException {
      * @see JcrDavException#JcrDavException(Throwable, int)
      */
     public JcrDavException(RepositoryException cause) {
-        this(cause, ((Integer)codeMap.get(cause.getClass())).intValue());
+        this(cause, lookupErrorCode(cause.getClass()));
     }
 
     /**
