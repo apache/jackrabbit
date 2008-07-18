@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.Session;
 import java.io.ByteArrayOutputStream;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
@@ -30,26 +29,7 @@ import java.util.Calendar;
  * <code>IndexingAggregateTest</code> checks if the nt:file nt:resource
  * aggregate defined in workspace indexing-test works properly.
  */
-public class IndexingAggregateTest extends AbstractQueryTest {
-
-    private Session session;
-
-    private Node testRootNode;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        session = helper.getSuperuserSession("indexing-test");
-        testRootNode = cleanUpTestRoot(session);
-        // overwrite query manager
-        qm = session.getWorkspace().getQueryManager();
-    }
-
-    protected void tearDown() throws Exception {
-        cleanUpTestRoot(session);
-        session = null;
-        testRootNode = null;
-        super.tearDown();
-    }
+public class IndexingAggregateTest extends AbstractIndexingTest {
 
     public void testNtFileAggregate() throws RepositoryException, IOException {
         String sqlBase = "SELECT * FROM nt:file"

@@ -1,11 +1,40 @@
 <?xml version="1.0"?>
-<!DOCTYPE configuration SYSTEM "http://jackrabbit.apache.org/dtd/indexing-configuration-1.0.dtd">
+<!DOCTYPE configuration SYSTEM "http://jackrabbit.apache.org/dtd/indexing-configuration-1.1.dtd">
 <configuration xmlns:jcr="http://www.jcp.org/jcr/1.0"
                xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
-  <aggregate primaryType="nt:file">
-    <include>jcr:content</include>
-    <include>jcr:content/*</include>
-  </aggregate>
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost1'">
+        <!-- default boost: 1.0 -->
+        <property>text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost2'">
+        <!-- boost: 2.0 -->
+        <property boost="2.0">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='boost3'">
+        <!-- boost: 3.0 -->
+        <property boost="3.0">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='nsiTrue'">
+        <!-- default value for nodeScopeIndex is true -->
+        <property>text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='nsiFalse'">
+        <!-- do not include text in node scope index -->
+        <property nodeScopeIndex="false">text</property>
+    </index-rule>
+
+    <index-rule nodeType="nt:unstructured" condition="@rule='regexp'">
+        <property isRegexp="true">.*Text</property>
+    </index-rule>
+
+    <aggregate primaryType="nt:file">
+        <include>jcr:content</include>
+        <include>jcr:content/*</include>
+    </aggregate>
 
 </configuration>

@@ -32,7 +32,11 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.Pattern;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.lucene.analysis.Analyzer;
@@ -67,6 +71,11 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * The logger instance for this class
      */
     private static final Logger log = LoggerFactory.getLogger(IndexingConfigurationImpl.class);
+
+    /**
+     * The path factory instance.
+     */
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
 
     /**
      * A namespace resolver for parsing QNames in the configuration.
@@ -155,7 +164,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                                         // set analyzer for the fulltext property fieldname
                                         int idx = fieldName.indexOf(':');
                                         fieldName = fieldName.substring(0, idx + 1)
-                                                    + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);;
+                                                    + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
                                         Object prevAnalyzer = analyzers.put(fieldName, analyzer);
                                         if (prevAnalyzer != null) {
                                             log.warn("Property " + propName.getLocalName()
@@ -343,15 +352,18 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
      * Creates property configurations defined in the <code>config</code>.
      *
      * @param config the fulltext indexing configuration.
-     * @return the property configurations defined in the <code>config</code>.
+     * @param propConfigs will be filled with exact <code>Name</code> to
+     *                    <code>PropertyConfig</code> mappings.
+     * @param namePatterns will be filled with <code>NamePattern</code>s.
      * @throws IllegalNameException   if the node type name contains illegal
      *                                characters.
      * @throws NamespaceException if the node type contains an unknown
      *                                prefix.
      */
-    private Map getPropertyConfigs(Node config)
+    private void createPropertyConfigs(Node config,
+                                       Map propConfigs,
+                                       List namePatterns)
             throws IllegalNameException, NamespaceException {
-        Map configs = new HashMap();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node n = childNodes.item(i);
@@ -376,13 +388,25 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                             nsIndex.getNodeValue()).booleanValue();
                 }
 
-                // get property name
-                Name propName = resolver.getQName(getTextContent(n));
+                // get isRegexp flag
+                boolean isRegexp = false;
+                Node regexp = attributes.getNamedItem("isRegexp");
+                if (regexp != null) {
+                    isRegexp = Boolean.valueOf(
+                            regexp.getNodeValue()).booleanValue();
+                }
 
-                configs.put(propName, new PropertyConfig(boost, nodeScopeIndex));
+                PropertyConfig pc = new PropertyConfig(boost, nodeScopeIndex);
+
+                if (isRegexp) {
+                    namePatterns.add(new NamePattern(
+                            getTextContent(n), pc, resolver));
+                } else {
+                    Name propName = resolver.getQName(getTextContent(n));
+                    propConfigs.put(propName, pc);
+                }
             }
         }
-        return configs;
     }
 
     /**
@@ -484,6 +508,66 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         return content.toString();
     }
 
+    /**
+     * A property name pattern.
+     */
+    private static final class NamePattern {
+
+        /**
+         * The pattern to match.
+         */
+        private final Pattern pattern;
+
+        /**
+         * The associated configuration.
+         */
+        private final PropertyConfig config;
+
+        /**
+         * Creates a new name pattern.
+         *
+         * @param pattern the pattern as read from the configuration file.
+         * @param config the associated configuration.
+         * @param resolver a namespace resolver for parsing name from the
+         *                 configuration.
+         * @throws IllegalNameException if the prefix of the name pattern is
+         *                              illegal.
+         * @throws NamespaceException if the prefix of the name pattern cannot
+         *                            be resolved.
+         */
+        private NamePattern(String pattern,
+                            PropertyConfig config,
+                            NameResolver resolver)
+                throws IllegalNameException, NamespaceException {
+            String uri = Name.NS_DEFAULT_URI;
+            String localPattern = pattern;
+            int idx = pattern.indexOf(':');
+            if (idx != -1) {
+                // use a dummy local name to get namespace uri
+                uri = resolver.getQName(pattern.substring(0, idx) + ":a").getNamespaceURI();
+                localPattern = pattern.substring(idx + 1);
+            }
+            this.pattern = Pattern.name(uri, localPattern);
+            this.config = config;
+        }
+
+        /**
+         * @param path the path to match.
+         * @return <code>true</code> if <code>path</code> matches this name
+         *         pattern; <code>false</code> otherwise.
+         */
+        boolean matches(Path path) {
+            return pattern.match(path).isFullMatch();
+        }
+
+        /**
+         * @return the property configuration for this name pattern.
+         */
+        PropertyConfig getConfig() {
+            return config;
+        }
+    }
+
     private class IndexingRule {
 
         /**
@@ -494,7 +578,12 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         /**
          * Map of {@link PropertyConfig}. Key=Name of property.
          */
-        private final Map propConfigs;
+        private final Map propConfigs = new HashMap();
+
+        /**
+         * List of {@link NamePattern}s.
+         */
+        private final List namePatterns = new ArrayList();
 
         /**
          * An expression based on a relative path.
@@ -516,9 +605,9 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         IndexingRule(Node config)
                 throws MalformedPathException, IllegalNameException, NamespaceException {
             this.nodeTypeName = getNodeTypeName(config);
-            this.propConfigs = getPropertyConfigs(config);
             this.condition = getCondition(config);
             this.boost = getNodeBoost(config);
+            createPropertyConfigs(config, propConfigs, namePatterns);
         }
 
         /**
@@ -546,7 +635,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          *         <code>false</code> otherwise.
          */
         public boolean isIndexed(Name propertyName) {
-            return propConfigs.containsKey(propertyName);
+            return getConfig(propertyName) != null;
         }
 
         /**
@@ -558,7 +647,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          * @return the boost value for the property.
          */
         public float getBoost(Name propertyName) {
-            PropertyConfig config = (PropertyConfig) propConfigs.get(propertyName);
+            PropertyConfig config = getConfig(propertyName);
             if (config != null) {
                 return config.boost;
             } else {
@@ -568,7 +657,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
 
         /**
          * Returns <code>true</code> if the property with the given name should
-         * be included in the node scope fulltext index. If there is not
+         * be included in the node scope fulltext index. If there is no
          * configuration entry for that propery <code>false</code> is returned.
          *
          * @param propertyName the name of a property.
@@ -576,7 +665,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          *         node scope fulltext index.
          */
         public boolean isIncludedInNodeScopeIndex(Name propertyName) {
-            PropertyConfig config = (PropertyConfig) propConfigs.get(propertyName);
+            PropertyConfig config = getConfig(propertyName);
             if (config != null) {
                 return config.nodeScopeIndex;
             } else {
@@ -604,6 +693,29 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         }
 
         //-------------------------< internal >---------------------------------
+
+        /**
+         * @param propertyName name of a property.
+         * @return the property configuration or <code>null</code> if this
+         *         indexing rule does not contain a configuration for the given
+         *         property.
+         */
+        private PropertyConfig getConfig(Name propertyName) {
+            PropertyConfig config = (PropertyConfig) propConfigs.get(propertyName);
+            if (config != null) {
+                return config;
+            } else if (namePatterns.size() > 0) {
+                Path path = PATH_FACTORY.create(propertyName);
+                // check patterns
+                for (Iterator it = namePatterns.iterator(); it.hasNext(); ) {
+                    NamePattern np = (NamePattern) it.next();
+                    if (np.matches(path)) {
+                        return np.getConfig();
+                    }
+                }
+            }
+            return null;
+        }
 
         /**
          * Reads the node type of the root node of the indexing rule.
@@ -713,7 +825,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                         NodeState.ChildNodeEntry cne =
                                 (NodeState.ChildNodeEntry) super.next();
                         try {
-                            return (NodeState) ism.getItemState(cne.getId());
+                            return ism.getItemState(cne.getId());
                         } catch (ItemStateException e) {
                             NoSuchElementException nsee = new NoSuchElementException("No node with id " + cne.getId() + " found in child axis");
                             nsee.initCause(e);

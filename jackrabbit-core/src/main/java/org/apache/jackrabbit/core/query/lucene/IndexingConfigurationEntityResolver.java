@@ -22,6 +22,9 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * <code>IndexingConfigurationEntityResolver</code> implements an entity
@@ -30,23 +33,29 @@ import java.io.InputStream;
 public class IndexingConfigurationEntityResolver implements EntityResolver {
 
     /**
-     * The system id of the indexing configuration DTD.
+     * Maps system ids to DTD resource names.
      */
-    private static final String SYSTEM_ID =
-            "http://jackrabbit.apache.org/dtd/indexing-configuration-1.0.dtd";
+    private static final Map SYSTEM_IDS;
 
-    /**
-     * The name of the DTD resource.
-     */
-    private static final String RESOURCE_NAME = "indexing-configuration-1.0.dtd";
+    static {
+        Map systemIds = new HashMap();
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/indexing-configuration-1.0.dtd",
+                "indexing-configuration-1.0.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/indexing-configuration-1.1.dtd",
+                "indexing-configuration-1.1.dtd");
+        SYSTEM_IDS = Collections.unmodifiableMap(systemIds);
+    }
 
     /**
      * {@inheritDoc}
      */
     public InputSource resolveEntity(String publicId, String systemId)
             throws SAXException, IOException {
-        if (SYSTEM_ID.equals(systemId)) {
-            InputStream in = getClass().getResourceAsStream(RESOURCE_NAME);
+        String resourceName = (String) SYSTEM_IDS.get(systemId);
+        if (resourceName != null) {
+            InputStream in = getClass().getResourceAsStream(resourceName);
             if (in != null) {
                 return new InputSource(in);
             }
