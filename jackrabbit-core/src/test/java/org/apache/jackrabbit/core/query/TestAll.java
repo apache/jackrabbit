@@ -57,6 +57,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ExcerptTest.class);
         suite.addTestSuite(IndexingAggregateTest.class);
         suite.addTestSuite(IndexFormatVersionTest.class);
+        suite.addTestSuite(IndexingRuleTest.class);
 
         return suite;
     }
