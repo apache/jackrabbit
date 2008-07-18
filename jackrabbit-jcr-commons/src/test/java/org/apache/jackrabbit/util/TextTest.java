@@ -20,6 +20,10 @@ import junit.framework.TestCase;
 import org.apache.jackrabbit.name.IllegalNameException;
 import org.apache.jackrabbit.name.NameFormat;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 /**
  * Test cases for the Text utility class.
  */
@@ -62,4 +66,41 @@ public class TextTest extends TestCase {
         checkEscape("%/:[]*'\"|\t\r\n");
     }
 
+    public void testIsDescendant() {
+        String parent = "/";
+        List descendants = new ArrayList();
+        descendants.add("/a");
+        descendants.add("/a/b");
+        for (Iterator it = descendants.iterator(); it.hasNext();) {
+            String desc = it.next().toString();
+            assertTrue(desc + " must be descendant of " + parent, Text.isDescendant(parent, desc));
+        }
+        List nonDescendants = new ArrayList();
+        nonDescendants.add("/");
+        nonDescendants.add("a");
+        for (Iterator it = nonDescendants.iterator(); it.hasNext();) {
+            String nonDesc = it.next().toString();
+            assertFalse(nonDesc + " isn't a descendant of " + parent,Text.isDescendant(parent, nonDesc));
+        }
+
+        parent = "/a/b";
+        descendants = new ArrayList();
+        descendants.add("/a/b/c");
+        descendants.add("/a/b/c/");
+        for (Iterator it = descendants.iterator(); it.hasNext();) {
+            String desc = it.next().toString();
+            assertTrue(desc + " must be descendant of " + parent, Text.isDescendant(parent, desc));
+        }
+        nonDescendants = new ArrayList();
+        nonDescendants.add("/");
+        nonDescendants.add("/a");
+        nonDescendants.add("/a/b");
+        nonDescendants.add("/a/b/");
+        nonDescendants.add("/d");
+        nonDescendants.add("/d/b");
+        for (Iterator it = nonDescendants.iterator(); it.hasNext();) {
+            String nonDesc = it.next().toString();
+            assertFalse(nonDesc + " isn't a descendant of " + parent, Text.isDescendant(parent, nonDesc));
+        }
+    }
 }

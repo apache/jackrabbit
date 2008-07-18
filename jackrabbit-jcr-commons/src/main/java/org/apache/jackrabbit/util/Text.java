@@ -604,9 +604,9 @@ public class Text {
      *         <code>false</code> otherwise.
      */
     public static boolean isDescendant(String path, String descendant) {
-        return !path.equals(descendant) &&
-                descendant.startsWith(path) &&
-                descendant.charAt(path.length()) == '/';
+        String pattern = path.endsWith("/") ? path : path + "/";
+        return !pattern.equals(descendant) &&
+                descendant.startsWith(pattern);
     }
 
     /**
