@@ -404,10 +404,9 @@ public class NodeIndexer {
                 Reader reader = extractor.extractText(stream, type, encoding);
                 doc.add(createFulltextField(reader));
             }
-        } catch (Exception e) {
+        } catch (Throwable t) {
             // TODO: How to recover from a transient indexing failure?
-            log.warn("Exception while indexing binary property: " + e.toString());
-            log.debug("Dump: ", e);
+            log.warn("Exception while indexing binary property", t);
         }
     }
 
