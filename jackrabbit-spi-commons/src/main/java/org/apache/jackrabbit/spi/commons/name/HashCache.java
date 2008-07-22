@@ -1,0 +1,62 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.spi.commons.name;
+
+/**
+ * Simple utility class that implements a fixed-size and thread-safe
+ * (non-blocking) cache of objects. The cache is simply an array
+ * of objects, indexed by their hash codes. If more than one objects
+ * hash to the same location, only the most recently accessed object is
+ * kept in the cache.
+ *
+ * @see https://issues.apache.org/jira/browse/JCR-1663
+ */
+class HashCache {
+
+    /**
+     * Size of the cache (must be a power of two). Note that this is the
+     * maximum number of objects kept in the cache, but due to hashing it
+     * can well be that only a part of the cache array is filled even if
+     * many more distinct objects are being accessed.
+     */
+    private static final int SIZE_POWER_OF_2 = 1024;
+
+    /**
+     * Array of cached objects, indexed by their hash codes
+     * (module size of the array).
+     */
+    private final Object[] array = new Object[SIZE_POWER_OF_2];
+
+    /**
+     * If a cached copy of the given object already exists, then returns
+     * that copy. Otherwise the given object is cached and returned.
+     *
+     * @param object object to return from the cache
+     * @return the given object or a previously cached copy
+     */
+    public Object get(Object object) {
+        int position = object.hashCode() & (SIZE_POWER_OF_2 - 1);
+        Object previous = array[position];
+        if (object.equals(previous)) {
+            return previous;
+        } else {
+            array[position] = object;
+            return object;
+        }
+    }
+
+}
