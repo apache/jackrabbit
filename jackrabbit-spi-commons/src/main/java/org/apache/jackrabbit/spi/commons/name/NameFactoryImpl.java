@@ -26,6 +26,13 @@ public class NameFactoryImpl implements NameFactory {
 
     private static final NameFactory INSTANCE = new NameFactoryImpl();
 
+    /**
+     * Cache of flyweight name instances.
+     *
+     * @see https://issues.apache.org/jira/browse/JCR-1663
+     */
+    private final HashCache cache = new HashCache();
+
     private NameFactoryImpl() {};
 
     public static NameFactory getInstance() {
@@ -44,7 +51,7 @@ public class NameFactoryImpl implements NameFactory {
         if (localName == null) {
             throw new IllegalArgumentException("invalid localName specified");
         }
-        return new NameImpl(namespaceURI, localName);
+        return (Name) cache.get(new NameImpl(namespaceURI, localName));
     }
 
     /**
@@ -63,9 +70,9 @@ public class NameFactoryImpl implements NameFactory {
         }
         if (i == nameString.length() - 1) {
             throw new IllegalArgumentException("Invalid Name literal");
-        } else {
-            return new NameImpl(nameString.substring(1, i), nameString.substring(i + 1));
         }
+        return (Name) cache.get(new NameImpl(
+                nameString.substring(1, i), nameString.substring(i + 1)));
     }
 
     //--------------------------------------------------------< inner class >---
