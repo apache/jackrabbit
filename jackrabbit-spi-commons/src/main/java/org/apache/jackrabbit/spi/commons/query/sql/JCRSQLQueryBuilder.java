@@ -424,12 +424,8 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 predicateNode = in;
             } else if (type == QueryConstants.OPERATION_NULL
                     || type == QueryConstants.OPERATION_NOT_NULL) {
-                // create a dummy literal
-                ASTLiteral star = new ASTLiteral(JCRSQLParserTreeConstants.JJTLITERAL);
-                star.setType(QueryConstants.TYPE_STRING);
-                star.setValue("%");
                 predicateNode = createRelationQueryNode(parent,
-                        identifier, type, star);
+                        identifier, type, null);
             } else if (type == QueryConstants.OPERATION_SIMILAR) {
                 ASTLiteral literal;
                 if (node.children.length == 1) {
@@ -598,7 +594,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
      * @param parent        the parent node for the created <code>RelationQueryNode</code>.
      * @param propertyName  the property name for the relation.
      * @param operationType the operation type.
-     * @param literal       the literal value for the relation.
+     * @param literal       the literal value for the relation or
+     *                      <code>null</code> if the relation does not have a
+     *                      literal (e.g. IS NULL).
      * @return a <code>RelationQueryNode</code>.
      * @throws IllegalArgumentException if the literal value does not conform
      *                                  to its type. E.g. a malformed String representation of a date.
@@ -609,7 +607,6 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                                                       ASTLiteral literal)
             throws IllegalArgumentException {
 
-        String stringValue = literal.getValue();
         RelationQueryNode node = null;
 
         try {
@@ -619,28 +616,31 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                 builder.addLast(propertyName);
                 relPath = builder.getPath();
             }
-            if (literal.getType() == QueryConstants.TYPE_DATE) {
+            if (literal == null) {
+                node = factory.createRelationQueryNode(parent, operationType);
+                node.setRelativePath(relPath);
+            } else if (literal.getType() == QueryConstants.TYPE_DATE) {
                 SimpleDateFormat format = new SimpleDateFormat(DATE_PATTERN);
-                Date date = format.parse(stringValue);
+                Date date = format.parse(literal.getValue());
                 node = factory.createRelationQueryNode(parent, operationType);
                 node.setRelativePath(relPath);
                 node.setDateValue(date);
             } else if (literal.getType() == QueryConstants.TYPE_DOUBLE) {
-                double d = Double.parseDouble(stringValue);
+                double d = Double.parseDouble(literal.getValue());
                 node = factory.createRelationQueryNode(parent, operationType);
                 node.setRelativePath(relPath);
                 node.setDoubleValue(d);
             } else if (literal.getType() == QueryConstants.TYPE_LONG) {
-                long l = Long.parseLong(stringValue);
+                long l = Long.parseLong(literal.getValue());
                 node = factory.createRelationQueryNode(parent, operationType);
                 node.setRelativePath(relPath);
                 node.setLongValue(l);
             } else if (literal.getType() == QueryConstants.TYPE_STRING) {
                 node = factory.createRelationQueryNode(parent, operationType);
                 node.setRelativePath(relPath);
-                node.setStringValue(stringValue);
+                node.setStringValue(literal.getValue());
             } else if (literal.getType() == QueryConstants.TYPE_TIMESTAMP) {
-                Calendar c = ISO8601.parse(stringValue);
+                Calendar c = ISO8601.parse(literal.getValue());
                 node = factory.createRelationQueryNode(parent, operationType);
                 node.setRelativePath(relPath);
                 node.setDateValue(c.getTime());
