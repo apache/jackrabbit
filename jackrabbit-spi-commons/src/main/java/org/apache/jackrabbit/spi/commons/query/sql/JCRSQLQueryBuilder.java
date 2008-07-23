@@ -470,7 +470,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // pass to operands
         node.childrenAccept(this, andQuery);
 
-        parent.addOperand(andQuery);
+        if (andQuery.getNumOperands() > 0) {
+            parent.addOperand(andQuery);
+        }
         return parent;
     }
 
@@ -480,7 +482,9 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // pass to operand
         node.childrenAccept(this, notQuery);
 
-        parent.addOperand(notQuery);
+        if (notQuery.getNumOperands() > 0) {
+            parent.addOperand(notQuery);
+        }
         return parent;
     }
 
