@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -114,6 +115,12 @@ public class BundleBinding extends ItemStateBinding {
         // properties
         name = readIndexedQName(in);
         while (name != null) {
+            // skip redundant primaryType, mixinTypes and uuid properties
+            if (name.equals(NameConstants.JCR_PRIMARYTYPE)
+                || name.equals(NameConstants.JCR_MIXINTYPES)
+                || name.equals(NameConstants.JCR_UUID)) {
+                continue;
+            }
             PropertyId pId = new PropertyId(bundle.getId(), name);
             NodePropBundle.PropertyEntry pState = readPropertyEntry(in, pId);
             bundle.addProperty(pState);
@@ -265,6 +272,12 @@ public class BundleBinding extends ItemStateBinding {
         iter = bundle.getPropertyNames().iterator();
         while (iter.hasNext()) {
             Name pName = (Name) iter.next();
+            // skip redundant primaryType, mixinTypes and uuid properties
+            if (pName.equals(NameConstants.JCR_PRIMARYTYPE)
+                || pName.equals(NameConstants.JCR_MIXINTYPES)
+                || pName.equals(NameConstants.JCR_UUID)) {
+                continue;
+            }
             NodePropBundle.PropertyEntry pState = bundle.getPropertyEntry(pName);
             if (pState == null) {
                 log.error("PropertyState missing in bundle: " + pName);
