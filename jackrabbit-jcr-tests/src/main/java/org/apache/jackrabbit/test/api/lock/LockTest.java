@@ -246,7 +246,7 @@ public class LockTest extends AbstractJCRTest {
     public void testCheckedIn()
             throws NotExecutableException, RepositoryException {
 
-        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
+        if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
         }
 
