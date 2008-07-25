@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jca;
 
+import org.apache.jackrabbit.api.XASession;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -40,6 +41,8 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
+import javax.transaction.xa.XAResource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,8 +51,7 @@ import java.security.AccessControlException;
 /**
  * This class implements the JCA implementation of session.
  */
-public final class JCASessionHandle
-        implements Session {
+public final class JCASessionHandle implements XASession {
 
     /**
      * Managed connection.
@@ -80,7 +82,7 @@ public final class JCASessionHandle
     /**
      * Return the session.
      */
-    private Session getSession() {
+    private XASession getSession() {
         return mc.getSession(this);
     }
 
@@ -327,4 +329,16 @@ public final class JCASessionHandle
     public void removeLockToken(String arg0) {
         getSession().removeLockToken(arg0);
     }
+
+    //---------------------------------------------------------< XASession >--
+
+    /**
+     * Returns the XAResource associated with this session.
+     *
+     * @return XA resource
+     */
+    public XAResource getXAResource() {
+        return getSession().getXAResource();
+    }
+
 }

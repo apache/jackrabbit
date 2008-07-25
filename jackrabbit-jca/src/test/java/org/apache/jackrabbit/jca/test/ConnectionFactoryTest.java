@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jca.test;
 
+import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.jca.JCAConnectionRequestInfo;
 import org.apache.jackrabbit.jca.JCARepositoryHandle;
 import org.apache.jackrabbit.jca.JCASessionHandle;
@@ -101,6 +102,21 @@ public final class ConnectionFactoryTest
         assertTrue(cf != null);
         assertTrue(cf instanceof Serializable);
         assertTrue(cf instanceof Referenceable);
+    }
+
+    /**
+     * Test if the session supports transactions
+     */
+    public void testTransactionSupport() throws Exception {
+        // Create the connection factory
+        Object cf = mcf.createConnectionFactory();
+        assertTrue(cf instanceof JCARepositoryHandle);
+        Repository repository = (Repository) cf;
+
+        // Open a session
+        Session session = repository.login(JCR_SUPERUSER);
+        assertTrue(session instanceof XASession);
+        session.logout();
     }
 
 }
