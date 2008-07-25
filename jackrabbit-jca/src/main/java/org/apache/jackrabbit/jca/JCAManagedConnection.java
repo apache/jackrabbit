@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.jca;
 
+import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.XASession;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
