@@ -23,7 +23,7 @@ import javax.jcr.observation.Event;
  * a method to detect whether the changes happened on locally
  * or remotely in a clustered environment.
  */
-public interface ExtendedEvent extends Event {
+public interface JackrabbitEvent extends Event {
 
     /**
      * Return a flag indicating whether this is an externally generated event.
