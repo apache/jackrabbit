@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import org.apache.jackrabbit.api.observation.ExtendedEvent;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -28,9 +29,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
 /**
- * Implementation of the {@link javax.jcr.observation.Event} interface.
+ * Implementation of the {@link javax.jcr.observation.Event} and
+ * the {@link ExtendedEvent} interface.
  */
-public final class EventImpl implements Event {
+public final class EventImpl implements ExtendedEvent {
 
     /**
      * Logger instance for this class
@@ -144,6 +146,7 @@ public final class EventImpl implements Event {
      *
      * @return <code>true</code> if this is an external event;
      *         <code>false</code> otherwise
+     * @see ExtendedEvent#isExternal()
      */
     public boolean isExternal() {
         return eventState.isExternal();
