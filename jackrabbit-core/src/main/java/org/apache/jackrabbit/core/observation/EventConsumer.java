@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.api.observation.LocalEventListener;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -239,7 +238,7 @@ class EventConsumer {
             return;
         }
         // check if filtered iterator has at least one event
-        EventIterator it = new FilteredEventIterator(events, filter, denied, listener instanceof LocalEventListener);
+        EventIterator it = new FilteredEventIterator(events, filter, denied);
         if (it.hasNext()) {
             listener.onEvent(it);
         } else {
