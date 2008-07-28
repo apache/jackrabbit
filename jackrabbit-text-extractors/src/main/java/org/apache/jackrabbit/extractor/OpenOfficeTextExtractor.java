@@ -54,7 +54,11 @@ public class OpenOfficeTextExtractor extends AbstractTextExtractor {
                            "application/vnd.oasis.opendocument.graphics",
                            "application/vnd.oasis.opendocument.presentation",
                            "application/vnd.oasis.opendocument.spreadsheet",
-                           "application/vnd.oasis.opendocument.text"});
+                           "application/vnd.oasis.opendocument.text",
+                           "application/vnd.sun.xml.calc",
+                           "application/vnd.sun.xml.draw",
+                           "application/vnd.sun.xml.impress",
+                           "application/vnd.sun.xml.writer"});
     }
 
     //-------------------------------------------------------< TextExtractor >
