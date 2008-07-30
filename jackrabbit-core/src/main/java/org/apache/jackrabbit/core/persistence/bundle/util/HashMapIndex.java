@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.util.StringIndex;
 
 /**
  * Implements a {@link StringIndex} that is based on a hashmap and persists

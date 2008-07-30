@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 import javax.jcr.NamespaceException;
 
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.util.StringIndex;
 
 /**
  * Implements a string index that is based on the namespace indexes of the

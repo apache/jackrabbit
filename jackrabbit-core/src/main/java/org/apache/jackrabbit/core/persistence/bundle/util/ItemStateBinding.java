@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.data.DataStore;

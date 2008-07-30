@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
