@@ -16,28 +16,37 @@
  */
 package org.apache.jackrabbit.spi.commons.conversion;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-
-import javax.jcr.NamespaceException;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
 
 /**
  * <code>DefaultNamePathResolver</code>...
  */
 public class DefaultNamePathResolver implements NamePathResolver {
 
-    private static Logger log = LoggerFactory.getLogger(DefaultNamePathResolver.class);
-
     private final NameResolver nResolver;
+
     private final PathResolver pResolver;
 
     public DefaultNamePathResolver(NamespaceResolver nsResolver) {
         this(nsResolver, false);
+    }
+
+    public DefaultNamePathResolver(Session session) {
+        this(new SessionNamespaceResolver(session));
+    }
+
+    public DefaultNamePathResolver(NamespaceRegistry registry) {
+        this(new RegistryNamespaceResolver(registry));
     }
 
     public DefaultNamePathResolver(NamespaceResolver nsResolver, boolean enableCaching) {

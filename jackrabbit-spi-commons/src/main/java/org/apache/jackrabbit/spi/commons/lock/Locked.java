@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.lock;
 
-import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -134,7 +133,7 @@ public abstract class Locked {
         }
 
         Session session = lockable.getSession();
-        NamePathResolver resolver = new DefaultNamePathResolver(new SessionNamespaceResolver(session));
+        NamePathResolver resolver = new DefaultNamePathResolver(session);
 
         Lock lock;
         EventListener listener = null;

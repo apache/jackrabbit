@@ -216,7 +216,7 @@ public class ClusterNode implements Runnable,
         try {
             JournalConfig jc = cc.getJournalConfig();
             journal = (Journal) jc.newInstance();
-            journal.init(clusterNodeId, clusterContext.getNamespaceResovler());
+            journal.init(clusterNodeId, clusterContext.getNamespaceResolver());
             instanceRevision = journal.getInstanceRevision();
             journal.register(this);
         } catch (ConfigurationException e) {
