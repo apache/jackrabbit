@@ -32,6 +32,8 @@ import java.util.Iterator;
  * with <code>supportListeners</code> set to <code>true</code>. The default
  * constructor will not enable listener support and all listener related
  * methods will throw an {@link UnsupportedOperationException} in that case.
+ *
+ * @deprecated https://issues.apache.org/jira/browse/JCR-1700
  */
 public abstract class AbstractNamespaceResolver implements NamespaceResolver {
 

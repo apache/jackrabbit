@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +47,7 @@ import java.util.Properties;
  * namespace mappings are stored in a properties file.
  */
 public class FileBasedNamespaceMappings
-        extends AbstractNamespaceResolver
-        implements NamespaceMappings {
+        implements NamespaceResolver, NamespaceMappings {
 
     /**
      * Default logger instance for this class

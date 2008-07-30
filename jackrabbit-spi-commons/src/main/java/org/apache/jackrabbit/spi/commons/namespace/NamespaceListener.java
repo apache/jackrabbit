@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi.commons.namespace;
 
 /**
  * Receives notifications when a namespace mapping changes.
+ *
+ * @deprecated https://issues.apache.org/jira/browse/JCR-1700
  */
 public interface NamespaceListener {
 
