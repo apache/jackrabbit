@@ -987,9 +987,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         values.add(nsMappings.translatePropertyName(n));
                         log.debug("Coerced " + literal + " into NAME.");
                     } catch (NameException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
                     } catch (NamespaceException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
                     }
                     break;
                 case PropertyType.PATH:
@@ -999,9 +999,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         values.add(resolver.getJCRPath(p));
                         log.debug("Coerced " + literal + " into PATH.");
                     } catch (NameException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
                     } catch (NamespaceException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
                     }
                     break;
                 case PropertyType.DATE:
@@ -1011,7 +1011,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         values.add(DateField.timeToString(c.getTimeInMillis()));
                         log.debug("Coerced " + literal + " into DATE.");
                     } else {
-                        log.warn("Unable to coerce '" + literal + "' into a DATE.");
+                        log.debug("Unable to coerce '" + literal + "' into a DATE.");
                     }
                     break;
                 case PropertyType.DOUBLE:
@@ -1021,7 +1021,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         values.add(DoubleField.doubleToString(d));
                         log.debug("Coerced " + literal + " into DOUBLE.");
                     } catch (NumberFormatException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a DOUBLE: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a DOUBLE: " + e.toString());
                     }
                     break;
                 case PropertyType.LONG:
@@ -1031,7 +1031,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         values.add(LongField.longToString(l));
                         log.debug("Coerced " + literal + " into LONG.");
                     } catch (NumberFormatException e) {
-                        log.warn("Unable to coerce '" + literal + "' into a LONG: " + e.toString());
+                        log.debug("Unable to coerce '" + literal + "' into a LONG: " + e.toString());
                     }
                     break;
                 case PropertyType.STRING:
