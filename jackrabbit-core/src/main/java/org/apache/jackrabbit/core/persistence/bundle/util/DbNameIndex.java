@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.jackrabbit.core.util.StringIndex;
+
 /**
  * Implements a {@link StringIndex} that stores and retrieves the names from a
  * table in a database.

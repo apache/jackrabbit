@@ -36,7 +36,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NamespaceIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;

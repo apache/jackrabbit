@@ -54,7 +54,7 @@ import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryMana
 import org.apache.jackrabbit.core.persistence.bundle.util.DbNameIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.ErrorHandling;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.bundle.util.StringIndex;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.Serializer;

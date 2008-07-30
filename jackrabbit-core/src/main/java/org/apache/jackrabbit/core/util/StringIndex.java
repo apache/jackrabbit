@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.persistence.bundle.util;
+package org.apache.jackrabbit.core.util;
 
 /**
- * The <code>StringIndex</code> defines a very simple interface that mapps
- * strings to an integer and vice versa. the mapping must be unique and
- * stable across repository restarts.
+ * A persistent two-way mapping between strings and index integers. The
+ * index may or may not be sequential.
  */
 public interface StringIndex {
 
@@ -27,17 +26,17 @@ public interface StringIndex {
      * Returns the index for a given string. if the string does not exist in
      * the underlying index map a new index needs to be created.
      *
-     * @param string the string to return the index for
-     * @return the index of that string.
+     * @param string the indexed (or to be indexed) string
+     * @return index of the string
      */
     int stringToIndex(String string);
 
     /**
-     * Returns the string for a given index. if the index does not exist in the
-     * underlying index map, <code>null</code> is returned.
+     * Returns the string for a given index. If the index does not exist
+     * in the underlying index map, <code>null</code> is returned.
      *
-     * @param idx the index tp returns the string for.
-     * @return the string or <code>null</code>
+     * @param idx index of a string
+     * @return the indexed string, or <code>null</code>
      */
     String indexToString(int idx);
 
