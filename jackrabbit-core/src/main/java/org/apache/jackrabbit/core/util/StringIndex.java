@@ -23,21 +23,24 @@ package org.apache.jackrabbit.core.util;
 public interface StringIndex {
 
     /**
-     * Returns the index for a given string. if the string does not exist in
-     * the underlying index map a new index needs to be created.
+     * Returns the index for a given string. If the given string is not
+     * already indexed, the implementation can either automatically index
+     * it or throw an exception.
      *
      * @param string the indexed (or to be indexed) string
      * @return index of the string
+     * @throws IllegalArgumentException if the string is not
+     *                                  (and can not be) indexed
      */
-    int stringToIndex(String string);
+    int stringToIndex(String string) throws IllegalArgumentException;
 
     /**
-     * Returns the string for a given index. If the index does not exist
-     * in the underlying index map, <code>null</code> is returned.
+     * Returns the string for a given index.
      *
      * @param idx index of a string
-     * @return the indexed string, or <code>null</code>
+     * @return the indexed string
+     * @throws IllegalArgumentException if the indexed string does not exist
      */
-    String indexToString(int idx);
+    String indexToString(int idx) throws IllegalArgumentException;
 
 }

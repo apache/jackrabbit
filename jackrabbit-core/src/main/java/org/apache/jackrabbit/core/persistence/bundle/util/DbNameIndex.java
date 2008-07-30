@@ -109,15 +109,12 @@ public class DbNameIndex implements StringIndex {
     /**
      * {@inheritDoc}
      */
-    public String indexToString(int idx) {
+    public String indexToString(int idx) throws IllegalArgumentException {
         // check cache
         Integer index = new Integer(idx);
         String s = (String) index2String.get(index);
         if (s == null) {
             s = getString(idx);
-            if (s == null) {
-                throw new IllegalStateException("String empty???");
-            }
             if (s.equals(" ")) {
                 s = "";
             }
@@ -135,21 +132,29 @@ public class DbNameIndex implements StringIndex {
      */
     protected int insertString(String string) {
         // assert index does not exist
-        ResultSet rs = null;
+        int result = -1;
         try {
-            Statement stmt = connectionManager.executeStmt(nameInsertSQL, new Object[]{string}, true, 0);
-            rs = stmt.getGeneratedKeys();
-            if (!rs.next()) {
-                return -1;
-            } else {
-                return rs.getInt(1);
+            Statement stmt = connectionManager.executeStmt(
+                    nameInsertSQL, new Object[] { string }, true, 0);
+            ResultSet rs = stmt.getGeneratedKeys();
+            try {
+                if (rs.next()) {
+                    result = rs.getInt(1);
+                }
+            } finally {
+                rs.close();
             }
         } catch (Exception e) {
-            IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
+            IllegalStateException ise = new IllegalStateException(
+                    "Unable to insert index for string: " + string);
             ise.initCause(e);
             throw ise;
-        } finally {
-            closeResultSet(rs);
+        }
+        if (result != -1) {
+            return result;
+        } else {
+            // Could not get the index with getGeneratedKeys, try with SELECT
+            return getIndex(string);
         }
     }
 
@@ -159,59 +164,57 @@ public class DbNameIndex implements StringIndex {
      * @return the index or -1 if not found.
      */
     protected int getIndex(String string) {
-        ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(indexSelectSQL, new Object[]{string});
-            rs = stmt.getResultSet();
-            if (!rs.next()) {
-                return -1;
-            } else {
-                return rs.getInt(1);
+            Statement stmt = connectionManager.executeStmt(
+                    indexSelectSQL, new Object[] { string });
+            ResultSet rs = stmt.getResultSet();
+            try {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                } else {
+                    return -1;
+                }
+            } finally {
+                rs.close();
             }
         } catch (Exception e) {
-            IllegalStateException ise = new IllegalStateException("Unable to read index for string: " + string);
+            IllegalStateException ise = new IllegalStateException(
+                    "Unable to read index for string: " + string);
             ise.initCause(e);
             throw ise;
-        } finally {
-            closeResultSet(rs);
         }
     }
 
     /**
      * Retrieves the string from the database for the given index.
      * @param index the index to retrieve the string for.
-     * @return the string or <code>null</code> if not found.
+     * @return the string
+     * @throws IllegalArgumentException if the string is not found
      */
-    protected String getString(int index) {
-        ResultSet rs = null;
+    protected String getString(int index)
+            throws IllegalArgumentException, IllegalStateException {
+        String result = null;
         try {
-            Statement stmt = connectionManager.executeStmt(nameSelectSQL, new Object[]{new Integer(index)});
-            rs = stmt.getResultSet();
-            if (!rs.next()) {
-                return null;
-            } else {
-                return rs.getString(1);
+            Statement stmt = connectionManager.executeStmt(
+                    nameSelectSQL, new Object[] { new Integer(index) });
+            ResultSet rs = stmt.getResultSet();
+            try {
+                if (rs.next()) {
+                    result = rs.getString(1);
+                }
+            } finally {
+                rs.close();
             }
         } catch (Exception e) {
-            IllegalStateException ise = new IllegalStateException("Unable to read name for index: " + index);
+            IllegalStateException ise = new IllegalStateException(
+                    "Unable to read name for index: " + index);
             ise.initCause(e);
             throw ise;
-        } finally {
-            closeResultSet(rs);
         }
+        if (result == null) {
+            throw new IllegalArgumentException("Index not found: " + index);
+        }
+        return result;
     }
 
-    /**
-     * Closes the result set
-     * @param rs the result set.
-     */
-    protected void closeResultSet(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException se) {
-                // ignore
-            }
-        }
-    }
 }
