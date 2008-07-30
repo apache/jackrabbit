@@ -38,7 +38,7 @@ public interface ClusterContext {
      *
      * @return namespace resolver
      */
-    NamespaceResolver getNamespaceResovler();
+    NamespaceResolver getNamespaceResolver();
 
     /**
      * Notifies the cluster context that some workspace update events are available

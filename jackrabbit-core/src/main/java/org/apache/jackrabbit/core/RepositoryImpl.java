@@ -67,6 +67,7 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
@@ -2149,8 +2150,8 @@ public class RepositoryImpl extends AbstractRepository
         /**
          * {@inheritDoc}
          */
-        public NamespaceResolver getNamespaceResovler() {
-            return getNamespaceRegistry();
+        public NamespaceResolver getNamespaceResolver() {
+            return new RegistryNamespaceResolver(getNamespaceRegistry());
         }
 
         /**

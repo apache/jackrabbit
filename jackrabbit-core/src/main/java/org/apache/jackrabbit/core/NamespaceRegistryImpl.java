@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.StringIndex;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
@@ -44,8 +43,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * A <code>NamespaceRegistryImpl</code> ...
  */
 public class NamespaceRegistryImpl implements
-        NamespaceRegistry, NamespaceResolver,
-        NamespaceEventListener, StringIndex {
+        NamespaceRegistry, NamespaceEventListener, StringIndex {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -421,7 +419,7 @@ public class NamespaceRegistryImpl implements
         return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
     }
 
-    //--------------------------------< NamespaceRegistry & NamespaceResolver >
+    //---------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
      */
