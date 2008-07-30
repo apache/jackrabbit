@@ -202,27 +202,28 @@ public class SearchManager implements SynchronousEventListener {
         this.excludedNodeId = excludedNodeId;
 
         // register namespaces
-        nsReg.safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
+        safeRegisterNamespace(NS_XS_PREFIX, NS_XS_URI);
         try {
             if (nsReg.getPrefix(NS_FN_OLD_URI).equals(NS_FN_PREFIX)) {
                 // old uri is mapped to 'fn' prefix -> re-map
-                String prefix = null;
-                for (int i = 0; prefix == null; i++) {
-                    try {
-                        nsReg.getURI(NS_FN_OLD_PREFIX + i);
-                    } catch (NamespaceException e) {
-                        // not mapped to uri
+                String prefix = NS_FN_OLD_PREFIX;
+                try {
+                    // Find a free prefix
+                    for (int i = 2; true; i++) {
+                        nsReg.getURI(prefix);
                         prefix = NS_FN_OLD_PREFIX + i;
                     }
+                } catch (NamespaceException e) {
+                    // Re-map the old fn URI to that prefix
+                    nsReg.registerNamespace(prefix, NS_FN_OLD_URI);
                 }
-                nsReg.registerNamespace(prefix, NS_FN_OLD_URI);
             }
         } catch (NamespaceException e) {
             // does not yet exist
-            nsReg.safeRegisterNamespace(NS_FN_OLD_PREFIX, NS_FN_OLD_URI);
+            safeRegisterNamespace(NS_FN_OLD_PREFIX, NS_FN_OLD_URI);
         }
         // at this point the 'fn' prefix shouldn't be assigned anymore
-        nsReg.safeRegisterNamespace(NS_FN_PREFIX, NS_FN_URI);
+        safeRegisterNamespace(NS_FN_PREFIX, NS_FN_URI);
 
         Properties params = config.getParameters();
         queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
@@ -240,6 +241,43 @@ public class SearchManager implements SynchronousEventListener {
 
         // initialize query handler
         initializeQueryHandler();
+    }
+
+    /**
+     * Registers a namespace using the given prefix hint. Does nothing
+     * if the namespace is already registered. If the given prefix hint
+     * is not yet registered as a prefix, then it is used as the prefix
+     * of the registered namespace. Otherwise a unique prefix is generated
+     * based on the given hint.
+     *
+     * @param prefixHint the prefix hint
+     * @param uri the namespace URI
+     * @throws NamespaceException if an illegal attempt is made to register
+     *                            a mapping
+     * @throws RepositoryException if an unexpected error occurs
+     * @see #registerNamespace(String, String)
+     */
+    private void safeRegisterNamespace(String prefixHint, String uri)
+            throws NamespaceException, RepositoryException {
+        try {
+            // Check if the namespace is already registered
+            nsReg.getPrefix(uri);
+            // ... it is, so do nothing.
+        } catch (NamespaceException e1) {
+            // ... it is not, try to find a unique prefix.
+            String prefix = prefixHint;
+            try {
+                for (int suffix = 2; true; suffix++) {
+                    // Is this prefix already registered?
+                    nsReg.getURI(prefix);
+                    // ... it is, generate a new prefix and try again.
+                    prefix = prefixHint + suffix;
+                }
+            } catch (NamespaceException e2) {
+                // ... it is not, register the namespace with this prefix.
+                nsReg.registerNamespace(prefix, uri);
+            }
+        }
     }
 
     /**
