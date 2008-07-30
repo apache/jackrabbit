@@ -18,11 +18,13 @@ package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.Row;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -32,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Abstract base class for query test cases.
@@ -130,6 +133,8 @@ public class AbstractQueryTest extends AbstractJCRTest {
      * the specified <code>nodes</code>.
      * @param xpath the xpath query.
      * @param nodes the expected result nodes.
+     * @throws RepositoryException if an error occurs while executing the query
+     *                             or checking the result.
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
@@ -142,6 +147,8 @@ public class AbstractQueryTest extends AbstractJCRTest {
      * the specified <code>nodes</code>.
      * @param sql the sql query.
      * @param nodes the expected result nodes.
+     * @throws RepositoryException if an error occurs while executing the query
+     *                             or checking the result.
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
@@ -153,8 +160,40 @@ public class AbstractQueryTest extends AbstractJCRTest {
      * Checks if the result set contains exactly the <code>nodes</code>.
      * @param result the query result.
      * @param nodes the expected nodes in the result set.
+     * @throws RepositoryException if an error occurs while reading from the result.
      */
     protected void checkResult(QueryResult result, Node[] nodes)
+            throws RepositoryException {
+        checkResult(result.getNodes(), nodes);
+    }
+
+    /**
+     * Checks if the result contains exactly the <code>nodes</code>.
+     * @param result the query result.
+     * @param nodes the expected nodes in the result set.
+     * @throws RepositoryException if an error occurs while reading from the result.
+     */
+    protected void checkResult(RowIterator result, Node[] nodes)
+            throws RepositoryException {
+        checkResult(new NodeIteratorAdapter(result) {
+            public Object next() throws NoSuchElementException {
+                Row next = (Row) super.next();
+                try {
+                    return superuser.getItem(next.getValue("jcr:path").getString());
+                } catch (RepositoryException e) {
+                    throw new NoSuchElementException();
+                }
+            }
+        }, nodes);
+    }
+
+    /**
+     * Checks if the result contains exactly the <code>nodes</code>.
+     * @param result the query result.
+     * @param nodes the expected nodes in the result set.
+     * @throws RepositoryException if an error occurs while reading from the result.
+     */
+    protected void checkResult(NodeIterator result, Node[] nodes)
             throws RepositoryException {
         // collect paths
         Set expectedPaths = new HashSet();
@@ -162,8 +201,8 @@ public class AbstractQueryTest extends AbstractJCRTest {
             expectedPaths.add(nodes[i].getPath());
         }
         Set resultPaths = new HashSet();
-        for (NodeIterator it = result.getNodes(); it.hasNext();) {
-            resultPaths.add(it.nextNode().getPath());
+        while (result.hasNext()) {
+            resultPaths.add(result.nextNode().getPath());
         }
         // check if all expected are in result
         for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
@@ -175,6 +214,24 @@ public class AbstractQueryTest extends AbstractJCRTest {
             String path = (String) it.next();
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
+    }
+
+    /**
+     * Checks if the result set contains exactly the <code>nodes</code> in the
+     * given sequence.
+     *
+     * @param result the query result.
+     * @param nodes the expected nodes in the result set.
+     * @throws RepositoryException if an error occurs while reading from the result.
+     */
+    protected void checkResultSequence(RowIterator result, Node[] nodes)
+            throws RepositoryException {
+        for (int i = 0; i < nodes.length; i++) {
+            assertTrue("No more results, expected " + nodes[i].getPath(), result.hasNext());
+            String path = result.nextRow().getValue("jcr:path").getString();
+            assertEquals("Wrong sequence", nodes[i].getPath(), path);
+        }
+        assertFalse("No more result expected", result.hasNext());
     }
 
     /**
