@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.util.StringIndex;
-import org.apache.jackrabbit.core.persistence.bundle.util.NamespaceIndex;
 import org.apache.jackrabbit.core.persistence.bundle.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.bundle.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.bundle.util.LRUNodeIdCache;
@@ -262,7 +261,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 if (nsFile.exists()) {
                     nsIndex = new HashMapIndex(nsFile);
                 } else {
-                    nsIndex = new NamespaceIndex((NamespaceRegistryImpl) context.getNamespaceRegistry());
+                    nsIndex = (NamespaceRegistryImpl) context.getNamespaceRegistry();
                 }
             }
             return nsIndex;

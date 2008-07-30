@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import java.sql.SQLException;
-import java.sql.ResultSet;
 
 /**
  * Same as {@link DbNameIndex} but does not make use of the
@@ -58,16 +57,15 @@ public class NGKDbNameIndex extends DbNameIndex {
      */
     protected int insertString(String string) {
         // assert index does not exist
-        ResultSet rs = null;
         try {
-            connectionManager.executeStmt(nameInsertSQL, new Object[]{string});
-            return getIndex(string);
+            connectionManager.executeStmt(nameInsertSQL, new Object[] { string });
         } catch (Exception e) {
-            IllegalStateException ise = new IllegalStateException("Unable to insert index for string: " + string);
+            IllegalStateException ise = new IllegalStateException(
+                    "Unable to insert index for string: " + string);
             ise.initCause(e);
             throw ise;
-        } finally {
-            closeResultSet(rs);
         }
+
+        return getIndex(string);
     }
 }

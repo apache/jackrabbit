@@ -60,9 +60,10 @@ public class NSRegistryBasedNamespaceMappings
     public String getURI(String prefix) throws NamespaceException {
         try {
             int index = Integer.parseInt(prefix);
-            return nsReg.getURI(index);
-        } catch (NumberFormatException e) {
-            throw new NamespaceException("Unknown prefix: " + prefix);
+            return nsReg.indexToString(index);
+        } catch (IllegalArgumentException e) {
+            throw new NamespaceException(
+                    "Unknown namespace prefix: " + prefix, e);
         }
     }
 
@@ -70,7 +71,12 @@ public class NSRegistryBasedNamespaceMappings
      * {@inheritDoc}
      */
     public String getPrefix(String uri) throws NamespaceException {
-        return String.valueOf(nsReg.getURIIndex(uri));
+        try {
+            return String.valueOf(nsReg.stringToIndex(uri));
+        } catch (IllegalArgumentException e) {
+            throw new NamespaceException(
+                    "Unknown namespace URI: " + uri, e);
+        }
     }
 
     //-------------------------------< NamespaceMappings >----------------------

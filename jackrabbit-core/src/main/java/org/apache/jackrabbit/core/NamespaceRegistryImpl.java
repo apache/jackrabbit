@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventChannel;
 import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
@@ -42,8 +43,9 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 /**
  * A <code>NamespaceRegistryImpl</code> ...
  */
-public class NamespaceRegistryImpl
-        implements NamespaceRegistry, NamespaceResolver, NamespaceEventListener {
+public class NamespaceRegistryImpl implements
+        NamespaceRegistry, NamespaceResolver,
+        NamespaceEventListener, StringIndex {
 
     private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
 
@@ -286,32 +288,34 @@ public class NamespaceRegistryImpl
         eventChannel.setListener(this);
     }
 
+    //-------------------------------------------------------< StringIndex >--
+
     /**
-     * Returns the index (i.e. stable prefix) for the given uri.
+     * Returns the index (i.e. stable prefix) for the given namespace URI.
      *
-     * @param uri the uri to retrieve the index for
-     * @return the index
-     * @throws NamespaceException if the URI is not registered.
+     * @param uri namespace URI
+     * @return namespace index
+     * @throws IllegalArgumentException if the namespace is not registered
      */
-    public int getURIIndex(String uri) throws NamespaceException {
+    public int stringToIndex(String uri) {
         Integer idx = (Integer) uriToIndex.get(uri);
         if (idx == null) {
-            throw new NamespaceException("URI " + uri + " is not registered.");
+            throw new IllegalArgumentException("Namespace not registered: " + uri);
         }
         return idx.intValue();
     }
 
     /**
-     * Returns the URI for a given index (i.e. stable prefix).
+     * Returns the namespace URI for a given index (i.e. stable prefix).
      *
-     * @param idx the index to retrieve the uri for.
-     * @return the uri
-     * @throws NamespaceException if the URI is not registered.
+     * @param idx namespace index
+     * @return namespace URI
+     * @throws IllegalArgumentException if the given index is invalid
      */
-    public String getURI(int idx) throws NamespaceException {
+    public String indexToString(int idx) {
         String uri = (String) indexToURI.get(new Integer(idx));
         if (uri == null) {
-            throw new NamespaceException("URI for index " + idx +  " not registered.");
+            throw new IllegalArgumentException("Invalid namespace index: " + idx);
         }
         return uri;
     }
