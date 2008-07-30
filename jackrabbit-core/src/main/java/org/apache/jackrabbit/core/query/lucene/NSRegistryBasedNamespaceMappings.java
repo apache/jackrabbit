@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceException;
@@ -29,8 +29,7 @@ import javax.jcr.NamespaceException;
  * based on the stable index prefix provided by the namespace registry.
  */
 public class NSRegistryBasedNamespaceMappings
-        extends AbstractNamespaceResolver
-        implements NamespaceMappings {
+        implements NamespaceResolver, NamespaceMappings {
 
     /**
      * The namespace registry.

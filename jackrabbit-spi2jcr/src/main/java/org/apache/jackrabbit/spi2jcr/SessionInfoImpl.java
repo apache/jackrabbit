@@ -29,7 +29,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -91,7 +90,7 @@ class SessionInfoImpl implements SessionInfo {
         this.credentials = credentials;
 
         final NamespaceRegistry nsReg = session.getWorkspace().getNamespaceRegistry();
-        final NamespaceResolver nsResolver = new AbstractNamespaceResolver() {
+        final NamespaceResolver nsResolver = new NamespaceResolver() {
             public String getPrefix(String uri) throws NamespaceException {
                 try {
                     return nsReg.getPrefix(uri);

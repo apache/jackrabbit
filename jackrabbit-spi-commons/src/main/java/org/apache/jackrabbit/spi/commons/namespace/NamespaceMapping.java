@@ -28,7 +28,7 @@ import java.util.Iterator;
  * and then the object can be used as a NamespaceResolver. Additionally, it can
  * be based on a underlying NamespaceResolver
  */
-public class NamespaceMapping extends AbstractNamespaceResolver {
+public class NamespaceMapping implements NamespaceResolver {
 
     /** local uris */
     private final Properties prefixToURI = new Properties();

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
-import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -270,7 +269,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * <code>NamespaceContext</code> supports scoped namespace declarations.
      */
-    class NamespaceContext extends AbstractNamespaceResolver {
+    class NamespaceContext implements NamespaceResolver {
 
         private final NamespaceSupport nsContext;
 
