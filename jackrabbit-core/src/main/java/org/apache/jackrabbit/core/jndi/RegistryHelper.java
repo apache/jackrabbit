@@ -16,13 +16,18 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.naming.Context;
 import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+
+import org.apache.jackrabbit.api.JackrabbitRepository;
 
 /**
  * JNDI helper functionality. This class contains static utility
- * methods for binding and unbinding Jackarbbit repositories to and
+ * methods for binding and unbinding Jackrabbit repositories to and
  * from a JNDI context.
  */
 public class RegistryHelper {
@@ -54,10 +59,20 @@ public class RegistryHelper {
                                           String repHomeDir,
                                           boolean overwrite)
             throws NamingException, RepositoryException {
+        Reference reference = new Reference(
+                Repository.class.getName(),
+                BindableRepositoryFactory.class.getName(),
+                null); // no classpath defined
+        reference.add(new StringRefAddr(
+                BindableRepository.CONFIGFILEPATH_ADDRTYPE, configFilePath));
+        reference.add(new StringRefAddr(
+                BindableRepository.REPHOMEDIR_ADDRTYPE, repHomeDir));
+
         // always create instance by using BindableRepositoryFactory
         // which maintains an instance cache;
         // see http://issues.apache.org/jira/browse/JCR-411 for details
-        Object obj = BindableRepositoryFactory.createInstance(configFilePath, repHomeDir);
+        Object obj = new BindableRepositoryFactory().getObjectInstance(
+                reference, null, null, null);
         if (overwrite) {
             ctx.rebind(name, obj);
         } else {
@@ -76,7 +91,8 @@ public class RegistryHelper {
      */
     public static void unregisterRepository(Context ctx, String name)
             throws NamingException {
-        ((BindableRepository) ctx.lookup(name)).shutdown();
+        ((JackrabbitRepository) ctx.lookup(name)).shutdown();
         ctx.unbind(name);
     }
+
 }
