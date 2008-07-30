@@ -33,7 +33,6 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Core tests");
 
         suite.addTestSuite(CachingHierarchyManagerTest.class);
-        suite.addTestSuite(NamespaceRegistryImplTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
         suite.addTestSuite(XATest.class);
