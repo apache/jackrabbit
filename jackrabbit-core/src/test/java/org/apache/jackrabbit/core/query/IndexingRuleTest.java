@@ -82,4 +82,15 @@ public class IndexingRuleTest extends AbstractIndexingTest {
                 "/*[jcr:contains(., 'quick')]";
         checkResult(executeQuery(stmt), new Node[]{node1});
     }
+
+    public void testNodeType() throws RepositoryException {
+        // assumes there is an index-rule for nt:hierarchyNode that
+        // does not include the property jcr:created
+        Node node1 = testRootNode.addNode(nodeName1, "nt:folder");
+        testRootNode.save();
+        String stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[@" + jcrCreated + " = xs:dateTime('" +
+                node1.getProperty(jcrCreated).getString() + "')]";
+        checkResult(executeQuery(stmt), new Node[]{});
+    }
 }

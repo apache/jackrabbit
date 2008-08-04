@@ -32,6 +32,10 @@
         <property isRegexp="true">.*Text</property>
     </index-rule>
 
+    <index-rule nodeType="nt:hierarchyNode">
+        <!-- do not index any properties -->
+    </index-rule>
+
     <aggregate primaryType="nt:file">
         <include>jcr:content</include>
         <include>jcr:content/*</include>
