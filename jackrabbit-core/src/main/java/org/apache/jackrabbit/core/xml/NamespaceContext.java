@@ -90,14 +90,15 @@ class NamespaceContext implements NamespaceResolver {
      * @throws NamespaceException if the prefix is not mapped
      */
     public String getURI(String prefix) throws NamespaceException {
-        String uri = (String) prefixToURI.get(prefix);
-        if (uri != null) {
-            return uri;
-        } else if (parent != null) {
-            return parent.getURI(prefix);
-        } else {
-            throw new NamespaceException("Unknown prefix: " + prefix);
+        NamespaceContext current = this;
+        while (current != null) {
+            String uri = (String) current.prefixToURI.get(prefix);
+            if (uri != null) {
+                return uri;
+            }
+            current = current.parent;
         }
+        throw new NamespaceException("Unknown prefix: " + prefix);
     }
 
     /**
@@ -108,13 +109,14 @@ class NamespaceContext implements NamespaceResolver {
      * @throws NamespaceException if the URI is not mapped
      */
     public String getPrefix(String uri) throws NamespaceException {
-        String prefix = (String) uriToPrefix.get(uri);
-        if (prefix != null) {
-            return prefix;
-        } else if (parent != null) {
-            return parent.getPrefix(uri);
-        } else {
-            throw new NamespaceException("Unknown URI: " + uri);
+        NamespaceContext current = this;
+        while (current != null) {
+            String prefix = (String) current.uriToPrefix.get(uri);
+            if (prefix != null) {
+                return prefix;
+            }
+            current = current.parent;
         }
+        throw new NamespaceException("Unknown URI: " + uri);
     }
 }
