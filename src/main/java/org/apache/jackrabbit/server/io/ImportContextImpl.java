@@ -196,14 +196,17 @@ public class ImportContextImpl implements ImportContext {
      * @see ImportContext#getContentLength()
      */
     public long getContentLength() {
+        long length = IOUtil.UNDEFINED_LENGTH;
         if (inputCtx != null) {
-            return inputCtx.getContentLength();
-        } else if (inputFile != null) {
-            return inputFile.length();
-        } else {
-            log.debug("Unable to determine content length -> default value = " + IOUtil.UNDEFINED_LENGTH);
-            return IOUtil.UNDEFINED_LENGTH;
+            length =  inputCtx.getContentLength();
         }
+        if (length < 0 && inputFile != null) {
+            length = inputFile.length();
+        }
+        if (length < 0) {
+            log.debug("Unable to determine content length -> default value = " + IOUtil.UNDEFINED_LENGTH);
+        }
+        return length;
     }
 
     /**
