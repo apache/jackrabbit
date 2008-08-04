@@ -123,10 +123,19 @@ public class XmlHandler extends DefaultHandler {
                 contentNode.setProperty(JcrConstants.JCR_ENCODING, "UTF-8");
             } catch (RepositoryException e) {
                 // ignore, since given nodetype could not allow encoding
-                // deliberately not rethrowing an IOException.
+                // deliberately not re-throwing an IOException.
             }
         }
         return success;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return <code>true</code>, always.
+     */
+    protected boolean forceCompatibleContentNodes() {
+        return true;
     }
 
     /**
