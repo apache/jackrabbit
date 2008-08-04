@@ -73,7 +73,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
 
     private String collectionNodetype = JcrConstants.NT_FOLDER;
     private String defaultNodetype = JcrConstants.NT_FILE;
-    /* IMPORTANT NOTE: for webDAV compliancy the default nodetype of the content
+    /* IMPORTANT NOTE: for webDAV compliance the default nodetype of the content
        node has been changed from nt:resource to nt:unstructured. */
     private String contentNodetype = JcrConstants.NT_UNSTRUCTURED;
 
@@ -96,7 +96,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * <li>Nodetype for Non-Collection content: {@link JcrConstants#NT_RESOURCE nt:resource}</li>
      * </ul>
      *
-     * @param ioManager
+     * @param ioManager the I/O manager
      */
     public DefaultHandler(IOManager ioManager) {
         this.ioManager = ioManager;
@@ -293,7 +293,8 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             if (parentNode.hasNode(JcrConstants.JCR_CONTENT)) {
                 contentNode = parentNode.getNode(JcrConstants.JCR_CONTENT);
                 // check if nodetype is compatible (might be update of an existing file)
-                if (contentNode.isNodeType(getContentNodeType())) {
+                if (contentNode.isNodeType(getContentNodeType()) ||
+                        !forceCompatibleContentNodes()) {
                     // remove all entries in the jcr:content since replacing content
                     // includes properties (DefaultHandler) and nodes (e.g. ZipHandler)
                     if (contentNode.hasNodes()) {
@@ -315,11 +316,21 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
     }
 
     /**
+     * Defines if content nodes should be replace if they don't have the
+     * node type given by {@link #getCollectionNodeType()}.
+     *
+     * @return <code>true</code> if content nodes should be replaced.
+     */
+    protected boolean forceCompatibleContentNodes() {
+        return false;
+    }
+
+    /**
      * Returns true if the export root is a node and if it contains a child node
      * with name {@link JcrConstants#JCR_CONTENT jcr:content} in case this
      * export is not intended for a collection.
      *
-     * @return true if the export root is a node. If the specified boolean paramter
+     * @return true if the export root is a node. If the specified boolean parameter
      * is false (not a collection export) the given export root must contain a
      * child node with name {@link JcrConstants#JCR_CONTENT jcr:content}.
      *
@@ -357,8 +368,8 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * Retrieves the content node that will be used for exporting properties and
      * data and calls the corresponding methods.
      *
-     * @param context
-     * @param isCollection
+     * @param context the export context
+     * @param isCollection <code>true</code> if collection
      * @see #exportProperties(ExportContext, boolean, Node)
      * @see #exportData(ExportContext, boolean, Node)
      */
@@ -395,15 +406,15 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
 
     /**
      * Checks if the given content node contains a jcr:data property
-     * and spools its value to the output stream fo the export context.<br>
+     * and spools its value to the output stream of the export context.<br>
      * Please note, that subclasses that define a different structure of the
      * content node should create their own
      * {@link  #exportData(ExportContext, boolean, Node) exportData} method.
      *
-     * @param context
-     * @param isCollection
-     * @param contentNode
-     * @throws IOException
+     * @param context export context
+     * @param isCollection <code>true</code> if collection
+     * @param contentNode the content node
+     * @throws IOException if an I/O error occurs
      */
     protected void exportData(ExportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         if (contentNode.hasProperty(JcrConstants.JCR_DATA)) {
@@ -418,9 +429,9 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * if it is present. The creation time however is retrieved from the parent
      * node (in case of isCollection == false only).
      *
-     * @param context
-     * @param isCollection
-     * @param contentNode
+     * @param context the export context
+     * @param isCollection <code>true</code> if collection
+     * @param contentNode the content node
      */
     protected void exportProperties(ExportContext context, boolean isCollection, Node contentNode) throws IOException {
         try {
@@ -475,10 +486,10 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * isCollection is true, this corresponds to the export root. Otherwise there
      * must be a child node with name {@link JcrConstants#JCR_CONTENT jcr:content}.
      *
-     * @param context
-     * @param isCollection
+     * @param context the export context
+     * @param isCollection <code>true</code> if collection
      * @return content node used for the export
-     * @throws RepositoryException
+     * @throws RepositoryException if an error during repository access occurs.
      */
     protected Node getContentNode(ExportContext context, boolean isCollection) throws RepositoryException {
         Node contentNode = (Node)context.getExportRoot();
@@ -531,7 +542,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
 
         Node cn = getContentNode(exportContext, isCollection);
         try {
-            // export the properties common with normal IO handling
+            // export the properties common with normal I/O handling
             exportProperties(exportContext, isCollection, cn);
 
             // export all other properties as well
@@ -630,9 +641,10 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * Please note, that the local part of the jcrName is checked for XML
      * compatibility by calling {@link ISO9075#encode(String)}
      *
-     * @param jcrName
-     * @param session
+     * @param jcrName name of the jcr property
+     * @param session session
      * @return a <code>DavPropertyName</code> for the given jcr name.
+     * @throws RepositoryException if an error during repository access occurs.
      */
     private DavPropertyName getDavName(String jcrName, Session session) throws RepositoryException {
         // make sure the local name is xml compliant
@@ -650,9 +662,10 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * is made to register the uri with the prefix defined. Note, that no
      * extra effort is made to generated a unique prefix.
      *
-     * @param propName
+     * @param propName name of the dav property
+     * @param session repository session
      * @return jcr name
-     * @throws RepositoryException
+     * @throws RepositoryException if an error during repository access occurs.
      */
     private String getJcrName(DavPropertyName propName, Session session) throws RepositoryException {
         // remove any encoding necessary for xml compliance
@@ -684,8 +697,9 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
 
 
     /**
-     * @param property
-     * @throws RepositoryException
+     * @param property dav property
+     * @param contentNode the content node
+     * @throws RepositoryException if an error during repository access occurs.
      */
     private void setJcrProperty(DavProperty property, Node contentNode) throws RepositoryException {
         // Retrieve the property value. Note, that a 'null' value is replaced
@@ -708,10 +722,12 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
     }
 
     /**
-     * @param propertyName
-     * @throws RepositoryException
+     * @param propertyName dav property name
+     * @param contentNode the content node
+     * @throws RepositoryException if an error during repository access occurs.
      */
-    private void removeJcrProperty(DavPropertyName propertyName, Node contentNode) throws RepositoryException {
+    private void removeJcrProperty(DavPropertyName propertyName, Node contentNode)
+            throws RepositoryException {
         if (DavPropertyName.GETCONTENTTYPE.equals(propertyName)) {
             if (contentNode.hasProperty(JcrConstants.JCR_MIMETYPE)) {
                 contentNode.getProperty(JcrConstants.JCR_MIMETYPE).remove();
@@ -739,7 +755,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             contentNode.setProperty(JcrConstants.JCR_LASTMODIFIED, lastMod);
         } catch (RepositoryException e) {
             // ignore: property may not be available on the node.
-            // deliberately not rethrowing as IOException.
+            // deliberately not re-throwing as IOException.
         }
     }
 
