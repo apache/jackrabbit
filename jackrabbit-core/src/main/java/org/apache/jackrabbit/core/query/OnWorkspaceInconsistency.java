@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -50,7 +51,7 @@ public abstract class OnWorkspaceInconsistency {
                                            QueryHandler handler,
                                            Path path,
                                            NodeState node,
-                                           NodeState.ChildNodeEntry child)
+                                           ChildNodeEntry child)
                 throws RepositoryException, ItemStateException {
             NamePathResolver resolver = new DefaultNamePathResolver(
                     handler.getContext().getNamespaceRegistry());
@@ -130,6 +131,6 @@ public abstract class OnWorkspaceInconsistency {
                                                 QueryHandler handler,
                                                 Path path,
                                                 NodeState node,
-                                                NodeState.ChildNodeEntry child)
+                                                ChildNodeEntry child)
             throws ItemStateException, RepositoryException;
 }

@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
@@ -151,7 +152,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             // fallback: try finding applicable definition
             NodeImpl parent = (NodeImpl) getItem(state.getParentId());
             NodeState parentState = (NodeState) parent.getItemState();
-            NodeState.ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
+            ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
             def = parent.getApplicableChildNodeDefinition(cne.getName(), state.getNodeTypeName());
             state.setDefinitionId(def.unwrap().getId());
         }
@@ -561,7 +562,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             // make sure any of the properties can be read.
             if (canRead(entry.getId())) {
                 return true;
@@ -592,7 +593,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             // delay check for read-access until item is being built
             // thus avoid duplicate check
             childIds.add(entry.getId());

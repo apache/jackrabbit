@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -238,7 +239,7 @@ public class WorkspaceImporter implements Importer {
             // child node entries (JCR-1055);
             // => backup list of child node entries beforehand in order
             // to restore it afterwards
-            NodeState.ChildNodeEntry cneConflicting = parent.getChildNodeEntry(nodeInfo.getId());
+            ChildNodeEntry cneConflicting = parent.getChildNodeEntry(nodeInfo.getId());
             List cneList = new ArrayList(parent.getChildNodeEntries());
             // do remove conflicting (recursive)
             itemOps.removeNodeState(conflicting);
@@ -264,7 +265,7 @@ public class WorkspaceImporter implements Importer {
                 // but preserving original position
                 parent.removeAllChildNodeEntries();
                 for (Iterator iter = cneList.iterator(); iter.hasNext();) {
-                    NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+                    ChildNodeEntry cne = (ChildNodeEntry) iter.next();
                     if (cne.getId().equals(nodeInfo.getId())) {
                         // replace entry with different name
                         parent.addChildNodeEntry(nodeInfo.getName(), nodeInfo.getId());
@@ -410,7 +411,7 @@ public class WorkspaceImporter implements Importer {
             }
             if (parent.hasChildNodeEntry(nodeName)) {
                 // a node with that name already exists...
-                NodeState.ChildNodeEntry entry =
+                ChildNodeEntry entry =
                         parent.getChildNodeEntry(nodeName, 1);
                 NodeId idExisting = entry.getId();
                 NodeState existing = (NodeState) itemOps.getItemState(idExisting);

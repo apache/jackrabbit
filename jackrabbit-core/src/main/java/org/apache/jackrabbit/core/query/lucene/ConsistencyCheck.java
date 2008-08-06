@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.index.IndexReader;
@@ -231,12 +232,12 @@ class ConsistencyCheck {
             while (node.getParentId() != null) {
                 NodeId parentId = node.getParentId();
                 NodeState parent = (NodeState) stateMgr.getItemState(parentId);
-                NodeState.ChildNodeEntry entry = parent.getChildNodeEntry(node.getNodeId());
+                ChildNodeEntry entry = parent.getChildNodeEntry(node.getNodeId());
                 elements.add(entry);
                 node = parent;
             }
             for (int i = elements.size() - 1; i > -1; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) elements.get(i);
+                ChildNodeEntry entry = (ChildNodeEntry) elements.get(i);
                 path.append('/').append(entry.getName().getLocalName());
                 if (entry.getIndex() > 1) {
                     path.append('[').append(entry.getIndex()).append(']');

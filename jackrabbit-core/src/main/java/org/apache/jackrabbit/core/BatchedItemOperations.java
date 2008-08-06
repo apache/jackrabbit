@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -765,7 +766,7 @@ public class BatchedItemOperations extends ItemValidator {
                 // there's already a node with that name...
 
                 // get definition of existing conflicting node
-                NodeState.ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
+                ChildNodeEntry entry = parentState.getChildNodeEntry(nodeName, 1);
                 NodeState conflictingState;
                 NodeId conflictingId = entry.getId();
                 try {
@@ -1667,7 +1668,7 @@ public class BatchedItemOperations extends ItemValidator {
             ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) tmp.get(i);
+                ChildNodeEntry entry = (ChildNodeEntry) tmp.get(i);
                 NodeId nodeId = entry.getId();
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
@@ -1826,7 +1827,7 @@ public class BatchedItemOperations extends ItemValidator {
             // copy child nodes
             Iterator iter = srcState.getChildNodeEntries().iterator();
             while (iter.hasNext()) {
-                NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                 Path srcChildPath = PathFactoryImpl.getInstance().create(srcPath, entry.getName(), true);
                 if (!srcAccessMgr.isGranted(srcChildPath, Permission.READ)) {
                     continue;

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
@@ -103,7 +104,7 @@ public final class Serializer {
         c = state.getChildNodeEntries();
         out.writeInt(c.size()); // count
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             out.writeUTF(entry.getName().toString());   // name
             out.write(entry.getId().getUUID().getRawBytes());    // uuid
         }

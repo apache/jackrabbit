@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
@@ -360,7 +361,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                 }
                 Iterator iter = state.getChildNodeEntries().iterator();
                 while (iter.hasNext()) {
-                    NodeState.ChildNodeEntry pe = (NodeState.ChildNodeEntry) iter.next();
+                    ChildNodeEntry pe = (ChildNodeEntry) iter.next();
                     invalidateItem(pe.getId(), true);
                 }
             }

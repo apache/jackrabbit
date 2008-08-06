@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.LocationStepQueryNode;
 import org.apache.jackrabbit.uuid.UUID;
@@ -448,7 +449,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                             NodeState state = (NodeState) itemMgr.getItemState(id);
                             Iterator entries = state.getChildNodeEntries().iterator();
                             while (entries.hasNext()) {
-                                NodeId childId = ((NodeState.ChildNodeEntry) entries.next()).getId();
+                                NodeId childId = ((ChildNodeEntry) entries.next()).getId();
                                 Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
                                 TermDocs docs = reader.termDocs(uuidTerm);
                                 try {
@@ -483,7 +484,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                             // only select last
                             List childNodes = state.getChildNodeEntries();
                             if (childNodes.size() == 0
-                                    || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                    || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
                                         .getId().equals(id)) {
                                 return false;
                             }
@@ -491,7 +492,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                             List childNodes = state.getChildNodeEntries();
                             if (position < 1
                                     || childNodes.size() < position
-                                    || !((NodeState.ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
+                                    || !((ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
                                 return false;
                             }
                         }
@@ -500,7 +501,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                         // specified position
                         if (position == LocationStepQueryNode.LAST) {
                             // only select last
-                            NodeState.ChildNodeEntry entry =
+                            ChildNodeEntry entry =
                                     state.getChildNodeEntry(id);
                             if (entry == null) {
                                 // no such child node, probably deleted meanwhile
@@ -510,13 +511,13 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                                 Name name = entry.getName();
                                 List childNodes = state.getChildNodeEntries(name);
                                 if (childNodes.size() == 0
-                                        || !((NodeState.ChildNodeEntry) childNodes.get(childNodes.size() - 1))
+                                        || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
                                             .getId().equals(id)) {
                                     return false;
                                 }
                             }
                         } else {
-                            NodeState.ChildNodeEntry entry =
+                            ChildNodeEntry entry =
                                     state.getChildNodeEntry(id);
                             if (entry == null) {
                                 // no such child node, probably has been deleted meanwhile

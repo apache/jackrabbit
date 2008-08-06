@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -312,7 +313,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 Iterator iter = elements[i].getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
-                    NodeState.ChildNodeEntry cne = modified.getChildNodeEntry(
+                    ChildNodeEntry cne = modified.getChildNodeEntry(
                             child.getName(), child.getNormalizedIndex());
                     if (cne == null) {
                         // Item does not exist, remove
@@ -412,7 +413,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                         continue;
                     }
                     NodeId childId = childEntry.getId();
-                    NodeState.ChildNodeEntry cne = state.getChildNodeEntry(childId);
+                    ChildNodeEntry cne = state.getChildNodeEntry(childId);
                     if (cne == null) {
                         /* Child no longer in parent node state, so remove it */
                         evict(child, false);

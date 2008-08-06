@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.spi.Name;
@@ -392,7 +393,7 @@ public abstract class ItemImpl implements Item {
                     NodeState nState = (NodeState) itemState;
                     for (Iterator it = nState.getAddedChildNodeEntries().iterator();
                          it.hasNext() && isGranted;) {
-                        Name nodeName = ((NodeState.ChildNodeEntry) it.next()).getName();
+                        Name nodeName = ((ChildNodeEntry) it.next()).getName();
                         isGranted = accessMgr.isGranted(path, nodeName, Permission.ADD_NODE);
                     }
                     for (Iterator it = nState.getAddedPropertyNames().iterator();
@@ -993,8 +994,8 @@ public abstract class ItemImpl implements Item {
                                             for (Iterator cneIt =
                                                     parent.getRenamedChildNodeEntries().iterator();
                                                  cneIt.hasNext();) {
-                                                NodeState.ChildNodeEntry cne =
-                                                        (NodeState.ChildNodeEntry) cneIt.next();
+                                                ChildNodeEntry cne =
+                                                        (ChildNodeEntry) cneIt.next();
                                                 if (cne.getId().equals(nodeState.getId())) {
                                                     // node has been renamed,
                                                     // add parent to dependencies
@@ -1015,16 +1016,16 @@ public abstract class ItemImpl implements Item {
                     for (Iterator cneIt =
                             nodeState.getRemovedChildNodeEntries().iterator();
                          cneIt.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) cneIt.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
                     // added child node entries
                     for (Iterator cneIt =
                             nodeState.getAddedChildNodeEntries().iterator();
                          cneIt.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) cneIt.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
 

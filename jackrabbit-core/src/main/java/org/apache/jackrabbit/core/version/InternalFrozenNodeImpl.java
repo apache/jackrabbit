@@ -21,8 +21,8 @@ import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
@@ -171,8 +171,8 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 Iterator iter = entries.iterator();
                 int i = 0;
                 while (iter.hasNext()) {
-                    NodeState.ChildNodeEntry entry =
-                            (NodeState.ChildNodeEntry) iter.next();
+                    ChildNodeEntry entry =
+                            (ChildNodeEntry) iter.next();
                     frozenNodes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
                 }
             } catch (RepositoryException e) {

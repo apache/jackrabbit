@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.extractor.TextExtractor;
@@ -188,7 +189,7 @@ public class NodeIndexer {
                         FieldNames.PARENT, node.getParentId().toString(),
                         Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
-                NodeState.ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
+                ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 if (child == null) {
                     // this can only happen when jackrabbit
                     // is running in a cluster.
