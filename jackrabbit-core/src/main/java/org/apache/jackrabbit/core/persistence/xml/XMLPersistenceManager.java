@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
@@ -598,7 +599,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("\t<" + NODES_ELEMENT + ">\n");
                 iter = state.getChildNodeEntries().iterator();
                 while (iter.hasNext()) {
-                    NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) iter.next();
+                    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                     writer.write("\t\t<" + NODE_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\" "
                             + UUID_ATTRIBUTE + "=\"" + entry.getId().getUUID().toString() + "\">\n");

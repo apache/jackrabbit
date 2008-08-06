@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -437,7 +438,7 @@ public class CachingHierarchyManagerTest extends TestCase {
                 throws ItemStateException {
 
             NodeState oldParent = (NodeState) getItemState(child.getParentId());
-            NodeState.ChildNodeEntry cne = oldParent.getChildNodeEntry(child.getNodeId());
+            ChildNodeEntry cne = oldParent.getChildNodeEntry(child.getNodeId());
             if (cne == null) {
                 throw new ItemStateException(child.getNodeId().toString());
             }
@@ -462,7 +463,7 @@ public class CachingHierarchyManagerTest extends TestCase {
 
             int srcIndex = -1, destIndex = -1;
             for (int i = 0; i < list.size(); i++) {
-                NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) list.get(i);
+                ChildNodeEntry cne = (ChildNodeEntry) list.get(i);
                 if (cne.getId().equals(src.getId())) {
                     srcIndex = i;
                 } else if (dest != null && cne.getId().equals(dest.getId())) {
@@ -507,7 +508,7 @@ public class CachingHierarchyManagerTest extends TestCase {
          */
         public void renameNode(NodeState child, String newName) throws ItemStateException {
             NodeState parent = (NodeState) getItemState(child.getParentId());
-            NodeState.ChildNodeEntry cne = parent.getChildNodeEntry(child.getNodeId());
+            ChildNodeEntry cne = parent.getChildNodeEntry(child.getNodeId());
             if (cne == null) {
                 throw new ItemStateException(child.getNodeId().toString());
             }

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
 
@@ -69,7 +70,7 @@ public abstract class SecurityItemModifier {
             // check for name collisions
             // TODO: improve. copied from NodeImpl
             NodeState thisState = (NodeState) parentImpl.getItemState();
-            NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
+            ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
             if (cne != null) {
                 // there's already a child node entry with that name;
                 // check same-name sibling setting of new node

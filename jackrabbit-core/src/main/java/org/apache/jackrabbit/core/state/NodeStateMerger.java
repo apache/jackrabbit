@@ -103,8 +103,8 @@ class NodeStateMerger {
 
                     for (Iterator iter = state.getAddedChildNodeEntries().iterator();
                          iter.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) iter.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
 
                         if (context.isAdded(cne.getId())) {
                             // a new child node entry has been added to this state;
@@ -126,8 +126,8 @@ class NodeStateMerger {
 
                     for (Iterator iter = state.getRemovedChildNodeEntries().iterator();
                          iter.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) iter.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         if (context.isDeleted(cne.getId())) {
                             // a child node entry has been removed from this node state
                             removed.add(cne);
@@ -138,13 +138,13 @@ class NodeStateMerger {
                     // re-apply changes made on this state
                     state.setChildNodeEntries(overlayedState.getChildNodeEntries());
                     for (Iterator iter = added.iterator(); iter.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) iter.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         state.addChildNodeEntry(cne.getName(), cne.getId());
                     }
                     for (Iterator iter = removed.iterator(); iter.hasNext();) {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) iter.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) iter.next();
                         state.removeChildNodeEntry(cne.getId());
                     }
                 }

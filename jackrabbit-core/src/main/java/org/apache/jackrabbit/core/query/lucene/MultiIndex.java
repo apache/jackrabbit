@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Timer;
@@ -1037,7 +1038,7 @@ public class MultiIndex {
         checkVolatileCommit();
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
-            NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) it.next();
+            ChildNodeEntry child = (ChildNodeEntry) it.next();
             Path childPath = PATH_FACTORY.create(path, child.getName(),
                     child.getIndex(), false);
             NodeState childState = null;

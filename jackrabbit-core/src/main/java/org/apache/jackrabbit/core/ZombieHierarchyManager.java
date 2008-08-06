@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.Iterator;
@@ -95,14 +96,14 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed/renamed child node entries.
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          Name name,
                                                          int index) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry =
-                    (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry =
+                    (ChildNodeEntry) iter.next();
             if (entry.getName().equals(name)
                     && entry.getIndex() == index) {
                 return entry;
@@ -118,13 +119,13 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
      * <p/>
      * Also allows for removed child node entries.
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
         // check removed child node entries first
         Iterator iter = parent.getRemovedChildNodeEntries().iterator();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry entry =
-                    (NodeState.ChildNodeEntry) iter.next();
+            ChildNodeEntry entry =
+                    (ChildNodeEntry) iter.next();
             if (entry.getId().equals(id)) {
                 return entry;
             }

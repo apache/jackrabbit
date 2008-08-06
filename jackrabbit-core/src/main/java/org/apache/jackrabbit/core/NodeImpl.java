@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.InternalFreeze;
@@ -207,7 +208,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     if (index == 0) {
                         index = 1;
                     }
-                    NodeState.ChildNodeEntry cne =
+                    ChildNodeEntry cne =
                             thisState.getChildNodeEntry(pe.getName(), index);
                     if (cne != null) {
                         return cne.getId();
@@ -588,7 +589,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (index == 0) {
             index = 1;
         }
-        NodeState.ChildNodeEntry entry =
+        ChildNodeEntry entry =
                 thisState.getChildNodeEntry(nodeName, index);
         if (entry == null) {
             String msg = "failed to remove child " + nodeName + " of "
@@ -646,8 +647,8 @@ public class NodeImpl extends ItemImpl implements Node {
             ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
-                NodeState.ChildNodeEntry entry =
-                        (NodeState.ChildNodeEntry) tmp.get(i);
+                ChildNodeEntry entry =
+                        (ChildNodeEntry) tmp.get(i);
                 // recursively remove child node
                 NodeId childId = entry.getId();
                 //NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
@@ -774,7 +775,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check for name collisions
         NodeState thisState = data.getNodeState();
-        NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
+        ChildNodeEntry cne = thisState.getChildNodeEntry(nodeName, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
             // check same-name sibling setting of new node
@@ -1230,7 +1231,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList list = new ArrayList(thisState.getChildNodeEntries());
         // start from tail to avoid problems with same-name siblings
         for (int i = list.size() - 1; i >= 0; i--) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             NodeImpl node = (NodeImpl) itemMgr.getItem(entry.getId());
             // check if node has been defined by mixin type (or one of its supertypes)
             NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
@@ -1437,7 +1438,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (index == 0) {
             index = 1;
         }
-        NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
+        ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
         if (cne == null) {
             throw new ItemNotFoundException();
         }
@@ -1479,7 +1480,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (index == 0) {
             index = 1;
         }
-        NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
+        ChildNodeEntry cne = thisState.getChildNodeEntry(name, index);
         if (cne == null) {
             return false;
         }
@@ -1821,7 +1822,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList list = new ArrayList(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             if (srcInd == -1) {
                 if (entry.getName().equals(srcName.getName())
                         && (entry.getIndex() == srcName.getIndex()
@@ -1909,7 +1910,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // => backup list of child node entries beforehand in order
         // to restore it afterwards
         NodeState state = data.getNodeState();
-        NodeState.ChildNodeEntry cneExisting = state.getChildNodeEntry(id);
+        ChildNodeEntry cneExisting = state.getChildNodeEntry(id);
         if (cneExisting == null) {
             throw new ItemNotFoundException(safeGetJCRPath()
                     + ": no child node entry with id " + id);
@@ -1939,7 +1940,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // but preserving original position
             state.removeAllChildNodeEntries();
             for (Iterator iter = cneList.iterator(); iter.hasNext();) {
-                NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+                ChildNodeEntry cne = (ChildNodeEntry) iter.next();
                 if (cne.getId().equals(id)) {
                     // replace entry with different name
                     state.addChildNodeEntry(nodeName, id);
@@ -2002,7 +2003,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ConstraintViolationException(msg, re);
         }
         NodeState thisState = data.getNodeState();
-        NodeState.ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
+        ChildNodeEntry cne = thisState.getChildNodeEntry(name, 1);
         if (cne != null) {
             // there's already a child node entry with that name;
             // check same-name sibling setting of new node
@@ -3060,7 +3061,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             NodeState parent =
                     (NodeState) stateMgr.getItemState(parentId);
-            NodeState.ChildNodeEntry parentEntry =
+            ChildNodeEntry parentEntry =
                     parent.getChildNodeEntry(getNodeId());
             return parentEntry.getIndex();
         } catch (ItemStateException ise) {
@@ -3257,7 +3258,7 @@ public class NodeImpl extends ItemImpl implements Node {
         Path parentPath = parentNode.getPrimaryPath();
         PathBuilder builder = new PathBuilder(parentPath);
 
-        NodeState.ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
+        ChildNodeEntry entry = ((NodeState) parentNode.getItemState()).
                 getChildNodeEntry(getNodeId());
         if (entry == null) {
             String msg = "failed to build path of " + id + ": "
@@ -4908,7 +4909,7 @@ public class NodeImpl extends ItemImpl implements Node {
         ArrayList list = new ArrayList(thisState.getChildNodeEntries());
         // start from tail to avoid problems with same-name siblings
         for (int i = list.size() - 1; i >= 0; i--) {
-            NodeState.ChildNodeEntry entry = (NodeState.ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             try {
                 NodeState nodeState =
                         (NodeState) stateMgr.getItemState(entry.getId());

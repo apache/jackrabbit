@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
@@ -840,8 +841,8 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                 nodeStates = new AbstractIteratorDecorator(
                         context.getChildNodeEntries().iterator()) {
                     public Object next() {
-                        NodeState.ChildNodeEntry cne =
-                                (NodeState.ChildNodeEntry) super.next();
+                        ChildNodeEntry cne =
+                                (ChildNodeEntry) super.next();
                         try {
                             return ism.getItemState(cne.getId());
                         } catch (ItemStateException e) {

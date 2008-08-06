@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -219,9 +220,9 @@ public final class EventStateCollection {
                         }
                         if (parent != null) {
                             // check if node has been renamed
-                            NodeState.ChildNodeEntry moved = null;
+                            ChildNodeEntry moved = null;
                             for (Iterator removedNodes = parent.getRemovedChildNodeEntries().iterator(); removedNodes.hasNext();) {
-                                NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) removedNodes.next();
+                                ChildNodeEntry child = (ChildNodeEntry) removedNodes.next();
                                 if (child.getId().equals(n.getNodeId())) {
                                     // found node re-added with different name
                                     moved = child;
@@ -273,14 +274,14 @@ public final class EventStateCollection {
                     // create a node removed and a node added event for every
                     // reorder
                     for (Iterator ro = reordered.iterator(); ro.hasNext();) {
-                        NodeState.ChildNodeEntry child = (NodeState.ChildNodeEntry) ro.next();
+                        ChildNodeEntry child = (ChildNodeEntry) ro.next();
                         Name name = child.getName();
                         int index = (child.getIndex() != 1) ? child.getIndex() : 0;
                         Path parentPath = getPath(n.getNodeId(), hmgr);
                         Path.Element addedElem = PathFactoryImpl.getInstance().create(name, index).getNameElement();
                         // get removed index
                         NodeState overlayed = (NodeState) n.getOverlayedState();
-                        NodeState.ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getId());
+                        ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getId());
                         if (entry == null) {
                             throw new ItemStateException("Unable to retrieve old child index for item: " + child.getId());
                         }

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.util.Text;
@@ -329,7 +330,7 @@ class AggregateRuleImpl implements AggregateRule {
                 // last segment -> add to collector if node type matches
                 Iterator it = cne.iterator();
                 while (it.hasNext()) {
-                    NodeId id = ((NodeState.ChildNodeEntry) it.next()).getId();
+                    NodeId id = ((ChildNodeEntry) it.next()).getId();
                     NodeState ns = (NodeState) ism.getItemState(id);
                     if (nodeTypeName == null || ns.getNodeTypeName().equals(nodeTypeName)) {
                         collector.add(ns);
@@ -340,7 +341,7 @@ class AggregateRuleImpl implements AggregateRule {
                 offset++;
                 Iterator it = cne.iterator();
                 while (it.hasNext()) {
-                    NodeId id = ((NodeState.ChildNodeEntry) it.next()).getId();
+                    NodeId id = ((ChildNodeEntry) it.next()).getId();
                     resolve((NodeState) ism.getItemState(id), collector, offset);
                 }
             }

@@ -27,10 +27,10 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -113,7 +112,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             }
             NodeState parentState = (NodeState) getItemState(parentId);
             if ((typeExpected & RETURN_NODE) != 0) {
-                NodeState.ChildNodeEntry nodeEntry =
+                ChildNodeEntry nodeEntry =
                         getChildNodeEntry(parentState, name, index);
                 if (nodeEntry != null) {
                     id = nodeEntry.getId();
@@ -222,7 +221,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      *         no such entry.
      * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, NodeId)
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
         return parent.getChildNodeEntry(id);
     }
@@ -242,7 +241,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      *         <code>null</code> if there's no such entry.
      * @see ZombieHierarchyManager#getChildNodeEntry(NodeState, Name, int)
      */
-    protected NodeState.ChildNodeEntry getChildNodeEntry(NodeState parent,
+    protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          Name name,
                                                          int index) {
         return parent.getChildNodeEntry(name, index);
@@ -281,7 +280,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
             NodeId id = nodeState.getNodeId();
-            NodeState.ChildNodeEntry entry = getChildNodeEntry(parent, id);
+            ChildNodeEntry entry = getChildNodeEntry(parent, id);
             if (entry == null) {
                 String msg = "failed to build path of " + state.getId() + ": "
                         + parent.getNodeId() + " has no child entry for "
@@ -458,7 +457,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new RepositoryException(msg, ise);
         }
 
-        NodeState.ChildNodeEntry entry =
+        ChildNodeEntry entry =
                 getChildNodeEntry(parentState, id);
         if (entry == null) {
             String msg = "failed to resolve name of " + id;

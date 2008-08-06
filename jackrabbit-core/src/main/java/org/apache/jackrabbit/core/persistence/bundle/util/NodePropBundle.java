@@ -155,7 +155,7 @@ public class NodePropBundle {
         Iterator iter = list.iterator();
         childNodeEntries.clear();
         while (iter.hasNext()) {
-            NodeState.ChildNodeEntry cne = (NodeState.ChildNodeEntry) iter.next();
+            org.apache.jackrabbit.core.state.ChildNodeEntry cne = (org.apache.jackrabbit.core.state.ChildNodeEntry) iter.next();
             addChildNodeEntry(cne.getName(), cne.getId());
         }
         sharedSet = state.getSharedSet();
