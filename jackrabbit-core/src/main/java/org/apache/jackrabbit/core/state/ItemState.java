@@ -21,18 +21,10 @@ import org.apache.jackrabbit.core.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
  */
-public abstract class ItemState implements Serializable {
-
-    /** Serialization UID of this class. */
-    static final long serialVersionUID = -1473610775880779769L;
+public abstract class ItemState {
 
     /**
      * Logger instance
@@ -87,12 +79,12 @@ public abstract class ItemState implements Serializable {
     /**
      * Parent container.
      */
-    private transient ItemStateListener container;
+    private ItemStateListener container;
 
     /**
      * the backing persistent item state (may be null)
      */
-    protected transient ItemState overlayedState;
+    protected ItemState overlayedState;
 
     /**
      * Constructs a new unconnected item state
@@ -429,15 +421,4 @@ public abstract class ItemState implements Serializable {
      * @return the approximate memory consumption of this state.
      */
     public abstract long calculateMemoryFootprint();
-
-    //-------------------------------------------------< Serializable support >
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // delegate to default implementation
-        out.defaultWriteObject();
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        // delegate to default implementation
-        in.defaultReadObject();
-    }
 }
