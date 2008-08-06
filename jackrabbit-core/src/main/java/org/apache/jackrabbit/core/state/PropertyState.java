@@ -16,36 +16,19 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
  */
 public class PropertyState extends ItemState {
-
-    /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(PropertyState.class);
-
-    /**
-     * Serialization UID of this class.
-     */
-    static final long serialVersionUID = 90076676913237139L;
 
     /**
      * the id of this property state
@@ -253,121 +236,5 @@ public class PropertyState extends ItemState {
         value=approx 100 bytes.
         */
         return 350 + values.length * 100;
-    }
-
-    //-------------------------------------------------< Serializable support >
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // important: fields must be written in same order as they are
-        // read in readObject(ObjectInputStream)
-        out.writeUTF(id.toString());
-        out.writeUTF(defId.toString());
-        out.writeInt(type);
-        out.writeBoolean(multiValued);
-        if (values == null) {
-            out.writeShort(-1);
-        } else {
-            out.writeShort(values.length);
-            for (int i = 0; i < values.length; i++) {
-                InternalValue val = values[i];
-                try {
-                    if (type == PropertyType.BINARY) {
-                        // special handling required for binary value
-                        BLOBFileValue blob = val.getBLOBFileValue();
-                        out.writeLong(blob.getLength());
-                        InputStream in = blob.getStream();
-                        try {
-                            IOUtils.copy(in, out);
-                        } finally {
-                            in.close();
-                        }
-                    } else {
-                        out.writeUTF(val.toString());
-                    }
-                } catch (IllegalStateException ise) {
-                    throw new IOException(ise.getMessage());
-                } catch (RepositoryException re) {
-                    throw new IOException(re.getMessage());
-                }
-            }
-        }
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException {
-        // important: fields must be read in same order as they are
-        // written in writeObject(ObjectOutputStream)
-        id = PropertyId.valueOf(in.readUTF());
-        defId = PropDefId.valueOf(in.readUTF());
-        type = in.readInt();
-        multiValued = in.readBoolean();
-        short count = in.readShort(); // # of values
-        if (count < 0) {
-            values = null;
-        } else {
-            values = new InternalValue[count];
-            for (int i = 0; i < values.length; i++) {
-                if (type == PropertyType.BINARY) {
-                    // special handling required for binary value
-                    final long length = in.readLong();
-                    final InputStream stream = in;
-                    // create InputStream wrapper of size 'length'
-                    try {
-                        values[i] = createInternalValueFromInputStream(stream, length);
-                    } catch (RepositoryException e) {
-                        String msg = "Failed to create internal value: " + e.getMessage();
-                        log.error(msg, e);
-                        throw new IOException(msg);
-                    }
-
-                } else {
-                    values[i] = InternalValue.valueOf(in.readUTF(), type);
-                }
-            }
-        }
-    }
-
-    private InternalValue createInternalValueFromInputStream(
-            final InputStream stream, final long length)
-            throws RepositoryException {
-        return InternalValue.create(new InputStream() {
-
-            private long consumed = 0;
-
-            public int read() throws IOException {
-                if (consumed >= length) {
-                    return -1;  // eof
-                }
-                int b = stream.read();
-                consumed++;
-                return b;
-            }
-
-            public int read(byte[] b, int off, int len) throws IOException {
-                if (consumed >= length) {
-                    return -1;  // eof
-                }
-                if ((consumed + len) > length) {
-                    len = (int) (length - consumed);
-                }
-                int read = stream.read(b, off, len);
-                consumed += read;
-                return read;
-            }
-
-            public long skip(long n) throws IOException {
-                if (consumed >= length && n > 0) {
-                    return -1;  // eof
-                }
-                if ((consumed + n) > length) {
-                    n = length - consumed;
-                }
-                long skipped = stream.skip(n);
-                consumed += skipped;
-                return skipped;
-            }
-
-            public void close() {
-                // nop
-            }
-        });
     }
 }

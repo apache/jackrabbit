@@ -23,12 +23,7 @@ import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,11 +39,6 @@ import java.util.Set;
  * <code>NodeState</code> represents the state of a <code>Node</code>.
  */
 public class NodeState extends ItemState {
-
-    /**
-     * Serialization UID of this class.
-     */
-    static final long serialVersionUID = 4392375681805781770L;
 
     /**
      * the name of this node's primary type
@@ -959,18 +949,6 @@ public class NodeState extends ItemState {
         }
     }
 
-    //-------------------------------------------------< Serializable support >
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // delegate to default implementation
-        out.defaultWriteObject();
-    }
-
-    private void readObject(ObjectInputStream in)
-            throws IOException, ClassNotFoundException {
-        // delegate to default implementation
-        in.defaultReadObject();
-    }
-
     //--------------------------------------------------------< inner classes >
     /**
      * <code>ChildNodeEntries</code> represents an insertion-ordered
@@ -980,7 +958,7 @@ public class NodeState extends ItemState {
      * <code>ChildNodeEntries</code> also provides an unmodifiable
      * <code>List</code> view.
      */
-    private static class ChildNodeEntries implements List, Cloneable, Serializable {
+    private static class ChildNodeEntries implements List, Cloneable {
 
         // insertion-ordered map of entries (key=NodeId, value=entry)
         private LinkedMap entries;
@@ -1373,32 +1351,6 @@ public class NodeState extends ItemState {
 
         public Object set(int index, Object element) {
             throw new UnsupportedOperationException();
-        }
-
-        //---------------------------------------------< Serializable support >
-        private void writeObject(ObjectOutputStream out) throws IOException {
-            // important: fields must be written in same order as they are
-            // read in readObject(ObjectInputStream)
-            out.writeShort(size()); // count
-            for (Iterator iter = iterator(); iter.hasNext();) {
-                NodeState.ChildNodeEntry entry =
-                        (NodeState.ChildNodeEntry) iter.next();
-                out.writeUTF(entry.getName().toString());   // name
-                out.writeUTF(entry.getId().toString());  // id
-            }
-        }
-
-        private void readObject(ObjectInputStream in) throws IOException {
-            entries = new LinkedMap();
-            nameMap = new HashMap();
-            // important: fields must be read in same order as they are
-            // written in writeObject(ObjectOutputStream)
-            short count = in.readShort();   // count
-            for (int i = 0; i < count; i++) {
-                Name name = NameFactoryImpl.getInstance().create(in.readUTF());    // name
-                String s = in.readUTF();   // id
-                add(name, NodeId.valueOf(s));
-            }
         }
 
         //------------------------------------------------< Cloneable support >
