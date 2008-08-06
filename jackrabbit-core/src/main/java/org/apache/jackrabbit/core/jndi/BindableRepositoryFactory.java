@@ -37,7 +37,7 @@ public class BindableRepositoryFactory implements ObjectFactory {
      * cache using <code>java.naming.Reference</code> objects as keys and
      * storing soft references to <code>BindableRepository</code> instances
      */
-    private static Map cache = new ReferenceMap();
+    private static final Map cache = new ReferenceMap();
 
     /**
      * {@inheritDoc}
