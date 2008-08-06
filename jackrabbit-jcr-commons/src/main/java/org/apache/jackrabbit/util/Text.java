@@ -509,26 +509,35 @@ public class Text {
     }
 
     /**
-     * Returns the name part of the path
+     * Returns the name part of the path. If the given path is already a name
+     * (i.e. contains no slashes) it is returned.
      *
      * @param path the path
-     * @return the name part
+     * @return the name part or <code>null</code> if <code>path</code> is <code>null</code>.
      */
     public static String getName(String path) {
-        int pos = path.lastIndexOf('/');
-        return pos >= 0 ? path.substring(pos + 1) : "";
+        if (path == null) {
+            return null;
+        } else {
+            return path.substring(path.lastIndexOf('/'));
+        }
     }
 
     /**
-     * Returns the name part of the path, delimited by the given <code>delim</code>
+     * Returns the name part of the path, delimited by the given <code>delim</code>.
+     * If the given path is already a name (i.e. contains no <code>delim</code>
+     * characters) it is returned.
      *
      * @param path the path
      * @param delim the delimiter
-     * @return the name part
+     * @return the name part or <code>null</code> if <code>path</code> is <code>null</code>.
      */
     public static String getName(String path, char delim) {
-        int pos = path.lastIndexOf(delim);
-        return pos >= 0 ? path.substring(pos + 1) : "";
+        if (path == null) {
+            return null;
+        } else {
+            return path.substring(path.lastIndexOf(delim));
+        }
     }
 
     /**
@@ -538,7 +547,7 @@ public class Text {
      * @see #getName(String)
      */
     public static String getName(String path, boolean ignoreTrailingSlash) {
-        if (ignoreTrailingSlash && path.endsWith("/") && path.length() > 1) {
+        if (ignoreTrailingSlash && path != null && path.endsWith("/") && path.length() > 1) {
             path = path.substring(0, path.length()-1);
         }
         return getName(path);
