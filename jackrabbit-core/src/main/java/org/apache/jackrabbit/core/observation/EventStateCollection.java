@@ -278,7 +278,7 @@ public final class EventStateCollection {
                         Name name = child.getName();
                         int index = (child.getIndex() != 1) ? child.getIndex() : 0;
                         Path parentPath = getPath(n.getNodeId(), hmgr);
-                        Path.Element addedElem = PathFactoryImpl.getInstance().create(name, index).getNameElement();
+                        Path.Element addedElem = PathFactoryImpl.getInstance().createElement(name, index);
                         // get removed index
                         NodeState overlayed = (NodeState) n.getOverlayedState();
                         ChildNodeEntry entry = overlayed.getChildNodeEntry(child.getId());
@@ -286,7 +286,7 @@ public final class EventStateCollection {
                             throw new ItemStateException("Unable to retrieve old child index for item: " + child.getId());
                         }
                         int oldIndex = (entry.getIndex() != 1) ? entry.getIndex() : 0;
-                        Path.Element removedElem = PathFactoryImpl.getInstance().create(name, oldIndex).getNameElement();
+                        Path.Element removedElem = PathFactoryImpl.getInstance().createElement(name, oldIndex);
 
                         events.add(EventState.childNodeRemoved(n.getNodeId(),
                                 parentPath,
