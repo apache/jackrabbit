@@ -120,36 +120,32 @@ public class WeightedHighlighter extends DefaultHighlighter {
                                     String hlStart,
                                     String hlEnd,
                                     int maxFragments,
-                                    int surround) {
-
+                                    int surround) throws IOException {
         if (offsets == null || offsets.length == 0) {
             // nothing to highlight
-            StringBuffer excerpt = new StringBuffer(excerptStart);
-            excerpt.append(fragmentStart);
-            int min = excerpt.length();
-            excerpt.append(text.substring(0, Math.min(text.length(), surround * 2)));
-            if (text.length() > excerpt.length()) {
-                for (int i = excerpt.length() - 1; i > min; i--) {
-                    if (Character.isWhitespace(excerpt.charAt(i))) {
-                        excerpt.delete(i, excerpt.length());
-                        excerpt.append(" ...");
-                        break;
-                    }
-                }
-            }
-            excerpt.append(fragmentEnd).append(excerptEnd);
-            return excerpt.toString();
+            return createDefaultExcerpt(text, excerptStart, excerptEnd,
+                    fragmentStart, fragmentEnd, surround * 2);
         }
 
         PriorityQueue bestFragments = new FragmentInfoPriorityQueue(maxFragments);
         for (int i = 0; i < offsets.length; i++) {
-            FragmentInfo fi = new FragmentInfo(offsets[i], surround * 2);
-            for (int j = i + 1; j < offsets.length; j++) {
-                if (!fi.add(offsets[j], text)) {
-                    break;
+            if (offsets[i].getEndOffset() <= text.length()) {
+                FragmentInfo fi = new FragmentInfo(offsets[i], surround * 2);
+                for (int j = i + 1; j < offsets.length; j++) {
+                    if (offsets[j].getEndOffset() > text.length()) {
+                        break;
+                    }
+                    if (!fi.add(offsets[j], text)) {
+                        break;
+                    }
                 }
+                bestFragments.insert(fi);
             }
-            bestFragments.insert(fi);
+        }
+
+        if (bestFragments.size() == 0) {
+            return createDefaultExcerpt(text, excerptStart, excerptEnd,
+                    fragmentStart, fragmentEnd, surround * 2);
         }
 
         // retrieve fragment infos from queue and fill into list, least

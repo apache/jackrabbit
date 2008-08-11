@@ -48,6 +48,8 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -105,6 +107,12 @@ public class NodeIndexer {
      * Indicates index format for this node indexer.
      */
     protected IndexFormatVersion indexFormatVersion = IndexFormatVersion.V1;
+
+    /**
+     * List of {@link FieldNames#FULLTEXT} fields which should not be used in
+     * an excerpt.
+     */
+    protected List doNotUseInExcerpt = new ArrayList();
 
     /**
      * Creates a new node indexer.
@@ -169,6 +177,7 @@ public class NodeIndexer {
      *                             values from the <code>ItemStateProvider</code>.
      */
     protected Document createDoc() throws RepositoryException {
+        doNotUseInExcerpt.clear();
         Document doc = new Document();
 
         doc.setBoost(getNodeBoost());
@@ -236,6 +245,11 @@ public class NodeIndexer {
             } catch (ItemStateException e) {
                 throwRepositoryException(e);
             }
+        }
+
+        // now add fields that are not used in excerpt (must go at the end)
+        for (Iterator it = doNotUseInExcerpt.iterator(); it.hasNext(); ) {
+            doc.add((Field) it.next());
         }
         return doc;
     }
@@ -328,7 +342,7 @@ public class NodeIndexer {
                     } else {
                         addStringValue(doc, fieldName, value.getString(),
                                 true, isIncludedInNodeIndex(name),
-                                getPropertyBoost(name));
+                                getPropertyBoost(name), useInExcerpt(name));
                     }
                 }
                 break;
@@ -612,10 +626,36 @@ public class NodeIndexer {
      *                           tokenized and added to the node scope fulltext
      *                           index.
      * @param boost              the boost value for this string field.
+     * @deprecated use {@link #addStringValue(Document, String, Object, boolean, boolean, float, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName,
                                   Object internalValue, boolean tokenized,
                                   boolean includeInNodeIndex, float boost) {
+        addStringValue(doc, fieldName, internalValue, tokenized, includeInNodeIndex, boost, true);
+    }
+
+    /**
+     * Adds the string value to the document both as the named field and
+     * optionally for full text indexing if <code>tokenized</code> is
+     * <code>true</code>.
+     *
+     * @param doc                The document to which to add the field
+     * @param fieldName          The name of the field to add
+     * @param internalValue      The value for the field to add to the
+     *                           document.
+     * @param tokenized          If <code>true</code> the string is also
+     *                           tokenized and fulltext indexed.
+     * @param includeInNodeIndex If <code>true</code> the string is also
+     *                           tokenized and added to the node scope fulltext
+     *                           index.
+     * @param boost              the boost value for this string field.
+     * @param useInExcerpt       If <code>true</code> the string may show up in
+     *                           an excerpt.
+     */
+    protected void addStringValue(Document doc, String fieldName,
+                                  Object internalValue, boolean tokenized,
+                                  boolean includeInNodeIndex, float boost,
+                                  boolean useInExcerpt) {
 
         // simple String
         String stringValue = (String) internalValue;
@@ -638,7 +678,13 @@ public class NodeIndexer {
 
             if (includeInNodeIndex) {
                 // also create fulltext index of this value
-                doc.add(createFulltextField(stringValue));
+                boolean store = supportHighlighting && useInExcerpt;
+                f = createFulltextField(stringValue, store, supportHighlighting);
+                if (useInExcerpt) {
+                    doc.add(f);
+                } else {
+                    doNotUseInExcerpt.add(f);
+                }
             }
         }
     }
@@ -670,9 +716,30 @@ public class NodeIndexer {
      *
      * @param value the string value.
      * @return a lucene field.
+     * @deprecated use {@link #createFulltextField(String, boolean, boolean)} instead.
      */
     protected Field createFulltextField(String value) {
-        if (supportHighlighting) {
+        return createFulltextField(value, supportHighlighting, supportHighlighting);
+    }
+
+    /**
+     * Creates a fulltext field for the string <code>value</code>.
+     *
+     * @param value the string value.
+     * @param store if the value of the field should be stored.
+     * @param withOffsets if a term vector with offsets should be stored.
+     * @return a lucene field.
+     */
+    protected Field createFulltextField(String value,
+                                        boolean store,
+                                        boolean withOffsets) {
+        Field.TermVector tv;
+        if (withOffsets) {
+            tv = Field.TermVector.WITH_OFFSETS;
+        } else {
+            tv = Field.TermVector.NO;
+        }
+        if (store) {
             // store field compressed if greater than 16k
             Field.Store stored;
             if (value.length() > 0x4000) {
@@ -681,10 +748,10 @@ public class NodeIndexer {
                 stored = Field.Store.YES;
             }
             return new Field(FieldNames.FULLTEXT, value, stored,
-                    Field.Index.TOKENIZED, Field.TermVector.WITH_OFFSETS);
+                    Field.Index.TOKENIZED, tv);
         } else {
             return new Field(FieldNames.FULLTEXT, value,
-                    Field.Store.NO, Field.Index.TOKENIZED);
+                    Field.Store.NO, Field.Index.TOKENIZED, tv);
         }
     }
 
@@ -711,7 +778,7 @@ public class NodeIndexer {
             } finally {
                 IOUtils.closeQuietly(value);
             }
-            return createFulltextField(textExtract.toString());
+            return createFulltextField(textExtract.toString(), true, true);
         } else {
             return new Field(FieldNames.FULLTEXT, value);
         }
@@ -746,6 +813,22 @@ public class NodeIndexer {
             return true;
         } else {
             return indexingConfig.isIncludedInNodeScopeIndex(node, propertyName);
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if the content of the property with the given
+     * name should the used to create an excerpt.
+     *
+     * @param propertyName the name of a property.
+     * @return <code>true</code> if it should be used to create an excerpt;
+     *         <code>false</code> otherwise.
+     */
+    protected boolean useInExcerpt(Name propertyName) {
+        if (indexingConfig == null) {
+            return true;
+        } else {
+            return indexingConfig.useInExcerpt(node, propertyName);
         }
     }
 

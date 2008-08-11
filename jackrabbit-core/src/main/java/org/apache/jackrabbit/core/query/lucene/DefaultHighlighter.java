@@ -21,6 +21,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.TermPositionVector;
@@ -150,15 +152,13 @@ public class DefaultHighlighter {
         int[] tvecindexes = tvec.indexesOf(terms, 0, terms.length);
         for (int i = 0; i < tvecindexes.length; i++) {
             TermVectorOffsetInfo[] termoffsets = tvec.getOffsets(tvecindexes[i]);
-            for (int ii = 0; ii < termoffsets.length; ii++) {
-                list.add(termoffsets[ii]);
-            }
+            list.addAll(Arrays.asList(termoffsets));
         }
 
         TermVectorOffsetInfo[] offsets = (TermVectorOffsetInfo[]) list.toArray(new TermVectorOffsetInfo[list.size()]);
         // sort offsets
         if (terms.length > 1) {
-            java.util.Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
+            Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
         }
 
         return mergeFragments(offsets, text, excerptStart,
@@ -175,43 +175,37 @@ public class DefaultHighlighter {
                                     String hlStart,
                                     String hlEnd,
                                     int maxFragments,
-                                    int surround)
-            throws IOException {
-        StringReader reader = new StringReader(text);
+                                    int surround) throws IOException {
         if (offsets == null || offsets.length == 0) {
             // nothing to highlight
-            StringBuffer excerpt = new StringBuffer(excerptStart);
-            excerpt.append(fragmentStart);
-            int min = excerpt.length();
-            char[] buf = new char[surround * 2];
-            int len = reader.read(buf);
-            excerpt.append(buf, 0, len);
-            if (len == buf.length) {
-                for (int i = excerpt.length() - 1; i > min; i--) {
-                    if (Character.isWhitespace(excerpt.charAt(i))) {
-                        excerpt.delete(i, excerpt.length());
-                        excerpt.append(" ...");
-                        break;
-                    }
-                }
-            }
-            excerpt.append(fragmentEnd).append(excerptEnd);
-            return excerpt.toString();
+            return createDefaultExcerpt(text, excerptStart, excerptEnd,
+                    fragmentStart, fragmentEnd, surround * 2);
         }
         int lastOffset = offsets.length; // Math.min(10, offsets.length); // 10 terms is plenty?
         ArrayList fragmentInfoList = new ArrayList();
-        FragmentInfo fi = new FragmentInfo(offsets[0], surround * 2);
-        for (int i = 1; i < lastOffset; i++) {
-            if (fi.add(offsets[i])) {
-                continue;
+        if (offsets[0].getEndOffset() <= text.length()) {
+            FragmentInfo fi = new FragmentInfo(offsets[0], surround * 2);
+            for (int i = 1; i < lastOffset; i++) {
+                if (offsets[i].getEndOffset() > text.length()) {
+                    break;
+                }
+                if (fi.add(offsets[i])) {
+                    continue;
+                }
+                fragmentInfoList.add(fi);
+                fi = new FragmentInfo(offsets[i], surround * 2);
             }
             fragmentInfoList.add(fi);
-            fi = new FragmentInfo(offsets[i], surround * 2);
         }
-        fragmentInfoList.add(fi);
+
+        if (fragmentInfoList.isEmpty()) {
+            // nothing to highlight
+            return createDefaultExcerpt(text, excerptStart, excerptEnd,
+                    fragmentStart, fragmentEnd, surround * 2);
+        }
 
         // sort with score
-        java.util.Collections.sort(fragmentInfoList, new FragmentInfoScoreSorter());
+        Collections.sort(fragmentInfoList, new FragmentInfoScoreSorter());
 
         // extract best fragments
         ArrayList bestFragmentsList = new ArrayList();
@@ -220,9 +214,10 @@ public class DefaultHighlighter {
         }
 
         // re-sort with positions
-        java.util.Collections.sort(bestFragmentsList, new FragmentInfoPositionSorter());
+        Collections.sort(bestFragmentsList, new FragmentInfoPositionSorter());
 
         // merge #maxFragments fragments
+        StringReader reader = new StringReader(text);
         StringBuffer sb = new StringBuffer(excerptStart);
         int pos = 0;
         char[] cbuf;
@@ -231,7 +226,7 @@ public class DefaultHighlighter {
         int skippedChars;
         int firstWhitespace;
         for (int i = 0; i < bestFragmentsList.size(); i++) {
-            fi = (FragmentInfo) bestFragmentsList.get(i);
+            FragmentInfo fi = (FragmentInfo) bestFragmentsList.get(i);
             fi.trim();
             nextStart = fi.getStartOffset();
             skip = nextStart - pos;
@@ -358,6 +353,44 @@ public class DefaultHighlighter {
         }
         sb.append(excerptEnd);
         return sb.toString();
+    }
+
+    /**
+     * Creates a default excerpt with the given text.
+     *
+     * @param text the text.
+     * @param excerptStart the excerpt start.
+     * @param excerptEnd the excerpt end.
+     * @param fragmentStart the fragement start.
+     * @param fragmentEnd the fragment end.
+     * @param maxLength the maximum length of the fragment.
+     * @return a default excerpt.
+     * @throws IOException if an error occurs while reading from the text.
+     */
+    protected String createDefaultExcerpt(String text,
+                                          String excerptStart,
+                                          String excerptEnd,
+                                          String fragmentStart,
+                                          String fragmentEnd,
+                                          int maxLength) throws IOException {
+        StringReader reader = new StringReader(text);
+        StringBuffer excerpt = new StringBuffer(excerptStart);
+        excerpt.append(fragmentStart);
+        int min = excerpt.length();
+        char[] buf = new char[maxLength];
+        int len = reader.read(buf);
+        excerpt.append(buf, 0, len);
+        if (len == buf.length) {
+            for (int i = excerpt.length() - 1; i > min; i--) {
+                if (Character.isWhitespace(excerpt.charAt(i))) {
+                    excerpt.delete(i, excerpt.length());
+                    excerpt.append(" ...");
+                    break;
+                }
+            }
+        }
+        excerpt.append(fragmentEnd).append(excerptEnd);
+        return excerpt.toString();
     }
 
     private static class FragmentInfo {

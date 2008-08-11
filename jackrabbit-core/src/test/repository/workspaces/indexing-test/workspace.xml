@@ -37,6 +37,8 @@
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />
     <param name="indexingConfiguration" value="${wsp.home}/indexing-configuration.xml"/>
+    <param name="supportHighlighting" value="true"/>
+    <param name="excerptProviderClass" value="org.apache.jackrabbit.core.query.lucene.WeightedHTMLExcerpt"/>
   </SearchIndex>
 </Workspace>
 

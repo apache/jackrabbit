@@ -66,8 +66,8 @@ public interface IndexingConfiguration {
 
     /**
      * Returns <code>true</code> if the property with the given name should be
-     * included in the node scope fulltext index. If there is not configuration
-     * entry for that propery <code>false</code> is returned.
+     * included in the node scope fulltext index. If there is no configuration
+     * entry for that property <code>false</code> is returned.
      *
      * @param state the node state.
      * @param propertyName the name of a property.
@@ -75,6 +75,18 @@ public interface IndexingConfiguration {
      *         scope fulltext index.
      */
     boolean isIncludedInNodeScopeIndex(NodeState state, Name propertyName);
+
+    /**
+     * Returns <code>true</code> if the content of the property with the given
+     * name should show up in an excerpt. If there is no configuration entry for
+     * that property <code>true</code> is returned.
+     *
+     * @param state the node state.
+     * @param propertyName the name of a property.
+     * @return <code>true</code> if the content of the property should be
+     *         included in an excerpt; <code>false</code> otherwise.
+     */
+    boolean useInExcerpt(NodeState state, Name propertyName);
 
     /**
      * Returns the boost value for the given property name. If there is no

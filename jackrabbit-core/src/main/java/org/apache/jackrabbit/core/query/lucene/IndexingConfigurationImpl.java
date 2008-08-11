@@ -270,6 +270,24 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         return true;
     }
 
+    /**
+     * Returns <code>true</code> if the content of the property with the given
+     * name should show up in an excerpt. If there is no configuration entry for
+     * that property <code>true</code> is returned.
+     *
+     * @param state the node state.
+     * @param propertyName the name of a property.
+     * @return <code>true</code> if the content of the property should be
+     *         included in an excerpt; <code>false</code> otherwise.
+     */
+    public boolean useInExcerpt(NodeState state, Name propertyName) {
+        IndexingRule rule = getApplicableIndexingRule(state);
+        if (rule != null) {
+            return rule.useInExcerpt(propertyName);
+        }
+        // none of the config elements matched -> default is to include
+        return true;
+    }
 
     /**
      * Returns the analyzer configured for the property with this fieldName
@@ -398,7 +416,16 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                             regexp.getNodeValue()).booleanValue();
                 }
 
-                PropertyConfig pc = new PropertyConfig(boost, nodeScopeIndex);
+                // get useInExcerpt flag
+                boolean useInExcerpt = true;
+                Node excerpt = attributes.getNamedItem("useInExcerpt");
+                if (excerpt != null) {
+                    useInExcerpt = Boolean.valueOf(
+                            excerpt.getNodeValue()).booleanValue();
+                }
+
+                PropertyConfig pc = new PropertyConfig(
+                        boost, nodeScopeIndex, useInExcerpt);
 
                 if (isRegexp) {
                     namePatterns.add(new NamePattern(
@@ -693,6 +720,24 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
         }
 
         /**
+         * Returns <code>true</code> if the content of the property with the
+         * given name should show up in an excerpt. If there is no configuration
+         * entry for that property <code>true</code> is returned.
+         *
+         * @param propertyName the name of a property.
+         * @return <code>true</code> if the content of the property should be
+         *         included in an excerpt; <code>false</code> otherwise.
+         */
+        public boolean useInExcerpt(Name propertyName) {
+            PropertyConfig config = getConfig(propertyName);
+            if (config != null) {
+                return config.useInExcerpt;
+            } else {
+                return true;
+            }
+        }
+
+        /**
          * Returns <code>true</code> if this rule applies to the given node
          * <code>state</code>.
          *
@@ -788,9 +833,18 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          */
         final boolean nodeScopeIndex;
 
-        PropertyConfig(float boost, boolean nodeScopeIndex) {
+        /**
+         * Flag that indicates whether the content of a property should be used
+         * to create an excerpt.
+         */
+        final boolean useInExcerpt;
+
+        PropertyConfig(float boost,
+                       boolean nodeScopeIndex,
+                       boolean useInExcerpt) {
             this.boost = boost;
             this.nodeScopeIndex = nodeScopeIndex;
+            this.useInExcerpt = useInExcerpt;
         }
     }
 
