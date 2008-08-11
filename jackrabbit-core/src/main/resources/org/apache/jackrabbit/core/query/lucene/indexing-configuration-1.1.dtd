@@ -62,12 +62,15 @@
     is not of type string. If isRegexp is set to true the name of the property
     is interpreted as a regular expression to match properties on a node. Please
     note that you may only use a regular expression for the local part of a
-    property name.
+    property name. The attribute useInExcerpt controls whether the contents
+    of the property is used to construct an excerpt. The default value for this
+    attribute is true.
 -->
 <!ELEMENT property (#PCDATA)>
 <!ATTLIST property boost CDATA "1.0"
                    nodeScopeIndex CDATA "true"
-                   isRegexp CDATA "false">
+                   isRegexp CDATA "false"
+                   useInExcerpt CDATA "true">
 
 <!--
     An analyzer element with property elements in it defines which analyzer is to

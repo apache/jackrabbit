@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.query;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Value;
+import javax.jcr.query.RowIterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -92,5 +94,32 @@ public class IndexingRuleTest extends AbstractIndexingTest {
                 "/*[@" + jcrCreated + " = xs:dateTime('" +
                 node1.getProperty(jcrCreated).getString() + "')]";
         checkResult(executeQuery(stmt), new Node[]{});
+    }
+
+    public void testUseInExcerpt() throws RepositoryException {
+        Node node = testRootNode.addNode(nodeName1, NT_UNSTRUCTURED);
+        node.setProperty("rule", "excerpt");
+        node.setProperty("title", "Apache Jackrabbit");
+        node.setProperty("text", "Jackrabbit is a JCR implementation");
+        testRootNode.save();
+        String stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[jcr:contains(., 'jackrabbit implementation')]/rep:excerpt(.)";
+        RowIterator rows = executeQuery(stmt).getRows();
+        assertTrue("No results returned", rows.hasNext());
+        Value excerpt = rows.nextRow().getValue("rep:excerpt(.)");
+        assertNotNull("No excerpt created", excerpt);
+        assertTrue("Title must not be present in excerpt",
+                excerpt.getString().indexOf("Apache") == -1);
+        assertTrue("Missing highlight",
+                excerpt.getString().indexOf("<strong>implementation</strong>") != -1);
+
+        stmt = "/jcr:root" + testRootNode.getPath() +
+                "/*[jcr:contains(., 'apache')]/rep:excerpt(.)";
+        rows = executeQuery(stmt).getRows();
+        assertTrue("No results returned", rows.hasNext());
+        excerpt = rows.nextRow().getValue("rep:excerpt(.)");
+        assertNotNull("No excerpt created", excerpt);
+        assertTrue("Title must not be present in excerpt",
+                excerpt.getString().indexOf("Apache") == -1);
     }
 }
