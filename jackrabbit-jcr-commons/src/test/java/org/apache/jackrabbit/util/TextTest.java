@@ -103,4 +103,44 @@ public class TextTest extends TestCase {
             assertFalse(nonDesc + " isn't a descendant of " + parent, Text.isDescendant(parent, nonDesc));
         }
     }
+
+    public void testGetName() {
+        List l = new ArrayList();
+        l.add(new String[] {"/a/b/c", "c"});
+        l.add(new String[] {"c", "c"});
+        l.add(new String[] {null, null});
+        l.add(new String[] {"", ""});
+        l.add(new String[] {"/", ""});
+        l.add(new String[] {"http://jackrabbit.apache.org/jackrabbit", "jackrabbit"});
+        l.add(new String[] {"http://jackrabbit.apache.org/jackrabbit/", ""});
+
+        for (Iterator it = l.iterator(); it.hasNext();) {
+            String[] strs = (String[]) it.next();
+            assertEquals(strs[1], Text.getName(strs[0]));
+        }
+
+        // Text.getName(String path, boolean ignoreTrailingSlash)
+        l = new ArrayList();
+        l.add(new String[] {"http://jackrabbit.apache.org/jackrabbit", "jackrabbit"});
+        l.add(new String[] {"http://jackrabbit.apache.org/jackrabbit/", "jackrabbit"});
+
+        for (Iterator it = l.iterator(); it.hasNext();) {
+            String[] strs = (String[]) it.next();
+            assertEquals(strs[1], Text.getName(strs[0], true));
+        }
+
+        // Text.getName(String path, char delim)
+        l = new ArrayList();
+        l.add(new String[] {"/a=b/c", "b/c"});
+        l.add(new String[] {"c", "c"});
+        l.add(new String[] {null, null});
+        l.add(new String[] {"", ""});
+        l.add(new String[] {"http:/=jackrabbit.apache.org/jackrabbit", "jackrabbit.apache.org/jackrabbit"});
+        l.add(new String[] {"http:=//jackrabbit.apache.org/jackrabbit/", "//jackrabbit.apache.org/jackrabbit/"});
+
+        for (Iterator it = l.iterator(); it.hasNext();) {
+            String[] strs = (String[]) it.next();
+            assertEquals(strs[1], Text.getName(strs[0], '='));
+        }
+    }
 }
