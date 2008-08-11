@@ -516,11 +516,7 @@ public class Text {
      * @return the name part or <code>null</code> if <code>path</code> is <code>null</code>.
      */
     public static String getName(String path) {
-        if (path == null) {
-            return null;
-        } else {
-            return path.substring(path.lastIndexOf('/'));
-        }
+        return getName(path, '/');
     }
 
     /**
@@ -533,11 +529,9 @@ public class Text {
      * @return the name part or <code>null</code> if <code>path</code> is <code>null</code>.
      */
     public static String getName(String path, char delim) {
-        if (path == null) {
-            return null;
-        } else {
-            return path.substring(path.lastIndexOf(delim));
-        }
+        return path == null
+                ? null 
+                : path.substring(path.lastIndexOf(delim) + 1);
     }
 
     /**
