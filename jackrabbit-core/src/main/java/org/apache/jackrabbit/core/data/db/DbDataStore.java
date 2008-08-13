@@ -846,7 +846,8 @@ public class DbDataStore implements DataStore {
     }
 
     /**
-     * Set the maximum number of concurrent connections.
+     * Set the maximum number of concurrent connections in the pool.
+     * At least 3 connections are required if the garbage collection process is used.
      *
      * @param maxConnections the new value
      */
