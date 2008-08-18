@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.apache.jackrabbit.util.Text;
 
 /**
@@ -67,5 +71,25 @@ public class OracleDatabaseJournal extends DatabaseJournal {
             tspace = "tablespace " + tableSpace;
         }
         return Text.replace(sql, TABLE_SPACE_VARIABLE, tspace).trim();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected boolean tableExists(DatabaseMetaData metaData, String tableName) throws SQLException {
+        if (metaData.storesLowerCaseIdentifiers()) {
+            tableName = tableName.toLowerCase();
+        } else if (metaData.storesUpperCaseIdentifiers()) {
+            tableName = tableName.toUpperCase();
+        }
+
+        String userName = metaData.getUserName();
+        ResultSet rs = metaData.getTables(null, userName, tableName, null);
+
+        try {
+            return rs.next();
+        } finally {
+            rs.close();
+        }
     }
 }
