@@ -45,6 +45,8 @@ public class RepositoryUtil
 
     /** namespace prefix constant */
     public static final String OCM_NAMESPACE_PREFIX   = "ocm";
+    
+    public static Repository repository; 
 
     /** namespace constant */
     public static final String OCM_NAMESPACE          = "http://jackrabbit.apache.org/ocm";
@@ -122,13 +124,23 @@ public class RepositoryUtil
     {
         try
         {
-            Hashtable env = new Hashtable();
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
-            env.put(Context.PROVIDER_URL, "localhost");
-            InitialContext ctx = new InitialContext(env);
+        	
+        	if (repository != null)
+        	{
+        		return repository;
+        	}
+        	else 
+        	{
+        		registerRepository(repositoryName,
+                      "./src/test/test-config/repository.xml", "./target/repository");
+        		Hashtable env = new Hashtable();
+        		env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory");
+        		env.put(Context.PROVIDER_URL, "localhost");
+        		InitialContext ctx = new InitialContext(env);
 
-            Repository repository = (Repository) ctx.lookup(repositoryName);
-            return repository;
+        		repository = (Repository) ctx.lookup(repositoryName);
+        		return repository;
+        	}
         }
         catch (Exception e)
         {
