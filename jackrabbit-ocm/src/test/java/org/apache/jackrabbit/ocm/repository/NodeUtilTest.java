@@ -29,10 +29,7 @@ import junit.framework.TestSuite;
 public class NodeUtilTest extends TestCase
 {
 
-    /**
-     * <p>Defines the test case name for junit.</p>
-     * @param testName The test case name.
-     */
+
     public NodeUtilTest(String testName)
     {
         super(testName);
@@ -52,24 +49,6 @@ public class NodeUtilTest extends TestCase
     public void tearDown() throws Exception
     {
         super.tearDown();
-    }
-
-    public static Test suite()
-    {
-        TestSuite suite = new TestSuite(NodeUtilTest.class);
-        // All methods starting with "test" will be executed in the test suite.
-        return new TestSetup(suite) {
-            protected void setUp() throws Exception {
-                super.setUp();
-                RepositoryUtil.registerRepository("repositoryTest", "./src/test/test-config/repository.xml", "target/repository");
-            }
-
-            protected void tearDown() throws Exception {
-                RepositoryUtil.unRegisterRepository("repositoryTest");
-                super.tearDown();
-            }
-
-        };
     }
 
 

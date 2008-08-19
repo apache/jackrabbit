@@ -19,8 +19,6 @@ package org.apache.jackrabbit.ocm.mapper;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
-
 
 /**
  * Package level tests.
@@ -30,7 +28,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 public class AllTests {
 
     public static Test suite() {
-        return new RepositoryLifecycleTestSetup(buildSuite());
+        return buildSuite();
     }
 
     public static Test buildSuite() {
