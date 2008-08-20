@@ -1171,7 +1171,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             if (p != null) {
                 removedNodeIds.add(itemId);
                 int index = p.getNameElement().getNormalizedIndex();
-                if (index > Path.INDEX_DEFAULT && !removedNodeIds.isEmpty()) {
+                if (index > Path.INDEX_DEFAULT) {
                     Path.Element[] elems = p.getElements();
                     PathBuilder pb = new PathBuilder();
                     for (int i = 0; i <= elems.length - 2; i++) {
