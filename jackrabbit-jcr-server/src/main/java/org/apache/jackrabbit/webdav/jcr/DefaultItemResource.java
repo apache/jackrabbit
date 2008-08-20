@@ -302,13 +302,13 @@ public class DefaultItemResource extends AbstractItemResource {
 
                 // set the content type
                 String contentType;
-                if (!isMultiple()) {
-                    contentType = (type == PropertyType.BINARY) ? "application/octet-stream" : "text/plain";
+                if (isMultiple()) {
+                    contentType = IOUtil.buildContentType("text/xml","utf-8");
                 } else {
-                    contentType = "text/xml";
+                    contentType = IOUtil.buildContentType(JcrValueType.contentTypeFromType(type), "utf-8");
+
                 }
                 properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, contentType));
-
 
                 // add jcr-specific resource properties
                 properties.add(new DefaultDavProperty(JCR_TYPE, PropertyType.nameFromValue(type)));
@@ -319,9 +319,6 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new ValuesProperty(prop.getValue()));
                     long length = prop.getLength();
                     properties.add(new DefaultDavProperty(JCR_LENGTH, String.valueOf(length), true));
-                    if (prop.getLength() > IOUtil.UNDEFINED_LENGTH) {
-                        properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, String.valueOf(length)));
-                    }
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());
