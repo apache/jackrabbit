@@ -564,7 +564,7 @@ public class SessionImpl extends AbstractSession
     }
 
     protected ItemManager createItemManager(HierarchyManager hierarchyManager) {
-        ItemCache cache = new ItemCacheImpl(1000); // TODO: make configurable
+        ItemCache cache = new ItemCacheImpl(config.getItemCacheSize());
         ItemManagerImpl imgr = new ItemManagerImpl(hierarchyManager, this, cache);
         return imgr;
     }
@@ -735,7 +735,7 @@ public class SessionImpl extends AbstractSession
      * state for this session is retrieved.
      *
      * @param version
-     * @return
+     * @return the NodeState associated with the specified version.
      */
     NodeState getVersionState(Version version) throws RepositoryException {
         ItemState itemState;
