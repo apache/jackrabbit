@@ -19,12 +19,14 @@ package org.apache.jackrabbit.core.config;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
+import javax.jcr.RepositoryException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -59,7 +61,7 @@ import java.util.Properties;
  * addition the workspace configuration object keeps track of all configured
  * workspaces.
  */
-public class RepositoryConfig {
+public class RepositoryConfig implements FileSystemFactory {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(RepositoryConfig.class);
@@ -161,9 +163,9 @@ public class RepositoryConfig {
     private final SecurityConfig sec;
 
     /**
-     * Repository file system configuration.
+     * Repository file system factory.
      */
-    private final FileSystemConfig fsc;
+    private final FileSystemFactory fsf;
 
     /**
      * Name of the default workspace.
@@ -228,7 +230,7 @@ public class RepositoryConfig {
      *
      * @param home repository home directory
      * @param sec the security configuration
-     * @param fsc file system configuration
+     * @param fsf file system factory
      * @param workspaceDirectory workspace root directory
      * @param workspaceConfigDirectory optional workspace configuration directory
      * @param defaultWorkspace name of the default workspace
@@ -240,7 +242,8 @@ public class RepositoryConfig {
      * @param dataStoreConfig configuration for data store
      * @param parser configuration parser
      */
-    public RepositoryConfig(String home, SecurityConfig sec, FileSystemConfig fsc,
+    public RepositoryConfig(
+            String home, SecurityConfig sec, FileSystemFactory fsf,
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
@@ -248,7 +251,7 @@ public class RepositoryConfig {
         workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
-        this.fsc = fsc;
+        this.fsf = fsf;
         this.workspaceDirectory = workspaceDirectory;
         this.workspaceConfigDirectory = workspaceConfigDirectory;
         this.workspaceMaxIdleTime = workspaceMaxIdleTime;
@@ -283,34 +286,33 @@ public class RepositoryConfig {
 
         // Get all workspace subdirectories
         if (workspaceConfigDirectory != null) {
-            // a configuration directoy had been specified; search for
+            // a configuration directory had been specified; search for
             // workspace configurations in virtual repository file system
             // rather than in physical workspace root directory on disk
-            FileSystem fs = fsc.createFileSystem();
             try {
-                if (!fs.exists(workspaceConfigDirectory)) {
-                    fs.createFolder(workspaceConfigDirectory);
-                } else {
-                    String[] dirNames = fs.listFolders(workspaceConfigDirectory);
-                    for (int i = 0; i < dirNames.length; i++) {
-                        String configDir = workspaceConfigDirectory
-                                + FileSystem.SEPARATOR + dirNames[i];
-                        WorkspaceConfig wc = loadWorkspaceConfig(fs, configDir);
-                        if (wc != null) {
-                            addWorkspaceConfig(wc);
+                FileSystem fs = fsf.getFileSystem();
+                try {
+                    if (!fs.exists(workspaceConfigDirectory)) {
+                        fs.createFolder(workspaceConfigDirectory);
+                    } else {
+                        String[] dirNames = fs.listFolders(workspaceConfigDirectory);
+                        for (int i = 0; i < dirNames.length; i++) {
+                            String configDir = workspaceConfigDirectory
+                            + FileSystem.SEPARATOR + dirNames[i];
+                            WorkspaceConfig wc = loadWorkspaceConfig(fs, configDir);
+                            if (wc != null) {
+                                addWorkspaceConfig(wc);
+                            }
                         }
-                    }
 
+                    }
+                } finally {
+                    fs.close();
                 }
-            } catch (FileSystemException e) {
+            } catch (Exception e) {
                 throw new ConfigurationException(
                         "error while loading workspace configurations from path "
                         + workspaceConfigDirectory, e);
-            } finally {
-                try {
-                    fs.close();
-                } catch (FileSystemException ignore) {
-                }
             }
         } else {
             // search for workspace configurations in physical workspace root
@@ -482,7 +484,11 @@ public class RepositoryConfig {
             // a configuration directoy had been specified;
             // workspace configurations are maintained in
             // virtual repository file system
-            virtualFS = fsc.createFileSystem();
+            try {
+                virtualFS = fsf.getFileSystem();
+            } catch (RepositoryException e) {
+                throw new ConfigurationException("File system configuration error", e);
+            }
         } else {
             // workspace configurations are maintained on disk
             virtualFS = null;
@@ -621,12 +627,13 @@ public class RepositoryConfig {
     }
 
     /**
-     * Returns the repository file system configuration.
+     * Creates and returns the configured repository file system.
      *
-     * @return file system configuration
+     * @return the configured {@link FileSystem}
+     * @throws RepositoryException if the file system can not be created
      */
-    public FileSystemConfig getFileSystemConfig() {
-        return fsc;
+    public FileSystem getFileSystem() throws RepositoryException {
+        return fsf.getFileSystem();
     }
 
     /**

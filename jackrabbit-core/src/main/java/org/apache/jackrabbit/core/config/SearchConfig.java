@@ -18,6 +18,11 @@ package org.apache.jackrabbit.core.config;
 
 import java.util.Properties;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemFactory;
+
 /**
  * Search index configuration. This bean configuration class
  * is used to create configured search index objects.
@@ -28,26 +33,24 @@ import java.util.Properties;
  *
  * @see WorkspaceConfig#getSearchConfig()
  */
-public class SearchConfig extends BeanConfig {
+public class SearchConfig extends BeanConfig implements FileSystemFactory {
 
     /**
-     * The search index file system configuration, or <code>null</code> if
-     * none is provided.
+     * The (optional) factory for creating the configured search file system.
      */
-    private final FileSystemConfig fsc;
+    private final FileSystemFactory fsf;
 
     /**
      * Creates a search index configuration object.
      *
      * @param className search index implementation class
      * @param properties search index properties
-     * @param fsc search index file system configuration, or <code>null</code>
-     *   if none is configured.
+     * @param fsf configured search index file system factory, or <code>null</code>
      */
     public SearchConfig(
-            String className, Properties properties, FileSystemConfig fsc) {
+            String className, Properties properties, FileSystemFactory fsf) {
         super(className, properties);
-        this.fsc = fsc;
+        this.fsf = fsf;
     }
 
     /**
@@ -60,12 +63,18 @@ public class SearchConfig extends BeanConfig {
     }
 
     /**
-     * Returns the configuration for the <code>FileSystem</code> or
-     * <code>null</code> if none is configured in this <code>SearchConfig</code>.
+     * Creates and returns the configured search file system, or returns
+     * <code>null</code> if a search file system has not been configured.
      *
-     * @return the <code>FileSystemConfig</code> for this <code>SearchConfig</code>.
+     * @return the configured {@link FileSystem}, or <code>null</code>
+     * @throws RepositoryException if the file system can not be created
      */
-    public FileSystemConfig getFileSystemConfig() {
-        return fsc;
+    public FileSystem getFileSystem() throws RepositoryException {
+        if (fsf != null) {
+            return fsf.getFileSystem();
+        } else {
+            return null;
+        }
     }
+
 }

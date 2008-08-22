@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -23,6 +26,8 @@ import org.xml.sax.InputSource;
 
 import java.io.File;
 import java.util.Properties;
+
+import javax.jcr.RepositoryException;
 
 /**
  * Configuration parser. This class is used to parse the repository and
@@ -212,8 +217,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         String home = getVariables().getProperty(REPOSITORY_HOME_VARIABLE);
 
         // File system implementation
-        FileSystemConfig fsc =
-            new FileSystemConfig(parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
+        FileSystemFactory fsf = getFileSystemFactory(root, FILE_SYSTEM_ELEMENT);
 
         // Security configuration and access manager implementation
         Element security = getElement(root, SECURITY_ELEMENT);
@@ -248,7 +252,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Optional data store configuration
         DataStoreConfig dsc = parseDataStoreConfig(root);
 
-        return new RepositoryConfig(home, securityConfig, fsc,
+        return new RepositoryConfig(home, securityConfig, fsf,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
                 maxIdleTime, template, vc, sc, cc, dsc, this);
     }
@@ -412,8 +416,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         RepositoryConfigurationParser tmpParser = createSubParser(tmpVariables);
 
         // File system implementation
-        FileSystemConfig fsc = new FileSystemConfig(
-                tmpParser.parseBeanConfig(root, FILE_SYSTEM_ELEMENT));
+        FileSystemFactory fsf =
+            tmpParser.getFileSystemFactory(root, FILE_SYSTEM_ELEMENT);
 
         // Persistence manager implementation
         PersistenceManagerConfig pmc = tmpParser.parsePersistenceManagerConfig(root);
@@ -427,7 +431,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // workspace specific security configuration
         WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
 
-        return new WorkspaceConfig(home, name, clustered, fsc, pmc, sc, ismLockingConfig, workspaceSecurityConfig);
+        return new WorkspaceConfig(home, name, clustered, fsf, pmc, sc, ismLockingConfig, workspaceSecurityConfig);
     }
 
     /**
@@ -474,13 +478,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                 Properties parameters = parseParameters(element);
 
                 // Optional file system implementation
-                FileSystemConfig fsc = null;
+                FileSystemFactory fsf = null;
                 if (getElement(element, FILE_SYSTEM_ELEMENT, false) != null) {
-                    fsc = new FileSystemConfig(
-                            parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+                    fsf = getFileSystemFactory(element, FILE_SYSTEM_ELEMENT);
                 }
 
-                return new SearchConfig(className, parameters, fsc);
+                return new SearchConfig(className, parameters, fsf);
             }
         }
         return null;
@@ -585,8 +588,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             replaceVariables(getAttribute(element, ROOT_PATH_ATTRIBUTE));
 
         // File system implementation
-        FileSystemConfig fsc = new FileSystemConfig(
-                parseBeanConfig(element, FILE_SYSTEM_ELEMENT));
+        FileSystemFactory fsf =
+            getFileSystemFactory(element, FILE_SYSTEM_ELEMENT);
 
         // Persistence manager implementation
         PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
@@ -594,7 +597,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Item state manager locking configuration (optional)
         ISMLockingConfig ismLockingConfig = parseISMLockingConfig(element);
 
-        return new VersioningConfig(home, fsc, pmc, ismLockingConfig);
+        return new VersioningConfig(home, fsf, pmc, ismLockingConfig);
     }
 
     /**
@@ -715,6 +718,36 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         Properties props = new Properties(getVariables());
         props.putAll(variables);
         return new RepositoryConfigurationParser(props);
+    }
+
+    /**
+     * Creates and returns a factory object that creates {@link FileSystem}
+     * instances based on the bean configuration at the named element.
+     *
+     * @param parent parent element
+     * @param name name of the bean configuration element
+     * @return file system factory
+     * @throws ConfigurationException if the bean configuration is invalid
+     */
+    private FileSystemFactory getFileSystemFactory(Element parent, String name)
+            throws ConfigurationException {
+        final BeanConfig config = parseBeanConfig(parent, name);
+        return new FileSystemFactory() {
+            public FileSystem getFileSystem() throws RepositoryException {
+                try {
+                    FileSystem fs = (FileSystem) config.newInstance();
+                    fs.init();
+                    return fs;
+                } catch (ClassCastException e) {
+                    throw new RepositoryException(
+                            "Invalid file system implementation class: "
+                            + config.getClassName(), e);
+                } catch (FileSystemException e) {
+                    throw new RepositoryException(
+                            "File system initialization failure.", e);
+                }
+            }
+        };
     }
 
 }

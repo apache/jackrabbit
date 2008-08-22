@@ -18,6 +18,11 @@ package org.apache.jackrabbit.core.config;
 
 import java.io.File;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemFactory;
+
 /**
  * Versioning configuration. This configuration class is used to
  * create configured versioning objects.
@@ -28,7 +33,7 @@ import java.io.File;
  *
  * @see RepositoryConfig#getVersioningConfig()
  */
-public class VersioningConfig {
+public class VersioningConfig implements FileSystemFactory {
 
     /**
      * Versioning home directory.
@@ -36,9 +41,9 @@ public class VersioningConfig {
     private final String home;
 
     /**
-     * Versioning file system configuration.
+     * Versioning file system factory.
      */
-    private final FileSystemConfig fsc;
+    private final FileSystemFactory fsf;
 
     /**
      * Versioning persistence manager configuration.
@@ -54,18 +59,18 @@ public class VersioningConfig {
      * Creates a versioning configuration object.
      *
      * @param home             home directory
-     * @param fsc              file system configuration
+     * @param fsf              file system factory
      * @param pmc              persistence manager configuration
      * @param ismLockingConfig the item state manager locking configuration, if
      *                         <code>null</code> is passed a default
      *                         configuration is used.
      */
     public VersioningConfig(String home,
-                            FileSystemConfig fsc,
+                            FileSystemFactory fsf,
                             PersistenceManagerConfig pmc,
                             ISMLockingConfig ismLockingConfig) {
         this.home = home;
-        this.fsc = fsc;
+        this.fsf = fsf;
         this.pmc = pmc;
         if (ismLockingConfig != null) {
             this.ismLockingConfig = ismLockingConfig;
@@ -84,12 +89,13 @@ public class VersioningConfig {
     }
 
     /**
-     * Returns the configuration for the <code>FileSystem</code>.
+     * Creates and returns the configured versioning file system.
      *
-     * @return the <code>FileSystemConfig</code> for this <code>VersionConfig</code>.
+     * @return the configured {@link FileSystem}
+     * @throws RepositoryException if the file system can not be created
      */
-    public FileSystemConfig getFileSystemConfig() {
-        return fsc;
+    public FileSystem getFileSystem() throws RepositoryException {
+        return fsf.getFileSystem();
     }
 
     /**

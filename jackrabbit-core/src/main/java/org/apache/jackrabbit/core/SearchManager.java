@@ -187,11 +187,7 @@ public class SearchManager implements SynchronousEventListener {
                          NodeId rootNodeId,
                          SearchManager parentMgr,
                          NodeId excludedNodeId) throws RepositoryException {
-        if (config.getFileSystemConfig() != null) {
-            fs = config.getFileSystemConfig().createFileSystem();
-        } else {
-            fs = null;
-        }
+        this.fs = config.getFileSystem();
         this.config = config;
         this.ntReg = ntReg;
         this.nsReg = nsReg;

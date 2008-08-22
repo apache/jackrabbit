@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemFactory;
+
 /**
  * Workspace configuration. This configuration class is used to create
  * configured workspace objects.
@@ -25,7 +30,7 @@ package org.apache.jackrabbit.core.config;
  * the item state manager locking configuration. The search index and the item
  * state manager locking and the security config are optional parts.
  */
-public class WorkspaceConfig {
+public class WorkspaceConfig implements FileSystemFactory {
 
     /**
      * Workspace home directory.
@@ -43,9 +48,9 @@ public class WorkspaceConfig {
     private final boolean clustered;
 
     /**
-     * Workspace file system configuration.
+     * Workspace file system factory.
      */
-    private FileSystemConfig fsc;
+    private FileSystemFactory fsf;
 
     /**
      * Workspace persistence manager configuration.
@@ -72,7 +77,7 @@ public class WorkspaceConfig {
      *
      * @param home home directory
      * @param name workspace name
-     * @param fsc file system configuration
+     * @param fsc file system factory
      * @param pmc persistence manager configuration
      * @param sc search index configuration
      * @param ismLockingConfig the item state manager locking configuration. If
@@ -80,13 +85,13 @@ public class WorkspaceConfig {
      * @param workspaceSecurityConfig the workspace specific security configuration.
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
-                           FileSystemConfig fsc, PersistenceManagerConfig pmc,
+                           FileSystemFactory fsf, PersistenceManagerConfig pmc,
                            SearchConfig sc, ISMLockingConfig ismLockingConfig,
                            WorkspaceSecurityConfig workspaceSecurityConfig) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
-        this.fsc = fsc;
+        this.fsf = fsf;
         this.pmc = pmc;
         this.sc = sc;
         if (ismLockingConfig != null) {
@@ -133,12 +138,13 @@ public class WorkspaceConfig {
     }
 
     /**
-     * Returns the file system configuration.
+     * Creates and returns the configured workspace file system.
      *
-     * @return file system configuration
+     * @return the configured {@link FileSystem}
+     * @throws RepositoryException if the file system can not be created
      */
-    public FileSystemConfig getFileSystemConfig() {
-        return fsc;
+    public FileSystem getFileSystem() throws RepositoryException {
+        return fsf.getFileSystem();
     }
 
     /**
