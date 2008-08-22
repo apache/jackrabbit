@@ -729,7 +729,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * @return file system factory
      * @throws ConfigurationException if the bean configuration is invalid
      */
-    private FileSystemFactory getFileSystemFactory(Element parent, String name)
+    protected FileSystemFactory getFileSystemFactory(Element parent, String name)
             throws ConfigurationException {
         final BeanConfig config = parseBeanConfig(parent, name);
         return new FileSystemFactory() {
