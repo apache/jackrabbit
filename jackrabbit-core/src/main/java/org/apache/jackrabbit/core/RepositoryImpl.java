@@ -32,7 +32,6 @@ import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.DataStoreConfig;
-import org.apache.jackrabbit.core.config.FileSystemConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.SecurityManagerConfig;
@@ -248,7 +247,7 @@ public class RepositoryImpl extends AbstractRepository
             repLock.acquire();
 
             // setup file systems
-            repStore = repConfig.getFileSystemConfig().createFileSystem();
+            repStore = repConfig.getFileSystem();
             String fsRootPath = "/meta";
             try {
                 if (!repStore.exists(fsRootPath) || !repStore.isFolder(fsRootPath)) {
@@ -423,7 +422,7 @@ public class RepositoryImpl extends AbstractRepository
             throws RepositoryException {
 
 
-        FileSystem fs = vConfig.getFileSystemConfig().createFileSystem();
+        FileSystem fs = vConfig.getFileSystem();
         PersistenceManager pm = createPersistenceManager(vConfig.getHomeDir(),
                 fs,
                 vConfig.getPersistenceManagerConfig(),
@@ -1836,8 +1835,7 @@ public class RepositoryImpl extends AbstractRepository
          * @throws RepositoryException if an error occurs.
          */
         protected void doInitialize() throws RepositoryException {
-            FileSystemConfig fsConfig = config.getFileSystemConfig();
-            fs = fsConfig.createFileSystem();
+            fs = config.getFileSystem();
 
             persistMgr = createPersistenceManager(new File(config.getHomeDir()),
                     fs,
