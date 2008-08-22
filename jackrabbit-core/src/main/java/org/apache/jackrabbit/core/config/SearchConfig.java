@@ -54,15 +54,6 @@ public class SearchConfig extends BeanConfig implements FileSystemFactory {
     }
 
     /**
-     * Returns the search implementation class name.
-     *
-     * @return search implementation class name
-     */
-    public String getHandlerClassName() {
-        return getClassName();
-    }
-
-    /**
      * Creates and returns the configured search file system, or returns
      * <code>null</code> if a search file system has not been configured.
      *

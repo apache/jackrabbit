@@ -61,7 +61,7 @@ public class WorkspaceConfigTest extends TestCase {
         SearchConfig sc = config.getSearchConfig();
         assertEquals(
                 "org.apache.jackrabbit.core.query.lucene.SearchIndex",
-                sc.getHandlerClassName());
+                sc.getClassName());
         assertEquals(4, sc.getParameters().size());
         assertEquals("true", sc.getParameters().getProperty("useCompoundFile"));
         assertEquals("1000", sc.getParameters().getProperty("minMergeDocs"));
