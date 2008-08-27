@@ -44,6 +44,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(OrderByTest.class);
         suite.addTestSuite(XPathAxisTest.class);
         suite.addTestSuite(SkipDeletedNodesTest.class);
+        suite.addTestSuite(SkipDeniedNodesTest.class);
         suite.addTestSuite(MixinTest.class);
         suite.addTestSuite(DerefTest.class);
         suite.addTestSuite(VersionStoreQueryTest.class);
