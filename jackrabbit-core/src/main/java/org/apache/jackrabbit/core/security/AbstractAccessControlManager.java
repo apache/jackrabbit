@@ -16,14 +16,11 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.api.jsr283.security.Hold;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.jsr283.security.RetentionPolicy;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.slf4j.Logger;
@@ -33,8 +30,6 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 import java.security.Principal;
 
 /**
@@ -56,7 +51,17 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         checkValidNodePath(absPath);
 
         // return all known privileges everywhere.
-        return PrivilegeRegistry.getRegisteredPrivileges();
+        return getPrivilegeRegistry().getRegisteredPrivileges();
+    }
+
+    /**
+     * @see AccessControlManager#privilegeFromName(String)
+     */
+    public Privilege privilegeFromName(String privilegeName)
+            throws AccessControlException, RepositoryException {
+        checkInitialized();
+
+        return getPrivilegeRegistry().getPrivilege(privilegeName);
     }
 
     /**
@@ -66,12 +71,12 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      * @return always returns <code>null</code>.
      * @see AccessControlManager#getApplicablePolicies(String)
      */
-    public AccessControlPolicy getPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
+    public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
 
-        log.debug("Implementation does not provide applicable policies -> getPolicy() always returns null.");
-        return null;
+        log.debug("Implementation does not provide applicable policies -> getPolicy() always returns an empty array.");
+        return new AccessControlPolicy[0];
     }
 
     /**
@@ -88,7 +93,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         log.debug("Implementation does not provide applicable policies -> returning empty iterator.");
         return AccessControlPolicyIteratorAdapter.EMPTY;
     }
-    
+
     /**
      * Always throws <code>AccessControlException</code>
      *
@@ -98,99 +103,29 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         checkInitialized();
         checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
-        throw new AccessControlException("AccessControlPolicy " + policy.getName() + " cannot be applied.");
+        throw new AccessControlException("AccessControlPolicy " + policy + " cannot be applied.");
     }
 
     /**
      * Always throws <code>AccessControlException</code>
      *
-     * @see AccessControlManager#removePolicy(String)
+     * @see AccessControlManager#removePolicy(String, AccessControlPolicy)
      */
-    public AccessControlPolicy removePolicy(String absPath) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
+    public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
         checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
 
         throw new AccessControlException("No AccessControlPolicy has been set through this API -> Cannot be removed.");
     }
 
+
+    //-------------------------------------< JackrabbitAccessControlManager >---
     /**
-     * Returns an empty array.
-     *
-     * @return always returns an empty array.
-     * @see AccessControlManager#getAccessControlEntries(String)
+     * {@inheritDoc}
      */
-    public AccessControlEntry[] getAccessControlEntries(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
-
-        return new AccessControlEntry[0];
-    }
-
-    /**
-     * Always throws <code>UnsupportedRepositoryOperationException</code>
-     *
-     * @see AccessControlManager#addAccessControlEntry(String, Principal, Privilege[])
-     */
-    public AccessControlEntry addAccessControlEntry(String absPath, Principal principal, Privilege[] privileges) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new UnsupportedRepositoryOperationException("Adding access control entry is not supported by this AccessControlManager (" + getClass().getName()+ ").");
-    }
-
-    /**
-     * Always throws <code>AccessControlException</code>
-     * 
-     * @see AccessControlManager#removeAccessControlEntry(String, AccessControlEntry)
-     */
-    public void removeAccessControlEntry(String absPath, AccessControlEntry ace) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new AccessControlException("Invalid access control entry, that has not been applied through this API.");
-    }
-
-    public Hold[] getHolds(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
-    }
-
-    public Hold addHold(String absPath, String name, boolean isDeep) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
-    }
-
-    public void removeHold(String absPath, Hold hold) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
-    }
-
-    public RetentionPolicy getRetentionPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
-
-    }
-
-    public void setRetentionPolicy(String absPath, RetentionPolicy retentionPolicy) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
-    }
-
-    public void removeRetentionPolicy(String absPath) throws PathNotFoundException, AccessControlException, AccessDeniedException, UnsupportedRepositoryOperationException, LockException, VersionException, RepositoryException {
-        checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
-
-        throw new UnsupportedRepositoryOperationException("Retention & Hold are not supported by this AccessControlManager (" + getClass().getName()+ ").");
+    public AccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        log.debug("Implementation does not provide applicable policies -> returning empty array.");        
+        return new AccessControlPolicy[0];
     }
 
     //--------------------------------------------------------------------------
@@ -213,6 +148,12 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      * @throws RepositoryException
      */
     protected abstract void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException;
+
+    /**
+     * @return the privilege registry
+     * @throws RepositoryException
+     */
+    protected abstract PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException;
 
     /**
      * Build a qualified path from the specified <code>absPath</code> and test

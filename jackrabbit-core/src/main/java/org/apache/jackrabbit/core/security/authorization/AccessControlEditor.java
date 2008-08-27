@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
 
 /**
@@ -33,21 +31,21 @@ import java.security.Principal;
 public interface AccessControlEditor {
 
     /**
-     * Retrieves the policy template for the Node identified by the given
-     * <code>NodeId</code>. In contrast to {@link #editPolicyTemplate} this method
-     * returns <code>null</code> if no policy has been applied before by calling
-     * {@link #setPolicyTemplate}). Still the returned PolicyTemplate is detached from
-     * the AccessControlProvider and is only an external representation.
-     * Modification will therefore not take effect, until it is written back to
+     * Retrieves the policies for the Node identified by the given
+     * <code>nodePath</code>. In contrast to {@link #editAccessControlPolicies} this method
+     * returns an empty array if no policy has been applied before by calling
+     * {@link #setPolicy}). Still the returned policies are detached from
+     * the <code>AccessControlProvider</code> and are only an external representation.
+     * Modification will therefore not take effect, until they are written back to
      * the editor and persisted.
      * <p/>
-     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(org.apache.jackrabbit.spi.Path)},
-     * the scope of the PolicyTemplate it limited to the Node itself and does
+     * Compared to the policy returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path)},
+     * the scope of the policies it limited to the Node itself and does
      * not take inherited elements into account.
      *
      * @param nodePath Absolute path to an existing node object.
-     * @return the PolicyTemplate or <code>null</code> no policy has been
-     * applied to the node before.
+     * @return the policies applied so far or an empty array if no
+     * policy has been applied to the node before.
      * @throws AccessControlException If the Node identified by the given
      * <code>nodePath</code> does not allow access control modifications (e.g.
      * the node itself stores the access control information for its parent).
@@ -55,135 +53,67 @@ public interface AccessControlEditor {
      * <code>nodePath</code>.
      * @throws RepositoryException if an error occurs
      */
-    PolicyTemplate getPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
+    AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
-     * Retrieves the policy template for the Node identified by the given
-     * <code>NodeId</code>. If the node does not yet have an policy set an
-     * new (empty) template is created (see also {@link #getPolicyTemplate(String)}.<br>
-     * The PolicyTemplate returned is detached from the underlying
+     * Retrieves the editable policies for the Node identified by the given
+     * <code>nodePath</code>. If the node does not yet have any policy set an
+     * new (empty) 'template' is created (see also {@link #getPolicies(String)}.<br>
+     * The AccessControlPolicy objects returned are detached from the underlying
      * <code>AccessControlProvider</code> and is only an external
-     * representation. Modification will therefore not take effect, until it is
-     * written back to the editor and persisted.
+     * representation. Modification will therefore not take effect, until a
+     * modified policy is written back to the editor and persisted.
      * <p/>
-     * Compared to the policy returned by {@link AccessControlProvider#getPolicy(org.apache.jackrabbit.spi.Path)},
-     * the scope of the PolicyTemplate it limited to the Node itself and does
-     * never not take inherited elements into account.
+     * Compared to the policies returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path)},
+     * the scope of the policies returned by this methods it limited to the Node
+     * itself and does never not take inherited elements into account.
      *
      * @param nodePath Absolute path to an existing node object.
-     * @return policy template
+     * @return an array of editable access control policies.
      * @throws AccessControlException If the Node identified by the given
      * <code>nodePath</code> does not allow access control modifications.
      * @throws PathNotFoundException if no node exists for the given
      * <code>nodePath</code>.
      * @throws RepositoryException if an error occurs
      */
-    PolicyTemplate editPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
+    AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
-     * Returns a policy template for the given <code>principal</code>.
+     * Returns an array of editable policies for the given <code>principal</code>.
      *
-     * @return policy template for the specified <code>principal.</code>.
+     * @return an array of editable policies for the given <code>principal</code>.
      * @throws AccessControlException if the specified principal does not exist,
-     * if this implementation does provide policy tempates for principals or
+     * if this implementation cannot provide policies for individual principals or
      * if same other access control related exception occurs.
      * @throws RepositoryException if another error occurs.
      */
-    PolicyTemplate editPolicyTemplate(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException;
+    AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException;
 
     /**
      * Stores the policy template to the respective node.
      *
      * @param nodePath Absolute path to an existing node object.
-     * @param template the <code>PolicyTemplate</code> to store.
-     * @throws AccessControlException If the PolicyTemplate is <code>null</code> or
+     * @param policy the <code>AccessControlPolicy</code> to store.
+     * @throws AccessControlException If the policy is <code>null</code> or
      * if it is not applicable to the Node identified by the given
      * <code>nodePath</code>.
      * @throws PathNotFoundException if no node exists for the given
      * <code>nodePath</code>.
      * @throws RepositoryException if an other error occurs.
      */
-    void setPolicyTemplate(String nodePath, PolicyTemplate template) throws AccessControlException, PathNotFoundException, RepositoryException;
+    void setPolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
-     * Removes the template from the respective node.
+     * Removes the specified policy from the node at <code>nodePath</code>.
      *
      * @param nodePath Absolute path to an existing node object.
-     * @return the PolicyTemplate that has been remove or <code>null</code>
-     * if there was no policy to remove.
+     * @param policy The policy to be removed at <code>nodePath</code>.
      * @throws AccessControlException If the Node identified by the given
-     * <code>nodePath</code> does not allow policy modifications.
+     * <code>nodePath</code> does not allow policy modifications or does not have
+     * the specified policy attached.
      * @throws PathNotFoundException if no node exists for the given
      * <code>nodePath</code>.
      * @throws RepositoryException if an other error occurs
      */
-    PolicyTemplate removePolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
-
-    /**
-     * Returns the access control entries present with the node
-     * identified by  <code>id</code>, that have
-     * been added using {@link #addAccessControlEntry(String,Principal,Privilege[])}.
-     * The implementation may return other entries, if they can be removed
-     * using {@link #removeAccessControlEntry(String,AccessControlEntry)}.
-     *
-     * @param nodePath Absolute path to an existing node object.
-     * @return the (granting) access control entries present with the node
-     * identified by  <code>id</code>.
-     * @throws AccessControlException
-     * @throws PathNotFoundException if no node exists for the given
-     * <code>nodePath</code>.
-     * @throws UnsupportedRepositoryOperationException if only simple access
-     * control is supported.
-     * @throws RepositoryException
-     */
-    AccessControlEntry[] getAccessControlEntries(String nodePath) throws AccessControlException, PathNotFoundException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Adds an access control entry to the node identified by
-     * <code>id</code>. An implementation that always keeps entries with an
-     * existing <code>AccessControlPolicy</code> may choose to treat this
-     * method as short-cut for {@link #editPolicyTemplate(String)} and
-     * subsequent template modification.
-     * Note, that in addition an implementation may only allow granting
-     * ACEs as specified by JSR 283.
-     *
-     * @param nodePath Absolute path to an existing node object.
-     * @param principal
-     * @param privileges
-     * @return The entry that results from adding the specified
-     * privileges for the specified principal.
-     * @throws AccessControlException If the Node identified by the given nodePath.
-     * does not allow access control modifications, if the principal does not
-     * exist or if any of the specified privileges is unknown.
-     * @throws PathNotFoundException if no node exists for the given
-     * <code>nodePath</code>.
-     * @throws UnsupportedRepositoryOperationException if only simple access
-     * control is supported.
-     * @throws RepositoryException if an other error occurs
-     */
-    AccessControlEntry addAccessControlEntry(String nodePath, Principal principal, Privilege[] privileges) throws AccessControlException, PathNotFoundException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Removes the access control entry represented by the given
-     * <code>template</code> from the node identified by
-     * <code>id</code>. An implementation that always keeps entries with an
-     * existing <code>AccessControlPolicy</code> may choose to treat this
-     * method as short-cut for {@link #getPolicyTemplate(String)} and
-     * subsequent template modification.
-     * Note that only <code>PolicyEntry</code>s accessible through
-     * {@link #getAccessControlEntries(String)} can be removed by this call.
-     *
-     * @param nodePath Absolute path to an existing node object.
-     * @param entry The access control entry to be removed.
-     * @return true if entry was contained could be successfully removed.
-     * @throws AccessControlException If an access control specific exception
-     * occurs (e.g. invalid entry implementation, entry cannot be removed
-     * by this call, etc.).
-     * @throws PathNotFoundException if no node exists for the given
-     * <code>nodePath</code>.
-     * @throws UnsupportedRepositoryOperationException if only simple access
-     * control is supported.
-     * @throws RepositoryException if another error occurs.
-     */
-    boolean removeAccessControlEntry(String nodePath, AccessControlEntry entry) throws AccessControlException, PathNotFoundException, UnsupportedRepositoryOperationException, RepositoryException;
+    void removePolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, PathNotFoundException, RepositoryException;
 }

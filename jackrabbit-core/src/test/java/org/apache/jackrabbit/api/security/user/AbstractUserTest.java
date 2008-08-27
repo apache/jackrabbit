@@ -24,8 +24,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -44,8 +42,6 @@ import java.util.Set;
  * <code>AbstractUserTest</code>...
  */
 public abstract class AbstractUserTest extends AbstractJCRTest {
-
-    private static Logger log = LoggerFactory.getLogger(AbstractUserTest.class);
 
     protected UserManager userMgr;
 
@@ -113,16 +109,9 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
     }
 
     protected User getTestUser(Session session) throws NotExecutableException, RepositoryException {
-        Set principals = getPrincipalSetFromSession(session);
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            try {
-                Authorizable auth = userMgr.getAuthorizable((Principal) it.next());
-                if (auth != null && !auth.isGroup()) {
-                    return (User) auth;
-                }
-            } catch (RepositoryException e) {
-                // ignore
-            }
+        Authorizable auth = getUserManager(session).getAuthorizable(session.getUserID());
+        if (auth != null && !auth.isGroup()) {
+            return (User) auth;
         }
         // should never happen. An Session should always have a corresponding User.
         throw new RepositoryException("Unable to retrieve a User.");
@@ -131,13 +120,9 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
     protected Group getTestGroup(Session session) throws NotExecutableException, RepositoryException {
         Set principals = getPrincipalSetFromSession(session);
         for (Iterator it = principals.iterator(); it.hasNext();) {
-            try {
-                Authorizable auth = userMgr.getAuthorizable((Principal) it.next());
-                if (auth != null && auth.isGroup()) {
-                    return (Group) auth;
-                }
-            } catch (RepositoryException e) {
-                // ignore
+            Authorizable auth = getUserManager(session).getAuthorizable((Principal) it.next());
+            if (auth != null && auth.isGroup()) {
+                return (Group) auth;
             }
         }
         // may happen -> don't throw RepositoryException

@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.api.security.user;
 
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
@@ -30,9 +28,7 @@ import java.util.Set;
  */
 public class UserManagerTest extends AbstractUserTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserManagerTest.class);
-
-    // TODO: add generic tests for UserManager.findAuthorizable
+    // TODO: add generic tests for UserManager.findAuthorizables
     // TODO: test creating users/groups if root is locked OR checked-in.
 
     public void testGetAuthorizableByPrincipal() throws RepositoryException, NotExecutableException {

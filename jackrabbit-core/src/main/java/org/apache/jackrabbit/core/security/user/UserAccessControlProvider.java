@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.NamedAccessControlPolicyImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
@@ -36,8 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -45,9 +47,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,13 +83,13 @@ import java.util.Set;
  * as member to any Group is limited to those that are editable according to
  * the restrictions described above for the 'User administrator'.</li>
  * </ul>
- *
- * TODO: allow for editing of additional ac that extends the default permission evaluted by this provided.
  */
 public class UserAccessControlProvider extends AbstractAccessControlProvider
         implements UserConstants {
 
     private static Logger log = LoggerFactory.getLogger(UserAccessControlProvider.class);
+
+    private final AccessControlPolicy policy;
 
     private Path groupsPath;
     private Path usersPath;
@@ -101,18 +101,27 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      *
      */
     public UserAccessControlProvider() {
-        super("Access control policy for the 'security' workspace.",
-              "Policy that defines the general access control rules for the security workspace.");
+        policy = new NamedAccessControlPolicyImpl("userPolicy");
     }
 
-    //--------------------------------------< AbstractAccessControlProvider >---
+    //-------------------------------------------------< AccessControlUtils >---
     /**
      * Always returns false, since this ac provider does not use content stored
      * in items to evaluate AC information.
      * 
-     * @see AbstractAccessControlProvider#isAcItem(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)
      */
-    protected boolean isAcItem(Path absPath) throws RepositoryException {
+    public boolean isAcItem(Path absPath) throws RepositoryException {
+        return false;
+    }
+
+    /**
+     * Always returns false, since this ac provider does not use content stored
+     * in items to evaluate AC information.
+     *
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(ItemImpl)
+     */
+    public boolean isAcItem(ItemImpl item) throws RepositoryException {
         return false;
     }
 
@@ -120,16 +129,15 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     /**
      * @see AccessControlProvider#init(Session, Map)
      */
-    public void init(Session systemSession, Map options) throws RepositoryException {
-        super.init(systemSession, options);
+    public void init(Session systemSession, Map configuration) throws RepositoryException {
+        super.init(systemSession, configuration);
 
          if (systemSession instanceof SessionImpl) {
              SessionImpl sImpl = (SessionImpl) systemSession;
-             userAdminGroup = (options.containsKey(USER_ADMIN_GROUP_NAME)) ? options.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
-             groupAdminGroup = (options.containsKey(GROUP_ADMIN_GROUP_NAME)) ? options.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
+             userAdminGroup = (configuration.containsKey(USER_ADMIN_GROUP_NAME)) ? configuration.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
+             groupAdminGroup = (configuration.containsKey(GROUP_ADMIN_GROUP_NAME)) ? configuration.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
 
              // make sure the groups exist (and ev. create them).
-             // TODO: review again.
              UserManager uMgr = sImpl.getUserManager();
              if (!initGroup(uMgr, userAdminGroup)) {
                  log.warn("Unable to initialize User admininistrator group -> no user admins.");
@@ -142,12 +150,34 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
              usersPath = sImpl.getQPath(USERS_PATH);
              groupsPath = sImpl.getQPath(GROUPS_PATH);
-
          } else {
              throw new RepositoryException("SessionImpl (system session) expected.");
          }
      }
 
+    /**
+     * @see AccessControlProvider#getEffectivePolicies(Path)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
+        checkInitialized();
+        return new AccessControlPolicy[] {policy};
+    }
+
+    /**
+     * Always returns <code>null</code>.
+     *
+     * @see AccessControlProvider#getEditor(Session)
+     */
+    public AccessControlEditor getEditor(Session session) {
+        checkInitialized();
+        // not editable at all: policy is always the default and cannot be
+        // changed using the JCR API.
+        return null;
+    }
+
+    /**
+     * @see AccessControlProvider#compilePermissions(Set)
+     */
     public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
@@ -165,6 +195,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         }
     }
 
+    /**
+     * @see AccessControlProvider#canAccessRoot(Set)
+     */
     public boolean canAccessRoot(Set principals) throws RepositoryException {
         checkInitialized();
         return true;
@@ -203,20 +236,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         return userNode;
     }
 
-    private boolean isMember(Node userNode, Path memberPath) throws RepositoryException, PathNotFoundException {
-        // precondition: memberPath points to a rep:members property
-        String propPath = session.getJCRPath(memberPath);
-        if (session.propertyExists(propPath)) {
-            // check if any of the ref-values equals to the value created from
-            // the user-Node (which must be present if the user is member of the group)
-            Property membersProp = session.getProperty(propPath);
-            List values = Arrays.asList(membersProp.getValues());
-            return values.contains(session.getValueFactory().createValue(userNode));
-        } else {
-            return false;
-        }
-    }
-
     private Node getExistingNode(Path path) throws RepositoryException {
         String absPath = resolver.getJCRPath(path.getNormalizedPath());
         if (session.nodeExists(absPath)) {
@@ -231,22 +250,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 throw new ItemNotFoundException("Unable to determine permissions: No item and no existing parent for target path " + absPath);
             }
         }
-    }
-
-    /**
-     * Determine if for the given <code>path</code>, the set of privileges
-     * must be calculated.
-     *
-     * @param path
-     * @return true if <code>path</code> denotes an existing <code>Node</code>,
-     * false otherwise.
-     * @throws RepositoryException
-     */
-    private boolean doCalculatePrivileges(Path path) throws RepositoryException {
-        String absPath = resolver.getJCRPath(path.getNormalizedPath());
-        // privileges can only be determined for existing nodes.
-        // not for properties and neither for non-existing nodes.
-        return session.nodeExists(absPath);
     }
 
     private static boolean containsGroup(Set principals, String groupName) {
@@ -306,18 +309,21 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
         protected Result buildResult(Path path) throws RepositoryException {
-            // default permission and default privileges
-            int perms = Permission.READ;
+            // no explicit denied permissions:
+            int denies = Permission.NONE;
+            // default allow permission and default privileges
+            int allows = Permission.READ;
             int privs;
-            boolean calcPrivs = doCalculatePrivileges(path);
+            // Determine if for path, the set of privileges must be calculated:
+            // Generally, privileges can only be determined for existing nodes.
+            boolean calcPrivs = session.nodeExists(resolver.getJCRPath(path.getNormalizedPath()));
             if (calcPrivs) {
                 privs = PrivilegeRegistry.READ;
             } else {
-                privs = 0;
+                privs = PrivilegeRegistry.NO_PRIVILEGE;
             }
 
             Path abs2Path = path.subPath(0, 4);
-            //
             if (usersPath.equals(abs2Path)) {
                 /*
                  below the user-tree
@@ -370,7 +376,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                 // -> user can modify items below the user-node except rep:group.
                                 // principals contains 'user-admin' + 'group-admin'
                                 // -> user can modify rep:group property as well.
-                                perms = Permission.ALL;
+                                allows = Permission.ALL;
                                 if (calcPrivs) {
                                     // grant WRITE privilege
                                     // note: ac-read/modification is not included
@@ -379,7 +385,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                             } else if (userNode.isSame(node) && (!isGroupProp || isGroupAdmin)) {
                                 // user can only read && write his own props
                                 // except for the rep:group property.
-                                perms |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
+                                allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
                                 if (calcPrivs) {
                                     privs |= PrivilegeRegistry.MODIFY_PROPERTIES;
                                 }
@@ -397,7 +403,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                             if rep:groups is the target item.
                             */
                             if (requiredGroups) {
-                                perms = Permission.ALL;
+                                allows = Permission.ALL;
                                 if (calcPrivs) {
                                     // grant WRITE privilege
                                     // note: ac-read/modification is not included
@@ -412,14 +418,13 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 - test if the user is group-administrator.
                 */
                 if (isGroupAdmin) {
-                    perms = Permission.ALL;
+                    allows = Permission.ALL;
                     if (calcPrivs) {
                         privs |= PrivilegeRegistry.WRITE;
                     }
                 }
             } // else outside of user/group tree -> read only.
-
-            return new Result(perms, privs);
+            return new Result(allows, denies, privs, PrivilegeRegistry.NO_PRIVILEGE);
         }
 
         //--------------------------------------------< CompiledPermissions >---
@@ -478,7 +483,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                 break;
                             case Event.PROPERTY_ADDED:
                             case Event.PROPERTY_CHANGED:
-                                // TODO: improve
                                 Value[] vs = session.getProperty(evPath).getValues();
                                 String princName = session.getJCRName(P_PRINCIPAL_NAME);
                                 for (int i = 0; i < vs.length; i++) {

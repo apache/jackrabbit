@@ -17,16 +17,18 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.commons.collections.map.ListOrderedMap;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -35,91 +37,128 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * {@link PolicyTemplate}-Implementation for the resource-based {@link ACLImpl}.
- *
- * @see PolicyTemplate
- * @see ACLImpl
+ * Implementation of the {@link JackrabbitAccessControlList} interface that
+ * is detached from the effective access control content. Consequently, any
+ * modifications applied to this ACL only take effect, if the policy gets
+ * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy) reapplied}
+ * to the <code>AccessControlManager</code> and the changes are saved.
  */
-class ACLTemplate implements PolicyTemplate {
+class ACLTemplate implements JackrabbitAccessControlList {
 
-    private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
-
+    /**
+     * Path of the node this ACL template has been created for.
+     */
     private final String path;
-    private final String name = ACLImpl.POLICY_NAME;
-    private final String description;
 
     /**
      * Map containing the entries of this ACL Template using the principal
      * name as key. The value represents a List containing maximal one grant
      * and one deny ACE per principal.
      */
-    private final Map entries = new HashMap();
+    private final Map entries = new ListOrderedMap();
 
     /**
-     * Construct a new empty {@link PolicyTemplate}.
+     * The principal manager used for validation checks
      */
-    ACLTemplate(String path) {
+    private final PrincipalManager principalMgr;
+
+    /**
+     * The privilege registry
+     */
+    private final PrivilegeRegistry privilegeRegistry;
+
+    /**
+     * Construct a new empty {@link ACLTemplate}.
+     *
+     * @param path
+     * @param principalMgr
+     */
+    ACLTemplate(String path, PrincipalManager principalMgr, PrivilegeRegistry privilegeRegistry) {
         this.path = path;
-        description = null;
+        this.principalMgr = principalMgr;
+        this.privilegeRegistry = privilegeRegistry;
     }
 
     /**
-     * Create a {@link PolicyTemplate} that is used to edit an existing ACL
+     * Create a {@link ACLTemplate} that is used to edit an existing ACL
      * node.
      */
-    ACLTemplate(NodeImpl aclNode) throws RepositoryException {
-        this(aclNode, Collections.EMPTY_SET);
-    }
-
-    /**
-     * Create a {@link PolicyTemplate} that is used to edit an existing ACL
-     * policy but only lists those entries that match any of the principal
-     * names present in the given filter. If the set is empty all entry will
-     * be read as local entries. Otherwise only the entries matching any of
-     * the principals in the set will be retrieved.
-     */
-    ACLTemplate(NodeImpl aclNode, Set principalNames) throws RepositoryException {
+    ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
         if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
             throw new IllegalArgumentException("Node must be of type: " +
                     AccessControlConstants.NT_REP_ACL);
         }
+        SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         path = aclNode.getParent().getPath();
-        description = null;
-        loadEntries(aclNode, principalNames);
+        principalMgr = sImpl.getPrincipalManager();
+        this.privilegeRegistry = privilegeRegistry;
+
+        // load the entries:
+        AccessControlManager acMgr = sImpl.getAccessControlManager();
+        NodeIterator itr = aclNode.getNodes();
+        while (itr.hasNext()) {
+            NodeImpl aceNode = (NodeImpl) itr.nextNode();
+
+            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
+            Principal princ = principalMgr.getPrincipal(principalName);
+
+            Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
+            Privilege[] privs = new Privilege[privValues.length];
+            for (int i = 0; i < privValues.length; i++) {
+                privs[i] = acMgr.privilegeFromName(privValues[i].getString());
+            }
+            // create a new ACEImpl (omitting validation check)
+            Entry ace = new Entry(
+                    princ,
+                    privs,
+                    aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
+            // add the entry
+            internalAdd(ace);
+        }
     }
 
     /**
-     * Returns those {@link PolicyEntry entries} of this
-     * <code>PolicyTemplate</code> that affect the permissions of the given
-     * <code>principal</code>.
+     * Separately collect the entries defined for the principals with the
+     * specified names and return a map consisting of principal name key
+     * and a list of ACEs as value.
      *
-     * @return the {@link PolicyEntry entries} present in this
-     * <code>PolicyTemplate</code> that affect the permissions of the given
-     * <code>principal</code>.
+     * @param aclNode
+     * @param princToEntries Map of key = principalName and value = ArrayList
+     * to be filled with ACEs matching the principal names.
+     * @throws RepositoryException
      */
-    ACEImpl[] getEntries(Principal principal) {
-        List l = internalGetEntries(principal);
-        return (ACEImpl[]) l.toArray(new ACEImpl[l.size()]);
-    }
+    static void collectEntries(NodeImpl aclNode, Map princToEntries)
+            throws RepositoryException {
+        SessionImpl sImpl = (SessionImpl) aclNode.getSession();
+        PrincipalManager principalMgr = sImpl.getPrincipalManager();
+        AccessControlManager acMgr = sImpl.getAccessControlManager();
 
-    private void checkValidEntry(PolicyEntry entry) throws AccessControlException {
-        if (!(entry instanceof ACEImpl)) {
-            throw new AccessControlException("Invalid PolicyEntry " + entry + ". Expected instanceof ACEImpl.");
-        }
-        ACEImpl ace = (ACEImpl) entry;
-        // TODO: ev. assert that the principal is known to the repository
-        // make sure valid privileges are provided.
-        PrivilegeRegistry.getBits(ace.getPrivileges());
+        NodeIterator itr = aclNode.getNodes();
+        while (itr.hasNext()) {
+            NodeImpl aceNode = (NodeImpl) itr.nextNode();
+            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
+            // only process aceNode if 'principalName' is contained in the given set
+            if (princToEntries.containsKey(principalName)) {
+                Principal princ = principalMgr.getPrincipal(principalName);
 
-        if (!entry.isAllow() && entry.getPrincipal() instanceof Group) {
-            throw new AccessControlException("For group principals permissions can only be added but not denied.");
+                Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
+                Privilege[] privs = new Privilege[privValues.length];
+                for (int i = 0; i < privValues.length; i++) {
+                    privs[i] = acMgr.privilegeFromName(privValues[i].getString());
+                }
+                // create a new ACEImpl (omitting validation check)
+                Entry ace = new Entry(
+                        princ,
+                        privs,
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
+                // add it to the proper list (e.g. separated by principals)
+                ((List) princToEntries.get(principalName)).add(ace);
+            }
         }
     }
 
@@ -140,187 +179,163 @@ class ACLTemplate implements PolicyTemplate {
         }
     }
 
-    private synchronized boolean internalAdd(ACEImpl entry) {
+    private synchronized boolean internalAdd(Entry entry) throws AccessControlException {
         Principal principal = entry.getPrincipal();
         List l = internalGetEntries(principal);
         if (l.isEmpty()) {
+            // simple case: just add the new entry
             l.add(entry);
             entries.put(principal.getName(), l);
             return true;
         } else {
-            return adjustEntries(entry, l);
-        }
-    }
-
-    private static boolean adjustEntries(ACEImpl entry, List l) {
-        if (l.contains(entry)) {
-            // the same entry is already contained -> no modification
-            return false;
-        }
-
-        ACEImpl complementEntry = null;
-        ACEImpl[] entries = (ACEImpl[]) l.toArray(new ACEImpl[l.size()]);
-        for (int i = 0; i < entries.length; i++) {
-            ACEImpl t = entries[i];
-            if (entry.isAllow() == entries[i].isAllow()) {
-                // replace the existing entry with the new one at the end.
-                l.remove(i);
-            } else {
-                complementEntry = t;
+            if (l.contains(entry)) {
+                // the same entry is already contained -> no modification
+                return false;
             }
-        }
+            // ev. need to adjust existing entries
+            Entry complementEntry = null;
+            Entry[] entries = (Entry[]) l.toArray(new Entry[l.size()]);
+            for (int i = 0; i < entries.length; i++) {
+                if (entry.isAllow() == entries[i].isAllow()) {
+                    int existingPrivs = entries[i].getPrivilegeBits();
+                    if ((existingPrivs | ~entry.getPrivilegeBits()) == -1) {
+                        // all privileges to be granted/denied are already present
+                        // in the existing entry -> not modified
+                        return false;
+                    }
 
-        // make sure, that the complement entry (if existing) does not
-        // grant/deny the same privileges -> remove privs that are now
-        // denied/granted.
-        if (complementEntry != null) {
-            int complPrivs = complementEntry.getPrivilegeBits();
-            int resultPrivs = PrivilegeRegistry.diff(complPrivs, entry.getPrivilegeBits());
-            if (resultPrivs == PrivilegeRegistry.NO_PRIVILEGE) {
-                l.remove(complementEntry);
-            } else if (resultPrivs != complPrivs) {
-                l.remove(complementEntry);
-                ACEImpl tmpl = new ACEImpl(entry.getPrincipal(), resultPrivs, !entry.isAllow());
-                l.add(tmpl);
-            } /* else: does not need to be modified.*/
-        }
-        // finally add the new entry at the end.
-        l.add(entry);
-        return true;
-    }
-
-    private synchronized boolean internalRemove(ACEImpl entry) {
-        List l = internalGetEntries(entry.getPrincipal());
-        boolean success = l.remove(entry);
-        if (l.isEmpty()) {
-            entries.remove(entry.getPrincipal().getName());
-        }
-        return success;
-    }
-
-    /**
-     * Read the child nodes of the given node and build {@link ACEImpl}
-     * objects. If the filter set is not empty, the entries are
-     * collected separately for each principal.
-     *
-     * @param aclNode
-     * @param filter Set of principal names used to filter the entries present
-     * within this ACL.
-     */
-    private void loadEntries(NodeImpl aclNode, Set filter)
-            throws RepositoryException {
-        PrincipalManager pMgr = ((SessionImpl) aclNode.getSession()).getPrincipalManager();
-        // NOTE: don't simply add the individual matching entries, instead
-        // collect entries separated for the principals first and later add
-        // them in the order the need to be evaluated (order of principals).
-        // therefore use ListOrderedMap in order to preserve the order of the
-        // principalNames passed with the 'filter'.
-        String noFilter = "";
-        Map princToEntries = new ListOrderedMap();
-        if (filter == null || filter.isEmpty()) {
-            princToEntries.put(noFilter, new ArrayList());
-        } else {
-            for (Iterator it = filter.iterator(); it.hasNext();) {
-                princToEntries.put(it.next().toString(), new ArrayList());
-            }
-        }
-
-        NodeIterator itr = aclNode.getNodes();
-        while (itr.hasNext()) {
-            NodeImpl aceNode = (NodeImpl) itr.nextNode();
-            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
-            // only process aceNode if no filter is present of if the filter
-            // contains the principal-name defined with the ace-Node
-            String key = (filter == null || filter.isEmpty()) ? noFilter : principalName;
-            if (princToEntries.containsKey(key)) {
-                Principal princ = pMgr.getPrincipal(principalName);
-                Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
-                String[] privNames = new String[privValues.length];
-                for (int i = 0; i < privValues.length; i++) {
-                    privNames[i] = privValues[i].getString();
+                    // remove the existing entry and create a new that includes
+                    // both the new privileges and the existing onces.
+                    l.remove(i);
+                    int mergedBits = entries[i].getPrivilegeBits() | entry.getPrivilegeBits();
+                    Privilege[] mergedPrivs = privilegeRegistry.getPrivileges(mergedBits);
+                    // omit validation check.
+                    entry = new Entry(entry.getPrincipal(), mergedPrivs, entry.isAllow());
+                } else {
+                    complementEntry = entries[i];
                 }
-                // create a new ACEImpl
-                ACEImpl ace = new ACEImpl(
-                        princ,
-                        PrivilegeRegistry.getBits(privNames),
-                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
-                // add it to the proper list (e.g. separated by principals)
-                ((List) princToEntries.get(key)).add(ace);
             }
-        }
 
-        // now retrieve the entries for each principal names and add them
-        // to the single (complete) list of all entries that need to
-        // be evaluated.
-        for (Iterator it = princToEntries.keySet().iterator(); it.hasNext();) {
-            String princName = it.next().toString();
-            for (Iterator entries = ((List) princToEntries.get(princName)).iterator();
-                 entries.hasNext();) {
-                ACEImpl ace = (ACEImpl) entries.next();
-                internalAdd(ace);
+            // make sure, that the complement entry (if existing) does not
+            // grant/deny the same privileges -> remove privs that are now
+            // denied/granted.
+            if (complementEntry != null) {
+                int complPrivs = complementEntry.getPrivilegeBits();
+                int resultPrivs = Permission.diff(complPrivs, entry.getPrivilegeBits());
+                if (resultPrivs == PrivilegeRegistry.NO_PRIVILEGE) {
+                    l.remove(complementEntry);
+                } else if (resultPrivs != complPrivs) {
+                    l.remove(complementEntry);
+                    // omit validation check
+                    Entry tmpl = new Entry(entry.getPrincipal(),
+                            privilegeRegistry.getPrivileges(resultPrivs),
+                            !entry.isAllow());
+                    l.add(tmpl);
+                } /* else: does not need to be modified.*/
             }
+
+            // finally add the new entry at the end.
+            l.add(entry);
+            return true;
         }
     }
 
-    //------------------------------------------------< AccessControlPolicy >---
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getName()
+     *
+     * @param principal
+     * @param privileges
+     * @param isAllow
+     * @throws AccessControlException
      */
-    public String getName() throws RepositoryException {
-        return name;
+    private void checkValidEntry(Principal principal, Privilege[] privileges, boolean isAllow) throws AccessControlException {
+        // validate principal
+        if (!principalMgr.hasPrincipal(principal.getName())) {
+            throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
+        }
+        // additional validation: a group may not have 'denied' permissions
+        if (!isAllow && principal instanceof Group) {
+            throw new AccessControlException("For group principals permissions can only be added but not denied.");
+        }
+    }
+
+    //--------------------------------------------------< AccessControlList >---
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#getAccessControlEntries()
+     */
+    public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
+        List l = internalGetEntries();
+        return (AccessControlEntry[]) l.toArray(new AccessControlEntry[l.size()]);
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy#getDescription()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
      */
-    public String getDescription() throws RepositoryException {
-        return description;
+    public boolean addAccessControlEntry(Principal principal, Privilege[] privileges)
+            throws AccessControlException, RepositoryException {
+        return addEntry(principal, privileges, true, Collections.EMPTY_MAP);
     }
 
-    //-----------------------------------------------------< PolicyTemplate >---
     /**
-     * @see PolicyTemplate#getPath()
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
+     */
+    public synchronized void removeAccessControlEntry(AccessControlEntry ace)
+            throws AccessControlException, RepositoryException {
+        if (!(ace instanceof Entry)) {
+            throw new AccessControlException("Invalid AccessControlEntry implementation " + ace.getClass().getName() + ".");
+        }
+        List l = internalGetEntries(ace.getPrincipal());
+        if (l.remove(ace)) {
+            if (l.isEmpty()) {
+                entries.remove(ace.getPrincipal().getName());
+            }
+        } else {
+            throw new AccessControlException("AccessControlEntry " + ace + " cannot be removed from ACL defined at " + getPath());
+        }
+    }
+
+    //-----------------------------------------------------< JackrabbitAccessControlList >---
+    /**
+     * @see JackrabbitAccessControlList#getPath()
      */
     public String getPath() {
         return path;
     }
 
     /**
-     * @see PolicyTemplate#isEmpty()
+     * @see JackrabbitAccessControlList#isEmpty()
      */
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
     /**
-     * @see PolicyTemplate#size()
+     * @see JackrabbitAccessControlList#size()
      */
     public int size() {
         return internalGetEntries().size();
     }
 
     /**
-     * @see PolicyTemplate#getEntries()
+     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean)
      */
-    public PolicyEntry[] getEntries() {
-        List l = internalGetEntries();
-        return (PolicyEntry[]) l.toArray(new PolicyEntry[l.size()]);
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
+            throws AccessControlException, RepositoryException {
+        return addEntry(principal, privileges, isAllow, null);
     }
 
     /**
-     * @see PolicyTemplate#setEntry(PolicyEntry)
+     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
-    public boolean setEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
-        checkValidEntry(entry);
-        return internalAdd((ACEImpl) entry);
-    }
+    public boolean addEntry(Principal principal, Privilege[] privileges,
+                            boolean isAllow, Map restrictions)
+            throws AccessControlException, RepositoryException {
+        if (restrictions != null && !restrictions.isEmpty()) {
+            throw new AccessControlException("This AccessControlList does not allow for additional restrictions.");
+        }
 
-    /**
-     * @see PolicyTemplate#removeEntry(PolicyEntry)
-     */
-    public boolean removeEntry(PolicyEntry entry) throws AccessControlException, RepositoryException {
-        checkValidEntry(entry);
-        return internalRemove((ACEImpl) entry);
+        checkValidEntry(principal, privileges, isAllow);
+        Entry ace = new Entry(principal, privileges, isAllow);
+        return internalAdd(ace);
     }
 
     //-------------------------------------------------------------< Object >---
@@ -336,10 +351,10 @@ class ACLTemplate implements PolicyTemplate {
     }
 
     /**
-     * Returns true if the name and the entries are equal; false otherwise.
+     * Returns true if the path and the entries are equal; false otherwise.
      *
      * @param obj
-     * @return true if the name and the entries are equal; false otherwise.
+     * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */
     public boolean equals(Object obj) {
@@ -348,10 +363,20 @@ class ACLTemplate implements PolicyTemplate {
         }
 
         if (obj instanceof ACLTemplate) {
-            ACLTemplate tmpl = (ACLTemplate) obj;
-            boolean equalName = (name == null || tmpl.name == null || name.equals(tmpl.name));
-            return equalName && entries.equals(tmpl.entries);
+            ACLTemplate acl = (ACLTemplate) obj;
+            return path.equals(acl.path) && entries.equals(acl.entries);
         }
         return false;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     */
+    static class Entry extends AccessControlEntryImpl {
+
+        Entry(Principal principal, Privilege[] privileges, boolean allow) throws AccessControlException {
+            super(principal, privileges, allow, Collections.EMPTY_MAP);
+        }
     }
 }

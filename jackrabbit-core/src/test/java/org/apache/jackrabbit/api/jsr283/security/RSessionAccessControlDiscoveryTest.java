@@ -20,8 +20,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * <code>RSessionAccessControlDiscoveryTest</code>: A read-only session must
@@ -49,16 +49,6 @@ public class RSessionAccessControlDiscoveryTest extends AbstractAccessControlTes
         super.tearDown();
     }
 
-    private Privilege getPrivilege(String name) throws RepositoryException, NotExecutableException {
-        Privilege[] privileges = acMgr.getSupportedPrivileges(testPath);
-        for (int i = 0; i < privileges.length; i++) {
-            if (name.equals(privileges[i].getName())) {
-                return privileges[i];
-            }
-        }
-        throw new NotExecutableException();
-    }
-
     public void testGetSupportedPrivileges() throws RepositoryException {
         Privilege[] privileges = testAcMgr.getSupportedPrivileges(testPath);
         assertNotNull("getSupportedPrivileges must return a non-null value even for read-only session.", privileges);
@@ -66,23 +56,20 @@ public class RSessionAccessControlDiscoveryTest extends AbstractAccessControlTes
     }
 
     public void testGetPrivileges() throws RepositoryException {
-        Privilege[] privs = testAcMgr.getPrivileges(testPath);
-        List names = new ArrayList(privs.length);
-        for (int i = 0; i < privs.length; i++) {
-            names.add(privs[i].getName());
-        }
+        List privs = Arrays.asList(testAcMgr.getPrivileges(testPath));
+        Privilege readPrivilege = testAcMgr.privilegeFromName(Privilege.JCR_READ);
         assertTrue("A read-only session must have READ access to the test node.",
-                names.contains(Privilege.READ));
+                privs.contains(readPrivilege));
     }
 
     public void testHasPrivileges() throws RepositoryException, NotExecutableException {
-        Privilege priv = getPrivilege(Privilege.READ);
+        Privilege priv = testAcMgr.privilegeFromName(Privilege.JCR_READ);
         assertTrue("Read-only session must have READ privilege on test node.",
                 testAcMgr.hasPrivileges(testPath, new Privilege[] {priv}));
     }
 
     public void testNotHasPrivileges() throws RepositoryException, NotExecutableException {
-        Privilege all = getPrivilege(Privilege.ALL);
+        Privilege all = testAcMgr.privilegeFromName(Privilege.JCR_ALL);
         assertFalse("Read-only session must not have ALL privilege",
                 testAcMgr.hasPrivileges(testPath, new Privilege[] {all}));
     }

@@ -16,27 +16,25 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
+import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
 
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.Property;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 
 /**
  * <code>SecurityItemModifier</code>: An abstract helper class to allow classes
@@ -48,13 +46,11 @@ import javax.jcr.lock.LockException;
  */
 public abstract class SecurityItemModifier {
 
-    private static Logger log = LoggerFactory.getLogger(SecurityItemModifier.class);
-
     protected SecurityItemModifier() {
         Class cl = getClass();
         if (!(cl.equals(UserManagerImpl.class) ||
               cl.equals(ACLEditor.class) ||
-              cl.getSuperclass().equals(ACLEditor.class))) {
+              cl.equals(org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class))) {
             throw new IllegalArgumentException("Only UserManagerImpl and ACLEditor may extend from the SecurityItemModifier");
         }
     }

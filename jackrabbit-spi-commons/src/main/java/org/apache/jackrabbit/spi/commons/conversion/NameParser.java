@@ -34,11 +34,15 @@ public class NameParser {
     private static final int STATE_PREFIX = 1;
     private static final int STATE_NAME_START = 2;
     private static final int STATE_NAME = 3;
+    private static final int STATE_URI_START = 4;
+    private static final int STATE_URI = 5;
 
     /**
-     * Parses the <code>jcrName</code> and returns a new <code>Name</code>.
+     * Parses the <code>jcrName</code> (either qualified or expanded) and
+     * returns a new <code>Name</code>.
      *
-     * @param jcrName the name to be parsed
+     * @param jcrName the name to be parsed. The jcrName may either in the
+     * qualified or in the expanded form.
      * @param resolver <code>NamespaceResolver</code> use to retrieve the
      * namespace URI from the prefix contained in the given JCR name.
      * @return qName the new <code>Name</code>
@@ -59,6 +63,7 @@ public class NameParser {
 
         // parse the name
         String prefix = "";
+        String uri = null;
         int nameStart = 0;
         int state = STATE_PREFIX_START;
         boolean trailingSpaces = false;
@@ -77,6 +82,8 @@ public class NameParser {
                         throw new IllegalNameException("Invalid name prefix: "+ prefix);
                     }
                     state = STATE_NAME_START;
+                } else if (state == STATE_URI) {
+                    // ignore -> validation of uri later on.
                 } else {
                     throw new IllegalNameException("'" + c + "' not allowed in name");
                 }
@@ -86,17 +93,72 @@ public class NameParser {
                     throw new IllegalNameException("'" + c + "' not valid name start");
                 }
                 trailingSpaces = true;
-            } else if (Character.isWhitespace(c) || c == '/' || c == '[' || c == ']' || c == '*' || c == '\'' || c == '\"') {
+            } else if (Character.isWhitespace(c) || c == '[' || c == ']' || c == '*' || c == '\'' || c == '\"') {
                 throw new IllegalNameException("'" + c + "' not allowed in name");
+            } else if (c == '/') {
+                if (state == STATE_URI_START) {
+                    state = STATE_URI;
+                } else if (state != STATE_URI) {
+                    throw new IllegalNameException("'" + c + "' not allowed in name");
+                }
+                trailingSpaces = false;
+            } else if (c == '{') {
+                if (state == STATE_PREFIX_START) {
+                    state = STATE_URI_START;
+                } else if (state == STATE_URI_START || state == STATE_URI) {
+                    // second '{' in the uri-part -> no valid expanded jcr-name.
+                    // therefore reset the nameStart and change state.
+                    state = STATE_NAME;
+                    nameStart = 0;
+                } else if (state == STATE_NAME_START) {
+                    state = STATE_NAME;
+                    nameStart = i;
+                }
+                trailingSpaces = false;
+            } else if (c == '}') {
+                if (state == STATE_URI_START || state == STATE_URI) {
+                    String tmp = jcrName.substring(1, i);
+                    try {
+                        // make sure the uri is a known namespace uri
+                        // TODO: since namespace registration does not validate
+                        //       the URI format validation is omitted here
+                        resolver.getPrefix(tmp);
+                        uri = tmp;
+                        state = STATE_NAME_START;
+                    } catch (NamespaceException e) {
+                        // unknown uri -> apparently a localname starting with {
+                        // -> make sure there are no invalid characters
+                        if (tmp.indexOf(':') == -1 && tmp.indexOf('/') == -1) {
+                            state = STATE_NAME;
+                            nameStart = 0;
+                        } else {
+                            throw new IllegalNameException("Unknown uri " + tmp + ". But ':' and '/' are not allowed in a local name.");
+                        }
+                    }
+                } else if (state == STATE_PREFIX_START) {
+                    state = STATE_PREFIX; // prefix start -> validation later on will fail.
+                } else if (state == STATE_NAME_START) {
+                    state = STATE_NAME;
+                    nameStart = i;
+                }
+                trailingSpaces = false;
             } else {
                 if (state == STATE_PREFIX_START) {
                     state = STATE_PREFIX; // prefix start
                 } else if (state == STATE_NAME_START) {
                     state = STATE_NAME;
                     nameStart = i;
+                } else if (state == STATE_URI_START) {
+                    state = STATE_URI;
                 }
                 trailingSpaces = false;
             }
+        }
+
+        // take care of qualified jcrNames starting with '{' that are not having
+        // a terminating '}' -> make sure there are no illegal characters present.
+        if (state == STATE_URI && (jcrName.indexOf(':') > -1 || jcrName.indexOf('/') > -1)) {
+            throw new IllegalNameException("Local name may not contain ':' nor '/'");
         }
 
         if (nameStart == len || state == STATE_NAME_START) {
@@ -113,8 +175,12 @@ public class NameParser {
         }
 
         // resolve prefix to uri
-        String uri = resolver.getURI(prefix);
-        return factory.create(uri, nameStart == 0 ? jcrName : jcrName.substring(nameStart, len));
+        if (uri == null) {
+            uri = resolver.getURI(prefix);
+        }
+
+        String localName = (nameStart == 0 ? jcrName : jcrName.substring(nameStart, len));
+        return factory.create(uri, localName);
     }
 
     /**

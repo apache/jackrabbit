@@ -23,13 +23,13 @@ public final class Permission {
 
     public static final int NONE = 0;
 
-    public static final int READ = 1;
+    public static final int READ = 1;   
+
+    public static final int SET_PROPERTY = 2;
 
     public static final int ADD_NODE = 4;
 
     public static final int REMOVE_NODE = 8;
-
-    public static final int SET_PROPERTY = 2;
 
     public static final int REMOVE_PROPERTY = 16;
 
@@ -45,11 +45,13 @@ public final class Permission {
      * the ACL of the direct ancestor).
      * @param parentPrivs The privileges granted on the parent of the Node. Not
      * relevant for properties since it only is used to determine permissions
-     * on a Node (add_node, remove).
+     * on a Node (add_child_nodes, remove_child_nodes).
+     * @param isAllow
      * @param protectsPolicy
      * @return the permissions granted evaluating the given privileges.
      */
-    public static int calculatePermissions(int privs, int parentPrivs, boolean protectsPolicy) {
+    public static int calculatePermissions(int privs, int parentPrivs,
+                                           boolean isAllow, boolean protectsPolicy) {
         int perm = Permission.NONE;
         if (protectsPolicy) {
             if ((parentPrivs & PrivilegeRegistry.READ_AC) == PrivilegeRegistry.READ_AC) {
@@ -69,12 +71,29 @@ public final class Permission {
                 perm |= Permission.SET_PROPERTY;
                 perm |= Permission.REMOVE_PROPERTY;
             }
-            // the following permissions are granted through privilege on the parent.
+            // add_node permission is granted through privilege on the parent.
             if ((parentPrivs & PrivilegeRegistry.ADD_CHILD_NODES) == PrivilegeRegistry.ADD_CHILD_NODES) {
                 perm |= Permission.ADD_NODE;
             }
-            if ((parentPrivs & PrivilegeRegistry.REMOVE_CHILD_NODES) == PrivilegeRegistry.REMOVE_CHILD_NODES) {
-                perm |= Permission.REMOVE_NODE;
+            /*
+             remove_node is
+             allowed: only if remove_child_nodes privilege is present on
+                      the parent AND remove_node is present on the node itself
+             denied : if either remove_child_nodes is denied on the parent
+                      OR remove_node is denied on the node itself.
+            */
+            if (isAllow) {
+                if ((parentPrivs & PrivilegeRegistry.REMOVE_CHILD_NODES) ==
+                        PrivilegeRegistry.REMOVE_CHILD_NODES &&
+                        (privs & PrivilegeRegistry.REMOVE_NODE) == PrivilegeRegistry.REMOVE_NODE) {
+                    perm |= Permission.REMOVE_NODE;
+                }
+            } else {
+                if ((parentPrivs & PrivilegeRegistry.REMOVE_CHILD_NODES) ==
+                        PrivilegeRegistry.REMOVE_CHILD_NODES ||
+                        (privs & PrivilegeRegistry.REMOVE_NODE) == PrivilegeRegistry.REMOVE_NODE) {
+                    perm |= Permission.REMOVE_NODE;
+                }
             }
         }
         return perm;

@@ -22,8 +22,6 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
@@ -33,8 +31,6 @@ import java.util.Properties;
  * <code>DefaultPrincipalProviderTest</code>...
  */
 public class DefaultPrincipalProviderTest extends AbstractUserTest {
-
-    private static Logger log = LoggerFactory.getLogger(DefaultPrincipalProviderTest.class);
 
     private PrincipalProvider principalProvider;
 

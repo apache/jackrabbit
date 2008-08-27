@@ -29,6 +29,8 @@ public class RepositoryCallback implements Callback {
 
     private Session session;
     private PrincipalProviderRegistry principalProviderRegistry;
+    private String adminId;
+    private String anonymousId;
 
     public void setSession(Session session) {
         this.session = session;
@@ -44,5 +46,21 @@ public class RepositoryCallback implements Callback {
 
     public PrincipalProviderRegistry getPrincipalProviderRegistry() {
         return principalProviderRegistry;
+    }
+
+    public String getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(String adminId) {
+        this.adminId = adminId;
+    }
+
+    public String getAnonymousId() {
+        return anonymousId;
+    }
+
+    public void setAnonymousId(String anonymousId) {
+        this.anonymousId = anonymousId;
     }
 }

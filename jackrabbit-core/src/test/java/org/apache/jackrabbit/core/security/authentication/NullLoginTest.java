@@ -14,18 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization;
+package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- * <code>EntryTemplateTest</code>...
- */
-public class EntryTemplateTest extends AbstractJCRTest {
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
-    private static Logger log = LoggerFactory.getLogger(EntryTemplateTest.class);
+/** <code>NullLoginTest</code>... */
+public class NullLoginTest extends AbstractJCRTest {
 
-    // TODO: add tests
+    protected void setUp() throws Exception {
+        super.setUp();
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    public void testNullLogin() throws RepositoryException {
+        Session s = helper.getRepository().login();
+        Session s2 = helper.getRepository().login(null, null);
+
+        assertNotNull(s.getUserID());
+        assertEquals(s.getUserID(), s2.getUserID());
+        assertEquals(s.getWorkspace().getName(), s2.getWorkspace().getName());
+    }
 }

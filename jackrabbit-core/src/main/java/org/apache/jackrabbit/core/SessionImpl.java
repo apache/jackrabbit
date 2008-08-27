@@ -36,6 +36,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -47,6 +48,7 @@ import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -224,6 +226,11 @@ public class SessionImpl extends AbstractSession
      * User Manager
      */
     private UserManager userManager;
+
+    /**
+     * Retention and Hold Manager
+     */
+    private RetentionManager retentionManager;
 
     /**
      * Protected constructor.
@@ -1343,7 +1350,7 @@ public class SessionImpl extends AbstractSession
 
     /**
      * @see Session#getAccessControlManager()
-     * @since 2.0
+     * @since JCR 2.0
      */
     public AccessControlManager getAccessControlManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -1352,6 +1359,18 @@ public class SessionImpl extends AbstractSession
         } else {
             throw new UnsupportedRepositoryOperationException("Access control discovery is not supported.");
         }
+    }
+
+    /**
+     * @see Session#getRetentionManager()
+     * @since JCR 2.0
+     */
+    public synchronized RetentionManager getRetentionManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (retentionManager == null) {
+            retentionManager = new RetentionManagerImpl(this);
+        }
+        return retentionManager;
     }
 
     //-----------------------------------< Session methods changed in JSR 283 >

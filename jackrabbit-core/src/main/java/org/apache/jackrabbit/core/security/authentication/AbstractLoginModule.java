@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.jsr283.GuestCredentials;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
@@ -47,19 +47,17 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This Abstract class provides the means for the common Authentication tasks,
- * within the Repository.<p />
- * It implements an authentication by User-ID / Password - Credentials
- * {@link SimpleCredentials}<p />
- * On successfull authentication it relates this credentials to principals
- * by the use of * the {@link PrincipalProvider} configured for this LoginModule<p />
- * Jackrabbit knows about two typs of Login, the one for its "own" Credentials and one
- * for Impersonation.<br>
- * {@link #login()}-method dispatches to
+ * <code>AbstractLoginModule</code> provides the means for the common
+ * authentication tasks within the Repository.
+ * <p/>
+ * On successfull authentication it associates the credentials to principals
+ * using the {@link PrincipalProvider} configured for this LoginModule<p />
+ * Jackrabbit distinguishes between Login and Impersonation dispatching the
+ * the correspoding Repository/Session methods to
  * {@link #authenticate(java.security.Principal, javax.jcr.Credentials)} and
- * {@link #impersonate(java.security.Principal, javax.jcr.Credentials)} for the
- * two cases for implemenations.<br>
- * This LoginModule imlements default behaviours for this methods.
+ * {@link #impersonate(java.security.Principal, javax.jcr.Credentials)}, respectively.
+ * <br>
+ * This LoginModule implements default behaviors for both methods.
  *
  * @see LoginModule
  */
@@ -67,12 +65,12 @@ public abstract class AbstractLoginModule implements LoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractLoginModule.class);
 
-    private static final String KEY_SIMPLE_CREDENTIALS = "org.apache.jackrabbit.credentials.simple";
+    private static final String KEY_CREDENTIALS = "org.apache.jackrabbit.credentials";
     private static final String KEY_LOGIN_NAME = "javax.security.auth.login.name";
 
     protected String adminId;
     protected String anonymousId;
-    protected String defaultUserId;
+    private String principalProviderClassName;
 
     private CallbackHandler callbackHandler;
     private boolean initialized;
@@ -90,7 +88,6 @@ public abstract class AbstractLoginModule implements LoginModule {
      * <ul>
      * <li>{@link PrincipalManager} for group-membership resoultion</li>
      * <li>{@link PrincipalProvider} for user-{@link Principal} resolution.</li>
-     * <li>{@link LoginModuleConfig#PARAM_DEFAULT_USERID} option is evaluated</li>
      * <li>{@link LoginModuleConfig#PARAM_ADMIN_ID} option is evaluated</li>
      * <li>{@link LoginModuleConfig#PARAM_ANONYMOUS_ID} option is evaluated</li>
      * </ul>
@@ -112,18 +109,25 @@ public abstract class AbstractLoginModule implements LoginModule {
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map sharedState, Map options) {
+        // common jaas state variables
+        this.callbackHandler = callbackHandler;
+        this.subject = subject;
+        this.sharedState = sharedState;
+
+        // initialize the login module
         try {
             log.debug("Initalize LoginModule: ");
-            //Properties configProps = new Properties();
-            //configProps.putAll(options);
             RepositoryCallback repositoryCb = new RepositoryCallback();
             callbackHandler.handle(new Callback[]{repositoryCb});
 
-            // retrieve the principal-provider configured for this module
+            // retrieve the principal-provider configured for this module.
+            // if not configured -> retrieve the provider from the callback.
             PrincipalProviderRegistry registry = repositoryCb.getPrincipalProviderRegistry();
             if (options.containsKey(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS)) {
-                String providerName = (String) options.get(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS);
-                principalProvider = registry.getProvider(providerName);
+                principalProviderClassName = (String) options.get(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS);
+                principalProvider = registry.getProvider(principalProviderClassName);
+            } else if (principalProviderClassName != null) {
+                principalProvider = registry.getProvider(principalProviderClassName);
             }
             if (principalProvider == null) {
                 principalProvider = registry.getDefault();
@@ -133,22 +137,23 @@ public abstract class AbstractLoginModule implements LoginModule {
             }
             log.debug("- PrincipalProvider -> '" + principalProvider.getClass().getName() + "'");
 
-            //call implementation for additional setup
+            // call implementation for additional setup
             doInit(callbackHandler, repositoryCb.getSession(), options);
 
+            // adminId: if not present in options -> retrieve from callback
             if (options.containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
                 adminId = (String) options.get(LoginModuleConfig.PARAM_ADMIN_ID);
             }
+            if (adminId == null) {
+                adminId = repositoryCb.getAdminId();
+            }
+            // anonymousId: if not present in options -> retrieve from callback
             if (options.containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
                 anonymousId = (String) options.get(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
-            if (options.containsKey(LoginModuleConfig.PARAM_DEFAULT_USERID)) {
-                defaultUserId = (String) options.get(LoginModuleConfig.PARAM_DEFAULT_USERID);
+            if (anonymousId == null) {
+                anonymousId = repositoryCb.getAnonymousId();
             }
-
-            //common jaas state variables
-            this.callbackHandler = callbackHandler;
-            this.subject = subject;
 
             //log config values for debug
             if (log.isDebugEnabled()) {
@@ -159,8 +164,6 @@ public abstract class AbstractLoginModule implements LoginModule {
 
                 }
             }
-
-            this.sharedState = sharedState;
             initialized = (this.subject != null);
 
         } catch (Exception e) {
@@ -264,7 +267,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        //check for availablity of Credentials;
+        // check for availablity of Credentials;
         Credentials creds = getCredentials();
         if (creds == null) {
             log.warn("No credentials available -> try default (anonymous) authentication.");
@@ -286,7 +289,7 @@ public abstract class AbstractLoginModule implements LoginModule {
                 authenticated = authenticate(userPrincipal, creds);
             }
 
-            // process authenticated user or return false
+            // process authenticated user
             if (authenticated) {
                 if (creds instanceof SimpleCredentials) {
                     credentials = (SimpleCredentials) creds;
@@ -305,11 +308,11 @@ public abstract class AbstractLoginModule implements LoginModule {
     /**
      * Method to commit the authentication process (phase 2).
      * <p/>
-     * <p> This method is called if the LoginContext's overall authentication
+     * This method is called if the LoginContext's overall authentication
      * succeeded (the relevant REQUIRED, REQUISITE, SUFFICIENT and OPTIONAL
      * LoginModules succeeded).
      * <p/>
-     * <p> If this LoginModule's own authentication attempt succeeded (checked
+     * If this LoginModule's own authentication attempt succeeded (checked
      * by retrieving the private state saved by the <code>login</code> method),
      * then this method associates relevant Principals and Credentials with the
      * <code>Subject</code> located in the <code>LoginModule</code>.  If this
@@ -317,12 +320,12 @@ public abstract class AbstractLoginModule implements LoginModule {
      * removes/destroys any state that was originally saved.
      * <p/>
      * The login is considers as succeeded if the credentials field is set. If
-     * there is no principalstate. the login is considered as ignored.
+     * there is no principal set the login is considered as ignored.
      * <p/>
      * The implementation stores the principal associated to the UserID and all
      * the Groups it is member of. {@link PrincipalManager#getGroupMembership(Principal)}
      * An instance of (#link SimpleCredentials} containing only the UserID used
-     * to login is set to the Subject's public Credentials
+     * to login is set to the Subject's public Credentials.
      *
      * @return true if this method succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
@@ -339,7 +342,8 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        subject.getPrincipals().addAll(getPrincipals());
+        Set principals = getPrincipals();
+        subject.getPrincipals().addAll(principals);
         subject.getPublicCredentials().add(credentials);
         return true;
     }
@@ -365,7 +369,7 @@ public abstract class AbstractLoginModule implements LoginModule {
         if (!isInitialized()) {
             return false;
         } else {
-            sharedState.remove(KEY_SIMPLE_CREDENTIALS);
+            sharedState.remove(KEY_CREDENTIALS);
             callbackHandler = null;
             principal = null;
             credentials = null;
@@ -420,22 +424,6 @@ public abstract class AbstractLoginModule implements LoginModule {
             return true;
         }
         throw new FailedLoginException();
-    }
-
-    /**
-     * @return a Collection of principals that contains the current user
-     * principal and all groups it is member of.
-     */
-    protected Set getPrincipals() {
-        // use ListOrderedSet instead of Hashset in order to maintain the order
-        // of principals (as in the Subject).
-        Set principals = new ListOrderedSet();
-        principals.add(principal);
-        Iterator groups = principalProvider.getGroupMembership(principal);
-        while (groups.hasNext()) {
-            principals.add(groups.next());
-        }
-        return principals;
     }
 
     /**
@@ -508,38 +496,41 @@ public abstract class AbstractLoginModule implements LoginModule {
         return impersonator;
     }
 
-    //------------------------------------------------------------< private >---
     /**
      * Method tries to resolve the {@link Credentials} used for login. It takes
-     * into account, that an authentication-extension of an allready
-     * authenticate {@link Subject} could take place<p/> Therefore the
-     * credentials are searchred for in the following search-order: <ol> <li>
-     * Ask CallbackHandler for Credentials with use of {@link
+     * authentication-extension of an already authenticated {@link Subject} into
+     * accout.
+     * <p/>
+     * Therefore the credentials are searchred as follows:
+     * <ol>
+     * <li>Test if the shared state contains credentials.</li>
+     * <li>Ask CallbackHandler for Credentials with using a {@link
      * CredentialsCallback}. Expects {@link CredentialsCallback#getCredentials}
-     * to return an instance of {@link SimpleCredentials}.</li> <li> Ask the
-     * Subject for its public credentials {@link Subject#getPublicCredentials(Class)},
-     * with {@link SimpleCredentials#getClass()} as argument.<p> This enables to
-     * preauthenticate the Subject.</li> </ol> NOTE: While the method signiture
-     * works with {@link Credentials} it actually searches and returns {@link
-     * SimpleCredentials}.<br> This is done to allow implementations to make use
-     * of this abstract class, without beeing bound to a {@link Credentials}
-     * implementation.
+     * to return an instance of {@link Credentials}.</li>
+     * <li>Ask the Subject for its public <code>SimpleCredentials</code> see
+     * {@link Subject#getPublicCredentials(Class)}, thus enabling to
+     * preauthenticate the Subject.</li>
+     * </ol>
      *
      * @return Credentials or null if not found
      * @see #login()
      */
-    private Credentials getCredentials() {
-        SimpleCredentials credentials = null;
-        if (sharedState.containsKey(KEY_SIMPLE_CREDENTIALS)) {
-            credentials = (SimpleCredentials) sharedState.get(KEY_SIMPLE_CREDENTIALS);
+    protected Credentials getCredentials() {
+        Credentials credentials = null;
+        if (sharedState.containsKey(KEY_CREDENTIALS)) {
+            credentials = (Credentials) sharedState.get(KEY_CREDENTIALS);
         } else {
             try {
                 CredentialsCallback callback = new CredentialsCallback();
                 callbackHandler.handle(new Callback[]{callback});
                 Credentials creds = callback.getCredentials();
-                if (null != creds && creds instanceof SimpleCredentials) {
-                    credentials = (SimpleCredentials) creds;
-                    sharedState.put(KEY_SIMPLE_CREDENTIALS, credentials);
+                if (null != creds) {
+                    if (creds instanceof SimpleCredentials) {
+                       credentials = (SimpleCredentials) creds;
+                    } else if (creds instanceof GuestCredentials) {
+                       credentials = (GuestCredentials) creds;
+                    }
+                    sharedState.put(KEY_CREDENTIALS, credentials);
                 }
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");
@@ -549,21 +540,24 @@ public abstract class AbstractLoginModule implements LoginModule {
         }
         // ask subject if still no credentials
         if (null == credentials) {
+            // try if subject contains SimpleCredentials
             Set preAuthCreds = subject.getPublicCredentials(SimpleCredentials.class);
             if (!preAuthCreds.isEmpty()) {
-                credentials = (SimpleCredentials) subject.getPublicCredentials(SimpleCredentials.class).iterator().next();
+                credentials = (Credentials) preAuthCreds.iterator().next();
             }
         }
         return credentials;
     }
 
     /**
-     * Method supports tries to acquire a UserID in the follwing order: <ol>
+     * Method supports tries to acquire a UserID in the follwing order:
+     * <ol>
+     * <li>If passed credentials are {@link GuestCredentials} the anonymous user id
+     * is returned.</li>
      * <li>Try to access it from the {@link Credentials} via {@link
      * SimpleCredentials#getUserID()}</li>
      * <li>Ask CallbackHandler for User-ID with use of {@link NameCallback}.</li>
      * <li>Test if the 'sharedState' contains a login name.</li>
-     * <li>Test a defaultUserID is present in the LoginModule configuration.</li>
      * <li>Fallback: return the anonymous UserID.</li>
      * </ol>
      *
@@ -572,10 +566,12 @@ public abstract class AbstractLoginModule implements LoginModule {
      * described above.
      * @see #login()
      */
-    private String getUserID(Credentials credentials) {
+    protected String getUserID(Credentials credentials) {
         String userId = null;
         if (credentials != null) {
-            if (credentials instanceof SimpleCredentials) {
+            if (credentials instanceof GuestCredentials) {
+                userId = anonymousId;
+            } else if (credentials instanceof SimpleCredentials) {
                 userId = ((SimpleCredentials) credentials).getUserID();
             } else {
                 try {
@@ -593,17 +589,11 @@ public abstract class AbstractLoginModule implements LoginModule {
             userId = (String) sharedState.get(KEY_LOGIN_NAME);
         }
 
-        // still no userId -> if a defaultUserID has been specified or return
-        // the anonymous UserID.
+        // still no userId -> anonymousID if its has been defined.
         // TODO: check again if correct when used with 'extendedAuth'
         if (userId == null) {
-            if (defaultUserId != null) {
-                userId = defaultUserId;
-            } else {
-                userId = anonymousId;
-            }
+            userId = anonymousId;
         }
-
         return userId;
     }
 
@@ -613,36 +603,41 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @param credentials
      * @return true if is anonymous
      */
-    private boolean isAnonymous(Credentials credentials) {
-        // TODO: check again. former simple-login-module treated 'null' as anonymous and had no anonymous config entry.
-        String userId = getUserID(credentials);
-        if (anonymousId == null) {
-            return userId == null;
+    protected boolean isAnonymous(Credentials credentials) {
+        if (credentials instanceof GuestCredentials) {
+            return true;
         } else {
-            return anonymousId.equals(userId);
+            // TODO: review again. former simple-login-module treated 'null' as anonymous (probably wrong).
+            String userId = getUserID(credentials);
+            return (anonymousId == null) ? userId == null : anonymousId.equals(userId);
         }
     }
 
+
     /**
      * Authentication process associates a Principal to Credentials<br>
-     * This method resolves the Principal for the given Credentials. If there
-     * is no Principal for the Credentials, the LoginModule should be ignored.<p>
-     * This Abstract implementation uses the {@link PrincipalProvider} configured
-     * for it, to resolve this association.
-     * It takes the {@link PrincipalProvider#findPrincipals(String)} for the User-ID
-     * resolved by  {@link #getUserID(Credentials)}
+     * This method resolves the Principal for the given Credentials. If no valid
+     * Principal can be determined, the LoginModule should be ignored.
      *
      * @param credentials
-     * @return if credentials are associated to one or null if none found
+     * @return the principal associated with the given credentials or <code>null</code>.
      */
-    private Principal getPrincipal(Credentials credentials) {
-        Principal principal = null;
-        String userId = isAnonymous(credentials) ? anonymousId : getUserID(credentials);
-        PrincipalIterator res = principalProvider.findPrincipals(userId, PrincipalManager.SEARCH_TYPE_NOT_GROUP);
-        if (res.hasNext()) {
-            principal = res.nextPrincipal();
-        } // no matching principal -> return null
-        return principal;
+    protected abstract Principal getPrincipal(Credentials credentials);
+
+    /**
+     * @return a Collection of principals that contains the current user
+     * principal and all groups it is member of.
+     */
+    protected Set getPrincipals() {
+        // use ListOrderedSet instead of Hashset in order to maintain the order
+        // of principals (as in the Subject).
+        Set principals = new ListOrderedSet();
+        principals.add(principal);
+        Iterator groups = principalProvider.getGroupMembership(principal);
+        while (groups.hasNext()) {
+            principals.add(groups.next());
+        }
+        return principals;
     }
 
     //--------------------------------------------------------------------------
@@ -683,21 +678,20 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Returns the default user id.
+     * Returns the configured name of the principal provider class.
      *
-     * @return default user id
+     * @return name of the principal provider class.
      */
-    public String getDefaultUserId() {
-        return defaultUserId;
+    public String getPrincipalProvider() {
+        return principalProviderClassName;
     }
 
     /**
-     * Sets the default user id to be used when no login credentials
-     * are presented.
+     * Sets the configured name of the principal provider class
      *
-     * @param defaultUserId default user id
+     * @param principalProvider Name of the principal provider class.
      */
-    public void setDefaultUserId(String defaultUserId) {
-        this.defaultUserId = defaultUserId;
+    public void setPrincipalProvider(String principalProvider) {
+        this.principalProviderClassName = principalProvider;
     }
 }

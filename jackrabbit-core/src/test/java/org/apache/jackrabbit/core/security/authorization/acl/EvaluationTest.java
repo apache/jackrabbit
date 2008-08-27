@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
+import java.util.Collections;
+import java.util.Map;
 import java.security.Principal;
 
 /**
@@ -36,14 +36,11 @@ import java.security.Principal;
  */
 public class EvaluationTest extends AbstractEvaluationTest {
 
-    private String[] restrictions = new String[0];
-
     protected void setUp() throws Exception {
         super.setUp();
-
         try {
-            AccessControlPolicy rootPolicy = acMgr.getPolicy("/");
-            if (!(rootPolicy instanceof ACLTemplate)) {
+            AccessControlPolicy[] rootPolicies = acMgr.getPolicies("/");
+            if (rootPolicies.length == 0 || !(rootPolicies[0] instanceof ACLTemplate)) {
                 throw new NotExecutableException();
             }
         } catch (RepositoryException e) {
@@ -52,10 +49,11 @@ public class EvaluationTest extends AbstractEvaluationTest {
     }
 
     protected void clearACInfo() {
-        // nop
+        // nop since ac information is stored with nodes that get removed
+        // during the general tear-down.
     }
 
-    protected PolicyTemplate getPolicyTemplate(AccessControlManager acM, String path) throws RepositoryException, AccessDeniedException, NotExecutableException {
+    protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         AccessControlPolicyIterator it = acM.getApplicablePolicies(path);
         while (it.hasNext()) {
             AccessControlPolicy acp = it.nextAccessControlPolicy();
@@ -66,12 +64,8 @@ public class EvaluationTest extends AbstractEvaluationTest {
         throw new NotExecutableException("ACLTemplate expected.");
     }
 
-    protected PolicyEntry createEntry(Principal principal, int privileges, boolean isAllow, String[] restrictions) {
-        return new ACEImpl(principal, privileges, isAllow);
-    }
-
-    protected String[] getRestrictions(String path) {
-        return restrictions;
+    protected Map getRestrictions(String path) {
+        return Collections.EMPTY_MAP;
     }
 
     public void testAccessControlModification2() throws RepositoryException, NotExecutableException {
@@ -82,8 +76,11 @@ public class EvaluationTest extends AbstractEvaluationTest {
         checkReadOnly(path);
 
         // give 'testUser' READ_AC|MODIFY_AC privileges at 'path'
-        PolicyTemplate tmpl = givePrivileges(path, PrivilegeRegistry.READ_AC |
-                PrivilegeRegistry.MODIFY_AC, getRestrictions(path));
+        Privilege[] privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_READ_ACCESS_CONTROL,
+                Privilege.JCR_MODIFY_ACCESS_CONTROL
+        });
+        JackrabbitAccessControlList tmpl = givePrivileges(path, privileges, getRestrictions(path));
         /*
          testuser must
          - still have the inherited READ permission.
@@ -97,13 +94,19 @@ public class EvaluationTest extends AbstractEvaluationTest {
         // make sure the 'rep:policy' node has been created.
         assertTrue(superuser.itemExists(tmpl.getPath() + "/rep:policy"));
 
+        AccessControlManager testAcMgr = getTestACManager();
         // test: MODIFY_AC granted at 'path'
-        assertTrue(testAcMgr.hasPrivileges(path, new Privilege[] {
-                PrivilegeRegistry.MODIFY_AC_PRIVILEGE}));
+        assertTrue(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL)));
+
+        // test if testuser can READ access control on the path and on the
+        // entire subtree that gets the policy inherited.
+        AccessControlPolicy[] policies = testAcMgr.getPolicies(path);
+        testAcMgr.getEffectivePolicies(path);
+        testAcMgr.getEffectivePolicies(childNPath);
 
         // test: READ_AC privilege does not apply outside of the tree.
         try {
-            testAcMgr.getPolicy(siblingPath);
+            testAcMgr.getPolicies(siblingPath);
             fail("READ_AC privilege must not apply outside of the tree it has applied to.");
         } catch (AccessDeniedException e) {
             // success
@@ -111,39 +114,31 @@ public class EvaluationTest extends AbstractEvaluationTest {
 
         // test: MODIFY_AC privilege does not apply outside of the tree.
         try {
-            testAcMgr.addAccessControlEntry(siblingPath,
-                    testUser.getPrincipal(),
-                    new Privilege[] {PrivilegeRegistry.WRITE_PRIVILEGE});
+            testAcMgr.setPolicy(siblingPath, policies[0]);
             fail("MODIFY_AC privilege must not apply outside of the tree it has applied to.");
         } catch (AccessDeniedException e) {
             // success
         }
 
-        // test if testuser can READ access control on the path and on the
-        // entire subtree that gets the policy inherited.
-        AccessControlPolicy policy = testAcMgr.getPolicy(path);
-        AccessControlPolicy effPolicy = testAcMgr.getEffectivePolicy(path);
-        AccessControlPolicy effPOnChild = testAcMgr.getEffectivePolicy(childNPath);
-
         // test if testuser can modify AC-items
         // 1) add an ac-entry
-        AccessControlEntry entry = testAcMgr.addAccessControlEntry(path,
-                testUser.getPrincipal(),
-                new Privilege[] {PrivilegeRegistry.WRITE_PRIVILEGE});
-        testSession.save();
+        ACLTemplate acl = (ACLTemplate) policies[0];
+        acl.addAccessControlEntry(getTestUser().getPrincipal(), privilegesFromName(Privilege.JCR_WRITE));
+        testAcMgr.setPolicy(path, acl);
+        getTestSession().save();
 
         assertTrue(testAcMgr.hasPrivileges(path,
-                new Privilege[] {PrivilegeRegistry.REMOVE_CHILD_NODES_PRIVILEGE}));
+                privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES)));
 
         // 2) remove the policy
-        testAcMgr.removePolicy(path);
-        testSession.save();
+        testAcMgr.removePolicy(path, policies[0]);
+        getTestSession().save();
 
         // Finally: testuser removed the policy that granted him permission
         // to modify the AC content. Since testuser removed the policy, it's
         // privileges must be gone again...
         try {
-            testAcMgr.getEffectivePolicy(childNPath);
+            testAcMgr.getEffectivePolicies(childNPath);
             fail("READ_AC privilege has been revoked -> must throw again.");
         } catch (AccessDeniedException e) {
             // success
@@ -151,5 +146,31 @@ public class EvaluationTest extends AbstractEvaluationTest {
         // ... and since the ACE is stored with the policy all right except
         // READ must be gone.
         checkReadOnly(path);
+    }
+
+    public void testRemovePermission9() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_child_nodes' at 'path and allow 'remove_node' at childNPath
+        givePrivileges(path, rmChildNodes, getRestrictions(path));
+        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - rep:policy node can still not be remove for it is access-control
+           content that requires jcr:modifyAccessControl privilege instead.
+         */
+        String policyPath = childNPath + "/rep:policy";
+        assertFalse(testSession.hasPermission(policyPath, SessionImpl.REMOVE_ACTION));
+        assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 }

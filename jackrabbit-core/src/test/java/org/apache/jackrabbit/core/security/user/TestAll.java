@@ -28,7 +28,7 @@ public class TestAll extends TestCase {
      * @return a <code>Test</code> suite that executes all test in this package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("o.a.j.security.user tests");
+        TestSuite suite = new TestSuite("core.security.user tests");
 
         suite.addTestSuite(UserManagerImplTest.class);
         suite.addTestSuite(AuthorizableImplTest.class);
@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UserAdministratorTest.class);
         suite.addTestSuite(NotUserAdministratorTest.class);
         suite.addTestSuite(GroupAdministratorTest.class);
+        suite.addTestSuite(AdministratorTest.class);
 
         suite.addTestSuite(IndexNodeResolverTest.class);
         suite.addTestSuite(TraversingNodeResolverTest.class);

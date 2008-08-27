@@ -16,31 +16,15 @@
  */
 package org.apache.jackrabbit.api.jsr283.security;
 
-import javax.jcr.RepositoryException;
-
 /**
- * An <code>AccessControlPolicy</code> is an object with a name and an optional
- * description. Examples of possible <code>AccessControlPolicy</code> 
- * implementations include access control lists or role-responsibility 
- * assignments.
+ * The <code>AccessControlPolicy</code> is a marker interface for all kind
+ * of access control policies. This API defines two subinterfaces:
+ * <ul>
+ * <li>{@link NamedAccessControlPolicy},</li>
+ * <li>{@link AccessControlList}.</li>
+ * </ul>
  *
  * @since JCR 2.0
  */
 public interface AccessControlPolicy {
-    /**
-     * Returns the name of the access control policy, which should be unique
-     * among the choices applicable to any particular node.
-     *
-     * @return the name of the access control policy.
-     * @throws RepositoryException if an error occurs.
-     */
-    public String getName() throws RepositoryException;
-
-    /**
-     * Returns a human readable description of the access control policy.
-     *
-     * @return a human readable description of the access control policy.
-     * @throws RepositoryException if an error occurs.
-     */
-    public String getDescription() throws RepositoryException;
 }

@@ -14,24 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.combined;
+package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.test.JUnitTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.api.jsr283.security.NamedAccessControlPolicy;
 
-/**
- * <code>GlobPatternTest</code>...
- */
-public class GlobPatternTest extends JUnitTest {
+import javax.jcr.RepositoryException;
 
-    private static Logger log = LoggerFactory.getLogger(GlobPatternTest.class);
+/** <code>NamedAccessControlPolicyImpl</code>... */
+public final class NamedAccessControlPolicyImpl implements NamedAccessControlPolicy {
 
-    public void testMatches() {
-        // TODO
+    private final String jcrName;
+
+    public NamedAccessControlPolicyImpl(String jcrName) {
+        if (jcrName == null) {
+            throw new IllegalArgumentException("The name of a named access control policy might not be null.");
+        }
+        this.jcrName = jcrName;
     }
 
-    public void testMatchesItem() {
-       // TODO
+    //-------------------------------------------< NamedAccessControlPolicy >---
+    /**
+     * @see NamedAccessControlPolicy#getName()
+     */
+    public String getName() throws RepositoryException {
+        return jcrName;
     }
 }

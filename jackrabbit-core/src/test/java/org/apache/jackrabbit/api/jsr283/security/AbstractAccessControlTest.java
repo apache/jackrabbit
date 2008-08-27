@@ -33,7 +33,6 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-
         acMgr = getAccessControlManager(superuser);
     }
 
@@ -43,7 +42,7 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
         // TODO: uncomment again.
-        // checkSupportedOption(Repository.OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED);
+        // checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
         try {
             return ((SessionImpl) s).getAccessControlManager();
         } catch (UnsupportedRepositoryOperationException e) {
@@ -57,14 +56,28 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
         }
     }
 
+    protected Privilege[] privilegesFromName(String privilegeName) throws RepositoryException, NotExecutableException {
+        AccessControlManager acMgr = getAccessControlManager(superuser);
+        return new Privilege[] {acMgr.privilegeFromName(privilegeName)};
+    }
+
+    protected Privilege[] privilegesFromNames(String[] privilegeNames) throws RepositoryException, NotExecutableException {
+        AccessControlManager acMgr = getAccessControlManager(superuser);
+        Privilege[] privs = new Privilege[privilegeNames.length];
+        for (int i = 0; i < privilegeNames.length; i++) {
+            privs[i] = acMgr.privilegeFromName(privilegeNames[i]);
+        }
+        return privs;
+    }
+
     protected void checkCanReadAc(String path) throws RepositoryException, NotExecutableException {
-        if (!acMgr.hasPrivileges(path, new Privilege[] {getPrivilege(Privilege.READ_ACCESS_CONTROL)})) {
+        if (!acMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_READ_ACCESS_CONTROL))) {
             throw new NotExecutableException();
         }
     }
 
     protected void checkCanModifyAc(String path) throws RepositoryException, NotExecutableException {
-        if (!acMgr.hasPrivileges(path, new Privilege[] {getPrivilege(Privilege.MODIFY_ACCESS_CONTROL)})) {
+        if (!acMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL))) {
             throw new NotExecutableException();
         }
     }
@@ -89,19 +102,5 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
             throw new RepositoryException("Path " + path + " should point to property.");
         }
         return path;
-    }
-
-    private Privilege getPrivilege(String name) throws NotExecutableException {
-        try {
-            Privilege[] supported = acMgr.getSupportedPrivileges(testRootNode.getPath());
-            for (int i = 0; i < supported.length; i++) {
-                if (supported[i].getName().equals(name)) {
-                    return supported[i];
-                }
-            }
-            throw new NotExecutableException("Unable to retrieve privilege with name "+ name);
-        } catch (RepositoryException e) {
-            throw new NotExecutableException("Unable to retrieve privilege with name "+ name);
-        }
     }
 }

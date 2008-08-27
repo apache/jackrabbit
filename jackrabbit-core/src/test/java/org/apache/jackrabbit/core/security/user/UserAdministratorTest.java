@@ -103,6 +103,14 @@ public class UserAdministratorTest extends AbstractUserTest {
         super.tearDown();
     }
 
+    private Group getGroupAdminGroup(UserManager uMgr) throws RepositoryException, NotExecutableException {
+        Authorizable auth = uMgr.getAuthorizable(UserConstants.GROUP_ADMIN_GROUP_NAME);
+        if (auth == null || !auth.isGroup()) {
+            throw new NotExecutableException();
+        }
+        return (Group) auth;
+    }
+
     public void testUserIsUserAdmin() throws RepositoryException, NotExecutableException {
         Set principals = getPrincipalSetFromSession(otherSession);
         boolean isAdmin = false;
@@ -216,13 +224,11 @@ public class UserAdministratorTest extends AbstractUserTest {
         UserManager umgr = getUserManager(otherSession);
 
         User userHimSelf = (User) umgr.getAuthorizable(otherUID);
-        for (Iterator it = ((UserManagerImpl) umgr).findGroups(""); it.hasNext();) {
-            Group gr = (Group) it.next();
-            try {
-                assertFalse(gr.addMember(userHimSelf));
-            } catch (RepositoryException e) {
-                // success
-            }
+        Group gr = getGroupAdminGroup(umgr);
+        try {
+            assertFalse(gr.addMember(userHimSelf));
+        } catch (RepositoryException e) {
+            // success as well.
         }
     }
 
@@ -233,13 +239,11 @@ public class UserAdministratorTest extends AbstractUserTest {
         if (parentUser == null) {
             throw new NotExecutableException();
         } else {
-            for (Iterator it = ((UserManagerImpl) umgr).findGroups(""); it.hasNext();) {
-                Group gr = (Group) it.next();
-                try {
-                    assertFalse(gr.addMember(parentUser));
-                } catch (RepositoryException e) {
-                    // success
-                }
+            Group gr = getGroupAdminGroup(umgr);
+            try {
+                assertFalse(gr.addMember(parentUser));
+            } catch (RepositoryException e) {
+                // success
             }
         }
     }
@@ -250,13 +254,11 @@ public class UserAdministratorTest extends AbstractUserTest {
         User childU = null;
         try {
             childU = umgr.createUser(cp.getName(), buildPassword(cp));
-            for (Iterator it = ((UserManagerImpl) umgr).findGroups(""); it.hasNext();) {
-                Group gr = (Group) it.next();
-                try {
-                    assertFalse(gr.addMember(childU));
-                } catch (RepositoryException e) {
-                    // success
-                }
+            Group gr = getGroupAdminGroup(umgr);
+            try {
+                assertFalse(gr.addMember(childU));
+            } catch (RepositoryException e) {
+                // success
             }
         } finally {
             if (childU != null) {
@@ -289,12 +291,8 @@ public class UserAdministratorTest extends AbstractUserTest {
 
     public void testAddToGroup() throws NotExecutableException, RepositoryException {
         UserManager umgr = getUserManager(otherSession);
-        Iterator it = ((UserManagerImpl) umgr).findGroups("");
-        if (!it.hasNext()) {
-            throw new NotExecutableException("Couldn't find any group");
-        }
+        Group gr = getGroupAdminGroup(umgr);
 
-        Group gr = (Group) it.next();
         Authorizable auth = umgr.getAuthorizable(uID);
         try {
             assertFalse(gr.addMember(auth));

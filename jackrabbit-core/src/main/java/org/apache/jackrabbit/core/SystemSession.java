@@ -20,15 +20,21 @@ import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.PathNotFoundException;
 import javax.security.auth.Subject;
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,9 +106,12 @@ class SystemSession extends SessionImpl {
     }
 
     //--------------------------------------------------------< inner classes >
-    private class SystemAccessManager implements AccessManager {
+    private class SystemAccessManager extends AbstractAccessControlManager implements AccessManager {
+
+        private final PrivilegeRegistry privilegeRegistry;
 
         SystemAccessManager() {
+            privilegeRegistry = new PrivilegeRegistry(SystemSession.this);
         }
 
         //----------------------------------------------------< AccessManager >
@@ -191,6 +200,73 @@ class SystemSession extends SessionImpl {
          */
         public boolean canAccess(String workspaceName) throws RepositoryException {
             return true;
+        }
+
+        //-----------------------------------< AbstractAccessControlManager >---
+        /**
+         * @see AbstractAccessControlManager#checkInitialized()
+         */
+        protected void checkInitialized() throws IllegalStateException {
+            // nop
+        }
+
+        /**
+         * @see AbstractAccessControlManager#checkPrivileges(String, int)
+         */
+        protected void checkPrivileges(String absPath, int privileges) throws
+                AccessDeniedException, PathNotFoundException, RepositoryException {
+            // allow everything
+        }
+
+        /**
+         * @see AbstractAccessControlManager#getPrivilegeRegistry()
+         */
+        protected PrivilegeRegistry getPrivilegeRegistry()
+                throws RepositoryException {
+            return privilegeRegistry;
+        }
+
+        /**
+         * @see AbstractAccessControlManager#checkValidNodePath(String)
+         */
+        protected void checkValidNodePath(String absPath)
+                throws PathNotFoundException, RepositoryException {
+            Path p = getQPath(absPath);
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("Absolute path expected.");
+            }
+            if (hierMgr.resolveNodePath(p) == null) {
+                throw new PathNotFoundException("No such node " + absPath);
+            }
+        }
+
+        //-------------------------------------------< AccessControlManager >---
+        /**
+         * @see AccessControlManager#hasPrivileges(String, Privilege[])
+         */
+        public boolean hasPrivileges(String absPath, Privilege[] privileges)
+                throws PathNotFoundException, RepositoryException {
+            checkValidNodePath(absPath);
+            // allow everything
+            return true;
+        }
+
+        /**
+         * @see AccessControlManager#getPrivileges(String)
+         */
+        public Privilege[] getPrivileges(String absPath)
+                throws PathNotFoundException, RepositoryException {
+            checkValidNodePath(absPath);
+            return getPrivilegeRegistry().getPrivileges(PrivilegeRegistry.ALL);
+        }
+
+        /**
+         * @see AccessControlManager#getEffectivePolicies(String)
+         */
+        public AccessControlPolicy[] getEffectivePolicies(String absPath) throws
+                PathNotFoundException, AccessDeniedException, RepositoryException {
+            // TODO
+            throw new UnsupportedOperationException();
         }
     }
 }

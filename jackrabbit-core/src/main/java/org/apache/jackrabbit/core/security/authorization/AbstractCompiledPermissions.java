@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 
@@ -27,8 +25,6 @@ import javax.jcr.RepositoryException;
  * <code>AbstractCompiledPermissions</code>...
  */
 public abstract class AbstractCompiledPermissions implements CompiledPermissions {
-
-    private static Logger log = LoggerFactory.getLogger(AbstractCompiledPermissions.class);
 
     // cache mapping a Path to a 'Result' containing permissions and privileges.
     private final LRUMap cache;
@@ -40,9 +36,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     /**
      *
      * @param absPath
-     * @return
+     * @return the <code>Result</code> for the give <code>absPath</code>.
      */
-    protected Result getResult(Path absPath) throws RepositoryException {
+    public Result getResult(Path absPath) throws RepositoryException {
         Result result;
         synchronized (cache) {
             result = (Result) cache.get(absPath);
@@ -101,23 +97,72 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     }
 
     //--------------------------------------------------------< inner class >---
+    /**
+     *
+     */
+    public static class Result {
 
-    protected class Result {
+        public static final Result EMPTY = new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
 
-        private final int permissions;
-        private final int privileges;
+        private final int allows;
+        private final int denies;
+        private final int allowPrivileges;
+        private final int denyPrivileges;
 
-        public Result(int permissions, int privileges) {
-            this.permissions = permissions;
-            this.privileges = privileges;
+        private final int hashCode;
+
+        public Result(int allows, int denies, int allowPrivileges, int denyPrivileges) {
+            this.allows = allows;
+            this.denies = denies;
+            this.allowPrivileges = allowPrivileges;
+            this.denyPrivileges = denyPrivileges;
+
+            int h = 17;
+            h = 37 * h + allows;
+            h = 37 * h + denies;
+            h = 37 * h + allowPrivileges;
+            h = 37 * h + denyPrivileges;
+            hashCode = h;
         }
 
         public boolean grants(int permissions) {
-            return (this.permissions | ~permissions) == -1;
+            return (this.allows | ~permissions) == -1;
         }
 
         public int getPrivileges() {
-            return privileges;
+            return allowPrivileges;
+        }
+
+        public Result combine(Result other) {
+            int cAllows =  allows | Permission.diff(other.allows, denies);
+            int cDenies = denies | Permission.diff(other.denies, allows);
+            int cAPrivs = allowPrivileges | Permission.diff(other.allowPrivileges, denyPrivileges);
+            int cDPrivs = denyPrivileges | Permission.diff(other.denyPrivileges, allowPrivileges);
+            return new Result(cAllows, cDenies, cAPrivs, cDPrivs);
+        }
+
+        /**
+         * @see Object#hashCode()
+         */
+        public int hashCode() {
+            return hashCode;
+        }
+
+        /**
+         * @see Object#equals(Object)
+         */
+        public boolean equals(Object object) {
+            if (object == this) {
+                return true;
+            }
+            if (object instanceof Result) {
+                Result other = (Result) object;
+                return allows == other.allows &&
+                       denies == other.denies &&
+                       allowPrivileges == other.allowPrivileges &&
+                       denyPrivileges == other.denyPrivileges;
+            }
+            return false;
         }
     }
 }

@@ -17,7 +17,7 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("security.principal tests");
+        TestSuite suite = new TestSuite("core.security.principal tests");
 
         suite.addTestSuite(DefaultPrincipalProviderTest.class);
 

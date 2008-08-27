@@ -41,11 +41,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(AccessControlDiscoveryTest.class);
         suite.addTestSuite(AccessControlPolicyTest.class);
          suite.addTestSuite(AccessControlPolicyIteratorTest.class);
-        suite.addTestSuite(AccessControlEntryTest.class);
+        suite.addTestSuite(AccessControlListTest.class);
 
         // tests with read only session:
         suite.addTestSuite(RSessionAccessControlDiscoveryTest.class);
-        suite.addTestSuite(RSessionAccessControlEntryTest.class);
         suite.addTestSuite(RSessionAccessControlPolicyTest.class);
 
         return suite;

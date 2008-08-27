@@ -25,6 +25,7 @@ import java.security.Principal;
  * @since JCR 2.0
  */
 public interface AccessControlEntry {
+
     /**
      * Returns the principal associated with this access control entry.
      * @return a <code>Principal</code>.

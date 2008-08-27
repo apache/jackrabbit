@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
-
 import javax.jcr.Credentials;
-import javax.jcr.Session;
 
 /**
  * A <code>CallbackHandlerImpl</code> ...
@@ -29,12 +26,6 @@ import javax.jcr.Session;
 public class CredentialsCallbackHandler extends org.apache.jackrabbit.core.security.authentication.CallbackHandlerImpl {
 
     public CredentialsCallbackHandler(Credentials credentials) {
-        super(credentials, null, null);
-    }
-
-    public CredentialsCallbackHandler(Credentials credentials,
-                                      Session session,
-                                      PrincipalProviderRegistry principalProviderRegistry) {
-        super(credentials, session, principalProviderRegistry);
+        super(credentials, null, null, null, null);
     }
 }

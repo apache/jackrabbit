@@ -67,6 +67,13 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
     }
 
     /**
+     * Add an entry to the principal cache.
+     */
+    protected synchronized void addToCache(Principal principal) {
+        cache.put(principal.getName(), principal);
+    }
+
+    /**
      * Called if the cache does not contain the principal requested.<br>
      * Implementations should return a {@link Principal} from their source,
      * if it contains one for the given name or <code>null</code>.
@@ -80,13 +87,6 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
     //--------------------------------------------------< PrincipalProvider >---
     /**
      * {@inheritDoc}
-     */
-    public boolean hasPrincipal(String principalName) {
-        return getPrincipal(principalName) != null;
-    }
-
-    /**
-     * {@inheritDoc}
      *
      * {@link #providePrincipal(String)} is called, if no principal with the
      * given name is present in the cache.
@@ -97,7 +97,7 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
         if (principal == null) {
             principal = providePrincipal(principalName);
             if (principal != null) {
-                cache.put(principalName, principal);
+                addToCache(principal);
             }
         }
         return principal;

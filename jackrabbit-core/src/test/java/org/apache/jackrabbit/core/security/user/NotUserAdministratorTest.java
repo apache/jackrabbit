@@ -24,22 +24,18 @@ import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import java.security.Principal;
-import java.util.Iterator;
 
 /**
  * <code>NotUserAdministratorTest</code>...
  */
 public class NotUserAdministratorTest extends AbstractUserTest {
-
-    private static Logger log = LoggerFactory.getLogger(NotUserAdministratorTest.class);
 
     // test user that is NOT user admin
     private String uID;
@@ -203,14 +199,14 @@ public class NotUserAdministratorTest extends AbstractUserTest {
     }
 
     public void testAddToGroup() throws NotExecutableException, RepositoryException {
-        Iterator it = ((UserManagerImpl) uMgr).findGroups("");
-        if (!it.hasNext()) {
-            throw new NotExecutableException("Couldn't find any group");
+        Authorizable auth = userMgr.getAuthorizable(SecurityConstants.ADMINISTRATORS_NAME);
+        if (auth == null || !auth.isGroup()) {
+            throw new NotExecutableException("Couldn't find 'administrators' group");
         }
 
-        Group gr = (Group) it.next();
+        Group gr = (Group) auth;
         try {
-            Authorizable auth = uMgr.getAuthorizable(uID);
+            auth = uMgr.getAuthorizable(uID);
             gr.addMember(auth);
             fail("a common user should not be allowed to modify any groups.");
             gr.removeMember(auth);

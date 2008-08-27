@@ -57,15 +57,14 @@
         </AccessManager>
 
         <LoginModule class="org.apache.jackrabbit.core.security.simple.SimpleLoginModule">
-           <!-- anonymous user id -->
+           <!-- 
+              anonymous user name ('anonymous' is the default value)
+            -->
            <param name="anonymousId" value="anonymous"/>
-           <!-- administrator user id (default value if param is missing is 'admin') -->
-           <param name="adminId" value="admin"/>
            <!--
-              default user name to be used instead of the anonymous user
-              when no login credentials are provided (unset by default)
-           -->
-           <!-- <param name="defaultUserId" value="superuser"/> -->
+              administrator user id (default value if param is missing is 'admin')
+            -->
+           <param name="adminId" value="admin"/>
         </LoginModule>
     </Security>
 

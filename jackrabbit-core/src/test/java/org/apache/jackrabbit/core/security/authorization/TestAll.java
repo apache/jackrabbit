@@ -33,10 +33,10 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("security.authorization tests");
+        TestSuite suite = new TestSuite("core.security.authorization tests");
 
         suite.addTestSuite(PrivilegeRegistryTest.class);
-        suite.addTestSuite(PolicyTemplateTest.class);
+        suite.addTestSuite(JackrabbitAccessControlListTest.class);
 
         return suite;
     }

@@ -39,7 +39,7 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        // policy-option is cover the by the 'OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED' -> see super-class
+        // policy-option is cover the by the 'OPTION_ACCESS_CONTROL_SUPPORTED' -> see super-class
         
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
@@ -58,7 +58,7 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
 
     public void testGetPolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
         try {
-            testAcMgr.getPolicy(path);
+            testAcMgr.getPolicies(path);
             fail("read only session may not read AC content.");
         } catch (AccessDeniedException e) {
             // success
@@ -67,7 +67,7 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
 
     public void testGetEffectivePolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
         try {
-            testAcMgr.getEffectivePolicy(path);
+            testAcMgr.getEffectivePolicies(path);
             fail("read only session may not read AC content.");
         } catch (AccessDeniedException e) {
             // success
@@ -115,15 +115,6 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
             // success.
         } catch (AccessDeniedException e) {
             // fine as well (privileges were apparently checked first)
-        }
-    }
-
-    public void testRemovePolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
-        try {
-            testAcMgr.removePolicy(path);
-            fail("read only session may not remove a policy.");
-        } catch (AccessDeniedException e) {
-            // success.
         }
     }
 }

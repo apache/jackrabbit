@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.acl;
+package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.core.security.authorization.AbstractPolicyEntryTest;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 
-import java.security.Principal;
+import javax.jcr.RepositoryException;
 
 /**
- * <code>ACEImplTest</code>...
+ * <code>ACLTemplateTest</code>...
  */
-public class ACEImplTest extends AbstractPolicyEntryTest {
+public class ACLTemplateTest extends AbstractACLTemplateTest {
 
-    private static Logger log = LoggerFactory.getLogger(ACEImplTest.class);
+    private String testPath = "/rep:accessControl/users/test";
 
-    protected PolicyEntry createPolicyEntry(Principal principal, int privileges, boolean isAllow) {
-        return new ACEImpl(principal, privileges, isAllow);
+    protected String getTestPath() {
+        return testPath;
+    }
+
+    protected JackrabbitAccessControlList createEmptyTemplate(String testPath)
+            throws RepositoryException {
+        return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser);
     }
 }

@@ -18,12 +18,14 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 
+import javax.jcr.Value;
+
 /**
- * This is one Entry in an {@link PolicyTemplate} or an
- * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy}<p>
- * In the previous case the entry must be detached from the effective ac-content.
+ * <code>JackrabbitAccessControlEntry</code> is a Jackrabbit specific extension
+ * of the <code>AccessControlEntry</code> interface. It represents an single
+ * entry of a {@link JackrabbitAccessControlList}.
  */
-public interface PolicyEntry extends AccessControlEntry {
+public interface JackrabbitAccessControlEntry extends AccessControlEntry {
 
     /**
      * @return true if this entry adds <code>Privilege</code>s for the principal;
@@ -37,9 +39,20 @@ public interface PolicyEntry extends AccessControlEntry {
      */
     int getPrivilegeBits();
 
-    // TODO: eventually add
-    // String getNodePath();
-    // String getGlob();
-    // String[] getRestrictionNames();
-    // Value getRestriction(String restrictionName);
+    /**
+     * Return the names of the restrictions present with this access control entry.
+     *
+     * @return the names of the restrictions
+     */
+    String[] getRestrictionNames();
+
+    /**
+     * Return the value of the restriction with the specified name or
+     * <code>null</code> if no such restriction exists.
+     *
+     * @param restrictionName
+     * @return value of the restriction with the specified name or
+     * <code>null</code> if no such restriction exists
+     */
+    Value getRestriction(String restrictionName);
 }

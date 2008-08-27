@@ -123,22 +123,26 @@ class IndexNodeResolver extends NodeResolver {
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(*,");
         stmt.append(getNamePathResolver().getJCRName(ntName));
-        stmt.append(")[");
 
-        int i = 0;
-        Iterator itr = props.iterator();
-        while (itr.hasNext()) {
-            stmt.append((exact) ? "@" : "jcr:like(@");
-            String pName = getNamePathResolver().getJCRName((Name) itr.next());
-            stmt.append(ISO9075.encode(pName));
-            stmt.append((exact) ? "='" : ",'%");
-            stmt.append(value);
-            stmt.append((exact) ? "'" : "%')");
-            if (++i < props.size()) {
-                stmt.append(" or ");
+        if (value == null) {
+            stmt.append(")");
+        } else {
+            stmt.append(")[");
+            int i = 0;
+            Iterator itr = props.iterator();
+            while (itr.hasNext()) {
+                stmt.append((exact) ? "@" : "jcr:like(@");
+                String pName = getNamePathResolver().getJCRName((Name) itr.next());
+                stmt.append(ISO9075.encode(pName));
+                stmt.append((exact) ? "='" : ",'%");
+                stmt.append(value);
+                stmt.append((exact) ? "'" : "%')");
+                if (++i < props.size()) {
+                    stmt.append(" or ");
+                }
             }
+            stmt.append("]");
         }
-        stmt.append("]");
         return queryManager.createQuery(stmt.toString(), Query.XPATH);
     }
 }

@@ -20,12 +20,11 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,10 +35,8 @@ import java.util.Set;
  */
 public class PrincipalManagerTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(PrincipalManagerTest.class);
-
     private PrincipalManager principalMgr;
-    private Principal everyone;
+    private Group everyone;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -47,7 +44,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
         principalMgr = ((JackrabbitSession) superuser).getPrincipalManager();
-        everyone = principalMgr.getEveryone();
+        everyone = (Group) principalMgr.getEveryone();
     }
 
     private static Principal[] getPrincipals(Session session) {
@@ -67,7 +64,6 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     }
 
     public void testSuperUserIsEveryOne() {
-        java.security.acl.Group everyone = (java.security.acl.Group) principalMgr.getEveryone();
         Principal[] pcpls = getPrincipals(superuser);
         for (int i = 0; i < pcpls.length; i++) {
             if (!(pcpls[i].equals(everyone))) {
@@ -77,7 +73,6 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     }
 
     public void testReadOnlyIsEveryOne() throws RepositoryException {
-        java.security.acl.Group everyone = (java.security.acl.Group) principalMgr.getEveryone();
         Principal[] pcpls = getPrincipals(helper.getReadOnlySession());
         for (int i = 0; i < pcpls.length; i++) {
             if (!(pcpls[i].equals(everyone))) {

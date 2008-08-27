@@ -36,8 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("security.authorization.acl tests");
 
         suite.addTestSuite(ACLTemplateTest.class);
-        suite.addTestSuite(ACLImplTest.class);
-        suite.addTestSuite(ACEImplTest.class);
+        suite.addTestSuite(EntryTest.class);
 
         suite.addTestSuite(EvaluationTest.class);
 

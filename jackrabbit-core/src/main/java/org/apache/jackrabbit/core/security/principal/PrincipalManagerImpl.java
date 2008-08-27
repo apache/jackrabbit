@@ -234,7 +234,6 @@ public class PrincipalManagerImpl implements PrincipalManager {
         }
 
         public boolean isMember(Principal member) {
-            // TODO: check if access-restrictions should be checked
             return delegatee.isMember(member);
         }
 

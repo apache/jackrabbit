@@ -795,8 +795,6 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * shareable, there might be more than one cache entry for this item.
      *
      * @param id id of the items to remove from the cache
-     * @return <code>true</code> if the item was contained in this cache,
-     *         <code>false</code> otherwise.
      */
     private void evictItems(ItemId id) {
         if (log.isDebugEnabled()) {
@@ -1105,7 +1103,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         /**
          * Cache some node.
          *
-         * @param node node to cache
+         * @param data data to cache
          */
         public void cache(AbstractNodeData data) {
             NodeId id = data.getNodeState().getNodeId();
@@ -1123,7 +1121,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         /**
          * Evict some node from the cache.
          *
-         * @param node node to evict
+         * @param data data to evict
          */
         public void evict(AbstractNodeData data) {
             ReferenceMap map = (ReferenceMap) cache.get(data.getId());

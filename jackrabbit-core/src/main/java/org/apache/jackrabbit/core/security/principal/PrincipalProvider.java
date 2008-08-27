@@ -35,15 +35,6 @@ import java.util.Properties;
 public interface PrincipalProvider {
 
     /**
-     * Checks if the principal with the given name is known to this provider.
-     *
-     * @param principalName the name of the principal to check
-     * @return return <code>true</code> if the principal with this name is known
-     *         to this provider; <code>false</code> otherwise.
-     */
-    boolean hasPrincipal(String principalName);
-
-    /**
      * Returns the principal with the given name if is known to this provider
      *
      * @param principalName the name of the principal to retrieve

@@ -111,9 +111,15 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * The user id of the administrator. The value is retrieved from
      * configuration. If the config entry is missing a default id is used (see
      * {@link SecurityConstants#ADMIN_ID}).
-     *
      */
     private String adminId;
+
+    /**
+     * The user id of the anonymous user. The value is retrieved from
+     * configuration. If the config entry is missing a default id is used (see
+     * {@link SecurityConstants#ANONYMOUS_ID}).
+     */
+    private String anonymousId;
 
     /**
      * Contains the access control providers per workspace.
@@ -178,13 +184,12 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         Properties[] moduleConfig = authContextProvider.getModuleConfig();
 
         // retrieve default-ids (admin and anomymous) from login-module-configuration.
-        String anonymousId = null;
         for (int i = 0; i < moduleConfig.length; i++) {
             if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
                 adminId = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
             }
             if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
-                anonymousId = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID, null);
+                anonymousId = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
         }
         // fallback:
@@ -193,7 +198,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             adminId = SecurityConstants.ADMIN_ID;
         }
         if (anonymousId == null) {
-            log.debug("No anonymousID defined in LoginModule/JAAS config -> anonymous not defined..");
+            log.debug("No anonymousID defined in LoginModule/JAAS config -> using default.");
+            anonymousId = SecurityConstants.ANONYMOUS_ID;
         }
 
         // create the system userManager and make sure the system-users exist.
@@ -373,7 +379,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     public AuthContext getAuthContext(Credentials creds, Subject subject)
             throws RepositoryException {
         checkInitialized();
-        return authContextProvider.getAuthContext(creds, subject, securitySession, principalProviderRegistry);
+        return authContextProvider.getAuthContext(creds, subject, securitySession,
+                principalProviderRegistry, adminId, anonymousId);
     }
 
     //--------------------------------------------------------------------------

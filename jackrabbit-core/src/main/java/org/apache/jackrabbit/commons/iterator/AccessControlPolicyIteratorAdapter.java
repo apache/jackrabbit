@@ -18,8 +18,6 @@ package org.apache.jackrabbit.commons.iterator;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 import javax.jcr.RangeIterator;
 import java.util.Collection;

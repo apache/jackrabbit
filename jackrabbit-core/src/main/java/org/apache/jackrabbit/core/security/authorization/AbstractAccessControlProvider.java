@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
@@ -26,7 +24,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
@@ -38,34 +35,27 @@ import java.util.Set;
 /**
  * <code>AbstractAccessControlProvider</code>...
  */
-public abstract class AbstractAccessControlProvider implements AccessControlProvider {
+public abstract class AbstractAccessControlProvider implements AccessControlProvider, AccessControlUtils {
 
     private static Logger log = LoggerFactory.getLogger(AbstractAccessControlProvider.class);
 
-    private final String policyName;
-    private final String policyDesc;
+    public static final String PARAM_OMIT_DEFAULT_PERMISSIONS = "omit-default-permission";
 
     /**
-     * Returns the system session this provider has been created for.
+     * the system session this provider has been created for.
      */
     protected SessionImpl session;
     protected ObservationManager observationMgr;
     protected NamePathResolver resolver;
 
     private boolean initialized;
-    private Principal everyone;
 
     protected AbstractAccessControlProvider() {
-        this(AbstractAccessControlProvider.class.getName() + ": default Policy", null);
-    }
-
-    protected AbstractAccessControlProvider(String defaultPolicyName, String defaultPolicyDesc) {
-        policyName = defaultPolicyName;
-        policyDesc = defaultPolicyDesc;
     }
 
     /**
-     *
+     * Throws <code>IllegalStateException</code> if the provider has not
+     * been initialized or has been closed.
      */
     protected void checkInitialized() {
         if (!initialized) {
@@ -74,65 +64,38 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     }
 
     /**
-     * Simple test if the specified path points to an item that defines AC
-     * information.
-     * 
-     * @param absPath
-     * @return
-     */
-    protected abstract boolean isAcItem(Path absPath) throws RepositoryException;
-
-    /**
+     * Returns compiled permissions for the administrator i.e. permissions
+     * that grants everything and returns {@link PrivilegeRegistry#ALL}
+     * upon {@link CompiledPermissions#getPrivileges(Path)} for all
+     * paths.
      *
-     * @param principals
-     * @return
-     */
-    protected static boolean isAdminOrSystem(Set principals) {
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            Principal p = (Principal) it.next();
-            if (p instanceof AdminPrincipal || p instanceof SystemPrincipal) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     *
-     * @return
+     * @return an implementation of <code>CompiledPermissions</code> that
+     * grants everything and always returns {@link PrivilegeRegistry#ALL}
+     * upon {@link CompiledPermissions#getPrivileges(Path)}.
      */
     protected static CompiledPermissions getAdminPermissions() {
         return new CompiledPermissions() {
             public void close() {
                 //nop
             }
-            public boolean grants(Path absPath, int permissions) throws RepositoryException {
+            public boolean grants(Path absPath, int permissions) {
                 return true;
             }
-            public int getPrivileges(Path absPath) throws RepositoryException {
+            public int getPrivileges(Path absPath) {
                 return PrivilegeRegistry.ALL;
             }
-            public boolean canReadAll() throws RepositoryException {
+            public boolean canReadAll() {
                 return true;
             }
         };
     }
 
     /**
-     * Simple implementation to determine if the given set of principals
-     * only will result in read-only access.
+     * Returns compiled permissions for a read-only user i.e. permissions
+     * that grants READ permission for all non-AC items.
      *
-     * @param principals
-     * @return true if the given set only contains the everyone group.
-     */
-    protected boolean isReadOnly(Set principals) {
-        // TODO: improve. need to detect if 'anonymous' is included.
-        return principals.size() == 1 && principals.contains(everyone);
-    }
-
-    /**
-     *
-     * @return
+     * @return an implementation of <code>CompiledPermissions</code> that
+     * grants READ permission for all non-AC items.
      */
     protected CompiledPermissions getReadOnlyPermissions() {
         return new CompiledPermissions() {
@@ -154,10 +117,32 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                     return PrivilegeRegistry.READ;
                 }
             }
-            public boolean canReadAll() throws RepositoryException {
+            public boolean canReadAll() {
                 return false;
             }
         };
+    }
+
+    //-------------------------------------------------< AccessControlUtils >---
+    /**
+     * @see AccessControlUtils#isAdminOrSystem(Set)
+     */
+    public boolean isAdminOrSystem(Set principals) {
+        for (Iterator it = principals.iterator(); it.hasNext();) {
+            Principal p = (Principal) it.next();
+            if (p instanceof AdminPrincipal || p instanceof SystemPrincipal) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @see AccessControlUtils#isReadOnly(Set)
+     */
+    public boolean isReadOnly(Set principals) {
+        // TODO: find ways to determine read-only status
+        return false;
     }
 
     //----------------------------------------------< AccessControlProvider >---
@@ -170,7 +155,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
      * <code>SessionImpl</code> or if retrieving the observation manager fails.
      * @see AccessControlProvider#init(Session, Map)
      */
-    public void init(Session systemSession, Map options) throws RepositoryException {
+    public void init(Session systemSession, Map configuration) throws RepositoryException {
         if (initialized) {
             throw new IllegalStateException("already initialized");
         }
@@ -180,9 +165,6 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         session = (SessionImpl) systemSession;
         observationMgr = systemSession.getWorkspace().getObservationManager();
         resolver = (SessionImpl) systemSession;
-
-        everyone = session.getPrincipalManager().getEveryone();
-
         initialized = true;
     }
 
@@ -192,41 +174,5 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     public void close() {
         checkInitialized();
         initialized = false;
-    }
-
-    /**
-     * @see AccessControlProvider#getPolicy(Path)
-     * @param absPath
-     */
-    public AccessControlPolicy getPolicy(Path absPath) throws ItemNotFoundException, RepositoryException {
-        checkInitialized();
-        return new AccessControlPolicy() {
-            public String getName() throws RepositoryException {
-                return policyName;
-            }
-            public String getDescription() throws RepositoryException {
-                return policyDesc;
-            }
-        };
-    }
-
-    /**
-     * @see AccessControlProvider#getAccessControlEntries(Path)
-     * @param absPath
-     */
-    public AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException {
-        checkInitialized();
-        // always empty array, since aces will never be changed using the api.
-        return new AccessControlEntry[0];
-    }
-
-    /**
-     * @see AccessControlProvider#getEditor(Session)
-     */
-    public AccessControlEditor getEditor(Session session) {
-        checkInitialized();
-        // not editable at all: policy is always the default and cannot be
-        // changed using the JCR API.
-        return null;
     }
 }

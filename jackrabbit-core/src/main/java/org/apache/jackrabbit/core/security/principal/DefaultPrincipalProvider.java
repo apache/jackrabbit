@@ -37,7 +37,6 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -71,6 +70,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private final EveryonePrincipal everyonePrincipal;
 
     private final String pGroupName;
+    private final String pPrincipalName;
 
     /**
      * Creates a new DefaultPrincipalProvider reading the principals from the
@@ -92,9 +92,11 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             NameResolver resolver = (SessionImpl) securitySession;
             ntNames[0] = resolver.getJCRName(UserManagerImpl.NT_REP_USER);
             pGroupName = resolver.getJCRName(UserManagerImpl.P_GROUPS);
+            pPrincipalName = resolver.getJCRName(UserManagerImpl.P_PRINCIPAL_NAME);
         } else {
             ntNames[0] = "rep:User";
             pGroupName = "rep:groups";
+            pPrincipalName = "rep:principalName";
         }
         securitySession.getWorkspace().getObservationManager().addEventListener(this,
                 Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
@@ -163,7 +165,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * @param searchType
      */
     public PrincipalIterator getPrincipals(int searchType) {
-        return findPrincipals("", searchType);
+        return findPrincipals(null, searchType);
     }
 
     /**
@@ -175,9 +177,8 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         synchronized (membershipCache) {
             mship = (Set) membershipCache.get(userPrincipal.getName());
             if (mship == null) {
-                mship = new ListOrderedSet();
                 // recursively collect group membership
-                collectGroupMembership(userPrincipal, mship);
+                mship = collectGroupMembership(userPrincipal);
 
                 // make sure everyone-group is not missing
                 if (!mship.contains(everyonePrincipal) && everyonePrincipal.isMember(userPrincipal)) {
@@ -267,25 +268,25 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * @return all Group principals the specified <code>princ</code> is member of
      * including inherited membership.
      */
-    private Set collectGroupMembership(Principal princ, Set membership) {
-        String princName = princ.getName();
-        if (!hasPrincipal(princName)) {
-            return Collections.EMPTY_SET;
-        }
-        try {
-            Authorizable auth = userManager.getAuthorizable(princ);
-            if (auth != null) {
-                Iterator itr = auth.memberOf();
-                while (itr.hasNext()) {
-                    Group group = (Group) itr.next();
-                    membership.add(group.getPrincipal());
+    private Set collectGroupMembership(Principal princ) {
+        Set membership = new ListOrderedSet();
+            try {
+                Authorizable auth = userManager.getAuthorizable(princ);
+                if (auth != null) {
+                    addToCache(princ);
+                    Iterator itr = auth.memberOf();
+                    while (itr.hasNext()) {
+                        Group group = (Group) itr.next();
+                        Principal gp = group.getPrincipal();
+                        addToCache(gp);
+                        membership.add(gp);
+                    }
+                } else {
+                    log.debug("Cannot find authorizable for principal " + princ.getName());
                 }
-            } else {
-                log.debug("Cannot find authorizable for principal " + princ.getName());
+            } catch (RepositoryException e) {
+                log.warn("Failed to determine membership for " + princ.getName(), e.getMessage());
             }
-        } catch (RepositoryException e) {
-            log.warn("Failed to determine membership for " + princName, e.getMessage());
-        }
         return membership;
     }
 
@@ -297,7 +298,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private PrincipalIterator findUserPrincipals(String simpleFilter) {
         synchronized (userManager) {
             try {
-                Iterator itr = userManager.findUsers(simpleFilter);
+                Iterator itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_USER);
                 return new PrincipalIteratorImpl(itr, false);
             } catch (RepositoryException e) {
                 log.error("Error while searching user principals.", e);
@@ -314,7 +315,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     private PrincipalIterator findGroupPrincipals(final String simpleFilter) {
         synchronized (userManager) {
             try {
-                Iterator itr = userManager.findGroups(simpleFilter);
+                Iterator itr = userManager.findAuthorizables(pPrincipalName, simpleFilter, UserManager.SEARCH_TYPE_GROUP);
 
                 // everyone will not be found by the usermanager -> extra test
                 boolean addEveryone = everyonePrincipal.getName().matches(".*"+simpleFilter+".*");
@@ -348,7 +349,9 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         protected Principal seekNext() {
             while (authorizableItr.hasNext()) {
                 try {
-                    return ((Authorizable) authorizableItr.next()).getPrincipal();
+                    Principal p = ((Authorizable) authorizableItr.next()).getPrincipal();
+                    addToCache(p);
+                    return p;
                 } catch (RepositoryException e) {
                     // should never get here
                     log.warn("Error while retrieving principal from group -> skip.");
