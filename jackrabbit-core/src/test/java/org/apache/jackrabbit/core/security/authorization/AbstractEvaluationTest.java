@@ -20,7 +20,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -44,6 +44,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * <code>AbstractEvaluationTest</code>...
@@ -52,11 +54,12 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
 
-    protected Credentials creds;
-    protected User testUser;
-    protected Group testGroup;
-    protected SessionImpl testSession;
-    protected AccessControlManager testAcMgr;
+    private Credentials creds;
+    private User testUser;
+    private Group testGroup;
+
+    private SessionImpl testSession;
+    private AccessControlManager testAccessControlManager;
 
     protected String path;
     protected String childNPath;
@@ -73,26 +76,12 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         super.setUp();
 
         UserManager uMgr = getUserManager(superuser);
-        Principal princ = getTestPrincipal("testUser", uMgr);
-        String uid = princ.getName();
-        String pw = princ.getName();
+        // create the testUser
+        Principal principal = new TestPrincipal("testUser" + UUID.randomUUID());
+        String uid = principal.getName();
+        String pw = principal.getName();
         creds = new SimpleCredentials(uid, pw.toCharArray());
-
-        Authorizable a = uMgr.getAuthorizable(princ);
-        if (a == null) {
-            testUser = uMgr.createUser(uid, pw);
-        } else if (a.isGroup()) {
-            throw new NotExecutableException();
-        } else {
-            testUser = (User) a;
-        }
-
-        testGroup = uMgr.createGroup(getTestPrincipal("testGroup", uMgr));
-        testGroup.addMember(testUser);
-
-        // TODO: remove cast once 283 is released.
-        testSession = (SessionImpl) helper.getRepository().login(creds);
-        testAcMgr = getAccessControlManager(testSession);
+        testUser = uMgr.createUser(uid, pw);
 
         // create some nodes below the test root in order to apply ac-stuff
         Node node = testRootNode.addNode(nodeName1, testNodeType);
@@ -144,48 +133,86 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     protected abstract void clearACInfo();
 
-    protected abstract PolicyTemplate getPolicyTemplate(AccessControlManager acM, String path) throws RepositoryException, AccessDeniedException, NotExecutableException;
+    protected abstract Map getRestrictions(String path)
+            throws RepositoryException,
+            NotExecutableException;
 
-    protected abstract PolicyEntry createEntry(Principal principal, int privileges, boolean isAllow, String[] restrictions);
+    protected abstract JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException;
 
-    protected abstract String[] getRestrictions(String path);
-
-    protected PolicyTemplate givePrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
+    protected JackrabbitAccessControlList givePrivileges(String nPath, Privilege[] privileges,
+                                                         Map restrictions) throws NotExecutableException, RepositoryException {
         return givePrivileges(nPath, testUser.getPrincipal(), privileges, restrictions);
     }
 
-    protected PolicyTemplate givePrivileges(String nPath, Principal principal,
-                                            int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-        tmpl.setEntry(createEntry(principal, privileges, true, restrictions));
+    protected JackrabbitAccessControlList givePrivileges(String nPath, Principal principal,
+                                                         Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+        JackrabbitAccessControlList tmpl = getPolicy(acMgr, nPath, principal);
+        tmpl.addEntry(principal, privileges, true, restrictions);
         acMgr.setPolicy(tmpl.getPath(), tmpl);
         superuser.save();
         return tmpl;
     }
 
-    protected PolicyTemplate withdrawPrivileges(String nPath, int privileges, String[] restrictions) throws NotExecutableException, RepositoryException {
-        PolicyTemplate tmpl = getPolicyTemplate(acMgr, nPath);
-        tmpl.setEntry(createEntry(testUser.getPrincipal(), privileges, false, restrictions));
+    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+        return withdrawPrivileges(nPath, testUser.getPrincipal(), privileges, restrictions);
+    }
+
+    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Principal principal, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
+        JackrabbitAccessControlList tmpl = getPolicy(acMgr, nPath, principal);
+        tmpl.addEntry(principal, privileges, false, restrictions);
         acMgr.setPolicy(tmpl.getPath(), tmpl);
         superuser.save();
         return tmpl;
     }
 
-    protected void checkReadOnly(String path) throws RepositoryException {
-        Privilege[] privs = testAcMgr.getPrivileges(path);
+    protected void checkReadOnly(String path) throws RepositoryException, NotExecutableException {
+        Privilege[] privs = getTestACManager().getPrivileges(path);
         assertTrue(privs.length == 1);
-        assertEquals(PrivilegeRegistry.READ_PRIVILEGE, privs[0]);
+        assertEquals(privilegesFromName(Privilege.JCR_READ)[0], privs[0]);
+    }
+
+    protected User getTestUser() {
+        return testUser;
+    }
+
+    protected Group getTestGroup() throws RepositoryException, NotExecutableException {
+        if (testGroup == null) {
+            // create the testGroup
+            Principal principal = new TestPrincipal("testGroup" + UUID.randomUUID());
+            testGroup = getUserManager(superuser).createGroup(principal);
+            testGroup.addMember(testUser);
+        }
+        return testGroup;
+    }
+
+    protected SessionImpl getTestSession() throws RepositoryException {
+        if (testSession == null) {
+            // TODO: remove cast once 283 is released.
+            testSession = (SessionImpl) helper.getRepository().login(creds);
+        }
+        return testSession;
+    }
+
+    protected AccessControlManager getTestACManager() throws NotExecutableException, RepositoryException {
+        if (testAccessControlManager == null) {
+            testAccessControlManager = getAccessControlManager(getTestSession());
+        }
+        return testAccessControlManager;
     }
 
     public void testGrantedPermissions() throws RepositoryException, AccessDeniedException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
         /* precondition:
            testuser must have READ-only permission on test-node and below
          */
         checkReadOnly(path);
 
         // give 'testUser' ADD_CHILD_NODES|MODIFY_PROPERTIES privileges at 'path'
-        givePrivileges(path, PrivilegeRegistry.ADD_CHILD_NODES |
-                PrivilegeRegistry.MODIFY_PROPERTIES, getRestrictions(path));
+        Privilege[] privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_ADD_CHILD_NODES,
+                Privilege.JCR_MODIFY_PROPERTIES
+        });
+        givePrivileges(path, privileges, getRestrictions(path));
         /*
          testuser must now have
          - ADD_NODE permission for child node
@@ -230,15 +257,18 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     public void testDeniedPermission() throws RepositoryException, NotExecutableException, InterruptedException {
-         /* precondition:
+        SessionImpl testSession = getTestSession();
+        /* precondition:
            testuser must have READ-only permission on test-node and below
          */
         checkReadOnly(path);
 
         // withdraw READ privilege to 'testUser' at 'path'
-        withdrawPrivileges(childNPath, PrivilegeRegistry.READ, getRestrictions(childNPath));
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        withdrawPrivileges(childNPath, privileges, getRestrictions(childNPath));
         /*
          testuser must now have
+         - READ-only permission at path
          - READ-only permission for the child-props of path
 
          testuser must not have
@@ -253,12 +283,10 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         // ... and props of path
         assertTrue(n.getProperties().hasNext());
 
-        /*
-        testSession must not have access to 'childNPath'
-        */
+        //testSession must not have access to 'childNPath'
         assertFalse(testSession.itemExists(childNPath));
         try {
-            Node testN = testSession.getNode(childNPath);
+            testSession.getNode(childNPath);
             fail("Read access has been denied -> cannot retrieve child node.");
         } catch (PathNotFoundException e) {
             // ok.
@@ -276,10 +304,13 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     public void testAccessControlRead() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
         checkReadOnly(path);
 
         // re-grant READ in order to have an ACL-node
-        PolicyTemplate tmpl = givePrivileges(path, PrivilegeRegistry.READ, getRestrictions(path));
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        JackrabbitAccessControlList tmpl = givePrivileges(path, privileges, getRestrictions(path));
         // make sure the 'rep:policy' node has been created.
         assertTrue(superuser.itemExists(tmpl.getPath() + "/rep:policy"));
 
@@ -287,9 +318,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
          Testuser must still have READ-only access only and must not be
          allowed to view the acl-node that has been created.
         */
-        assertFalse(testAcMgr.hasPrivileges(path, new Privilege[] {
-                PrivilegeRegistry.READ_AC_PRIVILEGE
-        }));
+        assertFalse(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_READ_ACCESS_CONTROL)));
         assertFalse(testSession.itemExists(path + "/rep:policy"));
 
         Node n = testSession.getNode(tmpl.getPath());
@@ -303,7 +332,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
         /* Finally the test user must not be allowed to remove the policy. */
         try {
-            testAcMgr.removePolicy(path);
+            testAcMgr.removePolicy(path, new AccessControlPolicy() {});
             fail("Test user must not be allowed to remove the access control policy.");
         } catch (AccessDeniedException e) {
             // success
@@ -311,16 +340,20 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     public void testAccessControlModification() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
         /* precondition:
           testuser must have READ-only permission on test-node and below
         */
         checkReadOnly(path);
 
         // give 'testUser' ADD_CHILD_NODES|MODIFY_PROPERTIES| REMOVE_CHILD_NODES privileges at 'path'
-        PolicyTemplate tmpl = givePrivileges(path,
-                PrivilegeRegistry.ADD_CHILD_NODES |
-                PrivilegeRegistry.REMOVE_CHILD_NODES |
-                PrivilegeRegistry.MODIFY_PROPERTIES, getRestrictions(path));
+        Privilege[] privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_ADD_CHILD_NODES,
+                Privilege.JCR_REMOVE_CHILD_NODES,
+                Privilege.JCR_MODIFY_PROPERTIES
+        });
+        JackrabbitAccessControlList tmpl = givePrivileges(path, privileges, getRestrictions(path));
         /*
          testuser must not have
          - permission to view AC items
@@ -332,31 +365,25 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         // the policy node however must not be visible to the test-user
         assertFalse(testSession.itemExists(tmpl.getPath() + "/rep:policy"));
         try {
-            testAcMgr.getPolicy(tmpl.getPath());
+            testAcMgr.getPolicies(tmpl.getPath());
             fail("test user must not have READ_AC privilege.");
         } catch (AccessDeniedException e) {
             // success
         }
         try {
-            testAcMgr.getEffectivePolicy(tmpl.getPath());
+            testAcMgr.getEffectivePolicies(tmpl.getPath());
             fail("test user must not have READ_AC privilege.");
         } catch (AccessDeniedException e) {
             // success
         }
         try {
-            testAcMgr.getEffectivePolicy(path);
+            testAcMgr.getEffectivePolicies(path);
             fail("test user must not have READ_AC privilege.");
         } catch (AccessDeniedException e) {
             // success
         }
         try {
-            testAcMgr.getAccessControlEntries(tmpl.getPath());
-            fail("test user must not have READ_AC privilege.");
-        } catch (AccessDeniedException e) {
-            // success
-        }
-        try {
-            testAcMgr.removePolicy(tmpl.getPath());
+            testAcMgr.removePolicy(tmpl.getPath(), new AccessControlPolicy() {});
             fail("test user must not have MODIFY_AC privilege.");
         } catch (AccessDeniedException e) {
             // success
@@ -371,9 +398,11 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         checkReadOnly(path);
 
         // give 'testUser' READ_AC|MODIFY_AC privileges at 'path'
-        givePrivileges(path, PrivilegeRegistry.WRITE, getRestrictions(path));
+        Privilege[] grPrivs = privilegesFromName(Privilege.JCR_WRITE);
+        givePrivileges(path, grPrivs, getRestrictions(path));
         // withdraw the READ privilege
-        withdrawPrivileges(path, PrivilegeRegistry.READ, getRestrictions(path));
+        Privilege[] dnPrivs = privilegesFromName(Privilege.JCR_READ);
+        withdrawPrivileges(path, dnPrivs, getRestrictions(path));
 
         // test if login as testuser -> item at path must not exist.
         Session s = null;
@@ -388,6 +417,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     public void testEventGeneration() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
         /*
          precondition:
          testuser must have READ-only permission on test-node and below
@@ -395,7 +425,8 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         checkReadOnly(path);
 
         // withdraw the READ privilege
-        withdrawPrivileges(path, PrivilegeRegistry.READ, getRestrictions(path));
+        Privilege[] dnPrivs = privilegesFromName(Privilege.JCR_READ);
+        withdrawPrivileges(path, dnPrivs, getRestrictions(path));
 
         // testUser registers a eventlistener for 'path
         ObservationManager obsMgr = testSession.getWorkspace().getObservationManager();
@@ -424,62 +455,296 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     }
 
     public void testInheritance() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
         /* precondition:
           testuser must have READ-only permission on test-node and below
         */
         checkReadOnly(path);
+        checkReadOnly(childNPath);
 
-        // give 'modify-properties' privilege on 'path'
-        givePrivileges(path, PrivilegeRegistry.MODIFY_PROPERTIES, getRestrictions(path));
-        // give 'add-child-nodes' and 'remove-child-nodes' privilege on 'child-path'
-        givePrivileges(childNPath, PrivilegeRegistry.ADD_CHILD_NODES |
-                PrivilegeRegistry.REMOVE_CHILD_NODES, getRestrictions(childNPath));
+        // give 'modify_properties' and 'remove_node' privilege on 'path'
+        Privilege[] privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_REMOVE_NODE, Privilege.JCR_MODIFY_PROPERTIES});
+        givePrivileges(path, privileges, getRestrictions(path));
+        // give 'add-child-nodes', remove_child_nodes' on 'childNPath'
+        privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_REMOVE_CHILD_NODES});
+        givePrivileges(childNPath, privileges, getRestrictions(childNPath));
 
         /*
-        since permission evaluation respects inheritance through the node
+        since evaluation respects inheritance through the node
         hierarchy, the following privileges must now be given at 'childNPath':
-        - read
-        - modify-properties
-        - add-child-nodes
-        - remove-child-nodes
-        -> read + write
+        - jcr:read
+        - jcr:modifyProperties
+        - jcr:addChildNodes
+        - jcr:removeChildNodes
+        - jcr:removeNode
         */
-        Privilege[] privs = new Privilege[] {
-                PrivilegeRegistry.READ_PRIVILEGE,
-                PrivilegeRegistry.WRITE_PRIVILEGE
-        };
-        assertTrue(testAcMgr.hasPrivileges(childNPath, privs));
+        privileges =  privilegesFromNames(new String[] {
+                Privilege.JCR_READ,
+                Privilege.JCR_WRITE,
+                Privilege.JCR_REMOVE_NODE
+        });
+        assertTrue(testAcMgr.hasPrivileges(childNPath, privileges));
+
         /*
-        ... and the following permissions must be granted at any child item
-        of child-path:
+         ... permissions granted at childNPath:
+         - read
+         - set-property
+
+         BUT NOT:
+         - add-node
+         - remove.
+         */
+        String aActions = SessionImpl.SET_PROPERTY_ACTION + "," + SessionImpl.READ_ACTION;
+        assertTrue(testSession.hasPermission(childNPath, aActions));
+        String dActions = SessionImpl.REMOVE_ACTION + "," + SessionImpl.ADD_NODE_ACTION;
+        assertFalse(testSession.hasPermission(childNPath, dActions));
+
+        /*
+        ... permissions granted at any child item of child-path:
         - read
         - set-property
         - add-node
         - remove
         */
         String nonExistingItemPath = childNPath + "/anyItem";
-        String actions = SessionImpl.ADD_NODE_ACTION + "," +
-                SessionImpl.REMOVE_ACTION + "," +
-                SessionImpl.SET_PROPERTY_ACTION + "," +
-                SessionImpl.READ_ACTION;
-        assertTrue(testSession.hasPermission(nonExistingItemPath, actions));
+        assertTrue(testSession.hasPermission(nonExistingItemPath, aActions + "," + dActions));
 
         /* try adding a new child node -> must succeed. */
         Node childN = testSession.getNode(childNPath);
-        Node testChild = childN.addNode(nodeName2, testNodeType);
+        String testPath = childN.addNode(nodeName2, testNodeType).getPath();
 
         /* test privileges on the 'new' child node */
-        privs = testAcMgr.getPrivileges(testChild.getPath());
-        int exptectedPrivs = PrivilegeRegistry.WRITE | PrivilegeRegistry.READ;
-        assertTrue(exptectedPrivs == PrivilegeRegistry.getBits(privs));
+        Privilege[] expectedPrivs = privilegesFromNames(new String[] {
+                Privilege.JCR_READ, Privilege.JCR_WRITE, Privilege.JCR_REMOVE_NODE});
+        assertTrue(testAcMgr.hasPrivileges(testPath, expectedPrivs));
 
-        /* repeate test after save. */
+        /* repeat test after save. */
         testSession.save();
-        privs = testAcMgr.getPrivileges(testChild.getPath());
-        assertTrue(exptectedPrivs == PrivilegeRegistry.getBits(privs));
+        assertTrue(testAcMgr.hasPrivileges(testPath, expectedPrivs));
+    }
+
+    public void testRemovePermission() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
+
+        // add 'remove_child_nodes' privilge at 'path'
+        givePrivileges(path, rmChildNodes, getRestrictions(path));
+        /*
+         expected result:
+         - neither node at path nor at childNPath can be removed since
+           REMOVE_NODE privilege is missing.
+         */
+        assertFalse(testSession.hasPermission(path, SessionImpl.REMOVE_ACTION));
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+    }
+
+    public void testRemovePermission2() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_node' privilege at 'path'
+        givePrivileges(path, rmChildNodes, getRestrictions(path));
+        /*
+         expected result:
+         - neither node at path nor at childNPath can be removed permission
+           due to missing remove_child_nodes privilege.
+         */
+        assertFalse(testSession.hasPermission(path, SessionImpl.REMOVE_ACTION));
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+    }
+
+   public void testRemovePermission3() throws NotExecutableException, RepositoryException {
+       SessionImpl testSession = getTestSession();
+       AccessControlManager testAcMgr = getTestACManager();
+       /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] privs = privilegesFromNames(new String[] {
+                Privilege.JCR_REMOVE_CHILD_NODES, Privilege.JCR_REMOVE_NODE
+        });
+        // add 'remove_node' and 'remove_child_nodes' privilge at 'path'
+        givePrivileges(path, privs, getRestrictions(path));
+        /*
+         expected result:
+         - missing remove permission at path since REMOVE_CHILD_NODES present
+           at path only applies for nodes below. REMOVE_CHILD_NODES must
+           be present at the parent instead (which isn't)
+         - remove permission is however granted at childNPath.
+         - privileges: both at path and at childNPath 'remove_node' and
+           'remove_child_nodes' are present.
+        */
+       assertFalse(testSession.hasPermission(path, SessionImpl.REMOVE_ACTION));
+       assertTrue(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+
+       assertTrue(testAcMgr.hasPrivileges(path, privs));
+       assertTrue(testAcMgr.hasPrivileges(childNPath, privs));
+   }
+
+    public void testRemovePermission4() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_child_nodes' privilge at 'path'...
+        givePrivileges(path, rmChildNodes, getRestrictions(path));
+        // ... and add 'remove_node' privilge at 'childNPath'
+        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - remove not allowed for node at path
+         - remove-permission present for node at childNPath
+         - both remove_node and remove_childNodes privilege present at childNPath
+         */
+        assertFalse(testSession.hasPermission(path, SessionImpl.REMOVE_ACTION));
+        assertTrue(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+        assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
+    }
+
+    public void testRemovePermission5() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_node' privilege at 'childNPath'
+        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - node at childNPath can't be removed since REMOVE_CHILD_NODES is missing.
+         */
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+    }
+
+    public void testRemovePermission6() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] privs = privilegesFromNames(new String[] {
+                Privilege.JCR_REMOVE_CHILD_NODES, Privilege.JCR_REMOVE_NODE
+        });
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_child_nodes' and 'remove_node' privilge at 'path'
+        givePrivileges(path, privs, getRestrictions(path));
+        // ... but deny 'remove_node' at childNPath
+        withdrawPrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - neither node at path nor at childNPath could be removed.
+         - no remove_node privilege at childNPath
+         - read, remove_child_nodes privilege at childNPath
+         */
+        assertFalse(testSession.hasPermission(path, SessionImpl.REMOVE_ACTION));
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+        assertTrue(testAcMgr.hasPrivileges(childNPath, privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_REMOVE_CHILD_NODES})));
+        assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE)));
+    }
+
+    public void testRemovePermission7() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // deny 'remove_child_nodes' at 'path'
+        withdrawPrivileges(path, rmChildNodes, getRestrictions(path));
+        // ... but allow 'remove_node' at childNPath
+        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - node at childNPath can't be removed.
+         */
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+
+        // additionally add remove_child_nodes priv at 'childNPath'
+        givePrivileges(childNPath, rmChildNodes, getRestrictions(childNPath));
+        /*
+         expected result:
+         - node at childNPath still can't be removed.
+         - but both privileges (remove_node, remove_child_nodes) are present.
+         */
+        assertFalse(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+        assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
+    }
+
+    public void testRemovePermission8() throws NotExecutableException, RepositoryException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        Privilege[] rmChildNodes = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
+        Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
+
+        // add 'remove_child_nodes' at 'path
+        givePrivileges(path, rmChildNodes, getRestrictions(path));
+        // deny 'remove_nodes' at 'path'
+        withdrawPrivileges(path, rmNode, getRestrictions(path));
+        // and allow 'remove_node' at childNPath
+        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        /*
+         expected result:
+         - remove permission must be granted at childNPath
+         */
+        assertTrue(testSession.hasPermission(childNPath, SessionImpl.REMOVE_ACTION));
+        assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 
     public void testGroupPermissions() throws NotExecutableException, RepositoryException {
+        Group testGroup = getTestGroup();
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
         /*
          precondition:
          testuser must have READ-only permission on test-node and below
@@ -487,17 +752,45 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         checkReadOnly(path);
 
         /* add privileges for the Group the test-user is member of */
-        givePrivileges(path, testGroup.getPrincipal(), PrivilegeRegistry.MODIFY_PROPERTIES, getRestrictions(path));
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        givePrivileges(path, testGroup.getPrincipal(), privileges, getRestrictions(path));
 
         /* testuser must get the permissions/privileges inherited from
            the group it is member of.
          */
         String actions = SessionImpl.SET_PROPERTY_ACTION + "," + SessionImpl.READ_ACTION;
         assertTrue(testSession.hasPermission(path, actions));
-        assertTrue(testAcMgr.hasPrivileges(path, new Privilege[] {PrivilegeRegistry.MODIFY_PROPERTIES_PRIVILEGE}));
+        Privilege[] privs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        assertTrue(testAcMgr.hasPrivileges(path, privs));
     }
 
-    public void testNewNodes() throws RepositoryException {
+    public void testMixedUserGroupPermissions() throws NotExecutableException, RepositoryException {
+        Group testGroup = getTestGroup();
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        /* explicitely withdraw MODIFY_PROPERTIES for the user */
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(path));
+        /* give MODIFY_PROPERTIES privilege for a Group the test-user is member of */
+        givePrivileges(path, testGroup.getPrincipal(), privileges, getRestrictions(path));
+        /*
+         since user-permissions overrule the group permissions, testuser must
+         not have set_property action / modify_properties privilege.
+         */
+        String actions = SessionImpl.SET_PROPERTY_ACTION;
+        assertFalse(testSession.hasPermission(path, actions));
+        assertFalse(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
+    }
+
+    public void testNewNodes() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
         /*
          precondition:
          testuser must have READ-only permission on test-node and below
@@ -505,23 +798,26 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         checkReadOnly(path);
 
         /* create some new nodes below 'path' */
-        Node n = testSession.getNode(path);
+        Node n = ((SessionImpl) superuser).getNode(path);
         for (int i = 0; i < 5; i++) {
             n = n.addNode(nodeName2, testNodeType);
         }
+        superuser.save();
 
         /* make sure the same privileges/permissions are granted as at path. */
-        Privilege[] privs = testAcMgr.getPrivileges(n.getPath());
+        String childPath = n.getPath();
+        Privilege[] privs = testAcMgr.getPrivileges(childPath);
         assertTrue(PrivilegeRegistry.READ == PrivilegeRegistry.getBits(privs));
-        testSession.checkPermission(n.getPath(), SessionImpl.READ_ACTION);
+        testSession.checkPermission(childPath, SessionImpl.READ_ACTION);
     }
 
-    public void testNonExistingItem() throws RepositoryException {
+    public void testNonExistingItem() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
         /*
           precondition:
           testuser must have READ-only permission on the root node and below
         */
-        String rootPath = testSession.getRootNode().getPath();
+        String rootPath = getTestSession().getRootNode().getPath();
         checkReadOnly(rootPath);
         testSession.checkPermission(rootPath + "nonExistingItem", SessionImpl.READ_ACTION);
     }
@@ -568,24 +864,53 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
     }
 
+    /**
+     * the ADD_CHILD_NODES privileges assigned on a node to a specific principal
+     * grants the corresponding user the permission to add nodes below the
+     * target node but not 'at' the target node.
+     *
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
+    public void testAddChildNodePrivilege() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        /*
+         precondition:
+         testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+
+        /* create a child node below node at 'path' */
+        Node n = ((SessionImpl) superuser).getNode(path);
+        n = n.addNode(nodeName2, testNodeType);
+        superuser.save();
+
+        /* add 'add_child_nodes' privilege for testSession at path. */
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+        givePrivileges(path, privileges, getRestrictions(path));
+
+        /* test permissions. expected result:
+           - testSession cannot add child-nodes at 'path'
+           - testSession can add child-nodes below path
+         */
+        assertFalse(testSession.hasPermission(path, SessionImpl.ADD_NODE_ACTION));
+        assertTrue(testSession.hasPermission(path+"/anychild", SessionImpl.ADD_NODE_ACTION));
+        String childPath = n.getPath();
+        assertTrue(testSession.hasPermission(childPath, SessionImpl.ADD_NODE_ACTION));
+    }
+
+
     private static Node findPolicyNode(Node start) throws RepositoryException {
         Node policyNode = null;
-        if (start.isNodeType("rep:ACL")) {
+        if (start.isNodeType("rep:Policy")) {
             policyNode = start;
         }
         for (NodeIterator it = start.getNodes(); it.hasNext() && policyNode == null;) {
-            policyNode = findPolicyNode(it.nextNode());
+            Node n = it.nextNode();
+            if (!"jcr:system".equals(n.getName())) {
+                policyNode = findPolicyNode(n);
+            }
         }
         return policyNode;
-    }
-
-    protected Principal getTestPrincipal(String nameHint, UserManager uMgr) throws RepositoryException {
-        Principal principal = new TestPrincipal(nameHint);
-        int i = 0;
-        while (uMgr.getAuthorizable(principal) != null) {
-            principal = new TestPrincipal(nameHint + i);
-            i++;
-        }
-        return principal;
     }
 }

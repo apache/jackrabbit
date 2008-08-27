@@ -154,29 +154,6 @@ public class AccessManagerTest extends AbstractJCRTest {
         assertTrue(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
     }
 
-/*
-// TODO: uncomment as soon as SimpleAccessManager is replaced
-    public void testIsGrantedForRemovedItem() throws RepositoryException, NotExecutableException {
-        AccessManager acMgr = getAccessManager(superuser);
-        Property p = testRootNode.setProperty(propertyName1, "anyvalue");
-        ItemId id;
-        if (p instanceof PropertyImpl) {
-            id = ((PropertyImpl)p).getId();
-        } else {
-            throw new NotExecutableException();
-        }
-
-        assertTrue(acMgr.isGranted(id, AccessManager.READ));
-        p.remove();
-        try {
-            acMgr.isGranted(id, AccessManager.READ);
-            fail("AccessManager.isGranted should throw ItemNotFoundException if id of a removed item is passed.");
-        } catch (ItemNotFoundException e) {
-            // ok
-        }
-    }
-*/
-
     public void testCanAccess() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         String wspName = s.getWorkspace().getName();

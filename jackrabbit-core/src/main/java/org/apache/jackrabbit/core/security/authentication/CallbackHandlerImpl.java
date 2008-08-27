@@ -48,17 +48,23 @@ public class CallbackHandlerImpl implements CallbackHandler {
     private final Session session;
     private final Credentials credentials;
     private final PrincipalProviderRegistry principalProviderRegistry;
+    private final String adminId;
+    private final String anonymousId;
 
     /**
      * Instanciate with the data needed to handle callbacks
+     *
      * @param credentials
      * @param session
      */
     public CallbackHandlerImpl(Credentials credentials, Session session,
-                               PrincipalProviderRegistry principalProviderRegistry) {
+                               PrincipalProviderRegistry principalProviderRegistry,
+                               String adminId, String anonymousId) {
         this.credentials = credentials;
         this.session = session;
         this.principalProviderRegistry = principalProviderRegistry;
+        this.adminId = adminId;
+        this.anonymousId = anonymousId;
 
         if (session == null) {
             log.debug("Session is null -> CallbackHandler won't be able to handle RepositoryCallback.");
@@ -90,8 +96,11 @@ public class CallbackHandlerImpl implements CallbackHandler {
                 if (session == null || principalProviderRegistry == null) {
                     throw new UnsupportedCallbackException(callback);
                 }
-                ((RepositoryCallback) callback).setSession(session);
-                ((RepositoryCallback) callback).setPrincipalProviderRegistry(principalProviderRegistry);
+                RepositoryCallback rcb = (RepositoryCallback) callback;
+                rcb.setSession(session);
+                rcb.setPrincipalProviderRegistry(principalProviderRegistry);
+                rcb.setAdminId(adminId);
+                rcb.setAnonymousId(anonymousId);
             } else if (credentials != null && credentials instanceof SimpleCredentials) {
                 SimpleCredentials simpleCreds = (SimpleCredentials) credentials;
                 if (callback instanceof NameCallback) {

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -30,7 +32,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import java.util.Iterator;
 
@@ -52,13 +53,19 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
         try {
-            UserManagerImpl uMgr = (UserManagerImpl) ((JackrabbitSession) session).getUserManager();
-            return uMgr.getCurrentUser();
-        } catch (UnsupportedRepositoryOperationException e) {
-            throw new NotExecutableException(e.getMessage());
-        } catch (UnsupportedOperationException e) {
-            throw new NotExecutableException(e.getMessage());
+            UserManager uMgr = ((JackrabbitSession) session).getUserManager();
+            String uid = session.getUserID();
+            if (uid != null) {
+                Authorizable auth = uMgr.getAuthorizable(session.getUserID());
+                if (auth != null && auth instanceof UserImpl) {
+                    return (UserImpl) auth;
+                }
+            }
+        } catch (RepositoryException e) {
+            // ignore
         }
+        // unable to retrieve current user
+        throw new NotExecutableException();
     }
 
     protected abstract NodeResolver createNodeResolver(Session session) throws RepositoryException, NotExecutableException;

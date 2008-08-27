@@ -22,6 +22,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Credentials;
@@ -124,7 +125,7 @@ class UserImpl extends AuthorizableImpl implements User {
     public Principal getPrincipal() throws RepositoryException {
         if (principal == null) {
             if (isAdmin()) {
-                principal = new AdminPrincipal(getPrincipalName());
+                principal = new NodeBasedAdminPrincipal(getPrincipalName());
             } else {
                 principal = new NodeBasedPrincipal(getPrincipalName());
             }
@@ -151,5 +152,20 @@ class UserImpl extends AuthorizableImpl implements User {
         }
         Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
         userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     */
+    private class NodeBasedAdminPrincipal extends AdminPrincipal implements ItemBasedPrincipal {
+
+        public NodeBasedAdminPrincipal(String adminId) {
+            super(adminId);
+        }
+
+        public String getPath() throws RepositoryException {
+            return getNode().getPath();
+        }
     }
 }

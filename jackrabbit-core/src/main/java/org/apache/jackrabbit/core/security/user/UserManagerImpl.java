@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.util.Text;
+import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * UserManagerImpl
@@ -60,7 +62,13 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     private final String adminId;
     private final NodeResolver authResolver;
 
-    private String currentUserPath;
+    /**
+     * Simple unmanaged map from authorizableID to nodePath (node representing
+     * the authorizable) used limit the number of calls to the
+     * <code>NodeResolver</code> in order to find authorizable nodes by the
+     * authorizable id.
+     */
+    private final Map idPathMap = new LRUMap(1000);
 
     public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
         this.session = session;
@@ -85,14 +93,13 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             throw new IllegalArgumentException("Invalid authorizable name '" + id + "'");
         }
         Authorizable authorz = null;
-        NodeImpl n = (NodeImpl) authResolver.findNode(P_USERID, id, NT_REP_USER);
+        NodeImpl n = getUserNode(id);
         if (n != null) {
-            authorz = UserImpl.create(n, this);
+            authorz = createUser(n);
         } else {
-            Name nodeName = session.getQName(id);
-            n = (NodeImpl) authResolver.findNode(nodeName, NT_REP_GROUP);
+            n = getGroupNode(id);
             if (n != null) {
-                authorz = GroupImpl.create(n, this);
+                authorz = createGroup(n);
             }
         }
         return authorz;
@@ -121,9 +128,9 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
         // build the corresponding authorizable object
         if (n != null) {
             if (n.isNodeType(NT_REP_USER)) {
-               return UserImpl.create(n, this);
+               return createUser(n);
             } else if (n.isNodeType(NT_REP_GROUP)) {
-               return GroupImpl.create(n, this);
+               return createGroup(n);
             } else {
                 log.warn("Unexpected user nodetype " + n.getPrimaryNodeType().getName());
             }
@@ -132,12 +139,33 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     }
 
     /**
-     * @see UserManager#findAuthorizable(String,String)
+     * @see UserManager#findAuthorizables(String,String)
      */
-    public Iterator findAuthorizable(String propertyName, String value) throws RepositoryException {
+    public Iterator findAuthorizables(String propertyName, String value) throws RepositoryException {
+        return findAuthorizables(propertyName, value, SEARCH_TYPE_AUTHORIZABLE);
+    }
+
+    /**
+     * @see UserManager#findAuthorizables(String,String, int)
+     */
+    public Iterator findAuthorizables(String propertyName, String value, int searchType)
+            throws RepositoryException {
         Name name = session.getQName(propertyName);
-        NodeIterator auths  = authResolver.findNodes(name, value, NT_REP_AUTHORIZABLE, true);
-        return new AuthorizableIterator(auths);
+        Name ntName;
+        switch (searchType) {
+            case SEARCH_TYPE_AUTHORIZABLE:
+                ntName = NT_REP_AUTHORIZABLE;
+                break;
+            case SEARCH_TYPE_GROUP:
+                ntName = NT_REP_GROUP;
+                break;
+            case SEARCH_TYPE_USER:
+                ntName = NT_REP_USER;
+                break;
+            default: throw new IllegalArgumentException("Invalid search type " + searchType);
+        }
+        NodeIterator nodes = authResolver.findNodes(name, value, ntName, true);
+        return new AuthorizableIterator(nodes);
     }
 
     /**
@@ -195,7 +223,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             parent.save();
 
             log.info("User created: " + userID + "; " + userNode.getPath());
-            return UserImpl.create(userNode, this);
+            return createUser(userNode);
         } catch (RepositoryException e) {
             // something went wrong -> revert changes and rethrow
             if (parent != null) {
@@ -248,7 +276,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
 
             log.info("Group created: " + groupID + "; " + groupNode.getPath());
 
-            return GroupImpl.create(groupNode, this);
+            return createGroup(groupNode);
         } catch (RepositoryException e) {
             if (parent != null) {
                 parent.refresh(false);
@@ -259,38 +287,6 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     }
 
     //--------------------------------------------------------------------------
-    /**
-     * Simple search for <code>User</code>s<br>
-     * The argument is a substring which must match the UserId or main
-     * Principal's name.
-     *
-     * @param simpleFilter substring to match against. The empty String matches
-     * all users.
-     * @return Iterator containing Authorizable-objects
-     * @throws RepositoryException
-     */
-    public Iterator findUsers(String simpleFilter) throws RepositoryException {
-        Set s = new HashSet(2);
-        s.add(P_USERID);
-        s.add(P_PRINCIPAL_NAME);
-        NodeIterator nodes = authResolver.findNodes(s, simpleFilter, NT_REP_USER, false, Long.MAX_VALUE);
-        return new AuthorizableIterator(nodes);
-    }
-
-    /**
-     * Simple search for a <code>Group</code>s<br>
-     * The argument is a substring which must match the Group's Principal name.
-     *
-     * @param simpleFilter substring to match against. The empty String matches
-     * all groups.
-     * @return Iterator containing Authorizable-objects
-     * @throws RepositoryException
-     */
-    public Iterator findGroups(String simpleFilter) throws RepositoryException {
-        NodeIterator nodes = authResolver.findNodes(P_PRINCIPAL_NAME, simpleFilter, NT_REP_GROUP, false);
-        return new AuthorizableIterator(nodes);
-    }
-
     /**
      *
      * @param principal
@@ -348,45 +344,112 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
      * @return true if the given userID belongs to the administrator user.
      */
     boolean isAdminId(String userID) {
-        return adminId.equals(userID);
+        return (adminId == null) ? false : adminId.equals(userID);
     }
 
-    UserImpl getCurrentUser() {
-        try {
-            String uid = session.getUserID();
-            if (uid != null) {
-                AuthorizableImpl auth = (AuthorizableImpl) getAuthorizable(session.getUserID());
-                if (auth != null && !auth.isGroup()) {
-                    return (UserImpl) auth;
+    /**
+     * Build the User object from the given user node.
+     *
+     * @param userNode
+     * @return
+     * @throws RepositoryException
+     */
+    User createUser(NodeImpl userNode) throws RepositoryException {
+        User user = UserImpl.create(userNode, this);
+        idPathMap.put(user.getID(), userNode.getPath());
+        return user;
+    }
+
+    /**
+     * Build the Group object from the given group node.
+     *
+     * @param groupNode
+     * @return
+     * @throws RepositoryException
+     */
+    Group createGroup(NodeImpl groupNode) throws RepositoryException {
+        Group group = GroupImpl.create(groupNode, this);
+        idPathMap.put(group.getID(), groupNode.getPath());
+        return group;
+    }
+
+    /**
+     * @param userID
+     * @return the node associated with the given userID or <code>null</code>.
+     */
+    private NodeImpl getUserNode(String userID) throws RepositoryException {
+        NodeImpl n = null;
+        if (idPathMap.containsKey(userID)) {
+            String path = idPathMap.get(userID).toString();
+            if (session.itemExists(path)) {
+                Item itm = session.getItem(path);
+                // make sure the item really represents the node associated with
+                // the given userID. if not the search below is execute.
+                if (itm.isNode()) {
+                    NodeImpl tmp = (NodeImpl) itm;
+                    if (tmp.isNodeType(NT_REP_USER) && userID.equals(((NodeImpl) itm).getProperty(P_USERID).getString())) {
+                        n = (NodeImpl) itm;
+                    }
                 }
             }
-        } catch (RepositoryException e) {
-            // should never get here
-            log.error("Internal error: unable to build current user path.", e.getMessage());
         }
-        return null;
+
+        if (n == null) {
+            // clear eventual previous entry
+            idPathMap.remove(userID);
+            // search for it the node belonging to that userID
+            n = (NodeImpl) authResolver.findNode(P_USERID, userID, NT_REP_USER);
+        }
+        return n;
     }
 
-    private String getCurrentUserPath() {
-        if (currentUserPath == null) {
-            StringBuffer b = new StringBuffer();
-            try {
-                String uid = session.getUserID();
-                if (uid != null) {
-                    UserImpl user = getCurrentUser();
-                    if (user != null) {
-                        b.append(user.getNode().getPath());
+    private NodeImpl getGroupNode(String groupID) throws RepositoryException {
+        NodeImpl n = null;
+        if (idPathMap.containsKey(groupID)) {
+            String path = idPathMap.get(groupID).toString();
+            if (session.itemExists(path)) {
+                Item itm = session.getItem(path);
+                // make sure the item really represents the node associated with
+                // the given userID. if not the search below is execute.
+                if (itm.isNode()) {
+                    NodeImpl tmp = (NodeImpl) itm;
+                    if (tmp.isNodeType(NT_REP_GROUP) && groupID.equals(tmp.getName())) {
+                        n = (NodeImpl) itm;
                     }
+                }
+            }
+        }
+        if (n == null) {
+            // clear eventual previous entry
+            idPathMap.remove(groupID);
+            // search for it the node belonging to that groupID
+            Name nodeName = session.getQName(groupID);
+            n = (NodeImpl) authResolver.findNode(nodeName, NT_REP_GROUP);
+        }
+        return n;
+    }
+
+    /**
+     * @return the path refering to the node associated with the user this
+     * <code>UserManager</code> has been built for.
+     */
+    private String getCurrentUserPath() {
+        // fallback: default user-path
+        String currentUserPath = USERS_PATH;;
+        String userId = session.getUserID();
+
+        if (idPathMap.containsKey(userId)) {
+            currentUserPath = idPathMap.get(userId).toString();
+        } else {
+            try {
+                Node n = getUserNode(userId);
+                if (n != null) {
+                    currentUserPath = n.getPath();
                 }
             } catch (RepositoryException e) {
                 // should never get here
                 log.error("Internal error: unable to build current user path.", e.getMessage());
             }
-            if (b.length() == 0) {
-                // fallback: default user-path
-                b.append(USERS_PATH);
-            }
-            currentUserPath = b.toString();
         }
         return currentUserPath;
     }
@@ -488,9 +551,9 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
                     if (!served.contains(node.getUUID())) {
                         Authorizable authr;
                         if (node.isNodeType(NT_REP_USER)) {
-                            authr = UserImpl.create(node, UserManagerImpl.this);
+                            authr = createUser(node);
                         } else if (node.isNodeType(NT_REP_GROUP)) {
-                            authr = GroupImpl.create(node, UserManagerImpl.this);
+                            authr = createGroup(node);
                         } else {
                             log.warn("Ignoring unexpected nodetype: " + node.getPrimaryNodeType().getName());
                             continue;
@@ -508,5 +571,4 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             return null;
         }
     }
-
 }

@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.api.jsr283.retention;
 
 import javax.jcr.RepositoryException;
 
 /**
- * <code>Hold</code> represents a hold that can be applied to an existing node in order to
- * prevent the node from being modified or removed. The format and interpretation of the name
- * are not specified. They are application-dependent.
+ * <code>Hold</code> represents a hold that can be applied to an existing node
+ * in order to prevent the node from being modified or removed. The format and
+ * interpretation of the name are not specified. They are application-dependent.
  * <p/>
  * If {@link #isDeep()} is <code>true</code>, the hold applies to the
  * node and its entire subtree. Otherwise the hold applies to the node and its
  * properties only.
  *
- * @see AccessControlManager#getHolds(String)
- * @see AccessControlManager#addHold(String, String, boolean)
- * @see AccessControlManager#removeHold(String, Hold)
+ * @see RetentionManager#getHolds(String)
+ * @see RetentionManager#addHold(String, String, boolean)
+ * @see RetentionManager#removeHold(String, Hold)
  * @since JCR 2.0
  */
 public interface Hold {
@@ -43,9 +43,9 @@ public interface Hold {
     public boolean isDeep() throws RepositoryException;
 
     /**
-     * Returns the name of this <code>Hold</code>.
+     * Returns the name of this <code>Hold</code>. A JCR name.
      *
-     * @return the name of this <code>Hold</code>.
+     * @return the name of this <code>Hold</code>. A JCR name.
      * @throws RepositoryException if an error occurs.
      */
     public String getName() throws RepositoryException;

@@ -18,10 +18,9 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
@@ -32,36 +31,19 @@ import java.security.Principal;
 public interface JackrabbitAccessControlManager extends AccessControlManager {
 
     /**
-     * Returns a policy template for the existing node at <code>absPath</code>.
-     * 
-     * @return policy template for the node at <code>absPath</code>.
-     * @throws PathNotFoundException if no node exists for the given
-     * <code>nodePath</code>.
-     * @throws AccessDeniedException if the session lacks
-     * <code>MODIFY_ACCESS_CONTROL</code> privilege for the <code>absPath</code>
-     * node.
-     * @throws AccessControlException if this implementation does not allow to
-     * edit the policy at <code>absPath</code> of if same other access
-     * control related exception occurs.
-     * @throws UnsupportedRepositoryOperationException if editing the policy
-     * is not supported.
-     * @throws RepositoryException if another error occurs.
-     */
-    PolicyTemplate editPolicy(String absPath) throws PathNotFoundException, AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * Returns a policy template for the specified <code>principal.</code>
+     * Returns the editable policies for the specified <code>principal</code>.
      *
-     * @return policy template for the specified <code>principal</code>.
+     * @return array of policies for the specified <code>principal</code>. Note
+     * that the policy object returned must reveal the path of the node where
+     * they can be applied later on.
      * @throws AccessDeniedException if the session lacks
      * <code>MODIFY_ACCESS_CONTROL</code> privilege.
-     * @throws AccessControlException if the specified principal does not exist,
-     * if this implementation does provide policy tempates for principals or
-     * if same other access control related exception occurs.
+     * @throws AccessControlException if the specified principal does not exist
+     * or if same other access control related exception occurs.
      * @throws UnsupportedRepositoryOperationException if editing the policy
      * is not supported.
      * @throws RepositoryException if another error occurs.
      */
-    PolicyTemplate editPolicy(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
+    AccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 
 }

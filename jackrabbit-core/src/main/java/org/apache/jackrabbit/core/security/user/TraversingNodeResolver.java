@@ -213,30 +213,34 @@ class TraversingNodeResolver extends NodeResolver {
 
         boolean match = false;
         if (node.isNodeType(nodeTypeName)) {
-            try {
-                if (propertyNames.isEmpty()) {
-                    match = (exact) ? node.getName().equals(value) :
-                            node.getName().matches(".*"+value+".*");
-                } else {
-                    Iterator pItr = propertyNames.iterator();
-                    while (!match && pItr.hasNext()) {
-                        Name propertyName = (Name) pItr.next();
-                        if (node.hasProperty(propertyName)) {
-                            Property prop = node.getProperty(propertyName);
-                            if (prop.getDefinition().isMultiple()) {
-                                Value[] values = prop.getValues();
-                                for (int i = 0; i < values.length && !match; i++) {
-                                    match = matches(value, values[i].getString(), exact);
+            if (value == null) {
+                match = true;
+            } else {
+                try {
+                    if (propertyNames.isEmpty()) {
+                        match = (exact) ? node.getName().equals(value) :
+                                node.getName().matches(".*"+value+".*");
+                    } else {
+                        Iterator pItr = propertyNames.iterator();
+                        while (!match && pItr.hasNext()) {
+                            Name propertyName = (Name) pItr.next();
+                            if (node.hasProperty(propertyName)) {
+                                Property prop = node.getProperty(propertyName);
+                                if (prop.getDefinition().isMultiple()) {
+                                    Value[] values = prop.getValues();
+                                    for (int i = 0; i < values.length && !match; i++) {
+                                        match = matches(value, values[i].getString(), exact);
+                                    }
+                                } else {
+                                    match = matches(value, prop.getString(), exact);
                                 }
-                            } else {
-                                match = matches(value, prop.getString(), exact);
                             }
                         }
                     }
+                } catch (PatternSyntaxException pe) {
+                    log.debug("couldn't search for {}, pattern invalid: {}",
+                            value, pe.getMessage());
                 }
-            } catch (PatternSyntaxException pe) {
-                log.debug("couldn't search for {}, pattern invalid: {}",
-                          value, pe.getMessage());
             }
         }
         return match;

@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.combined;
+package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -26,6 +27,8 @@ import javax.jcr.RepositoryException;
  * <code>GlobPattern</code>...
  */
 class GlobPattern {
+
+    //TODO: add proper impl.
 
     private static Logger log = LoggerFactory.getLogger(GlobPattern.class);
 
@@ -57,7 +60,7 @@ class GlobPattern {
         if (containsWildCard()) {
             return matches(pattern, toMatch);
         } else {
-            return pattern.equals(toMatch);
+            return pattern.equals(toMatch) || Text.isDescendant(pattern, toMatch);
         }
     }
 

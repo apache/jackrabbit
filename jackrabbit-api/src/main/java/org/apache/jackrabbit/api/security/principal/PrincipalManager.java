@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.api.security.principal;
 
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-
 import java.security.Principal;
 import java.security.acl.Group;
 

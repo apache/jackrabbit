@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.spi.Path;
 
@@ -58,12 +57,12 @@ public interface AccessControlProvider {
 
     /**
      * Allows the {@link AccessControlProviderFactory} to pass a session
-     * and configuration options to the <code>AccessControlProvider</code>.
+     * and configuration parameters to the <code>AccessControlProvider</code>.
      *
      * @param systemSession
-     * @param options
+     * @param configuration
      */
-    void init(Session systemSession, Map options) throws RepositoryException;
+    void init(Session systemSession, Map configuration) throws RepositoryException;
 
     /**
      * Closes this provider when it is no longer used by the respective
@@ -72,31 +71,16 @@ public interface AccessControlProvider {
     void close();
 
     /**
-     * Returns the effective policy for the node at the given absPath.
+     * Returns the effective policies for the node at the given absPath.
      *
      * @param absPath an absolute path.
-     * @return The effective policy that applies at <code>absPath</code>.
+     * @return The effective policies that apply at <code>absPath</code>.
      * @throws ItemNotFoundException If no Node with the specified
      * <code>absPath</code> exists.
      * @throws RepositoryException If another error occurs.
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlManager#getEffectivePolicy(String)
+     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlManager#getEffectivePolicies(String)
      */
-    AccessControlPolicy getPolicy(Path absPath) throws ItemNotFoundException, RepositoryException;
-
-    /**
-     * Returns the effective 'grant' access control entries for the node at absPath.
-     * An implementation may retrieve the entries from the effective
-     * policy or by other implementation specific means.
-     *
-     * @param absPath an absolute path.
-     * @return The effective access control entries or an empty array if
-     * no entries apply at <code>absPath</code>.
-     * @throws ItemNotFoundException If no Node with the specified
-     * <code>absPath</code> exists.
-     * @throws RepositoryException If an error occurs.
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlManager#getEffectiveAccessControlEntries(String)
-     */
-    AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException;
+    AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an <code>AccessControlEditor</code> for the given Session object
@@ -105,8 +89,9 @@ public interface AccessControlProvider {
      *
      * @param session
      * @return the ACL editor or <code>null</code>
+     * @throws RepositoryException If an error occurs.
      */
-    AccessControlEditor getEditor(Session session);
+    AccessControlEditor getEditor(Session session) throws RepositoryException;
 
     /**
      * Compiles the effective policy for the specified set of

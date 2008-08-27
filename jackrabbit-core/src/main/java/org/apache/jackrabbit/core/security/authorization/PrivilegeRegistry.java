@@ -18,9 +18,14 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,90 +35,99 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The <code>PrivilegeSet</code> represents a set of {@link Privilege}s.
+ * The <code>PrivilegeRegistry</code> defines the set of <code>Privilege</code>s
+ * known to the repository.
  */
 public final class PrivilegeRegistry {
 
-    private static final Map REGISTERED_PRIVILEGES = new HashMap(10);
+    private static final Set REGISTERED_PRIVILEGES = new HashSet(10);
     private static final Map BITS_TO_PRIVILEGES = new HashMap();
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
+
+    private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
 
     public static final int NO_PRIVILEGE = 0;
     public static final int READ = 1;
     public static final int MODIFY_PROPERTIES = 2;
     public static final int ADD_CHILD_NODES = 4;
     public static final int REMOVE_CHILD_NODES = 8;
-    public static final int READ_AC = 16;
-    public static final int MODIFY_AC =32;
+    public static final int REMOVE_NODE = 16;
+    public static final int READ_AC = 32;
+    public static final int MODIFY_AC = 64;
     public static final int WRITE = 14;
-    public static final int ALL = 63;
+    public static final int ALL = 127;
 
-    public static final Privilege READ_PRIVILEGE = registerPrivilege(Privilege.READ, READ);
-    public static final Privilege MODIFY_PROPERTIES_PRIVILEGE = registerPrivilege(Privilege.MODIFY_PROPERTIES, MODIFY_PROPERTIES);
-    public static final Privilege ADD_CHILD_NODES_PRIVILEGE = registerPrivilege(Privilege.ADD_CHILD_NODES, ADD_CHILD_NODES);
-    public static final Privilege REMOVE_CHILD_NODES_PRIVILEGE = registerPrivilege(Privilege.REMOVE_CHILD_NODES, REMOVE_CHILD_NODES);
-    public static final Privilege READ_AC_PRIVILEGE = registerPrivilege(Privilege.READ_ACCESS_CONTROL, READ_AC);
-    public static final Privilege MODIFY_AC_PRIVILEGE = registerPrivilege(Privilege.MODIFY_ACCESS_CONTROL, MODIFY_AC);
-    public static final Privilege WRITE_PRIVILEGE = registerPrivilege(Privilege.WRITE, new PrivilegeImpl[] {
-            (PrivilegeImpl) MODIFY_PROPERTIES_PRIVILEGE,
-            (PrivilegeImpl) ADD_CHILD_NODES_PRIVILEGE,
-            (PrivilegeImpl) REMOVE_CHILD_NODES_PRIVILEGE });
-    public static final Privilege ALL_PRIVILEGE = registerPrivilege(new AllPrivilege());
-
-    public static Privilege[] getRegisteredPrivileges() {
-        return (Privilege[]) REGISTERED_PRIVILEGES.values().toArray(new Privilege[REGISTERED_PRIVILEGES.size()]);
-    }
-
-    public static Privilege[] getPrivileges(String[] privilegeNames) throws AccessControlException {
-        if (privilegeNames == null || privilegeNames.length == 0) {
-            throw new AccessControlException();
-        }
-        PrivilegeImpl[] privileges = new PrivilegeImpl[privilegeNames.length];
-        for (int i = 0; i < privilegeNames.length; i++) {
-            String name = privilegeNames[i];
-            if (REGISTERED_PRIVILEGES.containsKey(name)) {
-                privileges[i] = (PrivilegeImpl) REGISTERED_PRIVILEGES.get(name);
-            } else {
-                throw new AccessControlException("Unknown privilege " + name);
-            }
-        }
-        return privileges;
-    }
+    private static final InternalPrivilege READ_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ, READ));
+    private static final InternalPrivilege MODIFY_PROPERTIES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_PROPERTIES, MODIFY_PROPERTIES));
+    private static final InternalPrivilege ADD_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ADD_CHILD_NODES, ADD_CHILD_NODES));
+    private static final InternalPrivilege REMOVE_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_CHILD_NODES, REMOVE_CHILD_NODES));
+    private static final InternalPrivilege REMOVE_NODE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_NODE, REMOVE_NODE));
+    private static final InternalPrivilege READ_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ_ACCESS_CONTROL, READ_AC));
+    private static final InternalPrivilege MODIFY_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL, MODIFY_AC));
+    private static final InternalPrivilege WRITE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_WRITE, new InternalPrivilege[] {
+            MODIFY_PROPERTIES_PRIVILEGE,
+            ADD_CHILD_NODES_PRIVILEGE,
+            REMOVE_CHILD_NODES_PRIVILEGE }));
+    private static final InternalPrivilege ALL_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ALL, new InternalPrivilege[] {
+            READ_PRIVILEGE,
+            WRITE_PRIVILEGE,
+            REMOVE_NODE_PRIVILEGE,
+            READ_AC_PRIVILEGE,
+            MODIFY_AC_PRIVILEGE}));
 
     /**
+     * The name resolver used to determine the correct privilege
+     * {@link Privilege#getName() name} depending on the sessions namespace
+     * mappings.
+     */
+    private final NameResolver resolver;
+
+    /**
+     * Per instance map containing the instance specific representation of
+     * the registered privileges.
+     */
+    private final Map localCache;
+
+    /**
+     * Create a new <code>PrivilegeRegistry</code> instance.
      *
-     * @param privilegeNames
-     * @return
-     * @throws AccessControlException if the specified <code>privilegeNames</code>
-     * are <code>null</code>, an empty array or if any of the names is not known
-     * to this registry.
+     * @param resolver NameResolver used to calculate the JCR name of the
+     * privileges.
      */
-    public static int getBits(String[] privilegeNames) throws AccessControlException {
-        if (privilegeNames == null || privilegeNames.length == 0) {
-            throw new AccessControlException();
+    public PrivilegeRegistry(NameResolver resolver) {
+        this.resolver = resolver;
+        localCache = new HashMap(REGISTERED_PRIVILEGES.size());
+        for (Iterator it = REGISTERED_PRIVILEGES.iterator(); it.hasNext();) {
+            InternalPrivilege ip = (InternalPrivilege) it.next();
+            Privilege priv = new PrivilegeImpl(ip, resolver);
+            localCache.put(ip.name, priv);
         }
-        PrivilegeImpl[] privileges = new PrivilegeImpl[privilegeNames.length];
-        for (int i = 0; i < privilegeNames.length; i++) {
-            String name = privilegeNames[i];
-            if (REGISTERED_PRIVILEGES.containsKey(name)) {
-                privileges[i] = (PrivilegeImpl) REGISTERED_PRIVILEGES.get(name);
-            } else {
-                throw new AccessControlException("Unknown privilege " + name);
-            }
-        }
-        return PrivilegeImpl.getBits(privileges, false);
     }
 
     /**
-     * @param privileges
-     * @return
-     * @throws AccessControlException If the specified array is null
-     * or if it contains an unregistered privilege.
+     * Returns all registered privileges.
+     *
+     * @return all registered privileges.
      */
-    public static int getBits(Privilege[] privileges) throws AccessControlException {
-        if (privileges == null || privileges.length == 0) {
-            throw new AccessControlException();
+    public Privilege[] getRegisteredPrivileges() {
+        return (Privilege[]) localCache.values().toArray(new Privilege[localCache.size()]);
+    }
+
+    /**
+     * Returns the privilege with the specified <code>privilegeName</code>.
+     *
+     * @param privilegeName
+     * @return the privilege with the specified <code>privilegeName</code>.
+     * @throws AccessControlException If no privilege with the given name exists.
+     * @throws RepositoryException If another error occurs.
+     */
+    public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
+        Name name = resolver.getQName(privilegeName);
+        if (localCache.containsKey(name)) {
+            return (Privilege) localCache.get(name);
+        } else {
+            throw new AccessControlException("Unknown privilege " + privilegeName);
         }
-        return PrivilegeImpl.getBits(privileges, false);
     }
 
     /**
@@ -129,63 +143,52 @@ public final class PrivilegeRegistry {
      * or an empty array if <code>bits</code> is lower than {@link #READ} or
      * cannot be resolved to registered <code>Privilege</code>s.
      */
-    public static Privilege[] getPrivileges(int bits) {
-        Privilege[] privs = new Privilege[0];
+    public Privilege[] getPrivileges(int bits) {
+        Privilege[] privs;
         if (bits > NO_PRIVILEGE) {
-            PrivilegeImpl privilege = getPrivilege(bits);
-            if (REGISTERED_PRIVILEGES.containsKey(privilege.getName())) {
-                privs = new Privilege[] {privilege};
-            } else {
-                privs = privilege.getDeclaredAggregatePrivileges();
+            InternalPrivilege[] internalPrivs = getInteralPrivileges(bits);
+            privs = new Privilege[internalPrivs.length];
+            for (int i = 0; i < internalPrivs.length; i++) {
+                privs[i] = (Privilege) localCache.get(internalPrivs[i].name);
             }
+        } else {
+            privs = new Privilege[0];
         }
         return privs;
     }
 
     /**
-     * Returns those bits from <code>bits</code> that are not present in
-     * the <code>otherBits</code>, i.e. subtracts the other privileges from
-     * this one.<br>
-     * If the specified <code>otherBits</code> do not intersect with
-     * <code>bits</code>,  <code>bits</code> are returned.<br>
-     * If <code>bits</code> is included <code>otherBits</code>,
-     * {@link #NO_PRIVILEGE} is returned.
-     *
-     * @param bits
-     * @param otherBits
-     * @return the differences of the 2 privileges or <code>{@link #NO_PRIVILEGE}</code>.
-     */
-    public static int diff(int bits, int otherBits) {
-        return bits & ~otherBits;
-    }
-
-    /**
-     *
-     * @param name
-     * @param description
      * @param privileges
-     * @return new aggregate from the specified privileges.
+     * @return
+     * @throws AccessControlException If the specified array is null
+     * or if it contains an unregistered privilege.
      */
-    private static PrivilegeImpl getPrivilege(String name, String description, PrivilegeImpl[] privileges) {
-        return new AggregatePrivilege(name, description, privileges);
+    public static int getBits(Privilege[] privileges) throws AccessControlException {
+        if (privileges == null || privileges.length == 0) {
+            throw new AccessControlException();
+        }
+        int bits = NO_PRIVILEGE;
+        for (int i = 0; i < privileges.length; i++) {
+            Privilege priv = privileges[i];
+            if (priv instanceof PrivilegeImpl) {
+                bits |= ((PrivilegeImpl) priv).internalPrivilege.getBits();
+            } else {
+                throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
+            }
+        }
+        return bits;
     }
 
     /**
      *
      * @param bits
-     * @return PrivilegeImpl that corresponds to the given bits.
+     * @return InternalPrivilege that corresponds to the given bits.
      */
-    private static PrivilegeImpl getPrivilege(int bits) {
-        PrivilegeImpl priv = null;
+    private static InternalPrivilege[] getInteralPrivileges(int bits) {
         Object key = new Integer(bits);
         if (BITS_TO_PRIVILEGES.containsKey(key)) {
-            return (PrivilegeImpl) BITS_TO_PRIVILEGES.get(key);
+            return (InternalPrivilege[]) BITS_TO_PRIVILEGES.get(key);
         } else {
-            // shortcut
-            if ((bits & ALL) == ALL) {
-                return (PrivilegeImpl) ALL_PRIVILEGE;
-            }
-
             List privileges = new ArrayList();
             if ((bits & READ) == READ) {
                 privileges.add(READ_PRIVILEGE);
@@ -203,6 +206,9 @@ public final class PrivilegeRegistry {
                     privileges.add(REMOVE_CHILD_NODES_PRIVILEGE);
                 }
             }
+            if ((bits & REMOVE_NODE) == REMOVE_NODE) {
+                privileges.add(REMOVE_NODE_PRIVILEGE);
+            }
             if ((bits & READ_AC) == READ_AC) {
                 privileges.add(READ_AC_PRIVILEGE);
             }
@@ -210,106 +216,161 @@ public final class PrivilegeRegistry {
                 privileges.add(MODIFY_AC_PRIVILEGE);
             }
 
+            InternalPrivilege[] privs;
             if (!privileges.isEmpty()) {
-                if (privileges.size() == 1) {
-                    priv = (PrivilegeImpl) privileges.get(0);
-                } else {
-                    String name = "AggregatePrivilege" + bits;
-                    priv = getPrivilege(name, null, (PrivilegeImpl[]) privileges.toArray(new PrivilegeImpl[privileges.size()]));
-                }
-                BITS_TO_PRIVILEGES.put(key, priv);
+                privs = (InternalPrivilege[]) privileges.toArray(new InternalPrivilege[privileges.size()]);
+                BITS_TO_PRIVILEGES.put(key, privs);
+            } else {
+                privs = new InternalPrivilege[0];
             }
-            return priv;
+            return privs;
         }
     }
 
-    private static Privilege registerPrivilege(String name, int bits) {
-        PrivilegeImpl priv = new SimplePrivilege(name, null, bits);
-        return registerPrivilege(priv);
-    }
-
-    private static Privilege registerPrivilege(String name, PrivilegeImpl[] privileges) {
-        PrivilegeImpl priv = getPrivilege(name, null, privileges);
-        return registerPrivilege(priv);
-    }
-
-    private static Privilege registerPrivilege(PrivilegeImpl privilege) {
-        REGISTERED_PRIVILEGES.put(privilege.getName(), privilege);
-        BITS_TO_PRIVILEGES.put(new Integer(privilege.getBits()), privilege);
+    private static InternalPrivilege registerPrivilege(InternalPrivilege privilege) {
+        REGISTERED_PRIVILEGES.add(privilege);
+        BITS_TO_PRIVILEGES.put(new Integer(privilege.getBits()), new InternalPrivilege[] {privilege});
         return privilege;
     }
 
     //--------------------------------------------------------------------------
     /**
-     * Avoid instanciation of the <code>PrivilegeRegistry</code>.
+     * Internal representation of the registered privileges (without JCR
+     * name).
      */
-    private PrivilegeRegistry() {}
+    private static class InternalPrivilege {
 
-    //--------------------------------------------------------------------------
-    /**
-     *
-     */
-    private static abstract class PrivilegeImpl implements Privilege {
+        private final Name name;
+        private final boolean isAbstract = false;
+        private final boolean isAggregate;
+        private final InternalPrivilege[] declaredAggregates;
+        private final Set aggregates;
 
-        static final Privilege[] EMPTY_ARRAY = new Privilege[0];
+        private final int bits;
 
-        private final String name;
-        private final String description;
-
-        private PrivilegeImpl(String name, String description) {
+        /**
+         * Create a simple (non-aggregate) internal privilege.
+         */
+        private InternalPrivilege(String name, int bits) {
             if (name == null) {
                 throw new IllegalArgumentException("A privilege must have a name.");
             }
-            this.name = name;
-            this.description = description;
-        }
+            this.name = NAME_FACTORY.create(name);
+            this.bits = bits;
 
-        abstract int getBits();
-
-        //------------------------------------------------------< Privilege >---
-        public String getName() {
-            return name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public boolean isAbstract() {
-            return false;
+            declaredAggregates = null;
+            aggregates = null;
+            isAggregate = false;
         }
 
         /**
-         * @param  privileges to get the bit representation for
-         * @param ignoreUnkown
-         * @return bit representing the Action
-         * @throws AccessControlException If <code>ignoreUnkown</code> is false
-         * and any of the specified privileges not a registered privilege.
+         * Create an aggregate internal privilege
          */
-        private static int getBits(Privilege[] privileges, boolean ignoreUnkown) throws AccessControlException {
-            int bits = NO_PRIVILEGE;
-            for (int i = 0; i < privileges.length; i++) {
-                Privilege priv = privileges[i];
-                if (priv instanceof PrivilegeImpl) {
-                    bits |= ((PrivilegeImpl) priv).getBits();
-                } else if (priv.isAggregate()) {
-                    // try to resolve the aggregates
-                    bits |= getBits(priv.getDeclaredAggregatePrivileges(), ignoreUnkown);
+        private InternalPrivilege(String name, InternalPrivilege[] declaredAggregates) {
+            if (name == null) {
+                throw new IllegalArgumentException("A privilege must have a name.");
+            }
+            this.name = NAME_FACTORY.create(name);
+            this.declaredAggregates = declaredAggregates;
+
+            Set aggrgt = new HashSet();
+            int bts = 0;
+            for (int i = 0; i < declaredAggregates.length; i++) {
+                InternalPrivilege priv = declaredAggregates[i];
+                bts |= priv.getBits();
+                if (priv.isAggregate) {
+                    aggrgt.addAll(priv.aggregates);
                 } else {
-                    PrivilegeImpl p = (PrivilegeImpl) REGISTERED_PRIVILEGES.get(priv.getName());
-                    if (p != null) {
-                        bits |= p.getBits();
-                    } else if (!ignoreUnkown) {
-                        throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
-                    }
+                    aggrgt.add(priv);
                 }
             }
+            aggregates = Collections.unmodifiableSet(aggrgt);
+            bits = bts;
+            isAggregate = true;
+        }
+
+        int getBits() {
             return bits;
         }
 
         //---------------------------------------------------------< Object >---
         public int hashCode() {
-            return getBits();
+            return bits;
+        }
+
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof InternalPrivilege) {
+                return bits == ((InternalPrivilege) obj).bits;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Simple wrapper used to provide an public representation of the
+     * registered internal privileges properly exposing the JCR name.
+     */
+    private class PrivilegeImpl implements Privilege {
+
+        private final InternalPrivilege internalPrivilege;
+        private final NameResolver resolver;
+
+        private PrivilegeImpl(InternalPrivilege internalPrivilege,
+                              NameResolver resolver) {
+            this.internalPrivilege = internalPrivilege;
+            this.resolver = resolver;
+        }
+
+        public String getName() {
+            try {
+                return resolver.getJCRName(internalPrivilege.name);
+            } catch (NamespaceException e) {
+                // should not occur -> return internal name representation.
+                return internalPrivilege.name.toString();
+            }
+        }
+
+        public boolean isAbstract() {
+            return internalPrivilege.isAbstract;
+        }
+
+        public boolean isAggregate() {
+            return internalPrivilege.isAggregate;
+        }
+
+        public Privilege[] getDeclaredAggregatePrivileges() {
+            if (internalPrivilege.isAggregate) {
+                int len = internalPrivilege.declaredAggregates.length;
+                Privilege[] privs = new Privilege[len];
+                for (int i = 0; i < len; i++) {
+                    InternalPrivilege ip = internalPrivilege.declaredAggregates[i];
+                    privs[i] = (Privilege) localCache.get(ip.name);
+                }
+                return privs;
+            } else {
+                return EMPTY_ARRAY;
+            }
+        }
+
+        public Privilege[] getAggregatePrivileges() {
+            if (internalPrivilege.isAggregate) {
+                Privilege[] privs = new Privilege[internalPrivilege.aggregates.size()];
+                int i = 0;
+                for (Iterator it = internalPrivilege.aggregates.iterator(); it.hasNext();) {
+                    InternalPrivilege ip = (InternalPrivilege) it.next();
+                    privs[i++] = (Privilege) localCache.get(ip.name);
+                }
+                return privs;
+            } else {
+                return EMPTY_ARRAY;
+            }
+        }
+
+        public int hashCode() {
+            return internalPrivilege.hashCode();
         }
 
         public boolean equals(Object obj) {
@@ -317,119 +378,10 @@ public final class PrivilegeRegistry {
                 return true;
             }
             if (obj instanceof PrivilegeImpl) {
-                return getBits() == ((PrivilegeImpl) obj).getBits();
+                PrivilegeImpl other = (PrivilegeImpl) obj;
+                return internalPrivilege.equals(other.internalPrivilege);
             }
             return false;
-        }
-    }
-
-    /**
-     * Simple (non-aggregate) privilege.
-     */
-    private static class SimplePrivilege extends PrivilegeImpl {
-
-        private final int bits;
-
-        private SimplePrivilege(String name, String description, int bits) {
-            super(name, description);
-            this.bits = bits;
-        }
-
-        int getBits() {
-            return bits;
-        }
-
-        //------------------------------------------------------< Privilege >---
-
-        public boolean isAggregate() {
-            return false;
-        }
-
-        public Privilege[] getDeclaredAggregatePrivileges() {
-            return EMPTY_ARRAY;
-        }
-
-        public Privilege[] getAggregatePrivileges() {
-            return EMPTY_ARRAY;
-        }
-    }
-
-    /**
-     * Aggregate privilege
-     */
-    private static class AggregatePrivilege extends PrivilegeImpl {
-
-        private final Privilege[] declaredAggregates;
-        private final Set aggregates;
-        private final int bits;
-
-        private AggregatePrivilege(String name, String description, PrivilegeImpl[] declaredAggregates) {
-            super(name, description);
-            this.declaredAggregates = declaredAggregates;
-            Set aggrgt = new HashSet();
-            int bts = 0;
-            for (int i = 0; i < declaredAggregates.length; i++) {
-                PrivilegeImpl priv = declaredAggregates[i];
-                bts |= priv.getBits();
-                if (priv.isAggregate()) {
-                    aggrgt.addAll(Arrays.asList(priv.getAggregatePrivileges()));
-                } else {
-                    aggrgt.add(priv);
-                }
-            }
-            aggregates = Collections.unmodifiableSet(aggrgt);
-            bits = bts;
-        }
-
-        int getBits() {
-            return bits;
-        }
-
-        //------------------------------------------------------< Privilege >---
-        public boolean isAggregate() {
-            return true;
-        }
-
-        public Privilege[] getDeclaredAggregatePrivileges() {
-            return declaredAggregates;
-        }
-
-        public Privilege[] getAggregatePrivileges() {
-            return (Privilege[]) aggregates.toArray(new Privilege[aggregates.size()]);
-        }
-    }
-
-    /**
-     * The ALL privilege
-     */
-    private static class AllPrivilege extends PrivilegeImpl {
-
-        private AllPrivilege() {
-            super(Privilege.ALL, null);
-        }
-
-        int getBits() {
-            return PrivilegeRegistry.ALL;
-        }
-
-        //------------------------------------------------------< Privilege >---
-        public boolean isAggregate() {
-            return true;
-        }
-
-        public Privilege[] getDeclaredAggregatePrivileges() {
-            return getAggregatePrivileges();
-        }
-
-        public Privilege[] getAggregatePrivileges() {
-            Set all = new HashSet(REGISTERED_PRIVILEGES.values());
-            for (Iterator it = all.iterator(); it.hasNext();) {
-                Privilege priv = (Privilege) it.next();
-                if (priv.isAggregate()) {
-                    it.remove();
-                }
-            }
-            return (Privilege[]) all.toArray(new Privilege[all.size()]);
         }
     }
 }

@@ -29,12 +29,12 @@ public interface AccessControlConstants {
 
     //---------------------------------------------------------< node names >---
     /**
-     * rep:policy node name
+     * Default name for a node of type rep:Policy.
      */
     Name N_POLICY = NF.create(Name.NS_REP_URI, "policy");
 
     /**
-     * Combined-ACL:
+     * PrincipalBased-ACL:
      * Name of the root-node of all access-control-nodes that store the
      * privileges for individual principals. This node is created upon
      * initializing this provider.
@@ -50,18 +50,6 @@ public interface AccessControlConstants {
      * rep:principalName property name
      */
     Name P_PRINCIPAL_NAME = NF.create(Name.NS_REP_URI, "principalName");
-    /**
-     * rep:nodePath property name (optional if the ACL is stored with the
-     * node itself).
-     */
-    Name P_NODE_PATH = NF.create(Name.NS_REP_URI, "nodePath");
-    /**
-     * rep:glob property name used to restrict the number of child nodes
-     * or properties that are affected by the privileges applied at
-     * rep:nodePath
-     */
-    Name P_GLOB = NF.create(Name.NS_REP_URI, "glob");
-
 
     //----------------------------------------------------< node type names >---
     /**

@@ -31,10 +31,7 @@ import java.security.Principal;
  * @see User#getImpersonation()
  */
 public interface Impersonation {
-
-    // TODO: ev. add method that allows to display principals/users that are allowed to impersonate.
-    // TODO: ev. grantImpersonation/revokeImpersonation should take User
-
+    
     /**
      * @return An iterator over the <code>Principal</code>s that are allowed
      * to impersonate the <code>User</code> this <code>Impersonation</code>

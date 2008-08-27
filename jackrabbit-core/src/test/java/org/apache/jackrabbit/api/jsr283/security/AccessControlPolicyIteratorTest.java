@@ -37,7 +37,7 @@ public class AccessControlPolicyIteratorTest extends AbstractAccessControlTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        // policy-option is cover the by the 'OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED' -> see super-class
+        // policy-option is cover the by the 'OPTION_ACCESS_CONTROL_SUPPORTED' -> see super-class
 
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();

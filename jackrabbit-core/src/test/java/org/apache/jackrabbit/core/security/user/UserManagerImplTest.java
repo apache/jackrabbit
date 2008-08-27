@@ -20,11 +20,12 @@ import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -41,13 +42,17 @@ import java.util.Set;
  */
 public class UserManagerImplTest extends AbstractUserTest {
 
-    private static Logger log = LoggerFactory.getLogger(UserManagerImplTest.class);
+    private String pPrincipalName;
+    private String pUserID;
 
     protected void setUp() throws Exception {
         super.setUp();
         if (!(userMgr instanceof UserManagerImpl)) {
             throw new NotExecutableException("UserManagerImpl expected -> cannot perform test.");
         }
+        NameResolver resolver = (SessionImpl) superuser;
+        pPrincipalName = resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME);
+        pUserID = resolver.getJCRName(UserConstants.P_USERID);
     }
 
     private String getTestUserId(Principal p) throws RepositoryException {
@@ -211,7 +216,7 @@ public class UserManagerImplTest extends AbstractUserTest {
             if (auth != null) {
                 if (!auth.isGroup() && auth.hasProperty("rep:userId")) {
                     String val = auth.getProperty("rep:userId")[0].getString();
-                    Iterator users = userMgr.findAuthorizable("rep:userId", val);
+                    Iterator users = userMgr.findAuthorizables("rep:userId", val);
 
                     // the result must contain 1 authorizable
                     assertTrue(users.hasNext());
@@ -235,7 +240,7 @@ public class UserManagerImplTest extends AbstractUserTest {
             auth.setProperty("E-Mail", new Value[] { superuser.getValueFactory().createValue("anyVal")});
 
             boolean found = false;
-            Iterator result = userMgr.findAuthorizable("E-Mail", "anyVal");
+            Iterator result = userMgr.findAuthorizables("E-Mail", "anyVal");
             while (result.hasNext()) {
                 Authorizable a = (Authorizable) result.next();
                 if (a.getID().equals(auth.getID())) {
@@ -260,14 +265,14 @@ public class UserManagerImplTest extends AbstractUserTest {
             u = userMgr.createUser(uid, buildPassword(uid, false), p, null);
 
             boolean found = false;
-            Iterator it = ((UserManagerImpl)userMgr).findUsers("");
+            Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
             while (it.hasNext() && !found) {
                 User nu = (User) it.next();
                 found = nu.getID().equals(uid);
             }
-            assertTrue("Searching for \"\" must find the created user.", found);
+            assertTrue("Searching for 'null' must find the created user.", found);
 
-            it = ((UserManagerImpl)userMgr).findUsers(p.getName());
+            it = userMgr.findAuthorizables(pPrincipalName, p.getName(), UserManager.SEARCH_TYPE_USER);
             found = false;
             while (it.hasNext() && !found) {
                 User nu = (User) it.next();
@@ -275,7 +280,7 @@ public class UserManagerImplTest extends AbstractUserTest {
             }
             assertTrue("Searching for principal-name must find the created user.", found);
 
-            it = ((UserManagerImpl)userMgr).findUsers(uid);
+            it = userMgr.findAuthorizables(pUserID, uid, UserManager.SEARCH_TYPE_USER);
             found = false;
             while (it.hasNext() && !found) {
                 User nu = (User) it.next();
@@ -284,10 +289,10 @@ public class UserManagerImplTest extends AbstractUserTest {
             assertTrue("Searching for user id must find the created user.", found);
 
             // but search groups should not find anything
-            it = ((UserManagerImpl)userMgr).findGroups(uid);
+            it = userMgr.findAuthorizables(pPrincipalName, p.getName(), UserManager.SEARCH_TYPE_GROUP);
             assertFalse(it.hasNext());
 
-            it = ((UserManagerImpl)userMgr).findGroups("");
+            it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
             while (it.hasNext()) {
                 if (((Authorizable) it.next()).getPrincipal().getName().equals(p.getName())) {
                     fail("Searching for Groups should never find a user");
@@ -307,26 +312,24 @@ public class UserManagerImplTest extends AbstractUserTest {
             gr = userMgr.createGroup(p);
 
             boolean found = false;
-            Iterator it = ((UserManagerImpl)userMgr).findGroups("");
+            Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
             while (it.hasNext() && !found) {
                 Group ng = (Group) it.next();
                 found = ng.getPrincipal().getName().equals(p.getName());
             }
             assertTrue("Searching for \"\" must find the created group.", found);
 
-            it = ((UserManagerImpl)userMgr).findGroups(p.getName());
-            found = false;
-            while (it.hasNext() && !found) {
-                Group ng = (Group) it.next();
-                found = ng.getPrincipal().getName().equals(p.getName());
-            }
-            assertTrue("Searching for principal-name must find the created group.", found);
+            it = userMgr.findAuthorizables(pPrincipalName, p.getName(), UserManager.SEARCH_TYPE_GROUP);
+            assertTrue(it.hasNext());
+            Group ng = (Group) it.next();
+            assertEquals("Searching for principal-name must find the created group.", p.getName(), ng.getPrincipal().getName());
+            assertFalse("Only a single group must be found for a given principal name.", it.hasNext());
 
             // but search users should not find anything
-            it = ((UserManagerImpl)userMgr).findUsers(p.getName());
+            it = userMgr.findAuthorizables(pPrincipalName, p.getName(), UserManager.SEARCH_TYPE_USER);
             assertFalse(it.hasNext());
 
-            it = ((UserManagerImpl)userMgr).findUsers("");
+            it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
             while (it.hasNext()) {
                 if (((Authorizable) it.next()).getPrincipal().getName().equals(p.getName())) {
                     fail("Searching for Users should never find a group");
@@ -340,14 +343,14 @@ public class UserManagerImplTest extends AbstractUserTest {
     }
 
     public void testFindAllUsers() throws RepositoryException {
-        Iterator it = ((UserManagerImpl)userMgr).findUsers("");
+        Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_USER);
         while (it.hasNext()) {
             assertFalse(((Authorizable) it.next()).isGroup());
         }
     }
 
     public void testFindAllGroups() throws RepositoryException {
-        Iterator it = ((UserManagerImpl)userMgr).findGroups("");
+        Iterator it = userMgr.findAuthorizables(pPrincipalName, null, UserManager.SEARCH_TYPE_GROUP);
         while (it.hasNext()) {
             assertTrue(((Authorizable) it.next()).isGroup());
         }

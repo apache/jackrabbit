@@ -74,9 +74,11 @@ public class AuthContextProvider {
     }
 
     /**
-     * @param credentials to authenticate
-     * @param subject subject to extend authentication
-     * @param session Session to pass to the login-modules
+     *
+     * @param credentials
+     * @param subject
+     * @param session
+     * @param principalProviderRegistry
      * @return context of for authentication and log-out
      * @throws RepositoryException in case neither an <code>JAASContext</code>
      * nor a <code>LocalContext</code> can be successfully created.
@@ -84,10 +86,12 @@ public class AuthContextProvider {
     public AuthContext getAuthContext(Credentials credentials,
                                       Subject subject,
                                       Session session,
-                                      PrincipalProviderRegistry principalProviderRegistry)
+                                      PrincipalProviderRegistry principalProviderRegistry,
+                                      String adminId,
+                                      String anonymousId)
             throws RepositoryException {
 
-        CallbackHandler cbHandler = new CallbackHandlerImpl(credentials, session, principalProviderRegistry);
+        CallbackHandler cbHandler = new CallbackHandlerImpl(credentials, session, principalProviderRegistry, adminId, anonymousId);
 
         if (isJAAS()) {
             return new JAASAuthContext(appName, cbHandler, subject);

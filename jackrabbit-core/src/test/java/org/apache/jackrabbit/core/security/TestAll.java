@@ -28,7 +28,7 @@ public class TestAll extends TestCase {
      * @return a <code>Test</code> suite that executes all security test.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Security tests");
+        TestSuite suite = new TestSuite("core.security tests");
 
         suite.addTestSuite(AccessManagerTest.class);
 

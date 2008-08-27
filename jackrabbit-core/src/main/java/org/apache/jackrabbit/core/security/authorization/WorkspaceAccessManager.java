@@ -44,8 +44,8 @@ public interface WorkspaceAccessManager {
     void close() throws RepositoryException;
 
     /**
-     * Returns true if access to the workspace with the given name is granted to
-     * the to any of the specified principals.
+     * Returns <code>true</code> if access to the workspace with the given name
+     * is granted to the to any of the specified principals.
      *
      * @param principals
      * @param workspaceName

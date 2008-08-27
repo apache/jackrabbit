@@ -16,169 +16,162 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.core.security.authorization.AbstractPolicyTemplateTest;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
+import java.security.acl.Group;
+import java.util.Collections;
 
 /**
  * <code>ACLTemplateTest</code>...
  */
-public class ACLTemplateTest extends AbstractPolicyTemplateTest {
-
-    private static Logger log = LoggerFactory.getLogger(ACLTemplateTest.class);
+public class ACLTemplateTest extends AbstractACLTemplateTest {
 
     protected String getTestPath() {
         return "/ab/c/d";
     }
 
-    protected PolicyTemplate createEmptyTemplate(String path) {
-        return new ACLTemplate(path);
+    protected JackrabbitAccessControlList createEmptyTemplate(String path) throws RepositoryException {
+        SessionImpl sImpl = (SessionImpl) superuser;
+        PrincipalManager princicipalMgr = sImpl.getPrincipalManager();
+        PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(sImpl);
+        return new ACLTemplate(path, princicipalMgr, privilegeRegistry);
     }
 
-    public void testAddEntry() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        assertTrue(pt.setEntry(new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true)));
-    }
-
-    public void testAddEntryTwice() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-
-        pt.setEntry(pe);
-        assertFalse(pt.setEntry(pe));
-    }
-
-    public void testRevokeEffect() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-
-        pt.setEntry(pe);
-
-        // same entry but with revers 'isAllow' flag
-        pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, false);
-        assertTrue(pt.setEntry(pe));
-
-        // net-effect: only a single deny-read entry
-        assertTrue(pt.size() == 1);
-        assertEquals(pt.getEntries()[0], pe);
-    }
-
-    public void testEffect() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-
-        pt.setEntry(pe);
+    public void testMultipleEntryEffect() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        pt.addEntry(testPrincipal, privileges, true, Collections.EMPTY_MAP);
 
         // new entry extends privs.
-        pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ | PrivilegeRegistry.ADD_CHILD_NODES, true);
-        assertTrue(pt.setEntry(pe));
+        privileges = privilegesFromNames(new String[] {
+                Privilege.JCR_READ,
+                Privilege.JCR_ADD_CHILD_NODES});
+        assertTrue(pt.addEntry(testPrincipal,
+                privileges,
+                true, Collections.EMPTY_MAP));
 
         // net-effect: only a single allow-entry with both privileges
         assertTrue(pt.size() == 1);
-        assertEquals(pt.getEntries()[0], pe);
+        assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
 
-        // new entry revokes READ priv
-        pe = new ACEImpl(testPrincipal, PrivilegeRegistry.ADD_CHILD_NODES, true);
-        assertTrue(pt.setEntry(pe));
-        // net-effect: only a single allow-entry with add_child_nodes priv
+        // adding just ADD_CHILD_NODES -> must not remove READ priv
+        Privilege[] achPrivs = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+        assertFalse(pt.addEntry(testPrincipal, achPrivs, true, Collections.EMPTY_MAP));
+        // net-effect: only a single allow-entry with add_child_nodes + read priv
         assertTrue(pt.size() == 1);
-        assertEquals(pt.getEntries()[0], pe);
-    }
+        assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
 
-    public void testEffect2() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-        pt.setEntry(pe);
-
-        // add deny entry for mod_props
-        PolicyEntry pe2 = new ACEImpl(testPrincipal, PrivilegeRegistry.MODIFY_PROPERTIES, false);
-        assertTrue(pt.setEntry(pe2));
-
-        // net-effect: 2 entries
+        // revoke the 'READ' privilege
+        privileges = privilegesFromName(Privilege.JCR_READ);
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.EMPTY_MAP));
+        // net-effect: 2 entries one allowing ADD_CHILD_NODES, the other denying READ
         assertTrue(pt.size() == 2);
-        assertEquals(pt.getEntries()[0], pe);
-        assertEquals(pt.getEntries()[1], pe2);
+        assertSamePrivileges(privilegesFromName(Privilege.JCR_ADD_CHILD_NODES),
+                pt.getAccessControlEntries()[0].getPrivileges());
+        assertSamePrivileges(privilegesFromName(Privilege.JCR_READ),
+                pt.getAccessControlEntries()[1].getPrivileges());
+
+        // remove the deny-READ entry
+        pt.removeAccessControlEntry(pt.getAccessControlEntries()[1]);
+        assertTrue(pt.size() == 1);
+        assertSamePrivileges(privilegesFromName(Privilege.JCR_ADD_CHILD_NODES),
+                pt.getAccessControlEntries()[0].getPrivileges());
+
+        // remove the allow-ADD_CHILD_NODES entry
+        pt.removeAccessControlEntry(pt.getAccessControlEntries()[0]);
+        assertTrue(pt.isEmpty());
     }
 
-    public void testEffect3() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.WRITE, true);
-
-        pt.setEntry(pe);
+    public void testMultipleEntryEffect2() throws RepositoryException, NotExecutableException {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_WRITE);
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+        pt.addAccessControlEntry(testPrincipal, privileges);
 
         // add deny entry for mod_props
-        PolicyEntry pe2 = new ACEImpl(testPrincipal, PrivilegeRegistry.MODIFY_PROPERTIES, false);
-        assertTrue(pt.setEntry(pe2));
+        privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, null));
 
         // net-effect: 2 entries with the allow entry being adjusted
         assertTrue(pt.size() == 2);
-        PolicyEntry[] entries = pt.getEntries();
+        AccessControlEntry[] entries = pt.getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
-            int privs = entries[i].getPrivilegeBits();
-            if (entries[i].isAllow()) {
-                assertTrue(privs == (PrivilegeRegistry.ADD_CHILD_NODES | PrivilegeRegistry.REMOVE_CHILD_NODES));
+            JackrabbitAccessControlEntry entry = (JackrabbitAccessControlEntry) entries[i];
+            int privs = entry.getPrivilegeBits();
+            if (entry.isAllow()) {
+                assertEquals(privs, (PrivilegeRegistry.ADD_CHILD_NODES | PrivilegeRegistry.REMOVE_CHILD_NODES));
             } else {
-                assertTrue(privs == PrivilegeRegistry.MODIFY_PROPERTIES);
+                assertEquals(privs, PrivilegeRegistry.MODIFY_PROPERTIES);
             }
         }
     }
 
-    public void testMultiplePrincipals() throws RepositoryException {
-        Principal princ2 = new Principal() {
-            public String getName() {
-                return "AnotherPrincipal";
+    public void testMultiplePrincipals() throws RepositoryException, NotExecutableException {
+        PrincipalManager pMgr = ((JackrabbitSession) superuser).getPrincipalManager();
+        Principal everyone = pMgr.getEveryone();
+        Principal grPrincipal = null;
+        PrincipalIterator it = pMgr.findPrincipals("", PrincipalManager.SEARCH_TYPE_GROUP);
+        while (it.hasNext()) {
+            Group gr = (Group) it.nextPrincipal();
+            if (!everyone.equals(gr)) {
+                grPrincipal = gr;
             }
-        };
+        }
+        if (grPrincipal == null || grPrincipal.equals(everyone)) {
+            throw new NotExecutableException();
+        }
+        Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
 
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-        pt.setEntry(pe);
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+        pt.addAccessControlEntry(testPrincipal, privs);
+        assertFalse(pt.addAccessControlEntry(testPrincipal, privs));
 
-        // add deny entry for mod_props
-        pe = new ACEImpl(princ2, PrivilegeRegistry.READ, true);
-        assertTrue(pt.setEntry(pe));
-        assertTrue(pt.getEntries().length == 2);
+        // add same privs for another principal -> must modify as well.
+        assertTrue(pt.addAccessControlEntry(everyone, privs));
+        // .. 2 entries must be present.
+        assertTrue(pt.getAccessControlEntries().length == 2);
     }
 
-    public void testRemoveEntry() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-        pt.setEntry(pe);
-
-        assertTrue(pt.removeEntry(pe));
-    }
-
-    public void testRemoveNonExisting() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
-        PolicyEntry pe = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, true);
-        pt.setEntry(pe);
-        PolicyEntry pe2 = new ACEImpl(testPrincipal, PrivilegeRegistry.READ, false);
-        pt.setEntry(pe2);
-
-        assertFalse(pt.removeEntry(pe));
-    }
-
-    public void testSetEntryForGroupPrincipal() throws RepositoryException {
-        PolicyTemplate pt = createEmptyTemplate(getTestPath());
+    public void testSetEntryForGroupPrincipal() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+        Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
+        Group grPrincipal = (Group) pMgr.getEveryone();
 
         // adding allow-entry must succeed
-        PolicyEntry pe = new ACEImpl(testGroup, PrivilegeRegistry.READ, true);
-        assertTrue(pt.setEntry(pe));
+        assertTrue(pt.addAccessControlEntry(grPrincipal, privs));
 
         // adding deny-entry must succeed
-        pe = new ACEImpl(testGroup, PrivilegeRegistry.READ, false);
         try {
-            pt.setEntry(pe);
+            pt.addEntry(grPrincipal, privs, false, null);
             fail("Adding DENY-ace for a group principal should fail.");
         } catch (AccessControlException e) {
             // success
         }
+    }
+
+    public void testRevokeEffect() throws RepositoryException, NotExecutableException {
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+
+        pt.addEntry(testPrincipal, privileges, true, Collections.EMPTY_MAP);
+
+        // same entry but with revers 'isAllow' flag
+        assertTrue(pt.addEntry(testPrincipal, privileges, false, Collections.EMPTY_MAP));
+
+        // net-effect: only a single deny-read entry
+        assertTrue(pt.size() == 1);
+        assertSamePrivileges(privileges, pt.getAccessControlEntries()[0].getPrivileges());
     }
 }

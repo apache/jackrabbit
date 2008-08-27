@@ -26,11 +26,13 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <code>AccessControlPolicyTest</code>...
@@ -40,12 +42,12 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     private static Logger log = LoggerFactory.getLogger(AccessControlPolicyTest.class);
 
     private String path;
-    private List addedPolicies = new ArrayList();
+    private Map addedPolicies = new HashMap();
 
     protected void setUp() throws Exception {
         super.setUp();
 
-        // policy-option is cover the by the 'OPTION_SIMPLE_ACCESS_CONTROL_SUPPORTED' -> see super-class
+        // policy-option is cover the by the 'OPTION_ACCESS_CONTROL_SUPPORTED' -> see super-class
 
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
@@ -54,81 +56,60 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
 
     protected void tearDown() throws Exception {
         try {
-            for (Iterator it = addedPolicies.iterator(); it.hasNext();) {
+            for (Iterator it = addedPolicies.keySet().iterator(); it.hasNext();) {
                 String path = it.next().toString();
-                acMgr.removePolicy(path);
+                AccessControlPolicy policy = (AccessControlPolicy) addedPolicies.get(path);
+                acMgr.removePolicy(path, policy);
             }
             superuser.save();
         } catch (Exception e) {
             log.error("Unexpected error while removing test policies.", e);
         }
+        addedPolicies.clear();
         super.tearDown();
     }
 
-    private AccessControlPolicy buildInvalidPolicy(String path) throws RepositoryException, AccessDeniedException {
-        List applicable = new ArrayList();
-        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-        while (it.hasNext()) {
-            applicable.add(it.nextAccessControlPolicy().getName());
-        }
-
-        String name = "invalidPolicy";
-        int index = 0;
-        while (applicable.contains(name)) {
-            name = "invalidPolicy" + index;
-            index++;
-        }
-        final String policyName = name;
-        return new AccessControlPolicy() {
-
-            public String getName() throws RepositoryException {
-                return policyName;
-            }
-            public String getDescription() throws RepositoryException {
-                return null;
-            }
-        };
-    }
-
-    public void testGetEffectivePolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
+    public void testGetEffectivePolicies() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanReadAc(path);
         // call must succeed without exception
-        AccessControlPolicy policy = acMgr.getEffectivePolicy(path);
-        if (policy != null) {
-            assertTrue("The name of an AccessControlPolicy must not be null.", policy.getName() != null);
-        } else {
-            // no policy present on that node. // TODO: check if possible.
+        AccessControlPolicy[] policies = acMgr.getEffectivePolicies(path);
+        if (policies == null && policies.length == 0) {
+            fail("To every existing node at least a single effective policy applies.");
         }
     }
 
-    public void testGetEffectivePolicyForNonExistingNode() throws RepositoryException, AccessDeniedException, NotExecutableException {
+    public void testGetEffectivePoliciesForNonExistingNode() throws RepositoryException, AccessDeniedException, NotExecutableException {
         String path = getPathToNonExistingNode();
         try {
-            acMgr.getEffectivePolicy(path);
+            acMgr.getEffectivePolicies(path);
             fail("AccessControlManager.getEffectivePolicy for an invalid absPath must throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // ok
         }
     }
 
-    public void testGetEffectivePolicyForProperty() throws RepositoryException, AccessDeniedException, NotExecutableException {
+    public void testGetEffectivePoliciesForProperty() throws RepositoryException, AccessDeniedException, NotExecutableException {
         String path = getPathToProperty();
         try {
-            acMgr.getEffectivePolicy(path);
+            acMgr.getEffectivePolicies(path);
             fail("AccessControlManager.getEffectivePolicy for property must throw PathNotFoundException.");
         } catch (PathNotFoundException e) {
             // ok
         }
     }
 
-    public void testGetPolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
+    public void testGetPolicies() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanReadAc(path);
         // call must succeed without exception
-        AccessControlPolicy policy = acMgr.getPolicy(path);
-        if (policy != null) {
-            assertTrue("The name of an AccessControlPolicy must not be null.", policy.getName() != null);
-        } else {
-            // no policy present on that node.
+        AccessControlPolicy[] policies = acMgr.getPolicies(path);
+
+        assertNotNull("AccessControlManager.getPolicies must never return null.", policies);
+        for (int i = 0; i < policies.length; i++) {
+            if (policies[i] instanceof NamedAccessControlPolicy) {
+                assertNotNull("The name of an NamedAccessControlPolicy must not be null.", ((NamedAccessControlPolicy) policies[i]).getName());
+            } else if (policies[i] instanceof AccessControlList) {
+                assertNotNull("The entries of an AccessControlList must not be null.", ((AccessControlList) policies[i]).getAccessControlEntries());
+            }
         }
     }
 
@@ -143,12 +124,12 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         // call must succeed without exception
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-        Set names = new HashSet();
+        Set AccessControlList = new HashSet();
 
         while (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
-            if (!names.add(policy.getName())) {
-                fail("The names of the policies present should be unique among the choices presented for a specific node. Name " + policy.getName() + " occured multiple times.");
+            if (!AccessControlList.add(policy)) {
+                fail("The applicable policies present should be unique among the choices. Policy " + policy + " occured multiple times.");
             }
         }
     }
@@ -167,7 +148,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     public void testSetIllegalPolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanModifyAc(path);
         try {
-            acMgr.setPolicy(path, buildInvalidPolicy(path));
+            acMgr.setPolicy(path, new AccessControlPolicy() {});
             fail("SetPolicy with an unknown policy should throw AccessControlException.");
         } catch (AccessControlException e) {
             // success.
@@ -183,8 +164,14 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(path, policy);
 
-            AccessControlPolicy p = acMgr.getPolicy(path);
-            assertEquals("GetPolicy must return the policy that has been set before.", policy, p);
+            AccessControlPolicy[] policies = acMgr.getPolicies(path);
+            for (int i = 0; i < policies.length; i++) {
+                if (policy.equals(policies[i])) {
+                    // ok
+                    return;
+                }
+            }
+            fail("GetPolicies must at least return the policy that has been set before.");
         } else {
             throw new NotExecutableException();
         }
@@ -193,18 +180,18 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     public void testSetPolicyIsTransient() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanModifyAc(path);
 
-        AccessControlPolicy current = acMgr.getPolicy(path);
+        List currentPolicies = Arrays.asList(acMgr.getPolicies(path));
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
         if (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(path, policy);
             superuser.refresh(false);
 
-            String mgs = "Reverting 'setPolicy' must change back the return value of getPolicy.";
-            if (current == null) {
-                assertEquals(mgs, acMgr.getPolicy(path), current);
+            String mgs = "Reverting 'setPolicy' must change back the return value of getPolicies.";
+            if (currentPolicies.isEmpty()) {
+                assertTrue(mgs, acMgr.getPolicies(path).length == 0);
             } else {
-                assertTrue(mgs, acMgr.getPolicy(path).equals(current));
+                assertEquals(mgs, currentPolicies, Arrays.asList(acMgr.getPolicies(path)));
             }
         } else {
             throw new NotExecutableException();
@@ -223,7 +210,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             superuser.save();
 
             // remember for tearDown
-            addedPolicies.add(path);
+            addedPolicies.put(path, policy);
         } else {
             throw new NotExecutableException();
         }
@@ -231,8 +218,9 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         Session s2 = null;
         try {
             s2 = helper.getSuperuserSession();
-            AccessControlPolicy p = getAccessControlManager(s2).getPolicy(path);
-            assertEquals("Policy must be visible to another superuser session.", policy, p);
+            List plcs = Arrays.asList(getAccessControlManager(s2).getPolicies(path));
+            // TODO: check again if policies can be compared with equals!
+            assertTrue("Policy must be visible to another superuser session.", plcs.contains(policy));
         } finally {
             if (s2 != null) {
                 s2.logout();
@@ -250,7 +238,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             acMgr.setPolicy(path, policy);
             superuser.save();
             // remember for tearDown
-            addedPolicies.add(path);
+            addedPolicies.put(path, policy);
         } else {
             throw new NotExecutableException();
         }
@@ -295,8 +283,14 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         if (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(path, policy);
-            AccessControlPolicy removed = acMgr.removePolicy(path);
-            assertEquals("RemovePolicy must return the policy that has been set before.", policy, removed);
+            acMgr.removePolicy(path, policy);
+
+            AccessControlPolicy[] plcs = acMgr.getPolicies(path);
+            for (int i = 0; i < plcs.length; i++) {
+                if (plcs[i].equals(policy)) {
+                    fail("RemovePolicy must remove the policy that has been set before.");
+                }
+            }
         } else {
             throw new NotExecutableException();
         }
@@ -306,8 +300,10 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         checkCanModifyAc(path);
 
-        AccessControlPolicy current = acMgr.getPolicy(path);
-        if (acMgr.getPolicy(path) == null) {
+        AccessControlPolicy[] currentPolicies = acMgr.getPolicies(path);
+        int size = currentPolicies.length;
+        AccessControlPolicy toRemove;
+        if (size == 0) {
             // no policy to remove ->> apply one
             AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
             if (it.hasNext()) {
@@ -316,23 +312,26 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
                 superuser.save();
 
                 // remember for teardown
-                addedPolicies.add(path);
+                addedPolicies.put(path, policy);
 
-                current = policy;
+                toRemove = policy;
+                currentPolicies = acMgr.getPolicies(path);
+                size = currentPolicies.length;
             } else {
                 throw new NotExecutableException();
             }
+        } else {
+            toRemove = currentPolicies[0];
         }
 
         // test transient behaviour of the removal
-        acMgr.removePolicy(path);
-        AccessControlPolicy p = acMgr.getPolicy(path);
-        assertTrue("After transient remove AccessControlManager.getPolicy must return null.", p == null);
+        acMgr.removePolicy(path, toRemove);
+
+        assertEquals("After transient remove AccessControlManager.getPolicies must return less policies.", size - 1, acMgr.getPolicies(path).length);
 
         // revert changes
         superuser.refresh(false);
-        p = acMgr.getPolicy(path);
-        assertEquals("Reverting a Policy removal must restore the original state.", p, current);
+        assertEquals("Reverting a Policy removal must restore the original state.", Arrays.asList(currentPolicies), Arrays.asList(acMgr.getPolicies(path)));
     }
 
     public void testNodeIsModifiedAfterRemovePolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
@@ -340,7 +339,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         Item item = superuser.getItem(path);
-        if (acMgr.getPolicy(path) == null) {
+        if (acMgr.getPolicies(path).length == 0) {
             // no policy to remove ->> apply one
             AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
             if (it.hasNext()) {
@@ -349,15 +348,19 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
                 superuser.save();
 
                 // remember for teardown
-                addedPolicies.add(path);
+                addedPolicies.put(path, policy);
             } else {
                 throw new NotExecutableException();
             }
         }
 
         // test transient behaviour of the removal
-        try {acMgr.removePolicy(path);
-            assertTrue("After removing a policy the node must be marked modified.", item.isModified());
+        try {
+            AccessControlPolicy[] plcs = acMgr.getPolicies(path);
+            if (plcs.length > 0) {
+                acMgr.removePolicy(path, plcs[0]);
+                assertTrue("After removing a policy the node must be marked modified.", item.isModified());
+            }
         } finally {
             item.refresh(false);
         }
@@ -371,7 +374,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             throw new NotExecutableException();
         }
 
-        assertNull("A new Node must not have an access control policy set.", acMgr.getPolicy(n.getPath()));
+        assertTrue("A new Node must not have an access control policy set.", acMgr.getPolicies(n.getPath()).length == 0);
     }
 
     public void testSetPolicyOnNewNode() throws NotExecutableException, RepositoryException, AccessDeniedException {
@@ -387,29 +390,25 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(n.getPath(), policy);
 
-            AccessControlPolicy p = acMgr.getPolicy(n.getPath());
-            assertNotNull("After calling setPolicy the manager must return a non-null policy for the new Node.", p);
-            assertEquals("The name of applicable policy must be equal to the name of the set policy", policy.getName(), p.getName());
+            AccessControlPolicy[] plcs = acMgr.getPolicies(n.getPath());
+            assertNotNull("After calling setPolicy the manager must return a non-null policy array for the new Node.", plcs);
+            assertTrue("After calling setPolicy the manager must return a policy array with a length greater than zero for the new Node.", plcs.length > 0);
         }
     }
 
     public void testRemoveTransientlyAddedPolicy() throws RepositoryException, AccessDeniedException {
-        AccessControlPolicy ex = acMgr.getPolicy(path);
+        AccessControlPolicy[] ex = acMgr.getPolicies(path);
 
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
         while (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(path, policy);
-            acMgr.removePolicy(path);
+            acMgr.removePolicy(path, policy);
 
             String msg = "transiently added AND removing a policy must revert " +
                     "the changes made. " +
-                    "ACMgr.getPolicy must then return the original value.";
-            if (ex == null) {
-                assertNull(msg, acMgr.getPolicy(path));
-            } else {
-                assertEquals(msg, ex.getName(), acMgr.getPolicy(path).getName());
-            }
+                    "ACMgr.getPolicies must then return the original value.";
+            assertEquals(msg, Arrays.asList(ex), Arrays.asList(acMgr.getPolicies(path)));
         }
     }
 }

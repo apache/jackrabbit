@@ -14,26 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization.acl;
+package org.apache.jackrabbit.api.jsr283.retention;
 
-import org.apache.jackrabbit.core.security.authorization.AbstractPolicyEntry;
-
-import java.security.Principal;
+import javax.jcr.RepositoryException;
 
 /**
- * <code>ACEImpl</code>
+ * An <code>RetentionPolicy</code> is an object with a name and an optional
+ * description.
+ *
+ * @see RetentionManager#getRetentionPolicy(String)
+ * @see RetentionManager#setRetentionPolicy(String, RetentionPolicy)
+ * @see RetentionManager#removeRetentionPolicy(String) 
+ * @since JCR 2.0
  */
-class ACEImpl extends AbstractPolicyEntry {
-
+public interface RetentionPolicy {
     /**
-     * Construct an access control entry for the given principal, privileges and
-     * a polarity (deny or allow)
+     * Returns the name of the retention policy. A JCR name.
      *
-     * @param principal
-     * @param privileges
-     * @param allow
+     * @return the name of the access control policy. A JCR name.
+     * @throws RepositoryException if an error occurs.
      */
-    ACEImpl(Principal principal, int privileges, boolean allow) {
-        super(principal, privileges, allow);
-    }
+    public String getName() throws RepositoryException;
+
 }

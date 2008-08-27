@@ -14,30 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import javax.jcr.RepositoryException;
+import org.apache.jackrabbit.test.JUnitTest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * An <code>RetentionPolicy</code> is an object with a name and an optional
- * description.
- *
- * @since JCR 2.0
+ * <code>GlobPatternTest</code>...
  */
-public interface RetentionPolicy {
-    /**
-     * Returns the name of the retention policy.
-     *
-     * @return the name of the access control policy.
-     * @throws RepositoryException if an error occurs.
-     */
-    public String getName() throws RepositoryException;
+public class GlobPatternTest extends JUnitTest {
 
-    /**
-     * Returns a human readable description of the retention policy.
-     *
-     * @return a human readable description of the retention policy.
-     * @throws RepositoryException if an error occurs.
-     */
-    public String getDescription() throws RepositoryException;
+    private static Logger log = LoggerFactory.getLogger(GlobPatternTest.class);
+
+    public void testMatches() {
+        // TODO
+    }
+
+    public void testMatchesItem() {
+       // TODO
+    }
 }

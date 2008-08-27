@@ -29,6 +29,24 @@ import java.util.Iterator;
 public interface UserManager {
 
     /**
+     * Filter flag indicating that only <code>User</code>s should be searched
+     * and returned.
+     */
+    int SEARCH_TYPE_USER = 1;
+
+    /**
+     * Filter flag indicating that only <code>Group</code>s should be searched
+     * and returned.
+     */
+    int SEARCH_TYPE_GROUP = 2;
+
+    /**
+     * Filter flag indicating that all <code>Authorizable</code>s should be
+     * searched.
+     */
+    int SEARCH_TYPE_AUTHORIZABLE = 3;
+
+    /**
      * Get the Authorizable by its id.
      *
      * @param id
@@ -59,7 +77,27 @@ public interface UserManager {
      * @throws RepositoryException
      * @see Authorizable#getProperty(String)
      */
-    Iterator findAuthorizable(String propertyName, String value) throws RepositoryException;
+    Iterator findAuthorizables(String propertyName, String value) throws RepositoryException;
+
+    /**
+     * Returns all <code>Authorizable</code>s that have
+     * {@link Authorizable#getProperty(String) property} with the given name and
+     * that Property equals the given value. In contrast to
+     * {@link #findAuthorizables(String, String)} the type of authorizable is
+     * respected while executing the search.
+     *
+     * @param propertyName
+     * @param value
+     * @param searchType Any of the following constants:
+     * <ul>
+     * <li>{@link #SEARCH_TYPE_AUTHORIZABLE}</li>
+     * <li>{@link #SEARCH_TYPE_GROUP}</li>
+     * <li>{@link #SEARCH_TYPE_USER}</li>
+     * </ul>
+     * @return
+     * @throws RepositoryException
+     */
+    Iterator findAuthorizables(String propertyName, String value, int searchType) throws RepositoryException;
 
     /**
      * Creates an User for the given userID / password pair; neither of the

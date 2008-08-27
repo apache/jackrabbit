@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
+import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -42,9 +43,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * <code>ACLEditor</code>...
@@ -58,65 +56,86 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     /**
      * Default name for ace nodes
      */
-    private static final String DEFAULT_PERMISSION_NAME = "permission";
+    private static final String DEFAULT_ACE_NAME = "ace";
+    /**
+     * the editing session
+     */
+    private final SessionImpl session;
+    private final PrivilegeRegistry privilegeRegistry;
+    private final AccessControlUtils utils;
 
-    protected final SessionImpl session;
-    private final PrincipalManager principalManager;
-
-    protected ACLEditor(Session editingSession) throws RepositoryException {
+    ACLEditor(Session editingSession, AccessControlUtils utils) {
         if (editingSession instanceof SessionImpl) {
             session = ((SessionImpl) editingSession);
-            principalManager = ((SessionImpl) editingSession).getPrincipalManager();
+            // TODO: review and find better solution
+            privilegeRegistry = new PrivilegeRegistry(session);
         } else {
             throw new IllegalArgumentException("org.apache.jackrabbit.core.SessionImpl expected. Found " + editingSession.getClass());
         }
+        this.utils = utils;
+    }
+
+    /**
+     *
+     * @param aclNode
+     * @return
+     * @throws RepositoryException
+     */
+    AccessControlList getACL(NodeImpl aclNode) throws RepositoryException {
+        return new ACLTemplate(aclNode, privilegeRegistry);
     }
 
     //------------------------------------------------< AccessControlEditor >---
     /**
-     * @see AccessControlEditor#getPolicyTemplate(String)
+     * @see AccessControlEditor#getPolicies(String)
      * @param nodePath
      */
-    public PolicyTemplate getPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
+    public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
 
-        PolicyTemplate tmpl = null;
-        NodeImpl aclNode = getAclNode(nodePath);
-        if (aclNode != null) {
-            tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
-        }
-        return tmpl;
-    }
-
-    /**
-     * @see AccessControlEditor#editPolicyTemplate(String)
-     * @param nodePath
-     */
-    public PolicyTemplate editPolicyTemplate(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        checkProtectsNode(nodePath);
-
-        PolicyTemplate tmpl;
         NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode == null) {
-            tmpl = new ACLTemplate(nodePath);
+            return new AccessControlPolicy[0];
         } else {
-            tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
+            return new AccessControlPolicy[] {getACL(aclNode)};
         }
-        return tmpl;
     }
 
     /**
-     * @see AccessControlEditor#editPolicyTemplate(Principal)
+     * @see AccessControlEditor#editAccessControlPolicies(String)
+     * @param nodePath
      */
-    public PolicyTemplate editPolicyTemplate(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException {
-        throw new AccessControlException("Unable to edit policy for principal " + principal.getName());
-    }
-
-    /**
-     * @see AccessControlEditor#setPolicyTemplate(String,PolicyTemplate)
-     */
-    public void setPolicyTemplate(String nodePath, PolicyTemplate template) throws RepositoryException {
+    public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
+
+        AccessControlPolicy acl;
+        NodeImpl aclNode = getAclNode(nodePath);
+        if (aclNode == null) {
+            // create an empty acl
+            acl = new ACLTemplate(nodePath, session.getPrincipalManager(), privilegeRegistry);
+        } else {
+            acl = getACL(aclNode);
+        }
+        return new AccessControlPolicy[] {acl};
+    }
+
+    /**
+     * @see AccessControlEditor#editAccessControlPolicies(Principal)
+     */
+    public AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException {
+        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
+            throw new AccessControlException("Unknown principal.");
+        }
+        // TODO: impl. missing
+        return new AccessControlPolicy[0];
+    }
+
+    /**
+     * @see AccessControlEditor#setPolicy(String,AccessControlPolicy)
+     */
+    public void setPolicy(String nodePath, AccessControlPolicy policy) throws RepositoryException {
+        checkProtectsNode(nodePath);
+        checkValidPolicy(nodePath, policy);
 
         NodeImpl aclNode = getAclNode(nodePath);
         /* in order to assert that the parent (ac-controlled node) gets modified
@@ -130,18 +149,21 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         // now (re) create it
         aclNode = createAclNode(nodePath);
 
-        PolicyEntry[] entries = template.getEntries();
+        AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
-            ACEImpl ace = (ACEImpl) entries[i];
-            // TODO: improve
+            JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entries[i];
+
             Name nodeName = getUniqueNodeName(aclNode, ace.isAllow() ? "allow" : "deny");
             Name ntName = (ace.isAllow()) ? NT_REP_GRANT_ACE : NT_REP_DENY_ACE;
             ValueFactory vf = session.getValueFactory();
 
+            // create the ACE node
             NodeImpl aceNode = addSecurityNode(aclNode, nodeName, ntName);
+
             // write the rep:principalName property
             String principalName = ace.getPrincipal().getName();
             setSecurityProperty(aceNode, P_PRINCIPAL_NAME, vf.createValue(principalName));
+
             // ... and the rep:privileges property
             Privilege[] pvlgs = ace.getPrivileges();
             Value[] names = getPrivilegeNames(pvlgs, vf);
@@ -150,110 +172,52 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     }
 
     /**
-     * @see AccessControlEditor#removePolicyTemplate(String)
+     * @see AccessControlEditor#removePolicy(String,AccessControlPolicy)
      */
-    public PolicyTemplate removePolicyTemplate(String nodePath) throws AccessControlException, RepositoryException {
+    public synchronized void removePolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException, RepositoryException {
         checkProtectsNode(nodePath);
+        checkValidPolicy(nodePath, policy);
 
-        PolicyTemplate tmpl = null;
         NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode != null) {
-            // need to build the template in order to have a return value.
-            tmpl = new ACLTemplate(aclNode, Collections.EMPTY_SET);
             removeSecurityItem(aclNode);
-        }
-        return tmpl;
-    }
-
-    /**
-     * @see AccessControlEditor#getAccessControlEntries(String)
-     */
-    public AccessControlEntry[] getAccessControlEntries(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        PolicyTemplate pt = getPolicyTemplate(nodePath);
-        if (pt == null) {
-            return new AccessControlEntry[0];
         } else {
-            PolicyEntry[] entries = pt.getEntries();
-            List l = new ArrayList();
-            for (int i = 0; i < entries.length; i++) {
-                if (entries[i].isAllow()) {
-                    l.add(entries[i]);
-                }
-            }
-            return (AccessControlEntry[]) l.toArray(new AccessControlEntry[l.size()]);
+            throw new AccessControlException("No policy to remove at " + nodePath);
         }
-    }
-
-    /**
-     * @see AccessControlEditor#addAccessControlEntry(String,Principal,Privilege[])
-     */
-    public AccessControlEntry addAccessControlEntry(String nodePath, Principal principal, Privilege[] privileges) throws AccessControlException, PathNotFoundException, RepositoryException {
-        // JSR 283 requires that the principal is known TODO: check again.
-        if (!principalManager.hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
-        }
-
-        ACLTemplate pt = (ACLTemplate) editPolicyTemplate(nodePath);
-        // TODO: check again. maybe these 'grant-ACE' should be stored/evaluated separated
-        int privs = PrivilegeRegistry.getBits(privileges);
-        /*
-        since added access control entry may never remove privileges that are
-        granted by the policy -> retrieve existing allow entries and add
-        the new privileges to be granted.
-        Reason: PolicyTemplate#setEntry does in fact overwrite (which is fine
-        when editing the policy itself, but wrong when adding ACEs over the JCR-API.
-        */
-        ACEImpl[] existing = pt.getEntries(principal);
-        for (int i = 0; i < existing.length; i++) {
-            if (existing[i].isAllow()) {
-                privs |= existing[i].getPrivilegeBits();
-            }
-        }
-
-        pt.setEntry(new ACEImpl(principal, privs, true));
-        setPolicyTemplate(nodePath, pt);
-        ACEImpl[] tmpls = pt.getEntries(principal);
-        for (int i = 0; i < tmpls.length; i++) {
-            if (tmpls[i].isAllow()) {
-                return tmpls[i];
-            }
-        }
-        // should never get here
-        throw new AccessControlException("Internal error: No access control entry added.");
-    }
-
-
-    /**
-     * @see AccessControlEditor#removeAccessControlEntry(String,AccessControlEntry)
-     */
-    public boolean removeAccessControlEntry(String nodePath, AccessControlEntry entry) throws AccessControlException, PathNotFoundException, RepositoryException {
-        if (!(entry instanceof ACEImpl)) {
-            throw new AccessControlException("Unknown AccessControlEntry implementation.");
-        }
-        // TODO: check again. maybe these 'grant-ACE' should be removed separated
-        PolicyTemplate pt = editPolicyTemplate(nodePath);
-        boolean removed = pt.removeEntry((ACEImpl) entry);
-        if (removed) {
-            setPolicyTemplate(nodePath, pt);
-        }
-        return removed;
     }
 
     //--------------------------------------------------------------------------
     /**
-     * Test if the Node identified by <code>id</code> is itself part of ACL
+     * Check if the Node identified by <code>nodePath</code> is itself part of ACL
      * defining content. It this case setting or modifying an AC-policy is
      * obviously not possible.
      *
      * @param nodePath
-     * @throws AccessControlException If the given id identifies a Node that
+     * @throws AccessControlException If the given nodePath identifies a Node that
      * represents a ACL or ACE item.
      * @throws RepositoryException
      */
     private void checkProtectsNode(String nodePath) throws RepositoryException {
         NodeImpl node = getNode(nodePath);
-        if (ACLProvider.protectsNode(node)) {
+        if (utils.isAcItem(node)) {
             throw new AccessControlException("Node " + nodePath + " defines ACL or ACE itself.");
+        }
+    }
+
+    /**
+     * Check if the specified policy can be set/removed from this editor.
+     *
+     * @param nodePath
+     * @param policy
+     * @throws AccessControlException
+     */
+    private static void checkValidPolicy(String nodePath, AccessControlPolicy policy) throws AccessControlException {
+        if (policy == null || !(policy instanceof ACLTemplate)) {
+            throw new AccessControlException("Attempt to set/remove invalid policy " + policy);
+        }
+        ACLTemplate acl = (ACLTemplate) policy;
+        if (!nodePath.equals(acl.getPath())) {
+            throw new AccessControlException("Policy " + policy + " cannot be applied/removed from the node at " + nodePath);
         }
     }
 
@@ -305,18 +269,18 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      * Create a unique valid name for the Permission nodes to be save.
      *
      * @param node a name for the child is resolved
-     * @param name if missing the {@link #DEFAULT_PERMISSION_NAME} is taken
+     * @param name if missing the {@link #DEFAULT_ACE_NAME} is taken
      * @return
      * @throws RepositoryException
      */
     protected static Name getUniqueNodeName(Node node, String name) throws RepositoryException {
         if (name == null) {
-            name = DEFAULT_PERMISSION_NAME;
+            name = DEFAULT_ACE_NAME;
         } else {
             try {
                 NameParser.checkFormat(name);
             } catch (NameException e) {
-                name = DEFAULT_PERMISSION_NAME;
+                name = DEFAULT_ACE_NAME;
                 log.debug("Invalid path name for Permission: " + name + ".");
             }
         }

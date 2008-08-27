@@ -28,7 +28,7 @@ import javax.jcr.Credentials;
 public interface User extends Authorizable {
 
     /**
-     * @return true if the current Authorizable is has all Privileges
+     * @return true if the current user represents the administrator.
      */
     boolean isAdmin();
 

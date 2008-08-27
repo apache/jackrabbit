@@ -26,9 +26,10 @@ import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.SecurityConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.AnonymousPrincipal;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.UserPrincipal;
+import org.apache.jackrabbit.core.security.AnonymousPrincipal;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
@@ -92,6 +93,9 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     private String anonymID;
 
     //------------------------------------------< JackrabbitSecurityManager >---
+    /**
+     * @see JackrabbitSecurityManager#init(Repository, Session)
+     */
     public void init(Repository repository, Session systemSession) throws RepositoryException {
         if (initialized) {
             throw new IllegalStateException("already initialized");
@@ -124,9 +128,19 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
                 adminID = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
             }
             if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
-                anonymID = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID, null);
+                anonymID = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
         }
+        // fallback:
+        if (adminID == null) {
+            log.debug("No adminID defined in LoginModule/JAAS config -> using default.");
+            adminID = SecurityConstants.ADMIN_ID;
+        }
+        if (anonymID == null) {
+            log.debug("No anonymousID defined in LoginModule/JAAS config -> using default.");
+            anonymID = SecurityConstants.ANONYMOUS_ID;
+        }
+
         // most simple principal provider registry, that does not read anything
         // from configuration
         PrincipalProvider principalProvider = new SimplePrincipalProvider();
@@ -220,8 +234,10 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
         if (creds.hasNext()) {
             SimpleCredentials sc = (SimpleCredentials) creds.next();
             uid = sc.getUserID();
+        } else if (anonymID != null && !subject.getPrincipals(AnonymousPrincipal.class).isEmpty()) {
+            uid = anonymID;
         } else {
-            // no SimpleCredentials: assume that UserID and principal name
+            // assume that UserID and principal name
             // are the same (not totally correct) and thus return the name
             // of the first non-group principal.
             for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
@@ -247,7 +263,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     public AuthContext getAuthContext(Credentials creds, Subject subject)
             throws RepositoryException {
         checkInitialized();
-        return authCtxProvider.getAuthContext(creds, subject, systemSession, principalProviderRegistry);
+        return authCtxProvider.getAuthContext(creds, subject, systemSession, principalProviderRegistry, adminID, anonymID);
     }
 
     //--------------------------------------------------------------------------
@@ -271,13 +287,9 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             if (anonymID != null) {
                 principals.put(anonymID, new AnonymousPrincipal());
             }
+
             EveryonePrincipal everyone = EveryonePrincipal.getInstance();
             principals.put(everyone.getName(), everyone);
-
-        }
-
-        public boolean hasPrincipal(String principalName) {
-            return true;
         }
 
         public Principal getPrincipal(String principalName) {

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.PropDefId;

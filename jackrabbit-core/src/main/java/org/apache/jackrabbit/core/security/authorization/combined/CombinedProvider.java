@@ -16,71 +16,60 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PolicyEntry;
-import org.apache.jackrabbit.core.security.authorization.PolicyTemplate;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
+import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.principalbased.ACLProvider;
+import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import java.security.Principal;
+import javax.jcr.ItemNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * <code>CombinedProvider</code>...
  */
-public class CombinedProvider extends AbstractAccessControlProvider implements AccessControlConstants {
+public class CombinedProvider extends AbstractAccessControlProvider {
 
     private static Logger log = LoggerFactory.getLogger(CombinedProvider.class);
 
-    // TODO: add means to show effective-policy to a user.
-    // TODO: TOBEFIXED proper evaluation of permissions respecting resource-based ACLs.
-    // TODO: TOBEFIXED assert proper evaluation order of group/non-group principal-ACLs
+    private AccessControlProvider[] providers;
 
-    private CombinedEditor editor;
-    private NodeImpl acRoot;
-
-    public CombinedProvider() {
-        super("Combined AC policy", "Policy evaluating user-based and resource-based ACLs.");
+    //-------------------------------------------------< AccessControlUtils >---
+    /**
+     * @see AccessControlUtils#isAcItem(Path)
+     */
+    public boolean isAcItem(Path absPath) throws RepositoryException {
+        for (int i = 0; i < providers.length; i++) {
+            if (providers[i] instanceof AccessControlUtils && ((AccessControlUtils) providers[i]).isAcItem(absPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    //--------------------------------------< AbstractAccessControlProvider >---
     /**
-     * @see AbstractAccessControlProvider#isAcItem(Path)
+     * @see AccessControlUtils#isAcItem(ItemImpl)
      */
-    protected boolean isAcItem(Path absPath) throws RepositoryException {
-        Path.Element[] elems = absPath.getElements();
-        for (int i = 0; i < elems.length; i++) {
-            if (N_POLICY.equals(elems[i].getName())) {
+    public boolean isAcItem(ItemImpl item) throws RepositoryException {
+        for (int i = 0; i < providers.length; i++) {
+            if (providers[i] instanceof AccessControlUtils && ((AccessControlUtils) providers[i]).isAcItem(item)) {
                 return true;
             }
         }
@@ -89,65 +78,50 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
 
     //----------------------------------------------< AccessControlProvider >---
     /**
-     * @see AccessControlProvider#init(javax.jcr.Session, java.util.Map)
+     * @see AccessControlProvider#close()
      */
-    public void init(Session systemSession, Map options) throws RepositoryException {
-        super.init(systemSession, options);
-
-        NodeImpl root = (NodeImpl) session.getRootNode();
-        if (root.hasNode(N_ACCESSCONTROL)) {
-            acRoot = root.getNode(N_ACCESSCONTROL);
-            if (!acRoot.isNodeType(NT_REP_ACCESS_CONTROL)) {
-                throw new RepositoryException("Error while initializing Access Control Provider: Found ac-root to be wrong node type " + acRoot.getPrimaryNodeType().getName());
-            }
-        } else {
-            acRoot = root.addNode(N_ACCESSCONTROL, NT_REP_ACCESS_CONTROL, null);
+    public void close() {
+        for (int i = 0; i < providers.length; i++) {
+            providers[i].close();
         }
-
-        editor = new CombinedEditor(session, resolver, resolver.getQPath(acRoot.getPath()));
-        try {
-            log.info("Install initial ACL:...");
-
-            PrincipalManager pMgr = session.getPrincipalManager();
-            log.info("... Privilege.ALL for administrators.");
-            Principal administrators;
-            String pName = SecurityConstants.ADMINISTRATORS_NAME;
-            if (pMgr.hasPrincipal(pName)) {
-                administrators = pMgr.getPrincipal(pName);
-            } else {
-                log.warn("Administrators principal group is missing.");
-                administrators = new PrincipalImpl(pName);
-            }
-
-            String glob = GlobPattern.WILDCARD_ALL;
-            PolicyTemplate pt = editor.editPolicyTemplate(administrators);
-            pt.setEntry(new PolicyEntryImpl(administrators, PrivilegeRegistry.ALL, true, root.getPath(), glob));
-            editor.setPolicyTemplate(pt.getPath(), pt);
-
-            Principal everyone = pMgr.getEveryone();
-            log.info("... Privilege.READ for everyone.");
-            pt = editor.editPolicyTemplate(everyone);
-            pt.setEntry(new PolicyEntryImpl(everyone, PrivilegeRegistry.READ, true, root.getPath(), glob));
-            editor.setPolicyTemplate(pt.getPath(), pt);
-
-            session.save();
-            log.info("... done.");
-
-        } catch (RepositoryException e) {
-            log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
-            session.getRootNode().refresh(false);
-            throw e;
-        }
+        super.close();
     }
 
     /**
-     * @see AccessControlProvider#getAccessControlEntries(Path)
-     * @param absPath
+     * @see AccessControlProvider#init(javax.jcr.Session, java.util.Map)
      */
-    public AccessControlEntry[] getAccessControlEntries(Path absPath) throws RepositoryException {
-        checkInitialized();
-        // TODO: TOBEFIXED
-        return new AccessControlEntry[0];
+    public void init(Session systemSession, Map configuration) throws RepositoryException {
+        super.init(systemSession, configuration);
+
+        // this provider combines the result of 2 (currently hardcoded) AC-providers
+        // TODO: make this configurable
+        providers = new AccessControlProvider[2];
+
+        // 1) a resource-based ACL provider, that is not inited with default
+        //    permissions and should only be used to overrule the permissions
+        //    granted or denied by the default provider (see 2).
+        providers[0] = new org.apache.jackrabbit.core.security.authorization.acl.ACLProvider();
+        Map config = new HashMap(configuration);
+        config.put(PARAM_OMIT_DEFAULT_PERMISSIONS, Boolean.TRUE);
+        providers[0].init(systemSession, config);
+
+        // 2) the principal-base ACL provider which is intended to provide
+        //    the default/standard permissions present at an item for a given
+        //    set of principals.
+        providers[1] = new ACLProvider();
+        providers[1].init(systemSession, configuration);
+    }
+
+    /**
+     * @see AccessControlProvider#getEffectivePolicies(Path)
+     */
+    public AccessControlPolicy[] getEffectivePolicies(Path absPath)
+            throws ItemNotFoundException, RepositoryException {
+        List l = new ArrayList();
+        for (int i = 0; i < providers.length; i++) {
+            l.addAll(Arrays.asList(providers[i].getEffectivePolicies(absPath)));
+        }
+        return (AccessControlPolicy[]) l.toArray(new AccessControlPolicy[l.size()]);
     }
 
     /**
@@ -155,18 +129,21 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
      */
     public AccessControlEditor getEditor(Session editingSession) {
         checkInitialized();
-        if (editingSession instanceof SessionImpl) {
+        List editors = new ArrayList();
+        for (int i = 0; i < providers.length; i++) {
             try {
-                return new CombinedEditor((SessionImpl) editingSession,
-                        session, session.getQPath(acRoot.getPath()));
+                editors.add(providers[i].getEditor(editingSession));
             } catch (RepositoryException e) {
-                // should never get here
-                log.error("Internal error:", e.getMessage());
+                log.debug(e.getMessage());
+                // ignore.
             }
         }
-
-        log.debug("Unable to build access control editor " + CombinedEditor.class.getName() + ".");
-        return null;
+        if (!editors.isEmpty()) {
+            return new CombinedEditor((AccessControlEditor[]) editors.toArray(new AccessControlEditor[editors.size()]));
+        } else {
+            log.debug("None of the derived access control providers supports editing.");
+            return null;
+        }
     }
 
     /**
@@ -176,8 +153,6 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
-        } else if (isReadOnly(principals)) {
-            return getReadOnlyPermissions();
         } else {
             return new CompiledPermissionImpl(principals);
         }
@@ -191,7 +166,13 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         if (isAdminOrSystem(principals)) {
             return true;
         } else {
-            return new CompiledPermissionImpl(principals, false).grants(PathFactoryImpl.getInstance().getRootPath(), Permission.READ);
+            CompiledPermissions cp = new CompiledPermissionImpl(principals);
+            try {
+                Path rootPath = PathFactoryImpl.getInstance().getRootPath();
+                return cp.grants(rootPath, Permission.READ);
+            } finally {
+                cp.close();
+            }
         }
     }
 
@@ -199,39 +180,24 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
     /**
      *
      */
-    private class CompiledPermissionImpl extends AbstractCompiledPermissions
-            implements SynchronousEventListener {
+    private class CompiledPermissionImpl extends AbstractCompiledPermissions  {
 
-        private final Set principals;
-        private final Set acPaths;
-        private Entries entries;
+        private final List cPermissions;
 
         /**
          * @param principals
-         * @throws RepositoryException
          */
-        private CompiledPermissionImpl(Set principals) throws RepositoryException {
-            this(principals, true);
-        }
-
-        /**
-         * @param principals
-         * @throws RepositoryException
-         */
-        private CompiledPermissionImpl(Set principals, boolean listenToEvents) throws RepositoryException {
-
-            this.principals = principals;
-            acPaths = new HashSet(principals.size());
-            entries = reload();
-
-            // TODO: describe
-            if (listenToEvents) {
-                int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED |
-                        Event.PROPERTY_REMOVED | Event.NODE_ADDED | Event.NODE_REMOVED;
-                String[] ntNames = new String[] {
-                        session.getJCRName(NT_REP_ACE)
-                };
-                observationMgr.addEventListener(this, events, acRoot.getPath(), true, null, ntNames, false);
+        private CompiledPermissionImpl(Set principals) throws
+                RepositoryException {
+            this.cPermissions = new ArrayList();
+            for (int i = 0; i < providers.length; i++) {
+                CompiledPermissions cp = providers[i].compilePermissions(principals);
+                if (cp instanceof AbstractCompiledPermissions) {
+                    cPermissions.add(cp);
+                } else {
+                    // TODO: deal with other impls.
+                    log.warn("AbstractCompiledPermissions expected. Found " + cp.getClass().getName() + " -> ignore.");
+                }
             }
         }
 
@@ -239,214 +205,36 @@ public class CombinedProvider extends AbstractAccessControlProvider implements A
         /**
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
-        protected synchronized Result buildResult(Path absPath) throws RepositoryException {
-            if (!absPath.isAbsolute()) {
-                throw new RepositoryException("Absolute path expected.");
+        protected Result buildResult(Path absPath) throws RepositoryException {
+            Result res = null;
+            for (Iterator it = cPermissions.iterator(); it.hasNext();) {
+                AbstractCompiledPermissions acp = (AbstractCompiledPermissions) it.next();
+                Result other = acp.getResult(absPath);
+                res = (res == null) ? other : res.combine(other);
             }
+            return res;
+        }
 
-            /* Test if the given path points to a Node (or an existing or non
-             * existing direct decendant of an existing Node) that stores
-             * AC-information
-             */
-            boolean isAclItem = isAcItem(absPath);
-            String jcrPath = session.getJCRPath(absPath);            
-            int permissions;
-            if (session.itemExists(jcrPath)) {
-                permissions = entries.getPermissions(session.getItem(jcrPath), isAclItem);
-            } else {
-                Node parent = null;
-                String parentPath = jcrPath;
-                while (parent == null) {
-                    parentPath = Text.getRelativeParent(parentPath, 1);
-                    if (parentPath.length() == 0) {
-                        // root node reached
-                        parent = session.getRootNode();
-                    } else if (session.nodeExists(parentPath)) {
-                        parent = session.getNode(parentPath);
-                    }
-                }
-                String relPath = jcrPath.substring(parent.getPath().length() + 1);
-                permissions = entries.getPermissions(parent, relPath, isAclItem);
-            }
-            /* TODO: privileges can only be determined for nodes. */
-            int privileges = entries.getPrivileges(jcrPath);
-            return new Result(permissions, privileges);
+        /**
+         * @see AbstractCompiledPermissions#getResult(Path)
+         */
+        public Result getResult(Path absPath) throws RepositoryException {
+            // TODO: missing caching
+            return buildResult(absPath);
         }
 
         //--------------------------------------------< CompiledPermissions >---
         /**
          * @see CompiledPermissions#close()
          */
-        public void close() {
-            try {
-                observationMgr.removeEventListener(this);
-            } catch (RepositoryException e) {
-                log.debug("Unable to unregister listener: ", e.getMessage());
+        public synchronized void close() {
+            // close all c-permissions retained in the list and clear the list.
+            for (Iterator it = cPermissions.iterator(); it.hasNext();) {
+                CompiledPermissions cp = (CompiledPermissions) it.next();
+                cp.close();
+                it.remove();
             }
             super.close();
-        }
-
-        //--------------------------------------------------< EventListener >---
-        /**
-         * @see EventListener#onEvent(EventIterator)
-         */
-        public synchronized void onEvent(EventIterator events) {
-            try {
-                boolean reload = false;
-                while (events.hasNext() && !reload) {
-                    Event ev = events.nextEvent();
-                    String path = ev.getPath();
-                    // only invalidate cache if any of the events affects the
-                    // nodes defining permissions for the principals.
-                    switch (ev.getType()) {
-                        case Event.NODE_ADDED:
-                        case Event.NODE_REMOVED:
-                            reload = acPaths.contains(Text.getRelativeParent(path, 2));
-                            break;
-                        case Event.PROPERTY_ADDED:
-                        case Event.PROPERTY_CHANGED:
-                        case Event.PROPERTY_REMOVED:
-                            reload = acPaths.contains(Text.getRelativeParent(path, 3));
-                            break;
-                        default:
-                            // illegal event-type: should never occur. ignore
-                            reload = false;
-                            break;
-                    }
-                }
-                // eventually reload the ACL and clear the cache
-                if (reload) {
-                    clearCache();
-                    // reload the acl
-                    entries = reload();
-                }
-            } catch (RepositoryException e) {
-                // should never get here
-                log.warn("Internal error: ", e.getMessage());
-            }
-        }
-
-        /**
-         *
-         * @return
-         * @throws RepositoryException
-         */
-        private Entries reload() throws RepositoryException {
-            // reload the paths
-            acPaths.clear();
-
-            // acNodes must be ordered in the same order as the principals
-            // in order to obtain proper acl-evalution in case the given
-            // principal-set is ordered.
-            List allACEs = new ArrayList();
-            // build acl-hierarchy assuming that principal-order determines the
-            // acl-inheritance.
-            for (Iterator it = principals.iterator(); it.hasNext();) {
-                Principal princ = (Principal) it.next();
-                PolicyTemplate at = editor.getPolicyTemplate(princ);
-                if (at == null || at.isEmpty()) {
-                    log.debug("No matching ACL node found for principal " + princ.getName() + " -> principal ignored.");
-                } else {
-                    // retrieve the ACEs from the node
-                    PolicyEntry[] aces = (PolicyEntry[]) at.getEntries();
-                    allACEs.addAll(Arrays.asList(aces));
-                    acPaths.add(at.getPath());
-                }
-            }
-            return new Entries(allACEs);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-
-    private static class Entries {
-
-        private final List entries;
-
-        private Entries(List entries) {
-            this.entries = entries;
-        }
-
-        /**
-         * Loop over all entries and evaluate allows/denies for those matching
-         * the given jcrPath.
-         *
-         * @param target Existing target item for which the permissions will be
-         * evaluated.
-         * @param protectsACL
-         * @return
-         * @throws RepositoryException
-         */
-        private int getPermissions(Item target, boolean protectsACL) throws RepositoryException {
-            int allows = 0;
-            int denies = 0;
-            for (Iterator it = entries.iterator(); it.hasNext() && allows != Permission.ALL;) {
-                PolicyEntryImpl entr = (PolicyEntryImpl) it.next();
-                if (entr.matches(target)) {
-                    int privs = entr.getPrivilegeBits();
-                    int permissions = Permission.calculatePermissions(privs, privs, protectsACL);
-                    if (entr.isAllow()) {
-                        allows |= Permission.diff(permissions, denies);
-                    } else {
-                        denies |= Permission.diff(permissions, allows);
-                    }
-                }
-            }
-            return allows;
-        }
-
-        /**
-         * loop over all entries and evaluate allows/denies for those matching
-         * the given jcrPath.
-         *
-         * @param parent Existing parent of the target to be evaluated.
-         * @param relPath relative path to a non-existing child item to calculate the
-         * permissions for.
-         * @param protectsACL
-         * @return
-         * @throws RepositoryException
-         */
-        private int getPermissions(Node parent, String relPath, boolean protectsACL) throws RepositoryException {
-            int allows = 0;
-            int denies = 0;
-            String jcrPath = parent.getPath() + "/" + relPath;
-
-            for (Iterator it = entries.iterator(); it.hasNext() && allows != Permission.ALL;) {
-                PolicyEntryImpl entr = (PolicyEntryImpl) it.next();
-                if (entr.matches(jcrPath)) {
-                    int privs = entr.getPrivilegeBits();
-                    int permissions = Permission.calculatePermissions(privs, privs, protectsACL);
-                    if (entr.isAllow()) {
-                        allows |= Permission.diff(permissions, denies);
-                    } else {
-                        denies |= Permission.diff(permissions, allows);
-                    }
-                }
-            }
-            return allows;
-        }
-
-        private int getPrivileges(String nodePath) throws RepositoryException {
-            // TODO: improve. avoid duplicate evaluation ...            
-            int allows = 0;
-            int denies = 0;
-            for (Iterator it = entries.iterator(); it.hasNext() && allows != Permission.ALL;) {
-                PolicyEntryImpl entr = (PolicyEntryImpl) it.next();
-                // loop over all entries and evaluate allows/denies for those
-                // matching the given jcrPath
-                // TODO: check again which ACEs must be respected.
-                // TODO: maybe ancestor-defs only if glob = *?
-                String np = entr.getNodePath();
-                // TODO: TOBEFIXED Text.isDescendant that returns false if np==root-path
-                if (np.equals(nodePath) || "/".equals(np) || Text.isDescendant(np, nodePath)) {
-                    if (entr.isAllow()) {
-                        allows |= PrivilegeRegistry.diff(entr.getPrivilegeBits(), denies);
-                    } else {
-                        denies |= PrivilegeRegistry.diff(entr.getPrivilegeBits(), allows);
-                    }
-                }
-            }
-            return allows;
         }
     }
 }

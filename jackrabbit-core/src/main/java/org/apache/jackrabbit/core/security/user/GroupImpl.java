@@ -172,14 +172,14 @@ class GroupImpl extends AuthorizableImpl implements Group {
         while (itr.hasNext()) {
             NodeImpl n = (NodeImpl) itr.nextProperty().getParent();
             if (n.isNodeType(NT_REP_GROUP)) {
-                Group group = create(n, userManager);
+                Group group = userManager.createGroup(n);
                 // only retrieve indirect group-members if the group is not
                 // yet present (detected eventual circular membership).
                 if (members.add(group) && includeIndirect) {
                     members.addAll(((GroupImpl) group).getMembers(true));
                 }
             } else if (n.isNodeType(NT_REP_USER)) {
-                User user = UserImpl.create(n, userManager);
+                User user = userManager.createUser(n);
                 members.add(user);
             }
         }
@@ -240,9 +240,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 try {
                     NodeImpl mem = (NodeImpl) getSession().getNodeByUUID(uuid);
                     if (mem.isNodeType(NT_REP_GROUP)) {
-                        auth = create(mem, userManager);
+                        auth = userManager.createGroup(mem);
                     } else {
-                        auth = UserImpl.create(mem, userManager);
+                        auth = userManager.createUser(mem);
                     }
                 } catch (RepositoryException e) {
                     log.warn("Internal error while building next member.", e.getMessage());

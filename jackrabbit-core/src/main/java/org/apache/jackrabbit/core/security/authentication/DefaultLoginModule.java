@@ -33,6 +33,7 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import java.security.Principal;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The <code>DefaultLoginModule</code> authenticates Credentials related to
@@ -49,6 +50,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractLoginModule.class);
 
+    private User user;
     private UserManager userManager;
 
     /**
@@ -69,17 +71,44 @@ public class DefaultLoginModule extends AbstractLoginModule {
         }
     }
 
+    /**
+     * Resolves the userID from the given credentials and obtains the
+     * principal from the User object associated with the given userID.
+     * If the the userID cannot be resolved to a User or if obtaining the
+     * principal fail, <code>null</code> is returned.
+     *
+     * @param credentials
+     * @return a user principal or <code>null</code>.
+     * @see AbstractLoginModule#getPrincipal(Credentials)
+     */
+    protected Principal getPrincipal(Credentials credentials) {
+        Principal principal = null;
+        String userId = getUserID(credentials);
+        try {
+            Authorizable authrz = userManager.getAuthorizable(userId);
+            if (authrz != null && !authrz.isGroup()) {
+                user = (User) authrz;
+                principal = user.getPrincipal();
+            }
+        } catch (RepositoryException e) {
+            // should not get here
+            log.warn("Error while retrieving principal.", e.getMessage());
+        }
+        return principal;
+    }
+
+    /**
+     * @see AbstractLoginModule#getAuthentication(Principal, Credentials)
+     */
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
-        Authorizable authrz = userManager.getAuthorizable(principal);
-        if (authrz == null || authrz.isGroup()) {
-            return null;
+        if (user != null) {
+            Authentication authentication = new SimpleCredentialsAuthentication(user);
+            if (authentication.canHandle(creds)) {
+                return authentication;
+            }
         }
-        Authentication authentication = new SimpleCredentialsAuthentication((User) authrz);
-        if (authentication.canHandle(creds)) {
-            return authentication;
-        } else {
-            return null;
-        }
+        // no valid user or authencation could not handle the given creds.
+        return null;
     }
 
     /**

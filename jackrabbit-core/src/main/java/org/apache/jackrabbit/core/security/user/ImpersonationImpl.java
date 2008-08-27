@@ -99,7 +99,6 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         // make sure the given principals belong to an existing authorizable
         Authorizable auth = user.userManager.getAuthorizable(principal);
         if (auth == null || auth.isGroup()) {
-            // TODO: check again if this assumption is correct...
             log.debug("Cannot grant impersonation to a principal that is a Group " +
                       "or an unknown Authorizable.");
             return false;

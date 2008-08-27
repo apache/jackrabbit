@@ -19,8 +19,7 @@ package org.apache.jackrabbit.api.jsr283.security;
 /**
  * A privilege represents the capability of performing a particular set
  * of operations on items in the JCR repository. Each privilege is identified
- * by a NAME that is unique across the set of privileges supported by a
- * repository. JCR defines a set of standard privileges in the <code>jcr</code>
+ * by a JCR name. JCR defines a set of standard privileges in the <code>jcr</code>
  * namespace. Implementations may add additional privileges in namespaces other
  * than <code>jcr</code>.
  * <p/>
@@ -41,63 +40,84 @@ package org.apache.jackrabbit.api.jsr283.security;
 public interface Privilege {
 
     /**
-     * A constant representing <code>READ</code>, the privilege to retrieve
+     * A constant representing <code>jcr:read</code> (in extended form), the privilege to retrieve
      * a node and get its properties and their values.
      */
-    public static final String READ = "javax.jcr.security.Privilege.READ";
+    public static final String JCR_READ = "{http://www.jcp.org/jcr/1.0}read";
 
     /**
-     * A constant representing <code>MODIFY_PROPERTIES</code>, the privilege
+     * A constant representing <code>jcr:modifyProperties</code> (in extended form), the privilege
      * to create, modify and remove the properties of a node.
      */
-    public static final String MODIFY_PROPERTIES = "javax.jcr.security.Privilege.MODIFY_PROPERTIES";
+    public static final String JCR_MODIFY_PROPERTIES = "{http://www.jcp.org/jcr/1.0}modifyProperties";
 
     /**
-     * A constant representing <code>ADD_CHILD_NODES</code>, the privilege
+     * A constant representing <code>jcr:addChildNodes</code> (in extended form), the privilege
      * to create child nodes of a node.
      */
-    public static final String ADD_CHILD_NODES = "javax.jcr.security.Privilege.ADD_CHILD_NODES";
+    public static final String JCR_ADD_CHILD_NODES = "{http://www.jcp.org/jcr/1.0}addChildNodes";
 
     /**
-     * A constant representing <code>REMOVE_CHILD_NODES</code>, the privilege
-     * to remove child nodes of a node.
+     * A constant representing <code>jcr:removeNode</code> (in extended form), the privilege
+     * to remove a node.
+     * <p>
+     * In order to actually remove a node requires <code>jcr:removeNode</code> on that node
+     * and <code>jcr:removeChildNodes</code> on the parent node.
+     * <p>
+     * The distinction is provided in order to reflect implementations that internally model "remove"
+     * as a "delete" instead of a "unlink". A repository that uses the "delete" model
+     * can have <code>jcr:removeChildNodes</code> in every access control policy, so that removal
+     * is effectively controlled by <code>jcr:removeNode</code>.
      */
-    public static final String REMOVE_CHILD_NODES = "javax.jcr.security.Privilege.REMOVE_CHILD_NODES";
+    public static final String JCR_REMOVE_NODE = "{http://www.jcp.org/jcr/1.0}removeNode";
 
     /**
-     * A constant representing <code>WRITE</code>, an aggregate privilege that contains:
-     *<ul>
-     *  <li>MODIFY_PROPERTIES</li>
-     *  <li>ADD_CHILD_NODES</li>
-     *  <li>REMOVE_CHILD_NODES</li>
+     * A constant representing <code>jcr:removeChildNodes</code> (in extended form), the privilege
+     * to remove child nodes of a node. In order to actually remove a node requires <code>jcr:removeNode</code> on that node
+     * and <code>jcr:removeChildNodes</code> on the parent node.
+     * <p>
+     * The distinction is provided in order to reflect implementations that internally model "remove"
+     * as a "unlink" instead of a "delete". A repository that uses the "unlink" model
+     * can have <code>jcr:removeNode</code> in every access control policy, so that removal
+     * is effectively controlled by <code>jcr:removeChildNodes</code>.
+     */
+    public static final String JCR_REMOVE_CHILD_NODES = "{http://www.jcp.org/jcr/1.0}removeChildNodes";
+
+    /**
+     * A constant representing <code>jcr:write</code> (in extended form), an aggregate privilege that contains:
+     * <ul>
+     *  <li><code>jcr:modifyProperties</code></li>
+     *  <li><code>jcr:addChildNodes</code></li>
+     *  <li><code>jcr:removeNode</code></li>
+     *  <li><code>jcr:removeChildNodes</code></li>
      * </ul>
      */
-    public static final String WRITE = "javax.jcr.security.Privilege.WRITE";
+    public static final String JCR_WRITE = "{http://www.jcp.org/jcr/1.0}write";
 
     /**
-     * A constant representing <code>READ_ACCESS_CONTROL</code>, the privilege
+     * A constant representing <code>jcr:readAccessControl</code> (in extended form), the privilege
      * to get the access control policy of a node.
      */
-    public static final String READ_ACCESS_CONTROL = "javax.jcr.security.Privilege.READ_ACCESS_CONTROL";
+    public static final String JCR_READ_ACCESS_CONTROL = "{http://www.jcp.org/jcr/1.0}readAccessControl";
 
     /**
-     * A constant representing <code>MODIFY_ACCESS_CONTROL</code>, the privilege
+     * A constant representing <code>jcr:modifyAccessControl</code> (in extended form), the privilege
      * to modify the access control policies of a node.
      */
-    public static final String MODIFY_ACCESS_CONTROL = "javax.jcr.security.Privilege.MODIFY_ACCESS_CONTROL";
+    public static final String JCR_MODIFY_ACCESS_CONTROL = "{http://www.jcp.org/jcr/1.0}modifyAccessControl";
 
     /**
-     * A constant representing <code>ALL</code>, an aggregate privilege that contains
+     * A constant representing <code>jcr:all</code> (in extended form), an aggregate privilege that contains
      * all predefined privileges:
      * <ul>
-     *   <li>READ</li>
-     *   <li>WRITE</li>
-     *   <li>READ_ACCESS_CONTROL</li>
-     *   <li>MODIFY_ACCESS_CONTROL</li>
+     *   <li><code>jcr:read</code></li>
+     *   <li><code>jcr:write</code></li>
+     *   <li><code>jcr:readAccessControl</code></li>
+     *   <li><code>jcr:modifyAccessControl</code></li>
      * </ul>
-     * It should in addition include all implementation-defined privileges.
+     * It should, in addition, include all implementation-defined privileges.
      */
-    public static final String ALL = "javax.jcr.security.Privilege.ALL";
+    public static final String JCR_ALL = "{http://www.jcp.org/jcr/1.0}all";
 
     /**
      * Returns the name of this privilege.
@@ -105,13 +125,6 @@ public interface Privilege {
      * @return the name of this privilege.
      */
     public String getName();
-
-    /**
-     * Returns a description of this privilege.
-     *
-     * @return a description of this privilege.
-     */
-    public String getDescription();
 
     /**
      * Returns whether this privilege is an abstract privilege.

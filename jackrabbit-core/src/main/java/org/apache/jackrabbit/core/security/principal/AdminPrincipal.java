@@ -21,7 +21,7 @@ package org.apache.jackrabbit.core.security.principal;
  * the access rights and is being authenticated (in contrast to the
  * {@link org.apache.jackrabbit.core.security.SystemPrincipal SystemPrincipal}).
  */
-public final class AdminPrincipal implements JackrabbitPrincipal {
+public class AdminPrincipal implements JackrabbitPrincipal {
 
     private final String adminId;
 
