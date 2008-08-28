@@ -30,6 +30,7 @@ import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -45,7 +46,6 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * <code>AbstractEvaluationTest</code>...
