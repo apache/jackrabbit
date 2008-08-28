@@ -96,13 +96,13 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
-            map.put("e1", e1);
+            map.put("keyE1", e1);
 
             Element e2 = new Element();
             e2.setId("e2");
             e2.setText("Element 2");
             hashMapElement.addObject(e2);
-            map.put("e2", e2);
+            map.put("keyE2", e2);
 
             main.setHashMapElement(hashMapElement);
             main.setMap(map);
@@ -118,8 +118,12 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             assertNotNull("main.getHashMap() is null", main.getMap());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
             map = (Map) main.getHashMapElement().getObjects();
-            assertTrue("Incorrect para element", ((Element) map.get("e1")).getText().equals("Element 1"));
-            assertTrue("Incorrect para element", ((Element) map.get("e1")).getText().equals("Element 1"));
+            assertTrue("Incorrect para element", map.get("e1").getText().equals("Element 1"));
+            assertTrue("Incorrect para element", map.get("e2").getText().equals("Element 2"));
+            
+            map = main.getMap();
+            assertTrue("Incorrect para element", map.get("keyE1").getText().equals("Element 1"));
+            assertTrue("Incorrect para element", map.get("keyE2").getText().equals("Element 2"));
 
             // --------------------------------------------------------------------------------
             // Update the object
@@ -131,19 +135,19 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             e1.setId("e1");
             e1.setText("Element 1");
             hashMapElement.addObject(e1);
-            map.put("e1", e1);
+            map.put("keyE1", e1);
 
             e2 = new Element();
             e2.setId("e3");
             e2.setText("Element 3");
             hashMapElement.addObject(e2);
-            map.put("e3", e2);
+            map.put("keyE3", e2);
 
             Element e3 = new Element();
             e3.setId("e4");
             e3.setText("Element 4");
             hashMapElement.addObject(e3);
-            map.put("e4", e3);
+            map.put("keyE4", e3);
 
             main.setHashMapElement(hashMapElement);
             main.setMap(map);
@@ -157,8 +161,12 @@ public class AnnotationHashMapTest extends AnnotationTestBase
             assertNotNull("main.getElements() is null", main.getHashMapElement());
             assertTrue("Incorrect text", main.getText().equals("Main text"));
             map = (Map) main.getHashMapElement().getObjects();
-            assertTrue("Incorrect para element", ((Element) map.get("e4")).getText().equals("Element 4"));
-            assertTrue("Incorrect para element", main.getMap().get("e4").getText().equals("Element 4"));
+            assertTrue("Incorrect para element", map.get("e4").getText().equals("Element 4"));
+            assertTrue("Incorrect para element", map.get("e4").getText().equals("Element 4"));
+            
+            map = main.getMap();
+            assertTrue("Incorrect para element", map.get("keyE4").getText().equals("Element 4"));
+            assertTrue("Incorrect para element", map.get("keyE4").getText().equals("Element 4"));
         }
         catch (Exception e)
         {

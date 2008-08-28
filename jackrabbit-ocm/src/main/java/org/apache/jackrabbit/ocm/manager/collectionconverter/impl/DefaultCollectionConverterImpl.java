@@ -24,10 +24,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.ItemExistsException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
@@ -110,7 +115,17 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
 
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
-        Iterator collectionIterator = objects.getIterator();
+        if (objects instanceof ManageableCollection)
+           insertManageableCollection(session, objects, collectionNode, elementClassDescriptor);
+        else 
+           insertManageableMap(session, objects, collectionNode);
+        	
+    }
+
+	private void insertManageableCollection(Session session,
+			ManageableObjects objects, Node collectionNode,
+			ClassDescriptor elementClassDescriptor) {
+		Iterator collectionIterator = objects.getIterator();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
             String elementJcrName = null;
@@ -127,7 +142,19 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
 
             objectConverter.insert(session, collectionNode, elementJcrName, item);
         }
-    }
+	}
+	
+	private void insertManageableMap(Session session, ManageableObjects objects, Node collectionNode) {
+
+		
+		Map map = (Map) objects.getObjects(); 
+		for (Object key : map.keySet())
+		{
+			Object item = map.get(key);
+			objectConverter.insert(session, collectionNode, key.toString(), item);
+			
+		}
+	}
 
     /**
      *
@@ -158,10 +185,23 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
     	}
 
     	// update process
+    	if (objects instanceof ManageableCollection)
+           updateManagableCollection(session, parentNode, collectionDescriptor, objects, jcrName);
+    	else
+    	   updateManagableMap(session, parentNode, collectionDescriptor, objects, jcrName);
+    		
+    }
 
-        ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
+	private void updateManagableCollection(Session session, Node parentNode,
+			CollectionDescriptor collectionDescriptor,
+			ManageableObjects objects, String jcrName)
+			throws PathNotFoundException, RepositoryException,
+			VersionException, LockException, ConstraintViolationException,
+			ItemExistsException {
+		ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
         Node collectionNode = parentNode.getNode(jcrName);
-        //  If the collection elements have not an id, it is not possible to find the matching JCR nodes => delete the complete collection
+        //  If the collection elements have not an id, it is not possible to find the matching JCR nodes 
+        //  => delete the complete collection
         if (!elementClassDescriptor.hasIdField()) {
             collectionNode.remove();
             collectionNode = parentNode.addNode(jcrName);
@@ -211,7 +251,50 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                 ((Node) removeNodes.get(i)).remove();
             }
         }
-    }
+	}
+	
+	
+	private void updateManagableMap(Session session, Node parentNode,
+									CollectionDescriptor collectionDescriptor,
+									ManageableObjects objects, String jcrName)
+									throws PathNotFoundException, RepositoryException,
+									VersionException, LockException, ConstraintViolationException,
+									ItemExistsException {
+		
+		
+		ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
+        Node collectionNode = parentNode.getNode(jcrName);
+
+        Map map = (Map) objects.getObjects(); 
+        Map updatedItems = new HashMap();
+		for (Object key : map.keySet())
+		{
+			Object item = map.get(key);
+			// Update existing JCR Nodes
+            if (collectionNode.hasNode(key.toString())) {
+                objectConverter.update(session, collectionNode, key.toString(), item);
+            }
+            else {
+                // Add new collection elements
+                objectConverter.insert(session, collectionNode, key.toString(), item);
+            } 
+            updatedItems.put(key.toString(), item);
+		}
+
+		// Delete the nodes that are not present in the Map 
+        NodeIterator nodeIterator = collectionNode.getNodes();
+        List removeNodes = new ArrayList();
+        while (nodeIterator.hasNext()) {
+            Node child = nodeIterator.nextNode();
+            if (!updatedItems.containsKey(child.getName())) {
+                    removeNodes.add(child);
+            }
+        }
+        for(int i = 0; i < removeNodes.size(); i++) {
+            ((Node) removeNodes.get(i)).remove();
+        }
+
+	}
 
     /**
      * @see AbstractCollectionConverterImpl#doGetCollection(Session, Node, CollectionDescriptor, Class)
@@ -236,19 +319,9 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             Object item = objectConverter.getObject(session, elementClass, itemNode.getPath());
             if ( objects instanceof ManageableCollection)
             	((ManageableCollection)objects).addObject(item);
-            else {
-            	ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass(elementClass);
-            	if (!elementClassDescriptor.hasIdField())
-            	{
-            		throw new JcrMappingException("Impossible to use a map for the field : "
-            				                      + collectionDescriptor.getFieldName()
-            				                      + " in the class : " + collectionDescriptor.getCollectionClassName()
-            				                      + ". The element objects have no id field (check their OCM mapping).");
-            	}
-            	Object elementId = ReflectionUtils.getNestedProperty(item,
-            			                           elementClassDescriptor.getIdFieldDescriptor().getFieldName());
-                ((ManageableMap) objects).addObject(elementId, item);
-            }
+            else 
+            	((ManageableMap) objects).addObject(itemNode.getName(), item);
+
         }
 
         return objects;

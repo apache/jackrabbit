@@ -54,9 +54,10 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  *
  * This collection mapping strategy maps the collection elements into subnodes based on the same node types.
  *
- * There are 2 constraints in this collection converter :
+ * There are 3 constraints in this collection converter :
  * 1/ this is not possible to have 2 different collections in the main object which are used the same jcr node type for their elements.
  * 2/ this is not possible to make a distinction between an empty collection and an null collection.
+ * 3/ Map are not supported. 
  *
  *
  * If the collection element class contains an id (see the FieldDescriptor definition), this id value is used to build the collection element node name.
