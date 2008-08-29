@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.InputStreamReader;
 
 /**
  * Text extractor for HyperText Markup Language (HTML).
@@ -64,7 +65,13 @@ public class HTMLTextExtractor extends AbstractTextExtractor {
             HTMLParser parser = new HTMLParser();
             SAXResult result = new SAXResult(new DefaultHandler());
 
-            SAXSource source = new SAXSource(parser, new InputSource(stream));
+            Reader reader;
+            if (encoding != null) {
+                reader = new InputStreamReader(stream, encoding);
+            } else {
+                reader = new InputStreamReader(stream);
+            }
+            SAXSource source = new SAXSource(parser, new InputSource(reader));
             transformer.transform(source, result);
 
             return new StringReader(parser.getContents());
