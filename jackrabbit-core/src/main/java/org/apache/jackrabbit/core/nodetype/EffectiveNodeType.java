@@ -686,25 +686,20 @@ public class EffectiveNodeType implements Cloneable {
 
         // try named node definitions first
         ItemDef[] defs = getNamedItemDefs(name);
-        if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                ItemDef def = defs[i];
-                if (def.definesNode()) {
-                    NodeDef nd = (NodeDef) def;
-                    // node definition with that name exists
-                    if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
-                        // check 'required primary types' constraint
-                        if (!entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
-                            continue;
-                        }
+        for (int i = 0; i < defs.length; i++) {
+            if (defs[i].definesNode()) {
+                NodeDef nd = (NodeDef) defs[i];
+                Name[] types = nd.getRequiredPrimaryTypes();
+                // node definition with that name exists
+                if (entTarget != null && types != null) {
+                    // check 'required primary types' constraint
+                    if (entTarget.includesNodeTypes(types)) {
                         // found named node definition
                         return nd;
-                    } else {
-                        if (nd.getDefaultPrimaryType() != null) {
-                            // found node definition with default node type
-                            return nd;
-                        }
                     }
+                } else if (nd.getDefaultPrimaryType() != null) {
+                    // found node definition with default node type
+                    return nd;
                 }
             }
         }
