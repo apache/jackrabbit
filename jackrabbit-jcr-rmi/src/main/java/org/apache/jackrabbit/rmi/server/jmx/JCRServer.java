@@ -20,12 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.jcr.Credentials;
-import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Workspace;
 import javax.naming.InitialContext;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
@@ -124,31 +123,22 @@ public class JCRServer implements JCRServerMBean {
         remote = null;
     }
 
-    public void createWorkspace( String username, String password, String workspace ) {
+    public void createWorkspace(
+            String username, String password, String name)
+            throws RepositoryException {
+        Session session = localRepository.login(
+                new SimpleCredentials(username, password.toCharArray()));
         try {
-            Credentials cred = new SimpleCredentials( username, password.toCharArray() );
-            Session sesion = this.localRepository.login( cred );
-            JackrabbitWorkspace ws = ( JackrabbitWorkspace ) sesion.getWorkspace();
-            ws.createWorkspace( workspace );
-        } catch ( LoginException ex ) {
-            ex.printStackTrace();
-        } catch ( RepositoryException ex ) {
-            ex.printStackTrace();
+            Workspace workspace = session.getWorkspace();
+            if (workspace instanceof JackrabbitWorkspace) {
+                ((JackrabbitWorkspace) workspace).createWorkspace(name);
+            } else {
+                throw new RepositoryException(
+                        "Not a Jackrabbit workspace: " + workspace);
+            }
+        } finally {
+            session.logout();
         }
-    }
-
-    /**
-     * Returns the local repository instance.
-     */
-    Repository getLocalRepository() {
-        return localRepository;
-    }
-
-    /**
-     * Sets the local repository instance.
-     */
-    public void setLocalRepository( Repository localRepository ) {
-        this.localRepository = localRepository;
     }
 
     public String getLocalAddress() {
