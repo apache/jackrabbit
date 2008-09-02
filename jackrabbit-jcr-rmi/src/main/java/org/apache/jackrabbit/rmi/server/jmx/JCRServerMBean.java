@@ -22,6 +22,8 @@ public interface JCRServerMBean {
 
     public void stop() throws Exception;
 
+    public void createWorkspace(String username, String password, String workspace);
+
     public String getLocalAddress();
 
     public void setLocalAddress(String address);
