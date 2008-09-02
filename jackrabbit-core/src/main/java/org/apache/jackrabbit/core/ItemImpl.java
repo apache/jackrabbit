@@ -1322,13 +1322,17 @@ public abstract class ItemImpl implements Item {
     //--------------------------------------------------------------< Object >
 
     /**
-     * Returns the ({@link #safeGetJCRPath() safe}) path of this item
-     * for use in diagnostic output.
+     * Returns a string with the type and ({@link #safeGetJCRPath() safe}) path
+     * of this item for use in diagnostic output.
      *
      * @return item path
      */
     public String toString() {
-        return safeGetJCRPath();
+        if (isNode()) {
+            return "node " + safeGetJCRPath();
+        } else {
+            return "property " + safeGetJCRPath();
+        }
     }
 
 }
