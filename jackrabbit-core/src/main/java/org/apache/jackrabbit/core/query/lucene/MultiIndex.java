@@ -539,14 +539,15 @@ public class MultiIndex {
             }
         } catch (IOException e) {
             // close readers obtained so far
-            for (Iterator it = indexReaders.keySet().iterator(); it.hasNext();) {
-                ReadOnlyIndexReader reader = (ReadOnlyIndexReader) it.next();
+            for (Iterator it = indexReaders.entrySet().iterator(); it.hasNext();) {
+                Map.Entry entry = (Map.Entry) it.next();
+                ReadOnlyIndexReader reader = (ReadOnlyIndexReader) entry.getKey();
                 try {
                     reader.close();
                 } catch (IOException ex) {
                     log.warn("Exception closing index reader: " + ex);
                 }
-                ((PersistentIndex) indexReaders.get(reader)).resetListener();
+                ((PersistentIndex) entry.getValue()).resetListener();
             }
             throw e;
         }

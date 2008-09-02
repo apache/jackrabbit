@@ -16,13 +16,15 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import javax.jcr.PropertyType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import javax.jcr.PropertyType;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -247,10 +249,11 @@ public class NodeTypeDefDiff {
          * walk through defs1 and process all entries found in
          * both defs1 & defs2 and those found only in defs1
          */
-        Iterator iter = defs1.keySet().iterator();
+        Iterator iter = defs1.entrySet().iterator();
         while (iter.hasNext()) {
-            PropDefId id = (PropDefId) iter.next();
-            PropDef def1 = (PropDef) defs1.get(id);
+            Map.Entry entry = (Map.Entry) iter.next();
+            PropDefId id = (PropDefId) entry.getKey();
+            PropDef def1 = (PropDef) entry.getValue();
             PropDef def2 = (PropDef) defs2.get(id);
             PropDefDiff diff = new PropDefDiff(def1, def2);
             if (diff.getType() > maxType) {
@@ -264,10 +267,11 @@ public class NodeTypeDefDiff {
          * defs2 by now only contains entries found in defs2 only;
          * walk through defs2 and process all remaining entries
          */
-        iter = defs2.keySet().iterator();
+        iter = defs2.entrySet().iterator();
         while (iter.hasNext()) {
-            PropDefId id = (PropDefId) iter.next();
-            PropDef def = (PropDef) defs2.get(id);
+            Map.Entry entry = (Map.Entry) iter.next();
+            PropDefId id = (PropDefId) entry.getKey();
+            PropDef def = (PropDef) entry.getValue();
             PropDefDiff diff = new PropDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -304,10 +308,11 @@ public class NodeTypeDefDiff {
          * walk through defs1 and process all entries found in
          * both defs1 & defs2 and those found only in defs1
          */
-        Iterator iter = defs1.keySet().iterator();
+        Iterator iter = defs1.entrySet().iterator();
         while (iter.hasNext()) {
-            NodeDefId id = (NodeDefId) iter.next();
-            NodeDef def1 = (NodeDef) defs1.get(id);
+            Map.Entry entry = (Map.Entry) iter.next();
+            NodeDefId id = (NodeDefId) entry.getKey();
+            NodeDef def1 = (NodeDef) entry.getValue();
             NodeDef def2 = (NodeDef) defs2.get(id);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
             if (diff.getType() > maxType) {
@@ -321,10 +326,11 @@ public class NodeTypeDefDiff {
          * defs2 by now only contains entries found in defs2 only;
          * walk through defs2 and process all remaining entries
          */
-        iter = defs2.keySet().iterator();
+        iter = defs2.entrySet().iterator();
         while (iter.hasNext()) {
-            NodeDefId id = (NodeDefId) iter.next();
-            NodeDef def = (NodeDef) defs2.get(id);
+            Map.Entry entry = (Map.Entry) iter.next();
+            NodeDefId id = (NodeDefId) entry.getKey();
+            NodeDef def = (NodeDef) entry.getValue();
             ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
