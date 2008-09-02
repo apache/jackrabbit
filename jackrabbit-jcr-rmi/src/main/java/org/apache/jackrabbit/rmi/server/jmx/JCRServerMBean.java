@@ -16,13 +16,24 @@
  */
 package org.apache.jackrabbit.rmi.server.jmx;
 
+import javax.jcr.RepositoryException;
+
 public interface JCRServerMBean {
 
     void start() throws Exception;
 
     void stop() throws Exception;
 
-    void createWorkspace(String username, String password, String workspace);
+    /**
+     * Creates a workspace in the managed repository.
+     *
+     * @param username administrator username
+     * @param password administrator password
+     * @param workspace name of the workspace to create
+     * @throws RepositoryException if the workspace could not be created
+     */
+    void createWorkspace(String username, String password, String workspace)
+        throws RepositoryException;
 
     String getLocalAddress();
 
