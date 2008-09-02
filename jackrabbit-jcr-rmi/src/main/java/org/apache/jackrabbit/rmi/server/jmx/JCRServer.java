@@ -20,9 +20,15 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.jcr.Credentials;
+import javax.jcr.LoginException;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.naming.InitialContext;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
@@ -57,6 +63,11 @@ public class JCRServer implements JCRServerMBean {
      */
     RemoteRepository remote;
 
+    /**
+     * Local repository instance
+     */
+    private Repository localRepository;
+
     public void start() throws Exception {
 
         if (this.localAddress == null) {
@@ -69,8 +80,7 @@ public class JCRServer implements JCRServerMBean {
 
         // local repository
         InitialContext localContext = createInitialContext(localEnvironment);
-        Repository localRepository = (Repository) localContext
-                .lookup(this.localAddress);
+        localRepository = (Repository) localContext.lookup(this.localAddress);
         if (localRepository == null) {
             throw new IllegalArgumentException("local repository not found at "
                     + this.localAddress);
@@ -112,6 +122,33 @@ public class JCRServer implements JCRServerMBean {
         InitialContext ctx = new InitialContext();
         ctx.unbind(this.remoteAddress);
         remote = null;
+    }
+
+    public void createWorkspace( String username, String password, String workspace ) {
+        try {
+            Credentials cred = new SimpleCredentials( username, password.toCharArray() );
+            Session sesion = this.localRepository.login( cred );
+            JackrabbitWorkspace ws = ( JackrabbitWorkspace ) sesion.getWorkspace();
+            ws.createWorkspace( workspace );
+        } catch ( LoginException ex ) {
+            ex.printStackTrace();
+        } catch ( RepositoryException ex ) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Returns the local repository instance.
+     */
+    Repository getLocalRepository() {
+        return localRepository;
+    }
+
+    /**
+     * Sets the local repository instance.
+     */
+    public void setLocalRepository( Repository localRepository ) {
+        this.localRepository = localRepository;
     }
 
     public String getLocalAddress() {
