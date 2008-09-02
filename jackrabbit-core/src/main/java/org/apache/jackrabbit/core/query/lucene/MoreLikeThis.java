@@ -595,11 +595,12 @@ public final class MoreLikeThis {
         int numDocs = ir.numDocs();
         FreqQ res = new FreqQ(words.size()); // will order words by score
 
-        Iterator it = words.keySet().iterator();
+        Iterator it = words.entrySet().iterator();
         while (it.hasNext()) { // for every word
-            String word = (String) it.next();
+            Map.Entry entry = (Map.Entry) it.next();
+            String word = (String) entry.getKey();
 
-            int tf = ((Int) words.get(word)).x; // term freq in the source doc
+            int tf = ((Int) entry.getValue()).x; // term freq in the source doc
             if (minTermFreq > 0 && tf < minTermFreq) {
                 continue; // filter out words that don't occur enough times in the source
             }
