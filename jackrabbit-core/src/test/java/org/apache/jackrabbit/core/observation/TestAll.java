@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReorderTest.class);
         suite.addTestSuite(MixinTest.class);
         suite.addTestSuite(VersionEventsTest.class);
+        suite.addTestSuite(MoveInPlaceTest.class);
 
         return suite;
     }
