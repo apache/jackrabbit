@@ -18,26 +18,26 @@ package org.apache.jackrabbit.rmi.server.jmx;
 
 public interface JCRServerMBean {
 
-    public void start() throws Exception;
+    void start() throws Exception;
 
-    public void stop() throws Exception;
+    void stop() throws Exception;
 
-    public void createWorkspace(String username, String password, String workspace);
+    void createWorkspace(String username, String password, String workspace);
 
-    public String getLocalAddress();
+    String getLocalAddress();
 
-    public void setLocalAddress(String address);
+    void setLocalAddress(String address);
 
-    public String getRemoteAddress();
+    String getRemoteAddress();
 
-    public void setRemoteAddress(String address);
+    void setRemoteAddress(String address);
 
-    public String getRemoteEnvironment();
+    String getRemoteEnvironment();
 
-    public void setRemoteEnvironment(String remoteEnvironment);
+    void setRemoteEnvironment(String remoteEnvironment);
 
-    public String getLocalEnvironment();
+    String getLocalEnvironment();
 
-    public void setLocalEnvironment(String localEnvironment);
+    void setLocalEnvironment(String localEnvironment);
 
 }
