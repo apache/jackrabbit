@@ -1318,4 +1318,17 @@ public abstract class ItemImpl implements Item {
         }
         return false;
     }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns the ({@link #safeGetJCRPath() safe}) path of this item
+     * for use in diagnostic output.
+     *
+     * @return item path
+     */
+    public String toString() {
+        return safeGetJCRPath();
+    }
+
 }

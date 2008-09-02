@@ -765,15 +765,4 @@ public class PropertyImpl extends ItemImpl implements Property {
         return (Node) itemMgr.getItem(getPropertyState().getParentId());
     }
 
-    //--------------------------------------------------------------< Object >
-
-    /**
-     * Returns the (safe) path of this property.
-     *
-     * @return property path
-     */
-    public String toString() {
-        return safeGetJCRPath();
-    }
-
 }
