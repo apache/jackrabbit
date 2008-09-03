@@ -42,7 +42,7 @@ public class NodeState extends ItemState {
     /**
      * the names of this node's mixin types
      */
-    private Set mixinTypeNames = Collections.EMPTY_SET;
+    private NameSet mixinTypeNames = new NameSet();
 
     /**
      * the id of this node.
@@ -66,21 +66,9 @@ public class NodeState extends ItemState {
     private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
 
     /**
-     * Set to <code>true</code> if {@link #childNodeEntries} are shared between
-     * different <code>NodeState</code> instance.
-     */
-    private boolean sharedChildNodeEntries = false;
-
-    /**
      * set of property names (Name objects)
      */
-    private HashSet propertyNames = new HashSet();
-
-    /**
-     * Set to <code>true</code> if {@link #propertyNames} is shared between
-     * different <code>NodeState</code> instances.
-     */
-    private boolean sharedPropertyNames = false;
+    private NameSet propertyNames = new NameSet();
 
     /**
      * Shared set, consisting of the parent ids of this shareable node. This
@@ -138,14 +126,10 @@ public class NodeState extends ItemState {
             id = nodeState.id;
             parentId = nodeState.parentId;
             nodeTypeName = nodeState.nodeTypeName;
-            mixinTypeNames = nodeState.mixinTypeNames;
+            mixinTypeNames = (NameSet) nodeState.mixinTypeNames.clone();
             defId = nodeState.defId;
-            propertyNames = nodeState.propertyNames;
-            sharedPropertyNames = true;
-            nodeState.sharedPropertyNames = true;
-            childNodeEntries = nodeState.childNodeEntries;
-            sharedChildNodeEntries = true;
-            nodeState.sharedChildNodeEntries = true;
+            propertyNames = (NameSet) nodeState.propertyNames.clone();
+            childNodeEntries = (ChildNodeEntries) nodeState.childNodeEntries.clone();
             if (syncModCount) {
                 setModCount(state.getModCount());
             }
@@ -214,7 +198,7 @@ public class NodeState extends ItemState {
      * @return a set of the names of this node's mixin types.
      */
     public synchronized Set getMixinTypeNames() {
-        return Collections.unmodifiableSet(mixinTypeNames);
+        return mixinTypeNames;
     }
 
     /**
@@ -223,11 +207,7 @@ public class NodeState extends ItemState {
      * @param names set of names of mixin types
      */
     public synchronized void setMixinTypeNames(Set names) {
-        if (names instanceof HashSet) {
-            mixinTypeNames = (Set) ((HashSet) names).clone();
-        } else {
-            mixinTypeNames = new HashSet(names);
-        }
+        mixinTypeNames.replaceAll(names);
     }
 
     /**
@@ -367,10 +347,6 @@ public class NodeState extends ItemState {
      */
     public synchronized ChildNodeEntry addChildNodeEntry(Name nodeName,
                                                          NodeId id) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.add(nodeName, id);
         notifyNodeAdded(entry);
         return entry;
@@ -387,10 +363,6 @@ public class NodeState extends ItemState {
      */
     public synchronized boolean renameChildNodeEntry(Name oldName, int index,
                                                      Name newName) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry oldEntry = childNodeEntries.remove(oldName, index);
         if (oldEntry != null) {
             ChildNodeEntry newEntry =
@@ -411,10 +383,6 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(Name nodeName, int index) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.remove(nodeName, index);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -430,10 +398,6 @@ public class NodeState extends ItemState {
      *         in the list of child node entries and could be removed.
      */
     public synchronized boolean removeChildNodeEntry(NodeId id) {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         ChildNodeEntry entry = childNodeEntries.remove(id);
         if (entry != null) {
             notifyNodeRemoved(entry);
@@ -445,10 +409,6 @@ public class NodeState extends ItemState {
      * Removes all <code>ChildNodeEntry</code>s.
      */
     public synchronized void removeAllChildNodeEntries() {
-        if (sharedChildNodeEntries) {
-            childNodeEntries = (ChildNodeEntries) childNodeEntries.clone();
-            sharedChildNodeEntries = false;
-        }
         childNodeEntries.removeAll();
         notifyNodesReplaced();
     }
@@ -464,14 +424,8 @@ public class NodeState extends ItemState {
             // optimization
             ChildNodeEntries entries = (ChildNodeEntries) nodeEntries;
             childNodeEntries = (ChildNodeEntries) entries.clone();
-            sharedChildNodeEntries = false;
         } else {
-            if (sharedChildNodeEntries) {
-                childNodeEntries = new ChildNodeEntries();
-                sharedChildNodeEntries = false;
-            } else {
-                childNodeEntries.removeAll();
-            }
+            childNodeEntries.removeAll();
             childNodeEntries.addAll(nodeEntries);
 
         }
@@ -487,7 +441,7 @@ public class NodeState extends ItemState {
      * @see #removePropertyName
      */
     public synchronized Set getPropertyNames() {
-        return Collections.unmodifiableSet(propertyNames);
+        return propertyNames;
     }
 
     /**
@@ -496,10 +450,6 @@ public class NodeState extends ItemState {
      * @param propName <code>Name</code> object specifying the property name
      */
     public synchronized void addPropertyName(Name propName) {
-        if (sharedPropertyNames) {
-            propertyNames = (HashSet) propertyNames.clone();
-            sharedPropertyNames = false;
-        }
         propertyNames.add(propName);
     }
 
@@ -511,10 +461,6 @@ public class NodeState extends ItemState {
      *         in the list of property name entries and could be removed.
      */
     public synchronized boolean removePropertyName(Name propName) {
-        if (sharedPropertyNames) {
-            propertyNames = (HashSet) propertyNames.clone();
-            sharedPropertyNames = false;
-        }
         return propertyNames.remove(propName);
     }
 
@@ -522,12 +468,7 @@ public class NodeState extends ItemState {
      * Removes all property name entries.
      */
     public synchronized void removeAllPropertyNames() {
-        if (sharedPropertyNames) {
-            propertyNames = new HashSet();
-            sharedPropertyNames = false;
-        } else {
-            propertyNames.clear();
-        }
+        propertyNames.removeAll();
     }
 
     /**
@@ -536,19 +477,7 @@ public class NodeState extends ItemState {
      * @param propNames set of {@link Name}s.
      */
     public synchronized void setPropertyNames(Set propNames) {
-        if (propNames instanceof HashSet) {
-            HashSet names = (HashSet) propNames;
-            propertyNames = (HashSet) names.clone();
-            sharedPropertyNames = false;
-        } else {
-            if (sharedPropertyNames) {
-                propertyNames = new HashSet();
-                sharedPropertyNames = false;
-            } else {
-                propertyNames.clear();
-            }
-            propertyNames.addAll(propNames);
-        }
+        propertyNames.replaceAll(propNames);
     }
 
     /**
@@ -667,7 +596,7 @@ public class NodeState extends ItemState {
      */
     public synchronized Set getAddedPropertyNames() {
         if (!hasOverlayedState()) {
-            return Collections.unmodifiableSet(propertyNames);
+            return propertyNames;
         }
 
         NodeState other = (NodeState) getOverlayedState();

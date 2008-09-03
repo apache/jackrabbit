@@ -20,6 +20,7 @@ import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.OrderedMapIterator;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.util.EmptyLinkedMap;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.ListIterator;
+import java.util.Map;
 
 /**
  * <code>ChildNodeEntries</code> represents an insertion-ordered
@@ -40,15 +42,26 @@ import java.util.ListIterator;
  */
 class ChildNodeEntries implements List, Cloneable {
 
-    // insertion-ordered map of entries (key=NodeId, value=entry)
+    /**
+     * Insertion-ordered map of entries
+     * (key=NodeId, value=entry)
+     */
     private LinkedMap entries;
-    // map used for lookup by name
-    // (key=name, value=either a single entry or a list of sns entries)
-    private HashMap nameMap;
+
+    /**
+     * Map used for lookup by name
+     * (key=name, value=either a single entry or a list of sns entries)
+     */
+    private Map nameMap;
+
+    /**
+     * Indicates whether the entries and nameMap are shared with another
+     * ChildNodeEntries instance.
+     */
+    private boolean shared;
 
     ChildNodeEntries() {
-        entries = new LinkedMap();
-        nameMap = new HashMap();
+        init();
     }
 
     ChildNodeEntry get(NodeId id) {
@@ -94,6 +107,7 @@ class ChildNodeEntries implements List, Cloneable {
     }
 
     ChildNodeEntry add(Name nodeName, NodeId id) {
+        ensureModifiable();
         List siblings = null;
         int index = 0;
         Object obj = nameMap.get(nodeName);
@@ -143,6 +157,7 @@ class ChildNodeEntries implements List, Cloneable {
             throw new IllegalArgumentException("index is 1-based");
         }
 
+        ensureModifiable();
         Object obj = nameMap.get(nodeName);
         if (obj == null) {
             return null;
@@ -223,8 +238,7 @@ class ChildNodeEntries implements List, Cloneable {
      * Removes all child node entries
      */
     public void removeAll() {
-        nameMap.clear();
-        entries.clear();
+        init();
     }
 
     /**
@@ -434,6 +448,7 @@ class ChildNodeEntries implements List, Cloneable {
     }
 
     //------------------------------------------------< Cloneable support >
+
     /**
      * Returns a shallow copy of this <code>ChildNodeEntries</code> instance;
      * the entries themselves are not cloned.
@@ -441,19 +456,50 @@ class ChildNodeEntries implements List, Cloneable {
      * @return a shallow copy of this instance.
      */
     protected Object clone() {
-        ChildNodeEntries clone = new ChildNodeEntries();
-        clone.entries = (LinkedMap) entries.clone();
-        clone.nameMap = new HashMap(nameMap.size());
-        for (Iterator it = nameMap.keySet().iterator(); it.hasNext();) {
-            Object key = it.next();
-            Object obj = nameMap.get(key);
-            if (obj instanceof ArrayList) {
-                // clone List
-                obj = ((ArrayList) obj).clone();
+        try {
+            ChildNodeEntries clone = (ChildNodeEntries) super.clone();
+            if (nameMap != Collections.EMPTY_MAP) {
+                clone.shared = true;
+                shared = true;
             }
-            clone.nameMap.put(key, obj);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            // never happens, this class is cloneable
+            throw new InternalError();
         }
-        return clone;
+    }
+
+    //-------------------------------------------------------------< internal >
+
+    /**
+     * Initializes the name and entries map with unmodifiable empty instances.
+     */
+    private void init() {
+        nameMap = Collections.EMPTY_MAP;
+        entries = EmptyLinkedMap.INSTANCE;
+        shared = false;
+    }
+
+    /**
+     * Ensures that the {@link #nameMap} and {@link #entries} map are
+     * modifiable.
+     */
+    private void ensureModifiable() {
+        if (nameMap == Collections.EMPTY_MAP) {
+            nameMap = new HashMap();
+            entries = new LinkedMap();
+        } else if (shared) {
+            entries = (LinkedMap) entries.clone();
+            nameMap = (Map) ((HashMap) nameMap).clone();
+            for (Iterator it = nameMap.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry entry = (Map.Entry) it.next();
+                Object value = entry.getValue();
+                if (value instanceof ArrayList) {
+                    entry.setValue(((ArrayList) value).clone());
+                }
+            }
+            shared = false;
+        }
     }
 
     //----------------------------------------------------< inner classes >
