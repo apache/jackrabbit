@@ -122,7 +122,6 @@ public final class EventStateCollection {
     public void createEventStates(NodeId rootNodeId, ChangeLog changes, ItemStateManager stateMgr) throws ItemStateException {
         // create a hierarchy manager, that is based on the ChangeLog and
         // the ItemStateProvider
-        // todo use CachingHierarchyManager ?
         ChangeLogBasedHierarchyMgr hmgr =
             new ChangeLogBasedHierarchyMgr(rootNodeId, stateMgr, changes);
 
