@@ -131,7 +131,7 @@ public class PathMap {
      * Internal class holding the object associated with a certain
      * path element.
      */
-    public static class Element {
+    public final static class Element {
 
         /**
          * Parent element
@@ -154,9 +154,11 @@ public class PathMap {
         private Object obj;
 
         /**
-         * Name associated with this element
+         * Path.Element suitable for path construction associated with this
+         * element. The path element will never have a default index. Instead an
+         * undefined index value is set in that case.
          */
-        private Name name;
+        private Path.Element pathElement;
 
         /**
          * 1-based index associated with this element where index=0 is
@@ -169,8 +171,13 @@ public class PathMap {
          * @param nameIndex path element of this child
          */
         private Element(Path.Element nameIndex) {
-            this.name = nameIndex.getName();
             this.index = nameIndex.getIndex();
+            if (nameIndex.denotesName()) {
+                updatePathElement(nameIndex.getName(), index);
+            } else {
+                // root, current or parent
+                this.pathElement = nameIndex;
+            }
         }
 
         /**
@@ -182,6 +189,20 @@ public class PathMap {
             Element element = new Element(nameIndex);
             put(nameIndex, element);
             return element;
+        }
+
+        /**
+         * Updates the {@link #pathElement} with a new name and index value.
+         *
+         * @param name the new name.
+         * @param index the new index.
+         */
+        private void updatePathElement(Name name, int index) {
+            if (index == Path.INDEX_DEFAULT) {
+                pathElement = PATH_FACTORY.createElement(name);
+            } else {
+                pathElement = PATH_FACTORY.createElement(name, index);
+            }
         }
 
         /**
@@ -199,6 +220,7 @@ public class PathMap {
                         Element element = (Element) list.get(i);
                         if (element != null) {
                             element.index = element.getNormalizedIndex() + 1;
+                            element.updatePathElement(element.getName(), element.index);
                         }
                     }
                     list.add(index, null);
@@ -252,8 +274,8 @@ public class PathMap {
             }
 
             element.parent = this;
-            element.name = nameIndex.getName();
             element.index = nameIndex.getIndex();
+            element.updatePathElement(nameIndex.getName(), element.index);
 
             childrenCount++;
         }
@@ -305,6 +327,7 @@ public class PathMap {
                     Element sibling = (Element) list.get(i);
                     if (sibling != null) {
                         sibling.index--;
+                        sibling.updatePathElement(sibling.getName(), sibling.index);
                     }
                 }
                 list.remove(index);
@@ -409,7 +432,7 @@ public class PathMap {
          * @return name
          */
         public Name getName() {
-            return name;
+            return pathElement.getName();
         }
 
         /**
@@ -430,11 +453,7 @@ public class PathMap {
          * @return 1-based index
          */
         public int getNormalizedIndex() {
-            if (index == Path.INDEX_UNDEFINED) {
-                return Path.INDEX_DEFAULT;
-            } else {
-                return index;
-            }
+            return pathElement.getNormalizedIndex();
         }
 
         /**
@@ -443,9 +462,9 @@ public class PathMap {
          */
         public Path.Element getPathElement() {
             if (index < Path.INDEX_DEFAULT) {
-                return PATH_FACTORY.create(name).getNameElement();
+                return PATH_FACTORY.create(getName()).getNameElement();
             } else {
-                return PATH_FACTORY.create(name, index).getNameElement();
+                return PATH_FACTORY.create(getName(), index).getNameElement();
             }
         }
 
@@ -475,11 +494,7 @@ public class PathMap {
                 return;
             }
             parent.getPath(builder);
-            if (index == Path.INDEX_UNDEFINED || index == Path.INDEX_DEFAULT) {
-                builder.addLast(name);
-            } else {
-                builder.addLast(name, index);
-            }
+            builder.addLast(pathElement);
         }
 
         /**

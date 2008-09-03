@@ -25,7 +25,7 @@ package org.apache.jackrabbit.spi.commons.name;
  *
  * @see https://issues.apache.org/jira/browse/JCR-1663
  */
-class HashCache {
+public class HashCache {
 
     /**
      * Size of the cache (must be a power of two). Note that this is the

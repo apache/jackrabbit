@@ -54,6 +54,8 @@ public class PathFactoryImpl implements PathFactory {
     private static final Path CURRENT_PATH = new PathImpl(new Path.Element[]{CURRENT_ELEMENT}, true);
     private static final Path PARENT_PATH = new PathImpl(new Path.Element[]{PARENT_ELEMENT}, true);
 
+    private final HashCache ELEMENT_CACHE = new HashCache();
+
     private PathFactoryImpl() {}
 
     public static PathFactory getInstance() {
@@ -180,7 +182,7 @@ public class PathFactoryImpl implements PathFactory {
         } else if (name.equals(ROOT_NAME)) {
             return ROOT_ELEMENT;
         } else {
-            return new Element(name, Path.INDEX_UNDEFINED);
+            return getCachedElement(new Element(name, Path.INDEX_UNDEFINED));
         }
     }
 
@@ -220,7 +222,7 @@ public class PathFactoryImpl implements PathFactory {
         int pos = elementString.indexOf('[');
         if (pos == -1) {
             Name name = NAME_FACTORY.create(elementString);
-            return new Element(name, Path.INDEX_UNDEFINED);
+            return getCachedElement(new Element(name, Path.INDEX_UNDEFINED));
         }
         Name name = NAME_FACTORY.create(elementString.substring(0, pos));
         int pos1 = elementString.indexOf(']');
@@ -644,6 +646,20 @@ public class PathFactoryImpl implements PathFactory {
     }
 
     //-------------------------------------------------------< Path.Element >---
+
+    /**
+     * If a cached copy of the given element already exists, then returns
+     * that copy. Otherwise the given element is cached and returned. This
+     * method only works correctly with elements that have an undefined index!
+     *
+     * @param element the element to return from the cache
+     * @return the given element or a previously cached copy
+     */
+    private Element getCachedElement(Element element) {
+        assert element.getIndex() == Path.INDEX_UNDEFINED;
+        return (Element) ELEMENT_CACHE.get(element);
+    }
+
     /**
      * Object representation of a single JCR path element.
      *
