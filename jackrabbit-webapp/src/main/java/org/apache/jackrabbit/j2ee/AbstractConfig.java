@@ -43,8 +43,8 @@ public abstract class AbstractConfig {
     private BeanMap map = new BeanMap(this);
 
     /**
-     * Initializes the config with values from the given properties
-     * @param props the config properties
+     * Initializes the configuration with values from the given properties
+     * @param props the configuration properties
      */
     public void init(Properties props) throws ServletException {
         Iterator iter = props.keySet().iterator();
@@ -56,8 +56,8 @@ public abstract class AbstractConfig {
                     map.put(mapName, props.getProperty(name));
                 }
             } catch (Exception e) {
-                log.error("Error in configuration: {}", e.toString());
-                throw new ServletException("Error in configuration: " + e.toString());
+                throw new ServletExceptionWithCause(
+                        "Invalid configuration property: " + name, e);
             }
         }
     }
@@ -72,8 +72,8 @@ public abstract class AbstractConfig {
                     map.put(mapName, ctx.getInitParameter(name));
                 }
             } catch (Exception e) {
-                log.error("Error in configuration: {}", e.toString());
-                throw new ServletException("Error in configuration: " + e.toString());
+                throw new ServletExceptionWithCause(
+                        "Invalid servlet configuration option: " + name, e);
             }
         }
     }

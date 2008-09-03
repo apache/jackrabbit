@@ -330,8 +330,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                     try {
                         in = new FileInputStream(bootstrapConfigFile);
                     } catch (FileNotFoundException e) {
-                        log.error("Error while opening bootstrap properties: {}", e.toString());
-                        throw new ServletException("Error while opening bootstrap properties: " + e.toString());
+                        throw new ServletExceptionWithCause(
+                                "Bootstrap configuration not found: " + bstrp, e);
                     }
                 }
             }
@@ -339,8 +339,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 try {
                     bootstrapProps.load(in);
                 } catch (IOException e) {
-                    log.error("Error while loading bootstrap properties: {}", e.toString());
-                    throw new ServletException("Error while loading bootstrap properties: " + e.toString());
+                    throw new ServletException(
+                            "Bootstrap configuration failure: " + bstrp, e);
                 } finally {
                     try {
                         in.close();
@@ -384,8 +384,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         try {
             repHome = new File(config.getRepositoryHome()).getCanonicalFile();
         } catch (IOException e) {
-            log.error("Repository startup configuration invalid: " + e.toString());
-            throw new ServletException("Repository startup configuration invalid: " + e.toString());
+            throw new ServletExceptionWithCause(
+                    "Repository configuration failure: " + config.getRepositoryHome(), e);
         }
         String repConfig = config.getRepositoryConfig();
         InputStream in = getServletContext().getResourceAsStream(repConfig);
@@ -397,8 +397,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 try {
                     in = new FileInputStream(new File(repHome, repConfig));
                 } catch (FileNotFoundException e1) {
-                    log.error("Repository startup configuration invalid: " + e1.toString());
-                    throw new ServletException("Repository startup configuration invalid: " + e.toString());
+                    throw new ServletExceptionWithCause(
+                            "Repository configuration not found: " + repConfig, e);
                 }
             }
         }
@@ -406,7 +406,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         try {
             repository = createRepository(new InputSource(in), repHome);
         } catch (RepositoryException e) {
-            throw new ServletException("Error while creating repository", e);
+            throw new ServletExceptionWithCause("Error while creating repository", e);
         }
     }
 
@@ -451,7 +451,8 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 jndiContext.bind(jc.getJndiName(), repository);
                 log.info("Repository bound to JNDI with name: " + jc.getJndiName());
             } catch (NamingException e) {
-                throw new ServletException("Unable to bind repository using JNDI.", e);
+                throw new ServletExceptionWithCause(
+                        "Unable to bind repository using JNDI: " + jc.getJndiName(), e);
             }
         }
     }
@@ -490,12 +491,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             remote = rmf.createRemoteRepository(repository);
         } catch (RemoteException e) {
             log.error("Unable to create RMI repository.", e);
-            throw new ServletException("Unable to create remote repository.", e);
-        } catch (NoClassDefFoundError e) {
-            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.", e);
-        } catch (Exception e) {
-            log.error("Unable to create RMI repository.", e);
-            throw new ServletException("Unable to create RMI repository. jcr-rmi.jar might be missing.");
+            throw new ServletExceptionWithCause("Unable to create remote repository.", e);
+        } catch (Throwable t) {
+            log.error("Unable to create RMI repository.", t);
+            throw new ServletExceptionWithCause(
+                    "Unable to create RMI repository. jcr-rmi.jar might be missing.", t);
         }
 
         try {
@@ -565,9 +565,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             }
 
         } catch (RemoteException e) {
-            throw new ServletException("Unable to bind repository via RMI.", e);
+            throw new ServletExceptionWithCause(
+                    "Unable to bind repository via RMI: " + rc.getRmiUri(), e);
         } catch (AlreadyBoundException e) {
-            throw new ServletException("Unable to bind repository via RMI.", e);
+            throw new ServletExceptionWithCause(
+                    "Unable to bind repository via RMI: " + rc.getRmiUri(), e);
         }
     }
 
