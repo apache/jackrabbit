@@ -262,7 +262,7 @@ class BufferedStringValue implements TextValue {
                 }
             } else {
                 // all other types
-                return ValueHelper.deserialize(retrieve(), targetType, true, ValueFactoryImpl.getInstance());
+                return ValueHelper.deserialize(retrieve(), targetType, false, ValueFactoryImpl.getInstance());
             }
         } catch (IOException e) {
             String msg = "failed to retrieve serialized value";

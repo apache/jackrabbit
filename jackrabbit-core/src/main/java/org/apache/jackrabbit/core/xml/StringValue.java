@@ -66,11 +66,9 @@ class StringValue implements TextValue {
             // convert InternalValue to Value using this
             // session's namespace mappings
             return ival.toJCRValue(resolver);
-        } else if (type == PropertyType.BINARY) {
-            return ValueHelper.deserialize(value, type, false, ValueFactoryImpl.getInstance());
         } else {
             // all other types
-            return ValueHelper.deserialize(value, type, true, ValueFactoryImpl.getInstance());
+            return ValueHelper.deserialize(value, type, false, ValueFactoryImpl.getInstance());
         }
     }
 
