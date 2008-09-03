@@ -16,15 +16,23 @@
  */
 package org.apache.jackrabbit.j2ee;
 
-import javax.servlet.ServletException;
-
 /**
  * Exception for signaling that the JCR API is not available.
  */
-public class JcrApiNotFoundException extends ServletException {
+public class JcrApiNotFoundException extends ServletExceptionWithCause {
 
+    /**
+     * Serial version UID
+     */
+    private static final long serialVersionUID = -6439777923943394980L;
+
+    /**
+     * Creates an exception to signal that the JCR API is not available.
+     *
+     * @param e the specific exception that indicates the lack of the JCR API
+     */
     public JcrApiNotFoundException(ClassNotFoundException e) {
-        super(e);
+        super("JCR API (jcr-1.0.jar) not available in the classpath", e);
     }
 
 }

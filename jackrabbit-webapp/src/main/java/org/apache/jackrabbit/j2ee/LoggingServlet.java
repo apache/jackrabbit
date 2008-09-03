@@ -102,7 +102,8 @@ public class LoggingServlet extends HttpServlet {
             try {
                 in = new FileInputStream(log4jConfig);
             } catch (FileNotFoundException e) {
-                throw new ServletException("Unable to initialize log4j: " + e.toString());
+                throw new ServletExceptionWithCause(
+                        "Log4j configuration not found: " + log4jConfig, e);
             }
         } else {
             // hack for entity resolver
@@ -117,7 +118,8 @@ public class LoggingServlet extends HttpServlet {
                 configureProperties(in);
             }
         } catch (IOException e) {
-            throw new ServletException("Unable to initialize log4j: " + e.toString());
+            throw new ServletExceptionWithCause(
+                    "Log4j configuration failure: " + log4jConfig, e);
         } finally {
             try {
                 in.close();
@@ -147,11 +149,11 @@ public class LoggingServlet extends HttpServlet {
             Element root =  document.getDocumentElement();
             DOMConfigurator.configure(root);
         } catch (ParserConfigurationException e) {
-            throw new ServletException(
-                    "Unable to create configuration XML parser", e);
+            throw new ServletExceptionWithCause(
+                    "Unable to create XML parser for the configuration", e);
         } catch (SAXException e) {
-            throw new ServletException(
-                    "Configuration file syntax error.", e);
+            throw new ServletExceptionWithCause(
+                    "Configuration file syntax error:" + in.getSystemId(), e);
         }
     }
 

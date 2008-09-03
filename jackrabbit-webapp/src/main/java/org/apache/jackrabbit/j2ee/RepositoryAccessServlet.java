@@ -133,8 +133,8 @@ public class RepositoryAccessServlet extends HttpServlet {
                         try {
                             in = new FileInputStream(file);
                         } catch (FileNotFoundException e) {
-                            log.error("Error while opening bootstrap properties: {}", e.toString());
-                            throw new ServletException("Error while opening bootstrap properties: " + e.toString());
+                            throw new ServletExceptionWithCause(
+                                    "Bootstrap configuration not found: " + bstrp, e);
                         }
                     }
                 }
@@ -142,8 +142,8 @@ public class RepositoryAccessServlet extends HttpServlet {
                     try {
                         bootstrapProps.load(in);
                     } catch (IOException e) {
-                        log.error("Error while loading bootstrap properties: {}", e.toString());
-                        throw new ServletException("Error while loading bootstrap properties: " + e.toString());
+                        throw new ServletExceptionWithCause(
+                                "Bootstrap configuration failure: " + bstrp, e);
                     } finally {
                         try {
                             in.close();
@@ -160,8 +160,8 @@ public class RepositoryAccessServlet extends HttpServlet {
             tmpConfig.init(bootstrapProps);
             tmpConfig.validate();
             if (!tmpConfig.isValid()) {
-                log.error("Repository acesss configuration is not valid.");
-                throw new ServletException("Repository access configuration is not valid.");
+                throw new ServletException(
+                        "Repository access configuration is not valid.");
             }
             tmpConfig.logInfos();
             config = tmpConfig;
@@ -207,7 +207,7 @@ public class RepositoryAccessServlet extends HttpServlet {
             log.info("Acquired repository via JNDI.");
             return r;
         } catch (NamingException e) {
-            log.error("Error while retrieving repository using JNDI (name=" + repositoryName + "): " + e);
+            log.error("Error while retrieving repository using JNDI (name={})", repositoryName, e);
             return null;
         }
     }
@@ -228,16 +228,13 @@ public class RepositoryAccessServlet extends HttpServlet {
         if (rmiURI == null) {
             return null;
         }
-        log.info("  trying to retrieve repository using rmi. uri=" + rmiURI);
+        log.info("  trying to retrieve repository using rmi. uri={}", rmiURI);
         ClientFactoryDelegater cfd;
         try {
             Class clazz = Class.forName(getServerFactoryDelegaterClass());
             cfd = (ClientFactoryDelegater) clazz.newInstance();
-        } catch (NoClassDefFoundError e) {
-            log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing? " + e.toString());
-            return null;
-        } catch (Exception e) {
-            log.error("Unable to locate RMI ClientRepositoryFactory. jcr-rmi.jar missing?" + e.toString());
+        } catch (Throwable e) {
+            log.error("Unable to locate RMI ClientRepositoryFactory. Is jcr-rmi.jar missing?", e);
             return null;
         }
 
@@ -246,7 +243,7 @@ public class RepositoryAccessServlet extends HttpServlet {
             log.info("Acquired repository via RMI.");
             return r;
         } catch (Exception e) {
-            log.error("Error while retrieving repository using RMI: " + e);
+            log.error("Error while retrieving repository using RMI: {}", rmiURI, e);
             return null;
         }
     }
@@ -261,9 +258,9 @@ public class RepositoryAccessServlet extends HttpServlet {
 
             if(log.isDebugEnabled()) {
                 if(result!=null) {
-                    log.debug("Got Repository from ServletContext attribute '" + repositoryContextAttributeName + "'");
+                    log.debug("Got Repository from ServletContext attribute '{}'", repositoryContextAttributeName);
                 } else {
-                    log.debug("ServletContext attribute '" + repositoryContextAttributeName + "' does not provide a Repository");
+                    log.debug("ServletContext attribute '{}' does not provide a Repository", repositoryContextAttributeName);
                 }
             }
         }
