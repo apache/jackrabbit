@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -29,7 +30,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -45,7 +45,7 @@ import java.util.Map;
  * the {@link ChangeLog} overlay the {@link ItemState}s in the
  * {@link ItemStateManager}.
  */
-class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
+class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
 
     ZombieHierarchyManager zombieHierMgr;
 
@@ -56,7 +56,6 @@ class ChangeLogBasedHierarchyMgr extends HierarchyManagerImpl {
      * @param rootNodeId the id of the root node.
      * @param manager the item state manager.
      * @param changes the changes that will be applied on the item state manager.
-     * @param resolver path resolver for outputting user friendly paths
      */
     ChangeLogBasedHierarchyMgr(NodeId rootNodeId,
                                ItemStateManager manager,
