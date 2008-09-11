@@ -23,6 +23,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.Similarity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -417,8 +418,8 @@ abstract class AbstractIndex {
             Document copy = new Document();
             Iterator fields = doc.getFields().iterator();
             while (fields.hasNext()) {
-                Field f = (Field) fields.next();
-                Field field = null;
+                Fieldable f = (Fieldable) fields.next();
+                Fieldable field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
                 Field.Store stored = getStoreParameter(f);
                 Field.Index indexed = getIndexParameter(f);
@@ -510,7 +511,7 @@ abstract class AbstractIndex {
      * @param f a lucene field.
      * @return the index parameter on <code>f</code>.
      */
-    private Field.Index getIndexParameter(Field f) {
+    private Field.Index getIndexParameter(Fieldable f) {
         if (!f.isIndexed()) {
             return Field.Index.NO;
         } else if (f.isTokenized()) {
@@ -526,7 +527,7 @@ abstract class AbstractIndex {
      * @param f a lucene field.
      * @return the store parameter on <code>f</code>.
      */
-    private Field.Store getStoreParameter(Field f) {
+    private Field.Store getStoreParameter(Fieldable f) {
         if (f.isCompressed()) {
             return Field.Store.COMPRESS;
         } else if (f.isStored()) {
@@ -542,7 +543,7 @@ abstract class AbstractIndex {
      * @param f a lucene field.
      * @return the term vector parameter on <code>f</code>.
      */
-    private Field.TermVector getTermVectorParameter(Field f) {
+    private Field.TermVector getTermVectorParameter(Fieldable f) {
         if (f.isStorePositionWithTermVector() && f.isStoreOffsetWithTermVector()) {
             return Field.TermVector.WITH_POSITIONS_OFFSETS;
         } else if (f.isStorePositionWithTermVector()) {
