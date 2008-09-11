@@ -423,7 +423,7 @@ abstract class AbstractIndex {
                 Field.TermVector tv = getTermVectorParameter(f);
                 Field.Store stored = getStoreParameter(f);
                 Field.Index indexed = getIndexParameter(f);
-                if (f.readerValue() != null) {
+                if (f instanceof LazyTextExtractorField || f.readerValue() != null) {
                     // replace all readers with empty string reader
                     field = new Field(f.name(), new StringReader(""), tv);
                 } else if (f.stringValue() != null) {
