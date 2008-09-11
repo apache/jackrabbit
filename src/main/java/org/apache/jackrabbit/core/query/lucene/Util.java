@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.io.IOException;
 
 /**
@@ -41,14 +41,17 @@ public class Util {
      * @param old the document to dispose.
      */
     public static void disposeDocument(Document old) {
-        for (Enumeration e = old.fields(); e.hasMoreElements();) {
-            Field f = (Field) e.nextElement();
-            if (f.readerValue() != null) {
-                try {
+        for (Iterator it = old.getFields().iterator(); it.hasNext(); ) {
+            Fieldable f = (Fieldable) it.next();
+            try {
+                if (f.readerValue() != null) {
                     f.readerValue().close();
-                } catch (IOException ex) {
-                    log.warn("Exception while disposing index document: " + ex);
+                } else if (f instanceof LazyTextExtractorField) {
+                    LazyTextExtractorField field = (LazyTextExtractorField) f;
+                    field.dispose();
                 }
+            } catch (IOException ex) {
+                log.warn("Exception while disposing index document: " + ex);
             }
         }
     }
@@ -62,11 +65,11 @@ public class Util {
      *         otherwise.
      */
     public static boolean isDocumentReady(Document doc) {
-        for (Enumeration fields = doc.fields(); fields.hasMoreElements(); ) {
-            Field f = (Field) fields.nextElement();
-            if (f.readerValue() instanceof TextExtractorReader) {
-                TextExtractorReader r = (TextExtractorReader) f.readerValue();
-                if (!r.isExtractorFinished()) {
+        for (Iterator it = doc.getFields().iterator(); it.hasNext(); ) {
+            Fieldable f = (Fieldable) it.next();
+            if (f instanceof LazyTextExtractorField) {
+                LazyTextExtractorField field = (LazyTextExtractorField) f;
+                if (!field.isExtractorFinished()) {
                     return false;
                 }
             }
