@@ -55,6 +55,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
@@ -1111,7 +1112,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                 getNamespaceMappings(),
                                 index.getIndexFormatVersion());
                         // transfer fields to doc if there are any
-                        Field[] fulltextFields = aDoc.getFields(FieldNames.FULLTEXT);
+                        Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
                         if (fulltextFields != null) {
                             for (int k = 0; k < fulltextFields.length; k++) {
                                 doc.add(fulltextFields[k]);

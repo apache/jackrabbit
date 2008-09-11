@@ -26,7 +26,7 @@ import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
 import org.apache.jackrabbit.core.NodeId;
@@ -98,7 +98,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             } finally {
                 tDocs.close();
             }
-            Field[] fields = doc.getFields(FieldNames.FULLTEXT);
+            Fieldable[] fields = doc.getFieldables(FieldNames.FULLTEXT);
             if (fields == null) {
                 log.debug("Fulltext field not stored, using {}",
                         SimpleExcerptProvider.class.getName());
