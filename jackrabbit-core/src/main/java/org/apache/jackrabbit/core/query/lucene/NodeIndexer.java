@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -42,7 +43,6 @@ import javax.jcr.RepositoryException;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Set;
@@ -661,30 +661,11 @@ public class NodeIndexer {
      * @param value the reader value.
      * @return a lucene field.
      */
-    protected Field createFulltextField(Reader value) {
+    protected Fieldable createFulltextField(Reader value) {
         if (supportHighlighting) {
-            // need to create a string value
-            StringBuffer textExtract = new StringBuffer();
-            char[] buffer = new char[1024];
-            int len;
-            try {
-                while ((len = value.read(buffer)) > -1) {
-                    textExtract.append(buffer, 0, len);
-                }
-            } catch (IOException e) {
-                log.warn("Exception reading value for fulltext field: " +
-                        e.getMessage());
-                log.debug("Dump:", e);
-            } finally {
-                try {
-                    value.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
-            return createFulltextField(textExtract.toString());
+            return new LazyTextExtractorField(FieldNames.FULLTEXT, value, true, true);
         } else {
-            return new Field(FieldNames.FULLTEXT, value);
+            return new LazyTextExtractorField(FieldNames.FULLTEXT, value, false, false);
         }
     }
 
