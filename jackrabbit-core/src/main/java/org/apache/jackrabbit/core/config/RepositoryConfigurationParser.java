@@ -628,9 +628,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     && CLUSTER_ELEMENT.equals(child.getNodeName())) {
                 Element element = (Element) child;
 
-                String id = getAttribute(element, ID_ATTRIBUTE, null);
-                long syncDelay = Long.parseLong(
-                        getAttribute(element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY));
+                String value = getAttribute(element, ID_ATTRIBUTE, null);
+                String id = replaceVariables(value);
+                value = getAttribute(element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY);
+                long syncDelay = Long.parseLong(replaceVariables(value));
 
                 JournalConfig jc = parseJournalConfig(element);
                 return new ClusterConfig(id, syncDelay, jc);

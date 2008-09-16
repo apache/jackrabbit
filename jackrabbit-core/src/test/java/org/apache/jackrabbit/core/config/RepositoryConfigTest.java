@@ -238,4 +238,19 @@ public class RepositoryConfigTest extends TestCase {
         }
     }
 
+    public void testRepositoryConfigWithSystemVariables() throws Exception {
+        final String id = "testvalue";
+        final long syncDelay = 11;
+
+        System.setProperty("cluster.id", id);
+        System.setProperty("cluster.syncDelay", Long.toString(syncDelay));
+
+        InputStream in = getClass().getResourceAsStream(
+                "/org/apache/jackrabbit/core/cluster/repository.xml");
+        RepositoryConfig config = RepositoryConfig.create(in, REPOSITORY_HOME);
+
+        ClusterConfig clusterConfig = config.getClusterConfig();
+        assertEquals(id, clusterConfig.getId());
+        assertEquals(syncDelay, clusterConfig.getSyncDelay());
+    }
 }
