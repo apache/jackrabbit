@@ -590,6 +590,14 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     }
 
     /**
+     * Returns the config that was used to bootstrap this servlet.
+     * @return the bootstrap config or <code>null</code>.
+     */
+    public BootstrapConfig getBootstrapConfig() {
+        return config;
+    }
+
+    /**
      * Return the fully qualified name of the class providing the remote
      * repository. The class whose name is returned must implement the
      * {@link RemoteFactoryDelegater} interface.

@@ -103,7 +103,7 @@ public class RepositoryAccessServlet extends HttpServlet {
      * @param ctx the servlet context
      * @return this servlet
      */
-    private static RepositoryAccessServlet getInstance(ServletContext ctx) {
+    public static RepositoryAccessServlet getInstance(ServletContext ctx) {
         final RepositoryAccessServlet instance = (RepositoryAccessServlet) ctx.getAttribute(CTX_PARAM_THIS);
         if(instance==null) {
             throw new IllegalStateException(
@@ -320,6 +320,14 @@ public class RepositoryAccessServlet extends HttpServlet {
      */
     public static Repository getRepository(ServletContext ctx) {
         return getInstance(ctx).getRepository();
+    }
+
+    /**
+     * Returns the config that was used to bootstrap this servlet.
+     * @return the bootstrap config or <code>null</code>.
+     */
+    public BootstrapConfig getBootstrapConfig() {
+        return config;
     }
 
     /**
