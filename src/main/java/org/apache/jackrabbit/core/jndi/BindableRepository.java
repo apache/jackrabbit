@@ -16,24 +16,22 @@
  */
 package org.apache.jackrabbit.core.jndi;
 
+import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
-import javax.naming.StringRefAddr;
 
 /**
  * A referenceable and serializable content repository proxy.
@@ -60,36 +58,35 @@ import javax.naming.StringRefAddr;
  * method should be used to explicitly close the repository if
  * needed.
  */
-public class BindableRepository implements Repository, Referenceable, Serializable {
+public class BindableRepository extends AbstractRepository
+        implements JackrabbitRepository, Referenceable, Serializable {
 
     /**
      * The serialization UID of this class.
      */
-    static final long serialVersionUID = -2298220550793843166L;
+    private static final long serialVersionUID = 8864716577016297651L;
 
     /**
-     * The repository configuration file path.
-     */
-    private final String configFilePath;
-
-    /**
-     * The repository home directory path.
-     */
-    private final String repHomeDir;
-
-    /**
-     * type of <code>configFilePath</code> reference address (@see <code>{@link Reference#get(String)}</code>
+     * type of <code>configFilePath</code> reference address
+     * @see Reference#get(String)
      */
     public static final String CONFIGFILEPATH_ADDRTYPE = "configFilePath";
+
     /**
-     * type of <code>repHomeDir</code> reference address (@see <code>{@link Reference#get(String)}</code>
+     * type of <code>repHomeDir</code> reference address
+     * @see Reference#get(String)
      */
     public static final String REPHOMEDIR_ADDRTYPE = "repHomeDir";
 
     /**
+     * The repository reference
+     */
+    private final Reference reference;
+
+    /**
      * The delegate repository instance. Created by {@link #init() init}.
      */
-    protected transient Repository delegatee;
+    private transient JackrabbitRepository delegatee;
 
     /**
      * Thread that is registered as shutdown hook after {@link #init} has been
@@ -104,26 +101,9 @@ public class BindableRepository implements Repository, Referenceable, Serializab
      * @param configFilePath repository configuration file path
      * @param repHomeDir     repository home directory path
      */
-    protected BindableRepository(String configFilePath, String repHomeDir) {
-        this.configFilePath = configFilePath;
-        this.repHomeDir = repHomeDir;
-        delegatee = null;
-    }
-
-    /**
-     * Creates an initialized BindableRepository instance using the given
-     * configuration information.
-     *
-     * @param configFilePath repository configuration file path
-     * @param repHomeDir     repository home directory path
-     * @return initialized repository instance
-     * @throws RepositoryException if the repository cannot be created
-     */
-    static BindableRepository create(String configFilePath, String repHomeDir)
-            throws RepositoryException {
-        BindableRepository rep = new BindableRepository(configFilePath, repHomeDir);
-        rep.init();
-        return rep;
+    public BindableRepository(Reference reference) throws RepositoryException {
+        this.reference = reference;
+        init();
     }
 
     /**
@@ -134,43 +114,29 @@ public class BindableRepository implements Repository, Referenceable, Serializab
      * @throws RepositoryException if the repository cannot be created
      */
     protected void init() throws RepositoryException {
-        RepositoryConfig config = createRepositoryConfig(configFilePath, repHomeDir);
-        delegatee = createRepository(config);
+        delegatee = getRepository(reference);
         hook = new Thread() {
             public void run() {
                 shutdown();
             }
         };
-
         Runtime.getRuntime().addShutdownHook(hook);
     }
 
     /**
-     * Creates a repository configuration from a path to the repository.xml file
-     * and the repository home directory.
+     * Creates a repository instance based on the given reference. Can be
+     * overridden by subclasses to return different repositories. The default
+     * implementation returns a {@link RepositoryImpl} instance.
      *
-     * @param configFilePath path to the repository.xml file.
-     * @param repHomeDir     the repository home directory.
-     * @return the repository configuration.
-     * @throws ConfigurationException on configuration error.
+     * @param reference repository reference
+     * @return repository instance
+     * @throws RepositoryException if the repository could not be created
      */
-    protected RepositoryConfig createRepositoryConfig(String configFilePath,
-                                                      String repHomeDir)
-            throws ConfigurationException {
-        return RepositoryConfig.create(configFilePath, repHomeDir);
-    }
-
-    /**
-     * Creates a plain repository instance from a repository
-     * <code>config</code>.
-     *
-     * @param config the repository configuration.
-     * @return the repository instance.
-     * @throws RepositoryException if an error occurs while creating the
-     *                             repository instance.
-     */
-    protected Repository createRepository(RepositoryConfig config)
+    protected JackrabbitRepository getRepository(Reference reference)
             throws RepositoryException {
+        RepositoryConfig config = RepositoryConfig.create(
+                reference.get(CONFIGFILEPATH_ADDRTYPE).getContent().toString(),
+                reference.get(REPHOMEDIR_ADDRTYPE).getContent().toString());
         return RepositoryImpl.create(config);
     }
 
@@ -183,32 +149,6 @@ public class BindableRepository implements Repository, Referenceable, Serializab
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
         return delegatee.login(credentials, workspaceName);
-    }
-
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
-    public Session login(String workspaceName)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return delegatee.login(workspaceName);
-    }
-
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
-    public Session login() throws LoginException, RepositoryException {
-        return delegatee.login();
-    }
-
-    /**
-     * Delegated to the underlying repository instance.
-     * {@inheritDoc}
-     */
-    public Session login(Credentials credentials)
-            throws LoginException, RepositoryException {
-        return delegatee.login(credentials);
     }
 
     /**
@@ -230,36 +170,17 @@ public class BindableRepository implements Repository, Referenceable, Serializab
     //--------------------------------------------------------< Referenceable >
 
     /**
-     * Creates a JNDI reference for this content repository. The returned
+     * Returns the JNDI reference for this content repository. The returned
      * reference holds the configuration information required to create a
      * copy of this instance.
      *
-     * @return the created JNDI reference
+     * @return the JNDI reference
      */
     public Reference getReference() {
-        Reference ref = new Reference(BindableRepository.class.getName(),
-                BindableRepositoryFactory.class.getName(),
-                null); // no classpath defined
-        ref.add(new StringRefAddr(CONFIGFILEPATH_ADDRTYPE, configFilePath));
-        ref.add(new StringRefAddr(REPHOMEDIR_ADDRTYPE, repHomeDir));
-        return ref;
+        return reference;
     }
 
     //-------------------------------------------------< Serializable support >
-
-    /**
-     * Serializes the repository configuration. The default serialization
-     * mechanism is used, as the underlying delegate repository is referenced
-     * using a transient variable.
-     *
-     * @param out the serialization stream
-     * @throws IOException on IO errors
-     * @see Serializable
-     */
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        // delegate to default implementation
-        out.defaultWriteObject();
-    }
 
     /**
      * Deserializes a repository instance. The repository configuration
@@ -279,21 +200,24 @@ public class BindableRepository implements Repository, Referenceable, Serializab
         // initialize reconstructed instance
         try {
             init();
-        } catch (RepositoryException re) {
+        } catch (RepositoryException e) {
             // failed to reinstantiate repository
-            throw new IOException(re.getMessage());
+            IOException exception = new IOException(e.getMessage());
+            exception.initCause(e);
+            throw exception;
         }
     }
 
     /**
      * Delegated to the underlying repository instance.
      */
-    void shutdown() {
-        ((RepositoryImpl) delegatee).shutdown();
+    public void shutdown() {
+        delegatee.shutdown();
         try {
             Runtime.getRuntime().removeShutdownHook(hook);
         } catch (IllegalStateException e) {
             // ignore. exception is thrown when hook itself calls shutdown
         }
     }
+
 }
