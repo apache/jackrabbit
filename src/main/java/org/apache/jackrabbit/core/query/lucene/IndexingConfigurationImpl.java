@@ -124,15 +124,16 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
             if (configNode.getNodeName().equals("index-rule")) {
                 IndexingRule element = new IndexingRule(configNode);
                 // register under node type and all its sub types
+                log.debug("Found rule '{}' for NodeType '{}'", element, element.getNodeTypeName());
                 for (int n = 0; n < ntNames.length; n++) {
-                    if (ntReg.getEffectiveNodeType(ntNames[n]).includesNodeType(
-                            element.getNodeTypeName())) {
+                    if (ntReg.getEffectiveNodeType(ntNames[n]).includesNodeType(element.getNodeTypeName())) {
                         List perNtConfig = (List) configElements.get(ntNames[n]);
                         if (perNtConfig == null) {
                             perNtConfig = new ArrayList();
                             configElements.put(ntNames[n], perNtConfig);
                         }
-                        perNtConfig.add(element);
+                        log.debug("Registering it for name '{}'", ntNames[n]);
+                        perNtConfig.add(new IndexingRule(element, ntNames[n]));
                     }
                 }
             } else if (configNode.getNodeName().equals("aggregate")) {
@@ -509,6 +510,20 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
          * The boost value for this config element.
          */
         private final float boost;
+
+        /**
+         * Creates a new indexing rule base on an existing one, but for a
+         * different node type name.
+         *
+         * @param original the existing rule.
+         * @param nodeTypeName the node type name for the rule.
+         */
+        IndexingRule(IndexingRule original, Name nodeTypeName) {
+            this.nodeTypeName = nodeTypeName;
+            this.propConfigs = original.propConfigs;
+            this.condition = original.condition;
+            this.boost = original.boost;
+        }
 
         /**
          *
