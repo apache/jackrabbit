@@ -37,11 +37,19 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.uuid.UUID;
+
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +69,9 @@ public class ClusterNode implements Runnable,
      * System property specifying a node id to use.
      */
     public static final String SYSTEM_PROPERTY_NODE_ID = "org.apache.jackrabbit.core.cluster.node_id";
+
+    /** Cluster node id file. */
+    private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
 
     /**
      * Used for padding short string representations.
@@ -304,7 +315,7 @@ public class ClusterNode implements Runnable,
 
             journal.close();
             instanceRevision.close();
-            
+
             notifyAll();
         }
     }
@@ -331,7 +342,7 @@ public class ClusterNode implements Runnable,
 
     /**
      * Return the journal created by this cluster node.
-     * 
+     *
      * @return journal
      */
     public Journal getJournal() {
@@ -340,16 +351,58 @@ public class ClusterNode implements Runnable,
 
     /**
      * Return the instance id to be used for this node in the cluster.
-     * @param id configured id, <code>null</code> to take random id
+     * @param id configured id, <code>null</code> to generate a unique id
      */
-    private String getClusterNodeId(String id) {
+    private String getClusterNodeId(String id) throws ClusterException {
         if (id == null) {
             id = System.getProperty(SYSTEM_PROPERTY_NODE_ID);
             if (id == null) {
-                id = toHexString((short) (Math.random() * (Short.MAX_VALUE - Short.MIN_VALUE)));
+                try {
+                    id = getClusterNodeIdFromFile();
+                } catch (IOException e) {
+                    throw new ClusterException(e.getMessage(), e.getCause());
+                }
             }
         }
         return id;
+    }
+
+    /**
+     * Return a cluster node from a file, creating it if necessary.
+     *
+     * @return stored or generated cluster id
+     * @throws IOException if an I/O error occurs
+     */
+    protected String getClusterNodeIdFromFile() throws IOException {
+        String filename = clusterContext.getRepositoryHome() + File.separator + CLUSTER_NODE_ID_FILE;
+        File f = new File(filename);
+
+        if (f.exists() && f.canRead()) {
+            BufferedReader reader = null;
+
+            try {
+                reader = new BufferedReader(new FileReader(f));
+                return reader.readLine();
+            } finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+
+        FileWriter writer = null;
+        String id = UUID.randomUUID().toString();
+
+        try {
+            writer = new FileWriter(f);
+            writer.write(id);
+        } finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
+        return id;
+
     }
 
     /**

@@ -628,8 +628,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     && CLUSTER_ELEMENT.equals(child.getNodeName())) {
                 Element element = (Element) child;
 
+                String id = null;
+
                 String value = getAttribute(element, ID_ATTRIBUTE, null);
-                String id = replaceVariables(value);
+                if (value != null) {
+                    id = replaceVariables(value);
+                }
                 value = getAttribute(element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY);
                 long syncDelay = Long.parseLong(replaceVariables(value));
 
