@@ -119,6 +119,7 @@ public class BundleBinding extends ItemStateBinding {
             if (name.equals(NameConstants.JCR_PRIMARYTYPE)
                 || name.equals(NameConstants.JCR_MIXINTYPES)
                 || name.equals(NameConstants.JCR_UUID)) {
+                name = readIndexedQName(in);
                 continue;
             }
             PropertyId pId = new PropertyId(bundle.getId(), name);
