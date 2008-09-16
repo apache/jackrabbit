@@ -180,28 +180,24 @@ public final class EventStateCollection {
                         Set mixins = oldParent.getMixinTypeNames();
                         Path newPath = getPath(n.getNodeId(), hmgr);
                         Path oldPath = getZombiePath(n.getNodeId(), hmgr);
-                        if (!oldPath.equals(newPath)) {
-                            events.add(EventState.childNodeRemoved(oldParentId,
-                                    getParent(oldPath),
-                                    n.getNodeId(),
-                                    oldPath.getNameElement(),
-                                    oldParentNodeType.getQName(),
-                                    mixins,
-                                    session));
+                        events.add(EventState.childNodeRemoved(oldParentId,
+                                getParent(oldPath),
+                                n.getNodeId(),
+                                oldPath.getNameElement(),
+                                oldParentNodeType.getQName(),
+                                mixins,
+                                session));
 
-                            NodeState newParent = (NodeState) changes.get(newParentId);
-                            NodeTypeImpl newParentNodeType = getNodeType(newParent, session);
-                            mixins = newParent.getMixinTypeNames();
-                            events.add(EventState.childNodeAdded(newParentId,
-                                    getParent(newPath),
-                                    n.getNodeId(),
-                                    newPath.getNameElement(),
-                                    newParentNodeType.getQName(),
-                                    mixins,
-                                    session));
-                        } else {
-                            log.error("Unable to calculate old path of moved node");
-                        }
+                        NodeState newParent = (NodeState) changes.get(newParentId);
+                        NodeTypeImpl newParentNodeType = getNodeType(newParent, session);
+                        mixins = newParent.getMixinTypeNames();
+                        events.add(EventState.childNodeAdded(newParentId,
+                                getParent(newPath),
+                                n.getNodeId(),
+                                newPath.getNameElement(),
+                                newParentNodeType.getQName(),
+                                mixins,
+                                session));
                     } else {
                         // a moved node always has a modified parent node
                         NodeState parent = null;
