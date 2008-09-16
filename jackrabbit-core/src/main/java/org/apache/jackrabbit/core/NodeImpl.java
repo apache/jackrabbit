@@ -1984,6 +1984,9 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
+        if (nt.isMixin()) {
+            throw new RepositoryException(nodeTypeName + ": not a primary node type");
+        }
         return internalAddNode(relPath, nt);
     }
 
