@@ -37,51 +37,22 @@ public class BindableRepositoryFactory implements ObjectFactory {
      * cache using <code>java.naming.Reference</code> objects as keys and
      * storing soft references to <code>BindableRepository</code> instances
      */
-    private static Map cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+    private static Map cache = new ReferenceMap();
 
-    /**
-     * empty default constructor
-     */
-    public BindableRepositoryFactory() {
-    }
-
-    /**
-     * Creates an initialized BindableRepository instance using the given
-     * configuration information and puts it in {@link #cache}.
-     *
-     * @param configFilePath repository configuration file path
-     * @param repHomeDir     repository home directory path
-     * @return initialized repository instance
-     * @throws RepositoryException if the repository cannot be created
-     */
-    static BindableRepository createInstance(String configFilePath, String repHomeDir)
-            throws RepositoryException {
-        BindableRepository rep = BindableRepository.create(configFilePath, repHomeDir);
-        cache.put(rep.getReference(), rep);
-        return rep;
-    }
-
-    //--------------------------------------------------------< ObjectFactory >
     /**
      * {@inheritDoc}
      */
-    public Object getObjectInstance(Object obj, Name name, Context nameCtx,
-                                    Hashtable environment)
-            throws Exception {
-        if (obj instanceof Reference) {
-            Reference ref = (Reference) obj;
-            synchronized (cache) {
-                if (cache.containsKey(ref)) {
-                    return cache.get(ref);
-                } else {
-                    String configFilePath =
-                            (String) ref.get(BindableRepository.CONFIGFILEPATH_ADDRTYPE).getContent();
-                    String repHomeDir =
-                            (String) ref.get(BindableRepository.REPHOMEDIR_ADDRTYPE).getContent();
-                    return createInstance(configFilePath, repHomeDir);
-                }
+    public synchronized Object getObjectInstance(
+            Object obj, Name name, Context nameCtx, Hashtable environment)
+            throws RepositoryException {
+        synchronized (cache) {
+            Object instance = cache.get(obj);
+            if (instance == null && obj instanceof Reference) {
+                instance = new BindableRepository((Reference) obj);
+                cache.put(obj, instance);
             }
+            return instance;
         }
-        return null;
     }
+
 }
