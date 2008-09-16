@@ -381,6 +381,16 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
+     * Get the cluster node. Returns <code>null</code> if this repository
+     * is not running clustered.
+     *
+     * @return cluster node
+     */
+    public ClusterNode getClusterNode() {
+        return clusterNode;
+    }
+
+    /**
      * Returns the {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager SecurityManager}
      * of this <code>Repository</code>
      *
@@ -2143,6 +2153,13 @@ public class RepositoryImpl extends AbstractRepository
          */
         public ClusterConfig getClusterConfig() {
             return getConfig().getClusterConfig();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public File getRepositoryHome() {
+            return new File(getConfig().getHomeDir());
         }
 
         /**

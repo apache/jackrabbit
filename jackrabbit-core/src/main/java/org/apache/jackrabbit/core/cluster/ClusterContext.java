@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
+import java.io.File;
+
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 
@@ -32,6 +34,13 @@ public interface ClusterContext {
      * @return cluster configuration
      */
     ClusterConfig getClusterConfig();
+
+    /**
+     * Return the repository home directory.
+     *
+     * @return repository home directory
+     */
+    File getRepositoryHome();
 
     /**
      * Return a namespace resolver to map prefixes to URIs and vice-versa
