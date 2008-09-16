@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.cluster;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.JournalConfig;
@@ -378,48 +379,13 @@ public class ClusterNode implements Runnable,
         File f = new File(filename);
 
         if (f.exists() && f.canRead()) {
-            BufferedReader reader = null;
-
-            try {
-                reader = new BufferedReader(new FileReader(f));
-                return reader.readLine();
-            } finally {
-                if (reader != null) {
-                    reader.close();
-                }
-            }
+            return FileUtils.readFileToString(f);
         }
 
-        FileWriter writer = null;
         String id = UUID.randomUUID().toString();
-
-        try {
-            writer = new FileWriter(f);
-            writer.write(id);
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
+        FileUtils.writeStringToFile(f, id);
         return id;
 
-    }
-
-    /**
-     * Return a zero-padded short string representation.
-     *
-     * @param n short
-     * @return string representation
-     */
-    private static String toHexString(short n) {
-        String s = Integer.toHexString(n);
-        int padlen = SHORT_PADDING.length() - s.length();
-        if (padlen < 0) {
-            s = s.substring(-padlen);
-        } else if (padlen > 0) {
-            s = SHORT_PADDING.substring(0, padlen) + s;
-        }
-        return s;
     }
 
     //-----------------------------------------------< NamespaceEventListener >
