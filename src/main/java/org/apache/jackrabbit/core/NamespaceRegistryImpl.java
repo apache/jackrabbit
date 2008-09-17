@@ -21,8 +21,6 @@ import org.apache.jackrabbit.core.cluster.NamespaceEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.XMLChar;
 import org.slf4j.Logger;
@@ -83,10 +81,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
     private HashMap uriToIndex = new HashMap();
 
     private int lastIndex = 0;
-
-    private NameResolver nameResolver;
-
-    private PathResolver pathResolver;
 
     private final FileSystem nsRegStore;
 
@@ -281,14 +275,6 @@ public class NamespaceRegistryImpl extends AbstractNamespaceResolver
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
-    }
-
-    public NameResolver getNameResolver() {
-        return nameResolver;
-    }
-
-    public PathResolver getPathResolver() {
-        return pathResolver;
     }
 
     /**
