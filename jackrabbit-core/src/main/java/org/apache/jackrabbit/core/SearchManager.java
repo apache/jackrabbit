@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
@@ -256,7 +257,7 @@ public class SearchManager implements SynchronousEventListener {
 
         if (excludedNodeId != null) {
             HierarchyManagerImpl hmgr = new HierarchyManagerImpl(
-                    rootNodeId, itemMgr, nsReg.getPathResolver());
+                    rootNodeId, itemMgr, new DefaultNamePathResolver(nsReg));
             excludePath = hmgr.getPath(excludedNodeId);
         }
 
