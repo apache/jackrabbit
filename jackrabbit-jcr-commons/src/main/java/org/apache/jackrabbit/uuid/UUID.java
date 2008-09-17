@@ -21,12 +21,10 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * <code>UUID</code> represents a Universally Unique Identifier per IETF
- * Draft specification. For more information regarding the IETF Draft UUID
- * specification
- * <p/>
- * See: http://www.ietf.org/internet-drafts/draft-mealling-uuid-urn-01.txt
- * <p/>
+ * <code>UUID</code> represents a Universally Unique IDentifier per IETF
+ * RFC 4122 ("A Universally Unique IDentifier (UUID) URN Namespace"), 
+ * <a href="http://tools.ietf.org/html/rfc4122#section-4">Section 4</a>.
+ * <p>
  * This is a lightweight implementation of an UUID, disregarding the different
  * versions of UUIDs.
  */
