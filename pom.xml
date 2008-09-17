@@ -163,14 +163,6 @@
     </pluginManagement>    
   </build>
 
-  <distributionManagement>
-    <site>
-      <id>jackrabbit.reports.site</id>
-      <name>Jackrabbit Reports Site</name>
-      <url>file:///export/home/jukka/jackrabbit</url>
-    </site>
-  </distributionManagement>
-
   <reporting>
     <plugins>
       <plugin>
