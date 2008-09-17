@@ -1,17 +1,14 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.5
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.6
 
 Introduction
 ------------
 
-This is the 1.4.5 patch release of the jackrabbit-core component of
+This is the 1.4.6 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release fixes various issues, including a change to some default
-persistence manager configuration settings (JCR-1562). Users who are
-relying on the default username, password, or schema name settings for
-database-based persistence should check their configuration when upgrading
-to this release. See below for the full list of changes in this release.
+This release fixes a number of minor issues. See below for the full
+list of changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -23,18 +20,18 @@ Unlike previous Jackrabbit releases that contained a full set of components,
 this patch release only contains the jackrabbit-core component. The component
 is distributed both as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.5-src.jar)
+    * Source archive (jackrabbit-core-1.4.6-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.5" directory. Use the following commands
+        in a "jackrabbit-core-1.4.6" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.5-src.jar
-          $ cd jackrabbit-1.4.5
+          $ jar xf jackrabbit-core-1.4.6-src.jar
+          $ cd jackrabbit-1.4.6
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.5.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.6.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 
@@ -53,13 +50,17 @@ You can look up individual issues for more details in the Jackrabbit
 issue tracker at http://issues.apache.org/jira/browse/JCR
 
   Bug fixes
-  [JCR-1450] move method of the MemoryFileSystem may accept invalid ...
-  [JCR-1551] TransientRepository: application doesn't exit quickly
-  [JCR-1557] Avoid exceptions during shutting repository down if several ...
-  [JCR-1562] JNDI data sources with various PersistenceManager: wrong ...
-  [JCR-1587] When trying to reuse version label in transaction, exception ...
-  [JCR-1599] LuceneQueryBuilder assumes readability of root-Node to be ...
-  [JCR-1602] DbDatastore: Problems indexing pdf file
+  [JCR-1362] DatabaseJournal improperly finds tables in external schemas ...
+  [JCR-1632] Mixin type loss
+  [JCR-1644] make NamespaceContext#getPrefix(java.lang.String) iterative ...
+  [JCR-1651] Node.addNode(String, String) doesn't prevent use of mixin ...
+  [JCR-1657] Cluster revision entries should be retrieved in order
+  [JCR-1664] JNDI Referencable Issues
+  [JCR-1701] InfiniteLoop in bundle binding
+  [JCR-1704] Indexing rules inheritance doesn't work
+  [JCR-1708] Impossible to import a string containing _x0020_ with ...
+  [JCR-1728] Observation logs error when a node is moved in place
+  [JCR-1730] Background text extraction not possible when ...
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -87,7 +88,6 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-936]  Using Oracle bundle PM throws SQL exception (cannot insert NULL)
   [JCR-983]  fn:upper accepted in too many places
   [JCR-1002] QueryManager does not throw exception if property name ...
-  [JCR-1075] Error with predicate in query with multiple jcr:deref()
   [JCR-1117] Bundle cache is not rolled back when the storage of a ...
   [JCR-1135] boolean value constraints exposed in custom format
   [JCR-1173] Session scoped lock has no effect on other cluster nodes
@@ -96,9 +96,7 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1223] Occasional NPE on node checkin
   [JCR-1248] ParseException if search string ends with '!'
   [JCR-1334] Deadlock with XA enabled
-  [JCR-1354] Repository shutdown reposts ERROR: failed to close connection
   [JCR-1360] Parsing built-in CND and XML nodetypes does not result in ...
-  [JCR-1362] DatabaseJournal improperly finds tables in external schemas ...
   [JCR-1367] Exception when closing connection under db2
   [JCR-1387] Lock token not removed from session when node is removed
   [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
@@ -111,5 +109,18 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1573] Lucene Query Exception: 'attempt to access a deleted ...
   [JCR-1605] RepositoryLock does not work on NFS sometimes
   [JCR-1613] REMOVE access is not checked when moving a node
-  [JCR-1626] The resource committed at the first server via WebDAV does not ...
-  [JCR-1632] Mixin type loss
+  [JCR-1626] The resource committed at the first server via WebDAV does ...
+  [JCR-1633] When node is created and locked in same transaction, ...
+  [JCR-1634] In XA transaction session.addLockToken() does not have effect
+  [JCR-1637] The GarbageCollector ignores InterruptedException and so ...
+  [JCR-1648] Database reconnect during shutdown
+  [JCR-1660] Consistency check / fix skips system nodes
+  [JCR-1666] After transaction rollback session may become 'corrupt'
+  [JCR-1668] After RepositoryImpl instance has been created and shut ...
+  [JCR-1670] NPE when clustered JR queries version history on a node that ...
+  [JCR-1693] JNDIDatabaseJournal doesn't work with "oracle" schema ...
+  [JCR-1703] Oracle JNDI DataSource support
+  [JCR-1707] Node.setProperty(String, String, PropertyType.UNDEFINED) ...
+  [JCR-1729] Node#addNode failes with AccessDeniedException if session ...
+  [JCR-1731] Session.checkPermission("/", "add_node") throws ...
+  
