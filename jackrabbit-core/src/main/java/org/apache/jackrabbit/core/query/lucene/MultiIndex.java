@@ -40,6 +40,7 @@ import org.apache.commons.collections.iterators.EmptyIterator;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -106,7 +107,7 @@ public class MultiIndex {
     /**
      * Names of index directories that can be deleted.
      */
-    private final IndexInfos deletable = new IndexInfos("deletable");
+    private final Set deletable = new HashSet();
 
     /**
      * List of open persistent indexes. This list may also contain an open
@@ -244,12 +245,9 @@ public class MultiIndex {
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
         }
-        if (deletable.exists(indexDir)) {
-            deletable.read(indexDir);
-        }
 
-        // try to remove deletable files if there are any
-        attemptDelete();
+        // as of 1.5 deletable file is not used anymore
+        removeDeletable();
 
         // initialize IndexMerger
         merger = new IndexMerger(this);
@@ -311,6 +309,10 @@ public class MultiIndex {
 
         // run recovery
         Recovery.run(this, redoLog);
+
+        // enqueue unused segments for deletion
+        enqueueUnusedSegments();
+        attemptDelete();
 
         // now that we are ready, start index merger
         merger.start();
@@ -845,12 +847,9 @@ public class MultiIndex {
         // remove it from the lists if index is registered
         indexes.remove(index);
         indexNames.removeName(index.getName());
-        // during recovery it may happen that an index had already been marked
-        // deleted, so we need to check if it is already marked deleted.
         synchronized (deletable) {
-            if (!deletable.contains(index.getName())) {
-                deletable.addName(index.getName());
-            }
+            log.debug("Moved " + index.getName() + " to deletable");
+            deletable.add(index.getName());
         }
     }
 
@@ -917,6 +916,26 @@ public class MultiIndex {
     }
 
     //-------------------------< internal >-------------------------------------
+
+    /**
+     * Enqueues unused segments for deletion in {@link #deletable}. This method
+     * does not synchronize on {@link #deletable}! A caller must ensure that it
+     * is the only one acting on the {@link #deletable} map.
+     */
+    private void enqueueUnusedSegments() {
+        // walk through index segments
+        File[] segmentDirs = indexDir.listFiles(new FileFilter() {
+            public boolean accept(File pathname) {
+                return pathname.isDirectory() && pathname.getName().startsWith("_");
+            }
+        });
+        for (int i = 0; i < segmentDirs.length; i++) {
+            String name = segmentDirs[i].getName();
+            if (!indexNames.contains(name)) {
+                deletable.add(name);
+            }
+        }
+    }
 
     private void scheduleFlushTask() {
         lastFlushTime = System.currentTimeMillis();
@@ -1060,20 +1079,26 @@ public class MultiIndex {
      */
     private void attemptDelete() {
         synchronized (deletable) {
-            for (int i = deletable.size() - 1; i >= 0; i--) {
-                String indexName = deletable.getName(i);
+            for (Iterator it = deletable.iterator(); it.hasNext(); ) {
+                String indexName = (String) it.next();
                 File dir = new File(indexDir, indexName);
                 if (deleteIndex(dir)) {
-                    deletable.removeName(i);
+                    it.remove();
                 } else {
                     log.info("Unable to delete obsolete index: " + indexName);
                 }
             }
-            try {
-                deletable.write(indexDir);
-            } catch (IOException e) {
-                log.warn("Exception while writing deletable indexes: " + e);
-            }
+        }
+    }
+
+    /**
+     * Removes the deletable file if it exists. The file is not used anymore
+     * in Jackrabbit versions >= 1.5.
+     */
+    private void removeDeletable() {
+        File deletable = new File(indexDir, "deletable");
+        if (deletable.exists()) {
+            deletable.delete();
         }
     }
 
