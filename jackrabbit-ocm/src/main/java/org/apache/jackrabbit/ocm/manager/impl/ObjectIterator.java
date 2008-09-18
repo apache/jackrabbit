@@ -17,11 +17,11 @@
 
 package org.apache.jackrabbit.ocm.manager.impl;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -44,7 +44,7 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  *
  */
-public class ObjectIterator implements Iterator
+public class ObjectIterator implements RangeIterator
 {
 
     private static final Log log = LogFactory.getLog(ObjectIterator.class);
@@ -116,5 +116,17 @@ public class ObjectIterator implements Iterator
 
         // no more results
         nextResult = null;
+    }
+
+    public void skip(long l) {
+        nodeIterator.skip(l);
+    }
+
+    public long getSize() {
+        return nodeIterator.getSize();
+    }
+
+    public long getPosition() {
+        return nodeIterator.getPosition();
     }
 }
