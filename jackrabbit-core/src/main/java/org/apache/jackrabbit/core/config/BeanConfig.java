@@ -116,7 +116,7 @@ public class BeanConfig {
             Iterator it = properties.keySet().iterator();
             while (it.hasNext()) {
                 String key = (String) it.next();
-                if (map.get(key) == null && properties.getProperty(key) != null) {
+                if (!map.containsKey(key) && properties.getProperty(key) != null) {
                     String msg = object.getClass().getName() + " does not support '" + key;
                     log.error(msg);
                     throw new ConfigurationException(msg);
