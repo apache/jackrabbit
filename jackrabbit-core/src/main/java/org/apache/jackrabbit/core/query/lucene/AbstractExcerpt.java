@@ -144,7 +144,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                 return null;
             }
         } finally {
-            reader.close();
+            Util.closeOrRelease(reader);
         }
     }
 
@@ -217,7 +217,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             } finally {
                 // only close reader if this method opened one
                 if (reader == null) {
-                    r.close();
+                    Util.closeOrRelease(r);
                 }
             }
             rewritten = true;

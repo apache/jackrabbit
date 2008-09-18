@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +152,7 @@ class ConsistencyCheck {
         Set multipleEntries = new HashSet();
         // collect all documents UUIDs
         documentUUIDs = new HashSet();
-        IndexReader reader = index.getIndexReader();
+        CachingMultiIndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
                 if (i > 10 && i % (reader.maxDoc() / 5) == 0) {
@@ -174,7 +173,7 @@ class ConsistencyCheck {
                 }
             }
         } finally {
-            reader.close();
+            reader.release();
         }
 
         // create multiple entries errors
@@ -212,7 +211,7 @@ class ConsistencyCheck {
                 }
             }
         } finally {
-            reader.close();
+            reader.release();
         }
     }
 

@@ -298,11 +298,11 @@ public class MultiIndex {
         resetVolatileIndex();
 
         // set index format version
-        IndexReader reader = getIndexReader();
+        CachingMultiIndexReader reader = getIndexReader();
         try {
             version = IndexFormatVersion.getVersion(reader);
         } finally {
-            reader.close();
+            reader.release();
         }
 
         indexingQueue.initialize(this);
@@ -349,11 +349,11 @@ public class MultiIndex {
         if (indexNames.size() == 0) {
             return volatileIndex.getNumDocuments();
         } else {
-            IndexReader reader = getIndexReader();
+            CachingMultiIndexReader reader = getIndexReader();
             try {
                 return reader.numDocs();
             } finally {
-                reader.close();
+                reader.release();
             }
         }
     }
@@ -441,7 +441,7 @@ public class MultiIndex {
             synchronized (updateMonitor) {
                 updateInProgress = false;
                 updateMonitor.notifyAll();
-                closeMultiReader();
+                releaseMultiReader();
             }
         }
     }
@@ -504,7 +504,7 @@ public class MultiIndex {
             synchronized (updateMonitor) {
                 updateInProgress = false;
                 updateMonitor.notifyAll();
-                closeMultiReader();
+                releaseMultiReader();
             }
         }
         return num;
@@ -538,14 +538,14 @@ public class MultiIndex {
                 }
             }
         } catch (IOException e) {
-            // close readers obtained so far
+            // release readers obtained so far
             for (Iterator it = indexReaders.entrySet().iterator(); it.hasNext();) {
                 Map.Entry entry = (Map.Entry) it.next();
                 ReadOnlyIndexReader reader = (ReadOnlyIndexReader) entry.getKey();
                 try {
-                    reader.close();
+                    reader.release();
                 } catch (IOException ex) {
-                    log.warn("Exception closing index reader: " + ex);
+                    log.warn("Exception releasing index reader: " + ex);
                 }
                 ((PersistentIndex) entry.getValue()).resetListener();
             }
@@ -674,7 +674,7 @@ public class MultiIndex {
                 synchronized (updateMonitor) {
                     updateInProgress = false;
                     updateMonitor.notifyAll();
-                    closeMultiReader();
+                    releaseMultiReader();
                 }
             }
         }
@@ -694,7 +694,7 @@ public class MultiIndex {
     public CachingMultiIndexReader getIndexReader() throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
-                multiReader.incrementRefCount();
+                multiReader.acquire();
                 return multiReader;
             }
             // no reader available
@@ -721,7 +721,7 @@ public class MultiIndex {
                         (ReadOnlyIndexReader[]) readerList.toArray(new ReadOnlyIndexReader[readerList.size()]);
                 multiReader = new CachingMultiIndexReader(readers, cache);
             }
-            multiReader.incrementRefCount();
+            multiReader.acquire();
             return multiReader;
         }
     }
@@ -751,7 +751,7 @@ public class MultiIndex {
 
             // commit / close indexes
             try {
-                closeMultiReader();
+                releaseMultiReader();
             } catch (IOException e) {
                 log.error("Exception while closing search index.", e);
             }
@@ -895,7 +895,7 @@ public class MultiIndex {
     }
 
     /**
-     * Closes the {@link #multiReader} and sets it <code>null</code>. If the
+     * Releases the {@link #multiReader} and sets it <code>null</code>. If the
      * reader is already <code>null</code> this method does nothing. When this
      * method returns {@link #multiReader} is guaranteed to be <code>null</code>
      * even if an exception is thrown.
@@ -904,12 +904,12 @@ public class MultiIndex {
      * A caller must ensure that it is the only thread operating on this multi
      * index, or that it holds the {@link #updateMonitor}.
      *
-     * @throws IOException if an error occurs while closing the reader.
+     * @throws IOException if an error occurs while releasing the reader.
      */
-    void closeMultiReader() throws IOException {
+    void releaseMultiReader() throws IOException {
         if (multiReader != null) {
             try {
-                multiReader.close();
+                multiReader.release();
             } finally {
                 multiReader = null;
             }
@@ -1143,7 +1143,7 @@ public class MultiIndex {
                         synchronized (updateMonitor) {
                             updateInProgress = false;
                             updateMonitor.notifyAll();
-                            closeMultiReader();
+                            releaseMultiReader();
                         }
                     }
                 }

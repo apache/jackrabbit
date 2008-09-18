@@ -55,8 +55,6 @@ class PersistentIndex extends AbstractIndex {
      * @param indexingQueue the indexing queue.
      * @throws IOException if an error occurs while opening / creating the
      *  index.
-     * @throws IOException if an error occurs while opening / creating
-     *  the index.
      */
     PersistentIndex(String name, File indexDir, Analyzer analyzer,
                     Similarity similarity, DocNumberCache cache,
@@ -65,6 +63,9 @@ class PersistentIndex extends AbstractIndex {
         super(analyzer, similarity, FSDirectory.getDirectory(indexDir, new NativeFSLockFactory(indexDir)),
                 cache, indexingQueue);
         this.name = name;
+        if (isExisting()) {
+            IndexMigration.migrate(this, indexDir);
+        }
     }
 
     /**

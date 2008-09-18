@@ -483,11 +483,10 @@ public class NodeIndexer {
             field.setOmitNorms(true);
             return field;
         } else {
-            Field field = new Field(FieldNames.PROPERTIES,
+            return new Field(FieldNames.PROPERTIES,
                     FieldNames.createNamedValue(fieldName, internalValue),
                     Field.Store.NO, Field.Index.NO_NORMS,
                     Field.TermVector.NO);
-            return field;
         }
     }
 

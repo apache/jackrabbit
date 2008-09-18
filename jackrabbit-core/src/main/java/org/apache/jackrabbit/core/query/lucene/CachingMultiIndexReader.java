@@ -65,11 +65,9 @@ public final class CachingMultiIndexReader
      *
      * @param subReaders the sub readers.
      * @param cache the document number cache.
-     * @throws IOException if an error occurs while reading from the indexes.
      */
     public CachingMultiIndexReader(ReadOnlyIndexReader[] subReaders,
-                              DocNumberCache cache)
-            throws IOException {
+                                   DocNumberCache cache) {
         super(subReaders);
         this.cache = cache;
         this.subReaders = subReaders;
@@ -150,20 +148,27 @@ public final class CachingMultiIndexReader
 
     /**
      * Increments the reference count of this reader. Each call to this method
-     * must later be acknowledged by a call to {@link #close()}
+     * must later be acknowledged by a call to {@link #release()}.
      */
-    synchronized void incrementRefCount() {
+    synchronized void acquire() {
         refCount++;
     }
 
     /**
-     * Decrements the reference count and closes the underlying readers if this
-     * reader is not in use anymore.
-     * @throws IOException if an error occurs while closing this reader.
+     * {@inheritDoc}
+     */
+    public synchronized final void release() throws IOException {
+        if (--refCount == 0) {
+            close();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
      */
     protected synchronized void doClose() throws IOException {
-        if (--refCount == 0) {
-            super.doClose();
+        for (int i = 0; i < subReaders.length; i++) {
+            subReaders[i].release();
         }
     }
 
