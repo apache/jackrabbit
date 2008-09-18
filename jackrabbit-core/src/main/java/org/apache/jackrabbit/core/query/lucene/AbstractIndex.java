@@ -20,6 +20,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -109,6 +111,12 @@ abstract class AbstractIndex {
     private IndexingQueue indexingQueue;
 
     /**
+     * Flag that indicates whether there was an index present in the directory
+     * when this AbstractIndex was created.
+     */
+    private boolean isExisting;
+
+    /**
      * Constructs an index with an <code>analyzer</code> and a
      * <code>directory</code>.
      *
@@ -131,8 +139,9 @@ abstract class AbstractIndex {
         this.directory = directory;
         this.cache = cache;
         this.indexingQueue = indexingQueue;
+        this.isExisting = IndexReader.indexExists(directory);
 
-        if (!IndexReader.indexExists(directory)) {
+        if (!isExisting) {
             indexWriter = new IndexWriter(directory, analyzer);
             // immediately close, now that index has been created
             indexWriter.close();
@@ -149,6 +158,17 @@ abstract class AbstractIndex {
      */
     Directory getDirectory() throws IOException {
         return directory;
+    }
+
+    /**
+     * Returns <code>true</code> if this index was openend on a directory with
+     * an existing index in it; <code>false</code> otherwise.
+     *
+     * @return <code>true</code> if there was an index present when this index
+     *          was created; <code>false</code> otherwise.
+     */
+    boolean isExisting() {
+        return isExisting;
     }
 
     /**
@@ -248,7 +268,7 @@ abstract class AbstractIndex {
         if (readOnlyReader != null) {
             if (readOnlyReader.getDeletedDocsVersion() == modCount) {
                 // reader up-to-date
-                readOnlyReader.incrementRefCount();
+                readOnlyReader.acquire();
                 return readOnlyReader;
             } else {
                 // reader outdated
@@ -256,12 +276,12 @@ abstract class AbstractIndex {
                     // not in use, except by this index
                     // update the reader
                     readOnlyReader.updateDeletedDocs(modifiableReader);
-                    readOnlyReader.incrementRefCount();
+                    readOnlyReader.acquire();
                     return readOnlyReader;
                 } else {
                     // cannot update reader, it is still in use
                     // need to create a new instance
-                    readOnlyReader.close();
+                    readOnlyReader.release();
                     readOnlyReader = null;
                 }
             }
@@ -280,7 +300,7 @@ abstract class AbstractIndex {
             sharedReader = new SharedIndexReader(cr);
         }
         readOnlyReader = new ReadOnlyIndexReader(sharedReader, deleted, modCount);
-        readOnlyReader.incrementRefCount();
+        readOnlyReader.acquire();
         return readOnlyReader;
     }
 
@@ -305,6 +325,9 @@ abstract class AbstractIndex {
             indexWriter.setMaxFieldLength(maxFieldLength);
             indexWriter.setUseCompoundFile(useCompoundFile);
             indexWriter.setInfoStream(STREAM_LOGGER);
+            indexWriter.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
+            indexWriter.setMergeScheduler(new SerialMergeScheduler());
+            indexWriter.setMergePolicy(new LogDocMergePolicy());
         }
         return indexWriter;
     }
@@ -326,7 +349,7 @@ abstract class AbstractIndex {
      */
     protected synchronized void commit(boolean optimize) throws IOException {
         if (indexReader != null) {
-            indexReader.commitDeleted();
+            indexReader.flush();
         }
         if (indexWriter != null) {
             log.debug("committing IndexWriter.");
@@ -346,6 +369,20 @@ abstract class AbstractIndex {
      * Closes this index, releasing all held resources.
      */
     synchronized void close() {
+        releaseWriterAndReaders();
+        if (directory != null) {
+            try {
+                directory.close();
+            } catch (IOException e) {
+                directory = null;
+            }
+        }
+    }
+
+    /**
+     * Releases all potentially held index writer and readers.
+     */
+    protected void releaseWriterAndReaders() {
         if (indexWriter != null) {
             try {
                 indexWriter.close();
@@ -364,24 +401,19 @@ abstract class AbstractIndex {
         }
         if (readOnlyReader != null) {
             try {
-                readOnlyReader.close();
+                readOnlyReader.release();
             } catch (IOException e) {
                 log.warn("Exception closing index reader: " + e.toString());
             }
+            readOnlyReader = null;
         }
         if (sharedReader != null) {
             try {
-                sharedReader.close();
+                sharedReader.release();
             } catch (IOException e) {
                 log.warn("Exception closing index reader: " + e.toString());
             }
-        }
-        if (directory != null) {
-            try {
-                directory.close();
-            } catch (IOException e) {
-                directory = null;
-            }
+            sharedReader = null;
         }
     }
 
@@ -393,12 +425,12 @@ abstract class AbstractIndex {
     protected synchronized void invalidateSharedReader() throws IOException {
         // also close the read-only reader
         if (readOnlyReader != null) {
-            readOnlyReader.close();
+            readOnlyReader.release();
             readOnlyReader = null;
         }
         // invalidate shared reader
         if (sharedReader != null) {
-            sharedReader.close();
+            sharedReader.release();
             sharedReader = null;
         }
     }

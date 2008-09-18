@@ -115,14 +115,14 @@ public class FieldNames {
 
     /**
      * Returns a named value for use as a term in the index. The named
-     * value is of the form: <code>fieldName</code> + '\uFFFF' + value
+     * value is of the form: <code>fieldName</code> + '[' + value
      *
      * @param fieldName the field name.
      * @param value the value.
      * @return value prefixed with field name.
      */
     public static String createNamedValue(String fieldName, String value) {
-        return fieldName + '\uFFFF' + value;
+        return fieldName + '[' + value;
     }
 
     /**
@@ -131,10 +131,9 @@ public class FieldNames {
      * does not contain a name prefix, this method return 0.
      *
      * @param namedValue the named value as created by {@link #createNamedValue(String, String)}.
-     * @return the length of the field prefix including the separator char
-     *         (\uFFFF).
+     * @return the length of the field prefix including the separator char '['.
      */
     public static int getNameLength(String namedValue) {
-        return namedValue.indexOf('\uFFFF') + 1;
+        return namedValue.indexOf('[') + 1;
     }
 }

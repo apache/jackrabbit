@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermPositions;
@@ -30,7 +29,7 @@ import java.io.IOException;
  * <code>ReadOnlyIndexReader</code> will always show all documents that have
  * not been deleted at the time when the index reader is created.
  */
-class ReadOnlyIndexReader extends FilterIndexReader {
+class ReadOnlyIndexReader extends RefCountingIndexReader {
 
     /**
      * The underlying shared reader.
@@ -50,11 +49,6 @@ class ReadOnlyIndexReader extends FilterIndexReader {
     private long deletedDocsVersion;
 
     /**
-     * A reference counter. When constructed the refCount is one.
-     */
-    private int refCount = 1;
-
-    /**
      * Creates a new index reader based on <code>reader</code> at
      * <code>modificationTick</code>.
      *
@@ -71,23 +65,8 @@ class ReadOnlyIndexReader extends FilterIndexReader {
         this.reader = reader;
         this.deleted = deleted;
         this.deletedDocsVersion = deletedDocsVersion;
-        // register this
-        reader.addClient(this);
-    }
-
-    /**
-     * Increments the reference count on this index reader. The reference count
-     * is decremented on {@link #close()}.
-     */
-    synchronized void incrementRefCount() {
-        refCount++;
-    }
-
-    /**
-     * @return the current reference count value.
-     */
-    synchronized int getRefCount() {
-        return refCount;
+        // acquire underlying reader
+        reader.acquire();
     }
 
     /**
@@ -198,22 +177,6 @@ class ReadOnlyIndexReader extends FilterIndexReader {
      */
     protected final void doCommit() {
         throw new UnsupportedOperationException("IndexReader is read-only");
-    }
-
-    /**
-     * Unregisters this reader from the shared index reader if the reference
-     * count for this reader drops to zero. Specifically, this method does
-     * <b>not</b> close the underlying index reader, because it is shared by
-     * multiple <code>ReadOnlyIndexReader</code>s.
-     *
-     * @throws IOException if an error occurs while closing the reader.
-     */
-    protected void doClose() throws IOException {
-        synchronized (this) {
-            if (--refCount == 0) {
-                reader.removeClient(this);
-            }
-        }
     }
 
     /**

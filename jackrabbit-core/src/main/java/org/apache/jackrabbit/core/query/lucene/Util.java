@@ -21,6 +21,7 @@ import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexReader;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -107,5 +108,22 @@ public class Util {
         IOException ex = new IOException(t.getMessage());
         ex.initCause(t);
         return ex;
+    }
+
+    /**
+     * Depending on the type of the <code>reader</code> this method either
+     * closes or releases the reader. The reader is released if it implements
+     * {@link ReleaseableIndexReader}.
+     *
+     * @param reader the index reader to close or release.
+     * @throws IOException if an error occurs while closing or releasing the
+     *                     index reader.
+     */
+    public static void closeOrRelease(IndexReader reader) throws IOException {
+        if (reader instanceof ReleaseableIndexReader) {
+            ((ReleaseableIndexReader) reader).release();
+        } else {
+            reader.close();
+        }
     }
 }

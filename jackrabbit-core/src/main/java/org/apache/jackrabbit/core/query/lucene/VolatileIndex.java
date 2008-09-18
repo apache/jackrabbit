@@ -156,6 +156,9 @@ class VolatileIndex extends AbstractIndex {
      * Commits pending documents to the index.
      */
     private void commitPending() throws IOException {
+        if (pending.isEmpty()) {
+            return;
+        }
         super.addDocuments((Document[]) pending.values().toArray(
                 new Document[pending.size()]));
         pending.clear();

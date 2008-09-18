@@ -305,13 +305,13 @@ class IndexMerger extends Thread implements IndexListener {
 
                         // force initializing of caches
                         time = System.currentTimeMillis();
-                        index.getReadOnlyIndexReader().close();
+                        index.getReadOnlyIndexReader().release();
                         time = System.currentTimeMillis() - time;
                         log.debug("reader obtained in {} ms", new Long(time));
                     } finally {
                         for (int i = 0; i < readers.length; i++) {
                             try {
-                                readers[i].close();
+                                Util.closeOrRelease(readers[i]);
                             } catch (IOException e) {
                                 log.warn("Unable to close IndexReader: " + e);
                             }

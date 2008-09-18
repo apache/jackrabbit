@@ -170,6 +170,6 @@ class Recovery {
 
         // now we are consistent again -> flush
         index.flush();
-        index.closeMultiReader();
+        index.releaseMultiReader();
     }
 }

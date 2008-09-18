@@ -60,15 +60,6 @@ class CommittableIndexReader extends FilterIndexReader {
     //------------------------< additional methods >----------------------------
 
     /**
-     * Commits the documents marked as deleted to disc.
-     *
-     * @throws IOException if an error occurs while writing.
-     */
-    void commitDeleted() throws IOException {
-        commit();
-    }
-
-    /**
      * @return the modification count of this index reader.
      */
     long getModificationCount() {
