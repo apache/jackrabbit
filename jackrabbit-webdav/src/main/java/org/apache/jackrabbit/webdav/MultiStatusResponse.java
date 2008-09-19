@@ -252,11 +252,12 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                 Integer statusKey = (Integer) iter.next();
                 Status st = new Status(statusKey.intValue());
                 PropContainer propCont = (PropContainer) statusMap.get(statusKey);
-
-                Element propstat = DomUtil.createElement(document, XML_PROPSTAT, NAMESPACE);
-                propstat.appendChild(propCont.toXml(document));
-                propstat.appendChild(st.toXml(document));
-                response.appendChild(propstat);
+                if (!propCont.isEmpty()) {
+                    Element propstat = DomUtil.createElement(document, XML_PROPSTAT, NAMESPACE);
+                    propstat.appendChild(propCont.toXml(document));
+                    propstat.appendChild(st.toXml(document));
+                    response.appendChild(propstat);
+                }
             }
         } else {
             // add a single '<status>' element
