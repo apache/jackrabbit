@@ -78,7 +78,7 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  */
 public class DefaultCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
-    private static final String COLLECTION_ELEMENT_NAME = "collection-element";
+    protected static final String COLLECTION_ELEMENT_NAME = "collection-element";
 
     /**
      * Constructor
@@ -116,7 +116,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         ClassDescriptor elementClassDescriptor = mapper.getClassDescriptorByClass( ReflectionUtils.forName(collectionDescriptor.getElementClassName()));
 
         if (objects instanceof ManageableCollection)
-           insertManageableCollection(session, objects, collectionNode, elementClassDescriptor);
+           insertManageableCollection(session, objects, collectionNode, elementClassDescriptor, collectionDescriptor);
         else 
            insertManageableMap(session, objects, collectionNode);
         	
@@ -124,7 +124,8 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
 
 	private void insertManageableCollection(Session session,
 			ManageableObjects objects, Node collectionNode,
-			ClassDescriptor elementClassDescriptor) {
+			ClassDescriptor elementClassDescriptor,
+            CollectionDescriptor collectionDescriptor) {
 		Iterator collectionIterator = objects.getIterator();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
@@ -137,7 +138,10 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                 elementJcrName = ReflectionUtils.getNestedProperty(item, idFieldName).toString();
             }
             else {
-                elementJcrName = COLLECTION_ELEMENT_NAME;
+                elementJcrName = collectionDescriptor.getJcrElementName();
+                if (elementJcrName == null) { // use PathFormat.checkFormat() here?
+                    elementJcrName = COLLECTION_ELEMENT_NAME;
+                }
             }
 
             objectConverter.insert(session, collectionNode, elementJcrName, item);
@@ -232,7 +236,10 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
                 updatedItems.put(elementJcrName, item);
             }
             else {
-                elementJcrName = COLLECTION_ELEMENT_NAME ;
+                elementJcrName = collectionDescriptor.getJcrElementName();
+                if (elementJcrName == null) { // use PathFormat.checkFormat() here?
+                    elementJcrName = COLLECTION_ELEMENT_NAME;
+                }
                 objectConverter.insert(session, collectionNode, elementJcrName, item);
             }
         }

@@ -246,7 +246,7 @@ public class AnnotationBeanDescriptorTest extends AnnotationTestBase {
             page.setPath("/test");
             page.setTitle("Page Title");
 
-            Collection paragraphs = new ArrayList();
+            List<Paragraph> paragraphs = new ArrayList<Paragraph>();
 
             paragraphs.add(new Paragraph("Para 1"));
             paragraphs.add(new Paragraph("Para 2"));
@@ -261,11 +261,10 @@ public class AnnotationBeanDescriptorTest extends AnnotationTestBase {
             // --------------------------------------------------------------------------------
             page = (Page) ocm.getObject("/test");
             paragraphs = page.getParagraphs();
-            for (Iterator iter = paragraphs.iterator(); iter.hasNext();) {
-				Paragraph paragraph = (Paragraph) iter.next();
+            for (Paragraph paragraph : paragraphs) {
 				System.out.println("Paragraph path : " + paragraph.getPath());				
 			}
-            Paragraph p1 = (Paragraph) ocm.getObject("/test/collection-element[2]");
+            Paragraph p1 = (Paragraph) ocm.getObject("/test/paragraph[2]");
             Page paraPage = p1.getPage();
             assertNotNull("Parent page is null", paraPage);
             assertTrue("Invalid parent page", paraPage.getPath().equals("/test"));

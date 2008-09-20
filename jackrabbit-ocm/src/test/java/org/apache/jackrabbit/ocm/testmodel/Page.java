@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.ocm.testmodel;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl;
@@ -35,8 +36,8 @@ public class Page
 	@Field(path=true) String path;
     @Field(jcrName="ocm:title") String title;
 
-    @Collection(elementClassName=Paragraph.class, collectionConverter=NTCollectionConverterImpl.class)
-    java.util.Collection paragraphs;
+    @Collection(collectionConverter=NTCollectionConverterImpl.class, jcrElementName="paragraph")
+    List<Paragraph> paragraphs;
 
     public String getPath()
     {
@@ -49,14 +50,14 @@ public class Page
 	/**
      * @return Returns the paragraphs.
      */
-    public java.util.Collection getParagraphs()
+    public List<Paragraph> getParagraphs()
     {
         return paragraphs;
     }
     /**
      * @param paragraphs The paragraphs to set.
      */
-    public void setParagraphs(java.util.Collection paragraphs)
+    public void setParagraphs(List<Paragraph> paragraphs)
     {
         this.paragraphs = paragraphs;
     }
@@ -79,7 +80,7 @@ public class Page
     {
     	if (paragraphs == null)
     	{
-    		paragraphs = new ArrayList();
+    		paragraphs = new ArrayList<Paragraph>();
     	}
     	
     	paragraphs.add(paragraph);
