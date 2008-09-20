@@ -240,6 +240,8 @@ public class AnnotationDescriptorReader implements DescriptorReader
 			setElementClassName(collectionDescriptor, field.getGenericType());
 		}
 
+		collectionDescriptor.setJcrElementName(collectionAnnotation.jcrElementName());
+
 		if (! collectionAnnotation.collectionClassName().equals(Object.class))
 		{
 			collectionDescriptor.setCollectionClassName(collectionAnnotation.collectionClassName().getName());

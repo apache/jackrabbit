@@ -90,7 +90,7 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
     private final static Log log = LogFactory.getLog(NTCollectionConverterImpl.class);
 
-    private static final String COLLECTION_ELEMENT_NAME = "collection-element";
+    protected static final String COLLECTION_ELEMENT_NAME = "collection-element";
 
     /**
      * Constructor
@@ -129,7 +129,10 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
                 elementJcrName = ReflectionUtils.getNestedProperty(item, idFieldName).toString();
             }
             else {
-                elementJcrName = COLLECTION_ELEMENT_NAME;
+                elementJcrName = collectionDescriptor.getJcrElementName();
+                if (elementJcrName == null) { // use PathFormat.checkFormat() here?
+                    elementJcrName = COLLECTION_ELEMENT_NAME;
+                }
             }
 
             objectConverter.insert(session, parentNode, elementJcrName, item);
@@ -181,7 +184,10 @@ public class NTCollectionConverterImpl extends AbstractCollectionConverterImpl {
                 updatedItems.put(elementJcrName, item);
             }
             else {
-                elementJcrName = COLLECTION_ELEMENT_NAME;
+                elementJcrName = collectionDescriptor.getJcrElementName();
+                if (elementJcrName == null) { // use PathFormat.checkFormat() here?
+                    elementJcrName = COLLECTION_ELEMENT_NAME;
+                }
                 objectConverter.insert(session, parentNode, elementJcrName, item);
             }
         }

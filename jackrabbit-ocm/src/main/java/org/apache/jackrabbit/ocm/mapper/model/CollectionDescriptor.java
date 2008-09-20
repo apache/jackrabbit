@@ -30,6 +30,7 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
      private String fieldName;
      private String jcrName;
      private String elementClassName;
+     private String jcrElementName;
      private String collectionConverterClassName;
      private String collectionClassName;
      private boolean proxy;
@@ -91,6 +92,23 @@ public class CollectionDescriptor implements ChildNodeDefDescriptor, PropertyDef
     public void setElementClassName(String elementClassName)
     {
         this.elementClassName = elementClassName;
+    }
+
+    /**
+     * @return Returns the elementName.
+     */
+    public String getJcrElementName()
+    {
+        return jcrElementName;
+    }
+
+    /**
+     * @param jcrElementName The collection element name to set.
+     *
+     */
+    public void setJcrElementName(String jcrElementName)
+    {
+        this.jcrElementName = jcrElementName;
     }
 
     /**

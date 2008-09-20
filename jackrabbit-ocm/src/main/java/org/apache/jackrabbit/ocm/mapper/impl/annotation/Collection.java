@@ -47,6 +47,8 @@ public @interface Collection {
     // because it is not possible to have a default null value in annotation field
     Class elementClassName() default Object.class;
 
+    String jcrElementName() default "collection-element";
+
 	Class collectionConverter() default DefaultCollectionConverterImpl.class;
 
 	// Use Object.class as default value

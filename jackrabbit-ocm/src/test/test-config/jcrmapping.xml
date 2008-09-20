@@ -88,6 +88,7 @@
 		<field-descriptor fieldName="title" jcrName="ocm:title" />
 		<collection-descriptor fieldName="paragraphs" proxy="false"
 		                       elementClassName="org.apache.jackrabbit.ocm.testmodel.Paragraph"
+                           jcrElementName="paragraph"
 		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.NTCollectionConverterImpl" />
 	</class-descriptor>
 
