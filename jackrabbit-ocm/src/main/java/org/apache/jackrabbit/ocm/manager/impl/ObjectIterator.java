@@ -33,10 +33,7 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
 
 /**
  * ObjectIterator is a wrapper class for JCR NodeIterator, which returns
- * mapped objects. Note, though, that this iterator may not return the same
- * number of objects as the underlying node iterator as not all nodes may
- * successfully be mapped to objects. Any problems mapping nodes to objects are
- * logged at INFO level.
+ * mapped objects.
  * <p>
  * This Iterator implementation does not support removing elements, therefore
  * the {@link #remove()} method throws a <code>UnsupportOperationException</code>.
@@ -46,17 +43,12 @@ import org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter;
  */
 public class ObjectIterator implements RangeIterator
 {
-
-    private static final Log log = LogFactory.getLog(ObjectIterator.class);
-
 	private NodeIterator nodeIterator;
 
 	private Session session;
 
 	private ObjectConverter objectConverter;
 
-    private Object nextResult;
-	
 	/**
 	 * Constructor
 	 *
@@ -69,63 +61,56 @@ public class ObjectIterator implements RangeIterator
 		nodeIterator = iterator;
 		objectConverter = converter;
 		this.session = session;
-		
-		// get first result
-        seek();
 	}
 
-
+    /**
+     * @see java.util.Iterator#hasNext()
+     */
 	public boolean hasNext() {
-        return nextResult != null;
+        return nodeIterator.hasNext();
     }
 
 	
+    /**
+     * @see java.util.Iterator#next() 
+     */
     public Object next() {
-        if (nextResult == null) {
-            throw new NoSuchElementException();
+        try {
+            Node node = nodeIterator.nextNode();
+            return objectConverter.getObject(session, node.getPath());
+        } catch (RepositoryException re) {
+            throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Repository access issue trying to map node to an object", re);
         }
-
-        Object result = nextResult;
-        seek();
-        return result;
     }
 
-
+    /**
+     * This Iterator implementation does not support removing elements, therefore
+     * this method always throws a <code>UnsupportOperationException</code>.
+     *
+     * @see java.util.Iterator#next()
+     */
     public void remove() {
         throw new UnsupportedOperationException();
     }
 
 
-    private void seek() {
-        while (nodeIterator.hasNext()) {
-            try {
-                Node node = nodeIterator.nextNode();
-                Object value = objectConverter.getObject(session, node.getPath());
-                if (value != null) {
-                    nextResult = value;
-                    return;
-                }
-            } catch (RepositoryException re) {
-                log.info("Repository access issue trying to map node to an object", re);
-            } catch (ObjectContentManagerException ocme) {
-                log.info("Mapping Failure", ocme);
-            } catch (Throwable t) {
-                log.info("Unexpected Problem while trying to map a node to an object", t);
-            }
-        }
-
-        // no more results
-        nextResult = null;
-    }
-
+    /**
+     * @see javax.jcr.RangeIterator#skip(long)
+     */
     public void skip(long l) {
         nodeIterator.skip(l);
     }
 
+    /**
+     * @see javax.jcr.RangeIterator#getSize()
+     */
     public long getSize() {
         return nodeIterator.getSize();
     }
 
+    /**
+     * @see javax.jcr.RangeIterator#getPosition()
+     */
     public long getPosition() {
         return nodeIterator.getPosition();
     }

@@ -34,6 +34,7 @@ import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.impl.ObjectContentManagerImpl;
+import org.apache.jackrabbit.ocm.manager.impl.ObjectIterator;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
@@ -89,22 +90,32 @@ public class AnnotationIteratorQueryTest extends AnnotationTestBase
     		  // No scope    		
     	      QueryManager queryManager = this.getQueryManager();
     	      Filter filter = queryManager.createFilter(Page.class);        	
-    	      Query query = queryManager.createQuery(filter);    	
+    	      Query query = queryManager.createQuery(filter);
+              // we need this to be sure about objects order in the iterator test
+              query.addOrderByAscending("title");
     	      ObjectContentManager ocm = this.getObjectContentManager();
     	
     	      long  start = System.currentTimeMillis();
-    	      Iterator iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
-    	          	
+              ObjectIterator iterator = (ObjectIterator) ocm.getObjectIterator(query);
+              System.out.println("getObjectIterator takes : " + (System.currentTimeMillis() - start));
+
     	      start = System.currentTimeMillis();
     	      Collection result = ocm.getObjects(query);
     	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
     	
-    	      start = System.currentTimeMillis();
-    	      iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	
 
-    	
+    	      start = System.currentTimeMillis();
+    	      iterator = (ObjectIterator) ocm.getObjectIterator(query);
+              System.out.println("getObjectIterator takes : " + (System.currentTimeMillis() - start));
+              assertEquals("wrong results count", 4, iterator.getSize());
+              assertEquals("wrong initial position", 0, iterator.getPosition());
+              assertTrue("no objects returned", iterator.hasNext());
+              Page page = (Page) iterator.next();
+              assertEquals("wrong first result", "Page 1 Title", page.getTitle());
+              iterator.skip(1);
+              assertEquals("wrong position after skip", 2, iterator.getPosition());
+              page = (Page) iterator.next();
+              assertEquals("wrong third result", "Page 3 Title", page.getTitle());
         }
         catch (Exception e)
         {
