@@ -122,6 +122,11 @@ public interface DavConstants {
     public static final String PROPERTY_SOURCE = "source";
     public static final String PROPERTY_SUPPORTEDLOCK = "supportedlock";
 
+    /*
+     * Webdav property names as defined by the BIND specification.
+     */
+    public static final String PROPERTY_RESOURCEID = "resource-id";
+
     //-------------------------------------------------< PropFind Constants >---
     public static final int PROPFIND_BY_PROPERTY = 0;
     public static final int PROPFIND_ALL_PROP = 1;
