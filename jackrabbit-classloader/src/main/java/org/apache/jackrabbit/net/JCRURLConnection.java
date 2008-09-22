@@ -48,16 +48,18 @@ import org.slf4j.LoggerFactory;
  * identify and access a repository <code>Property</code> based on the URL. This
  * main task is executed in the {@link #connect()} method.
  * <p>
- * Basically the guideposts to access content from a JCR Repository URl are
+ * Basically the guideposts to access content from a JCR Repository URL are
  * the following:
  * <ul>
  * <li>The URL must ultimately resolve to a repository property to provide
  *      content.
  * <li>If the URL itself is the path to a property, that property is used to
  *      provide the content.
- * <li>If the URL is a path to a node, the primary item chain starting with
- *      this node is followed until no further primary items exist. If the
- *      final item is a property, that property is used to provide the content.
+ * <li>If the URL is a path to a node, either the
+ *      <code>jcr:content/jcr:data</code> or <code>jcr:data</code> property is
+ *      used or the primary item chain starting with this node is followed until
+ *      no further primary items exist. If the final item is a property, that
+ *      property is used to provide the content.
  * <li>If neither of the above methods resolve to a property, the
  *      {@link #connect()} fails and access to the content is not possible.
  * </ul>
@@ -88,30 +90,25 @@ import org.slf4j.LoggerFactory;
  *      representation of the value for all other value types.
  *
  * <dt><code>Content-Type</code>
- * <dd>If the property is a child of a <code>nt:resource</code> node, the
- *      content type is retrieved from the <code>jcr:mimeType</code>
- *      property of the parent node. If the parent node is not a
- *      <code>nt:resource</code>, the <code>guessContentTypeFromName</code>
- *      method is called on the {@link #getPath() path}. If this does not
- *      yield a content type, it is set to <code>application/octet-stream</code>
- *      for binary properties and to <code>text/plain</code> for other types.
+ * <dd>The content type is retrieved from the <code>jcr:mimeType</code>
+ *      property of the property's parent node if existing. Otherwise the
+ *      <code>guessContentTypeFromName</code> method is called on the
+ *      {@link #getPath() path}. If this does not yield a content type, it is
+ *      set to <code>application/octet-stream</code> for binary properties and
+ *      to <code>text/plain</code> for other types.
  *
  * <dt><code>Content-Enconding</code>
- * <dd>If the property is a child of a <code>nt:resource</code> node, the
- *      content encoding is retrieved from the <code>jcr:econding</code>
- *      property of the parent node. If the <code>jcr:encoding</code> property
- *      is not set, this header field remains undefined (aka <code>null</code>).
+ * <dd>The content encoding is retrieved from the <code>jcr:econding</code>
+ *      property of the property's parent node if existing. Otherwise this
+ *      header field remains undefined (aka <code>null</code>).
  *
  * <dt><code>Last-Modified</code>
- * <dd>If the property is a child of a <code>nt:resource</code> node, the
- *      last modified type is retrieved from the <code>jcr:lastModified</code>
- *      property of the parent node. If the parent node is not a
- *      <code>nt:resource</code>, the last modification time is set to zero.
+ * <dd>The last modified type is retrieved from the <code>jcr:lastModified</code>
+ *      property of the property's parent node if existing. Otherwise the last
+ *      modification time is set to zero.
  * </dl>
  * <p>
  * This class is not intended to be subclassed or instantiated by clients.
- *
- * @author Felix Meschberger
  */
 public class JCRURLConnection extends URLConnection {
 
@@ -336,16 +333,15 @@ public class JCRURLConnection extends URLConnection {
      *      fails, because multi-valued properties are not currently supported.
      * <li>The content length header field is set from the property length
      *      (<code>Property.getLength())</code>).
-     * <li>If the property's parent node is of node type <code>nt:resource</code>,
-     *      the header fields for the content type, content encoding and last
+     * <li>The header fields for the content type, content encoding and last
      *      modification time are set from the <code>jcr:mimeType</code>,
      *      <code>jcr:encoding</code>, and <code>jcr:lastModification</code>
-     *      properties. Otherwise the content encoding field is set to
-     *      <code>null</code> and the last modification time is set to zero.
-     *      The content type field is guessed from the name of the URL item.
-     *      If the content type cannot be guessed, it is set to
-     *      <code>application/octet-stream</code> if the property is of binary
-     *      type or <code>text/plain</code> otherwise.
+     *      properties of the property's parent node if existing. Otherwise the
+     *      content encoding field is set to <code>null</code> and the last
+     *      modification time is set to zero. The content type field is guessed
+     *      from the name of the URL item. If the content type cannot be
+     *      guessed, it is set to <code>application/octet-stream</code> if the
+     *      property is of binary type or <code>text/plain</code> otherwise.
      * </ol>
      * <p>
      * When this method successfully returns, this connection is considered
@@ -377,26 +373,33 @@ public class JCRURLConnection extends URLConnection {
                 long lastModified;
 
                 Node parent = property.getParent();
-                if (parent.isNodeType("nt:resource")) {
+                if (parent.hasProperty("jcr:lastModified")) {
                     lastModified = parent.getProperty("jcr:lastModified").getLong();
-                    contentType = parent.getProperty("jcr:mimeType").getString();
-                    if (parent.hasProperty("jcr:encoding")) {
-                        contentEncoding =
-                            parent.getProperty("jcr:encoding").getString();
-                    }
                 } else {
                     lastModified = 0;
+                }
+                
+                if (parent.hasProperty("jcr:mimeType")) {
+                    contentType = parent.getProperty("jcr:mimeType").getString();
+                } else {
                     contentType = guessContentTypeFromName(getItem().getName());
                     if (contentType == null) {
                         contentType = (property.getType() == PropertyType.BINARY)
-                                            ? APPLICATION_OCTET
-                                            : TEXT_PLAIN;
+                                ? APPLICATION_OCTET
+                                : TEXT_PLAIN;
                     }
                 }
+                
+                if (parent.hasProperty("jcr:encoding")) {
+                    contentEncoding = parent.getProperty("jcr:encoding").getString();
+                } else {
+                    contentEncoding = null;
+                }
 
-                log.debug("connect: Using atom '" + property.getPath() +
-                    "' with content type '" + contentType + "' for " +
-                    String.valueOf(contentLength) + " bytes");
+                log.debug(
+                    "connect: Using property '{}' with content type '{}' for {} bytes",
+                    new Object[] { property.getPath(), contentType,
+                        new Integer(contentLength) });
 
                 // set the fields
                 setProperty(property);

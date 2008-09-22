@@ -99,7 +99,7 @@ public class ClassLoaderTestBase extends TestCase {
     public void repositoryStart() throws Exception {
         InputStream config =
             RepositoryImpl.class.getResourceAsStream("repository.xml");
-        String home = new File("cltest").getAbsolutePath();
+        String home = new File("target/cltest").getAbsolutePath();
         RepositoryConfig rc = RepositoryConfig.create(config, home);
         RepositoryImpl repository = RepositoryImpl.create(rc);
 
@@ -355,7 +355,7 @@ public class ClassLoaderTestBase extends TestCase {
     static void makeFileNode(Node node, URLConnection content)
             throws RepositoryException {
 
-        Node contentNode = node.addNode("jcr:content", "nt:resource");
+        Node contentNode = node.addNode("jcr:content", "nt:unstructured");
         InputStream ins = null;
         try {
             ins = content.getInputStream();
