@@ -252,25 +252,31 @@ public class ConfigurationParser {
      * @return named child element, or <code>null</code> if not found and
      *         <code>required</code> is <code>false</code>.
      * @throws ConfigurationException if the child element is not found and
-     *         <code>required</code> is <code>true</code>.
+     *         <code>required</code> is <code>true</code>;
+     *         or if more than one element with this name exists.
      */
     protected Element getElement(Element parent, String name, boolean required)
             throws ConfigurationException {
         NodeList children = parent.getChildNodes();
+        Element found = null;
         for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE
                     && name.equals(child.getNodeName())) {
-                return (Element) child;
+                if (found != null)  {
+                    throw new ConfigurationException(
+                        "Duplicate configuration element " + name + " in "
+                        + parent.getNodeName() + ".");
+                }
+                found = (Element) child;
             }
         }
-        if (required) {
+        if (required && found == null) {
             throw new ConfigurationException(
                     "Configuration element " + name + " not found in "
                     + parent.getNodeName() + ".");
-        } else {
-            return null;
         }
+        return found;
     }
 
     /**
