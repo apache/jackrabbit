@@ -100,8 +100,6 @@ public class OracleFileSystem extends DbFileSystem {
         schema = "oracle";
         driver = "oracle.jdbc.OracleDriver";
         schemaObjectPrefix = "";
-        user = "";
-        password = "";
         initialized = false;
     }
 
