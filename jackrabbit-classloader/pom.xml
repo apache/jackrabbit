@@ -32,7 +32,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-classloader</artifactId>
-  <version>1.4.1</version>
+  <version>1.4.2-SNAPSHOT</version>
   <name>Jackrabbit Repository Classloader</name>
   <description>The Jackrabbit Repository Classloader component provides support for
 loading Java classes from content repositories that implement the Content Repository for Java Technology API (JCR). The component is mostly independent of the underlying JCR implementation.</description>
