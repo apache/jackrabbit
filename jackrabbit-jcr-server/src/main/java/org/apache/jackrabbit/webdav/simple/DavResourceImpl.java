@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.simple;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.server.io.DefaultIOListener;
 import org.apache.jackrabbit.server.io.ExportContext;
@@ -96,6 +97,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
     protected DavPropertySet properties = new DavPropertySet();
     protected boolean propsInitialized = false;
     private boolean isCollection = true;
+    private String rfc4122Uri;
 
     private ResourceConfig config;
     private long modificationTime = IOUtil.UNDEFINED_TIME;
@@ -123,6 +125,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                     node = (Node) item;
                     // define what is a collection in webdav
                     isCollection = config.isCollectionResource(node);
+                    this.initRfc4122Uri();
                 }
             } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
@@ -178,9 +181,31 @@ public class DavResourceImpl implements DavResource, JcrConstants {
                 this.node = node;
                 // define what is a collection in webdav
                 isCollection = config.isCollectionResource(node);
+                this.initRfc4122Uri();
             }
         } else {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    /**
+     * If the Node associated with this DavResource has a UUID that allows for the creation of a rfc4122 compliant
+     * URI, we use it as the value of the protected DAV property DAV:resource-id, which is defined by the BIND
+     * specification.
+     */
+    private void initRfc4122Uri() {
+        try {
+            if (node.isNodeType("mix:referenceable")) {
+                String uuid = node.getUUID();
+                try {
+                    UUID.fromString(uuid);
+                    this.rfc4122Uri = "urn:uuid:" + uuid;
+                } catch (IllegalArgumentException e) {
+                    //no, this is not a UUID
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Error while detecting UUID", e);
         }
     }
 
@@ -340,6 +365,10 @@ public class DavResourceImpl implements DavResource, JcrConstants {
             properties.add(new ResourceType(ResourceType.DEFAULT_RESOURCE));
             // Windows XP support
             properties.add(new DefaultDavProperty(DavPropertyName.ISCOLLECTION, "0"));
+        }
+
+        if (rfc4122Uri != null) {
+            properties.add(new DefaultDavProperty(DavPropertyName.RESOURCEID, rfc4122Uri, true));
         }
 
         /* set current lock information. If no lock is set to this resource,
