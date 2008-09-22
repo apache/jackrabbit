@@ -1,0 +1,54 @@
+Release Notes -- Apache Jackrabbit Repository Classloader -- Version 1.4.1
+
+Introduction
+------------
+
+This is the 1.4.1 patch release of the jackrabbit-classloader component of
+Apache Jackrabbit, a fully conforming implementation of the Content
+Repository for Java Technology API (JCR).
+
+This release contains fixes to a number of issues. See below for the full
+list of changes in this release.
+
+See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
+more information.
+
+Release Contents
+----------------
+
+Unlike previous Jackrabbit releases that contained a full set of components,
+this patch release only contains the jackrabbit-classloader component. The
+component is distributed both as a source archive and a pre-compiled binary.
+
+    * Source archive (jackrabbit-classloader-1.4.1-src.jar)
+
+        The source archive contains the full source code of this release
+        in a "jackrabbit-classloader-1.4.1" directory. Use the following
+        commands (or the equivalent in your environment) to build the
+        component with Maven 2 and Java 1.4 or higher:
+
+          $ jar xf jackrabbit-classloader-1.4.1-src.jar
+          $ cd jackrabbit-classloader-1.4.1
+          $ mvn install
+
+    * Pre-compiled binary (jackrabbit-classloader-1.4.1.jar)
+
+        Jackrabbit Repositorly Classloader Library of the Apache Jackrabbit
+        content repository implementation.
+
+See the included README.txt file for more information.
+
+Each release file is accompanied by SHA1 and MD5 checksums and a PGP
+signature. The public key used for the signatures can be found
+in the KEYS file.
+
+Changes in this release
+-----------------------
+
+All the changes in this release are listed below. The issue identifier and
+title is listed for each change and known issue. You can look up individual
+issues for more details in the Jackrabbit issue tracker at
+http://issues.apache.org/jira/browse/JCR
+
+  Bug:
+  [JCR-1749] JCRUrlConnection relies on nt:file/nt:resource
