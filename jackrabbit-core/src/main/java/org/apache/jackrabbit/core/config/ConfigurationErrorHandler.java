@@ -37,6 +37,7 @@ public class ConfigurationErrorHandler implements ErrorHandler {
      */
     public void error(SAXParseException exception) throws SAXException {
         logError("Error", exception);
+        throw exception;
     }
 
     private void logError(String type, SAXParseException exception) {
@@ -49,6 +50,7 @@ public class ConfigurationErrorHandler implements ErrorHandler {
      */
     public void fatalError(SAXParseException exception) throws SAXException {
         logError("Fatal error", exception);
+        throw exception;
     }
 
     /**
