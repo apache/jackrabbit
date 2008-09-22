@@ -768,11 +768,7 @@ public class MultiIndex {
             }
 
             // finally close indexing queue
-            try {
-                indexingQueue.close();
-            } catch (IOException e) {
-                log.error("Exception while closing search index.", e);
-            }
+            indexingQueue.close();
         }
     }
 
@@ -981,8 +977,6 @@ public class MultiIndex {
         // after a crash.
         if (a.getType() == Action.TYPE_COMMIT || a.getType() == Action.TYPE_ADD_INDEX) {
             redoLog.flush();
-            // also flush indexing queue
-            indexingQueue.commit();
         }
         return a;
     }
@@ -1198,11 +1192,7 @@ public class MultiIndex {
             // remove documents from the queue
             Iterator it = finished.keySet().iterator();
             while (it.hasNext()) {
-                try {
-                    indexingQueue.removeDocument(it.next().toString());
-                } catch (IOException e) {
-                    log.error("Failed to remove node from indexing queue", e);
-                }
+                indexingQueue.removeDocument(it.next().toString());
             }
 
             try {

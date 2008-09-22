@@ -101,6 +101,12 @@ public class FieldNames {
     public static final String PROPERTY_LENGTHS = "_:PROPERTY_LENGTHS".intern();
 
     /**
+     * Name of the field that marks nodes that require reindexing because the
+     * text extraction process timed out. See also {@link IndexingQueue}.
+     */
+    public static final String REINDEXING_REQUIRED = "_:REINDEXING_REQUIRED".intern();
+
+    /**
      * Returns a named length for use as a term in the index. The named length
      * is of the form: <code>propertyName</code> + '[' +
      * {@link LongField#longToString(long)}.

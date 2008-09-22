@@ -43,4 +43,11 @@ public class AbstractIndexingTest extends AbstractQueryTest {
         testRootNode = null;
         super.tearDown();
     }
+
+    /**
+     * @return the query handler inside the {@link #qm query manager}.
+     */
+    protected QueryHandler getQueryHandler() {
+        return ((QueryManagerImpl) qm).getQueryHandler();
+    }
 }
