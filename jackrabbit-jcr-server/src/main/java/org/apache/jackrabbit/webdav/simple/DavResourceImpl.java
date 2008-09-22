@@ -58,6 +58,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -368,7 +369,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         if (rfc4122Uri != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.RESOURCEID, rfc4122Uri, true));
+            properties.add(new HrefProperty(DavPropertyName.RESOURCEID, rfc4122Uri, true));
         }
 
         /* set current lock information. If no lock is set to this resource,
