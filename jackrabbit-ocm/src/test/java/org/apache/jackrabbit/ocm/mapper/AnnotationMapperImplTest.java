@@ -462,6 +462,34 @@ public class AnnotationMapperImplTest extends TestCase {
 			fail("Impossible to retrieve the converter " + e);
 		}
 	}
+	
+	public void testInheritanceWithMixin()
+	{
+		try {
+			Mapper mapper = getMapper();
+			assertNotNull("Mapper is null", mapper);
+			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.Ancestor.class);
+			assertNotNull("Classdescriptor is null", classDescriptor);
+			assertEquals("No mixin defined for Ancestor", 1, classDescriptor.getJcrMixinTypes().length);
+			String[] mixinTypes = classDescriptor.getJcrMixinTypes();
+			assertEquals("Invalid mixin defined for Ancestor", "mix:referenceable", mixinTypes[0]);
+			
+			classDescriptor = mapper.getClassDescriptorByClass(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.Descendant.class);
+			assertEquals("No mixin defined for Descendant", 1, classDescriptor.getJcrMixinTypes().length);
+			mixinTypes = classDescriptor.getJcrMixinTypes();
+			assertEquals("Invalid mixin defined for Ancestor", "mix:referenceable", mixinTypes[0]);
+			
+			classDescriptor = mapper.getClassDescriptorByClass(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.SubDescendant.class);
+			assertEquals("No mixin defined for SubDescendant", 1, classDescriptor.getJcrMixinTypes().length);
+			mixinTypes = classDescriptor.getJcrMixinTypes();
+			assertEquals("Invalid mixin defined for Ancestor", "mix:referenceable", mixinTypes[0]);
+
+			
+		} catch (JcrMappingException e) {
+			e.printStackTrace();
+			fail("Impossible to retrieve the converter " + e);
+		}
+	}
 
 	/**
 	 *
@@ -495,6 +523,10 @@ public class AnnotationMapperImplTest extends TestCase {
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant.class);
 		classes.add( org.apache.jackrabbit.ocm.testmodel.inheritance.Descendant.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.SubDescendant.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.Ancestor.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.AnotherDescendant.class);
+		classes.add( org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.Descendant.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.SubDescendant.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject.class);
