@@ -16,12 +16,15 @@
  */
 package org.apache.jackrabbit.ocm.testmodel.collection;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.jackrabbit.ocm.manager.collectionconverter.impl.BeanReferenceMapConverterImpl;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Collection;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
 import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+import org.apache.jackrabbit.ocm.testmodel.uuid.A;
 
 
 /**
@@ -39,6 +42,9 @@ public class Main
     private HashMapElement hashMapElement;
 
     @Collection private Map<String, Element> map;
+    
+    @Collection(collectionConverter=BeanReferenceMapConverterImpl.class)
+    private Map<String, A> referenceMap = new HashMap<String, A>();
 
 
     // 3 ways to implements a collection :
@@ -122,6 +128,14 @@ public class Main
 	public void setCustomList(CustomList customList) {
 		this.customList = customList;
 	}
+	public Map<String, A> getReferenceMap() {
+		return referenceMap;
+	}
+	public void setReferenceMap(Map<String, A> referenceMap) {
+		this.referenceMap = referenceMap;
+	}
+	
+	
 
 
 }
