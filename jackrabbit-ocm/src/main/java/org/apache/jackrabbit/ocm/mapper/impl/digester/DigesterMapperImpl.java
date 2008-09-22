@@ -81,5 +81,12 @@ public class DigesterMapperImpl extends AbstractMapperImpl implements Mapper {
         descriptorReader = new DigesterDescriptorReader(streams);
         this.buildMapper();
     }
+    
+    
+    public DigesterMapperImpl(InputStream[] streams, boolean validate) {
+        descriptorReader = new DigesterDescriptorReader(streams);
+        DigesterDescriptorReader.class.cast(descriptorReader).setValidating(validate);
+        this.buildMapper();
+    } 
 
 }
