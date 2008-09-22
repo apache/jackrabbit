@@ -22,9 +22,15 @@
 
     it consists of
 
+      - an optional Cluster element that is used for configuring a
+        clustering node that synchronizes changes made in a cluster
+       
       - a FileSystem element (the virtual file system
         used by the repository to persist global state such as
-        registered namespaces, custom node types, etc..
+        registered namespaces, custom node types, etc.
+        
+      - an optional DataStore element to configure the component
+        to use for storing large binary objects
 
       - a Security element that specifies the name of the app-entry
         in the JAAS config and the access manager
@@ -38,19 +44,16 @@
       - a Workspace element that is used as a workspace configuration
         template; it is used to create the initial workspace if there's
         no workspace yet and for creating additional workspaces through
-        the api
+        the API
 
       - a Versioning element that is used for configuring
         versioning-related settings
 
-      - a SearchIndex element that is used for configuring Indexing-related
+      - an optional SearchIndex element that is used for configuring Indexing-related
         settings on the /jcr:system tree.
 
-      - a Cluster element that is used for configuring an optional
-        clustering node that synchronizes changes made in a cluster
-       
 -->
-<!ELEMENT Repository (FileSystem,Security,Workspaces,Workspace,Versioning,SearchIndex?,Cluster?,DataStore?)>
+<!ELEMENT Repository (Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex)*> 
 
 <!--
     a virtual file system
