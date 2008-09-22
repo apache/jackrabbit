@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,10 +73,27 @@ class IndexingQueue {
      * Initializes the indexing queue.
      *
      * @param index the multi index this indexing queue belongs to.
+     * @throws IOException if an error occurs while reading from the index.
      */
-    void initialize(MultiIndex index) {
+    void initialize(MultiIndex index) throws IOException {
         if (initialized) {
             throw new IllegalStateException("already initialized");
+        }
+        // check index for nodes that need to be reindexed
+        CachingMultiIndexReader reader = index.getIndexReader();
+        try {
+            TermDocs tDocs = reader.termDocs(
+                    new Term(FieldNames.REINDEXING_REQUIRED, ""));
+            try {
+                while (tDocs.next()) {
+                    queueStore.addUUID(reader.document(tDocs.doc(),
+                            FieldSelectors.UUID).get(FieldNames.UUID));
+                }
+            } finally {
+                tDocs.close();
+            }
+        } finally {
+            reader.release();
         }
         String[] uuids = queueStore.getPending();
         for (int i = 0; i < uuids.length; i++) {
@@ -82,17 +101,14 @@ class IndexingQueue {
                 UUID uuid = UUID.fromString(uuids[i]);
                 Document doc = index.createDocument(new NodeId(uuid));
                 pendingDocuments.put(uuids[i], doc);
+                log.debug("added node {}. New size of indexing queue: {}",
+                        uuid, new Integer(pendingDocuments.size()));
             } catch (IllegalArgumentException e) {
                 log.warn("Invalid UUID in indexing queue store: " + uuids[i]);
             } catch (RepositoryException e) {
                 // node does not exist anymore
                 log.debug("Node with uuid {} does not exist anymore", uuids[i]);
-                try {
-                    queueStore.removeUUID(uuids[i]);
-                } catch (IOException ex) {
-                    log.warn("Unable to remove node {} from indexing queue",
-                            uuids[i], ex);
-                }
+                queueStore.removeUUID(uuids[i]);
             }
         }
         initialized = true;
@@ -128,10 +144,8 @@ class IndexingQueue {
      * @return the document for the given <code>uuid</code> or <code>null</code>
      *         if this queue does not contain a document with the given
      *         <code>uuid</code>.
-     * @throws IOException if an error occurs removing the document from the
-     *                     queue.
      */
-    public synchronized Document removeDocument(String uuid) throws IOException {
+    public synchronized Document removeDocument(String uuid) {
         checkInitialized();
         Document doc = (Document) pendingDocuments.remove(uuid);
         if (doc != null) {
@@ -149,10 +163,8 @@ class IndexingQueue {
      * @return an existing document in the queue with the same uuid as the one
      *         in <code>doc</code> or <code>null</code> if there was no such
      *         document.
-     * @throws IOException an error occurs while adding the document to this
-     *                     queue.
      */
-    public synchronized Document addDocument(Document doc) throws IOException {
+    public synchronized Document addDocument(Document doc) {
         checkInitialized();
         String uuid = doc.get(FieldNames.UUID);
         Document existing = (Document) pendingDocuments.put(uuid, doc);
@@ -168,10 +180,8 @@ class IndexingQueue {
 
     /**
      * Closes this indexing queue and disposes all pending documents.
-     *
-     * @throws IOException if an error occurs while closing this queue.
      */
-    public synchronized void close() throws IOException {
+    public synchronized void close() {
         checkInitialized();
         // go through pending documents and close readers
         Iterator it = pendingDocuments.values().iterator();
@@ -184,17 +194,6 @@ class IndexingQueue {
     }
 
     /**
-     * Commits any pending changes to this queue store to disk.
-     *
-     * @throws IOException if an error occurs while writing pending changes to
-     *                     disk.
-     */
-    public synchronized void commit() throws IOException {
-        checkInitialized();
-        queueStore.commit();
-    }
-
-    /**
      * Checks if this indexing queue is initialized and otherwise throws a
      * {@link IllegalStateException}.
      */
@@ -202,5 +201,16 @@ class IndexingQueue {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
+    }
+
+    //----------------------------< testing only >------------------------------
+
+    /**
+     * <b>This method is for testing only!</b>
+     *
+     * @return the number of the currently pending documents.
+     */
+    synchronized int getNumPendingDocuments() {
+        return pendingDocuments.size();
     }
 }

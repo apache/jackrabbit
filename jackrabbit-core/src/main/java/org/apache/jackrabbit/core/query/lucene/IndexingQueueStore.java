@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -26,15 +25,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.io.BufferedOutputStream;
 import java.util.Set;
 import java.util.HashSet;
 
 /**
- * <code>IndexingQueueStore</code> implements the persistent store to keep
- * track of pending document in an indexing queue.
+ * <code>IndexingQueueStore</code> implements a store that keeps the uuids of
+ * nodes that are pending in the indexing queue. Until Jackrabbit 1.4 this store
+ * was also persisted to a {@link FileSystem}. Starting with 1.5 the pending
+ * nodes are marked directly in the index with a special field.
+ * See {@link FieldNames#REINDEXING_REQUIRED}.
  */
 class IndexingQueueStore {
 
@@ -64,7 +63,7 @@ class IndexingQueueStore {
     private final Set pending = new HashSet();
 
     /**
-     * The file system where to write the pending document UUIDs.
+     * The file system from where to read pending document UUIDs.
      */
     private final FileSystem fs;
 
@@ -72,11 +71,6 @@ class IndexingQueueStore {
      * The name of the file for the pending document UUIDs.
      */
     private final String fileName;
-
-    /**
-     * Non-null if we are currently writing to the file.
-     */
-    private Writer out;
 
     /**
      * Creates a new <code>IndexingQueueStore</code> using the given file
@@ -105,10 +99,8 @@ class IndexingQueueStore {
      * Adds a <code>uuid</code> to the store.
      *
      * @param uuid the uuid to add.
-     * @throws IOException if an error occurs while writing.
      */
-    public void addUUID(String uuid) throws IOException {
-        writeEntry(ADD, uuid, getLog());
+    public void addUUID(String uuid) {
         pending.add(uuid);
     }
 
@@ -116,43 +108,23 @@ class IndexingQueueStore {
      * Removes a <code>uuid</code> from the store.
      *
      * @param uuid the uuid to add.
-     * @throws IOException if an error occurs while writing.
      */
-    public void removeUUID(String uuid) throws IOException {
-        writeEntry(REMOVE, uuid, getLog());
+    public void removeUUID(String uuid) {
         pending.remove(uuid);
     }
 
     /**
-     * Commits the pending changes to the file.
-     *
-     * @throws IOException if an error occurs while writing.
+     * Closes this queue store.
      */
-    public void commit() throws IOException {
-        if (out != null) {
-            out.flush();
-            if (pending.size() == 0) {
-                out.close();
-                out = null;
-                // truncate log
-                try {
-                    fs.getOutputStream(fileName).close();
-                } catch (FileSystemException e) {
-                    // ignore
+    public void close() {
+        if (pending.isEmpty()) {
+            try {
+                if (fs.exists(fileName)) {
+                    fs.deleteFile(fileName);
                 }
+            } catch (FileSystemException e) {
+                log.warn("unable to delete " + fileName);
             }
-        }
-    }
-
-    /**
-     * Flushes and closes this queue store.
-     *
-     * @throws IOException if an error occurs while writing.
-     */
-    public void close() throws IOException {
-        commit();
-        if (out != null) {
-            out.close();
         }
     }
 
@@ -197,51 +169,5 @@ class IndexingQueueStore {
                 throw new FileSystemException(e.getMessage(), e);
             }
         }
-    }
-
-    /**
-     * Writes an entry to the log file.
-     *
-     * @param op     the operation. Either {@link #ADD} or {@link #REMOVE}.
-     * @param uuid   the uuid of the added or removed node.
-     * @param writer the writer where the entry is written to.
-     * @throws IOException if an error occurs when writing the entry.
-     */
-    private static void writeEntry(String op, String uuid, Writer writer) throws IOException {
-        StringBuffer buf = new StringBuffer(op);
-        buf.append(' ').append(uuid).append('\n');
-        writer.write(buf.toString());
-    }
-
-    /**
-     * Returns the writer to the log file.
-     *
-     * @return the writer to the log file.
-     * @throws IOException if an error occurs while opening the log file.
-     */
-    private Writer getLog() throws IOException {
-        if (out == null) {
-            // open file
-            try {
-                long len = 0;
-                if (fs.exists(fileName)) {
-                    len = fs.length(fileName);
-                }
-                RandomAccessOutputStream raos
-                        = fs.getRandomAccessOutputStream(fileName);
-                raos.seek(len);
-                // use buffering
-                out = new OutputStreamWriter(
-                        new BufferedOutputStream(raos, 1024),
-                        ENCODING);
-            } catch (FileSystemException e) {
-                if (out != null) {
-                    out.close();
-                    out = null;
-                }
-                throw Util.createIOException(e);
-            }
-        }
-        return out;
     }
 }

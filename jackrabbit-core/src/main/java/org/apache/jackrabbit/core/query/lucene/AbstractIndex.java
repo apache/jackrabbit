@@ -154,9 +154,8 @@ abstract class AbstractIndex {
      * in the constructor.
      *
      * @return the directory instance passed in the constructor
-     * @throws IOException
      */
-    Directory getDirectory() throws IOException {
+    Directory getDirectory() {
         return directory;
     }
 
@@ -448,6 +447,9 @@ abstract class AbstractIndex {
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
+            // mark the document that reindexing is required
+            copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
+                    Field.Store.NO, Field.Index.NO_NORMS));
             Iterator fields = doc.getFields().iterator();
             while (fields.hasNext()) {
                 Fieldable f = (Fieldable) fields.next();
