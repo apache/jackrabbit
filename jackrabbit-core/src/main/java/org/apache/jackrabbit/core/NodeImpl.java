@@ -131,7 +131,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
              * e.g. 'flag' nodes that refer to non-registered node types
              */
             log.warn("Fallback to nt:unstructured due to unknown node type '"
-                    + state.getNodeTypeName() + "' of node " + safeGetJCRPath());
+                    + state.getNodeTypeName() + "' of " + this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
     }
@@ -173,7 +173,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     getPrimaryPath(), session.getQPath(relPath), true);
             return session.getHierarchyManager().resolvePropertyPath(p);
         } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
+            String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -224,7 +224,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
             return session.getHierarchyManager().resolveNodePath(p);
         } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to " + safeGetJCRPath();
+            String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -470,8 +470,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 propState.setValues(defValues);
             }
         } catch (ItemStateException ise) {
-            String msg = "failed to add property " + name + " to "
-                    + safeGetJCRPath();
+            String msg = "failed to add property " + name + " to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -503,8 +502,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                             getNodeId(), ItemState.STATUS_NEW);
             nodeState.setDefinitionId(def.unwrap().getId());
         } catch (ItemStateException ise) {
-            String msg = "failed to add child node " + name + " to "
-                    + safeGetJCRPath();
+            String msg = "failed to add child node " + name + " to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, ise);
         }
@@ -571,8 +569,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // remove the property entry
         if (!thisState.removePropertyName(propName)) {
-            String msg = "failed to remove property " + propName + " of "
-                    + safeGetJCRPath();
+            String msg = "failed to remove property " + propName + " of " + this;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -592,8 +589,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         ChildNodeEntry entry =
                 thisState.getChildNodeEntry(nodeName, index);
         if (entry == null) {
-            String msg = "failed to remove child " + nodeName + " of "
-                    + safeGetJCRPath();
+            String msg = "failed to remove child " + nodeName + " of " + this;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -605,8 +601,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // remove the child node entry
         if (!thisState.removeChildNodeEntry(nodeName, index)) {
-            String msg = "failed to remove child " + nodeName + " of "
-                    + safeGetJCRPath();
+            String msg = "failed to remove child " + nodeName + " of " + this;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -701,8 +696,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             nodeName = nodePath.getNameElement().getName();
             parentPath = nodePath.getAncestor(1);
         } catch (NameException e) {
-            String msg = "failed to resolve path " + relPath + " relative to "
-                    + safeGetJCRPath();
+            String msg =
+                "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -722,8 +717,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // make sure that parent node is checked-out
         if (!parentNode.internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot add a child to a checked-in node";
+            String msg = this + ": cannot add a child to a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -751,7 +745,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             nodePath = PathFactoryImpl.getInstance().create(getPrimaryPath(), nodeName, true);
         } catch (MalformedPathException e) {
             // should never happen
-            String msg = "internal error: invalid path " + safeGetJCRPath();
+            String msg = "internal error: invalid path " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
@@ -792,7 +786,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check protected flag of parent (i.e. this) node
         final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
+            String msg = this + ": cannot add a child to a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -871,8 +865,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         try {
             return ntReg.getEffectiveNodeType(types);
         } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node "
-                    + safeGetJCRPath();
+            String msg = "Failed to build effective node type for " + this;
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
@@ -936,7 +929,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
     protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
-            log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
+            log.debug(this + " (" + id + "): there's no transient state to persist");
             return;
         }
 
@@ -951,8 +944,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         synchronized (persistentState) {
             // check staleness of transient state first
             if (transientState.isStale()) {
-                String msg = safeGetJCRPath()
-                        + ": the node cannot be saved because it has been modified externally.";
+                String msg =
+                    this + ": the node cannot be saved because it has been"
+                    + " modified externally.";
                 log.debug(msg);
                 throw new InvalidItemStateException(msg);
             }
@@ -1020,7 +1014,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a checked-in node";
+            String msg = this + ": cannot add a mixin node type to a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1028,7 +1022,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check protected flag
         final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot add a mixin node type to a protected node";
+            String msg = this + ": cannot add a mixin node type to a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -1133,8 +1127,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot remove a mixin node type from a checked-in node";
+            String msg =
+                this + ": cannot remove a mixin node type from a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1142,8 +1136,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check protected flag
         NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot remove a mixin node type from a protected node";
+            String msg =
+                this + ": cannot remove a mixin node type from a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -1297,8 +1291,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throws VersionException, LockException, RepositoryException {
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot set property of a checked-in node";
+            String msg = this + ": cannot set property of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1563,7 +1556,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot add node to a checked-in node";
+            String msg = this + ": cannot add node to a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1761,8 +1754,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         if (!getPrimaryNodeType().hasOrderableChildNodes()) {
             throw new UnsupportedRepositoryOperationException(
-                    "child node ordering not supported on node "
-                    + safeGetJCRPath());
+                    "child node ordering not supported on " + this);
         }
 
         // check arguments
@@ -1782,8 +1774,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             } catch (NamespaceException e) {
                 name = srcName.toString();
             }
-            throw new ItemNotFoundException(safeGetJCRPath()
-                    + " has no child node with name " + name);
+            throw new ItemNotFoundException(
+                    this + " has no child node with name " + name);
         }
         if (dstName != null && !hasNode(dstName.getName(), dstName.getIndex())) {
             String name;
@@ -1795,14 +1787,14 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             } catch (NamespaceException e) {
                 name = dstName.toString();
             }
-            throw new ItemNotFoundException(safeGetJCRPath()
-                    + " has no child node with name " + name);
+            throw new ItemNotFoundException(
+                    this + " has no child node with name " + name);
         }
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot change child node ordering of a checked-in node";
+            String msg =
+                this + ": cannot change child node ordering of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -1810,8 +1802,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check protected flag
         final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot change child node ordering of a protected node";
+            String msg =
+                this + ": cannot change child node ordering of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -1912,8 +1904,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         NodeState state = data.getNodeState();
         ChildNodeEntry cneExisting = state.getChildNodeEntry(id);
         if (cneExisting == null) {
-            throw new ItemNotFoundException(safeGetJCRPath()
-                    + ": no child node entry with id " + id);
+            throw new ItemNotFoundException(
+                    this + ": no child node entry with id " + id);
         }
         List cneList = new ArrayList(state.getChildNodeEntries());
 
@@ -1977,15 +1969,14 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             nodePath = PathFactoryImpl.getInstance().create(getPrimaryPath(), name, true);
         } catch (MalformedPathException e) {
             // should never happen
-            String msg = "internal error: invalid path " + safeGetJCRPath();
+            String msg = "internal error: invalid path " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
 
         // (1) make sure that parent node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath()
-                    + ": cannot add a child to a checked-in node";
+            String msg = this + ": cannot add a child to a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
@@ -2020,7 +2011,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // (4) check protected flag of parent (i.e. this) node
         final NodeDefinition definition = data.getNodeDefinition();
         if (definition.isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot add a child to a protected node";
+            String msg = this + ": cannot add a child to a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -2639,11 +2630,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         try {
             return itemMgr.getChildNodes((NodeId) id);
         } catch (ItemNotFoundException infe) {
-            String msg = "failed to list the child nodes of " + safeGetJCRPath();
+            String msg = "failed to list the child nodes of " + this;
             log.debug(msg);
             throw new RepositoryException(msg, infe);
         } catch (AccessDeniedException ade) {
-            String msg = "failed to list the child nodes of " + safeGetJCRPath();
+            String msg = "failed to list the child nodes of " + this;
             log.debug(msg);
             throw new RepositoryException(msg, ade);
         }
@@ -2666,11 +2657,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         try {
             return itemMgr.getChildProperties((NodeId) id);
         } catch (ItemNotFoundException infe) {
-            String msg = "failed to list the child properties of " + safeGetJCRPath();
+            String msg = "failed to list the child properties of " + this;
             log.debug(msg);
             throw new RepositoryException(msg, infe);
         } catch (AccessDeniedException ade) {
-            String msg = "failed to list the child properties of " + safeGetJCRPath();
+            String msg = "failed to list the child properties of " + this;
             log.debug(msg);
             throw new RepositoryException(msg, ade);
         }
@@ -3006,7 +2997,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             if (m1.getDepth() == 0) {
                 // check existence
                 if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
-                    throw new ItemNotFoundException(safeGetJCRPath());
+                    throw new ItemNotFoundException("Node not found: " + this);
                 } else {
                     return getPath();
                 }
@@ -3210,7 +3201,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     void addShareParent(NodeId parentId) throws RepositoryException {
         // verify that we're shareable
         if (!isShareable()) {
-            String msg = "Node at " + safeGetJCRPath() + " is not shareable.";
+            String msg = this + " is not shareable.";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
@@ -3291,14 +3282,14 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check if checked out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": Node is already checked-in. ignoring.";
+            String msg = this + ": Node is already checked-in. ignoring.";
             log.debug(msg);
             return getBaseVersion();
         }
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + safeGetJCRPath();
+            String msg = "Unable to checkin node. Node has pending changes: " + this;
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
@@ -3328,7 +3319,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check checked-out status
         if (internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": Node is already checked-out. ignoring.";
+            String msg = this + ": Node is already checked-out. ignoring.";
             log.debug(msg);
             return;
         }
@@ -3562,7 +3553,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     private void checkVersionable()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (!isNodeType(NameConstants.MIX_VERSIONABLE)) {
-            String msg = "Unable to perform versioning operation on non versionable node: " + safeGetJCRPath();
+            String msg =
+                "Unable to perform a versioning operation on"
+                + " a non versionable node: " + this;
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
@@ -3743,7 +3736,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 failedIds.add(id);
                 return null;
             } else {
-                String msg = "Unable to merge nodes. Violating versions. " + safeGetJCRPath();
+                String msg =
+                    "Unable to merge nodes. Violating versions. " + this;
                 log.debug(msg);
                 throw new MergeException(msg);
             }
@@ -3761,7 +3755,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to finish merge. Node has pending changes: " + safeGetJCRPath();
+            String msg =
+                "Unable to finish merge. Node has pending changes: " + this;
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
@@ -3774,7 +3769,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check if checked out
         if (!internalIsCheckedOut()) {
-            String msg = "Unable to finish merge. Node is checked-in: " + safeGetJCRPath();
+            String msg = "Unable to finish merge. Node is checked-in: " + this;
             log.error(msg);
             throw new VersionException(msg);
         }
@@ -3782,7 +3777,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check if version is in mergeFailed list
         Set failed = internalGetMergeFailed();
         if (!failed.remove(version.getUUID())) {
-            String msg = "Unable to finish merge. Specified version is not in jcr:mergeFailed property: " + safeGetJCRPath();
+            String msg =
+                "Unable to finish merge. Specified version is not in"
+                + " jcr:mergeFailed property: " + this;
             log.error(msg);
             throw new VersionException(msg);
         }
@@ -4106,7 +4103,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         } else if (replaceExisting) {
                             // node exists outside of this update tree, so continue there
                         } else {
-                            throw new ItemExistsException("Unable to update node: " + dstNode.safeGetJCRPath());
+                            throw new ItemExistsException("Unable to update item: " + dstNode);
                         }
                     }
 
@@ -4223,14 +4220,14 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         if (isNodeType(NameConstants.MIX_REFERENCEABLE)) {
             UUID uuid = freeze.getFrozenUUID();
             if (!internalGetUUID().equals(uuid)) {
-                throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". UUID changed.");
+                throw new ItemExistsException("Unable to restore version of " + this + ". UUID changed.");
             }
         }
 
         // check primary type
         if (!freeze.getFrozenPrimaryType().equals(data.getNodeState().getNodeTypeName())) {
             // todo: check with spec what should happen here
-            throw new ItemExistsException("Unable to restore version of " + safeGetJCRPath() + ". PrimaryType changed.");
+            throw new ItemExistsException("Unable to restore version of " + this + ". PrimaryType changed.");
         }
 
         // adjust mixins
@@ -4320,8 +4317,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         } else {
                             // since we delete the OPV=Copy children beforehand, all
                             // found nodes must be outside of this tree
-                            throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: "
-                                    + existing.safeGetJCRPath());
+                            throw new ItemExistsException(
+                                    "Unable to restore node, item already"
+                                    + " exists outside of restored tree: "
+                                    + existing);
                         }
                     } catch (ItemNotFoundException e) {
                         // ignore, item with uuid does not exist
@@ -4352,8 +4351,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     } else {
                         // since we delete the OPV=Copy children beforehand, all
                         // found nodes must be outside of this tree
-                        throw new ItemExistsException("Unable to restore node, item already exists outside of restored tree: "
-                                + n.safeGetJCRPath());
+                        throw new ItemExistsException(
+                                "Unable to restore node, item already exists"
+                                + " outside of restored tree: " + n);
                     }
                 }
                 // get desired version from version selector
@@ -4384,8 +4384,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     try {
                         restoredChild.internalRestore(v, vsel, removeExisting);
                     } catch (RepositoryException e) {
-                        log.error("Error while restoring node: " + e.toString());
-                        log.error("  child path: " + restoredChild.safeGetJCRPath());
+                        log.error("Error while restoring node: " + e);
+                        log.error("  child path: " + restoredChild);
                         log.error("  selected version: " + v.getName());
                         StringBuffer avail = new StringBuffer();
                         VersionIterator vi = history.getAllVersions();
@@ -4444,7 +4444,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to lock node. Node has pending changes: " + safeGetJCRPath();
+            String msg = "Unable to lock node. Node has pending changes: " + this;
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
@@ -4492,7 +4492,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         sanityCheck();
 
         if (isNew()) {
-            throw new LockException("Node not locked: " + safeGetJCRPath());
+            throw new LockException("New node can not be locked: " + this);
         }
         return session.getLockManager().getLock(this);
     }
@@ -4509,7 +4509,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check for pending changes
         if (hasPendingChanges()) {
-            String msg = "Unable to unlock node. Node has pending changes: " + safeGetJCRPath();
+            String msg = "Unable to unlock node. Node has pending changes: " + this;
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
@@ -4565,8 +4565,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      */
     private void checkLockable() throws LockException, RepositoryException {
         if (!isNodeType(NameConstants.MIX_LOCKABLE)) {
-            String msg = "Unable to perform locking operation on non-lockable node: "
-                    + safeGetJCRPath();
+            String msg =
+                "Unable to perform a locking operation on"
+                + " a non-lockable node: " + this;
             log.debug(msg);
             throw new LockException(msg);
         }
@@ -4733,14 +4734,14 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // make sure this node is checked-out
         if (!internalIsCheckedOut()) {
-            String msg = safeGetJCRPath() + ": cannot set primary type of a checked-in node";
+            String msg = this + ": cannot set primary type of a checked-in node";
             log.debug(msg);
             throw new VersionException(msg);
         }
 
         // check protected flag
         if (data.getDefinition().isProtected()) {
-            String msg = safeGetJCRPath() + ": cannot set primary type of a protected node";
+            String msg = this + ": cannot set primary type of a protected node";
             log.debug(msg);
             throw new ConstraintViolationException(msg);
         }
@@ -4796,7 +4797,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             NodeImpl parent = (NodeImpl) getParent();
             defId = parent.getApplicableChildNodeDefinition(getQName(), ntName).unwrap().getId();
         } catch (RepositoryException re) {
-            String msg = safeGetJCRPath() + ": no applicable definition found in parent node's node type";
+            String msg = this + ": no applicable definition found in parent node's node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, re);
         }
@@ -4954,4 +4955,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             }
         }
     }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Return a string representation of this node for diagnostic purposes.
+     *
+     * @return "node /path/to/item"
+     */
+    public String toString() {
+        return "node " + super.toString();
+    }
+
 }

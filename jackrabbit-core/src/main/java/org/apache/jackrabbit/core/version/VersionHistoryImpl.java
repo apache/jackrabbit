@@ -269,7 +269,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
     public void update(String srcWorkspaceName) throws ConstraintViolationException {
-        String msg = "update operation not allowed on a version history node: " + safeGetJCRPath();
+        String msg = "update operation not allowed: " + this;
         log.debug(msg);
         throw new ConstraintViolationException(msg);
     }
@@ -282,8 +282,21 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort)
             throws ConstraintViolationException {
-        String msg = "merge operation not allowed on a version history node: " + safeGetJCRPath();
+        String msg = "merge operation not allowed: " + this;
         log.debug(msg);
         throw new ConstraintViolationException(msg);
     }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Return a string representation of this version history node
+     * for diagnostic purposes.
+     *
+     * @return "version history node /path/to/item"
+     */
+    public String toString() {
+        return "version history " + super.toString();
+    }
+
 }

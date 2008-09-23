@@ -181,7 +181,7 @@ public class SessionImporter implements Importer {
         if (parent == null) {
             // parent node was skipped, skip this child node too
             parents.push(null); // push null onto stack for skipped node
-            log.debug("skipping node " + nodeName);
+            log.debug("Skipping node: " + nodeName);
             return;
         }
         if (parent.hasNode(nodeName)) {
@@ -194,7 +194,7 @@ public class SessionImporter implements Importer {
                 if (def.isProtected() && existing.isNodeType(ntName)) {
                     // skip protected node
                     parents.push(null); // push null onto stack for skipped node
-                    log.debug("skipping protected node " + existing.safeGetJCRPath());
+                    log.debug("Skipping protected node: " + existing);
                     return;
                 }
                 if (def.isAutoCreated() && existing.isNodeType(ntName)) {
@@ -206,7 +206,8 @@ public class SessionImporter implements Importer {
                     if (!(existing.getId().equals(id)
                             && (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING
                             || uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING))) {
-                        throw new ItemExistsException(existing.safeGetJCRPath());
+                        throw new ItemExistsException(
+                                "Node with the same UUID exists:" + existing);
                     }
                     // fall through
                 }

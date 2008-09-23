@@ -262,9 +262,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             LockInfo other = (LockInfo) element.get();
             if (other != null) {
                 if (element.hasPath(path)) {
-                    throw new LockException("Node already locked: " + node.safeGetJCRPath());
+                    throw new LockException("Node already locked: " + node);
                 } else if (other.deep) {
-                    throw new LockException("Parent node has deep lock.");
+                    throw new LockException(
+                            "Parent node has a deep lock: " + node);
                 }
             }
             if (info.deep && element.hasPath(path)
@@ -315,17 +316,16 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             SessionImpl session = (SessionImpl) node.getSession();
 
             // check whether node is locked by this session
-            PathMap.Element element = lockMap.map(
-                    getPath(node.getId()), true);
+            PathMap.Element element = lockMap.map(getPath(node.getId()), true);
             if (element == null) {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                throw new LockException("Node not locked: " + node);
             }
             AbstractLockInfo info = (AbstractLockInfo) element.get();
             if (info == null) {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                throw new LockException("Node not locked: " + node);
             }
             if (session != info.getLockHolder()) {
-                throw new LockException("Node not locked by session: " + node.safeGetJCRPath());
+                throw new LockException("Node not locked by session: " + node);
             }
             session.removeLockToken(info.getLockToken(session), false);
 
@@ -421,17 +421,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
             PathMap.Element element = lockMap.map(path, false);
             AbstractLockInfo info = (AbstractLockInfo) element.get();
-            if (info == null) {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
-            }
-            if (element.hasPath(path) || info.deep) {
+            if (info != null && (element.hasPath(path) || info.deep)) {
                 Node lockHolder = (Node) session.getItemManager().getItem(info.getId());
                 return new LockImpl(info, lockHolder);
             } else {
-                throw new LockException("Node not locked: " + node.safeGetJCRPath());
+                throw new LockException("Node not locked: " + node);
             }
         } catch (ItemNotFoundException e) {
-            throw new LockException("Node not locked: " + node.safeGetJCRPath());
+            throw new LockException("Node not locked: " + node);
         } finally {
             release();
         }

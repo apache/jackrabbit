@@ -86,7 +86,7 @@ public class XALockManager implements LockManager, InternalXAResource {
             info = lockMgr.getLockInfo(node.getNodeId());
         }
         if (info == null) {
-            throw new LockException("Node not locked: " + node.safeGetJCRPath());
+            throw new LockException("Node not locked: " + node);
         }
         SessionImpl session = (SessionImpl) node.getSession();
         NodeImpl holder = (NodeImpl) session.getItemManager().getItem(info.getId());

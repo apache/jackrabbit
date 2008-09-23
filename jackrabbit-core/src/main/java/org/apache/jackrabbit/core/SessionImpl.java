@@ -1541,7 +1541,8 @@ public class SessionImpl extends AbstractSession
             // there's already a node with that name:
             // check same-name sibling setting of existing node
             if (!existing.getDefinition().allowsSameNameSiblings()) {
-                throw new ItemExistsException(existing.safeGetJCRPath());
+                throw new ItemExistsException(
+                        "Same name siblings are not allowed: " + existing);
             }
         } catch (AccessDeniedException ade) {
             // FIXME by throwing ItemExistsException we're disclosing too much information
@@ -1567,7 +1568,8 @@ public class SessionImpl extends AbstractSession
         // existing node is not sufficient since same-name sibling nodes don't
         // necessarily have identical definitions
         if (existing != null && !newTargetDef.allowsSameNameSiblings()) {
-            throw new ItemExistsException(existing.safeGetJCRPath());
+            throw new ItemExistsException(
+                    "Same name siblings not allowed: " + existing);
         }
 
         // check protected flag of old & new parent
@@ -1621,7 +1623,7 @@ public class SessionImpl extends AbstractSession
         // change definition of target
         targetNode.onRedefine(newTargetDef.unwrap().getId());
 
-        return targetNode.safeGetJCRPath();
+        return targetNode.getPath();
     }
 
     //-------------------------------------------------------------< Dumpable >
