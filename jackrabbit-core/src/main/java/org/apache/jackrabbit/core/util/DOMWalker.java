@@ -212,7 +212,10 @@ public final class DOMWalker {
         }
 
         if (name.equals(current.getNodeName())) {
-            current = (Element) current.getParentNode();
+            Node parent = current.getParentNode();
+            if (parent instanceof Element) {
+                current = (Element) parent;
+            }
         }
         return false;
     }
