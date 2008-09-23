@@ -102,7 +102,7 @@ import java.util.Set;
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
  */
-public class NodeImpl extends ItemImpl implements Node {
+public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr283.Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
