@@ -50,6 +50,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
@@ -57,10 +58,10 @@ import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
@@ -232,7 +233,6 @@ public abstract class ItemImpl implements Item {
             while (iter.hasNext()) {
                 transientState = (ItemState) iter.next();
                 // fail-fast test: check status of transient state
-                String msg;
                 switch (transientState.getStatus()) {
                     case ItemState.STATUS_NEW:
                     case ItemState.STATUS_EXISTING_MODIFIED:
@@ -241,25 +241,23 @@ public abstract class ItemImpl implements Item {
                         break;
 
                     case ItemState.STATUS_STALE_MODIFIED:
-                        msg = transientState.getId()
-                            + ": the item cannot be saved because it has been modified externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
+                        throw new InvalidItemStateException(
+                                "Item cannot be saved because it has been"
+                                + "modified externally: " + this);
 
                     case ItemState.STATUS_STALE_DESTROYED:
-                        msg = transientState.getId()
-                            + ": the item cannot be saved because it has been deleted externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
+                        throw new InvalidItemStateException(
+                                "Item cannot be saved because it has been"
+                                + "deleted externally: " + this);
 
                     case ItemState.STATUS_UNDEFINED:
-                        msg = safeGetJCRPath()
-                            + ": the item cannot be saved; it seems to have been removed externally.";
-                        log.debug(msg);
-                        throw new InvalidItemStateException(msg);
+                        throw new InvalidItemStateException(
+                                "Item cannot be saved; it seems to have been"
+                                + "removed externally: " + this);
 
                     default:
-                        log.debug("unexpected state status (" + transientState.getStatus() + ")");
+                        log.warn("Unexpected item state status: "
+                                + transientState.getStatus() + " of " + this);
                         // ignore
                         break;
                 }
@@ -276,30 +274,27 @@ public abstract class ItemImpl implements Item {
                     break;
 
                 case ItemState.STATUS_NEW:
-                    msg = safeGetJCRPath() + ": cannot save a new item.";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
+                    throw new RepositoryException(
+                            "Cannot save a new item: " + this);
 
                 case ItemState.STATUS_STALE_MODIFIED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved because it has been modified externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
+                    throw new InvalidItemStateException(
+                            "Item cannot be saved because it has been"
+                            + " modified externally: " + this);
 
                 case ItemState.STATUS_STALE_DESTROYED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved because it has been deleted externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
+                    throw new InvalidItemStateException(
+                            "Item cannot be saved because it has been"
+                            + " deleted externally:" + this);
 
                 case ItemState.STATUS_UNDEFINED:
-                    msg = safeGetJCRPath()
-                        + ": the item cannot be saved; it seems to have been removed externally.";
-                    log.debug(msg);
-                    throw new InvalidItemStateException(msg);
+                    throw new InvalidItemStateException(
+                            "Item cannot be saved; it seems to have been"
+                            + " removed externally: " + this);
 
                 default:
-                    log.debug("unexpected state status (" + state.getStatus() + ")");
+                    log.warn("Unexpected item state status:"
+                            + state.getStatus() + " of " + this);
                     // ignore
                     break;
             }
@@ -781,58 +776,42 @@ public abstract class ItemImpl implements Item {
         // check state of this instance
         sanityCheck();
 
-        Path.Element thisName = getPrimaryPath().getNameElement();
-
-        // check if protected
-        if (isNode()) {
-            NodeImpl node = (NodeImpl) this;
-            // check if this is the root node
-            if (node.getDepth() == 0) {
-                String msg = safeGetJCRPath() + ": cannot remove root node";
-                log.debug(msg);
-                throw new RepositoryException(msg);
-            }
-
-            NodeDefinition def = node.getDefinition();
-            // check protected flag
-            if (!noChecks && def.isProtected()) {
-                String msg = safeGetJCRPath() + ": cannot remove a protected node";
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
-        } else {
-            PropertyImpl prop = (PropertyImpl) this;
-            PropertyDefinition def = prop.getDefinition();
-            // check protected flag
-            if (!noChecks && def.isProtected()) {
-                String msg = safeGetJCRPath() + ": cannot remove a protected property";
-                log.debug(msg);
-                throw new ConstraintViolationException(msg);
-            }
+        // check if this is the root node
+        if (getDepth() == 0) {
+            throw new RepositoryException("Cannot remove the root node");
         }
 
         NodeImpl parentNode = (NodeImpl) getParent();
 
-        // verify that parent node is checked-out
-        if (!noChecks && !parentNode.internalIsCheckedOut()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag of parent node
-        if (!noChecks && parentNode.getDefinition().isProtected()) {
-            String msg = parentNode.safeGetJCRPath() + ": cannot remove a child of a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
         if (!noChecks) {
+            // check if protected
+            ItemDefinition definition;
+            if (isNode()) {
+                definition = ((Node) this).getDefinition();
+            } else {
+                definition = ((Property) this).getDefinition();
+            }
+            if (definition.isProtected()) {
+                throw new ConstraintViolationException(
+                        "Cannot remove a protected item: " + this);
+            }
+
+            // verify that parent node is checked-out and not protected
+            if (!parentNode.internalIsCheckedOut()) {
+                throw new VersionException(
+                        "Cannot remove a child of a checked-in node: " + this);
+            }
+            if (parentNode.getDefinition().isProtected()) {
+                throw new ConstraintViolationException(
+                        "Cannot remove a child of a protected node: " + this);
+            }
+
+            // check lock status
             parentNode.checkLock();
         }
 
         // delegate the removal of the child item to the parent node
+        Path.Element thisName = getPrimaryPath().getNameElement();
         if (isNode()) {
             parentNode.removeChildNode(thisName.getName(), thisName.getIndex());
         } else {
@@ -1106,9 +1085,8 @@ public abstract class ItemImpl implements Item {
             } catch (StaleItemStateException e) {
                 throw new InvalidItemStateException(e.getMessage());
             } catch (ItemStateException e) {
-                String msg = safeGetJCRPath() + ": unable to update item.";
-                log.debug(msg);
-                throw new RepositoryException(msg, e);
+                throw new RepositoryException(
+                        "Unable to update item: " + this, e);
             } finally {
                 if (!succeeded) {
                     // update operation failed, cancel all modifications
@@ -1176,12 +1154,12 @@ public abstract class ItemImpl implements Item {
                     break;
 
                 case ItemState.STATUS_NEW:
-                    String msg = safeGetJCRPath() + ": cannot refresh a new item.";
-                    log.debug(msg);
-                    throw new RepositoryException(msg);
+                    throw new RepositoryException(
+                            "Cannot refresh a new item: " + this);
 
                 default:
-                    log.debug("unexpected state status (" + transientState.getStatus() + ")");
+                    log.warn("Unexpected item state status:"
+                            + transientState.getStatus() + " of " + this);
                     // ignore
                     break;
             }
@@ -1322,17 +1300,13 @@ public abstract class ItemImpl implements Item {
     //--------------------------------------------------------------< Object >
 
     /**
-     * Returns a string with the type and ({@link #safeGetJCRPath() safe}) path
-     * of this item for use in diagnostic output.
+     * Returns the({@link #safeGetJCRPath() safe}) path of this item for use
+     * in diagnostic output.
      *
-     * @return item path
+     * @return "/path/to/item"
      */
     public String toString() {
-        if (isNode()) {
-            return "node " + safeGetJCRPath();
-        } else {
-            return "property " + safeGetJCRPath();
-        }
+        return safeGetJCRPath();
     }
 
 }

@@ -296,7 +296,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
 
             if (opv == OnParentVersionAction.ABORT) {
                 parent.reload();
-                throw new VersionException("Checkin aborted due to OPV in " + prop.safeGetJCRPath());
+                throw new VersionException("Checkin aborted due to OPV in " + prop);
             } else if (opv == OnParentVersionAction.VERSION
                     || opv == OnParentVersionAction.COPY) {
                 // ignore frozen properties
@@ -320,7 +320,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             }
 
             if (opv == OnParentVersionAction.ABORT) {
-                throw new VersionException("Checkin aborted due to OPV in " + child.safeGetJCRPath());
+                throw new VersionException("Checkin aborted due to OPV in " + child);
             } else if (opv == OnParentVersionAction.VERSION) {
                 if (child.isNodeType(NameConstants.MIX_VERSIONABLE)) {
                     // create frozen versionable child

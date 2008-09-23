@@ -110,7 +110,7 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
-            log.debug(safeGetJCRPath() + " (" + id + "): there's no transient state to persist");
+            log.debug(this + " (" + id + "): there's no transient state to persist");
             return;
         }
 
@@ -124,8 +124,9 @@ public class PropertyImpl extends ItemImpl implements Property {
         synchronized (persistentState) {
             // check staleness of transient state first
             if (transientState.isStale()) {
-                String msg = safeGetJCRPath()
-                        + ": the property cannot be saved because it has been modified externally.";
+                String msg =
+                    this + ": the property cannot be saved because it has"
+                    + " been modified externally.";
                 log.debug(msg);
                 throw new InvalidItemStateException(msg);
             }
@@ -238,26 +239,28 @@ public class PropertyImpl extends ItemImpl implements Property {
 
         // verify that parent node is checked-out
         if (!parent.internalIsCheckedOut()) {
-            throw new VersionException("cannot set the value of a property of a checked-in node "
-                    + safeGetJCRPath());
+            throw new VersionException(
+                    "Cannot set a property of a checked-in node: " + this);
         }
 
         // check protected flag
         if (definition.isProtected()) {
-            throw new ConstraintViolationException("cannot set the value of a protected property "
-                    + safeGetJCRPath());
+            throw new ConstraintViolationException(
+                    "Cannot set the value of a protected property: " + this);
         }
 
         // check multi-value flag
         if (multipleValues) {
             if (!definition.isMultiple()) {
-                throw new ValueFormatException(safeGetJCRPath()
-                        + " is not multi-valued");
+                throw new ValueFormatException(
+                        "Single-valued property can not be set to"
+                        + " an array of values: " + this);
             }
         } else {
             if (definition.isMultiple()) {
-                throw new ValueFormatException(safeGetJCRPath()
-                        + " is multi-valued and can therefore only be set to an array of values");
+                throw new ValueFormatException(
+                        "Multivalued property can not be set to a single"
+                        + " value (an array of lenght one is OK): " + this);
             }
         }
 
@@ -763,6 +766,17 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public Node getParent() throws RepositoryException {
         return (Node) itemMgr.getItem(getPropertyState().getParentId());
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Return a string representation of this property for diagnostic purposes.
+     *
+     * @return "property /path/to/item"
+     */
+    public String toString() {
+        return "property " + super.toString();
     }
 
 }

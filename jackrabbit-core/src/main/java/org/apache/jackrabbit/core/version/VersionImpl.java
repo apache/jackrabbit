@@ -169,7 +169,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
     public void update(String srcWorkspaceName) throws ConstraintViolationException {
-        String msg = "update operation not allowed on a version node: " + safeGetJCRPath();
+        String msg = "update operation not allowed: " + this;
         log.debug(msg);
         throw new ConstraintViolationException(msg);
     }
@@ -182,9 +182,21 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort)
             throws ConstraintViolationException {
-        String msg = "merge operation not allowed on a version node: " + safeGetJCRPath();
+        String msg = "merge operation not allowed: " + this;
         log.debug(msg);
         throw new ConstraintViolationException(msg);
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Return a string representation of this version node for diagnostic
+     * purposes.
+     *
+     * @return "version node /path/to/item"
+     */
+    public String toString() {
+        return "version " + super.toString();
     }
 
 }
