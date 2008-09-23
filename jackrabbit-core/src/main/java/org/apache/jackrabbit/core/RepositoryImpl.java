@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.config.ClusterConfig;
-import org.apache.jackrabbit.core.config.DataStoreConfig;
 import org.apache.jackrabbit.core.config.PersistenceManagerConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.SecurityManagerConfig;
@@ -272,11 +271,9 @@ public class RepositoryImpl extends AbstractRepository
             nsReg = createNamespaceRegistry(new BasedFileSystem(repStore, "/namespaces"));
             ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
-            if (repConfig.getDataStoreConfig() != null) {
+            dataStore = repConfig.getDataStore();
+            if (dataStore != null) {
                 assert InternalValue.USE_DATA_STORE;
-                dataStore = createDataStore();
-            } else {
-                dataStore = null;
             }
 
             // init workspace configs
@@ -692,18 +689,6 @@ public class RepositoryImpl extends AbstractRepository
         } catch (Exception e) {
             throw new RepositoryException(e);
         }
-    }
-
-    /**
-     * Create a data store object using the data store configuration.
-     *
-     * @return the data store object
-     */
-    protected DataStore createDataStore() throws RepositoryException {
-        DataStoreConfig dsc = repConfig.getDataStoreConfig();
-        DataStore dataStore = (DataStore) dsc.newInstance();
-        dataStore.init(repConfig.getHomeDir());
-        return dataStore;
     }
 
     protected NamespaceRegistryImpl getNamespaceRegistry() {

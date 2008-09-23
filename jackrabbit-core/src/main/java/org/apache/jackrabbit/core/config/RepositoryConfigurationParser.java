@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
@@ -249,12 +251,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // Optional journal configuration
         ClusterConfig cc = parseClusterConfig(root);
 
-        // Optional data store configuration
-        DataStoreConfig dsc = parseDataStoreConfig(root);
+        // Optional data store factory
+        DataStoreFactory dsf = getDataStoreFactory(root, home);
 
         return new RepositoryConfig(home, securityConfig, fsf,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, cc, dsc, this);
+                maxIdleTime, template, vc, sc, cc, dsf, this);
     }
 
     /**
@@ -683,19 +685,26 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * @return journal configuration, or <code>null</code>
      * @throws ConfigurationException if the configuration is broken
      */
-    protected DataStoreConfig parseDataStoreConfig(Element parent)
+    protected DataStoreFactory getDataStoreFactory(
+            final Element parent, final String directory)
             throws ConfigurationException {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE
-                    && DATA_STORE_ELEMENT.equals(child.getNodeName())) {
-                DataStoreConfig cfg = new DataStoreConfig(parseBeanConfig(
-                        parent, DATA_STORE_ELEMENT));
-                return cfg;
+        return new DataStoreFactory() {
+            public DataStore getDataStore() throws RepositoryException {
+                NodeList children = parent.getChildNodes();
+                for (int i = 0; i < children.getLength(); i++) {
+                    Node child = children.item(i);
+                    if (child.getNodeType() == Node.ELEMENT_NODE
+                            && DATA_STORE_ELEMENT.equals(child.getNodeName())) {
+                        BeanConfig bc =
+                            parseBeanConfig(parent, DATA_STORE_ELEMENT);
+                        DataStore store = (DataStore) bc.newInstance();
+                        store.init(directory);
+                        return store;
+                    }
+                }
+                return null;
             }
-        }
-        return null;
+        };
     }
 
     /**

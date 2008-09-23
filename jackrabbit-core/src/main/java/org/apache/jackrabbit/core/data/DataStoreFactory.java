@@ -14,20 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.config;
+package org.apache.jackrabbit.core.data;
+
+import javax.jcr.RepositoryException;
 
 /**
- * Data store configuration.
+ * Factory interface for creating {@link DataStore} instances. Used
+ * to decouple the repository internals from the repository configuration
+ * mechanism.
+ *
+ * @since Jackrabbit 1.5
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-1438">JCR-1438</a>
  */
-public class DataStoreConfig extends BeanConfig {
+public interface DataStoreFactory {
 
     /**
-     * Creates a data store configuration object from the given bean configuration.
+     * Creates, initializes, and returns a {@link DataStore} instance
+     * for use by the repository. Note that no information is passed from
+     * the client, so all required configuration information must be
+     * encapsulated in the factory.
      *
-     * @param config bean configuration
+     * @return initialized data store
+     * @throws RepositoryException if the data store can not be created
      */
-    public DataStoreConfig(BeanConfig config) {
-        super(config);
-    }
+    DataStore getDataStore() throws RepositoryException;
 
 }
