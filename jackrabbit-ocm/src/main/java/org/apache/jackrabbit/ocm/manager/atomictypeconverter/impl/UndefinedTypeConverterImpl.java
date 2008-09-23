@@ -32,10 +32,11 @@ import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter
 
 /**
  *
- * String Type Converter
+ * Undefined Type Converter
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
+ * @author : <a href="mailto:boni.g@bioimagene.com">Boni Gopalan</a>
  */
 public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 {
@@ -43,6 +44,8 @@ public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 	 *
 	 * @see org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter#getValue(java.lang.Object)
 	 */
+	
+	
 	public Value getValue(ValueFactory valueFactory, Object propValue)
 	{
 
@@ -51,55 +54,44 @@ public class UndefinedTypeConverterImpl implements AtomicTypeConverter
 			return null;
 		  }
 		
-          if (propValue.getClass() == String.class)
+          if (propValue instanceof String )
           {
         	  return valueFactory.createValue((String) propValue);
           }
 
-          if (propValue.getClass() == InputStream.class)
+          if (propValue instanceof InputStream)
           {
         	  return valueFactory.createValue((InputStream) propValue);
           }
 	
-          if ((propValue.getClass() == Long.class) ||(propValue.getClass() == Integer.class))
+          if ((propValue instanceof Long || propValue instanceof Integer))
           {
         	  return valueFactory.createValue(((Number) propValue).longValue());
           }
 
-          if (propValue.getClass() == Double.class )
+          if (propValue instanceof Double )
           {
         	  return valueFactory.createValue(((Double) propValue).doubleValue());
           }
 
-          if (propValue.getClass() == Boolean.class )
+          if (propValue instanceof Boolean )
           {
         	  return valueFactory.createValue(((Boolean) propValue).booleanValue());
           }
 
-          if (propValue.getClass() == Calendar.class )
+          if (propValue instanceof Calendar )
           {
         	
         	  return valueFactory.createValue((Calendar) propValue);
           }
 
-          if (propValue.getClass() == GregorianCalendar.class )
+          if (propValue instanceof GregorianCalendar )
           {
         	  return valueFactory.createValue((GregorianCalendar) propValue);
           }
 
-          if (propValue.getClass() == GregorianCalendar.class )
-          {
-        	  return valueFactory.createValue((GregorianCalendar) propValue);
-          }
 
-          if (propValue.getClass() == Date.class )
-          {
-        	  Calendar calendar = Calendar.getInstance();
-        	  calendar.setTime((Date) propValue);
-        	  return valueFactory.createValue(calendar);
-          }
-
-          if (propValue.getClass() == Date.class )
+          if (propValue instanceof Date )
           {
         	  Calendar calendar = Calendar.getInstance();
         	  calendar.setTime((Date) propValue);
