@@ -707,12 +707,12 @@ public class SessionImpl extends AbstractSession
          */
         if (set.contains(ADD_NODE_ACTION)) {
             try {
-                parentPath = targetPath.getAncestor(1);
-                parentId = hierMgr.resolveNodePath(parentPath);
-                if (parentId == null) {
+                if (targetPath.denotesRoot()) {
                     // parent does not exist (i.e. / was specified), throw exception
                     throw new AccessControlException(ADD_NODE_ACTION);
                 }
+                parentPath = targetPath.getAncestor(1);
+                parentId = hierMgr.resolveNodePath(parentPath);
                 accessMgr.checkPermission(parentId, AccessManager.WRITE);
             } catch (AccessDeniedException re) {
                 // otherwise the RepositoryException catch clause will
