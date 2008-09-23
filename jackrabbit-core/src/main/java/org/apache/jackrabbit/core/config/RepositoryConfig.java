@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.config;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
@@ -61,7 +63,7 @@ import java.util.Properties;
  * addition the workspace configuration object keeps track of all configured
  * workspaces.
  */
-public class RepositoryConfig implements FileSystemFactory {
+public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(RepositoryConfig.class);
@@ -221,9 +223,10 @@ public class RepositoryConfig implements FileSystemFactory {
     private final ClusterConfig cc;
 
     /**
-     * Optional data store configuration
+     * The optional data store factory, returns <code>null</code> if
+     * the data store is not configured.
      */
-    private final DataStoreConfig dataStoreConfig;
+    private final DataStoreFactory dsf;
 
     /**
      * Creates a repository configuration object.
@@ -239,7 +242,7 @@ public class RepositoryConfig implements FileSystemFactory {
      * @param vc versioning configuration
      * @param sc search configuration for system search manager.
      * @param cc optional cluster configuration
-     * @param dataStoreConfig configuration for data store
+     * @param dsf data store factory
      * @param parser configuration parser
      */
     public RepositoryConfig(
@@ -247,7 +250,8 @@ public class RepositoryConfig implements FileSystemFactory {
             String workspaceDirectory, String workspaceConfigDirectory,
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
-            ClusterConfig cc, DataStoreConfig dataStoreConfig, RepositoryConfigurationParser parser) {
+            ClusterConfig cc, DataStoreFactory dsf,
+            RepositoryConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
         this.sec = sec;
@@ -260,7 +264,7 @@ public class RepositoryConfig implements FileSystemFactory {
         this.vc = vc;
         this.sc = sc;
         this.cc = cc;
-        this.dataStoreConfig = dataStoreConfig;
+        this.dsf = dsf;
         this.parser = parser;
     }
 
@@ -754,12 +758,15 @@ public class RepositoryConfig implements FileSystemFactory {
     }
 
     /**
-     * Returns the data store configuration. Returns <code>null</code> if data store
-     * has not been configured.
+     * Creates and returns the configured data store. Returns
+     * <code>null</code> if a data store has not been configured.
+     *
+     * @return the configured data store, or <code>null</code>
+     * @throws RepositoryException if the data store can not be created
      */
-    public DataStoreConfig getDataStoreConfig() {
-        return dataStoreConfig;
+    public DataStore getDataStore() throws RepositoryException {
+        return dsf.getDataStore();
     }
-}
 
+}
 
