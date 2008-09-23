@@ -614,6 +614,7 @@ public final class QValueFactoryImpl implements QValueFactory {
                     }
                 }
             } finally {
+                in.close();
                 if (out != null) {
                     out.close();
                 }
