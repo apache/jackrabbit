@@ -86,7 +86,7 @@
     <!-- dependency excluded above                                     -->
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>jcl104-over-slf4j</artifactId>
+      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
