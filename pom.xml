@@ -75,10 +75,6 @@
     <module>jackrabbit-spi-commons</module>
     <module>jackrabbit-jcr2spi</module>
     <module>jackrabbit-spi2jcr</module>
-    <!-- TODO: OCM requires Java 5
-    <module>jackrabbit-ocm</module>
-    <module>jackrabbit-ocm-nodemanagement</module>
-    -->
   </modules>
 
   <build>
@@ -202,6 +198,17 @@
   </reporting>
 
   <profiles>
+    <!-- JCR-1756: Include OCM in the main Jackrabbit build when using Java 5 -->
+    <profile>
+      <id>java5</id>
+      <activation>
+        <jdk>!1.4</jdk>
+      </activation>
+      <modules>
+        <module>jackrabbit-ocm</module>
+        <module>jackrabbit-ocm-nodemanagement</module>
+      </modules>
+    </profile>
     <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
     <profile>
       <id>non-mac</id>
