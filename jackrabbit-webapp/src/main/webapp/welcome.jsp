@@ -24,7 +24,6 @@ Repository rep;
 try {
     rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
 } catch (Throwable e) {
-    log("Error accesing the repository", e);
     %><jsp:forward page="bootstrap/missing.jsp"/><%
 }
 
