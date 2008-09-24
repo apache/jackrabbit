@@ -303,7 +303,9 @@ public class RepositoryAccessServlet extends HttpServlet {
             }
             return repository;
         } catch (ServletException e) {
-            log.error("The repository is not available. Check config of 'RepositoryAccessServlet'.");
+            log.error(
+                    "The content repository is not available. Please check"
+                    + " RepositoryAccessServlet configuration in web.xml.", e);
             throw new IllegalStateException("The repository is not available.");
         }
     }
