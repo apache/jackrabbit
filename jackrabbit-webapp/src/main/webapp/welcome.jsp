@@ -50,25 +50,8 @@ request.setAttribute("title", "Apache Jackrabbit JCR Server");
   <li><a href="remote.jsp">Remote repository access</a></li>
   <li><a href="local.jsp">Local repository access</a></li>
 </ul>
-
-<h3>About Apache Jackrabbit</h3>
 <p>
-  <a href="http://jackrabbit.apache.org/">Apache Jackrabbit</a> is a fully
-  conforming implementation of the Content Repository for Java Technology API
-  (JCR). A content repository is a hierarchical content store with support for
-  structured and unstructured content, full text search, versioning,
-  transactions, observation, and more. Typical applications that use content
-  repositories include content management, document management, and records
-  management systems.
-</p>
-<p>
-  Version 1.0 of the JCR API was specified by the
-  <a href="http://jcp.org/en/jsr/detail?id=170">Java Specification Request 170</a>
-  (JSR 170) and work on the JCR version 2.0 has begun in
-  <a href="http://jcp.org/en/jsr/detail?id=170">JSR 283</a>.
-</p>
-<p>
-  Apache Jackrabbit is a project of the
-  <a href="http://www.apache.org/">Apache Software Foundation</a>. 
+  For more information, including copyright and licensing details, visit the
+  <a href="about.jsp">About Apache Jackrabbit</a> page.
 </p>
 <jsp:include page="footer.jsp"/>

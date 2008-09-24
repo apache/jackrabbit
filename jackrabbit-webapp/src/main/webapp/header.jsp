@@ -52,6 +52,7 @@
               <li><a href="<%= request.getContextPath() %>/remote.jsp">Remote access</a></li>
               <li><a href="<%= request.getContextPath() %>/local.jsp">Local access</a></li>
               <li><a href="<%= request.getContextPath() %>/troubleshooting.jsp">Troubleshooting</a></li>
+              <li><a href="<%= request.getContextPath() %>/about.jsp">About Jackrabbit</a></li>
             </ul>
           </li>
           <li>Default workspace
