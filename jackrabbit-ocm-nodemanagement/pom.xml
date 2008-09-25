@@ -18,72 +18,72 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd ">
-	<modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<!-- ====================================================================== -->
-	<!-- P R O J E C T  D E S C R I P T I O N                                   -->
-	<!-- ====================================================================== -->
-	<parent>
-		<groupId>org.apache.jackrabbit</groupId>
-		<artifactId>jackrabbit</artifactId>
-		<version>1.5-SNAPSHOT</version>
-	</parent>
-	<artifactId>jackrabbit-ocm-nodemanagement</artifactId>
-	<name>Jackrabbit OCM Node management</name>
-	<description>
-		This subproject contains the JCR Nodetype Management tools. This
-		tools convert a OCM class descriptor into JCR node types.
-	</description>
+  <!-- ====================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+  <!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.5-SNAPSHOT</version>
+  </parent>
+  <artifactId>jackrabbit-ocm-nodemanagement</artifactId>
+  <name>Jackrabbit OCM Node management</name>
+  <description>
+    This subproject contains the JCR Nodetype Management tools. This
+    tools convert a OCM class descriptor into JCR node types.
+  </description>
 
-	<!-- ====================================================================== -->
-	<!-- D E P E N D E N C I E S                                                -->
-	<!-- ====================================================================== -->
-	<dependencies>
-		<dependency>
-			<groupId>javax.jcr</groupId>
-			<artifactId>jcr</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jackrabbit</groupId>
-			<artifactId>jackrabbit-ocm</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.jackrabbit</groupId>
-			<artifactId>jackrabbit-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
+  <!-- ====================================================================== -->
+  <!-- D E P E N D E N C I E S                                                -->
+  <!-- ====================================================================== -->
+  <dependencies>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-ocm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
 
-		<!-- Test -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>**/TestBase.java</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/TestBase.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <scm>
     <connection>
