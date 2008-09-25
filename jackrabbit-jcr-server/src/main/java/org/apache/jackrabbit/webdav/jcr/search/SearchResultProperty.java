@@ -93,7 +93,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         } else if (propValue instanceof Element) {
             parseColumnElement((Element)property.getValue(), colList, valList, valueFactory);
         } else {
-            new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
+            throw new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
         }
 
         columnNames = (String[]) colList.toArray(new String[colList.size()]);

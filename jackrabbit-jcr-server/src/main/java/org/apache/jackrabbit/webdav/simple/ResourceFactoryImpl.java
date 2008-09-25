@@ -137,13 +137,16 @@ public class ResourceFactoryImpl implements DavResourceFactory {
             throws RepositoryException {
         Node node = null;
         try {
-            Item item = ((JcrDavSession)sessionImpl).getRepositorySession().getItem(locator.getRepositoryPath());
-            if (item instanceof Node) {
-                node = (Node)item;
-            } // else: item is a property -> return null
+            String repoPath = locator.getRepositoryPath();
+            if (repoPath != null) {
+                Session session = ((JcrDavSession)sessionImpl).getRepositorySession();
+                Item item = session.getItem(repoPath);
+                if (item instanceof Node) {
+                    node = (Node)item;
+                } // else: item is a property -> return null
+            }
         } catch (PathNotFoundException e) {
-            // item does not exist (yet) -> create null-resource
-            node = null;
+            // item does not exist (yet). return null -> create null-resource
         }
         return node;
     }
@@ -153,7 +156,7 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      *
      * @param locator
      * @param session
-     * @param request
+     * @param isCollection
      * @return
      * @throws DavException
      */
@@ -178,10 +181,11 @@ public class ResourceFactoryImpl implements DavResourceFactory {
      * supports the versioning option different resources are created for
      * version, versionhistory and common nodes.
      *
+     * @param node
      * @param locator
-     * @param sessionImpl
-     * @return DavResource representing a repository item.
-     * @throws RepositoryException if {@link javax.jcr.Session#getItem(String)} fails.
+     * @param session
+     * @return
+     * @throws DavException
      */
     private DavResource createResource(Node node, DavResourceLocator locator,
                                        DavSession session) throws DavException {
