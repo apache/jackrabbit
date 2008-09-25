@@ -60,8 +60,10 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         NodeIterator nodes = q.execute().getNodes();
         assertFalse(nodes.hasNext());
 
-        while (queue.getNumPendingDocuments() > 0) {
-            Thread.sleep(50);
+        synchronized (index.getIndex()) {
+            while (queue.getNumPendingDocuments() > 0) {
+                index.getIndex().wait(50);
+            }
         }
 
         q = qm.createQuery(testPath + "/*[jcr:contains(., 'fox')]", Query.XPATH);
