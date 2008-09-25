@@ -62,7 +62,7 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
         if (repositoryPath == null) {
             throw new IllegalArgumentException("Cannot build resource path from 'null' repository path");
         }
-        return (startsWithWorkspace(repositoryPath, wspPath)) ? repositoryPath : wspPath + repositoryPath;
+        return wspPath + repositoryPath;
     }
 
     private boolean startsWithWorkspace(String repositoryPath, String wspPath) {

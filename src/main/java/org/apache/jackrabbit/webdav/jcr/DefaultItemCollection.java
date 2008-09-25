@@ -81,6 +81,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -403,8 +405,28 @@ public class DefaultItemCollection extends AbstractItemResource
                 if (in == null) {
                     // PUT: not possible without request body
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Cannot create a new non-collection resource without request body.");
+                }
+                // PUT : create new or overwrite existing property.
+                String ct = inputContext.getContentType();
+                int type = JcrValueType.typeFromContentType(ct);
+                if (type != PropertyType.UNDEFINED) {
+                    // no need to create value/values property. instead
+                    // prop-value can be retrieved directly:
+                    int pos = ct.indexOf(';');
+                    String charSet = (pos > -1) ? ct.substring(pos) : "UTF-8";
+                    if (type == PropertyType.BINARY) {
+                        n.setProperty(memberName, inputContext.getInputStream());
+                    } else {
+                        BufferedReader r = new BufferedReader(new InputStreamReader(inputContext.getInputStream(), charSet));
+                        String line;
+                        StringBuffer value = new StringBuffer();
+                        while ((line = r.readLine()) != null) {
+                            value.append(line);
+                        }
+                        n.setProperty(memberName, value.toString(), type);
+                    }
                 } else {
-                    // PUT : create new or overwrite existing property.
+                    // try to parse the request body into a 'values' property.
                     tmpFile = File.createTempFile(TMP_PREFIX + Text.escape(memberName), null, null);
                     FileOutputStream out = new FileOutputStream(tmpFile);
                     IOUtil.spool(in, out);
