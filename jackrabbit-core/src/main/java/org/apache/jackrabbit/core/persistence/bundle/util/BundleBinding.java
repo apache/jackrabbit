@@ -115,14 +115,15 @@ public class BundleBinding extends ItemStateBinding {
         // properties
         name = readIndexedQName(in);
         while (name != null) {
+            PropertyId pId = new PropertyId(bundle.getId(), name);
             // skip redundant primaryType, mixinTypes and uuid properties
             if (name.equals(NameConstants.JCR_PRIMARYTYPE)
                 || name.equals(NameConstants.JCR_MIXINTYPES)
                 || name.equals(NameConstants.JCR_UUID)) {
+                readPropertyEntry(in, pId);
                 name = readIndexedQName(in);
                 continue;
             }
-            PropertyId pId = new PropertyId(bundle.getId(), name);
             NodePropBundle.PropertyEntry pState = readPropertyEntry(in, pId);
             bundle.addProperty(pState);
             name = readIndexedQName(in);
