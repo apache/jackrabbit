@@ -32,6 +32,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
+  <version>1.4.1</version>
   <name>Jackrabbit JCR Server</name>
   <description>WebDAV server implementations for JCR</description>
 
@@ -54,6 +55,18 @@
         </includes>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+          <forkMode>once</forkMode>
+          <argLine>-Xmx128m -enableassertions</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <dependencies>
