@@ -662,18 +662,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @inheritDoc
+     * Ignores the <code>loadIfNotFound</code> flag due to the fact, that
+     * {@link org.apache.jackrabbit.spi.NodeInfo#getPropertyIds()} returns the
+     * complete list of property names currently available.
      * @see NodeEntry#getPropertyEntry(Name, boolean)
      */
     public PropertyEntry getPropertyEntry(Name propName, boolean loadIfNotFound) throws RepositoryException {
-        PropertyEntry entry = properties.get(propName);
-        if (entry == null && loadIfNotFound && Status.NEW != getStatus()) {
-            PropertyId propId = factory.getIdFactory().createPropertyId(getId(), propName);
-            entry = loadPropertyEntry(propId);
-        } else if (!EntryValidation.isValidPropertyEntry(entry)) {
-            entry = null;
-        }
-        return entry;
+        return getPropertyEntry(propName);
     }
 
     /**
