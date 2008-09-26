@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -1474,6 +1475,30 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
     }
 
+    /**
+     * Verify that shared nodes return correct paths.
+     */
+    public void testSharedNodePath() throws Exception {
+       Node a1 = testRootNode.addNode("a1");
+       Node a2 = a1.addNode("a2");
+       Node b1 = a1.addNode("b1");
+       b1.addMixin("mix:shareable");
+       testRootNode.save();
+
+       //now we have a shareable node N with path a1/b1
+
+       Session session = testRootNode.getSession();
+       Workspace workspace = session.getWorkspace();
+       String path = a2.getPath() + "/b2";
+       workspace.clone(workspace.getName(), b1.getPath(), path, false);
+
+       //now we have another shareable node N' in the same shared set as N with path a1/a2/b2
+
+       //using the path a1/a2/b2, we should get the node N' here
+       Item item = session.getItem(path);
+       assertEquals("unexpectedly got the path from another node from the same shared set", path, item.getPath()); 
+    } 
+    
     //---------------------------------------------------------- utility methods
 
     /**
