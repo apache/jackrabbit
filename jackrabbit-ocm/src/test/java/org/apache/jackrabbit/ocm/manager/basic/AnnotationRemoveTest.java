@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.jackrabbit.ocm.AnnotationTestBase;
 import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
@@ -41,7 +42,7 @@ import org.apache.jackrabbit.ocm.testmodel.Atomic;
  *
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Christophe Lombart</a>
  */
-public class AnnotationRemoveTest extends DigesterTestBase
+public class AnnotationRemoveTest extends AnnotationTestBase
 {
 	private final static Log log = LogFactory.getLog(AnnotationRemoveTest.class);
 	private Date date = new Date();

@@ -35,11 +35,11 @@ public class A
 	@Field(path=true) private String path;
     @Field private String a1;
     @Field private String a2;
-    @Bean private B b;
+    @Bean(jcrType="nt:unstructured", jcrOnParentVersion="IGNORE") private B b;
 
     private B emptyB;
 
-    @Collection(elementClassName=C.class, jcrType="ocm:C") private java.util.Collection collection;	
+    @Collection(elementClassName=C.class, jcrType="ocm:C", jcrOnParentVersion="IGNORE") private java.util.Collection collection;	
     @Collection(elementClassName=C.class) private java.util.Collection emptyCollection;
 
     public String getPath() {
