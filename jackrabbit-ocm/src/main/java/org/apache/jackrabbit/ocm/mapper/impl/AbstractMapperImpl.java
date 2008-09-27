@@ -20,9 +20,11 @@ package org.apache.jackrabbit.ocm.mapper.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +34,7 @@ import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.mapper.DescriptorReader;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
+import org.apache.jackrabbit.ocm.mapper.model.ImplementDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
 
 /**
@@ -74,26 +77,40 @@ public abstract class AbstractMapperImpl implements Mapper {
 
     }
 
-
+    
+    /**
+     * This method check class descriptor references (ancestor & implemented interfaces) : 
+     * For each classdescriptor found, this method will check if the ancestor class and the implemented 
+     * interfaces are also persistent or not. 
+     * 
+     * @param errors
+     * @return
+     */
     protected List solveReferences(List errors) {
         for(Iterator it = this.mappingDescriptor.getClassDescriptorsByClassName().entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             ClassDescriptor cd = (ClassDescriptor) entry.getValue();
-
+            
+            // Check if the ancestor is a persistent class
             if (null != cd.getExtend() && !"".equals(cd.getExtend()))
             {
                 ClassDescriptor superClassDescriptor = this.mappingDescriptor.getClassDescriptorByName(cd.getExtend());
 
                 if (null == superClassDescriptor)
                 {
-                    errors.add("Cannot find mapping for class "
+                	// Just a debug info because we can have a non persisted ancestor class
+                	log.debug("Cannot find mapping for class "
                             + cd.getExtend()
                             + " referenced as extends from "
                             + cd.getClassName());
+                	
+                	// This is not necessary to keep a non persisted ancestor class
+                	cd.setExtend(null);
+
                 }
                 else
                 {
-            	       log.debug("Class " +cd.getClassName() +  " extends " + cd.getExtend());
+            	    log.debug("Class " +cd.getClassName() +  " extends " + cd.getExtend());
                     cd.setSuperClassDescriptor(superClassDescriptor);
                 }
             }
@@ -102,29 +119,36 @@ public abstract class AbstractMapperImpl implements Mapper {
                    rootClassDescriptors.add(cd);
             }
 
-            Collection interfaces = cd.getImplements();
+            // Check if the implemented interfaces are persistent classes
+            Set interfaces = cd.getImplements();
+            Set mappedInterfaces  = new HashSet();
+            
             if (interfaces.size() > 0)
             {	
             	      for (Iterator iterator = interfaces.iterator(); iterator.hasNext();)
             	      {
-            	    	          String interfaceName= (String) iterator.next();
+            	    	  String interfaceName= (String) iterator.next();
                           ClassDescriptor interfaceClassDescriptor = this.mappingDescriptor.getClassDescriptorByName(interfaceName);
 
                           if (null == interfaceClassDescriptor)
                           {
-                              errors.add("Cannot find mapping for interface "
+                        	  // Just a debug info because we can have a non persisted interface reference 
+                        	  log.debug("Cannot find mapping for interface "
                                       + interfaceName
                                       + " referenced as implements from "
                                       + cd.getClassName());
+                        	  
                           }
                           else
                           {
-                      	       log.debug("Class " +cd.getClassName() +  " implements " + interfaceName);
-                              //cd.setSuperClassDescriptor(interfaceClassDescriptor);
+                      	      log.debug("Class " +cd.getClassName() +  " implements " + interfaceName);
                       	      interfaceClassDescriptor.addDescendantClassDescriptor(cd);
+                      	      mappedInterfaces.add(interfaceName);
                           }
             	    	
             	      }
+            	      
+            	      cd.setImplements(mappedInterfaces); 
             }
 
         }

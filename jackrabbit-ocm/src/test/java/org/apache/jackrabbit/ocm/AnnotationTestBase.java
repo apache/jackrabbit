@@ -33,6 +33,7 @@ import org.apache.jackrabbit.ocm.testmodel.C;
 import org.apache.jackrabbit.ocm.testmodel.D;
 import org.apache.jackrabbit.ocm.testmodel.DFull;
 import org.apache.jackrabbit.ocm.testmodel.Default;
+import org.apache.jackrabbit.ocm.testmodel.Discriminator;
 import org.apache.jackrabbit.ocm.testmodel.E;
 import org.apache.jackrabbit.ocm.testmodel.File;
 import org.apache.jackrabbit.ocm.testmodel.HierarchyNode;
@@ -43,6 +44,9 @@ import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
 import org.apache.jackrabbit.ocm.testmodel.Residual;
 import org.apache.jackrabbit.ocm.testmodel.Resource;
+import org.apache.jackrabbit.ocm.testmodel.SimpleAnnotedAbstractClass;
+import org.apache.jackrabbit.ocm.testmodel.SimpleAnnotedClass;
+import org.apache.jackrabbit.ocm.testmodel.SimpleInterface;
 import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualNodes;
 import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualProperties;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
@@ -112,7 +116,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(Main.class);
 		classes.add(Element.class);
 		classes.add(MultiValue.class);
-
+		classes.add(Discriminator.class);
 
 		classes.add(Residual.class);
 		classes.add(ResidualProperties.class);
@@ -160,6 +164,11 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 
 		classes.add(PressRelease.class);
 		classes.add(Author.class);
+		
+		classes.add(SimpleAnnotedAbstractClass.class);
+		classes.add(SimpleAnnotedClass.class);
+		classes.add(SimpleInterface.class);
+		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);
 

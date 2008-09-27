@@ -20,9 +20,11 @@ package org.apache.jackrabbit.ocm.mapper.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +47,7 @@ public class ClassDescriptor {
 
     private MappingDescriptor mappingDescriptor;
     private ClassDescriptor superClassDescriptor;
-    private Collection descendantClassDescriptors = new ArrayList();
+    private HashSet descendantClassDescriptors = new HashSet();
 
     private String className;
     private String jcrType;
@@ -69,7 +71,8 @@ public class ClassDescriptor {
 
 
     private boolean isInterface=false;
-    private List interfaces = new ArrayList();
+    private Set interfaces = new HashSet();
+    
 
     public void setAbstract(boolean flag) {
         this.isAbstract = flag;
@@ -410,7 +413,14 @@ public class ClassDescriptor {
 
 	private void lookupSuperDescriptor() {
         if (null != superClassDescriptor) {
-            this.hasDiscriminator = superClassDescriptor.hasDiscriminator();
+            
+        	//Check some attributes defined on the ancestor class descriptor
+        	this.hasDiscriminator = superClassDescriptor.hasDiscriminator();
+        	
+        	// If there is no mixin type on the current classdescriptor, check if there is one on the ancestor class. 
+        	if(jcrMixinTypes == null || jcrMixinTypes.length == 0)
+        		jcrMixinTypes = superClassDescriptor.jcrMixinTypes;
+        	
             if (! this.isInterface)
             {
                 this.fieldDescriptors = mergeFields(this.fieldDescriptors, this.superClassDescriptor.getFieldDescriptors());
@@ -509,9 +519,14 @@ public class ClassDescriptor {
     }
 
 
-    public Collection getImplements()
+    public Set getImplements()
     {
     	    return interfaces;
+    }
+    
+    public void setImplements(Set interfaces)
+    {
+    	this.interfaces = interfaces;
     }
 
     private Map mergeFields(Map existing, Collection superSource) {

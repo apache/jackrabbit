@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.ocm.reflection;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -135,7 +136,7 @@ abstract public class ReflectionUtils {
      * @param objects
      * @return
      */
-    public static Object  invokeConstructor(String className,  Object[] params) {
+    public static Object invokeConstructor(String className,  Object[] params) {
         try {
             Class converterClass= forName(className);
 
@@ -195,7 +196,7 @@ abstract public class ReflectionUtils {
 
     public static Class getBeanClass(Object bean)
     {
-    	     Class beanClass = bean.getClass();
+    	 Class beanClass = bean.getClass();
          if (isProxy(beanClass))
          {
         	     //CGLIB specific
@@ -245,6 +246,25 @@ abstract public class ReflectionUtils {
 
 		return defaultImplementation.get(clazz);
 	}
-
+	
+	public static boolean isAbstractClass(Class clazz)
+	{
+			return Modifier.isAbstract(clazz.getModifiers());
+	}
+	
+	public static Class getAncestorClass(Class clazz)
+	{
+        Class ancestorClass =  clazz.getSuperclass();
+        if (ancestorClass == Object.class)
+        	return null; 
+        else
+        	return ancestorClass;
+	}
+	
+	
+	public static Class[] getInterfaces(Class clazz)
+	{
+		return clazz.getInterfaces();
+	}
 
 }

@@ -34,6 +34,9 @@ import org.apache.jackrabbit.ocm.testmodel.A;
 import org.apache.jackrabbit.ocm.testmodel.B;
 import org.apache.jackrabbit.ocm.testmodel.C;
 import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
+import org.apache.jackrabbit.ocm.testmodel.SimpleAnnotedAbstractClass;
+import org.apache.jackrabbit.ocm.testmodel.SimpleAnnotedClass;
+import org.apache.jackrabbit.ocm.testmodel.SimpleInterface;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.Ancestor;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.Descendant;
@@ -61,7 +64,7 @@ public class AnnotationMapperImplTest extends TestCase {
 
 	public static Test suite() {
 		// All methods starting with "test" will be executed in the test suite.
-		return new TestSuite(DigesterMapperImplTest.class);
+		return new TestSuite(AnnotationMapperImplTest.class);
 	}
 
 	/**
@@ -393,8 +396,8 @@ public class AnnotationMapperImplTest extends TestCase {
 			assertNull("The interface has an ancestor", classDescriptor.getSuperClassDescriptor());
 			assertTrue("The interface has not implementation/descendant", classDescriptor.hasDescendants());
 			Collection descendants = classDescriptor.getDescendantClassDescriptors();
-			assertEquals("Invalid number of implementation/descendants", descendants.size(), 1);
-			assertEquals("Invalid interface implementation",( (ClassDescriptor) descendants.iterator().next()).getClassName(), "org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant");
+			assertEquals("Invalid number of implementation/descendants",2, descendants.size());
+			//assertEquals("Invalid interface implementation",( (ClassDescriptor) descendants.iterator().next()).getClassName(), "org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant");
 			assertTrue("Invalid extend strategy", classDescriptor.usesNodeTypePerHierarchyStrategy());
 			assertFalse("Incalid extend strategy", classDescriptor.usesNodeTypePerConcreteClassStrategy());
 			
@@ -440,7 +443,7 @@ public class AnnotationMapperImplTest extends TestCase {
 			assertNotNull("Classdescriptor is null", classDescriptor);
 			assertTrue("Document is not  an interface", classDescriptor.isInterface());
 			assertFalse("Document  has a discriminator", classDescriptor.hasDiscriminator());
-			assertEquals("Invalid number of implemented interface", classDescriptor.getImplements().size(), 0);			
+			assertEquals("Invalid number of implemented interface", classDescriptor.getImplements().size(), 1);			
 			assertFalse("Invalid extend strategy", classDescriptor.usesNodeTypePerHierarchyStrategy());
 			assertTrue("Invalid extend strategy", classDescriptor.usesNodeTypePerConcreteClassStrategy());
 			descendants = classDescriptor.getDescendantClassDescriptors();			
@@ -512,6 +515,35 @@ public class AnnotationMapperImplTest extends TestCase {
 		}
 	}
 	
+	public void testSimpleAnnotations()
+	{
+		try {
+			Mapper mapper = getMapper();
+			assertNotNull("Mapper is null", mapper);
+
+			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(SimpleAnnotedAbstractClass.class);
+			assertNotNull("ClassDescriptor for SimpleAnnotedAbstractClass is null", classDescriptor);
+			assertTrue("SimpleAnnotedAbstractClass is not Abstract ", classDescriptor.isAbstract());
+			
+			classDescriptor = mapper.getClassDescriptorByClass(SimpleAnnotedClass.class);
+			assertNotNull("ClassDescriptor for SimpleAnnotedClass is null", classDescriptor);
+			assertFalse("SimpleAnnotedClass is Abstract ", classDescriptor.isAbstract());
+			assertEquals("Invalid ancestor class for SimpleAnnotedClass ",
+						 "org.apache.jackrabbit.ocm.testmodel.SimpleAnnotedAbstractClass",
+						  classDescriptor.getSuperClassDescriptor().getClassName());
+			assertEquals("Invalid number of implemented interface", 1, classDescriptor.getImplements().size());
+			
+			String  interfaceName = (String) classDescriptor.getImplements().iterator().next();
+			assertEquals("Invalid interface for SimpleAnnotationClass", 
+					    "org.apache.jackrabbit.ocm.testmodel.SimpleInterface",
+					    interfaceName);
+			
+		} catch (JcrMappingException e) {
+			e.printStackTrace();
+			fail("Impossible to test simple annotation " + e);
+		}
+	}
+	
 	private Mapper getMapper()
 	{
 		List<Class> classes = new ArrayList<Class>();
@@ -528,11 +560,20 @@ public class AnnotationMapperImplTest extends TestCase {
 		classes.add( org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.Descendant.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.withmixin.SubDescendant.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.CmsObjectImpl.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.FolderImpl.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.ContentImpl.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.inheritance.impl.DocumentImpl.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Folder.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Content.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Document.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.Interface.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.interfaces.AnotherInterface.class);
 		classes.add(org.apache.jackrabbit.ocm.testmodel.proxy.Main.class);
+		classes.add(SimpleAnnotedAbstractClass.class);
+		classes.add(SimpleAnnotedClass.class);
+		classes.add(SimpleInterface.class);
+		classes.add(org.apache.jackrabbit.ocm.testmodel.uuid.A.class);
 		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		return mapper;
