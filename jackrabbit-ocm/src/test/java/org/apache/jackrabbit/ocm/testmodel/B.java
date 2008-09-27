@@ -24,11 +24,11 @@ import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
  * @author <a href="mailto:christophe.lombart@sword-technologies.com">Lombart Christophe </a>
  * @version $Id: Exp $
  */
-@Node
+@Node(jcrType="nt:unstructured", jcrSuperTypes="nt:base")
 public class B
 {
-     @Field private String b1;
-     @Field private String b2;
+     @Field(jcrType="String", jcrOnParentVersion="IGNORE") private String b1;
+     @Field(jcrType="String", jcrOnParentVersion="IGNORE")  private String b2;
      private A a;
 
 

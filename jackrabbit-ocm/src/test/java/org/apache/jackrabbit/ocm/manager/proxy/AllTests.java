@@ -37,7 +37,7 @@ public class AllTests {
         TestSuite suite= new TestSuite("Test for org.apache.jackrabbit.ocm.manager.proxy");
         //$JUnit-BEGIN$
         suite.addTestSuite(DigesterProxyTest.class);
-
+        suite.addTestSuite(AnnotationProxyTest.class);
         //$JUnit-END$
 
         return suite;

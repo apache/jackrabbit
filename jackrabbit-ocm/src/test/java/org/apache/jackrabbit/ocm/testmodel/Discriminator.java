@@ -16,14 +16,19 @@
  */
 package org.apache.jackrabbit.ocm.testmodel;
 
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Field;
+import org.apache.jackrabbit.ocm.mapper.impl.annotation.Node;
+
 
 /**
  * @author <a href='mailto:christophe.lombart@gmail.com'>Christophe Lombart</a>
  */
+@Node
 public class Discriminator {
-    private String path;
-    private String content;
-	public String getContent() {
+    @Field(path=true) private String path;
+    @Field private String content;
+	
+    public String getContent() {
 		return content;
 	}
 	public void setContent(String content) {
