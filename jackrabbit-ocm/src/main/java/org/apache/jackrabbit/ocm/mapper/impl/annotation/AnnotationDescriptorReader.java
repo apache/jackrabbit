@@ -104,18 +104,36 @@ public class AnnotationDescriptorReader implements DescriptorReader
 		     classDescriptor.setJcrMixinTypes(nodeAnnotation.jcrMixinTypes());
 		}
 
+		Class ancestorClass = ReflectionUtils.getAncestorClass(clazz);
+		if (ancestorClass != null)
+		{
+			classDescriptor.setExtend(ancestorClass.getName());
+		}
+			
+		// TODO : Can we still support the extend param in the annotation @Node if we are using 
+		//	      the reflection to get the ancestor class ? (see the previous if)
 		if (nodeAnnotation.extend() != null && ! nodeAnnotation.extend().equals(Object.class))
 		{
 		     classDescriptor.setExtend(nodeAnnotation.extend().getName());
 		}
 
-		classDescriptor.setAbstract(nodeAnnotation.isAbstract());
+		
+		classDescriptor.setAbstract(nodeAnnotation.isAbstract()||ReflectionUtils.isAbstractClass(clazz) );
 		classDescriptor.setInterface(clazz.isInterface());
 		return classDescriptor;
 	}
 
 	private void addImplementDescriptor(ClassDescriptor classDescriptor, Class clazz)
 	{
+		Class[] interfaces = ReflectionUtils.getInterfaces(clazz);
+		for (int i = 0; i < interfaces.length; i++) {
+			ImplementDescriptor implementDescriptor =  new ImplementDescriptor();
+            implementDescriptor.setInterfaceName(interfaces[i].getName());
+            classDescriptor.addImplementDescriptor(implementDescriptor);
+		}
+		
+		// TODO : Can we still support the annotation @Implement if we are using 
+		//	      the reflection to get the list of the interfaces ?		
 		Implement implementAnnotation = (Implement) clazz.getAnnotation(Implement.class);
 		if (implementAnnotation != null)
 		{
