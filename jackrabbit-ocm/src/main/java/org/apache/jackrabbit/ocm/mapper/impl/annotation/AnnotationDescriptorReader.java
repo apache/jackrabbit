@@ -41,6 +41,7 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  * Helper class that reads the xml mapping file and load all class descriptors into memory (object graph)
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
+ * @author : <a href="mailto:boni.g@bioimagene.com">Boni Gopalan</a>
  *
  */
 public class AnnotationDescriptorReader implements DescriptorReader
@@ -306,6 +307,9 @@ public class AnnotationDescriptorReader implements DescriptorReader
             if ( ancestorType!= null)
             {
 			   setElementClassName(collectionDescriptor,ancestorType);
+            }
+            else{
+            	collectionDescriptor.setElementClassName(Object.class.getName());
             }
 		}
 	}

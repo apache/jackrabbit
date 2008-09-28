@@ -32,6 +32,7 @@ import javax.jcr.ValueFormatException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverter;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.UndefinedTypeConverterImpl;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableCollection;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjectsUtil;
 import org.apache.jackrabbit.ocm.manager.collectionconverter.ManageableObjects;
@@ -47,6 +48,7 @@ import org.apache.jackrabbit.ocm.reflection.ReflectionUtils;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
+ * @author <a href='mailto:boni.g@bioimagene.com'>Boni Gopalan</a>
  */
 public class MultiValueCollectionConverterImpl extends AbstractCollectionConverterImpl {
 
@@ -84,6 +86,12 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
                 Object fieldValue = collectionIterator.next();
                 AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                     .get(fieldValue.getClass());
+                //If there is no proper conversion strategy defined for a specific bean type
+                //then system will make a best effort conversion strategy using UndefinedTypeConverter.
+                //@author:Boni Gopalan
+                if (atomicTypeConverter == null){
+                	atomicTypeConverter = new UndefinedTypeConverterImpl();
+                }
                 values[i] = atomicTypeConverter.getValue(valueFactory, fieldValue);
             }
 
@@ -125,6 +133,13 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             Object fieldValue = collectionIterator.next();
             AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                 .get(fieldValue.getClass());
+            //If there is no proper conversion strategy defined for a specific bean type
+            //then system will make a best effort conversion strategy using UndefinedTypeConverter.
+            //@author:Boni Gopalan
+            if (atomicTypeConverter == null){
+            	atomicTypeConverter = new UndefinedTypeConverterImpl();
+            }
+            
             values[i] = atomicTypeConverter.getValue(valueFactory, fieldValue);
         }
 
@@ -162,7 +177,12 @@ public class MultiValueCollectionConverterImpl extends AbstractCollectionConvert
             for (int i = 0; i < values.length; i++) {
                 AtomicTypeConverter atomicTypeConverter = (AtomicTypeConverter) atomicTypeConverters
                     .get(elementClass);
-
+                //If there is no proper conversion strategy defined for a specific bean type
+                //then system will make a best effort conversion strategy using UndefinedTypeConverter.
+                //@author:Boni Gopalan
+                if (atomicTypeConverter == null){
+                	atomicTypeConverter = new UndefinedTypeConverterImpl();
+                }
                 ((ManageableCollection) objects).addObject(atomicTypeConverter.getObject(values[i]));
             }
 

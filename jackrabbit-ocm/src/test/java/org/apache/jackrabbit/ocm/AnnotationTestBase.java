@@ -39,6 +39,7 @@ import org.apache.jackrabbit.ocm.testmodel.File;
 import org.apache.jackrabbit.ocm.testmodel.HierarchyNode;
 import org.apache.jackrabbit.ocm.testmodel.Lockable;
 import org.apache.jackrabbit.ocm.testmodel.MultiValue;
+import org.apache.jackrabbit.ocm.testmodel.MultiValueWithObjectCollection;
 import org.apache.jackrabbit.ocm.testmodel.Page;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 import org.apache.jackrabbit.ocm.testmodel.PropertyTest;
@@ -75,7 +76,7 @@ import org.apache.jackrabbit.ocm.testmodel.version.PressRelease;
  * repository.
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Christophe Lombart</a>
- *
+ * @author : <a href="mailto:boni.g@bioimagene.com">Boni Gopalan</a>
  *
  */
 public abstract class AnnotationTestBase extends AbstractTestBase
@@ -116,6 +117,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(Main.class);
 		classes.add(Element.class);
 		classes.add(MultiValue.class);
+		classes.add(MultiValueWithObjectCollection.class);
 		classes.add(Discriminator.class);
 
 		classes.add(Residual.class);

@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.ocm.exception.IncorrectPersistentClassException;
 import org.apache.jackrabbit.ocm.exception.InitMapperException;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
+import org.apache.jackrabbit.ocm.manager.atomictypeconverter.impl.AtomicTypeConverterProviderImpl;
 import org.apache.jackrabbit.ocm.mapper.DescriptorReader;
 import org.apache.jackrabbit.ocm.mapper.Mapper;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
@@ -42,6 +43,7 @@ import org.apache.jackrabbit.ocm.mapper.model.MappingDescriptor;
  * Abstract class for {@link org.apache.jackrabbit.ocm.mapper.Mapper}
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart Christophe </a>
+ * @author : <a href="mailto:boni.g@bioimagene.com">Boni Gopalan</a>
  *
  * TODO : Add more reference tests. For exemple, the mapper has to check if the class used for the elements
  *        of a collectiondescriptor exists. For performance reasone, we can defined some optional validations.
