@@ -515,6 +515,8 @@ public class ObjectContentManagerImpl implements ObjectContentManager {
 
         try {
             ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(clazz);
+            if (classDescriptor == null)
+            	return false;
             return true;
         } catch (IncorrectPersistentClassException e) {
             return false;

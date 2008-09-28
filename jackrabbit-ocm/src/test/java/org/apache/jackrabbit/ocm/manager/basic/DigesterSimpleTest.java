@@ -201,8 +201,9 @@ public class DigesterSimpleTest extends DigesterTestBase
     {
     	ObjectContentManager ocm = getObjectContentManager();
     	assertTrue("Class A is not persistent ", ocm.isPersistent(A.class));
-    	assertFalse("Class String is  persistent - hum ? ", ocm.isPersistent(String.class));
+    	assertFalse("Class SomeRandomUnMappedDigesterType is  persistent - hum ? ", ocm.isPersistent(SomeRandomUnMappedDigesterType.class));
     }
-
-
+}
+class SomeRandomUnMappedDigesterType{
+	
 }

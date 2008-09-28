@@ -202,8 +202,12 @@ public class AnnotationSimpleTest extends AnnotationTestBase
     {
     	ObjectContentManager ocm = getObjectContentManager();
     	assertTrue("Class A is not persistent ", ocm.isPersistent(A.class));
-    	assertFalse("Class String is  persistent - hum ? ", ocm.isPersistent(String.class));
+    	assertFalse("Class SomeRandomUnMappedType is  persistent - hum ? ", ocm.isPersistent(SomeRandomUnMappedType.class));
+    	
     }
 
 
+}
+class SomeRandomUnMappedType{
+	
 }

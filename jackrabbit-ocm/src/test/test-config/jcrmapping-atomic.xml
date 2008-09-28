@@ -53,6 +53,22 @@
 		                       
 
 	</class-descriptor> 
+
+    <class-descriptor
+		className="org.apache.jackrabbit.ocm.testmodel.MultiValueWithObjectCollection" jcrType="nt:unstructured" discriminator="true" >
+		<field-descriptor fieldName="path" path="true" />
+		<field-descriptor fieldName="name" jcrName="name" />
+		<collection-descriptor fieldName="multiValues" jcrName="multiValue" proxy="false" 
+		                       elementClassName="java.lang.Object" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+
+		<collection-descriptor fieldName="nullMultiValues" jcrName="nullMultiValue" proxy="false" 
+		                       elementClassName="java.lang.Object" 
+		                       collectionConverter="org.apache.jackrabbit.ocm.manager.collectionconverter.impl.MultiValueCollectionConverterImpl" />
+		                       
+
+	</class-descriptor> 
+
 	
 </jackrabbit-ocm>
  
