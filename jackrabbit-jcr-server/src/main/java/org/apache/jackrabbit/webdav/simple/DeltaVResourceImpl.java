@@ -32,6 +32,7 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavCompliance;
+import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
@@ -77,7 +78,8 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
                 DavCompliance._2_,
                 DavCompliance.VERSION_CONTROL,
                 DavCompliance.VERSION_HISTORY,
-                DavCompliance.LABEL
+                DavCompliance.LABEL,
+                BindConstants.COMPLIANCE_CLASS,
         });
     }
 

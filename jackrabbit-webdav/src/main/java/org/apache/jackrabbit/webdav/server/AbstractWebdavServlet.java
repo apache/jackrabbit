@@ -32,6 +32,10 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
+import org.apache.jackrabbit.webdav.bind.RebindInfo;
+import org.apache.jackrabbit.webdav.bind.UnbindInfo;
+import org.apache.jackrabbit.webdav.bind.BindableResource;
+import org.apache.jackrabbit.webdav.bind.BindInfo;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -311,6 +315,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             case DavMethods.DAV_ACL:
                 doAcl(request, response, resource);
                 break;
+            case DavMethods.DAV_REBIND:
+                doRebind(request, response, resource);
+                break;
+            case DavMethods.DAV_UNBIND:
+                doUnbind(request, response, resource);
+                break;
+            case DavMethods.DAV_BIND:
+                doBind(request, response, resource);
+                break;
             default:
                 // any other method
                 return false;
@@ -575,7 +588,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         DavResource destResource = getResourceFactory().createResource(request.getDestinationLocator(), request, response);
-        int status = validateDestination(destResource, request);
+        int status = validateDestination(destResource, request, true);
         if (status > DavServletResponse.SC_NO_CONTENT) {
             response.sendError(status);
             return;
@@ -598,7 +611,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                           DavResource resource) throws IOException, DavException {
 
         DavResource destResource = getResourceFactory().createResource(request.getDestinationLocator(), request, response);
-        int status = validateDestination(destResource, request);
+        int status = validateDestination(destResource, request, true);
         if (status > DavServletResponse.SC_NO_CONTENT) {
             response.sendError(status);
             return;
@@ -606,6 +619,85 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
         resource.move(destResource);
         response.setStatus(status);
+    }
+
+    /**
+     * The BIND method
+     *
+     * @param request
+     * @param response
+     * @param resource the collection resource to which a new member will be added
+     * @throws IOException
+     * @throws DavException
+     */
+    protected void doBind(WebdavRequest request, WebdavResponse response,
+                          DavResource resource) throws IOException, DavException {
+
+        if (!resource.exists()) {
+            response.sendError(DavServletResponse.SC_NOT_FOUND);
+        }
+        BindInfo bindInfo = request.getBindInfo();
+        DavResource oldBinding = getResourceFactory().createResource(request.getHrefLocator(bindInfo.getHref()), request, response);
+        if (!(oldBinding instanceof BindableResource)) {
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+        DavResource newBinding = getResourceFactory().createResource(request.getMemberLocator(bindInfo.getSegment()), request, response);
+        int status = validateDestination(newBinding, request, false);
+        if (status > DavServletResponse.SC_NO_CONTENT) {
+            response.sendError(status);
+            return;
+        }
+        ((BindableResource) oldBinding).bind(resource, newBinding);
+        response.setStatus(status);
+    }
+
+    /**
+     * The REBIND method
+     *
+     * @param request
+     * @param response
+     * @param resource the collection resource to which a new member will be added
+     * @throws IOException
+     * @throws DavException
+     */
+    protected void doRebind(WebdavRequest request, WebdavResponse response,
+                            DavResource resource) throws IOException, DavException {
+
+        if (!resource.exists()) {
+            response.sendError(DavServletResponse.SC_NOT_FOUND);
+        }
+        RebindInfo rebindInfo = request.getRebindInfo();
+        DavResource oldBinding = getResourceFactory().createResource(request.getHrefLocator(rebindInfo.getHref()), request, response);
+        if (!(oldBinding instanceof BindableResource)) {
+            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            return;
+        }
+        DavResource newBinding = getResourceFactory().createResource(request.getMemberLocator(rebindInfo.getSegment()), request, response);
+        int status = validateDestination(newBinding, request, false);
+        if (status > DavServletResponse.SC_NO_CONTENT) {
+            response.sendError(status);
+            return;
+        }
+        ((BindableResource) oldBinding).rebind(resource, newBinding);
+        response.setStatus(status);
+    }
+
+    /**
+     * The UNBIND method
+     *
+     * @param request
+     * @param response
+     * @param resource the collection resource from which a member will be removed
+     * @throws IOException
+     * @throws DavException
+     */
+    protected void doUnbind(WebdavRequest request, WebdavResponse response,
+                            DavResource resource) throws IOException, DavException {
+
+        UnbindInfo unbindInfo = request.getUnbindInfo();
+        DavResource srcResource = getResourceFactory().createResource(request.getMemberLocator(unbindInfo.getSegment()), request, response);
+        resource.removeMember(srcResource);
     }
 
     /**
@@ -617,12 +709,14 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @param request
      * @return status code indicating whether the destination is valid.
      */
-    private int validateDestination(DavResource destResource, WebdavRequest request)
+    private int validateDestination(DavResource destResource, WebdavRequest request, boolean checkHeader)
             throws DavException {
 
-        String destHeader = request.getHeader(HEADER_DESTINATION);
-        if (destHeader == null || "".equals(destHeader)) {
-            return DavServletResponse.SC_BAD_REQUEST;
+        if (checkHeader) {
+            String destHeader = request.getHeader(HEADER_DESTINATION);
+            if (destHeader == null || "".equals(destHeader)) {
+                return DavServletResponse.SC_BAD_REQUEST;
+            }
         }
         if (destResource.getLocator().equals(request.getRequestLocator())) {
             return DavServletResponse.SC_FORBIDDEN;

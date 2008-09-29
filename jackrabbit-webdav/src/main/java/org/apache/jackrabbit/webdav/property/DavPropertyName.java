@@ -49,9 +49,6 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
     public static final DavPropertyName SOURCE = DavPropertyName.create(PROPERTY_SOURCE);
     public static final DavPropertyName SUPPORTEDLOCK = DavPropertyName.create(PROPERTY_SUPPORTEDLOCK);
 
-    /* webdav properties defined by the BIND specification */
-    public static final DavPropertyName RESOURCEID = DavPropertyName.create(PROPERTY_RESOURCEID);
-
     /* property use by microsoft that are not specified in the RFC 2518 */
     public static final DavPropertyName ISCOLLECTION = DavPropertyName.create("iscollection");
 
