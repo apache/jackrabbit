@@ -20,6 +20,7 @@ import org.apache.jackrabbit.webdav.observation.ObservationDavServletRequest;
 import org.apache.jackrabbit.webdav.ordering.OrderingDavServletRequest;
 import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
 import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
+import org.apache.jackrabbit.webdav.bind.BindServletRequest;
 
 /**
  * The empty <code>WebdavRequest</code> interface collects the functionality
@@ -30,5 +31,6 @@ import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
  */
 public interface WebdavRequest extends DavServletRequest,
         ObservationDavServletRequest, OrderingDavServletRequest,
-        TransactionDavServletRequest, DeltaVServletRequest {
+        TransactionDavServletRequest, DeltaVServletRequest,
+        BindServletRequest {
 }

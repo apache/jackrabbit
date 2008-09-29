@@ -39,6 +39,10 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.bind.BindConstants;
+import org.apache.jackrabbit.webdav.bind.BindableResource;
+import org.apache.jackrabbit.webdav.bind.ParentSet;
+import org.apache.jackrabbit.webdav.bind.ParentElement;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
@@ -69,6 +73,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -78,16 +83,21 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * DavResourceImpl implements a DavResource.
  */
-public class DavResourceImpl implements DavResource, JcrConstants {
+public class DavResourceImpl implements DavResource, BindableResource, JcrConstants {
 
     /**
      * the default logger
      */
     private static final Logger log = LoggerFactory.getLogger(DavResourceImpl.class);
+
+    public static final String METHODS = DavResource.METHODS + ", " + BindConstants.METHODS;
+    public static final String COMPLIANCE_CLASS = DavResource.COMPLIANCE_CLASS + ", " + BindConstants.COMPLIANCE_CLASS;
 
     private DavResourceFactory factory;
     private LockManager lockManager;
@@ -196,7 +206,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      */
     private void initRfc4122Uri() {
         try {
-            if (node.isNodeType("mix:referenceable")) {
+            if (node.isNodeType(MIX_REFERENCEABLE)) {
                 String uuid = node.getUUID();
                 try {
                     UUID.fromString(uuid);
@@ -215,7 +225,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        return DavResource.COMPLIANCE_CLASS;
+        return COMPLIANCE_CLASS;
     }
 
     /**
@@ -223,7 +233,7 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
     public String getSupportedMethods() {
-        return DavResource.METHODS;
+        return METHODS;
     }
 
     /**
@@ -369,7 +379,12 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         }
 
         if (rfc4122Uri != null) {
-            properties.add(new HrefProperty(DavPropertyName.RESOURCEID, rfc4122Uri, true));
+            properties.add(new HrefProperty(BindConstants.RESOURCEID, rfc4122Uri, true));
+        }
+
+        Set parentElements = this.getParentElements();
+        if (!parentElements.isEmpty()) {
+            properties.add(new ParentSet(parentElements));
         }
 
         /* set current lock information. If no lock is set to this resource,
@@ -612,7 +627,13 @@ public class DavResourceImpl implements DavResource, JcrConstants {
         try {
             String itemPath = member.getLocator().getRepositoryPath();
             Item memItem = getJcrSession().getItem(itemPath);
-            memItem.remove();
+            //TODO once jcr2 is out: simply call removeShare()
+            if (memItem instanceof org.apache.jackrabbit.api.jsr283.Node) {
+                org.apache.jackrabbit.api.jsr283.Node n = (org.apache.jackrabbit.api.jsr283.Node) memItem;
+                n.removeShare();
+            } else {
+                memItem.remove();
+            }
             getJcrSession().save();
 
             // make sure, non-jcr locks are removed, once the removal is completed
@@ -834,6 +855,98 @@ public class DavResourceImpl implements DavResource, JcrConstants {
      */
     public DavSession getSession() {
         return session;
+    }
+
+
+    /**
+     * @see BindableResource#rebind(DavResource, DavResource)
+     */
+    public void bind(DavResource collection, DavResource newBinding) throws DavException {
+        if (!exists()) {
+            //DAV:bind-source-exists
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+        }
+        if (isLocked(collection)) {
+            //DAV:locked-update-allowed?
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
+        if (isFilteredResource(newBinding)) {
+            throw new DavException(DavServletResponse.SC_FORBIDDEN);
+        }
+        checkSameWorkspace(collection.getLocator());
+        try {
+            if (!this.node.isNodeType(MIX_SHAREABLE)) {
+                if (!this.node.canAddMixin(MIX_SHAREABLE)) {
+                    //DAV:binding-allowed
+                    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+                }
+                this.node.addMixin(MIX_SHAREABLE);
+                this.node.save();
+            }
+            Workspace workspace = this.session.getRepositorySession().getWorkspace();
+            workspace.clone(workspace.getName(), this.node.getPath(), newBinding.getLocator().getRepositoryPath(), false);
+
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+
+    }
+
+    /**
+     * @see BindableResource#rebind(DavResource, DavResource)
+     */
+    public void rebind(DavResource collection, DavResource newBinding) throws DavException {
+        if (!exists()) {
+            //DAV:rebind-source-exists
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+        }
+        if (isLocked(this)) {
+            //DAV:protected-source-url-deletion.allowed
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+        }
+        if (isLocked(collection)) {
+            //DAV:locked-update-allowed?
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
+        if (isFilteredResource(newBinding)) {
+            throw new DavException(DavServletResponse.SC_FORBIDDEN);
+        }
+        checkSameWorkspace(collection.getLocator());
+        try {
+            if (!this.node.isNodeType(MIX_REFERENCEABLE)) {
+                throw new DavException(this.node.canAddMixin(MIX_REFERENCEABLE)?
+                                       DavServletResponse.SC_CONFLICT : DavServletResponse.SC_METHOD_NOT_ALLOWED);
+            }
+            getJcrSession().getWorkspace().move(locator.getRepositoryPath(), newBinding.getLocator().getRepositoryPath());
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.bind.BindableResource#getParentElements()
+     */
+    public Set getParentElements() {
+        try {
+            //TODO remove this check once jcr2 is out
+            if (!(this.node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
+                DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
+                        this.locator.getPrefix(), this.locator.getWorkspacePath(), this.node.getParent().getPath(), false);
+                return Collections.singleton(new ParentElement(loc.getHref(true), this.node.getName()));
+            }
+            Set ps = new HashSet();
+            NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) this.node).getSharedSet();
+            while (sharedSetIterator.hasNext()) {
+                Node sharednode = sharedSetIterator.nextNode();
+                DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
+                        this.locator.getPrefix(), this.locator.getWorkspacePath(), sharednode.getParent().getPath(), false);
+                ps.add(new ParentElement(loc.getHref(true), sharednode.getName()));
+            }
+            return ps;
+        } catch (RepositoryException e) {
+            log.warn("unable to calculate parent set", e);
+            return Collections.EMPTY_SET; 
+        }
     }
 
     /**

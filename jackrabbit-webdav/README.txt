@@ -11,6 +11,7 @@ building a WebDAV server or client. The following RFC have been integrated:
     * RFC 3648 (Ordered Collections Protocol)
     * RFC 3744 (Access Control Protocol)
     * DAV Searching and Locating  (DASL)
+    * Binding Extensions to Web Distributed Authoring and Versioning (WebDAV) (experimental)
 
 In addition this library defines (unspecified)
 
@@ -82,9 +83,9 @@ Common Questions
 ================
 
 Q: Which WebDAV features are supported?
-A: DAV1,2, DeltaV, Ordering, Access Control, Search
+A: DAV 1, 2, DeltaV, Ordering, Access Control, Search, Bind
 
-Q: This this WebDAV libarary provide a full dav server?
+Q: This this WebDAV library provide a full dav server?
 A: This library only defines interfaces, utilities and common
    classes used for a dav server/client.
    A JCR specific implementation can be found in the 'jcr-server'

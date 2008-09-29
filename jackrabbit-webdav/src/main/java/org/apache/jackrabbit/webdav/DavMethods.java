@@ -262,6 +262,27 @@ public class DavMethods {
     public static final String METHOD_ACL = "ACL";
 
     /**
+     * The webdav REBIND method and public constant defined by
+     * the BIND specification
+     */
+    public static final int DAV_REBIND = DAV_ACL + 1;
+    public static final String METHOD_REBIND = "REBIND";
+
+    /**
+     * The webdav UNBIND method and public constant defined by
+     * the BIND specification
+     */
+    public static final int DAV_UNBIND = DAV_REBIND + 1;
+    public static final String METHOD_UNBIND = "UNBIND";
+
+    /**
+     * The webdav BIND method and public constant defined by
+     * the BIND specification
+     */
+    public static final int DAV_BIND = DAV_UNBIND + 1;
+    public static final String METHOD_BIND = "BIND";
+
+    /**
      * Returns webdav method type code, error result <= 0
      * Valid type codes > 0
      */
@@ -314,6 +335,9 @@ public class DavMethods {
         addMethodCode(METHOD_BASELINE_CONTROL, DAV_BASELINE_CONTROL);
         addMethodCode(METHOD_MKACTIVITY, DAV_MKACTIVITY);
         addMethodCode(METHOD_ACL, DAV_ACL);
+        addMethodCode(METHOD_REBIND, DAV_REBIND);
+        addMethodCode(METHOD_UNBIND, DAV_UNBIND);
+        addMethodCode(METHOD_BIND, DAV_BIND);
 
         labelMethods = new int[] { DAV_GET, DAV_HEAD, DAV_OPTIONS, DAV_PROPFIND,
                                    DAV_LABEL, DAV_COPY };

@@ -45,6 +45,9 @@ import org.apache.jackrabbit.webdav.version.UpdateInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.bind.RebindInfo;
+import org.apache.jackrabbit.webdav.bind.UnbindInfo;
+import org.apache.jackrabbit.webdav.bind.BindInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -186,6 +189,59 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             }
         }
         return factory.createResourceLocator(hrefPrefix, destination);
+    }
+
+    /**
+     * Parse a href and return the path of the resource.
+     *
+     * @return path of the resource identified by the href.
+     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getHrefLocator
+     */
+    public DavResourceLocator getHrefLocator(String href) throws DavException {
+        String ref = href;
+        if (ref != null) {
+            //href should be a Simple-ref production as defined in RFC4918, so it is either an absolute URI
+            //or an absoltute path
+            try {
+                URI uri = new URI(ref);
+                String auth = uri.getAuthority();
+                ref = uri.getRawPath();
+                if (auth == null) {
+                    //verify that href is an absolute path
+                    if (ref.startsWith("//") || !ref.startsWith("/")) {
+                        log.warn("expected absolute path but found " + ref);
+                        throw new DavException(DavServletResponse.SC_BAD_REQUEST);
+                    }
+                } else if (!auth.equals(httpRequest.getHeader("Host"))) {
+                    //this looks like an unsupported cross-server operation, but of course a reverse-proxy
+                    //might have rewritten the Host header. Since we can't find out, we have to reject anyway.
+                    //Better use absolute paths in DAV:href elements!
+                    throw new DavException(DavServletResponse.SC_FORBIDDEN);
+                }
+            } catch (URISyntaxException e) {
+                log.warn("malformed uri: " + href, e);
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST);
+            }
+            // cut off the context path
+            String contextPath = httpRequest.getContextPath();
+            if (ref.startsWith(contextPath)) {
+                ref = ref.substring(contextPath.length());
+            } else {
+                //absolute path has to start with contextpath
+                throw new DavException(DavServletResponse.SC_FORBIDDEN);
+            }
+        }
+        return factory.createResourceLocator(hrefPrefix, ref);
+    }
+
+    /**
+     * Returns the path of the member resource of the request resource which is identified by the segment parameter.
+     *
+     * @return path of internal member resource.
+     */
+    public DavResourceLocator getMemberLocator(String segment) {
+        String path = (this.getRequestLocator().getHref(true) + segment).substring(hrefPrefix.length());
+        return factory.createResourceLocator(hrefPrefix, path);
     }
 
     /**
@@ -722,6 +778,42 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         Document requestDocument = getRequestDocument();
         if (requestDocument != null) {
             info = OptionsInfo.createFromXml(requestDocument.getDocumentElement());
+        }
+        return info;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getRebindInfo()
+     */
+    public RebindInfo getRebindInfo() throws DavException {
+        RebindInfo info = null;
+        Document requestDocument = getRequestDocument();
+        if (requestDocument != null) {
+            info = RebindInfo.createFromXml(requestDocument.getDocumentElement());
+        }
+        return info;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getUnbindInfo()
+     */
+    public UnbindInfo getUnbindInfo() throws DavException {
+        UnbindInfo info = null;
+        Document requestDocument = getRequestDocument();
+        if (requestDocument != null) {
+            info = UnbindInfo.createFromXml(requestDocument.getDocumentElement());
+        }
+        return info;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getBindInfo()
+     */
+    public BindInfo getBindInfo() throws DavException {
+        BindInfo info = null;
+        Document requestDocument = getRequestDocument();
+        if (requestDocument != null) {
+            info = BindInfo.createFromXml(requestDocument.getDocumentElement());
         }
         return info;
     }

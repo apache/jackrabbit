@@ -28,7 +28,7 @@ String href =
 
 <p>
   The default WebDAV server (aka: Simple Server) is a
-  <a href="http://www.ietf.org/rfc/rfc2518.txt">DAV1,2</a> and
+  <a href="http://www.ietf.org/rfc/rfc2518.txt">DAV 1,2</a> and
   <a href="http://www.ietf.org/rfc/rfc3253.txt">DeltaV</a>
   compliant WebDAV  server implementation. It offers a file-based view to
   the JCR repository, suitable  for everybody looking for standard WebDAV
@@ -71,6 +71,7 @@ String href =
 <ul>
 <li><a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a> (WebDAV 1,2)</li>
 <li><a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a> (DeltaV)</li>
+<li>Experimental: <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-latest.html">draft-ietf-webdav-bind</a> (WebDAV BIND)</li>
 </ul> 
 
 <h3>Configuration</h3>
