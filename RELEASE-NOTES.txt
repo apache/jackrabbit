@@ -7,8 +7,8 @@ This is the 1.4.6 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
-This release fixes a number of minor issues. See below for the full
-list of changes in this release.
+This release fixes a number of issues. See below for the full list of
+changes in this release.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -28,7 +28,7 @@ is distributed both as a source archive and a pre-compiled binary.
         with Maven 2 and Java 1.4 or higher:
 
           $ jar xf jackrabbit-core-1.4.6-src.jar
-          $ cd jackrabbit-1.4.6
+          $ cd jackrabbit-core-1.4.6
           $ mvn install
 
     * Pre-compiled binary (jackrabbit-core-1.4.6.jar)
@@ -62,7 +62,10 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1708] Impossible to import a string containing _x0020_ with ...
   [JCR-1728] Observation logs error when a node is moved in place
   [JCR-1730] Background text extraction not possible when ...
-
+  [JCR-1731] Session.checkPermission("/", "add_node") throws ...
+  [JCR-1755] ClassCastException when registering custom node type by XML file
+  [JCR-1766] Bundle binding deserialization problem
+  
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
   [JCR-320]  BinaryValue equals fails for two objects with ...
@@ -115,6 +118,7 @@ issue tracker at http://issues.apache.org/jira/browse/JCR
   [JCR-1634] In XA transaction session.addLockToken() does not have effect
   [JCR-1637] The GarbageCollector ignores InterruptedException and so ...
   [JCR-1648] Database reconnect during shutdown
+  [JCR-1650] XPathQueryBuilder may not handle multiple jcr:deref correctly
   [JCR-1660] Consistency check / fix skips system nodes
   [JCR-1666] After transaction rollback session may become 'corrupt'
   [JCR-1668] After RepositoryImpl instance has been created and shut ...
