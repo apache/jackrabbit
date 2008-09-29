@@ -241,6 +241,10 @@ public interface JcrConstants {
      */
     public static final String MIX_VERSIONABLE = "mix:versionable";
     /**
+     * mix:shareable
+     */
+    public static final String MIX_SHAREABLE = "mix:shareable";
+    /**
      * nt:base
      */
     public static final String NT_BASE = "nt:base";
