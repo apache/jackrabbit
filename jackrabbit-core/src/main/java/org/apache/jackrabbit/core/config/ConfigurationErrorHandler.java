@@ -36,11 +36,10 @@ public class ConfigurationErrorHandler implements ErrorHandler {
      * The relevant information is written to the log file.
      */
     public void error(SAXParseException exception) throws SAXException {
-        logError("Error", exception);
-        throw exception;
+        log("Warning", exception);
     }
 
-    private void logError(String type, SAXParseException exception) {
+    private void log(String type, SAXParseException exception) {
         log.warn(type + " parsing the configuration at line " + exception.getLineNumber() + " using system id " + exception.getSystemId() + ": " + exception.toString());
     }
 
@@ -49,7 +48,7 @@ public class ConfigurationErrorHandler implements ErrorHandler {
      * The relevant information is written to the log file.
      */
     public void fatalError(SAXParseException exception) throws SAXException {
-        logError("Fatal error", exception);
+        log("Fatal error", exception);
         throw exception;
     }
 
@@ -58,7 +57,7 @@ public class ConfigurationErrorHandler implements ErrorHandler {
      * The relevant information is written to the log file.
      */
     public void warning(SAXParseException exception) throws SAXException {
-        logError("Warning", exception);
+        log("Warning", exception);
     }
 
 }
