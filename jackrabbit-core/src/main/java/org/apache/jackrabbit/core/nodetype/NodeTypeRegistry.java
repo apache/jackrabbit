@@ -470,14 +470,25 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     }
 
     /**
-     * @param ntNames
-     * @return
-     * @throws NodeTypeConflictException
-     * @throws NoSuchNodeTypeException
+     * Returns the effective node type of a node with the given primary
+     * and mixin types.
+     *
+     * @param primary primary type of the node
+     * @param mixins mixin types of the node (set of {@link Name names});
+     * @return effective node type
+     * @throws NodeTypeConflictException if the given types are conflicting
+     * @throws NoSuchNodeTypeException if one of the given types is not found
      */
-    public EffectiveNodeType getEffectiveNodeType(Name[] ntNames)
+    public EffectiveNodeType getEffectiveNodeType(Name primary, Set mixins)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
-        return getEffectiveNodeType(ntNames, entCache, registeredNTDefs);
+        if (mixins.isEmpty()) {
+            return getEffectiveNodeType(primary);
+        } else {
+            Name[] names = new Name[mixins.size() + 1];
+            mixins.toArray(names);
+            names[names.length - 1] = primary;
+            return getEffectiveNodeType(names, entCache, registeredNTDefs);
+        }
     }
 
     /**

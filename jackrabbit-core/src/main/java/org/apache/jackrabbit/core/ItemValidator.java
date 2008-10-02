@@ -185,23 +185,18 @@ public class ItemValidator {
      * node type representation of the specified node's primary and mixin
      * node types.
      *
-     * @param nodeState
+     * @param state
      * @return the effective node type
      * @throws RepositoryException
      */
-    public EffectiveNodeType getEffectiveNodeType(NodeState nodeState)
+    public EffectiveNodeType getEffectiveNodeType(NodeState state)
             throws RepositoryException {
-        // mixin types
-        Set set = nodeState.getMixinTypeNames();
-        Name[] types = new Name[set.size() + 1];
-        set.toArray(types);
-        // primary type
-        types[types.length - 1] = nodeState.getNodeTypeName();
         try {
-            return ntReg.getEffectiveNodeType(types);
+            return ntReg.getEffectiveNodeType(
+                    state.getNodeTypeName(), state.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
-                    + safeGetJCRPath(nodeState.getNodeId());
+                    + safeGetJCRPath(state.getNodeId());
             log.debug(msg);
             throw new RepositoryException(msg, ntce);
         }
