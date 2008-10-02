@@ -284,14 +284,9 @@ public class NodeStateEx {
      * @throws RepositoryException
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
-
-        // build effective node type of mixins & primary type
-        // existing mixin's
-        HashSet set = new HashSet((nodeState).getMixinTypeNames());
-        // primary type
-        set.add(nodeState.getNodeTypeName());
         try {
-            return ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            return ntReg.getEffectiveNodeType(
+                    nodeState.getNodeTypeName(), nodeState.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + nodeState.getNodeId();
             throw new RepositoryException(msg, ntce);

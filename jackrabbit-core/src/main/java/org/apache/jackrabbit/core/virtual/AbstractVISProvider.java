@@ -406,14 +406,10 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * @throws RepositoryException
      */
     protected EffectiveNodeType getEffectiveNodeType(NodeState parent) throws RepositoryException {
-        // build effective node type of mixins & primary type
-        NodeTypeRegistry ntReg = getNodeTypeRegistry();
-        // existing mixin's
-        HashSet set = new HashSet(parent.getMixinTypeNames());
-        // primary type
-        set.add(parent.getNodeTypeName());
         try {
-            return ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            NodeTypeRegistry ntReg = getNodeTypeRegistry();
+            return ntReg.getEffectiveNodeType(
+                    parent.getNodeTypeName(), parent.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node " + parent.getNodeId();
             throw new RepositoryException(msg, ntce);

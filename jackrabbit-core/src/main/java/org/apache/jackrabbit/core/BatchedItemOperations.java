@@ -2039,14 +2039,10 @@ public class BatchedItemOperations extends ItemValidator {
         if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
             return true;
         }
-        // build effective node type
-        Name[] types = new Name[mixins.size() + 1];
-        mixins.toArray(types);
-        // primary type
-        types[types.length - 1] = primary;
 
         try {
-            return ntReg.getEffectiveNodeType(types).includesNodeType(NameConstants.MIX_REFERENCEABLE);
+            EffectiveNodeType type = ntReg.getEffectiveNodeType(primary, mixins);
+            return type.includesNodeType(NameConstants.MIX_REFERENCEABLE);
         } catch (NodeTypeConflictException ntce) {
             String msg = "internal error: failed to build effective node type for node "
                     + state.getNodeId();

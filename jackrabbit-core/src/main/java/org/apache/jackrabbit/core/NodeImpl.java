@@ -842,28 +842,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      * @throws RepositoryException if an error occurs
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
-        return getEffectiveNodeType(data.getNodeState().getMixinTypeNames());
-    }
-
-    /**
-     * Small optimization to void double call for mixin types.
-     *
-     * @param mixins the set of mixins
-     * @return the effective node type
-     * @throws RepositoryException if an error occurs
-     */
-    private EffectiveNodeType getEffectiveNodeType(Set mixins)
-            throws RepositoryException {
-
-        // build effective node type of mixins & primary type
-        NodeTypeRegistry ntReg = session.getNodeTypeManager().getNodeTypeRegistry();
-
-        Name[] types = new Name[mixins.size() + 1];
-        mixins.toArray(types);
-        // primary type
-        types[types.length - 1] = data.getNodeState().getNodeTypeName();
         try {
-            return ntReg.getEffectiveNodeType(types);
+            NodeTypeRegistry registry =
+                session.getNodeTypeManager().getNodeTypeRegistry();
+            return registry.getEffectiveNodeType(
+                    data.getNodeState().getNodeTypeName(),
+                    data.getNodeState().getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             String msg = "Failed to build effective node type for " + this;
             log.debug(msg);
@@ -1048,22 +1032,21 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            HashSet set = new HashSet(data.getNodeState().getMixinTypeNames());
-            // primary type
-            set.add(primaryTypeName);
+            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
+
             // build effective node type representing primary type including existing mixin's
-            entExisting = ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
             if (entExisting.includesNodeType(mixinName)) {
                 // new mixin is already included in existing mixin type(s)
                 return;
             }
 
             // add new mixin
-            set.add(mixinName);
+            mixins.add(mixinName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
-        } catch (NodeTypeConflictException ntce) {
-            throw new ConstraintViolationException(ntce.getMessage());
+            ntReg.getEffectiveNodeType(primaryTypeName, mixins);
+        } catch (NodeTypeConflictException e) {
+            throw new ConstraintViolationException(e.getMessage(), e);
         }
 
         // do the actual modifications implied by the new mixin;
@@ -1160,14 +1143,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         remainingMixins.remove(mixinName);
         EffectiveNodeType entRemaining;
         try {
-            // remaining mixin's
-            HashSet set = new HashSet(remainingMixins);
-            // primary type
-            set.add(state.getNodeTypeName());
             // build effective node type representing primary type including remaining mixin's
-            entRemaining = ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
-        } catch (NodeTypeConflictException ntce) {
-            throw new ConstraintViolationException(ntce.getMessage());
+            entRemaining = ntReg.getEffectiveNodeType(
+                    state.getNodeTypeName(), remainingMixins);
+        } catch (NodeTypeConflictException e) {
+            throw new ConstraintViolationException(e.getMessage(), e);
         }
 
         /**
@@ -1251,7 +1231,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         sanityCheck();
 
         // first do trivial checks without using type hierarchy
-        if (ntName.equals(data.getNodeState().getNodeTypeName())) {
+        Name primary = data.getNodeState().getNodeTypeName();
+        if (ntName.equals(primary)) {
             return true;
         }
         Set mixins = data.getNodeState().getMixinTypeNames();
@@ -1260,7 +1241,17 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
 
         // check effective node type
-        return getEffectiveNodeType(mixins).includesNodeType(ntName);
+        try {
+            NodeTypeRegistry registry =
+                session.getNodeTypeManager().getNodeTypeRegistry();
+            EffectiveNodeType type =
+                registry.getEffectiveNodeType(primary, mixins);
+            return type.includesNodeType(ntName);
+        } catch (NodeTypeConflictException e) {
+            String msg = "Failed to build effective node type for " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
@@ -2858,18 +2849,18 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            HashSet set = new HashSet(data.getNodeState().getMixinTypeNames());
-            // primary type
-            set.add(primaryTypeName);
+            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
+
             // build effective node type representing primary type including existing mixin's
-            entExisting = ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
             if (entExisting.includesNodeType(ntName)) {
                 return false;
             }
+
             // add new mixin
-            set.add(ntName);
+            mixins.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            ntReg.getEffectiveNodeType(primaryTypeName, mixins);
         } catch (NodeTypeConflictException ntce) {
             return false;
         }
@@ -4781,12 +4772,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             entNew = ntReg.getEffectiveNodeType(ntName);
             entOld = ntReg.getEffectiveNodeType(state.getNodeTypeName());
 
-            // existing mixin's
-            HashSet set = new HashSet(state.getMixinTypeNames());
-            // new primary type
-            set.add(ntName);
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.getEffectiveNodeType((Name[]) set.toArray(new Name[set.size()]));
+            ntReg.getEffectiveNodeType(ntName, state.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
