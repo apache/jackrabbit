@@ -163,32 +163,12 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * resource.
      *
      * @return path of the destination resource.
+     * @throws DavException 
      * @see #HEADER_DESTINATION
      * @see DavServletRequest#getDestinationLocator
      */
-    public DavResourceLocator getDestinationLocator() {
-        String destination = httpRequest.getHeader(HEADER_DESTINATION);
-        if (destination != null) {
-            try {
-                URI uri = new URI(destination);
-                if (uri.getAuthority().equals(httpRequest.getHeader("Host"))) {
-                    destination = uri.getRawPath();
-                }
-            } catch (URISyntaxException e) {
-                log.debug("Destination is path is not a valid URI (" + e.getMessage() + ".");
-                int pos = destination.lastIndexOf(":");
-                if (pos > 0) {
-                    destination = destination.substring(destination.indexOf("/", pos));
-                    log.debug("Tried to retrieve resource destination path from invalid URI: " + destination);
-                }
-            }
-            // cut off the context path
-            String contextPath = httpRequest.getContextPath();
-            if (destination.startsWith(contextPath)) {
-                destination = destination.substring(contextPath.length());
-            }
-        }
-        return factory.createResourceLocator(hrefPrefix, destination);
+    public DavResourceLocator getDestinationLocator() throws DavException {
+        return getHrefLocator(httpRequest.getHeader(HEADER_DESTINATION));
     }
 
     /**
@@ -201,7 +181,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         String ref = href;
         if (ref != null) {
             //href should be a Simple-ref production as defined in RFC4918, so it is either an absolute URI
-            //or an absoltute path
+            //or an absolute path
             try {
                 URI uri = new URI(ref);
                 String auth = uri.getAuthority();
