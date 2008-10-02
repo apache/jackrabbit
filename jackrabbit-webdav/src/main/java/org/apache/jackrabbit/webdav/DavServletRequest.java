@@ -60,7 +60,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @return locator of the resource specified with the Destination header.
      * @see DavConstants#HEADER_DESTINATION
      */
-    public DavResourceLocator getDestinationLocator();
+    public DavResourceLocator getDestinationLocator() throws DavException;
 
     /**
      * Returns true if the {@link DavConstants#HEADER_OVERWRITE Overwrite header}
