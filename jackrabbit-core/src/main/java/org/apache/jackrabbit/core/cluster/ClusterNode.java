@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.JournalConfig;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.journal.AbstractJournal;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.Record;
@@ -46,10 +47,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -71,13 +69,10 @@ public class ClusterNode implements Runnable,
      */
     public static final String SYSTEM_PROPERTY_NODE_ID = "org.apache.jackrabbit.core.cluster.node_id";
 
-    /** Cluster node id file. */
-    private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
-
     /**
-     * Used for padding short string representations.
+     * Cluster node id file.
      */
-    private static final String SHORT_PADDING = "0000";
+    private static final String CLUSTER_NODE_ID_FILE = "cluster_node.id";
 
     /**
      * Producer identifier.
@@ -228,6 +223,7 @@ public class ClusterNode implements Runnable,
         try {
             JournalConfig jc = cc.getJournalConfig();
             journal = (Journal) jc.newInstance();
+            setRepositoryHome(journal, clusterContext.getRepositoryHome());
             journal.init(clusterNodeId, clusterContext.getNamespaceResolver());
             instanceRevision = journal.getInstanceRevision();
             journal.register(this);
@@ -235,6 +231,20 @@ public class ClusterNode implements Runnable,
             throw new ClusterException(e.getMessage(), e.getCause());
         } catch (JournalException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
+        }
+    }
+
+    /**
+     * Set a journal's repository home, if possible, i.e. if it is an
+     * <code>AbstractJournal</code>
+     *
+     * @param journal journal instance
+     * @param repHome repository home
+     */
+    private void setRepositoryHome(Journal journal, File repHome) {
+        if (journal instanceof AbstractJournal) {
+            AbstractJournal aj = (AbstractJournal) journal;
+            aj.setRepositoryHome(repHome);
         }
     }
 
