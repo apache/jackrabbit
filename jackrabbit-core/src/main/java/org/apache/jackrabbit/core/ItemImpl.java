@@ -19,8 +19,10 @@ package org.apache.jackrabbit.core;
 import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -265,7 +267,6 @@ public abstract class ItemImpl implements Item {
         }
         // fail-fast test: check status of this item's state
         if (isTransient()) {
-            String msg;
             final ItemState state = getItemState();
             switch (state.getStatus()) {
                 case ItemState.STATUS_EXISTING_MODIFIED:
@@ -367,8 +368,6 @@ public abstract class ItemImpl implements Item {
 
         AccessManager accessMgr = session.getAccessManager();
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
-                session.getHierarchyManager(), session);
         // walk through list of dirty transient items and validate each
         while (dirtyIter.hasNext()) {
             ItemState itemState = (ItemState) dirtyIter.next();
@@ -415,7 +414,7 @@ public abstract class ItemImpl implements Item {
                 // primary type
                 NodeTypeImpl pnt = ntMgr.getNodeType(nodeState.getNodeTypeName());
                 // effective node type (primary type incl. mixins)
-                EffectiveNodeType ent = validator.getEffectiveNodeType(nodeState);
+                EffectiveNodeType ent = getEffectiveNodeType(nodeState);
                 /**
                  * if the transient node was added (i.e. if it is 'new') or if
                  * its primary type has changed, check its node type against the
@@ -670,9 +669,6 @@ public abstract class ItemImpl implements Item {
      * </ul>
      */
     private void processShareableNodes(Iterator iter) throws RepositoryException {
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
-                session.getHierarchyManager(), session);
         while (iter.hasNext()) {
             ItemState is = (ItemState) iter.next();
             if (is.isNode()) {
@@ -680,10 +676,10 @@ public abstract class ItemImpl implements Item {
                 boolean wasShareable = false;
                 if (ns.hasOverlayedState()) {
                     NodeState old = (NodeState) ns.getOverlayedState();
-                    EffectiveNodeType ntOld = validator.getEffectiveNodeType(old);
+                    EffectiveNodeType ntOld = getEffectiveNodeType(old);
                     wasShareable = ntOld.includesNodeType(NameConstants.MIX_SHAREABLE);
                 }
-                EffectiveNodeType ntNew = validator.getEffectiveNodeType(ns);
+                EffectiveNodeType ntNew = getEffectiveNodeType(ns);
                 boolean isShareable = ntNew.includesNodeType(NameConstants.MIX_SHAREABLE);
 
                 if (!wasShareable && isShareable) {
@@ -713,14 +709,11 @@ public abstract class ItemImpl implements Item {
     private boolean initVersionHistories(Iterator iter) throws RepositoryException {
         // walk through list of transient items and search for new versionable nodes
         boolean createdTransientState = false;
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        ItemValidator validator = new ItemValidator(ntMgr.getNodeTypeRegistry(),
-                session.getHierarchyManager(), session);
         while (iter.hasNext()) {
             ItemState itemState = (ItemState) iter.next();
             if (itemState.isNode()) {
                 NodeState nodeState = (NodeState) itemState;
-                EffectiveNodeType nt = validator.getEffectiveNodeType(nodeState);
+                EffectiveNodeType nt = getEffectiveNodeType(nodeState);
                 if (nt.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     if (!nodeState.hasPropertyName(NameConstants.JCR_VERSIONHISTORY)) {
                         NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
@@ -748,6 +741,29 @@ public abstract class ItemImpl implements Item {
             }
         }
         return createdTransientState;
+    }
+
+    /**
+     * Helper method that builds the effective (i.e. merged and resolved)
+     * node type representation of the specified node's primary and mixin
+     * node types.
+     *
+     * @param state
+     * @return the effective node type
+     * @throws RepositoryException
+     */
+    private EffectiveNodeType getEffectiveNodeType(NodeState state)
+            throws RepositoryException {
+        try {
+            NodeTypeRegistry registry =
+                session.getNodeTypeManager().getNodeTypeRegistry();
+            return registry.getEffectiveNodeType(
+                    state.getNodeTypeName(), state.getMixinTypeNames());
+        } catch (NodeTypeConflictException e) {
+            throw new RepositoryException(
+                    "Failed to build effective node type of node state "
+                    + state.getId(), e);
+        }
     }
 
     /**

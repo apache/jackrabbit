@@ -35,7 +35,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Set;
 
 /**
  * Utility class for validating an item against constraints
