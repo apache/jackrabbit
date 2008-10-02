@@ -33,10 +33,34 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * A file record log is a file containing {@link Record}s. Physically,
- * the first 4 bytes contain a signature, followed by a major and minor version
- * (2 bytes each). The next 8 bytes contain the revision this log starts with.
- * After this, zero or more <code>ReadRecord</code>s follow.
+ * A file record log is a file containing {@link Record}s. Every file record
+ * log contains a header with the following physical layout:
+ *
+ * <blockquote>
+ *   <table border="2" cellpadding="4">
+ *     <tr align="center" valign="bottom" bgcolor="silver">
+ *       <td><tt>Byte 1</tt></td>
+ *       <td><tt>Byte 2</tt></td>
+ *       <td><tt>Byte 3</tt></td>
+ *       <td><tt>Byte 4</tt></td>
+ *     </tr>
+ *     <tr>
+ *       <td align="center"><tt>'J'</tt></td>
+ *       <td align="center"><tt>'L'</tt></td>
+ *       <td align="center"><tt>'O'</tt></td>
+ *       <td align="center"><tt>'G'</tt></td>
+ *     </tr>
+ *     <tr>
+ *       <td align="center" colspan="2"><tt>MAJOR</tt></td>
+ *       <td align="center" colspan="2"><tt>MINOR</tt></td>
+ *     </tr>
+ *     <tr>
+ *       <td align="center" colspan="4"><tt>START REVISION</tt></td>
+ *     </tr>
+ *  </table>
+ * </blockquote>
+ *
+ * After this header, zero or more <code>ReadRecord</code>s follow.
  */
 public class FileRecordLog {
 
