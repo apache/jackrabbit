@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -72,12 +73,17 @@ public abstract class AbstractJournal implements Journal {
 
     /**
      * The path of the local revision file on disk. Configurable through the repository.xml.
-     * 
+     *
      *  Note: this field is not located in the FileJournal class for upgrade reasons (before
      *  JCR-1087 had been fixed all Journals used a revision file on the local file system.
      *  Also see {@link DatabaseJournal#initInstanceRevisionAndJanitor()}).
      */
     private String revision;
+
+    /**
+     * Repository home.
+     */
+    private File repHome;
 
     /**
      * {@inheritDoc}
@@ -345,11 +351,31 @@ public abstract class AbstractJournal implements Journal {
     public NamePathResolver getNamePathResolver() {
         return npResolver;
     }
- 
+
+    /**
+     * Set the repository home.
+     *
+     * @param repHome repository home
+     * @since JR 1.5
+     */
+    public void setRepositoryHome(File repHome) {
+        this.repHome = repHome;
+    }
+
+    /**
+     * Return the repository home.
+     *
+     * @return the repository home
+     * @since JR 1.5
+     */
+    public File getRepositoryHome() {
+        return repHome;
+    }
+
     /*
      * Bean getters and setters.
-     */ 
-     
+     */
+
      /**
       * @return the path of the cluster node's local revision file
       */

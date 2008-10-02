@@ -42,6 +42,11 @@ import java.io.InputStream;
 public class FileJournal extends AbstractJournal {
 
     /**
+     * Default instance revision file name.
+     */
+    public static final String DEFAULT_INSTANCE_FILE_NAME = "revision.log";
+
+    /**
      * Global revision counter name, located in the journal directory.
      */
     private static final String REVISION_NAME = "revision";
@@ -103,8 +108,14 @@ public class FileJournal extends AbstractJournal {
         super.init(id, resolver);
 
         if (getRevision() == null) {
-            String msg = "Revision not specified.";
-            throw new JournalException(msg);
+            File repHome = getRepositoryHome();
+            if (repHome == null) {
+                String msg = "Revision not specified.";
+                throw new JournalException(msg);
+            }
+            String revision = new File(repHome, DEFAULT_INSTANCE_FILE_NAME).getPath();
+            log.info("Revision not specified, using: " + revision);
+            setRevision(revision);
         }
         if (directory == null) {
             String msg = "Directory not specified.";
@@ -156,7 +167,7 @@ public class FileJournal extends AbstractJournal {
                 files[i] = logFiles[i].getFile();
             }
         }
-        return new FileRecordIterator(files, startRevision, stopRevision, 
+        return new FileRecordIterator(files, startRevision, stopRevision,
                 getResolver(), getNamePathResolver());
     }
 
