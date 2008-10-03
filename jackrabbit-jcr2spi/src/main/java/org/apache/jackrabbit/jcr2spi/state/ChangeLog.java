@@ -149,24 +149,21 @@ public class ChangeLog {
     }
     //----------------------< Retrieve information present in the ChangeLog >---
     /**
-     *
-     * @return
+     * @return the target state
      */
     public ItemState getTarget() {
         return target;
     }
 
     /**
-     *
-     * @return
+     * @return <code>true</code> if this changelog is empty.
      */
     public boolean isEmpty() {
         return operations.isEmpty();
     }
 
     /**
-     *
-     * @return
+     * @return an iterator over all operations.
      */
     public Iterator getOperations() {
         return operations.iterator();
