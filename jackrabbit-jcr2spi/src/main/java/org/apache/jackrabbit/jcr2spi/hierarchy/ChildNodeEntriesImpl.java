@@ -46,17 +46,21 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     private static Logger log = LoggerFactory.getLogger(ChildNodeEntriesImpl.class);
 
+    private static final int STATUS_OK = 0;
+    private static final int STATUS_INVALIDATED = 1;
+
     private int status = STATUS_OK;
+    private boolean complete = false;
 
     /**
      * Linked list of {@link NodeEntry} instances.
      */
-    private final LinkedEntries entries;
+    private final LinkedEntries entries = new LinkedEntries();
 
     /**
      * Map used for lookup by name.
      */
-    private final NameMap entriesByName;
+    private final NameMap entriesByName = new NameMap();
 
     private final NodeEntry parent;
     private final EntryFactory factory;
@@ -67,9 +71,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * NEW nor in a terminal status.
      */
     ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory) throws ItemNotFoundException, RepositoryException {
-        entriesByName = new NameMap();
-        entries = new LinkedEntries();
-
         this.parent = parent;
         this.factory = factory;
 
@@ -85,30 +86,40 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         } /* else: cannot retrieve child-entries from persistent layer. the parent
            * is NEW (transient only) or already removed from the persistent layer.
            */
+
+        /* all child infos have been read from the persistent layer therefore
+           mark this child-node-entries as 'complete' */
+        complete = true;
     }
 
-    /**
-     * Create a new <code>ChildNodeEntries</code> collection from the given
-     * <code>childNodeInfos</code> instead of retrieving them from the
-     * persistent layer.
-     *
-     * @param parent
-     * @param factory
-     * @param childNodeInfos
-     */
-    ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory, Iterator childNodeInfos) {
-        entriesByName = new NameMap();
-        entries = new LinkedEntries();
+     /**
+      * Create a new <code>ChildNodeEntries</code> collection from the given
+      * <code>childNodeInfos</code> instead of retrieving them from the
+      * persistent layer.
+      *
+      * @param parent
+      * @param factory
+      * @param childNodeInfos The complete list of child infos or
+      * <code>null</code> if an 'empty' ChildNodeEntriesImpl should be created.
+      * In the latter case, individual child entries will be added on demand
+      * and the complete list will be retrieved only to answer {@link #iterator()}
+      * if the passed boolean is <code>true</code>.
+      */
+     ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory, Iterator childNodeInfos) {
+         this.parent = parent;
+         this.factory = factory;
 
-        this.parent = parent;
-        this.factory = factory;
-
-        while (childNodeInfos.hasNext()) {
-            ChildInfo ci = (ChildInfo) childNodeInfos.next();
-            NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
-            add(entry, ci.getIndex());
-        }
-    }
+         if (childNodeInfos != null) {
+             while (childNodeInfos.hasNext()) {
+                 ChildInfo ci = (ChildInfo) childNodeInfos.next();
+                 NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
+                 add(entry, ci.getIndex());
+             }
+             complete = true;
+         } else {
+             complete = false;
+         }
+     }
 
     /**
      * @see ChildNodeEntries#getStatus()
@@ -118,24 +129,17 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * Mark <code>ChildNodeEntries</code> in order to force reloading the
-     * entries.
-     *
-     * @see ChildNodeEntries#setStatus(int)
+     * @see ChildNodeEntries#invalidate()
      */
-    public void setStatus(int status) {
-        if (status == STATUS_INVALIDATED || status == STATUS_OK) {
-            this.status = status;
-        } else {
-            throw new IllegalArgumentException();
-        }
+    public void invalidate() {
+        this.status = STATUS_INVALIDATED;
     }
 
     /**
      * @see ChildNodeEntries#reload()
      */
     public synchronized void reload() throws ItemNotFoundException, RepositoryException {
-        if (status == STATUS_OK ||
+        if (status == STATUS_OK && complete ||
             parent.getStatus() == Status.NEW || Status.isTerminal(parent.getStatus())) {
             // nothing to do
             return;
@@ -143,10 +147,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
         NodeId id = parent.getWorkspaceId();
         Iterator childNodeInfos = factory.getItemStateFactory().getChildNodeInfos(id);
-        reload(childNodeInfos);
+        update(childNodeInfos);
     }
 
-    void reload(Iterator childNodeInfos) {
+    synchronized void update(Iterator childNodeInfos) {
         // TODO: should existing (not-new) entries that are not present in the childInfos be removed?
         // create list from all ChildInfos (for multiple loop)
         List cInfos = new ArrayList();
@@ -187,7 +191,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             add((NodeEntry) newEntries.get(i));
         }
         // finally reset the status
-        setStatus(ChildNodeEntries.STATUS_OK);
+        status = STATUS_OK;
+        complete = true;
     }
 
     /**
@@ -200,7 +205,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
         return Collections.unmodifiableList(l).iterator();
     }
-
+    
     /**
      * @see ChildNodeEntries#get(Name)
      */
@@ -262,14 +267,14 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @param cne the <code>NodeEntry</code> to add.
      * @see ChildNodeEntries#add(NodeEntry)
      */
-     public void add(NodeEntry cne) {
+     public synchronized void add(NodeEntry cne) {
         internalAdd(cne, Path.INDEX_UNDEFINED);
     }
 
     /**
      * @see ChildNodeEntries#add(NodeEntry, int)
      */
-    public void add(NodeEntry cne, int index) {
+    public synchronized void add(NodeEntry cne, int index) {
         if (index < Path.INDEX_UNDEFINED) {
             throw new IllegalArgumentException("Invalid index" + index);
         }
@@ -280,7 +285,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      *
      * @param entry
      * @param index
-     * @return
+     * @return the <code>LinkNode</code> belonging to the added entry.
      */
     private LinkedEntries.LinkNode internalAdd(NodeEntry entry, int index) {
         Name nodeName = entry.getName();
@@ -317,7 +322,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     /**
      * @see ChildNodeEntries#add(NodeEntry, NodeEntry)
      */
-    public void add(NodeEntry entry, NodeEntry beforeEntry) {
+    public synchronized void add(NodeEntry entry, NodeEntry beforeEntry) {
         if (beforeEntry != null) {
             // the link node where the new entry is ordered before
             LinkedEntries.LinkNode beforeLN = entries.getLinkNode(beforeEntry);
@@ -364,7 +369,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * in this <code>ChildNodeEntries</code>.
      * @see ChildNodeEntries#reorder(NodeEntry, NodeEntry)
      */
-    public NodeEntry reorder(NodeEntry insertEntry, NodeEntry beforeEntry) {
+    public synchronized NodeEntry reorder(NodeEntry insertEntry, NodeEntry beforeEntry) {
         // the link node to move
         LinkedEntries.LinkNode insertLN = entries.getLinkNode(insertEntry);
         if (insertLN == null) {
@@ -624,7 +629,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * Return true if more than one NodeEnty with the given name exists.
          *
          * @param qName
-         * @return
+         * @return true if more than one NodeEnty with the given name exists.
          */
         public boolean containsSiblings(Name qName) {
             return snsMap.containsKey(qName);
@@ -662,7 +667,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * exists for the given qualified name an empty list is returned.
          *
          * @param qName
-         * @return
+         * @return list of entries or an empty list.
          */
         public List getList(Name qName) {
             Object obj = get(qName);
@@ -762,7 +767,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          *
          * @param siblings
          * @param index
-         * @return
+         * @return matching entry or <code>null</code>.
          */
         private static NodeEntry findMatchingEntry(List siblings, int index) {
             // shortcut if index can never match

@@ -100,7 +100,12 @@ public class TransientItemStateManager implements ItemStateCreationListener {
                                  QNodeDefinition definition, NodeState parent)
             throws RepositoryException {
         NodeState nodeState = ((NodeEntry) parent.getHierarchyEntry()).addNewNodeEntry(nodeName, uniqueID, nodeTypeName, definition);
-        parent.markModified();
+        try {
+            parent.markModified();
+        } catch (RepositoryException e) {
+            nodeState.getHierarchyEntry().remove();
+            throw e;
+        }
 
         return nodeState;
     }
@@ -121,12 +126,17 @@ public class TransientItemStateManager implements ItemStateCreationListener {
     PropertyState createNewPropertyState(Name propName, NodeState parent,
                                          QPropertyDefinition definition,
                                          QValue[] values, int propertyType)
-        throws ItemExistsException, ConstraintViolationException, RepositoryException {
+            throws ItemExistsException, ConstraintViolationException, RepositoryException {
         // NOTE: callers must make sure, the property type is not 'undefined'
-        PropertyState propState = ((NodeEntry) parent.getHierarchyEntry()).addNewPropertyEntry(propName, definition);
-        propState.setValues(values, propertyType);
-        parent.markModified();
-
+        NodeEntry nodeEntry = (NodeEntry) parent.getHierarchyEntry();
+        PropertyState propState = nodeEntry.addNewPropertyEntry(propName, definition);
+        try {
+            propState.setValues(values, propertyType);
+            parent.markModified();
+        } catch (RepositoryException e) {
+            propState.getHierarchyEntry().remove();
+            throw e;
+        }
         return propState;
     }
 

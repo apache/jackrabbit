@@ -185,14 +185,16 @@ public interface NodeEntry extends HierarchyEntry {
     public void setNodeEntries(Iterator childInfos) throws RepositoryException;
 
     /**
-     * Adds a new child NodeEntry to this entry.
+     * Adds a child NodeEntry to this entry if it not yet present with this
+     * node entry.
      *
      * @param nodeName
+     * @param index
      * @param uniqueID
-     * @return the new <code>NodeEntry</code>
+     * @return the <code>NodeEntry</code>.
      * @throws RepositoryException If an unexpected error occurs.
      */
-    public NodeEntry addNodeEntry(Name nodeName, String uniqueID, int index) throws RepositoryException;
+    public NodeEntry getOrAddNodeEntry(Name nodeName, int index, String uniqueID) throws RepositoryException;
 
     /**
      * Adds a new, transient child <code>NodeEntry</code>
@@ -245,12 +247,14 @@ public interface NodeEntry extends HierarchyEntry {
      * Returns an unmodifiable Iterator over those children that represent valid
      * PropertyEntries.
      *
-     * @return
+     * @return an unmodifiable Iterator over those children that represent valid
+     * PropertyEntries.
      */
     public Iterator getPropertyEntries();
 
     /**
-     * Add an existing <code>PropertyEntry</code> with the given name.
+     * Add an existing <code>PropertyEntry</code> with the given name if it is
+     * not yet contained in this <code>NodeEntry</code>.
      * Please note the difference to {@link #addNewPropertyEntry(Name, QPropertyDefinition)}
      * which adds a new, transient entry.
      *
@@ -259,7 +263,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws ItemExistsException if a child item exists with the given name
      * @throws RepositoryException if an unexpected error occurs.
      */
-    public PropertyEntry addPropertyEntry(Name propName) throws ItemExistsException, RepositoryException;
+    public PropertyEntry getOrAddPropertyEntry(Name propName) throws ItemExistsException, RepositoryException;
 
     /**
      * Adds property entries for the given <code>Name</code>s. It depends on

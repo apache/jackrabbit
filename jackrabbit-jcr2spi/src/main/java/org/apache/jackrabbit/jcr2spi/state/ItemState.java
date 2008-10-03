@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Collections;
@@ -369,7 +370,7 @@ public abstract class ItemState {
     /**
      * Marks this item state as modified.
      */
-    void markModified() {
+    void markModified() throws InvalidItemStateException {
         switch (status) {
             case Status.EXISTING:
                 setStatus(Status.EXISTING_MODIFIED);
@@ -384,12 +385,12 @@ public abstract class ItemState {
             case Status.STALE_MODIFIED:
                 // should actually not get here because item should check before
                 // it modifies an item state.
-                throw new IllegalStateException("Cannot mark stale state modified.");
+                throw new InvalidItemStateException("Cannot mark stale state modified.");
 
             case Status.EXISTING_REMOVED:
             default:
-                String msg = "Cannot mark item state with status " + status + " modified.";
-                throw new IllegalStateException(msg);
+                String msg = "Cannot mark item state with status '" + Status.getName(status) + "' modified.";
+                throw new InvalidItemStateException(msg);
         }
     }
 }
