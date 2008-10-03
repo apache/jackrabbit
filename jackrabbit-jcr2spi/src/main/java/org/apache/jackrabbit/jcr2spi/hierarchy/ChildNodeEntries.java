@@ -32,23 +32,11 @@ import java.util.Iterator;
  */
 public interface ChildNodeEntries {
 
-    static final int STATUS_OK = 0;
-    static final int STATUS_INVALIDATED = 1;
-
-    /**
-     * Returns the status of this ChildNodeEntries object.
-     *
-     * @return {@link #STATUS_OK} or {@link #STATUS_INVALIDATED}
-     */
-    int getStatus();
-
     /**
      * Mark <code>ChildNodeEntries</code> in order to force reloading the
      * entries.
-     *
-     * @param status
      */
-    void setStatus(int status);
+    void invalidate();
 
     /**
      * Reloads this <code>ChildNodeEntries</code> object.
@@ -105,7 +93,7 @@ public interface ChildNodeEntries {
      * for validity of the entries is made.
      *
      * @param childInfo
-     * @return
+     * @return matching entry or <code>null</code>.
      */
     NodeEntry get(ChildInfo childInfo);
 

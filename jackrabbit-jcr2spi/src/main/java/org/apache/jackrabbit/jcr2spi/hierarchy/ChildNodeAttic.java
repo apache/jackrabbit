@@ -38,6 +38,10 @@ class ChildNodeAttic {
     ChildNodeAttic() {
     }
 
+    boolean isEmpty() {
+        return attic.isEmpty();
+    }
+
     boolean contains(Name name, int index) {
         for (Iterator it = attic.iterator(); it.hasNext();) {
             NodeEntryImpl ne = (NodeEntryImpl) it.next();
@@ -45,6 +49,19 @@ class ChildNodeAttic {
                 return true;
             }
         }
+        return false;
+    }
+
+    boolean contains(Name name, int index, String uniqueId) {
+        for (Iterator it = attic.iterator(); it.hasNext();) {
+            NodeEntryImpl ne = (NodeEntryImpl) it.next();
+            if (uniqueId != null && uniqueId.equals(ne.getUniqueID())) {
+                return true;
+            } else if (ne.matches(name, index)) {
+                return true;
+            }
+        }
+        // not found
         return false;
     }
 

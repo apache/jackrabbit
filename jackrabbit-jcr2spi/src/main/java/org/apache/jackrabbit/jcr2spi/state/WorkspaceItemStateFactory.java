@@ -18,8 +18,11 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -142,7 +145,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            return createDeepPropertyState(info, anyParent);
+            return createDeepPropertyState(info, anyParent, null);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
         }
@@ -189,16 +192,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param nodeId
      * @param itemInfos
      * @param entry
+     * @param isDeep
      * @return
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    private synchronized NodeState createItemStates(NodeId nodeId,
-                                                    Iterator itemInfos,
-                                                    NodeEntry entry,
-                                                    boolean isDeep)
+    private synchronized NodeState createItemStates(NodeId nodeId, Iterator itemInfos,
+                                                    NodeEntry entry, boolean isDeep)
             throws ItemNotFoundException, RepositoryException {
         NodeState nodeState;
+        ItemInfos infos = new ItemInfos(itemInfos);
         // first entry in the iterator is the originally requested Node.
         if (itemInfos.hasNext()) {
             NodeInfo first = (NodeInfo) itemInfos.next();
@@ -206,7 +209,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 // for a deep state, the hierarchy entry does not correspond to
                 // the given NodeEntry -> retrieve NodeState before executing
                 // validation check.
-                nodeState = createDeepNodeState(first, entry);
+                nodeState = createDeepNodeState(first, entry, infos);
                 assertMatchingPath(first, nodeState.getNodeEntry());
             } else {
                 // 'isDeep' == false -> the given NodeEntry must match to the
@@ -225,9 +228,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             while (itemInfos.hasNext()) {
                 ItemInfo info = (ItemInfo) itemInfos.next();
                 if (info.denotesNode()) {
-                    createDeepNodeState((NodeInfo) info, parentEntry);
+                    createDeepNodeState((NodeInfo) info, parentEntry, infos);
                 } else {
-                    createDeepPropertyState((PropertyInfo) info, parentEntry);
+                    createDeepPropertyState((PropertyInfo) info, parentEntry, infos);
                 }
             }
         }
@@ -245,7 +248,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     private NodeState createNodeState(NodeInfo info, NodeEntry entry) throws ItemNotFoundException, RepositoryException {
         // make sure the entry has the correct ItemId
-        // this make not be the case, if the hierachy has not been completely
+        // this make not be the case, if the hierarchy has not been completely
         // resolved yet -> if uniqueID is present, set it on this entry or on
         // the appropriate parent entry
         String uniqueID = info.getId().getUniqueID();
@@ -318,7 +321,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @return
      * @throws RepositoryException
      */
-    private NodeState createDeepNodeState(NodeInfo info, NodeEntry anyParent) throws RepositoryException {
+    private NodeState createDeepNodeState(NodeInfo info, NodeEntry anyParent, ItemInfos infos) throws RepositoryException {
         try {
             // node for nodeId exists -> build missing entries in hierarchy
             // Note, that the path contained in NodeId does not reveal which
@@ -331,7 +334,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             for (int i = 0; i < missingElems.length; i++) {
                 Name name = missingElems[i].getName();
                 int index = missingElems[i].getNormalizedIndex();
-                entry = createIntermediateNodeEntry(entry, name, index);
+                entry = createIntermediateNodeEntry(entry, name, index, infos);
             }
             if (entry == anyParent) {
                 throw new RepositoryException("Internal error while getting deep itemState");
@@ -349,29 +352,28 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @return
      * @throws RepositoryException
      */
-    private PropertyState createDeepPropertyState(PropertyInfo info, NodeEntry anyParent) throws RepositoryException {
+    private PropertyState createDeepPropertyState(PropertyInfo info, NodeEntry anyParent, ItemInfos infos) throws RepositoryException {
         try {
             // prop for propertyId exists -> build missing entries in hierarchy
             // Note, that the path contained in PropertyId does not reveal which
             // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getPath();
+            Path anyParentPath = anyParent.getWorkspacePath();
             Path relPath = anyParentPath.computeRelativePath(info.getPath());
             Path.Element[] missingElems = relPath.getElements();
             NodeEntry entry = anyParent;
+
             int i = 0;
             // NodeEntries except for the very last 'missingElem'
             while (i < missingElems.length - 1) {
                 Name name = missingElems[i].getName();
                 int index = missingElems[i].getNormalizedIndex();
-                entry = createIntermediateNodeEntry(entry, name, index);
+                entry = createIntermediateNodeEntry(entry, name, index, infos);
                 i++;
             }
             // create PropertyEntry for the last element if not existing yet
             Name propName = missingElems[i].getName();
-            PropertyEntry propEntry = entry.getPropertyEntry(propName);
-            if (propEntry == null) {
-                propEntry = entry.addPropertyEntry(propName);
-            }
+            PropertyEntry propEntry = entry.getOrAddPropertyEntry(propName);
+
             return createPropertyState(info, propEntry);
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
@@ -386,13 +388,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @return
      * @throws RepositoryException
      */
-    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry, Name name, int index) throws RepositoryException {
-        NodeEntry entry;
-        if (parentEntry.hasNodeEntry(name, index)) {
-            entry = parentEntry.getNodeEntry(name, index);
-        } else {
-            entry = parentEntry.addNodeEntry(name, null, index);
+    private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry,
+                                                         Name name, int index,
+                                                         ItemInfos infos) throws RepositoryException {
+        if (infos != null && !parentEntry.hasNodeEntry(name, index)) {
+            Iterator childInfos = infos.getChildInfos(parentEntry.getWorkspaceId());
+            if (childInfos != null) {
+                parentEntry.setNodeEntries(childInfos);
+            }
         }
+        NodeEntry entry = parentEntry.getOrAddNodeEntry(name, index, null);
         return entry;
     }
 
@@ -416,10 +421,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     *
      * @param entry
      * @param degree
-     * @return
+     * @return the ancestor entry at the specified degree.
      */
     private static NodeEntry getAncestor(HierarchyEntry entry, int degree) {
         NodeEntry parent = entry.getParent();
@@ -434,4 +438,81 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         return parent;
     }
 
+    //--------------------------------------------------------------------------
+    /**
+     * Iterator
+     */
+    private class ItemInfos implements Iterator {
+
+        private final List prefetchQueue = new ArrayList();
+        private final Map nodeInfos = new HashMap();
+        private final Iterator infos;
+
+        private ItemInfos(Iterator infos) {
+            super();
+            this.infos = infos;
+        }
+
+        // ------------------------------------------------------< Iterator >---
+        /**
+         * @see Iterator#hasNext()
+         */
+        public boolean hasNext() {
+            if (!prefetchQueue.isEmpty()) {
+                return true;
+            } else {
+                return prefetch();
+            }
+        }
+
+        /**
+         * @see Iterator#next()
+         */
+        public Object next() {
+            if (prefetchQueue.isEmpty()) {
+                throw new NoSuchElementException();
+            } else {
+                return prefetchQueue.remove(0);
+            }
+        }
+
+        /**
+         * @see Iterator#remove()
+         */
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        // -------------------------------------------------------< private >---
+        /**
+         * @param parentId
+         * @return The children <code>NodeInfo</code>s for the parent identified
+         * by the given <code>parentId</code> or <code>null</code> if the parent
+         * has not been read yet or does not provide child infos.
+         */
+        private Iterator getChildInfos(NodeId parentId) {
+            NodeInfo nodeInfo = (NodeInfo) nodeInfos.get(parentId);
+            while (nodeInfo == null && prefetch()) {
+                nodeInfo = (NodeInfo) nodeInfos.get(parentId);
+            }
+            return nodeInfo == null? null : nodeInfo.getChildInfos();
+        }
+
+        /**
+         * @return <code>true</code> if the next info could be retrieved.
+         */
+        private boolean prefetch() {
+            if (infos.hasNext()) {
+                ItemInfo info = (ItemInfo) infos.next();
+                prefetchQueue.add(info);
+                if (info.denotesNode()) {
+                    NodeInfo nodeInfo = (NodeInfo) info;
+                    nodeInfos.put(nodeInfo.getId(), nodeInfo);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 }
