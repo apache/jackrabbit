@@ -553,12 +553,12 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         ChangeLog changeLog = new ChangeLog(itemState);
         // fail-fast test: check status of this item's state
         if (itemState.getStatus() == Status.NEW) {
-            String msg = "Cannot save an item with status NEW (" +itemState+ ").";
+            String msg = "Cannot save/revert an item with status NEW (" +itemState+ ").";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
         if (throwOnStale && Status.isStale(itemState.getStatus())) {
-            String msg =  "Attempt to save an item, that has been externally modified (" +itemState+ ").";
+            String msg =  "Attempt to save/revert an item, that has been externally modified (" +itemState+ ").";
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
@@ -592,19 +592,18 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
     private void addPropertyState(NodeState parent, Name propertyName,
                                   int propertyType, QValue[] values,
                                   QPropertyDefinition pDef, int options)
-        throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+            throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
 
         validator.checkAddProperty(parent, propertyName, pDef, options);
-
         // create property state
         transientStateMgr.createNewPropertyState(propertyName, parent, pDef, values, propertyType);
     }
 
     private void addNodeState(NodeState parent, Name nodeName, Name nodeTypeName,
                               String uuid, QNodeDefinition definition, int options)
-        throws RepositoryException, ConstraintViolationException, AccessDeniedException,
-        UnsupportedRepositoryOperationException, NoSuchNodeTypeException,
-        ItemExistsException, VersionException {
+            throws RepositoryException, ConstraintViolationException, AccessDeniedException,
+            UnsupportedRepositoryOperationException, NoSuchNodeTypeException,
+            ItemExistsException, VersionException {
 
         // check if add node is possible. note, that the options differ if
         // the 'addNode' is called from inside a regular add-node to create
