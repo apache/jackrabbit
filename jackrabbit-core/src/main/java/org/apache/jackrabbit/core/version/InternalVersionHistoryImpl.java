@@ -518,11 +518,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      */
     static InternalVersionHistoryImpl create(AbstractVersionManager vMgr,
                                              NodeStateEx parent,
-                                             NodeId historyId, Name name,
+                                             Name name,
                                              NodeState nodeState)
             throws RepositoryException {
 
         // create history node
+        NodeId historyId = new NodeId(UUID.randomUUID());
         NodeStateEx pNode = parent.addNode(name, NameConstants.NT_VERSIONHISTORY, historyId, true);
 
         // set the versionable uuid
