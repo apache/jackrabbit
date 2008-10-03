@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
@@ -333,7 +332,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
             // create new history node in the persistent state
             InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(
-                    this, root, new NodeId(UUID.randomUUID()), historyNodeName, node);
+                    this, root, historyNodeName, node);
 
             // end update
             operation.save();
