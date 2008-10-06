@@ -24,6 +24,5 @@ public class BenchmarkSuite extends TestSuite {
     public BenchmarkSuite() {
         super("JCR Benchmarks");
         addTestSuite(BigCollectionTest.class);
-        addTestSuite(ConcurrentUpdateTest.class);
     }
 }
