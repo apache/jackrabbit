@@ -33,7 +33,8 @@ import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
 
 /**
- * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-20.html">draft-ietf-webdav-bind-20</a>
+ * Test cases for RFC 4918 Destination header functionality
+ * (see <a href="http://www.webdav.org/specs/rfc4918.html#rfc.section.10.3">RFC 4918, Section 10.3</a>
  * <p>
  * Required system properties:
  * <ul>
