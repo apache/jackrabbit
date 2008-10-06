@@ -115,7 +115,16 @@ public interface ObjectConverter
 	 */
     public void update(Session session, Node parentNode, String nodeName, Object object) throws ObjectContentManagerException;
 
-
+	/**
+	 * Update the object
+	 *
+	 * @param session the JCR session
+	 * @param uuId The UUID of the node to get updated.
+	 * @param object the object to update
+	 * @throws ObjectContentManagerException when it is not possible to update the object
+	 */
+    public void update(Session session, String uuId, Object object);
+    
     /**
      * Get the object JCR path
      *

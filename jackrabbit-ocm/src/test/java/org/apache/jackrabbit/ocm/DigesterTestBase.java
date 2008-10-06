@@ -57,7 +57,8 @@ public abstract class DigesterTestBase extends AbstractTestBase
                            "./src/test/test-config/jcrmapping-beandescriptor.xml",
                            "./src/test/test-config/jcrmapping-inheritance.xml",
                            "./src/test/test-config/jcrmapping-jcrnodetypes.xml",
-                           "./src/test/test-config/jcrmapping-uuid.xml"};
+                           "./src/test/test-config/jcrmapping-uuid.xml",
+                           "./src/test/test-config/jcrmapping-complex-collections.xml"};
 		session = RepositoryUtil.login(repository, "superuser", "superuser");
 		ocm = new ObjectContentManagerImpl(session, files);
 		

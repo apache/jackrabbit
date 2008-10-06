@@ -206,7 +206,7 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         Node collectionNode = parentNode.getNode(jcrName);
         //  If the collection elements have not an id, it is not possible to find the matching JCR nodes 
         //  => delete the complete collection
-        if (!elementClassDescriptor.hasIdField()) {
+        if (!elementClassDescriptor.hasIdField() && !elementClassDescriptor.hasUUIdField()) {
             collectionNode.remove();
             collectionNode = parentNode.addNode(jcrName);
         }
@@ -214,12 +214,31 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
         Iterator collectionIterator = objects.getIterator();
 
         Map updatedItems = new HashMap();
+        List<String> validUuidsForTheNode = new ArrayList<String>();
         while (collectionIterator.hasNext()) {
             Object item = collectionIterator.next();
-
             String elementJcrName = null;
-
-            if (elementClassDescriptor.hasIdField()) {
+            
+            if (elementClassDescriptor.hasUUIdField()){
+            	elementJcrName = collectionDescriptor.getJcrElementName();
+            	elementJcrName = (elementJcrName == null)? COLLECTION_ELEMENT_NAME : elementJcrName;
+                String uuidFieldName = elementClassDescriptor.getUuidFieldDescriptor().getFieldName();
+                Object objUuid = ReflectionUtils.getNestedProperty(item, uuidFieldName);
+            	String currentItemUuid = (objUuid == null) ? null : objUuid.toString();
+            	if (currentItemUuid != null){
+            		//The Node already exists so we need to update the existing node 
+            		//rather than to replace it.
+            		Node nodeToUpdate = collectionNode.getSession().getNodeByUUID(currentItemUuid);
+            		objectConverter.update(session, currentItemUuid, item);
+            		validUuidsForTheNode.add(currentItemUuid);
+            	}
+            	else{
+            		objectConverter.insert(session, collectionNode, elementJcrName, item);
+            		validUuidsForTheNode.add(ReflectionUtils.getNestedProperty(item, uuidFieldName).toString());
+            	}
+            	
+            }
+            else if (elementClassDescriptor.hasIdField()) {
 
                 String idFieldName = elementClassDescriptor.getIdFieldDescriptor().getFieldName();
                 elementJcrName = ReflectionUtils.getNestedProperty(item, idFieldName).toString();
@@ -244,6 +263,22 @@ public class DefaultCollectionConverterImpl extends AbstractCollectionConverterI
             }
         }
 
+        // Delete JCR nodes that are not present in the collection
+        if (elementClassDescriptor.hasUUIdField()) {
+            NodeIterator nodeIterator = collectionNode.getNodes();
+            List<Node> removeNodes = new ArrayList<Node>();
+            while (nodeIterator.hasNext()) {
+            	Node currentNode = nodeIterator.nextNode();
+            	if (!validUuidsForTheNode.contains(currentNode.getUUID())) {
+                    removeNodes.add(currentNode);
+                }
+            }
+            for (Node aNode : removeNodes){
+            	aNode.remove();
+            }
+            return;
+        }
+        
         // Delete JCR nodes that are not present in the collection
         if (elementClassDescriptor.hasIdField()) {
             NodeIterator nodeIterator = collectionNode.getNodes();

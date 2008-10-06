@@ -41,6 +41,7 @@ public class AllTests {
         suite.addTestSuite(AnnotationHashMapTest.class);
         suite.addTestSuite(AnnotationMultiValueCollectionConverterImplTest.class);
         suite.addTestSuite(AnnotationNTCollectionConverterImplTest.class);
+        suite.addTestSuite(AnnotationPersonListTest.class);
         suite.addTestSuite(AnnotationResidualNodesCollectionConverterImplTest.class);
         suite.addTestSuite(AnnotationResidualPropertiesCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterArrayListTest.class);
@@ -48,6 +49,7 @@ public class AllTests {
         suite.addTestSuite(DigesterHashMapTest.class);
         suite.addTestSuite(DigesterMultiValueCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterNTCollectionConverterImplTest.class);
+        suite.addTestSuite(DigesterPersonListTest.class);
         suite.addTestSuite(DigesterResidualNodesCollectionConverterImplTest.class);
         suite.addTestSuite(DigesterResidualPropertiesCollectionConverterImplTest.class);
 
