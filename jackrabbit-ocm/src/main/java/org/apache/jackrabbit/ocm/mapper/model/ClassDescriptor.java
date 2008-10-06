@@ -296,6 +296,16 @@ public class ClassDescriptor {
     }
 
     /**
+     * Check if this class has an UUID
+     * @return true if the class has an UUID
+     */
+    public boolean hasUUIdField(){
+        return (this.getUuidFieldDescriptor() != null
+        		&& this.getUuidFieldDescriptor().isUuid());
+    	
+    }
+
+    /**
      * Get the JCR name used for one of the object attributes
      * @param fieldName the object attribute name (can be an atomic field, bean field or a collection field)
      * @return the JCR name found

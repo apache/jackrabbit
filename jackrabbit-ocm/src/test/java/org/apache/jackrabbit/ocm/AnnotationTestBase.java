@@ -52,6 +52,7 @@ import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualNodes;
 import org.apache.jackrabbit.ocm.testmodel.Residual.ResidualProperties;
 import org.apache.jackrabbit.ocm.testmodel.collection.Element;
 import org.apache.jackrabbit.ocm.testmodel.collection.Main;
+import org.apache.jackrabbit.ocm.testmodel.collection.Person;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.Ancestor;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.AnotherDescendant;
 import org.apache.jackrabbit.ocm.testmodel.inheritance.Descendant;
@@ -170,6 +171,7 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(SimpleAnnotedAbstractClass.class);
 		classes.add(SimpleAnnotedClass.class);
 		classes.add(SimpleInterface.class);
+		classes.add(Person.class);
 		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);

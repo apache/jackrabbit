@@ -271,6 +271,32 @@ public class ObjectConverterImpl implements ObjectConverter {
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter#update(javax.jcr.Session,
 	 *      javax.jcr.Node, java.lang.String, java.lang.Object)
 	 */
+	public void update(Session session, String uuId, Object object) {
+		try {
+			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.getBeanClass(object));
+			Node objectNode = session.getNodeByUUID(uuId);
+
+			checkNodeType(session, classDescriptor);
+
+			checkCompatiblePrimaryNodeTypes(session, objectNode, classDescriptor, false);
+
+			simpleFieldsHelp.storeSimpleFields(session, object, classDescriptor, objectNode);
+			updateBeanFields(session, object, classDescriptor, objectNode);
+			updateCollectionFields(session, object, classDescriptor, objectNode);
+			simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectContentManagerException("Impossible to update the object with UUID: " + uuId , pnfe);
+		} catch (RepositoryException re) {
+			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to update the object with UUID: " + uuId, re);
+		}
+	}
+	
+	
+	/**
+	 *
+	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter#update(javax.jcr.Session,
+	 *      javax.jcr.Node, java.lang.String, java.lang.Object)
+	 */
 	public void update(Session session, Node parentNode, String nodeName, Object object) {
 		try {
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.getBeanClass(object));
