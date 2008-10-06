@@ -23,8 +23,8 @@ import java.text.DateFormat;
 
 /**
  * <code>DavConstants</code> provide constants for request and response
- * headers, Xml elements and property names defined by
- * <a href="http://www.ietf.org/rfc/rfc2518.txt">RFC 2518</a>. In addition
+ * headers, XML elements and property names defined by
+ * <a href="http://www.webdav.org/specs/rfc2518.html">RFC 2518</a>. In addition,
  * common date formats (creation date and modification time) are included.
  */
 public interface DavConstants {
@@ -121,11 +121,6 @@ public interface DavConstants {
     public static final String PROPERTY_RESOURCETYPE = "resourcetype";
     public static final String PROPERTY_SOURCE = "source";
     public static final String PROPERTY_SUPPORTEDLOCK = "supportedlock";
-
-    /*
-     * Webdav property names as defined by the BIND specification.
-     */
-    public static final String PROPERTY_RESOURCEID = "resource-id";
 
     //-------------------------------------------------< PropFind Constants >---
     public static final int PROPFIND_BY_PROPERTY = 0;
