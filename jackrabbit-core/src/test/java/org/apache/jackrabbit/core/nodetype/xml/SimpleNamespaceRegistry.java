@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.Name;
  * Simple utility implementation of the NamespaceRegistry interface.
  * Used by the node type formatter test cases.
  */
-class SimpleNamespaceRegistry implements NamespaceRegistry {
+public class SimpleNamespaceRegistry implements NamespaceRegistry {
 
     /** Map from namespace prefixes to namespace URIs. */
     private final Properties prefixToURI = new Properties();

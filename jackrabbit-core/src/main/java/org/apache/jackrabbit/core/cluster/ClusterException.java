@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * The <code>ClusterException</code> signals an error within a cluster operation.
  */
-public class ClusterException extends BaseException {
+public class ClusterException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified detail

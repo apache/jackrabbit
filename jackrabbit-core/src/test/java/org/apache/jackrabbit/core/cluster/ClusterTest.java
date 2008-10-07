@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.JournalConfig;
+import org.apache.jackrabbit.core.journal.MemoryJournal;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -30,10 +31,14 @@ import org.apache.jackrabbit.test.JUnitTest;
  */
 public class ClusterTest extends JUnitTest {
 
-    /** Repository home value. */
+    /**
+     * Repository home value.
+     */
     private static final String REPOSITORY_HOME = "target/repository_for_test";
 
-    /** Repository home. */
+    /**
+     * Repository home.
+     */
     private File repositoryHome;
 
     /**

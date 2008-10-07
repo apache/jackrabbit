@@ -21,18 +21,29 @@ import java.io.File;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.config.ClusterConfig;
+import org.apache.jackrabbit.core.nodetype.xml.SimpleNamespaceRegistry;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
 
 /**
  * Simple cluster context, providing only limited functionality.
  */
 public class SimpleClusterContext implements ClusterContext {
 
-    /** Cluster config. */
-    private ClusterConfig cc;
+    /**
+     * Cluster config.
+     */
+    private final ClusterConfig cc;
 
-    /** Repository home. */
-    private File repositoryHome;
+    /**
+     * Repository home.
+     */
+    private final File repositoryHome;
+
+    /**
+     * Namespace resolver.
+     */
+    private final NamespaceResolver nsResolver;
 
     /**
      * Create a new instance of this class.
@@ -43,7 +54,11 @@ public class SimpleClusterContext implements ClusterContext {
     public SimpleClusterContext(ClusterConfig cc, File repositoryHome) {
         this.cc = cc;
         this.repositoryHome = repositoryHome;
+
+        nsResolver = new RegistryNamespaceResolver(new SimpleNamespaceRegistry());
     }
+
+    //----------------------------------------------------------- ClusterContext
 
     /**
      * {@inheritDoc}
@@ -56,7 +71,7 @@ public class SimpleClusterContext implements ClusterContext {
      * {@inheritDoc}
      */
     public NamespaceResolver getNamespaceResolver() {
-        return null;
+        return nsResolver;
     }
 
     /**
@@ -69,10 +84,14 @@ public class SimpleClusterContext implements ClusterContext {
     /**
      * {@inheritDoc}
      */
-    public void lockEventsReady(String workspace) throws RepositoryException {}
+    public void lockEventsReady(String workspace) throws RepositoryException {
+        // nothing to be done here
+    }
 
     /**
      * {@inheritDoc}
      */
-    public void updateEventsReady(String workspace) throws RepositoryException {}
+    public void updateEventsReady(String workspace) throws RepositoryException {
+        // nothing to be done here
+    }
 }

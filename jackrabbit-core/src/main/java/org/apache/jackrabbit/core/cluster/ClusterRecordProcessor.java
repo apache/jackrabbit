@@ -16,30 +16,40 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import junit.framework.TestCase;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 /**
- * Collects all test classes setting up test data in the workspace. This test
- * data is specific to Jackrabbit and will probably not work in other
- * implementations.
+ * Cluster record processor. Pass an implementation of this interface to a
+ * <code>ClusterRecord</code> and it will call back the appropriate
+ * <code>process</code> method.
+ *
+ * @see ClusterRecord#process(ClusterRecordProcessor)
  */
-public class TestAll extends TestCase {
+public interface ClusterRecordProcessor {
 
     /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
+     * Process a change log record.
      *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
+     * @param record change log record
      */
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
+    public void process(ChangeLogRecord record);
 
-        suite.addTestSuite(ClusterRecordTest.class);
-        suite.addTestSuite(ClusterTest.class);
+    /**
+     * Process a lock record.
+     *
+     * @param record lock record
+     */
+    public void process(LockRecord record);
 
-        return suite;
-    }
+    /**
+     * Process a namespace record.
+     *
+     * @param record namespace record
+     */
+    public void process(NamespaceRecord record);
+
+    /**
+     * Process a node type record
+     *
+     * @param record node type record
+     */
+    public void process(NodeTypeRecord record);
 }

@@ -834,8 +834,8 @@ public class SharedItemStateManager
         /**
          * {@inheritDoc}
          */
-        public EventStateCollection getEvents() {
-            return events;
+        public List getEvents() {
+            return events.getEvents();
         }
     }
 

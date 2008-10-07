@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * Record used for reading.
  */
-class ReadRecord extends AbstractRecord {
+public class ReadRecord extends AbstractRecord {
 
     /**
      * This record's journal id.
