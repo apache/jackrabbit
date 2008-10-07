@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
@@ -245,17 +244,29 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the version history associated with the given node.
+     *
+     * @param session 
+     * @param node the node whose version history's id is to be returned.
+     * @return the version history associated with the given node
+     *         or <code>null</code> if that node doesn't have a version history.
+     * @throws RepositoryException if an error occurs
      */
     public VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
         acquireReadLock();
         try {
-            NodeId vhId = getVersionHistoryId(node);
-            if (vhId == null) {
+            String uuid = node.getNodeId().getUUID().toString();
+            Name name = getName(uuid);
+
+            NodeStateEx parent = getParentNode(uuid, false);
+            if (parent != null && parent.hasNode(name)) {
+                NodeId id =
+                    parent.getState().getChildNodeEntry(name, 1).getId();
+                return (VersionHistory) ((SessionImpl) session).getNodeById(id);
+            } else {
                 return null;
             }
-            return (VersionHistory) ((SessionImpl) session).getNodeById(vhId);
         } finally {
             releaseReadLock();
         }
@@ -312,27 +323,16 @@ abstract class AbstractVersionManager implements VersionManager {
         try {
             // create deep path
             String uuid = node.getNodeId().getUUID().toString();
-            NodeStateEx root = historyRoot;
-            for (int i = 0; i < 3; i++) {
-                Name name = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
-                if (!root.hasNode(name)) {
-                    root.addNode(name, NameConstants.REP_VERSIONSTORAGE, null, false);
-                    root.store();
-                }
-                root = root.getNode(name, 1);
-                if (root == null) {
-                    throw new InvalidItemStateException();
-                }
-            }
-            Name historyNodeName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid);
-            if (root.hasNode(historyNodeName)) {
+            NodeStateEx parent = getParentNode(uuid, true);
+            Name name = getName(uuid);
+            if (parent.hasNode(name)) {
                 // already exists
                 return null;
             }
 
             // create new history node in the persistent state
-            InternalVersionHistoryImpl hist = InternalVersionHistoryImpl.create(
-                    this, root, historyNodeName, node);
+            InternalVersionHistoryImpl hist =
+                InternalVersionHistoryImpl.create(this, parent, name, node);
 
             // end update
             operation.save();
@@ -348,31 +348,44 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
-     * Returns the id of the version history associated with the given node
-     * or <code>null</code> if that node doesn't have a version history.
+     * Utility method that returns the given string as a name in the default
+     * namespace.
      *
-     * @param node the node whose version history's id is to be returned.
-     * @return the the id of the version history associated with the given node
-     *         or <code>null</code> if that node doesn't have a version history.
-     * @throws javax.jcr.RepositoryException if an error occurs
+     * @param name string name
+     * @return qualified name
      */
-    private NodeId getVersionHistoryId(NodeState node)
+    private Name getName(String name) {
+        return NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, name);
+    }
+
+    /**
+     * Utility method that returns the parent node under which the version
+     * history of the identified versionable node is or will be stored. If
+     * the create flag is set, then the returned parent node and any ancestor
+     * nodes are automatically created if they do not already exist. Otherwise
+     * <code>null</code> is returned if the parent node does not exist.
+     *
+     * @param uuid UUID of a versionable node
+     * @param create whether to create missing nodes
+     * @return parent node of the version history, or <code>null</code>
+     * @throws RepositoryException if an error occurs
+     */
+    private NodeStateEx getParentNode(String uuid, boolean create)
             throws RepositoryException {
-        // build and traverse path
-        String uuid = node.getNodeId().getUUID().toString();
         NodeStateEx n = historyRoot;
         for (int i = 0; i < 3; i++) {
-            Name name = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid.substring(i * 2, i * 2 + 2));
-            if (!n.hasNode(name)) {
+            Name name = getName(uuid.substring(i * 2, i * 2 + 2));
+            if (n.hasNode(name)) {
+                n = n.getNode(name, 1);
+            } else if (create) {
+                n.addNode(name, NameConstants.REP_VERSIONSTORAGE, null, false);
+                n.store();
+                n = n.getNode(name, 1);
+            } else {
                 return null;
             }
-            n = n.getNode(name, 1);
         }
-        Name historyNodeName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, uuid);
-        if (!n.hasNode(historyNodeName)) {
-            return null;
-        }
-        return n.getNode(historyNodeName, 1).getNodeId();
+        return n;
     }
 
     /**
