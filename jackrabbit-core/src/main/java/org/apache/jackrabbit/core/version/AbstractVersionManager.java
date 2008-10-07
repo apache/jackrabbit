@@ -107,14 +107,6 @@ abstract class AbstractVersionManager implements VersionManager {
         return (InternalVersionHistory) getItem(id);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean hasVersionHistory(NodeId id) {
-        // lock handling via hasItem()
-        return hasItem(id);
-    }
-
     //-------------------------------------------------------< implementation >
 
     /**
