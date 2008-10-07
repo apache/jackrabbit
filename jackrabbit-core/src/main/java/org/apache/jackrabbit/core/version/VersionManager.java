@@ -109,14 +109,6 @@ public interface VersionManager {
             throws RepositoryException;
 
     /**
-     * Checks if the version history with the given id exists
-     *
-     * @param id
-     * @return <code>true</code> if the version history exists.
-     */
-    boolean hasVersionHistory(NodeId id);
-
-    /**
      * Returns the version history with the given id
      *
      * @param id
