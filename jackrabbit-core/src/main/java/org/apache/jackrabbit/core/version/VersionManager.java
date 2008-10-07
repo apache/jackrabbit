@@ -127,14 +127,6 @@ public interface VersionManager {
             throws RepositoryException;
 
     /**
-     * Checks if the version with the given id exists
-     *
-     * @param id
-     * @return <code>true</code> if the version exists.
-     */
-    boolean hasVersion(NodeId id);
-
-    /**
      * Returns the version with the given id
      *
      * @param id

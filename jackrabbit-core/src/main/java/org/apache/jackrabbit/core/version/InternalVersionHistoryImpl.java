@@ -277,13 +277,6 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public boolean hasVersion(NodeId id) {
-        return nameCache.containsValue(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public InternalVersion getVersion(NodeId id) {
         InternalVersion v = (InternalVersion) versionCache.get(id);
         if (v == null) {

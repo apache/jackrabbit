@@ -51,15 +51,6 @@ public interface InternalVersionHistory extends InternalVersionItem {
     boolean hasVersion(Name versionName);
 
     /**
-     * Checks if the version for the given uuid exists in this history.
-     *
-     * @param id the id of the version
-     * @return <code>true</code> if the version exists;
-     *         <code>false</code> otherwise.
-     */
-    boolean hasVersion(NodeId id);
-
-    /**
      * Returns the version with the given uuid or <code>null</code> if the
      * respective version does not exist.
      *
