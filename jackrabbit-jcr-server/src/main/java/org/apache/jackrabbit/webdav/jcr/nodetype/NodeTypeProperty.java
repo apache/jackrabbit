@@ -71,7 +71,7 @@ public class NodeTypeProperty extends AbstractDavProperty implements NodeTypeCon
      * @param property
      */
     public NodeTypeProperty(DavProperty property) {
-        super(property.getName(), property.isProtected());
+        super(property.getName(), property.isInvisibleInAllprop());
         if (property instanceof NodeTypeProperty) {
             nodetypeNames.addAll(((NodeTypeProperty)property).nodetypeNames);
         } else {

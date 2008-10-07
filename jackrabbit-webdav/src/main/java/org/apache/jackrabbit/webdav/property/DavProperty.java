@@ -21,9 +21,9 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * The <code>Property</code> class represents a Property of a WebDAV
- * resource. The {@link #hashCode()} and {@link #equals(Object)} METHODS are
- * overridden in a way, that the name and value of the property are
- * respected. this means, an property is equal to another, if the names
+ * resource. The {@link #hashCode()} and {@link #equals(Object)} methods are
+ * overridden in a way, such that the name and value of the property are
+ * respected. This means, a property is equal to another if the names
  * and values are equal.<br>
  * The XML representation of a <code>DavProperty</code>:
  * <pre>
@@ -61,11 +61,11 @@ public interface DavProperty extends XmlSerializable, DavConstants {
     public Object getValue();
 
     /**
-     * Return true if this property is protected. A protected property
-     * will not be returned in a {@link DavConstants#PROPFIND_ALL_PROP DAV:allprop}
-     * PROPFIND request and cannot be set/removed with a PROPPATCH request.
+     * Return <code>true</code> if this property should be suppressed
+     * in a PROPFIND/{@link DavConstants#PROPFIND_ALL_PROP DAV:allprop} 
+     * response. See RFC 4918, Section 9.1.
      *
-     * @return true, if this property is protected.
+     * @return true, if this property should be suppressed in a PROPFIND/allprop response
      */
-    public boolean isProtected();
+    public boolean isInvisibleInAllprop();
 }
