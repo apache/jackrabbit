@@ -16,13 +16,39 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.jackrabbit.webdav.bind.BindInfo;
+import org.apache.jackrabbit.webdav.bind.RebindInfo;
+import org.apache.jackrabbit.webdav.bind.UnbindInfo;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.header.LabelHeader;
 import org.apache.jackrabbit.webdav.header.OverwriteHeader;
-import org.apache.jackrabbit.webdav.header.TimeoutHeader;
 import org.apache.jackrabbit.webdav.header.PollTimeoutHeader;
+import org.apache.jackrabbit.webdav.header.TimeoutHeader;
 import org.apache.jackrabbit.webdav.lock.LockInfo;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
@@ -45,36 +71,11 @@ import org.apache.jackrabbit.webdav.version.UpdateInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.bind.RebindInfo;
-import org.apache.jackrabbit.webdav.bind.UnbindInfo;
-import org.apache.jackrabbit.webdav.bind.BindInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.Principal;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <code>WebdavRequestImpl</code>...
@@ -367,26 +368,58 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         // propfind httpRequest with invalid body
         Element root = requestDocument.getDocumentElement();
         if (!XML_PROPFIND.equals(root.getLocalName())) {
-            log.info("PropFind-Request has no <profind> tag.");
-            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "PropFind-Request has no <profind> tag.");
+            log.info("PropFind-Request has no <propfind> tag.");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "PropFind-Request has no <propfind> tag.");
         }
+        
+        DavPropertyNameSet include = null;
 
         ElementIterator it = DomUtil.getChildren(root);
+        int propfindTypeFound = 0;
+        
         while (it.hasNext()) {
             Element child = it.nextElement();
             String nodeName = child.getLocalName();
-            if (XML_PROP.equals(nodeName)) {
-                propfindType = PROPFIND_BY_PROPERTY;
-                propfindProps = new DavPropertyNameSet(child);
-                break;
-            } else if (XML_PROPNAME.equals(nodeName)) {
-                propfindType = PROPFIND_PROPERTY_NAMES;
-                break;
-            } else if (XML_ALLPROP.equals(nodeName)) {
-                propfindType = PROPFIND_ALL_PROP;
-                break;
+            if (NAMESPACE.getURI().equals(child.getNamespaceURI())) {
+                if (XML_PROP.equals(nodeName)) {
+                    propfindType = PROPFIND_BY_PROPERTY;
+                    propfindProps = new DavPropertyNameSet(child);
+                    propfindTypeFound += 1;
+                }
+                else if (XML_PROPNAME.equals(nodeName)) {
+                    propfindType = PROPFIND_PROPERTY_NAMES;
+                    propfindTypeFound += 1;
+                }
+                else if (XML_ALLPROP.equals(nodeName)) {
+                    propfindType = PROPFIND_ALL_PROP;
+                    propfindTypeFound += 1;
+                }
+                else if (XML_INCLUDE.equals(nodeName)) {
+                    include = new DavPropertyNameSet();
+                    ElementIterator pit = DomUtil.getChildren(child);
+                    while (pit.hasNext()) {
+                        include.add(DavPropertyName.createFromXml(pit.nextElement()));
+                    }
+                }
             }
         }
+        
+        if (propfindTypeFound > 1) {
+            log.info("Multiple top-level propfind instructions");
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Multiple top-level propfind instructions");
+        }
+        
+        if (include != null) {
+            if (propfindType == PROPFIND_ALL_PROP) {
+                // special case: allprop with include extension
+                propfindType = PROPFIND_ALL_PROP_INCLUDE;
+                propfindProps = include;
+            }
+            else {
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST, "<include> goes only with <allprop>");
+                
+            }
+        }   
     }
 
     /**

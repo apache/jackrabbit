@@ -158,7 +158,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * body.
      * @param propFindType any of the following values: {@link
      * #PROPFIND_ALL_PROP}, {@link #PROPFIND_BY_PROPERTY}, {@link
-     * #PROPFIND_PROPERTY_NAMES}
+     * #PROPFIND_PROPERTY_NAMES}, {@link #PROPFIND_ALL_PROP_INCLUDE}
      */
     public MultiStatusResponse(DavResource resource, DavPropertyNameSet propNameSet,
                                int propFindType) {
@@ -176,11 +176,16 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
             // clone set of property, since several resources could use this again
             propNameSet = new DavPropertyNameSet(propNameSet);
-            // Add requested properties or all non-protected properties
+            // Add requested properties or all non-protected properties, or 
+            // non-protected properties plus requested properties (allprop/include) 
             DavPropertyIterator iter = resource.getProperties().iterator();
             while (iter.hasNext()) {
                 DavProperty property = iter.nextProperty();
-                if ((propFindType == PROPFIND_ALL_PROP && !property.isProtected()) || propNameSet.remove(property.getName())) {
+                boolean allDeadPlusRfc4918LiveProperties =
+                    propFindType == PROPFIND_ALL_PROP || propFindType == PROPFIND_ALL_PROP_INCLUDE;
+                boolean wasRequested = propNameSet.remove(property.getName());
+                
+                if ((allDeadPlusRfc4918LiveProperties && !property.isProtected()) || wasRequested) {
                     status200.addContent(property);
                 }
             }

@@ -28,6 +28,7 @@ public class WebdavServerTests extends TestCase {
         suite.addTestSuite(BindTest.class);
         suite.addTestSuite(RFC4918DestinationHeaderTest.class);
         suite.addTestSuite(RFC4918IfHeaderTest.class);
+        suite.addTestSuite(RFC4918PropfindTest.class);
 
         return suite;
     }
