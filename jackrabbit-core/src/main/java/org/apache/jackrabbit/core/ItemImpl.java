@@ -726,10 +726,8 @@ public abstract class ItemImpl implements Item {
                          * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
                          * otherwise create a new version history
                          */
-                        VersionHistory vh = vMgr.getVersionHistory(session, nodeState);
-                        if (vh == null) {
-                            vh = vMgr.createVersionHistory(session, nodeState);
-                        }
+                        VersionHistory vh =
+                            vMgr.getVersionHistory(session, nodeState);
                         node.internalSetProperty(NameConstants.JCR_VERSIONHISTORY, InternalValue.create(new UUID(vh.getUUID())));
                         node.internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(vh.getRootVersion().getUUID())));
                         node.internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));

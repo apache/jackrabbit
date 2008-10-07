@@ -228,16 +228,12 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
-     * Returns the version history associated with the given node.
-     *
-     * @param session 
-     * @param node the node whose version history's id is to be returned.
-     * @return the version history associated with the given node
-     *         or <code>null</code> if that node doesn't have a version history.
-     * @throws RepositoryException if an error occurs
+     * {@inheritDoc}
      */
     public VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
+        NodeId id = null;
+
         acquireReadLock();
         try {
             String uuid = node.getNodeId().getUUID().toString();
@@ -245,16 +241,32 @@ abstract class AbstractVersionManager implements VersionManager {
 
             NodeStateEx parent = getParentNode(uuid, false);
             if (parent != null && parent.hasNode(name)) {
-                NodeId id =
-                    parent.getState().getChildNodeEntry(name, 1).getId();
-                return (VersionHistory) ((SessionImpl) session).getNodeById(id);
-            } else {
-                return null;
+                id = parent.getState().getChildNodeEntry(name, 1).getId();
             }
         } finally {
             releaseReadLock();
         }
+
+        if (id == null) {
+            id = createVersionHistory(session, node);
+        }
+
+        return (VersionHistory) ((SessionImpl) session).getNodeById(id);
     }
+
+
+    /**
+     * Creates a new version history. This action is needed either when creating
+     * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
+     * to a node.
+     *
+     * @param node
+     * @return identifier of the new version history node
+     * @throws RepositoryException
+     * @see #getVersionHistory(Session, NodeState)
+     */
+    protected abstract NodeId createVersionHistory(
+            Session session, NodeState node) throws RepositoryException;
 
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
