@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -47,9 +48,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -308,29 +307,32 @@ public class WorkspaceImporter implements Importer {
              * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
              * otherwise create a new version history
              */
-            VersionHistory history =
+            VersionHistoryInfo history =
                 versionManager.getVersionHistory(session, node);
-            Version rootVersion = history.getRootVersion();
+            InternalValue historyId = InternalValue.create(
+                    history.getVersionHistoryId().getUUID());
+            InternalValue versionId = InternalValue.create(
+                    history.getRootVersionId().getUUID());
 
             // jcr:versionHistory
             conditionalAddProperty(
-                    node, NameConstants.JCR_VERSIONHISTORY, PropertyType.REFERENCE, false,
-                    InternalValue.create(new UUID(history.getUUID())));
+                    node, NameConstants.JCR_VERSIONHISTORY,
+                    PropertyType.REFERENCE, false, historyId);
 
             // jcr:baseVersion
             conditionalAddProperty(
-                    node, NameConstants.JCR_BASEVERSION, PropertyType.REFERENCE, false,
-                    InternalValue.create(new UUID(rootVersion.getUUID())));
+                    node, NameConstants.JCR_BASEVERSION,
+                    PropertyType.REFERENCE, false, versionId);
 
             // jcr:predecessors
             conditionalAddProperty(
-                    node, NameConstants.JCR_PREDECESSORS, PropertyType.REFERENCE, true,
-                    InternalValue.create(new UUID(rootVersion.getUUID())));
+                    node, NameConstants.JCR_PREDECESSORS,
+                    PropertyType.REFERENCE, true, versionId);
 
             // jcr:isCheckedOut
             conditionalAddProperty(
-                    node, NameConstants.JCR_ISCHECKEDOUT, PropertyType.BOOLEAN, false,
-                    InternalValue.create(true));
+                    node, NameConstants.JCR_ISCHECKEDOUT,
+                    PropertyType.BOOLEAN, false, InternalValue.create(true));
         }
     }
 

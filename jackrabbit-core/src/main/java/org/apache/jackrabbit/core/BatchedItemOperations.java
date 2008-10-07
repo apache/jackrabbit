@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -58,7 +59,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -1916,19 +1916,19 @@ public class BatchedItemOperations extends ItemValidator {
                     VersionManager manager = session.getVersionManager();
                     if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                         // jcr:versionHistory
-                        VersionHistory vh =
+                        VersionHistoryInfo history =
                             manager.getVersionHistory(session, newState);
-                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
-                    } else if (propName.equals(NameConstants.JCR_BASEVERSION)) {
-                        // jcr:baseVersion
-                        VersionHistory vh =
+                        InternalValue value = InternalValue.create(
+                                history.getVersionHistoryId().getUUID());
+                        newChildState.setValues(new InternalValue[] { value });
+                    } else if (propName.equals(NameConstants.JCR_BASEVERSION)
+                            || propName.equals(NameConstants.JCR_PREDECESSORS)) {
+                        // jcr:baseVersion or jcr:predecessors
+                        VersionHistoryInfo history =
                             manager.getVersionHistory(session, newState);
-                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
-                    } else if (propName.equals(NameConstants.JCR_PREDECESSORS)) {
-                        // jcr:predecessors
-                        VersionHistory vh =
-                            manager.getVersionHistory(session, newState);
-                        newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
+                        InternalValue value = InternalValue.create(
+                                history.getRootVersionId().getUUID());
+                        newChildState.setValues(new InternalValue[] { value });
                     } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                         // jcr:isCheckedOut
                         newChildState.setValues(new InternalValue[]{InternalValue.create(true)});

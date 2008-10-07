@@ -20,7 +20,6 @@ import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -35,7 +34,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 
 /**
  * Base implementation of the {@link VersionManager} interface.
@@ -230,9 +228,9 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * {@inheritDoc}
      */
-    public VersionHistory getVersionHistory(Session session, NodeState node)
+    public VersionHistoryInfo getVersionHistory(Session session, NodeState node)
             throws RepositoryException {
-        NodeId id = null;
+        VersionHistoryInfo info = null;
 
         acquireReadLock();
         try {
@@ -241,17 +239,21 @@ abstract class AbstractVersionManager implements VersionManager {
 
             NodeStateEx parent = getParentNode(uuid, false);
             if (parent != null && parent.hasNode(name)) {
-                id = parent.getState().getChildNodeEntry(name, 1).getId();
+                NodeStateEx history = parent.getNode(name, 1);
+                Name root = NameConstants.JCR_ROOTVERSION;
+                info = new VersionHistoryInfo(
+                        history.getNodeId(),
+                        history.getState().getChildNodeEntry(root, 1).getId());
             }
         } finally {
             releaseReadLock();
         }
 
-        if (id == null) {
-            id = createVersionHistory(session, node);
+        if (info == null) {
+            info = createVersionHistory(session, node);
         }
 
-        return (VersionHistory) ((SessionImpl) session).getNodeById(id);
+        return info;
     }
 
 
@@ -265,7 +267,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * @throws RepositoryException
      * @see #getVersionHistory(Session, NodeState)
      */
-    protected abstract NodeId createVersionHistory(
+    protected abstract VersionHistoryInfo createVersionHistory(
             Session session, NodeState node) throws RepositoryException;
 
     /**
@@ -310,10 +312,10 @@ abstract class AbstractVersionManager implements VersionManager {
      * Creates a new Version History.
      *
      * @param node the node for which the version history is to be initialized
-     * @return the newly created version history.
+     * @return the identifiers of the newly created version history and root version
      * @throws javax.jcr.RepositoryException
      */
-    InternalVersionHistory createVersionHistory(NodeState node)
+    NodeStateEx createVersionHistory(NodeState node)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
@@ -327,15 +329,16 @@ abstract class AbstractVersionManager implements VersionManager {
             }
 
             // create new history node in the persistent state
-            InternalVersionHistoryImpl hist =
+            NodeStateEx history =
                 InternalVersionHistoryImpl.create(this, parent, name, node);
 
             // end update
             operation.save();
 
-            log.debug("Created new version history " + hist.getId() + " for " + node + ".");
-            return hist;
-
+            log.debug(
+                    "Created new version history " + history.getNodeId()
+                    + " for " + node + ".");
+            return history;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         } finally {
