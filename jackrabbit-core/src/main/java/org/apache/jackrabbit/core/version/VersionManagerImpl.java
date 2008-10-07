@@ -211,19 +211,22 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    protected NodeId createVersionHistory(Session session, final NodeState node)
-            throws RepositoryException {
-        InternalVersionHistory history = (InternalVersionHistory)
+    protected VersionHistoryInfo createVersionHistory(
+            Session session, final NodeState node) throws RepositoryException {
+        NodeStateEx state = (NodeStateEx)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
                 return createVersionHistory(node);
             }
         });
 
-        if (history == null) {
+        if (state == null) {
             throw new VersionException("History already exists for node " + node.getNodeId());
         }
-        return history.getId();
+        Name root = NameConstants.JCR_ROOTVERSION;
+        return new VersionHistoryInfo(
+                state.getNodeId(),
+                state.getState().getChildNodeEntry(root, 1).getId());
     }
 
     /**

@@ -131,13 +131,18 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    protected NodeId createVersionHistory(Session session, NodeState node)
+    protected VersionHistoryInfo createVersionHistory(Session session, NodeState node)
             throws RepositoryException {
 
         if (isInXA()) {
-            InternalVersionHistory history = createVersionHistory(node);
-            xaItems.put(history.getId(), history);
-            return history.getId();
+            NodeStateEx state = createVersionHistory(node);
+            InternalVersionHistory history =
+                new InternalVersionHistoryImpl(vMgr, state);
+            xaItems.put(state.getNodeId(), history);
+            Name root = NameConstants.JCR_ROOTVERSION;
+            return new VersionHistoryInfo(
+                    state.getNodeId(),
+                    state.getState().getChildNodeEntry(root, 1).getId());
         }
         return vMgr.createVersionHistory(session, node);
     }

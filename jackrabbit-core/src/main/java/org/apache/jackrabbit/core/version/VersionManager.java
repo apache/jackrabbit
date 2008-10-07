@@ -42,17 +42,18 @@ public interface VersionManager {
     VirtualItemStateProvider getVirtualItemStateProvider();
 
     /**
-     * Returns the version history of the specified node. If the given node
-     * does not already have an associated version history, then an empty
-     * history is automatically created. This method should only be called
-     * by code that already knows that the specified node is versionable.
+     * Returns information about the version history of the specified node.
+     * If the given node does not already have an associated version history,
+     * then an empty history is automatically created. This method should
+     * only be called by code that already knows that the specified node
+     * is versionable.
      *
      * @param session
      * @param node node whose version history should be returned
-     * @return the version history of the specified node
+     * @return identifiers of the version history and root version nodes
      * @throws RepositoryException if an error occurs
      */
-    VersionHistory getVersionHistory(Session session, NodeState node)
+    VersionHistoryInfo getVersionHistory(Session session, NodeState node)
             throws RepositoryException;
 
     /**

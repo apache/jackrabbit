@@ -501,19 +501,17 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * Creates a new <code>InternalVersionHistory</code> below the given parent
-     * node and with the given name.
+     * Creates a new version history below the given parent node and with
+     * the given name.
      *
      * @param parent
      * @param name
      * @return
      * @throws RepositoryException
      */
-    static InternalVersionHistoryImpl create(AbstractVersionManager vMgr,
-                                             NodeStateEx parent,
-                                             Name name,
-                                             NodeState nodeState)
-            throws RepositoryException {
+    static NodeStateEx create(
+            AbstractVersionManager vMgr, NodeStateEx parent, Name name,
+            NodeState nodeState) throws RepositoryException {
 
         // create history node
         NodeId historyId = new NodeId(UUID.randomUUID());
@@ -554,7 +552,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         parent.store();
-        return new InternalVersionHistoryImpl(vMgr, pNode);
+        return pNode;
     }
 
     /**
