@@ -16,53 +16,47 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.core.state.ChangeLog;
-
 /**
- * Item operation interface.
+ * Default cluster operation implementation.
  */
-public abstract class ItemOperation {
+public class DefaultClusterOperation implements ClusterOperation {
 
     /**
-     * Operation type: added.
+     * Cluster node.
      */
-    public static final int ADDED = 1;
+    private final ClusterNode clusterNode;
 
     /**
-     * Operation type: modified.
+     * Cluster record.
      */
-    public static final int MODIFIED = 2;
+    private final ClusterRecord record;
 
     /**
-     * Operation type: deleted.
+     * Create an instance of this class.
+     *
+     * @param clusterNode cluster node
+     * @param record cluster record
      */
-    public static final int DELETED = 3;
+    public DefaultClusterOperation(ClusterNode clusterNode,
+                                   ClusterRecord record) {
 
-    /**
-     * Operation type.
-     */
-    private final int operationType;
-
-    /**
-     * Creates a new instance of this class. Takes an operation type as parameter.
-     */
-    protected ItemOperation(int operationType) {
-        this.operationType = operationType;
+        this.clusterNode = clusterNode;
+        this.record = record;
     }
 
     /**
-     * Returns the operation type.
-     *
-     * @return operation type
+     * {@inheritDoc}
      */
-    public int getOperationType() {
-        return operationType;
+    public void ended(boolean successful) {
+        clusterNode.ended(this, successful);
     }
 
     /**
-     * Apply an operation to a change log. Subclass responsibility.
+     * Return the record.
      *
-     * @param changeLog change log
+     * @return the record
      */
-    public abstract void apply(ChangeLog changeLog);
+    public ClusterRecord getRecord() {
+        return record;
+    }
 }

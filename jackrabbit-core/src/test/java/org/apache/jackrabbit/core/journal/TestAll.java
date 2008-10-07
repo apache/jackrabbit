@@ -14,35 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.core.journal.InstanceRevision;
-import org.apache.jackrabbit.core.journal.JournalException;
+import junit.framework.TestCase;
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
- * Memory-based revision, useful for testing purposes only.
+ * Collects all test classes setting up test data in the workspace. This test
+ * data is specific to Jackrabbit and will probably not work in other
+ * implementations.
  */
-public class MemoryRevision implements InstanceRevision {
-
-    /** Revision. */
-    private long revision;
+public class TestAll extends TestCase {
 
     /**
-     * {@inheritDoc}
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     *
+     * @return a <code>Test</code> suite that executes all tests inside this
+     *         package.
      */
-    public long get() throws JournalException {
-        return revision;
+    public static Test suite() {
+        TestSuite suite = new TestSuite();
+
+        suite.addTestSuite(FileJournalTest.class);
+
+        return suite;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void set(long value) throws JournalException {
-        this.revision = value;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void close() {}
 }

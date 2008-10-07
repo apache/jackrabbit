@@ -30,8 +30,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Represents the session that has made some changes on another node in the cluster. The only method currently
- * implemented is {@link #getUserID()}.
+ * Represents the session that has made some changes on another node in the
+ * cluster. The only method currently implemented is {@link #getUserID()}.
  */
 class ClusterSession implements Session {
 
@@ -270,5 +270,23 @@ class ClusterSession implements Session {
      * {@inheritDoc}
      */
     public void removeLockToken(String s) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof ClusterSession) {
+            ClusterSession other = (ClusterSession) obj;
+            return userId.equals(other.userId);
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return userId.hashCode();
     }
 }

@@ -29,40 +29,29 @@ import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.Record;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.InstanceRevision;
+import org.apache.jackrabbit.core.journal.RecordProducer;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.observation.EventState;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.uuid.UUID;
 
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Default clustered node implementation.
  */
 public class ClusterNode implements Runnable,
-        NamespaceEventChannel, NodeTypeEventChannel, RecordConsumer  {
+        NamespaceEventChannel, NodeTypeEventChannel, RecordConsumer,
+        ClusterRecordProcessor  {
 
     /**
      * System property specifying a node id to use.
@@ -93,26 +82,6 @@ public class ClusterNode implements Runnable,
      * Status constant.
      */
     private static final int STOPPED = 2;
-
-    /**
-     * Bit indicating this is a registration operation.
-     */
-    private static final int NTREG_REGISTER = 0;
-
-    /**
-     * Bit indicating this is a reregistration operation.
-     */
-    private static final int NTREG_REREGISTER = (1 << 30);
-
-    /**
-     * Bit indicating this is an unregistration operation.
-     */
-    private static final int NTREG_UNREGISTER = (1 << 31);
-
-    /**
-     * Mask used in node type registration operations.
-     */
-    private static final int NTREG_MASK = (NTREG_REREGISTER | NTREG_UNREGISTER);
 
     /**
      * Logger.
@@ -180,24 +149,14 @@ public class ClusterNode implements Runnable,
     private InstanceRevision instanceRevision;
 
     /**
-     * Workspace name used when consuming records.
+     * Our record producer.
      */
-    private String workspace;
+    private RecordProducer producer;
 
     /**
-     * Change log used when consuming records.
+     * Record deserializer.
      */
-    private ChangeLog changeLog;
-
-    /**
-     * List of recorded events; used when consuming records.
-     */
-    private List events;
-
-    /**
-     * Last used session for event sources.
-     */
-    private Session lastSession;
+    private ClusterRecordDeserializer deserializer = new ClusterRecordDeserializer();
 
     /**
      * Initialize this cluster node.
@@ -227,6 +186,7 @@ public class ClusterNode implements Runnable,
             journal.init(clusterNodeId, clusterContext.getNamespaceResolver());
             instanceRevision = journal.getInstanceRevision();
             journal.register(this);
+            producer = journal.getProducer(PRODUCER_ID);
         } catch (ConfigurationException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
         } catch (JournalException e) {
@@ -408,14 +368,12 @@ public class ClusterNode implements Runnable,
             log.info("not started: namespace operation ignored.");
             return;
         }
-        Record record = null;
+        ClusterRecord record = null;
         boolean succeeded = false;
 
         try {
-            record = journal.getProducer(PRODUCER_ID).append();
-            record.writeString(null);
-            write(record, oldPrefix, newPrefix, uri);
-            record.writeChar('\0');
+            record = new NamespaceRecord(oldPrefix, newPrefix, uri, producer.append());
+            record.write();
             record.update();
             setRevision(record.getRevision());
             succeeded = true;
@@ -446,14 +404,12 @@ public class ClusterNode implements Runnable,
             log.info("not started: nodetype operation ignored.");
             return;
         }
-        Record record = null;
+        ClusterRecord record = null;
         boolean succeeded = false;
 
         try {
-            record = journal.getProducer(PRODUCER_ID).append();
-            record.writeString(null);
-            write(record, ntDefs, true);
-            record.writeChar('\0');
+            record = new NodeTypeRecord(ntDefs, true, producer.append());
+            record.write();
             record.update();
             setRevision(record.getRevision());
             succeeded = true;
@@ -478,14 +434,12 @@ public class ClusterNode implements Runnable,
             log.info("not started: nodetype operation ignored.");
             return;
         }
-        Record record = null;
+        ClusterRecord record = null;
         boolean succeeded = false;
 
         try {
-            record = journal.getProducer(PRODUCER_ID).append();
-            record.writeString(null);
-            write(record, ntDef);
-            record.writeChar('\0');
+            record = new NodeTypeRecord(ntDef, producer.append());
+            record.write();
             record.update();
             setRevision(record.getRevision());
             succeeded = true;
@@ -510,14 +464,12 @@ public class ClusterNode implements Runnable,
             log.info("not started: nodetype operation ignored.");
             return;
         }
-        Record record = null;
+        ClusterRecord record = null;
         boolean succeeded = false;
 
         try {
-            record = journal.getProducer(PRODUCER_ID).append();
-            record.writeString(null);
-            write(record, qnames, false);
-            record.writeChar('\0');
+            record = new NodeTypeRecord(qnames, false, producer.append());
+            record.write();
             record.update();
             setRevision(record.getRevision());
             succeeded = true;
@@ -574,7 +526,7 @@ public class ClusterNode implements Runnable,
                 return;
             }
             try {
-                Record record = journal.getProducer(PRODUCER_ID).append();
+                Record record = producer.append();
                 update.setAttribute(ATTRIBUTE_RECORD, record);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry.";
@@ -600,14 +552,14 @@ public class ClusterNode implements Runnable,
                 return;
             }
 
-            EventStateCollection events = update.getEvents();
+            List events = update.getEvents();
             ChangeLog changes = update.getChanges();
             boolean succeeded = false;
 
             try {
-                record.writeString(workspace);
-                write(record, changes, events);
-                record.writeChar('\0');
+                ChangeLogRecord clr = new ChangeLogRecord(changes, events,
+                        record, workspace);
+                clr.write();
                 succeeded = true;
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
@@ -710,9 +662,9 @@ public class ClusterNode implements Runnable,
                 return null;
             }
             try {
-                Record record = journal.getProducer(PRODUCER_ID).append();
-                return new LockOperation(ClusterNode.this, workspace, record,
-                        nodeId, deep, owner);
+                ClusterRecord record = new LockRecord(nodeId, deep, owner,
+                        producer.append(), workspace);
+                return new DefaultClusterOperation(ClusterNode.this, record);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
                 log.error(msg);
@@ -733,9 +685,9 @@ public class ClusterNode implements Runnable,
                 return null;
             }
             try {
-                Record record = journal.getProducer(PRODUCER_ID).append();
-                return new LockOperation(ClusterNode.this, workspace, record,
-                        nodeId);
+                ClusterRecord record = new LockRecord(nodeId, producer.append(),
+                        workspace);
+                return new DefaultClusterOperation(ClusterNode.this, record);
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
                 log.error(msg);
@@ -755,210 +707,6 @@ public class ClusterNode implements Runnable,
             if (listener != null) {
                 wspLockListeners.put(workspace, listener);
             }
-        }
-    }
-
-    /**
-     * Invoked when a record starts.
-     *
-     * @param workspace workspace, may be <code>null</code>
-     */
-    private void start(String workspace) {
-        this.workspace = workspace;
-
-        changeLog = new ChangeLog();
-        events = new ArrayList();
-    }
-
-    /**
-     * Process an update operation.
-     *
-     * @param operation operation to process
-     */
-    private void process(ItemOperation operation) {
-        operation.apply(changeLog);
-    }
-
-    /**
-     * Process an event.
-     *
-     * @param event event
-     */
-    private void process(EventState event) {
-        events.add(event);
-    }
-
-    /**
-     * Process a lock operation.
-     *
-     * @param nodeId node id
-     * @param isDeep flag indicating whether lock is deep
-     * @param owner lock owner
-     */
-    private void process(NodeId nodeId, boolean isDeep, String owner) {
-        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
-        if (listener == null) {
-            try {
-                clusterContext.lockEventsReady(workspace);
-            } catch (RepositoryException e) {
-                String msg = "Unable to make lock listener for workspace " +
-                        workspace + " online: " + e.getMessage();
-                log.warn(msg);
-            }
-            listener = (LockEventListener) wspLockListeners.get(workspace);
-            if (listener ==  null) {
-                String msg = "Lock channel unavailable for workspace: " + workspace;
-                log.error(msg);
-                return;
-            }
-        }
-        try {
-            listener.externalLock(nodeId, isDeep, owner);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver lock event: " + e.getMessage();
-            log.error(msg);
-        }
-    }
-
-    /**
-     * Process an unlock operation.
-     *
-     * @param nodeId node id
-     */
-    private void process(NodeId nodeId) {
-        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
-        if (listener == null) {
-            try {
-                clusterContext.lockEventsReady(workspace);
-            } catch (RepositoryException e) {
-                String msg = "Unable to make lock listener for workspace " +
-                        workspace + " online: " + e.getMessage();
-                log.warn(msg);
-            }
-            listener = (LockEventListener) wspLockListeners.get(workspace);
-            if (listener ==  null) {
-                String msg = "Lock channel unavailable for workspace: " + workspace;
-                log.error(msg);
-                return;
-            }
-        }
-        try {
-            listener.externalUnlock(nodeId);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver lock event: " + e.getMessage();
-            log.error(msg);
-        }
-    }
-
-    /**
-     * Process a namespace operation.
-     *
-     * @param oldPrefix old prefix. if <code>null</code> this is a fresh mapping
-     * @param newPrefix new prefix. if <code>null</code> this is an unmap operation
-     * @param uri uri to map prefix to
-     */
-    private void process(String oldPrefix, String newPrefix, String uri) {
-        if (namespaceListener == null) {
-            String msg = "Namespace listener unavailable.";
-            log.error(msg);
-            return;
-        }
-        try {
-            namespaceListener.externalRemap(oldPrefix, newPrefix, uri);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver namespace operation: " + e.getMessage();
-            log.error(msg);
-        }
-    }
-
-    /**
-     * Process one or more node type registrations.
-     *
-     * @param c collection of node type definitions, if this is a register
-     *          operation; collection of <code>Name</code>s if this is
-     *          an unregister operation
-     * @param register <code>true</code>, if this is a register operation;
-     *                 <code>false</code> otherwise
-     */
-    private void process(Collection c, boolean register) {
-        if (nodeTypeListener == null) {
-            String msg = "NodeType listener unavailable.";
-            log.error(msg);
-            return;
-        }
-        try {
-            if (register) {
-                nodeTypeListener.externalRegistered(c);
-            } else {
-                nodeTypeListener.externalUnregistered(c);
-            }
-        } catch (InvalidNodeTypeDefException e) {
-            String msg = "Unable to deliver node type operation: " + e.getMessage();
-            log.error(msg);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver node type operation: " + e.getMessage();
-            log.error(msg);
-        }
-    }
-
-    /**
-     * Process a node type re-registration.
-     *
-     * @param ntDef node type definition
-     */
-    private void process(NodeTypeDef ntDef) {
-        if (nodeTypeListener == null) {
-            String msg = "NodeType listener unavailable.";
-            log.error(msg);
-            return;
-        }
-        try {
-            nodeTypeListener.externalReregistered(ntDef);
-        } catch (InvalidNodeTypeDefException e) {
-            String msg = "Unable to deliver node type operation: " + e.getMessage();
-            log.error(msg);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver node type operation: " + e.getMessage();
-            log.error(msg);
-        }
-    }
-
-    /**
-     * Invoked when a record ends.
-     */
-    private void end() {
-        UpdateEventListener listener = null;
-        if (workspace != null) {
-            listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
-            if (listener == null) {
-                try {
-                    clusterContext.updateEventsReady(workspace);
-                } catch (RepositoryException e) {
-                    String msg = "Error making update listener for workspace " +
-                            workspace + " online: " + e.getMessage();
-                    log.warn(msg);
-                }
-                listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
-                if (listener ==  null) {
-                    String msg = "Update listener unavailable for workspace: " + workspace;
-                    log.error(msg);
-                    return;
-                }
-            }
-        } else {
-            if (versionUpdateListener != null) {
-                listener = versionUpdateListener;
-            } else {
-                String msg = "Version update listener unavailable.";
-                log.error(msg);
-                return;
-            }
-        }
-        try {
-            listener.externalUpdate(changeLog, events);
-        } catch (RepositoryException e) {
-            String msg = "Unable to deliver update events: " + e.getMessage();
-            log.error(msg);
         }
     }
 
@@ -989,95 +737,11 @@ public class ClusterNode implements Runnable,
     public void consume(Record record) {
         log.info("Processing revision: " + record.getRevision());
 
-        String workspace = null;
-
         try {
-            workspace = record.readString();
-            start(workspace);
-
-            for (;;) {
-                char c = record.readChar();
-                if (c == '\0') {
-                    break;
-                }
-                if (c == 'N') {
-                    NodeOperation operation = NodeOperation.create(record.readByte());
-                    operation.setId(record.readNodeId());
-                    process(operation);
-                } else if (c == 'P') {
-                    PropertyOperation operation = PropertyOperation.create(record.readByte());
-                    operation.setId(record.readPropertyId());
-                    process(operation);
-                } else if (c == 'E') {
-                    int type = record.readByte();
-                    NodeId parentId = record.readNodeId();
-                    Path parentPath = record.readPath();
-                    NodeId childId = record.readNodeId();
-                    Path.Element childRelPath = record.readPathElement();
-                    Name ntName = record.readQName();
-
-                    Set mixins = new HashSet();
-                    int mixinCount = record.readInt();
-                    for (int i = 0; i < mixinCount; i++) {
-                        mixins.add(record.readQName());
-                    }
-                    String userId = record.readString();
-                    process(createEventState(type, parentId, parentPath, childId,
-                            childRelPath, ntName, mixins, userId));
-                } else if (c == 'L') {
-                    NodeId nodeId = record.readNodeId();
-                    boolean isLock = record.readBoolean();
-                    if (isLock) {
-                        boolean isDeep = record.readBoolean();
-                        String owner = record.readString();
-                        process(nodeId, isDeep, owner);
-                    } else {
-                        process(nodeId);
-                    }
-                } else if (c == 'S') {
-                    String oldPrefix = record.readString();
-                    String newPrefix = record.readString();
-                    String uri = record.readString();
-                    process(oldPrefix, newPrefix, uri);
-                } else if (c == 'T') {
-                    int size = record.readInt();
-                    int opcode = size & NTREG_MASK;
-                    size &= ~NTREG_MASK;
-
-                    switch (opcode) {
-                        case NTREG_REGISTER:
-                            HashSet ntDefs = new HashSet();
-                            for (int i = 0; i < size; i++) {
-                                ntDefs.add(record.readNodeTypeDef());
-                            }
-                            process(ntDefs, true);
-                            break;
-                        case NTREG_REREGISTER:
-                            process(record.readNodeTypeDef());
-                            break;
-                        case NTREG_UNREGISTER:
-                            HashSet ntNames = new HashSet();
-                            for (int i = 0; i < size; i++) {
-                                ntNames.add(record.readQName());
-                            }
-                            process(ntNames, false);
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Unknown opcode: " + opcode);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Unknown entry type: " + c);
-                }
-            }
-            end();
-
+            deserializer.deserialize(record).process(this);
         } catch (JournalException e) {
             String msg = "Unable to read revision '" + record.getRevision() + "'.";
             log.error(msg, e);
-        } catch (IllegalArgumentException e) {
-            String msg = "Error while processing revision " +
-                    record.getRevision() + ": " + e.getMessage();
-            log.error(msg);
         }
     }
 
@@ -1092,177 +756,132 @@ public class ClusterNode implements Runnable,
         }
     }
 
-    /**
-     * Create an event state.
-     *
-     * @param type event type
-     * @param parentId parent id
-     * @param parentPath parent path
-     * @param childId child id
-     * @param childRelPath child relative path
-     * @param ntName ndoe type name
-     * @param userId user id
-     * @return event
-     */
-    private EventState createEventState(int type, NodeId parentId, Path parentPath,
-                                        NodeId childId, Path.Element childRelPath,
-                                        Name ntName, Set mixins, String userId) {
-        switch (type) {
-            case Event.NODE_ADDED:
-                return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId), true);
-            case Event.NODE_REMOVED:
-                return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId), true);
-            case Event.PROPERTY_ADDED:
-                return EventState.propertyAdded(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId), true);
-            case Event.PROPERTY_CHANGED:
-                return EventState.propertyChanged(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId), true);
-            case Event.PROPERTY_REMOVED:
-                return EventState.propertyRemoved(parentId, parentPath, childRelPath,
-                        ntName, mixins, getOrCreateSession(userId), true);
-            default:
-                String msg = "Unexpected event type: " + type;
-                throw new IllegalArgumentException(msg);
-        }
-    }
+    //--------------------------------------------------- ClusterRecordProcessor
 
     /**
-     * Return a session matching a certain user id.
-     *
-     * @param userId user id
-     * @return session
+     * {@inheritDoc}
      */
-    private Session getOrCreateSession(String userId) {
-        if (lastSession == null || !lastSession.getUserID().equals(userId)) {
-            lastSession = new ClusterSession(userId);
-        }
-        return lastSession;
-    }
+    public void process(ChangeLogRecord record) {
+        String workspace = record.getWorkspace();
 
-    //-----------------------------------------------< Record writing methods >
-
-    private static void write(Record record, ChangeLog changeLog, EventStateCollection esc)
-            throws JournalException {
-
-        Iterator deletedStates = changeLog.deletedStates();
-        while (deletedStates.hasNext()) {
-            ItemState state = (ItemState) deletedStates.next();
-            if (state.isNode()) {
-                write(record, NodeDeletedOperation.create((NodeState) state));
+        UpdateEventListener listener = null;
+        if (workspace != null) {
+            listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
+            if (listener == null) {
+                try {
+                    clusterContext.updateEventsReady(workspace);
+                } catch (RepositoryException e) {
+                    String msg = "Error making update listener for workspace " +
+                            workspace + " online: " + e.getMessage();
+                    log.warn(msg);
+                }
+                listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
+                if (listener ==  null) {
+                    String msg = "Update listener unavailable for workspace: " + workspace;
+                    log.error(msg);
+                    return;
+                }
+            }
+        } else {
+            if (versionUpdateListener != null) {
+                listener = versionUpdateListener;
             } else {
-                write(record, PropertyDeletedOperation.create((PropertyState) state));
+                String msg = "Version update listener unavailable.";
+                log.error(msg);
+                return;
             }
         }
-        Iterator modifiedStates = changeLog.modifiedStates();
-        while (modifiedStates.hasNext()) {
-            ItemState state = (ItemState) modifiedStates.next();
-            if (state.isNode()) {
-                write(record, NodeModifiedOperation.create((NodeState) state));
-            } else {
-                write(record, PropertyModifiedOperation.create((PropertyState) state));
-            }
+        try {
+            listener.externalUpdate(record.getChanges(), record.getEvents());
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver update events: " + e.getMessage();
+            log.error(msg);
         }
-        Iterator addedStates = changeLog.addedStates();
-        while (addedStates.hasNext()) {
-            ItemState state = (ItemState) addedStates.next();
-            if (state.isNode()) {
-                write(record, NodeAddedOperation.create((NodeState) state));
-            } else {
-                write(record, PropertyAddedOperation.create((PropertyState) state));
-            }
-        }
-
-        Iterator events = esc.getEvents().iterator();
-        while (events.hasNext()) {
-            EventState event = (EventState) events.next();
-            write(record, event);
-        }
-    }
-
-    private static void write(Record record, String oldPrefix, String newPrefix, String uri)
-            throws JournalException {
-
-        record.writeChar('S');
-        record.writeString(oldPrefix);
-        record.writeString(newPrefix);
-        record.writeString(uri);
-    }
-
-    private static void write(Record record, Collection c, boolean register)
-            throws JournalException {
-
-        record.writeChar('T');
-
-        int size = c.size();
-        if (!register) {
-            size |= NTREG_UNREGISTER;
-        }
-        record.writeInt(size);
-
-        Iterator iter = c.iterator();
-        while (iter.hasNext()) {
-            if (register) {
-                record.writeNodeTypeDef((NodeTypeDef) iter.next());
-            } else {
-                record.writeQName((Name) iter.next());
-            }
-        }
-    }
-
-    private static void write(Record record, NodeTypeDef ntDef)
-            throws JournalException {
-
-        record.writeChar('T');
-
-        int size = 1;
-        size |= NTREG_REREGISTER;
-        record.writeInt(size);
-
-        record.writeNodeTypeDef(ntDef);
-    }
-
-    private static void write(Record record, PropertyOperation operation)
-            throws JournalException {
-
-        record.writeChar('P');
-        record.writeByte(operation.getOperationType());
-        record.writePropertyId(operation.getId());
-    }
-
-    private static void write(Record record, NodeOperation operation)
-            throws JournalException {
-
-        record.writeChar('N');
-        record.writeByte(operation.getOperationType());
-        record.writeNodeId(operation.getId());
     }
 
     /**
-     * Log an event. Subclass responsibility.
-     *
-     * @param event event to log
+     * {@inheritDoc}
      */
-    private static void write(Record record, EventState event)
-            throws JournalException {
+    public void process(LockRecord record) {
+        String workspace = record.getWorkspace();
 
-        record.writeChar('E');
-        record.writeByte(event.getType());
-        record.writeNodeId(event.getParentId());
-        record.writePath(event.getParentPath());
-        record.writeNodeId(event.getChildId());
-        record.writePathElement(event.getChildRelPath());
-        record.writeQName(event.getNodeType());
-
-        Set mixins = event.getMixinNames();
-        record.writeInt(mixins.size());
-        Iterator iter = mixins.iterator();
-        while (iter.hasNext()) {
-            record.writeQName((Name) iter.next());
+        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
+        if (listener == null) {
+            try {
+                clusterContext.lockEventsReady(workspace);
+            } catch (RepositoryException e) {
+                String msg = "Unable to make lock listener for workspace " +
+                        workspace + " online: " + e.getMessage();
+                log.warn(msg);
+            }
+            listener = (LockEventListener) wspLockListeners.get(workspace);
+            if (listener ==  null) {
+                String msg = "Lock channel unavailable for workspace: " + workspace;
+                log.error(msg);
+                return;
+            }
         }
-        record.writeString(event.getUserId());
+        try {
+            if (record.isLock()) {
+                listener.externalLock(record.getNodeId(), record.isDeep(),
+                        record.getUserId());
+            } else {
+                listener.externalUnlock(record.getNodeId());
+            }
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver lock event: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void process(NamespaceRecord record) {
+        if (namespaceListener == null) {
+            String msg = "Namespace listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            namespaceListener.externalRemap(record.getOldPrefix(),
+                    record.getNewPrefix(), record.getUri());
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver namespace operation: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void process(NodeTypeRecord record) {
+        if (nodeTypeListener == null) {
+            String msg = "NodeType listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        Collection coll = record.getCollection();
+        try {
+            switch (record.getOperation()) {
+            case NodeTypeRecord.REGISTER:
+                nodeTypeListener.externalRegistered(coll);
+                break;
+            case NodeTypeRecord.UNREGISTER:
+                nodeTypeListener.externalUnregistered(coll);
+                break;
+            case NodeTypeRecord.REREGISTER:
+                NodeTypeDef ntd = (NodeTypeDef) coll.iterator().next();
+                nodeTypeListener.externalReregistered(ntd);
+                break;
+            }
+        } catch (InvalidNodeTypeDefException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        }
     }
 
     /**
@@ -1275,16 +894,13 @@ public class ClusterNode implements Runnable,
      *                   the journal record should be updated;
      *                   <code>false</code> to revoke changes
      */
-    public void ended(AbstractClusterOperation operation, boolean successful) {
-        Record record = operation.getRecord();
+    public void ended(DefaultClusterOperation operation, boolean successful) {
+        ClusterRecord record = operation.getRecord();
         boolean succeeded = false;
 
         try {
             if (successful) {
-                record = operation.getRecord();
-                record.writeString(operation.getWorkspace());
-                operation.write();
-                record.writeChar('\0');
+                record.write();
                 record.update();
                 setRevision(record.getRevision());
                 succeeded = true;

@@ -16,8 +16,9 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
+import java.util.List;
+
 import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
 
 /**
  * Update operation passed in <code>UpdateEventChannel</code>.
@@ -51,7 +52,9 @@ public interface Update {
     /**
      * Return the collection of events this update operation will
      * generate.
+     *
+     * @return collection of <code>EventState</code>s
      */
-    EventStateCollection getEvents();
+    List getEvents();
 
 }
