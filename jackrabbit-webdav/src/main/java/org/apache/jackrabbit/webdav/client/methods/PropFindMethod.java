@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
@@ -25,12 +26,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
 /**
- * <code>PropFindMethod</code>...
+ * <code>PropFindMethod</code>, as specified in
+ * <a href="http://www.webdav.org/specs/rfc4918.html#rfc.section.9.1">RFC 4918, Section 9.1</a>
+ * <p>
+ * Supported types:
+ * <ul>
+ *   <li>{@link DavConstants#PROPFIND_ALL_PROP}: all custom properties, 
+ *   plus the live properties defined in RFC2518/RFC4918
+ *   <li>{@link DavConstants#PROPFIND_ALL_PROP_INCLUDE}: same as 
+ *   {@link DavConstants#PROPFIND_ALL_PROP} plus the properties specified
+ *   in <code>propNameSet</code>
+ *   <li>{@link DavConstants#PROPFIND_BY_PROPERTY}: just the properties
+ *   specified in <code>propNameSet</code>
+ *   <li>{@link DavConstants#PROPFIND_PROPERTY_NAMES}: just the property names
+ * </ul>
+ * <p>
+ * Note: only WebDAV level 3 servers support {@link DavConstants#PROPFIND_ALL_PROP_INCLUDE},
+ * older servers will ignore the extension and act as if {@link DavConstants#PROPFIND_ALL_PROP}
+ * was used.
  */
 public class PropFindMethod extends DavMethodBase {
 
@@ -50,7 +69,7 @@ public class PropFindMethod extends DavMethodBase {
         this(uri, propfindType, new DavPropertyNameSet(), depth);
     }
 
-    private PropFindMethod(String uri, int propfindType, DavPropertyNameSet propNameSet,
+    public PropFindMethod(String uri, int propfindType, DavPropertyNameSet propNameSet,
                            int depth) throws IOException {
         super(uri);
 
@@ -69,16 +88,38 @@ public class PropFindMethod extends DavMethodBase {
                 case PROPFIND_ALL_PROP:
                     propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
                     break;
+                    
                 case PROPFIND_PROPERTY_NAMES:
                     propfind.appendChild(DomUtil.createElement(document, XML_PROPNAME, NAMESPACE));
                     break;
-                default:
+                    
+                case PROPFIND_BY_PROPERTY:
                     if (propNameSet == null) {
-                        propfind.appendChild(DomUtil.createElement(document, XML_PROP, NAMESPACE));
+                        // name set missing, ask for a property that is known to exist
+                        Element prop = DomUtil.createElement(document, XML_PROP, NAMESPACE);
+                        Element resourcetype = DomUtil.createElement(document, PROPERTY_RESOURCETYPE, NAMESPACE);
+                        prop.appendChild(resourcetype);
+                        propfind.appendChild(prop);
                     } else {
                         propfind.appendChild(propNameSet.toXml(document));
                     }
                     break;
+                    
+                case PROPFIND_ALL_PROP_INCLUDE:
+                    propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
+                    if (propNameSet != null && ! propNameSet.isEmpty()) {
+                        Element include = DomUtil.createElement(document, XML_INCLUDE, NAMESPACE);
+                        Element prop = propNameSet.toXml(document);
+                        for (Node c = prop.getFirstChild(); c != null; c = c.getNextSibling()) {
+                            // copy over the children of <prop> to <include> element
+                            include.appendChild(c.cloneNode(true));
+                        }
+                        propfind.appendChild(include);
+                    }
+                    break;
+                  
+               default:
+                   throw new IllegalArgumentException("unknown propfind type");
             }
 
             // set the request body

@@ -71,6 +71,7 @@ public interface DavConstants {
     public static final String XML_COLLECTION = "collection";
     public static final String XML_DST = "dst";
     public static final String XML_HREF = "href";
+    public static final String XML_INCLUDE = "include";
     public static final String XML_KEEPALIVE = "keepalive";
     public static final String XML_LINK = "link";
     public static final String XML_MULTISTATUS = "multistatus";
@@ -126,6 +127,7 @@ public interface DavConstants {
     public static final int PROPFIND_BY_PROPERTY = 0;
     public static final int PROPFIND_ALL_PROP = 1;
     public static final int PROPFIND_PROPERTY_NAMES = 2;
+    public static final int PROPFIND_ALL_PROP_INCLUDE = 3; // RFC 4918, Section 9.1
 
     //----------------------------------------------< Date Format Constants >---
     /**

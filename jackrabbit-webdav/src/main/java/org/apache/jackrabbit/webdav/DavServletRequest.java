@@ -136,6 +136,7 @@ public interface DavServletRequest extends HttpServletRequest {
      * @see DavConstants#PROPFIND_ALL_PROP
      * @see DavConstants#PROPFIND_BY_PROPERTY
      * @see DavConstants#PROPFIND_PROPERTY_NAMES
+     * @see DavConstants#PROPFIND_ALL_PROP_INCLUDE
      * @throws DavException If the propfind type could not be determined due to
      * an invalid request body.
      */
