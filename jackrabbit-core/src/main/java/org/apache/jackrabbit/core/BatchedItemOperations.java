@@ -1913,17 +1913,21 @@ public class BatchedItemOperations extends ItemValidator {
                      * copied properties declared by mix:versionable need to be
                      * adjusted accordingly.
                      */
+                    VersionManager manager = session.getVersionManager();
                     if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                         // jcr:versionHistory
-                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        VersionHistory vh =
+                            manager.getVersionHistory(session, newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getUUID()))});
                     } else if (propName.equals(NameConstants.JCR_BASEVERSION)) {
                         // jcr:baseVersion
-                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        VersionHistory vh =
+                            manager.getVersionHistory(session, newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                     } else if (propName.equals(NameConstants.JCR_PREDECESSORS)) {
                         // jcr:predecessors
-                        VersionHistory vh = getOrCreateVersionHistory(newState);
+                        VersionHistory vh =
+                            manager.getVersionHistory(session, newState);
                         newChildState.setValues(new InternalValue[]{InternalValue.create(new UUID(vh.getRootVersion().getUUID()))});
                     } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                         // jcr:isCheckedOut
@@ -1991,19 +1995,6 @@ public class BatchedItemOperations extends ItemValidator {
             }
         }
         return newState;
-    }
-
-    /**
-     * Returns the version history of the given node state. A new
-     * version history will be created if doesn't exist yet.
-     *
-     * @param node node state
-     * @return the version history of the target node state
-     * @throws RepositoryException if an error occurs
-     */
-    private VersionHistory getOrCreateVersionHistory(NodeState node)
-            throws RepositoryException {
-        return session.getVersionManager().getVersionHistory(session, node);
     }
 
     /**
