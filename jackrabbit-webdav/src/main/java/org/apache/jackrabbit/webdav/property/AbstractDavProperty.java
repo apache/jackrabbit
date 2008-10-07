@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.property;
 
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
@@ -36,22 +37,20 @@ public abstract class AbstractDavProperty implements DavProperty {
     private static Logger log = LoggerFactory.getLogger(AbstractDavProperty.class);
 
     private final DavPropertyName name;
-    private final boolean isProtected;
+    private final boolean isInvisibleInAllprop;
 
     /**
      * Create a new <code>AbstractDavProperty</code> with the given {@link DavPropertyName}
-     * and a boolean flag indicating whether this property is protected.
-     *
-     * @param name
-     * @param isProtected
+     * and a boolean flag indicating whether this property should be suppressed
+     * in PROPFIND/allprop responses.
      */
-    public AbstractDavProperty(DavPropertyName name, boolean isProtected) {
+    public AbstractDavProperty(DavPropertyName name, boolean isInvisibleInAllprop) {
         this.name = name;
-        this.isProtected = isProtected;
+        this.isInvisibleInAllprop = isInvisibleInAllprop;
     }
 
     /**
-     * Computes the hash code using this propertys name and value.
+     * Computes the hash code using this property's name and value.
      *
      * @return the hash code
      */
@@ -153,12 +152,13 @@ public abstract class AbstractDavProperty implements DavProperty {
     }
 
     /**
-     * Returns true if this property is protected or computed.
+     * Return <code>true</code> if this property should be suppressed
+     * in a PROPFIND/{@link DavConstants#PROPFIND_ALL_PROP DAV:allprop} 
+     * response. See RFC 4918, Section 9.1.
      *
-     * @return true if this is a protected (or computed) property.
-     * @see org.apache.jackrabbit.webdav.property.DavProperty#isProtected()
+     * @see org.apache.jackrabbit.webdav.property.DavProperty#isInvisibleInAllprop()
      */
-    public boolean isProtected() {
-        return isProtected;
+    public boolean isInvisibleInAllprop() {
+        return isInvisibleInAllprop;
     }
 }

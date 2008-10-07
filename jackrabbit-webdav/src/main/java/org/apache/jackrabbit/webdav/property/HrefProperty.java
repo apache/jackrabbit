@@ -47,12 +47,12 @@ public class HrefProperty extends AbstractDavProperty {
      *
      * @param name the name of the property
      * @param value the value of the property
-     * @param isProtected A value of true, defines this property to be protected.
+     * @param isInvisibleInAllprop A value of true, defines this property to be invisible in PROPFIND/allprop
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
-     * PROPFIND request and cannot be set/removed with a PROPPATCH request.
+     * PROPFIND request.
      */
-    public HrefProperty(DavPropertyName name, String value, boolean isProtected) {
-        super(name, isProtected);
+    public HrefProperty(DavPropertyName name, String value, boolean isInvisibleInAllprop) {
+        super(name, isInvisibleInAllprop);
         this.value = new String[]{value};
     }
 
@@ -61,12 +61,12 @@ public class HrefProperty extends AbstractDavProperty {
      *
      * @param name the name of the property
      * @param value the value of the property
-     * @param isProtected A value of true, defines this property to be protected.
+     * @param isInvisibleInAllprop A value of true, defines this property to be invisible in PROPFIND/allprop
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
-     * PROPFIND request and cannot be set/removed with a PROPPATCH request.
+     * PROPFIND request.
      */
-    public HrefProperty(DavPropertyName name, String[] value, boolean isProtected) {
-        super(name, isProtected);
+    public HrefProperty(DavPropertyName name, String[] value, boolean isInvisibleInAllprop) {
+        super(name, isInvisibleInAllprop);
         this.value = value;
     }
 
@@ -78,7 +78,7 @@ public class HrefProperty extends AbstractDavProperty {
      * @param prop
      */
     public HrefProperty(DavProperty prop) {
-        super(prop.getName(), prop.isProtected());
+        super(prop.getName(), prop.isInvisibleInAllprop());
         if (prop instanceof HrefProperty) {
             // already an HrefProperty: no parsing required
             this.value = ((HrefProperty)prop).value;
@@ -154,7 +154,7 @@ public class HrefProperty extends AbstractDavProperty {
     }
 
     /**
-     * Return an array of String containg the text of those DAV:href elements
+     * Return an array of String containing the text of those DAV:href elements
      * that would be returned as child elements of this property on
      * {@link org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)}
      *

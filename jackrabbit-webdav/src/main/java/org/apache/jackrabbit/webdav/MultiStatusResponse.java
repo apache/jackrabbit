@@ -185,7 +185,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                     propFindType == PROPFIND_ALL_PROP || propFindType == PROPFIND_ALL_PROP_INCLUDE;
                 boolean wasRequested = propNameSet.remove(property.getName());
                 
-                if ((allDeadPlusRfc4918LiveProperties && !property.isProtected()) || wasRequested) {
+                if ((allDeadPlusRfc4918LiveProperties && !property.isInvisibleInAllprop()) || wasRequested) {
                     status200.addContent(property);
                 }
             }

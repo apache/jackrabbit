@@ -227,7 +227,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
      * that given property (consisting of one or multiple DAV:href elements)
      * is replaced by the Xml representation of a separate
      * {@link MultiStatusResponse multistatus responses} for the
-     * resource referenced to by the given DAV.:href elements. The responses may
+     * resource referenced to by the given DAV:href elements. The responses may
      * themselves have properties, which are defined by the separate list.
      */
     private class ExpandProperty extends AbstractDavProperty {
@@ -241,7 +241,7 @@ public class ExpandPropertyReport implements Report, DeltaVConstants {
          * @param elementIter
          */
         private ExpandProperty(DeltaVResource deltaVResource, HrefProperty hrefProperty, ElementIterator elementIter) {
-            super(hrefProperty.getName(), hrefProperty.isProtected());
+            super(hrefProperty.getName(), hrefProperty.isInvisibleInAllprop());
             try {
                 DavResource[] refResource = deltaVResource.getReferenceResources(hrefProperty.getName());
                 for (int i = 0; i < refResource.length; i++) {

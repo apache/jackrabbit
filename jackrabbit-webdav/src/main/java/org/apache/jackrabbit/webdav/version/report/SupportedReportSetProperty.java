@@ -111,9 +111,9 @@ public class SupportedReportSetProperty extends AbstractDavProperty {
         Element elem = getName().toXml(document);
         Iterator it = reportTypes.iterator();
         while (it.hasNext()) {
-	    Element sr = DomUtil.addChildElement(elem, DeltaVConstants.XML_SUPPORTED_REPORT, DeltaVConstants.NAMESPACE);
+            Element sr = DomUtil.addChildElement(elem, DeltaVConstants.XML_SUPPORTED_REPORT, DeltaVConstants.NAMESPACE);
             Element r = DomUtil.addChildElement(sr, DeltaVConstants.XML_REPORT, DeltaVConstants.NAMESPACE);
-	    r.appendChild(((ReportType)it.next()).toXml(document));
+            r.appendChild(((ReportType)it.next()).toXml(document));
         }
         return elem;
     }
