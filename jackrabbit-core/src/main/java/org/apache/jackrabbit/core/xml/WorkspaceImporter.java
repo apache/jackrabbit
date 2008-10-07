@@ -308,10 +308,8 @@ public class WorkspaceImporter implements Importer {
              * IMPORT_UUID_COLLISION_REPLACE_EXISTING;
              * otherwise create a new version history
              */
-            VersionHistory history = versionManager.getVersionHistory(session, node);
-            if (history == null) {
-                history = versionManager.createVersionHistory(session, node);
-            }
+            VersionHistory history =
+                versionManager.getVersionHistory(session, node);
             Version rootVersion = history.getRootVersion();
 
             // jcr:versionHistory

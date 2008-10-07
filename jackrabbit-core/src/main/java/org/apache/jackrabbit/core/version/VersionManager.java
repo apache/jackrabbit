@@ -42,30 +42,15 @@ public interface VersionManager {
     VirtualItemStateProvider getVirtualItemStateProvider();
 
     /**
-     * Creates a new version history. This action is needed either when creating
-     * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
-     * to a node.
-     *
-     * @param node
-     * @return
-     * @throws RepositoryException
-     * @see #getVersionHistory(Session, NodeState)
-     */
-    VersionHistory createVersionHistory(Session session, NodeState node)
-            throws RepositoryException;
-
-    /**
-     * Returns the version history of the specified <code>node</code> or
-     * <code>null</code> if the given node doesn't (yet) have an associated
-     * version history.
+     * Returns the version history of the specified node. If the given node
+     * does not already have an associated version history, then an empty
+     * history is automatically created. This method should only be called
+     * by code that already knows that the specified node is versionable.
      *
      * @param session
      * @param node node whose version history should be returned
-     * @return the version history of the specified <code>node</code> or
-     *         <code>null</code> if the given node doesn't (yet) have an
-     *        associated version history.
+     * @return the version history of the specified node
      * @throws RepositoryException if an error occurs
-     * @see #createVersionHistory(Session, NodeState)
      */
     VersionHistory getVersionHistory(Session session, NodeState node)
             throws RepositoryException;
