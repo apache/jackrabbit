@@ -89,7 +89,11 @@ public class FileJournalTest extends JUnitTest {
         ClusterNode clusterNode = new ClusterNode();
         clusterNode.init(context);
 
-        File revisionFile = new File(repositoryHome, FileJournal.DEFAULT_INSTANCE_FILE_NAME);
-        assertTrue(revisionFile.exists());
+        try {
+            File revisionFile = new File(repositoryHome, FileJournal.DEFAULT_INSTANCE_FILE_NAME);
+            assertTrue(revisionFile.exists());
+        } finally {
+            clusterNode.stop();
+        }
     }
 }
