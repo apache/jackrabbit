@@ -58,6 +58,16 @@ public class SimpleClusterContext implements ClusterContext {
         nsResolver = new RegistryNamespaceResolver(new SimpleNamespaceRegistry());
     }
 
+    /**
+     * Create a new instance of this class. Equivalent to
+     * <blockquote>SimpleClusterContext(cc, <code>null</code>)</blockquote>
+     *
+     * @param cc cluster config
+     */
+    public SimpleClusterContext(ClusterConfig cc) {
+        this(cc, null);
+    }
+
     //----------------------------------------------------------- ClusterContext
 
     /**

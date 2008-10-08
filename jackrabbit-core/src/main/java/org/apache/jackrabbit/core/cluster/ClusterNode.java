@@ -281,12 +281,15 @@ public class ClusterNode implements Runnable,
      * Stops this cluster node.
      */
     public synchronized void stop() {
-        if (status == STARTED) {
+        if (status != STOPPED) {
             status = STOPPED;
 
-            journal.close();
-            instanceRevision.close();
-
+            if (journal != null) {
+                journal.close();
+            }
+            if (instanceRevision != null) {
+                instanceRevision.close();
+            }
             notifyAll();
         }
     }

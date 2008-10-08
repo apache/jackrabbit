@@ -126,6 +126,9 @@ public class ClusterRecordTest extends JUnitTest {
         if (master != null) {
             master.stop();
         }
+        if (slave != null) {
+            slave.stop();
+        }
         super.tearDown();
     }
 
@@ -316,7 +319,7 @@ public class ClusterRecordTest extends JUnitTest {
         BeanConfig bc = new BeanConfig(MemoryJournal.class.getName(), new Properties());
         JournalConfig jc = new JournalConfig(bc);
         ClusterConfig cc = new ClusterConfig(id, SYNC_DELAY, jc);
-        SimpleClusterContext context = new SimpleClusterContext(cc, null);
+        SimpleClusterContext context = new SimpleClusterContext(cc);
 
         ClusterNode clusterNode = new ClusterNode();
         clusterNode.init(context);
