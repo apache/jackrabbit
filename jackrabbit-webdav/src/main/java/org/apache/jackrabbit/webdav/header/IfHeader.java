@@ -127,7 +127,7 @@ public class IfHeader implements Header {
      * @param req The request object
      */
     public IfHeader(HttpServletRequest req) {
-	headerValue = req.getHeader(DavConstants.HEADER_IF);
+        headerValue = req.getHeader(DavConstants.HEADER_IF);
         ifHeader = parse();
     }
 
@@ -167,7 +167,7 @@ public class IfHeader implements Header {
      * If the <em>If</em> header is of untagged type, the untagged <em>IfList</em>
      * is matched against the token and etag given: A match of the token and
      * etag is found if at least one of the <em>IfList</em> entries match the
-     * token and etag tupel.
+     * token and etag tuple.
      *
      * @param tag The tag to identify the <em>IfList</em> to match the token
      * and etag against.
@@ -191,7 +191,7 @@ public class IfHeader implements Header {
     }
 
     /**
-     * @return an interator over all tokens present in the if header, that were
+     * @return an iterator over all tokens present in the if header, that were
      * not denied by a leading NOT statement.
      */
     public Iterator getAllTokens() {
@@ -199,15 +199,15 @@ public class IfHeader implements Header {
     }
 
     /**
-     * @return an interator over all NOT tokens present in the if header, that
-     * were explicitely denied.
+     * @return an iterator over all NOT tokens present in the if header, that
+     * were explicitly denied.
      */
     public Iterator getAllNotTokens() {
         return allNotTokens.iterator();
     }
 
     /**
-     * Parse the original header value and build th internal IfHeaderInterface
+     * Parse the original header value and build the internal IfHeaderInterface
      * object that is easy to query.
      */
     private IfHeaderInterface parse() {
@@ -346,7 +346,7 @@ public class IfHeader implements Header {
      *
      * @return The {@link IfList} for the input <em>IfList</em>.
      *
-     * @throws IOException if a problem occurrs during reading.
+     * @throws IOException if a problem occurs during reading.
      */
     private IfList parseIfList(StringReader reader) throws IOException {
         IfList res = new IfList();
@@ -432,7 +432,7 @@ public class IfHeader implements Header {
      *
      * @return The first non-whitespace character or -1 in case of EOF.
      *
-     * @throws IOException if a problem occurrs during reading.
+     * @throws IOException if a problem occurs during reading.
      */
     private int readWhiteSpace(Reader reader) throws IOException {
         int c = reader.read();
@@ -444,20 +444,20 @@ public class IfHeader implements Header {
 
     /**
      * Reads from the input until the end character is encountered and returns
-     * the string upto but not including this end character. If the end of input
+     * the string up to but not including this end character. If the end of input
      * is reached before reading the end character <code>null</code> is
      * returned.
      * <p>
      * Note that this method does not support any escaping.
      *
      * @param reader The <code>Reader</code> to read from
-     * @param end The ending character limitting the word.
+     * @param end The ending character limiting the word.
      *
-     * @return The string read upto but not including the ending character or
+     * @return The string read up to but not including the ending character or
      *      <code>null</code> if the end of input is reached before the ending
      *      character has been read.
      *
-     * @throws IOException if a problem occurrs during reading.
+     * @throws IOException if a problem occurs during reading.
      */
     private String readWord(Reader reader, char end) throws IOException {
         StringBuffer buf = new StringBuffer();
@@ -486,7 +486,7 @@ public class IfHeader implements Header {
      *
      * @param state The name of the current parse state. This method logs this
      *      name in the message. The intended value would probably be the
-     *      name of the EBNF production during which the error occurrs.
+     *      name of the EBNF production during which the error occurs.
      * @param effChar The effective character read.
      * @param expChar The list of characters acceptable in the current state.
      * @param reader The reader to be caught up to any of the expected
@@ -602,20 +602,20 @@ public class IfHeader implements Header {
          */
         protected abstract String getType();
 
-	/**
-	 * Returns the value of this entry.
-	 *
-	 * @return the value
-	 */
-	protected String getValue() {
-	    return value;
-	}
+        /**
+         * Returns the value of this entry.
+         * 
+         * @return the value
+         */
+        protected String getValue() {
+            return value;
+        }
 
         /**
-         * Returns the String represenation of this entry. This method uses the
+         * Returns the String representation of this entry. This method uses the
          * {@link #getType} to build the string representation.
          *
-         * @return the String represenation of this entry.
+         * @return the String representation of this entry.
          */
         public String toString() {
             if (stringValue == null) {
@@ -732,7 +732,7 @@ public class IfHeader implements Header {
          * {@link IfListEntry} objects are supported in this list.
          *
          * @param o The <code>Object</code> to add.
-         * @return <code>true</code> if successfull
+         * @return <code>true</code> if successful
          *
          * @throws IllegalStateException because only {@link IfListEntry}
          *      objects are supported in this list.
@@ -788,7 +788,7 @@ public class IfHeader implements Header {
          * @param token The token to compare.
          * @param etag The etag to compare.
          *
-         * @return <code>true</code> if all entries in the list matche the
+         * @return <code>true</code> if all entries in the list match the
          *      given tag and token.
          */
         public boolean match(String token, String etag) {
@@ -833,7 +833,7 @@ public class IfHeader implements Header {
     }
 
     /**
-     * The <code>IfHeaderList</code> clss implements the {@link IfHeaderInterface}
+     * The <code>IfHeaderList</code> class implements the {@link IfHeaderInterface}
      * interface to support untagged lists of {@link IfList}s. This class
      * implements the data container for the production :
      * <pre>
@@ -874,7 +874,7 @@ public class IfHeader implements Header {
     }
 
     /**
-     * The <code>IfHeaderMap</code> clss implements the {@link IfHeaderInterface}
+     * The <code>IfHeaderMap</code> class implements the {@link IfHeaderInterface}
      * interface to support tagged lists of {@link IfList}s. This class
      * implements the data container for the production :
      * <pre>
