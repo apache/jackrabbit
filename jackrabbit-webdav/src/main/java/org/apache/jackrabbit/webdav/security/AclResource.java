@@ -28,9 +28,6 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
  */
 public interface AclResource extends DavResource {
 
-    // RFC 3744 defines one additional compliance class for the DAV header.
-    public String COMPLIANCE_CLASS = "access-control";
-
     /**
      * The AclResource must support the ACL method and the REPORT method in order
      * to retrieve various security related reports.

@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>OptionsMethod</code>...
@@ -38,7 +39,8 @@ public class OptionsMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(OptionsMethod.class);
 
-    private final HashSet allowedMethods = new HashSet();
+    private final Set allowedMethods = new HashSet();
+    private final Set complianceClasses = new HashSet();
 
     public OptionsMethod(String uri) {
 	super(uri);
@@ -56,8 +58,6 @@ public class OptionsMethod extends DavMethodBase {
     }
 
     /**
-     *
-     * @return
      * @throws IOException
      */
     public OptionsResponse getResponseAsOptionsResponse() throws IOException {
@@ -93,6 +93,28 @@ public class OptionsMethod extends DavMethodBase {
         return (String[]) allowedMethods.toArray(new String[allowedMethods.size()]);
     }
 
+    /**
+     * Checks if the specified compliance class is supported by the resource
+     * identified by the original URI.
+     *
+     * @param complianceClass WebDAV compliance class
+     * @return true if the given compliance class is contained in the 'DAV' response header.
+     */
+    public boolean hasComplianceClass(String complianceClass) {
+        checkUsed();
+        return complianceClasses.contains(complianceClass);
+    }
+
+
+    /**
+     * Returns an array of String listing the WebDAV compliance classes.
+     *
+     * @return all compliance classes supported by the resource specified by the original URI.
+     */
+    public String[] getComplianceClasses() {
+        checkUsed();
+        return (String[]) complianceClasses.toArray(new String[complianceClasses.size()]);
+    }
 
     //---------------------------------------------------------< HttpMethod >---
     /**
@@ -105,8 +127,9 @@ public class OptionsMethod extends DavMethodBase {
     //-----------------------------------------------------< HttpMethodBase >---
     /**
      * <p>
-     * This implementation will parse the <tt>Allow</tt> header to obtain
-     * the set of methods supported by the resource identified by the Request-URI.
+     * This implementation will parse the <tt>Allow</tt> and <tt>DAV</tt> headers to obtain
+     * the set of HTTP methods and WebDAV compliance classes supported by the resource
+     * identified by the Request-URI.
      * </p>
      *
      * @param state the {@link HttpState state} information associated with this method
@@ -120,6 +143,13 @@ public class OptionsMethod extends DavMethodBase {
             String[] methods = allow.getValue().split(",");
             for (int i = 0; i < methods.length; i++) {
                 allowedMethods.add(methods[i].trim().toUpperCase());
+            }
+        }
+        Header dav = getResponseHeader("DAV");
+        if (dav != null) {
+            String[] classes = dav.getValue().split(",");
+            for (int i = 0; i < classes.length; i++) {
+                complianceClasses.add(classes[i].trim());
             }
         }
     }

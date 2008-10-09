@@ -26,12 +26,6 @@ import org.apache.jackrabbit.webdav.MultiStatus;
 public interface SearchResource {
 
     /**
-     * No extra compliance class defined by the Webdav Search spec.
-     * Instead an extra DASL header is included.
-     */
-    public String COMPLIANCE_CLASS = "";
-
-    /**
      * The 'SEARCH' method
      */
     public String METHODS = "SEARCH";

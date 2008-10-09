@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.webdav.bind;
 
+import java.util.Set;
+
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
-
-import java.util.Collection;
-import java.util.Set;
 
 public interface BindableResource {
 

@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import junit.framework.TestCase;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -30,17 +32,12 @@ import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
+import org.apache.jackrabbit.webdav.client.methods.OptionsMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
-import org.w3c.dom.Element;
-
-import junit.framework.TestCase;
 
 /**
  * Test cases for RFC 4918 PROPFIND functionality
@@ -80,6 +77,12 @@ public class RFC4918PropfindTest extends TestCase {
         super.tearDown();
     }
     
+    public void testOptions() throws HttpException, IOException, DavException, URISyntaxException {
+        OptionsMethod options = new OptionsMethod(this.root);
+        this.client.executeMethod(options);
+        assertTrue(options.hasComplianceClass("3"));
+    }
+
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
   
         String testuri = this.root + "iftest";

@@ -42,11 +42,6 @@ import org.apache.jackrabbit.webdav.DavException;
 public interface VersionableResource extends DeltaVResource {
 
     /**
-     * No extra compliance class defined, therefore set to empty string
-     */
-    public static final String COMPLIANCE_CLASS = "";
-
-    /**
      * The versionable resource defines one additional method VERSION-CONTROL.
      *
      * @see DeltaVResource#METHODS

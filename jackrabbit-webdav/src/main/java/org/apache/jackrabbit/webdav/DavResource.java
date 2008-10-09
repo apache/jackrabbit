@@ -38,12 +38,6 @@ import java.util.List;
 public interface DavResource {
 
     /**
-     * Constant for WebDAV 1 and 2 compliance class as is represented by this
-     * resource.
-     */
-    public static final String COMPLIANCE_CLASS = "1, 2";
-
-    /**
      * String constant representing the WebDAV 1 and 2 method set.
      */
     public static final String METHODS = "OPTIONS, GET, HEAD, POST, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, PUT, DELETE, MOVE, LOCK, UNLOCK";
