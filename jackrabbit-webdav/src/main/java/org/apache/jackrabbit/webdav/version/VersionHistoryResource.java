@@ -45,8 +45,6 @@ import org.apache.jackrabbit.webdav.property.ResourceType;
 public interface VersionHistoryResource extends DeltaVResource {
 
     // supported METHODS: same as DeltaVResource > set to empty string
-    public static final String COMPLIANCE_CLASS = "";
-    // supported METHODS: same as DeltaVResource > set to empty string
     public static final String METHODS = "";
 
     /**

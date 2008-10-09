@@ -25,7 +25,6 @@ import org.apache.jackrabbit.webdav.DavResource;
  */
 public interface TransactionResource extends DavResource {
 
-    public static final String COMPLIANCE_CLASS = "";
     public static final String METHODS = "";
 
     /**

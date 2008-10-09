@@ -25,7 +25,6 @@ import org.apache.jackrabbit.webdav.DavResource;
  */
 public interface ObservationResource extends DavResource {
 
-    public String COMPLIANCE_CLASS = "observation";
     public String METHODS = "SUBSCRIBE, UNSUBSCRIBE, POLL";
 
     /**

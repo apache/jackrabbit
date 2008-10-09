@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <code>DavCompliance</code> defines constants for the various compliance
- * classes defined RFC 2518 and it's extensions.
+ * classes defined RFC 2518, RFC 4918 and it's extensions.
  */
 public final class DavCompliance {
 
@@ -30,6 +30,9 @@ public final class DavCompliance {
     // RFC 2518
     public static final String _1_ = "1";
     public static final String _2_ = "2";
+
+    // RFC 4918
+    public static final String _3_ = "3";
 
     // RFC 3253
     public static final String ACTIVITY = "activity";
@@ -48,8 +51,11 @@ public final class DavCompliance {
     public static final String ORDERED_COLLECTIONS = "ordered-collections";
 
     // RFC 3744
-    public static final String ACCESS_CONTROLL = "access-control";
+    public static final String ACCESS_CONTROL = "access-control";
 
+    // draft-ietf-webdav-bind
+    public static final String BIND = "bind";
+    
     // no RFC
     public static final String OBSERVATION = "observation";
 

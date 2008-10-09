@@ -44,8 +44,6 @@ public interface BindConstants {
 
     public static final String METHODS = "BIND, REBIND, UNBIND";
 
-    public static final String COMPLIANCE_CLASS = "bind";
-
     /*
      * Webdav properties defined by the BIND specification. 
      */

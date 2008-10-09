@@ -22,10 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
@@ -47,7 +44,6 @@ import org.apache.jackrabbit.webdav.bind.ParentElement;
 import org.apache.jackrabbit.webdav.bind.RebindInfo;
 import org.apache.jackrabbit.webdav.bind.UnbindInfo;
 import org.apache.jackrabbit.webdav.client.methods.BindMethod;
-import org.apache.jackrabbit.webdav.client.methods.DavMethod;
 import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.DeleteMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
@@ -63,7 +59,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-20.html">draft-ietf-webdav-bind-20</a>
+ * Test cases for WebDAV BIND functionality (see <a href="http://greenbytes.de/tech/webdav/draft-ietf-webdav-bind-21.html">draft-ietf-webdav-bind-21</a>
  * <p>
  * Required system properties:
  * <ul>
@@ -104,9 +100,8 @@ public class BindTest extends TestCase {
         OptionsMethod options = new OptionsMethod(this.uri.toASCIIString());
         int status = this.client.executeMethod(options);
         assertEquals(200, status);
-        Set features = getDavFeatures(options);
         List allow = Arrays.asList(options.getAllowedMethods());
-        assertTrue("DAV header should include 'bind' feature: " + features, features.contains("bind"));
+        assertTrue("DAV header should include 'bind' feature", options.hasComplianceClass("bind"));
         assertTrue("Allow header should include BIND method", allow.contains("BIND"));
         assertTrue("Allow header should include REBIND method", allow.contains("REBIND"));
         assertTrue("Allow header should include UNBIND method", allow.contains("UNBIND"));
@@ -646,18 +641,5 @@ public class BindTest extends TestCase {
             }
         }
         return s;
-    }
-    
-    private Set getDavFeatures(DavMethod method) {
-        Set result = new HashSet();
-        Header[] features = method.getResponseHeaders("DAV");
-        for (int i = 0; i < features.length; i++) {
-            String val = features[i].getValue();
-            StringTokenizer tok = new StringTokenizer(val, "\t ,");
-            while (tok.hasMoreTokens()) {
-                result.add(tok.nextToken());
-            }
-        }
-        return result;
     }
 }

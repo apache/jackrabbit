@@ -26,7 +26,6 @@ import org.apache.jackrabbit.webdav.DavResource;
  */
 public interface OrderingResource extends DavResource {
 
-    public String COMPLIANCE_CLASS = "ordered-collections";
     public String METHODS = "ORDERPATCH";
 
     /**

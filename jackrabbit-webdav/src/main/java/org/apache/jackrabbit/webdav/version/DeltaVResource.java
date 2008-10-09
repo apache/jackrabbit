@@ -47,8 +47,6 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
  */
 public interface DeltaVResource extends DavResource {
 
-    public String COMPLIANCE_CLASS = "version-control, checkout-in-place, version-history, update, label, merge, workspace";
-
     /**
      * The generic deltaV complient resource defines one additional method REPORT.
      *
