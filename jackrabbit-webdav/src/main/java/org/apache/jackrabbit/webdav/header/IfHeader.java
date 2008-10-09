@@ -138,7 +138,7 @@ public class IfHeader implements Header {
      * @see DavConstants#HEADER_IF
      */
     public String getHeaderName() {
-	return DavConstants.HEADER_IF;
+        return DavConstants.HEADER_IF;
     }
 
     /**

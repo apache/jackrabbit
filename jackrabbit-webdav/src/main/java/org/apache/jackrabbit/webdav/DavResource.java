@@ -49,7 +49,7 @@ public interface DavResource {
     public static final String METHODS = "OPTIONS, GET, HEAD, POST, TRACE, PROPFIND, PROPPATCH, MKCOL, COPY, PUT, DELETE, MOVE, LOCK, UNLOCK";
 
     /**
-     * Returns a comma separted list of all compliance classes the given
+     * Returns a comma separated list of all compliance classes the given
      * resource is fulfilling.
      *
      * @return compliance classes
@@ -178,8 +178,8 @@ public interface DavResource {
      * @param removePropertyNames Set of property names to be removed
      * @return multistatus response listing the status resulting from
      * setting and/or removing the specified properties, in order to allow a
-     * detailled multistatus response.
-     * @throws DavException if an error occured. This may be the case if the
+     * detailed multistatus response.
+     * @throws DavException if an error occurred. This may be the case if the
      * general state of the resource prevents any properties to be set or removed
      * (e.g. due to a lock).
      * @deprecated use {@link #alterProperties(List)} instead
@@ -194,8 +194,8 @@ public interface DavResource {
      * properties to be added/set).
      * @return multistatus response listing the status resulting from
      * setting and/or removing the specified properties, in order to allow a
-     * detailled multistatus response.
-     * @throws DavException if an error occured. This may be the case if the
+     * detailed multistatus response.
+     * @throws DavException if an error occurred. This may be the case if the
      * general state of the resource prevents any properties to be set or removed
      * (e.g. due to a lock).
      */
@@ -276,7 +276,7 @@ public interface DavResource {
     /**
      * Return the lock present on this webdav resource or <code>null</code>
      * if the resource is either not locked or not lockable at all. Note, that
-     * a resource may have a lock that is inherited by a deep lock inforced on
+     * a resource may have a lock that is inherited by a deep lock enforced on
      * one of its 'parent' resources.
      *
      * @return lock information of this resource or <code>null</code> if this
@@ -317,10 +317,10 @@ public interface DavResource {
     public ActiveLock refreshLock(LockInfo reqLockInfo, String lockToken) throws DavException;
 
     /**
-     * Remove the lock indentified by the included lock token from this resource.
+     * Remove the lock identified by the included lock token from this resource.
      * This method will return false if the unlocking did not succeed.
      *
-     * @param lockToken indentifying the lock to be removed.
+     * @param lockToken identifying the lock to be removed.
      * @throws DavException if the lock could not be removed.
      */
     public void unlock(String lockToken) throws DavException;
