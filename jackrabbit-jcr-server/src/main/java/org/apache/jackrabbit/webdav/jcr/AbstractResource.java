@@ -93,6 +93,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         DavCompliance.concatComplianceClasses(new String[] {
         DavCompliance._1_,
         DavCompliance._2_,
+        DavCompliance._3_,
         DavCompliance.VERSION_CONTROL,
         DavCompliance.VERSION_HISTORY,
         DavCompliance.CHECKOUT_IN_PLACE,

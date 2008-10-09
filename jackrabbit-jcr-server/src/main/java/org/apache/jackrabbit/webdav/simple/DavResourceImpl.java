@@ -30,6 +30,7 @@ import org.apache.jackrabbit.server.io.ImportContextImpl;
 import org.apache.jackrabbit.server.io.PropertyExportContext;
 import org.apache.jackrabbit.server.io.PropertyImportContext;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -97,8 +98,16 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     private static final Logger log = LoggerFactory.getLogger(DavResourceImpl.class);
 
     public static final String METHODS = DavResource.METHODS + ", " + BindConstants.METHODS;
-    public static final String COMPLIANCE_CLASS = DavResource.COMPLIANCE_CLASS + ", " + BindConstants.COMPLIANCE_CLASS;
 
+    public static final String COMPLIANCE_CLASSES = DavCompliance.concatComplianceClasses(
+        new String[] {
+            DavCompliance._1_,
+            DavCompliance._2_,
+            DavCompliance._3_,
+            DavCompliance.BIND
+        }
+    );
+    
     private DavResourceFactory factory;
     private LockManager lockManager;
     private JcrDavSession session;
@@ -109,7 +118,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     protected boolean propsInitialized = false;
     private boolean isCollection = true;
     private String rfc4122Uri;
-
+    
     private ResourceConfig config;
     private long modificationTime = IOUtil.UNDEFINED_TIME;
 
@@ -221,11 +230,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     }
 
     /**
-     * @return DavResource#COMPLIANCE_CLASS
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        return COMPLIANCE_CLASS;
+        return COMPLIANCE_CLASSES;
     }
 
     /**
