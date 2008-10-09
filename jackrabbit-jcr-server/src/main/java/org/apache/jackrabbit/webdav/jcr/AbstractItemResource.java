@@ -87,8 +87,12 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        String cc = super.getComplianceClass() + "," + DavCompliance.OBSERVATION;
-        return cc;
+        return DavCompliance.concatComplianceClasses(
+            new String[] {
+                super.getComplianceClass(),
+                DavCompliance.OBSERVATION,
+            }
+        );
     }
 
     /**

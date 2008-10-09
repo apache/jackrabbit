@@ -24,6 +24,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -31,8 +32,6 @@ import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.DavCompliance;
-import org.apache.jackrabbit.webdav.bind.BindConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
@@ -48,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>DeltaVResourceImpl</code> encapsultes the functionality common to all
+ * The <code>DeltaVResourceImpl</code> encapsulates the functionality common to all
  * DeltaV compliant resources.
  */
 public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResource {
@@ -56,6 +55,12 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
     protected SupportedReportSetProperty supportedReports = new SupportedReportSetProperty();
     private static final Logger log = LoggerFactory.getLogger(DeltaVResourceImpl.class);
 
+    private static final String DELTAV_COMPLIANCE_CLASSES = DavCompliance.concatComplianceClasses(
+        new String[] {
+            DavResourceImpl.COMPLIANCE_CLASSES,
+            DavCompliance.BIND,
+        }
+    );
 
     public DeltaVResourceImpl(DavResourceLocator locator, DavResourceFactory factory, DavSession session, ResourceConfig config, Item item) throws DavException {
         super(locator, factory, session, config, (Node)item);
@@ -69,18 +74,10 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
 
     //---------------------------------------------------------< DavResource>---
     /**
-     * @return DavResource#COMPLIANCE_CLASS
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
     public String getComplianceClass() {
-        return DavCompliance.concatComplianceClasses(new String[] {
-                DavCompliance._1_,
-                DavCompliance._2_,
-                DavCompliance.VERSION_CONTROL,
-                DavCompliance.VERSION_HISTORY,
-                DavCompliance.LABEL,
-                BindConstants.COMPLIANCE_CLASS,
-        });
+        return DELTAV_COMPLIANCE_CLASSES;
     }
 
     //------------------------------------------------------< DeltaVResource>---
