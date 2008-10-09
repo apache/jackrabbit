@@ -38,6 +38,16 @@ public class FileJournalTest extends JUnitTest {
     private static final String REPOSITORY_HOME = "target/repository_for_test";
 
     /**
+     * Default cluster node id.
+     */
+    private static final String CLUSTER_NODE_ID = "node";
+
+    /**
+     * Default sync delay: 5 seconds.
+     */
+    private static final long SYNC_DELAY = 5000;
+
+    /**
      * Repository home.
      */
     private File repositoryHome;
@@ -83,7 +93,7 @@ public class FileJournalTest extends JUnitTest {
         BeanConfig bc = new BeanConfig(FileJournal.class.getName(), params);
         JournalConfig jc = new JournalConfig(bc);
 
-        ClusterConfig cc = new ClusterConfig(null, 0, jc);
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
         SimpleClusterContext context = new SimpleClusterContext(cc, repositoryHome);
 
         ClusterNode clusterNode = new ClusterNode();
@@ -95,5 +105,59 @@ public class FileJournalTest extends JUnitTest {
         } finally {
             clusterNode.stop();
         }
+    }
+
+    /**
+     * Verify that <code>ClusterNode.stop</code> can be invoked even when
+     * <code>ClusterNode.init</code> throws because of a bad journal class.
+     *
+     * @throws Exception
+     */
+    public void testClusterInitIncompleteBadJournalClass() throws Exception {
+        Properties params = new Properties();
+
+        BeanConfig bc = new BeanConfig(Object.class.getName(), params);
+        JournalConfig jc = new JournalConfig(bc);
+
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
+        SimpleClusterContext context = new SimpleClusterContext(cc);
+
+        ClusterNode clusterNode = new ClusterNode();
+
+        try {
+            clusterNode.init(context);
+            fail("Bad cluster configuration.");
+        } catch (Exception e) {
+        }
+
+        clusterNode.stop();
+    }
+
+    /**
+     * Verify that <code>ClusterNode.stop</code> can be invoked even when
+     * <code>ClusterNode.init</code> throws because the journal can not
+     * be initialized. Note: this is done by omitting the required argument
+     * <code>directory</code>.
+     *
+     * @throws Exception
+     */
+    public void testClusterInitIncompleteMissingParam() throws Exception {
+        Properties params = new Properties();
+
+        BeanConfig bc = new BeanConfig(FileJournal.class.getName(), params);
+        JournalConfig jc = new JournalConfig(bc);
+
+        ClusterConfig cc = new ClusterConfig(CLUSTER_NODE_ID, SYNC_DELAY, jc);
+        SimpleClusterContext context = new SimpleClusterContext(cc);
+
+        ClusterNode clusterNode = new ClusterNode();
+
+        try {
+            clusterNode.init(context);
+            fail("Bad cluster configuration.");
+        } catch (Exception e) {
+        }
+
+        clusterNode.stop();
     }
 }
