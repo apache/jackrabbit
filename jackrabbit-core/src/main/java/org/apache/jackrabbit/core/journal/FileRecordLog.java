@@ -294,6 +294,25 @@ public class FileRecordLog {
     }
 
     /**
+     * Return the previous revision. This is the last revision preceding the
+     * first revision in this log.
+     *
+     * @return previous revision
+     */
+    public long getPreviousRevision() {
+        return previousRevision;
+    }
+
+    /**
+     * Return the last revision. This is the last revision in this log.
+     *
+     * @return last revision
+     */
+    public long getLastRevision() {
+        return lastRevision;
+    }
+
+    /**
      * Close this log.
      */
     public void close() {
@@ -407,5 +426,4 @@ public class FileRecordLog {
         }
         return utflen;
     }
-
 }
