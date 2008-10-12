@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.4
+Release Notes -- Apache Jackrabbit -- Version 1.5.0
 
 Introduction
 ------------
@@ -10,16 +10,11 @@ content, full text search, versioning, transactions, observation, and
 more. Typical applications that use content repositories include content
 management, document management, and records management systems.
 
-Apache Jackrabbit 1.4 is an incremental feature release. While
-remaining compatible with previous releases, Jackrabbit 1.4 introduces
-a number of new features, improvements and fixes to known issues. The
-most notable new features in this releases are the new object mapping
-and service provider components for JCR. The Jackrabbit content
-repository implementation has been enhanced with a new storage model
-for binary content, a much improved query and indexing system, and
-many fixes and improvements especially for concurrent access. Many
-smaller improvements and bug fixes are also included all over the
-codebase.
+Apache Jackrabbit 1.5 is an incremental feature release. While
+remaining compatible with previous releases, Jackrabbit 1.5 introduces
+a number of new features, improvements and fixes to known issues.
+
+TODO: Notable new features
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -27,121 +22,93 @@ more information.
 Release Contents
 ----------------
 
-The release consists of a single source archive and a number of
-pre-compiled binary component archives.
+This release consists of a single source archive (jackrabbit-1.5.0-src.jar)
+that contains all the Apache Jackrabbit components. Use the following
+commands (or the equivalent in your system) to build the release with
+Maven 2 and Java 1.4 or higher:
 
-    * Jackrabbit source code (jackrabbit-1.4-src.jar)
+    jar xf jackrabbit-1.5.0-src.jar
+    cd jackrabbit-1.5.0-src
+    mvn install
 
-        The main source archive contains a "jackrabbit-1.4-src" directory
-        with the full released source code and build environment. Use the
-        following commands (or the equivalent in your system) to build all
-        the released components with Maven 2 and Java 1.4:
+Note that the OCM components require Java 5 or higher, and are not included
+in the build when using Java 1.4.
 
-          $ jar xf jackrabbit-1.4-src.jar
-          $ cd jackrabbit-1.4-src
-          $ mvn install
+The source archive is accompanied by SHA1 and MD5 checksums and a PGP
+signature that you can use to verify the authenticity of your download.
+The public key used for the PGP signature can be found at
+https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
 
-        The OCM components require Java 5 or higher, and you need to
-        build them separately:
-        
-          $ (cd jackrabbit-ocm; mvn install)
-          $ (cd jackrabbit-ocm-nodemanagement; mvn install)
+The build will result in the following components (with artifactIds in
+parenthesis) being built and installed in your local Maven repository.
+Pre-built binary artifacts of these components are also available on
+the Jackrabbit download page and on the central Maven repository.
 
-The components contained in the released source archive are listed below
-(with the pre-compiled binary archives in parenthesis):
+  * Jackrabbit API (jackrabbit-api)
+    Interface extensions that Apache Jackrabbit supports in
+    addition to the standard JCR API.
 
-    * Jackrabbit API (jackrabbit-api-1.4.jar)
+  * Jackrabbit JCR Commons (jackrabbit-jcr-commons)
+    General-purpose classes for use with the JCR API.
 
-        Interface extensions that Apache Jackrabbit supports in
-        addition to the standard JCR API.
+  * Jackrabbit JCR Tests (jackrabbit-jcr-tests)
+    Set of JCR API test cases designed for testing the compliance
+    of an implementation. Note that this is not the official JCR TCK!
 
-    * Jackrabbit JCR Commons (jackrabbit-jcr-commons-1.4.jar)
+  * Jackrabbit Core (jackrabbit-core)
+    Core of the Apache Jackrabbit content repository implementation.
 
-        General-purpose classes for use with the JCR API.
+  * Jackrabbit Text Extractors (jackrabbit-text-extractors)
+    Text extractor classes that allow Jackrabbit to extract text content
+    from binary properties for full text indexing.
 
-    * Jackrabbit JCR Tests (jackrabbit-jcr-tests-1.4.jar)
+  * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi)
+    RMI remoting layer for the JCR API.
 
-        Set of JCR API test cases designed for testing the compliance
-        of an implementation. Note that this is not the official JCR TCK!
+  * Jackrabbit WebDAV Library (jackrabbit-webdav)
+    Interfaces and common utility classes used for building a
+    WebDAV server or client.
 
-    * Jackrabbit Core (jackrabbit-core-1.4.jar)
+  * Jackrabbit JCR Server (jackrabbit-jcr-server)
+    WebDAV servlet implementations based on JCR.
 
-        Core of the Apache Jackrabbit content repository implementation.
+  * Jackrabbit JCR Servlets (jackrabbit-jcr-servlet)
+    Set of servlets and other classes designed to make it easier to use
+    Jackrabbit and other JCR content repositories in web applications.
 
-    * Jackrabbit Text Extractors (jackrabbit-text-extractors-1.4.jar)
+  * Jackrabbit Repository Classloader (jackrabbit-classloader)
+    Java classloader for loading classes from JCR content repositories.
 
-        Text extractor classes that allow Jackrabbit to extract text content
-        from binary properties for full text indexing.
+  * Jackrabbit Web Application (jackrabbit-webapp)
+    Deployable Jackrabbit installation with WebDAV support for JCR.
 
-    * Jackrabbit JCR-RMI (jackrabbit-jcr-rmi-1.4.jar)
+  * Jackrabbit JCA Resource Adapter (jackrabbit-jca)
+    J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
 
-        RMI network layer for the JCR API.
+  * Jackrabbit SPI (jackrabbit-spi)
+    The SPI defines a layer within a JSR-170 implementation that separates
+    the transient space from the persistent layer.
 
-    * Jackrabbit WebDAV Library (jackrabbit-webdav-1.4.jar)
+  * Jackrabbit SPI Commons (jackrabbit-spi-commons)
+    This component contains generic utility classes that might be used
+    to build an SPI implementation.
 
-        Interfaces and common utility classes used for building a
-        WebDAV server or client.
+  * Jackrabbit SPI2JCR (jackrabbit-spi2jcr)
+    This component contains a SPI implementation wrapping around an
+    implementation of JSR-170.
 
-    * Jackrabbit JCR Server (jackrabbit-jcr-server-1.4.jar)
+  * Jackrabbit JCR2SPI (jackrabbit-jcr2spi)
+    This component contains an implementation of the JSR-170 API and
+    covers the functionality that is not delegated to the SPI
+    implementation.
 
-        WebDAV servlet implementations based on JCR.
+  * Jackrabbit OCM (jackrabbit-ocm)
+    Object-Content mapping tool for persisting and accessing Java objects
+    in a JCR content repository.
 
-    * Jackrabbit JCR Servlets (jackrabbit-jcr-servlet-1.4.jar)
-
-        Set of servlets and other classes designed to make it easier to use
-        Jackrabbit and other JCR content repositories in web applications.
-
-    * Jackrabbit Repository Classloader (jackrabbit-classloader-1.4.jar)
-
-        Java classloader for loading classes from JCR content repositories.
-
-    * Jackrabbit Web Application (jackrabbit-webapp-1.4.war)
-
-        Deployable Jackrabbit installation with WebDAV support for JCR.
-
-    * Jackrabbit JCA Resource Adapter (jackrabbit-jca-1.4.rar)
-
-        J2EE Connector Architecture (JCA) resource adapter for Jackrabbit.
-
-    * Jackrabbit SPI (jackrabbit-spi-1.4.jar)
-
-        The SPI defines a layer within a JSR-170 implementation that separates
-        the transient space from the persistent layer.
-
-    * Jackrabbit SPI Commons (jackrabbit-spi-commons-1.4.jar)
-
-        This component contains generic utility classes that might be used
-        to build an SPI implementation.
-
-    * Jackrabbit SPI2JCR (jackrabbit-spi2jcr-1.4.jar)
-
-        This component contains a SPI implementation wrapping around an
-        implementation of JSR-170.
-
-    * Jackrabbit JCR2SPI (jackrabbit-jcr2spi-1.4.jar)
-
-        This component contains an implementation of the JSR-170 API and
-        covers the functionality that is not delegated to the SPI
-        implementation.
-
-    * Jackrabbit OCM (jackrabbit-ocm-1.4.jar)
-
-        Object-Content mapping tool for persisting and accessing Java objects
-        in a JCR content repository.
-
-    * Jackrabbit OCM Node Management (jackrabbit-ocm-nodemanagement-1.4.jar)
-
-        This component simplifies registration of node types and namespaces
-        referenced in OCM mapping descriptors.        
-
-All files contain a README.txt file with more information. Note that
-external runtime dependencies are only included for the war and rar
-archives. Other dependencies can be downloaded either manually or
-automatically using the Maven build system.
-
-Each release file is accompanied by SHA1 and MD5 checksums and a PGP
-signature. The public key used for the signatures can be found
-in the KEYS file located in the parent directory.
+  * Jackrabbit OCM Node Management (jackrabbit-ocm-nodemanagement)
+    This component simplifies registration of node types and namespaces
+    referenced in OCM mapping descriptors.
 
 Upgrading to Jackrabbit 1.4
 ---------------------------
