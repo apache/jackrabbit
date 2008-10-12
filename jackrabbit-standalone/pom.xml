@@ -23,9 +23,17 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.apache.jackrabbit</groupId>
+<!-- ====================================================================== -->
+<!-- P R O J E C T  D E S C R I P T I O N                                   -->
+<!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit</artifactId>
+    <version>1.5-SNAPSHOT</version>
+  </parent>
   <artifactId>jackrabbit-standalone</artifactId>
-  <version>SNAPSHOT</version>
+  <name>Jackrabbit Standalone</name>
+  <description>Runnable jar packaging of Apache Jackrabbit</description>
 
   <build>
     <plugins>

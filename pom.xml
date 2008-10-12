@@ -75,6 +75,7 @@
     <module>jackrabbit-spi-commons</module>
     <module>jackrabbit-jcr2spi</module>
     <module>jackrabbit-spi2jcr</module>
+    <module>jackrabbit-standalone</module>
   </modules>
 
   <build>
