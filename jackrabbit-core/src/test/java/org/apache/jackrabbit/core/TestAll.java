@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(TransientRepositoryTest.class);
         suite.addTestSuite(XATest.class);
+        suite.addTestSuite(RestoreAndCheckoutTest.class);
 
         return suite;
     }
