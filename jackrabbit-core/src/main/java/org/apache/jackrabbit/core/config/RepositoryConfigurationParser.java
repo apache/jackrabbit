@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -293,25 +294,33 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     }
 
     /**
-     * Parses the security manager configuration.
+     * Parses the security manager configuration. Returns default
+     * configuration based on the {@link SimpleSecurityManager} class if
+     * a security manager is not explicitly configured.
      *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1765">JCR-1765</a>
      * @param security the &lt;security> element.
      * @return the security manager configuration.
      * @throws ConfigurationException if the configuration is broken
      */
     public SecurityManagerConfig parseSecurityManagerConfig(Element security)
             throws ConfigurationException {
-
-        BeanConfig bc = parseBeanConfig(security, SECURITY_MANAGER_ELEMENT);
-
-        Element smElement = getElement(security, SECURITY_MANAGER_ELEMENT);
-        String wspAttr = getAttribute(smElement, WSP_NAME_ATTRIBUTE, null);
-
+        BeanConfig bc = new BeanConfig(
+                SimpleSecurityManager.class.getName(), new Properties());
+        String wspAttr = "security";
         BeanConfig wac = null;
-        Element element = getElement(smElement, WORKSPACE_ACCESS_ELEMENT, false);
+
+        Element element = getElement(security, SECURITY_MANAGER_ELEMENT, false);
         if (element != null) {
-            wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
+            bc = parseBeanConfig(security, SECURITY_MANAGER_ELEMENT);
+
+            wspAttr = getAttribute(element, WSP_NAME_ATTRIBUTE, null);
+
+            if (getElement(element, WORKSPACE_ACCESS_ELEMENT, false) != null) {
+                wac = parseBeanConfig(element, WORKSPACE_ACCESS_ELEMENT);
+            }
         }
+
         return new SecurityManagerConfig(bc, wspAttr, wac);
     }
 
