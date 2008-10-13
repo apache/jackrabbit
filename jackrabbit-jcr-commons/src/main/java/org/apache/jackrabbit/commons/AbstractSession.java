@@ -57,6 +57,9 @@ public abstract class AbstractSession implements Session {
 
     /**
      * Local namespace mappings. Prefixes as keys and namespace URIs as values.
+     * <p>
+     * This map is only accessed from synchronized methods (see
+     * <a href="https://issues.apache.org/jira/browse/JCR-1793">JCR-1793</a>).
      */
     private final Map namespaces = new HashMap();
 
@@ -66,7 +69,7 @@ public abstract class AbstractSession implements Session {
      * <code>super.logout()</code> when overriding this method to avoid
      * namespace mappings to be carried over to a new session.
      */
-    public void logout() {
+    public synchronized void logout() {
         namespaces.clear();
     }
 
@@ -85,7 +88,7 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public String getNamespacePrefix(String uri)
+    public synchronized String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
         Iterator iterator = namespaces.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -121,7 +124,7 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the namespace is not found
      * @throws RepositoryException if a repository error occurs
      */
-    public String getNamespaceURI(String prefix)
+    public synchronized String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
         String uri = (String) namespaces.get(prefix);
 
@@ -152,7 +155,8 @@ public abstract class AbstractSession implements Session {
      * @return namespace prefixes
      * @throws RepositoryException if a repository error occurs
      */
-    public String[] getNamespacePrefixes() throws RepositoryException {
+    public synchronized String[] getNamespacePrefixes()
+            throws RepositoryException {
         NamespaceRegistry registry = getWorkspace().getNamespaceRegistry();
         String[] uris = registry.getURIs();
         for (int i = 0; i < uris.length; i++) {
@@ -175,7 +179,7 @@ public abstract class AbstractSession implements Session {
      * @throws NamespaceException if the mapping is illegal
      * @throws RepositoryException if a repository error occurs
      */
-    public void setNamespacePrefix(String prefix, String uri)
+    public synchronized void setNamespacePrefix(String prefix, String uri)
             throws NamespaceException, RepositoryException {
         if (prefix == null) {
             throw new IllegalArgumentException("Prefix must not be null");
@@ -450,7 +454,7 @@ public abstract class AbstractSession implements Session {
      * @throws SAXException if the SAX event handler failed
      * @throws RepositoryException if another error occurs
      */
-    private void export(String path, Exporter exporter)
+    private synchronized void export(String path, Exporter exporter)
             throws PathNotFoundException, SAXException, RepositoryException {
         Item item = getItem(path);
         if (item.isNode()) {
