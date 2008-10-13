@@ -454,7 +454,7 @@ public abstract class AbstractSession implements Session {
      * @throws SAXException if the SAX event handler failed
      * @throws RepositoryException if another error occurs
      */
-    private void export(String path, Exporter exporter)
+    private synchronized void export(String path, Exporter exporter)
             throws PathNotFoundException, SAXException, RepositoryException {
         Item item = getItem(path);
         if (item.isNode()) {
