@@ -147,7 +147,8 @@ public class ConfigurationParser {
                     throw new ConfigurationException("Parameter value not set");
                 }
                 parameters.put(
-                        name.getValue(), replaceVariables(value.getValue()));
+                        name.getValue().trim(),
+                        replaceVariables(value.getValue()));
             }
         }
 
