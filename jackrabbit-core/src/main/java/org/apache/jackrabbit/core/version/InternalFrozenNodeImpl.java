@@ -110,7 +110,17 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             PropertyState prop = props[i];
             if (prop.getName().equals(NameConstants.JCR_FROZENUUID)) {
                 // special property
-                frozenUUID = UUID.fromString(node.getPropertyValue(NameConstants.JCR_FROZENUUID).getString());
+                InternalValue value =
+                    node.getPropertyValue(NameConstants.JCR_FROZENUUID);
+                // JCR-1803: The value should be a STRING, but older Jackrabbit
+                // versions (< 1.1, see JCR-487) used REFERENCE values. Since
+                // we do not automatically upgrade old content, we need to be
+                // ready to handle both types of values here.
+                if (value.getType() == PropertyType.STRING) {
+                    frozenUUID = UUID.fromString(value.getString());
+                } else {
+                    frozenUUID = value.getUUID();
+                }
             } else if (prop.getName().equals(NameConstants.JCR_FROZENPRIMARYTYPE)) {
                 // special property
                 frozenPrimaryType = node.getPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE).getQName();
