@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit</artifactId>
-    <version>1.5.0-b1</version>
+    <version>1.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
   <name>Jackrabbit JCR to SPI</name>
