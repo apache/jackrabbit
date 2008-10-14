@@ -20,34 +20,33 @@ import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
-import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
 import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Item;
-import javax.jcr.Session;
-import javax.jcr.ItemNotFoundException;
-
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * <code>LockManagerImpl</code>...
@@ -307,7 +306,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // error occured.
             // for this case, assume that no lock exists and delegate final
             // validation to the spi-implementation.
-            log.warn("Error while accessing lock holding NodeState", e);
+            log.warn("Error while accessing lock holding NodeState", e.getMessage());
             return null;
         }
     }
@@ -546,10 +545,14 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // status changes of the jcr:lockIsDeep property.
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 try {
+                    if (!lockHoldingState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
+                        // force reloading of the lock holding node.
+                        itemManager.getItem(lockHoldingState.getNodeEntry().getPath());
+                    }
                     PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
                     ps.addListener(this);
                 } catch (RepositoryException e) {
-                    log.warn("Internal error", e);
+                    log.warn("Unable to retrieve jcr:isDeep property after lock creation.", e.getMessage());
                 }
             }
         }
@@ -564,7 +567,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                         ps.removeListener(this);
                     }
                 } catch (ItemNotFoundException e) {
-                    log.debug("jcr:isDeep doesn't exist any more.");
+                    log.debug("jcr:lockIsDeep doesn't exist any more.");
                 } catch (Exception e) {
                     log.warn(e.getMessage());
                 }
