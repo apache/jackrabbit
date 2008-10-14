@@ -52,6 +52,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
@@ -399,19 +400,23 @@ public class RepositoryImpl extends AbstractRepository
 
         if (securityMgr == null) {
             SecurityManagerConfig smc = getConfig().getSecurityConfig().getSecurityManagerConfig();
-
-            String workspaceName = smc.getWorkspaceName();
-            if (workspaceName == null) {
-                workspaceName = getConfig().getDefaultWorkspaceName();
+            String workspaceName = getConfig().getDefaultWorkspaceName();
+            if (smc != null && smc.getWorkspaceName() != null) {
+                workspaceName = smc.getWorkspaceName();
             }
             SystemSession securitySession = getSystemSession(workspaceName);
             // mark system session as 'active' for that the system workspace does
             // not get disposed by workspace-janitor
             onSessionCreated(securitySession);
 
-            securityMgr = (JackrabbitSecurityManager) smc.newInstance();
-            securityMgr.init(this, securitySession);
+            if (smc == null) {
+                log.debug("No configuration entry for SecurityManager. Using org.apache.jackrabbit.core.security.simple.SimpleSecurityManager");
+                securityMgr = new SimpleSecurityManager();
+            } else {
+                securityMgr = (JackrabbitSecurityManager) smc.newInstance();
+            }
 
+            securityMgr.init(this, securitySession);
             log.info("SecurityManager = " + securityMgr.getClass());
         }
         return securityMgr;
@@ -454,10 +459,14 @@ public class RepositoryImpl extends AbstractRepository
      */
     protected void initStartupWorkspaces() throws RepositoryException {
         String wspName = repConfig.getDefaultWorkspaceName();
-        String secWspName = repConfig.getSecurityConfig().getSecurityManagerConfig().getWorkspaceName();
+        String secWspName = null;
+        SecurityManagerConfig smc = repConfig.getSecurityConfig().getSecurityManagerConfig();
+        if (smc != null) {
+           secWspName = smc.getWorkspaceName();
+        }
         try {
             initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
-            if(secWspName != null && !wspInfos.containsKey(secWspName)) {
+            if (secWspName != null && !wspInfos.containsKey(secWspName)) {
                 createWorkspace(secWspName);
                 log.info("created system workspace: {}", secWspName);
             }

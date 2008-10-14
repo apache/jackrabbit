@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.config.SecurityConfig;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 
 import javax.jcr.Credentials;
@@ -47,14 +46,6 @@ public interface JackrabbitSecurityManager {
      * Disposes this security manager instance and cleans all internal caches.
      */
     public void close();
-
-    /**
-     * Returns the configuration that applies to this manager.
-     *
-     * @return security config
-     * @throws RepositoryException
-     */
-    public SecurityConfig getSecurityConfig() throws RepositoryException;
 
     /**
      * Returns a new <code>AuthContext</code> for the specified credentials and
