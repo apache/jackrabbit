@@ -1272,17 +1272,9 @@ public class NodeImpl extends ItemImpl implements Node {
         Operation an = AddNode.create(getNodeState(), nodeName, nodeTypeName, null);
         session.getSessionItemStateManager().execute(an);
 
-        // retrieve id of state that has been created during execution of AddNode
-        NodeEntry entry;
-        List cne = getNodeEntry().getNodeEntries(nodeName);
-        if (definition.allowsSameNameSiblings()) {
-            // TODO TOBEFIXED find proper solution. problem with SNSs
-            entry = ((NodeEntry)cne.get(cne.size()-1));
-        } else {
-            entry = ((NodeEntry)cne.get(0));
-        }
         // finally retrieve the new node
-        return (Node) itemMgr.getItem(entry);
+        List addedStates = ((AddNode) an).getAddedStates();
+        return (Node) itemMgr.getItem(((NodeState) addedStates.get(0)).getHierarchyEntry());
     }
 
     /**

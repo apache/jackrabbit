@@ -80,19 +80,22 @@ public class RefreshMovedTest extends AbstractJCRTest {
      */
     public void testRefreshOtherSession() throws RepositoryException {
         Session readSession = helper.getReadOnlySession();
-        Node anotherNode = (Node) readSession.getItem(srcPath);
-
-        // workspace move
-        testRootNode.getSession().getWorkspace().move(srcPath, destinationPath);
-
-        readSession.refresh(false);
         try {
-            String p = anotherNode.getPath();
-            // unless InvalidItemStateException is thrown the node must have
-            // been 'moved' to its new position.
-            assertTrue("Upon refresh of a node moved by another session it must be moved to the new destination (or removed).", p.equals(destinationPath));
-        } catch (InvalidItemStateException e) {
-            // ok as well.
+            Node anotherNode = (Node) readSession.getItem(srcPath);
+            // workspace move
+            testRootNode.getSession().getWorkspace().move(srcPath, destinationPath);
+
+            readSession.refresh(false);
+            try {
+                String p = anotherNode.getPath();
+                // unless InvalidItemStateException is thrown the node must have
+                // been 'moved' to its new position.
+                assertTrue("Upon refresh of a node moved by another session it must be moved to the new destination (or removed).", p.equals(destinationPath));
+            } catch (InvalidItemStateException e) {
+                // ok as well.
+            }
+        } finally {
+            readSession.logout();
         }
     }
 }

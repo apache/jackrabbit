@@ -109,4 +109,20 @@ public class NodeOrderTest extends AbstractJCRTest {
             another.logout();
         }
     }
+
+    /**
+     * Test if the order of Nodes is the same when accessed through another
+     * <code>Session</code> after having accessed some of the nodes individually.
+     */
+    public void testOrderAfterIndividualAccess2() throws RepositoryException {
+        Session another = helper.getReadOnlySession();
+        try {
+            Node n2 = (Node) another.getItem(children[3].getPath());
+            Node n3 = (Node) another.getItem(children[1].getPath());
+            NodeIterator it = ((Node) another.getItem(testRootNode.getPath())).getNodes();
+            checkOrder(it, children);
+        } finally {
+            another.logout();
+        }
+    }
 }

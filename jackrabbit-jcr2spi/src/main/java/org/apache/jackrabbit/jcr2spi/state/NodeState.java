@@ -16,31 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.commons.collections.iterators.IteratorChain;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.util.StateUtility;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
-import java.util.ArrayList;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import javax.jcr.RepositoryException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -113,7 +107,7 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getId()
      */
-    public ItemId getId() {
+    public ItemId getId() throws RepositoryException {
         return getNodeId();
     }
 
@@ -121,7 +115,7 @@ public class NodeState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getWorkspaceId()
      */
-    public ItemId getWorkspaceId() {
+    public ItemId getWorkspaceId() throws RepositoryException {
         return getNodeEntry().getWorkspaceId();
     }
 
@@ -177,125 +171,6 @@ public class NodeState extends ItemState {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     * @see ItemState#persisted(ChangeLog)
-     */
-    void persisted(ChangeLog changeLog) throws IllegalStateException {
-        // remember parent states that have need to adjust their uniqueID/mixintypes
-        // or that got a new child entry added or existing entries removed.
-        Map modParents = new HashMap();
-
-        // process deleted states from the changelog
-        for (Iterator it = changeLog.deletedStates(); it.hasNext();) {
-            ItemState delState = (ItemState) it.next();
-            if (Status.isTerminal(delState.getStatus())) {
-                log.debug("Removal of State " + delState + " has already been completed.");
-                continue;
-            }
-            delState.getHierarchyEntry().remove();
-
-            // adjust parent states unless the parent is removed as well
-            if (delState.getHierarchyEntry().getParent().isAvailable()) {
-                try {
-                    NodeState parent = delState.getParent();
-                    if (!changeLog.containsDeletedState(parent)) {
-                        modifiedParent(parent, delState, modParents);
-                    }
-                } catch (RepositoryException e) {
-                    // ignore. if parent state cannot be retrieved for whatever
-                    // reason, it doesn't need to be adjusted
-                }
-            }
-        }
-
-        // process added states from the changelog. since the changlog maintains
-        // LinkedHashSet for its entries, the iterator will not return a added
-        // entry before its NEW parent.
-        for (Iterator it = changeLog.addedStates(); it.hasNext();) {
-            ItemState addedState = (ItemState) it.next();
-            NodeState parent;
-            try {
-                parent = addedState.getParent();
-            } catch (RepositoryException e) {
-                // TODO: handle properly
-                log.error("Internal error:", e.getMessage());
-                continue;
-            }
-            // if parent is modified -> remember for final status reset
-            if (parent.getStatus() == Status.EXISTING_MODIFIED) {
-                modifiedParent(parent, addedState, modParents);
-            }
-            if (addedState.getStatus() == Status.EXISTING) {
-                log.debug("Adding new state " + addedState + " has already been completed.");
-            } else {
-                // connect the new state to its overlayed state (including update
-                // via merging in order to be aware of autocreated values,
-                // changed definition etc.
-                addedState.reload(false);
-            }
-        }
-
-        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
-            ItemState modState = (ItemState) it.next();
-            if (modState.getStatus() == Status.EXISTING) {
-                log.debug("Modified state has already been processed");
-                continue;
-            }
-            if (modState.isNode()) {
-                if (StateUtility.isMovedState((NodeState) modState)) {
-                    // and mark the moved state existing
-                    modState.setStatus(Status.EXISTING);
-                } else {
-                    // remember state as modified only for later processing
-                    if (!modParents.containsKey(modState)) {
-                        modParents.put(modState, new ArrayList(2));
-                    }
-                }
-            } else {
-                // peristed prop-state has status EXISTING now
-                modState.setStatus(Status.EXISTING);
-
-                // if property state defines a modified jcr:mixinTypes the parent
-                // is listed as modified state and needs to be processed at the end.
-                if (NameConstants.JCR_MIXINTYPES.equals(modState.getName())) {
-                    try {
-                        modifiedParent(modState.getParent(), modState, modParents);
-                    } catch (RepositoryException e) {
-                        // should never occur. since parent must be available otherwise
-                        // the mixin could not been added/removed.
-                        log.warn("Internal error:", e.getMessage());
-                    }
-                }
-            }
-        }
-
-        /* process all parent states that are marked modified and eventually
-           need their uniqueID or mixin-types being adjusted because that property
-           has been added, modified or removed */
-        for (Iterator it = modParents.entrySet().iterator(); it.hasNext();) {
-            Map.Entry entry = (Map.Entry) it.next();
-            NodeState parent = (NodeState) entry.getKey();
-            List l = (List) entry.getValue();
-            adjustNodeState(parent, (PropertyState[]) l.toArray(new PropertyState[l.size()]));
-        }
-
-        /* finally check if all entries in the changelog have been processed
-           and eventually force a reload in order not to have any states with
-           wrong transient status floating around. */
-        Iterator[] its = new Iterator[] {changeLog.addedStates(), changeLog.deletedStates(), changeLog.modifiedStates()};
-        IteratorChain chain = new IteratorChain(its);
-        while (chain.hasNext()) {
-            ItemState state = (ItemState) chain.next();
-            if (!(state.getStatus() == Status.EXISTING ||
-                  state.getStatus() == Status.REMOVED ||
-                  state.getStatus() == Status.INVALIDATED)) {
-                log.info("State " + state + " with Status " + Status.getName(state.getStatus()) + " has not been processed upon ChangeLog.persisted => invalidate");
-                state.setStatus(Status.EXISTING);
-            }
-        }
-    }
-
     //----------------------------------------------------------< NodeState >---
     /**
      * @return The <code>NodeEntry</code> associated with this state.
@@ -309,7 +184,7 @@ public class NodeState extends ItemState {
      *
      * @return the id of this node state.
      */
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return getNodeEntry().getId();
     }
 
@@ -349,7 +224,6 @@ public class NodeState extends ItemState {
     }
 
     /**
-     * TODO improve
      * Used by NodeEntryImpl and NodeState only
      *
      * @param mixinTypeNames
@@ -573,51 +447,10 @@ public class NodeState extends ItemState {
              before. The effective NT must be evaluated as if it had been
              evaluated upon creating the workspace state.
              */
-            def = definitionProvider.getQNodeDefinition(getParent().getNodeTypeNames(), getName(), getNodeTypeName(), getNodeEntry().getWorkspaceId());
+            NodeState parent = getParent();
+            NodeId wspId = (NodeId) getWorkspaceId();
+            def = definitionProvider.getQNodeDefinition(getParent().getNodeTypeNames(), getName(), getNodeTypeName(), wspId);
         }
         return def;
-    }
-    /**
-     *
-     * @param childState
-     * @param modParents
-     */
-    private static void modifiedParent(NodeState parent, ItemState childState, Map modParents) {
-        List l;
-        if (modParents.containsKey(parent)) {
-            l = (List) modParents.get(parent);
-        } else {
-            l = new ArrayList(2);
-            modParents.put(parent, l);
-        }
-        if (childState != null && !childState.isNode() && StateUtility.isUuidOrMixin(childState.getName())) {
-            l.add(childState);
-        }
-    }
-
-    /**
-     *
-     * @param parent
-     * @param props
-     */
-    private static void adjustNodeState(NodeState parent, PropertyState[] props) {
-        for (int i = 0; i < props.length; i++) {
-            PropertyState propState = props[i];
-            if (NameConstants.JCR_UUID.equals(propState.getName())) {
-                if (propState.getStatus() == Status.REMOVED) {
-                    parent.getNodeEntry().setUniqueID(null);
-                } else {
-                    // retrieve uuid from persistent layer
-                    propState.reload(false);
-                }
-            } else if (NameConstants.JCR_MIXINTYPES.equals(propState.getName())) {
-                Name[] mixins = StateUtility.getMixinNames(propState);
-                parent.setMixinTypeNames(mixins);
-            } // else: ignore.
-        }
-
-        // set parent status to 'existing'
-        parent.setStatus(Status.EXISTING);
-        parent.reload(false);
     }
 }

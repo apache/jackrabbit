@@ -115,9 +115,16 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     }
 
     /**
-     * @see ChildPropertyEntries#remove(Name)
+     * @see ChildPropertyEntries#remove(PropertyEntry)
      */
-    public boolean remove(Name propertyName) {
-        return properties.remove(propertyName) != null;
+    public boolean remove(PropertyEntry propertyEntry) {
+        Name pName = propertyEntry.getName();
+        PropertyEntry pe = get(pName);
+        if (pe == propertyEntry) {
+            properties.remove(pName);
+            return true;
+        } else {
+            return false;
+        }
     }
 }

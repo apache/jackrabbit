@@ -453,19 +453,14 @@ public class SessionImporter implements Importer, SessionListener {
             Operation an = AddNode.create(parent, nodeInfo.getName(), ntName, nodeInfo.getUUID());
             stateMgr.execute(an);
             // retrieve id of state that has been created during execution of AddNode
-            NodeState childState;
-            List cne = parent.getNodeEntry().getNodeEntries(nodeInfo.getName());
-            if (def.allowsSameNameSiblings()) {
-                // TODO TOBEFIXED find proper solution. problem with same-name-siblings
-                childState = ((NodeEntry)cne.get(cne.size()-1)).getNodeState();
-            } else {
-                childState = ((NodeEntry)cne.get(0)).getNodeState();
-            }
+            NodeState childState = (NodeState) ((AddNode) an).getAddedStates().get(0);
 
             // and set mixin types
-            // TODO: missing validation
-            Operation sm = SetMixin.create(childState, nodeInfo.getMixinNames());
-            stateMgr.execute(sm);
+            Name[] mixinNames = nodeInfo.getMixinNames();
+            if (mixinNames != null && mixinNames.length > 0) {
+                Operation sm = SetMixin.create(childState, nodeInfo.getMixinNames());
+                stateMgr.execute(sm);
+            }
             return childState;
         }
     }

@@ -19,6 +19,8 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.ItemId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -30,11 +32,13 @@ import javax.jcr.version.VersionException;
  */
 public class Remove extends AbstractOperation {
 
+    private static Logger log = LoggerFactory.getLogger(Remove.class);
+
     private ItemId removeId;
     protected ItemState removeState;
     protected NodeState parent;
 
-    protected Remove(ItemState removeState, NodeState parent) {
+    protected Remove(ItemState removeState, NodeState parent) throws RepositoryException {
         this.removeId = removeState.getId();
         this.removeState = removeState;
         this.parent = parent;
@@ -48,20 +52,30 @@ public class Remove extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
     /**
-     * Throws UnsupportedOperationException
-     *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        parent.getHierarchyEntry().complete(this);
+    }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_UNDO;
+        parent.getHierarchyEntry().complete(this);
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public ItemId getRemoveId() {
+    public ItemId getRemoveId() throws RepositoryException {
         return removeId;
     }
 

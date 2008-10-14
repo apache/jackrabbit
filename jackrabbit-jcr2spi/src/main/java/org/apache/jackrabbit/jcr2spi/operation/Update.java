@@ -19,13 +19,13 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.NodeId;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 
 /**
  * <code>Update</code>...
@@ -47,6 +47,7 @@ public class Update extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -57,11 +58,13 @@ public class Update extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         nodeState.getHierarchyEntry().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 

@@ -48,6 +48,7 @@ public class LockRelease extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -58,6 +59,8 @@ public class LockRelease extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         // non-recursive invalidation but including all properties
         NodeEntry nodeEntry = nodeState.getNodeEntry();
         Iterator entries = nodeEntry.getPropertyEntries();
@@ -69,7 +72,7 @@ public class LockRelease extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeId();
     }
 

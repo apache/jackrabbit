@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
@@ -81,6 +82,23 @@ final class EntryValidation {
     }
 
     /**
+     * Returns <code>true</code> if the given childnode entry is not
+     * <code>null</code> and resolves to a NodeState, that is neither NEW
+     * nor REMOVED.
+     *
+     * @param cne NodeEntry to check.
+     * @return <code>true</code> if the given entry is valid.
+     */
+    static boolean isValidWorkspaceNodeEntry(NodeEntry cne) {
+        // shortcut.
+        if (cne == null) {
+            return false;
+        }
+        int status = cne.getStatus();
+        return status != Status.NEW && status != Status.REMOVED;
+    }
+
+    /**
      * Returns <code>true</code> if the given childproperty entry is not
      * <code>null</code> and resolves to a PropertyState, that is valid or if the
      * childproperty entry has not been resolved up to now (assuming the corresponding
@@ -101,7 +119,7 @@ final class EntryValidation {
                 // may occur if the cached state is marked 'INVALIDATED' and
                 // does not exist any more on the persistent layer -> invalid.
             } catch (RepositoryException e) {
-                // probably deleted in the meantime. should not occur.
+                // probably removed in the meantime. should not occur.
             }
         } else {
             // assume entry is valid // TODO check if this assumption is correct.

@@ -55,6 +55,7 @@ public class Restore extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws PathNotFoundException, ItemExistsException, VersionException, ConstraintViolationException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -66,6 +67,8 @@ public class Restore extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         NodeEntry entry;
         if (nodeState == null || removeExisting) {
             // invalidate the complete tree
@@ -88,7 +91,7 @@ public class Restore extends AbstractOperation {
      *
      * @return
      */
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return (nodeState == null) ? null : nodeState.getNodeEntry().getWorkspaceId();
     }
 
@@ -103,7 +106,7 @@ public class Restore extends AbstractOperation {
         return relQPath;
     }
 
-    public NodeId[] getVersionIds() {
+    public NodeId[] getVersionIds() throws RepositoryException {
         NodeId[] versionIds = new NodeId[versionStates.length];
         for (int i = 0; i < versionStates.length; i++) {
             versionIds[i] = versionStates[i].getNodeEntry().getWorkspaceId();

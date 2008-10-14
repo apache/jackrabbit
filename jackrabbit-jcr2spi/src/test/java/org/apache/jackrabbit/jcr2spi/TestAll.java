@@ -34,13 +34,20 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("jcr2spi tests");
 
         suite.addTestSuite(AccessByRelativePathTest.class);
+
+        // get node(s)
         suite.addTestSuite(SNSIndexTest.class);
         suite.addTestSuite(NodeOrderTest.class);
 
         // set/add property
+        suite.addTestSuite(GetPropertyTest.class);
+        suite.addTestSuite(AddPropertyTest.class);
         suite.addTestSuite(AddNewPropertyTest.class);
         suite.addTestSuite(SingleValuedPropertyTest.class);
         suite.addTestSuite(MultiValuedPropertyTest.class);
+
+        // change mixin types
+        suite.addTestSuite(MixinModificationTest.class);
 
         // move
         suite.addTestSuite(MoveTest.class);
@@ -51,6 +58,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MoveMultipleTest.class);
         //suite.addTestSuite(WorkspaceMoveTest.class);  // see JCR-1276
         suite.addTestSuite(RevertMoveTest.class);
+        suite.addTestSuite(MoveToNewTest.class);
+        suite.addTestSuite(MoveCombinedTest.class);
 
         // refresh
         suite.addTestSuite(RefreshFalseTest.class);
@@ -62,6 +71,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RemovePropertyTest.class);
         suite.addTestSuite(RemoveReferenceableNodeTest.class);
         suite.addTestSuite(RemoveSNSTest.class);
+        suite.addTestSuite(RemoveMovedNodeTest.class);
 
         // rename
         suite.addTestSuite(RenameTest.class);
@@ -75,7 +85,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReorderNewAndSavedTest.class);
         suite.addTestSuite(ReorderMixedTest.class);
         suite.addTestSuite(ReorderMoveTest.class);
-
+        
         // update
         suite.addTestSuite(UpdateTest.class);
 
@@ -83,6 +93,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ReplaceNodeTest.class);
         suite.addTestSuite(HierarchyNodeTest.class);
         suite.addTestSuite(LazyItemIteratorTest.class);
+        suite.addTestSuite(ExternalModificationTest.class);
 
         return suite;
     }

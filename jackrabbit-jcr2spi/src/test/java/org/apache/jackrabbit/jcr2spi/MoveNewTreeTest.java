@@ -22,6 +22,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Item;
 import javax.jcr.PathNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * <code>MoveTreeTest</code>...
@@ -46,7 +49,6 @@ public class MoveNewTreeTest extends AbstractMoveTreeTest {
         assertTrue("Moving a node must move all child items as well.", ancestor.isSame(destParentNode));
         ancestor = grandChildNode.getAncestor(degree);
         assertTrue("Moving a node must move all child items as well.", ancestor.isSame(destParentNode));
-
     }
 
     public void testTreeEntries() throws RepositoryException {
@@ -107,6 +109,25 @@ public class MoveNewTreeTest extends AbstractMoveTreeTest {
             fail("Reverting move of a new node must remove the tree completely");
         } catch (RepositoryException e) {
             // OK
+        }
+    }
+
+    public void testRefreshMovedTree() throws RepositoryException {
+        testRootNode.refresh(true);
+        String msg = "Refresh must not revert a moved tree.";
+
+        assertFalse(msg, superuser.itemExists(srcPath + "/" + nodeName2 + "/" + nodeName3));
+        int degree = destParentNode.getDepth();
+
+        List l = new ArrayList();
+        l.add(childNode);
+        l.add(childProperty);
+        l.add(grandChildNode);
+
+        for (Iterator it = l.iterator(); it.hasNext();) {
+            Item item = (Item) it.next();
+            assertTrue(msg, item.isNew());
+            assertTrue(msg, childNode.getAncestor(degree).isSame(destParentNode));
         }
     }
 }

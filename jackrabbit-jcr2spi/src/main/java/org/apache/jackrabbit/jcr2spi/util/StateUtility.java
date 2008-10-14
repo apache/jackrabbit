@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -32,8 +30,6 @@ import javax.jcr.RepositoryException;
  * <code>StateUtility</code>...
  */
 public class StateUtility {
-
-    private static Logger log = LoggerFactory.getLogger(StateUtility.class);
 
     /**
      *

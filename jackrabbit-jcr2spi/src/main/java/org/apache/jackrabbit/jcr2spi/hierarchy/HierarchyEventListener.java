@@ -28,6 +28,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PathNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -142,9 +143,24 @@ public class HierarchyEventListener implements InternalEventListener {
             progress = false;
             for (Iterator it = addEvents.iterator(); it.hasNext();) {
                 Event ev = (Event) it.next();
-                NodeEntry parent = (ev.getParentId() != null) ? (NodeEntry) hierarchyMgr.lookup(ev.getParentId()) : null;
-                if (parent != null) {
-                    parent.refresh(ev);
+                NodeId parentId = ev.getParentId();
+                HierarchyEntry parent = null;
+                if (parentId != null) {
+                    parent = hierarchyMgr.lookup(parentId);
+                    if (parent == null && ev.getPath() != null && parentId.getUniqueID() != null) {
+                        // parentID contains a uniqueID part -> try to lookup
+                        // the parent by path.
+                        try {
+                            Path parentPath = ev.getPath().getAncestor(1);
+                            parent = hierarchyMgr.lookup(parentPath);
+                        } catch (PathNotFoundException e) {
+                            // should not occur
+                            log.debug(e.getMessage());
+                        }
+                    }
+                }
+                if (parent != null && parent.denotesNode()) {
+                    ((NodeEntry) parent).refresh(ev);
                     it.remove();
                     progress = true;
                 }

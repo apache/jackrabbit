@@ -67,5 +67,9 @@ public class RevertMoveTest extends AbstractMoveTest {
         assertFalse("Reverting the move operation must remove the node at destination path.", testRootNode.getSession().itemExists(destinationPath));
         assertTrue("Reverting the move operation must re-add the node at its original position.", testRootNode.getSession().itemExists(srcPath));
         assertTrue("Reverting the move operation must re-add the node at its original position.", srcPath.equals(moveNode.getPath()));
+
+        assertFalse("The former destination must not be modified.", destParentNode.isModified());
+        assertFalse("The parent must not be modified.", srcParentNode.isModified());
+        assertFalse("The move-node must not be modified.", moveNode.isModified());
     }
 }

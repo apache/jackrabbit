@@ -121,11 +121,18 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
      * @see EntryFactory.NodeEntryListener#entryCreated(NodeEntry)
      */
     public void entryCreated(NodeEntry entry) {
-        String uniqueID = entry.getUniqueID();
-        if (uniqueID != null) {
-            Object previous = lookUp.put(uniqueID, entry);
-            if (previous != null) {
-                ((NodeEntry) previous).remove();
+        synchronized (lookUp) {
+            String uniqueID = entry.getUniqueID();
+            if (uniqueID != null) {
+                // get an previous entry first and remove it before adding the
+                // new one. otherwise the newly added entry will be removed
+                // again upon removal of the original entry.
+                Object previous = lookUp.get(uniqueID);
+                if (previous != null) {
+                    lookUp.remove(uniqueID);
+                    ((NodeEntry) previous).remove();
+                }
+                lookUp.put(uniqueID, entry);
             }
         }
     }
@@ -136,7 +143,13 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
     public void uniqueIdChanged(NodeEntry entry, String previousUniqueID) {
         synchronized (lookUp) {
             if (previousUniqueID != null) {
-                lookUp.remove(previousUniqueID);
+                Object previous = lookUp.get(previousUniqueID);
+                if (previous != entry) {
+                    // changed entry was not in this cache -> return.
+                    return;
+                } else {
+                    lookUp.remove(previousUniqueID);
+                }
             }
             String uniqueID = entry.getUniqueID();
             if (uniqueID != null) {
