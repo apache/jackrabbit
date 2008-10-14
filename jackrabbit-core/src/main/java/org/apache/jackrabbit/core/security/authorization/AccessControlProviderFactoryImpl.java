@@ -18,9 +18,10 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLProvider;
 import org.apache.jackrabbit.core.security.user.UserAccessControlProvider;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +44,17 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
      * The name of the security workspace (containing users...)
      */
     private String secWorkspaceName = null;
+    private String defaultWorkspaceName = null;
 
     //---------------------------------------< AccessControlProviderFactory >---
     /**
-     * @see AccessControlProviderFactory#init(JackrabbitSecurityManager)
+     * @see AccessControlProviderFactory#init(Session)
      */
-    public void init(JackrabbitSecurityManager securityMgr) throws RepositoryException {
-        secWorkspaceName = securityMgr.getSecurityConfig().getSecurityManagerConfig().getWorkspaceName();
+    public void init(Session securitySession) throws RepositoryException {
+        secWorkspaceName = securitySession.getWorkspace().getName();
+        if (securitySession instanceof SessionImpl) {
+            defaultWorkspaceName = ((RepositoryImpl) securitySession.getRepository()).getConfig().getDefaultWorkspaceName();
+        } // else: unable to determine default workspace name
     }
 
     /**
@@ -73,7 +78,10 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
             props = bc.getParameters();
         } else {
             log.debug("No ac-provider configuration for workspace " + workspaceName + " -> using defaults.");
-            if (workspaceName.equals(secWorkspaceName)) {
+            if (workspaceName.equals(secWorkspaceName) && !workspaceName.equals(defaultWorkspaceName)) {
+                // UserAccessControlProvider is designed to work with an extra
+                // workspace storing user and groups. therefore avoid returning
+                // this ac provider for the default workspace.
                 prov = new UserAccessControlProvider();
             } else {
                 prov = new ACLProvider();

@@ -23,15 +23,16 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
-import org.apache.jackrabbit.core.config.BeanConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.SecurityConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
+import org.apache.jackrabbit.core.config.SecurityManagerConfig;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.DefaultAccessManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
@@ -204,14 +205,22 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
         // create the system userManager and make sure the system-users exist.
         systemUserManager = new UserManagerImpl(securitySession, adminId);
-        createSystemUsers(adminId, anonymousId);
+        createSystemUsers(systemUserManager, adminId, anonymousId);
 
         // init default ac-provider-factory
         acProviderFactory = new AccessControlProviderFactoryImpl();
-        acProviderFactory.init(this);
+        acProviderFactory.init(securitySession);
 
         // create the evalutor for workspace access
-        workspaceAccessManager = createWorkspaceAccessManager();
+        SecurityManagerConfig smc = config.getSecurityManagerConfig();
+        if (smc != null && smc.getWorkspaceAccessConfig() != null) {
+            workspaceAccessManager = (WorkspaceAccessManager) smc.getWorkspaceAccessConfig().newInstance();
+        } else {
+            // fallback -> the default implementation
+            log.debug("No WorkspaceAccessManager configured; using default.");
+            workspaceAccessManager = new WorkspaceAccessManagerImpl();
+        }
+        workspaceAccessManager.init(securitySession);
 
         // initialize principa-provider registry
         // 1) create default
@@ -258,32 +267,30 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * @see JackrabbitSecurityManager#getSecurityConfig()
-     */
-    public SecurityConfig getSecurityConfig() throws RepositoryException {
-        return repository.getConfig().getSecurityConfig();
-    }
-
-    /**
      * @see JackrabbitSecurityManager#getAccessManager(Session,AMContext)
      */
     public AccessManager getAccessManager(Session session, AMContext amContext) throws RepositoryException {
         checkInitialized();
-        AccessManagerConfig amConfig = getSecurityConfig().getAccessManagerConfig();
+        AccessManagerConfig amConfig = repository.getConfig().getSecurityConfig().getAccessManagerConfig();
         try {
             String wspName = session.getWorkspace().getName();
             AccessControlProvider pp = getAccessControlProvider(wspName);
+            AccessManager accessMgr;
+            if (amConfig == null) {
+                log.debug("No configuration entry for AccessManager. Using org.apache.jackrabbit.core.security.DefaultAccessManager");
+                accessMgr = new DefaultAccessManager();
+            } else {
+                accessMgr = (AccessManager) amConfig.newInstance();
+            }
 
-            AccessManager accessMgr = (AccessManager) amConfig.newInstance();
             accessMgr.init(amContext, pp, workspaceAccessManager);
             return accessMgr;
-        } catch (AccessDeniedException ade) {
+        } catch (AccessDeniedException e) {
             // re-throw
-            throw ade;
+            throw e;
         } catch (Exception e) {
             // wrap in RepositoryException
             String msg = "Failed to instantiate AccessManager (" + amConfig.getClassName() + ")";
-            e.printStackTrace();
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
@@ -330,6 +337,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * @see JackrabbitSecurityManager#getUserID(Subject)
      */
     public String getUserID(Subject subject) throws RepositoryException {
+        checkInitialized();
         /* shortcut if the subject contains the AdminPrincipal in which case
            the userID is already known. */
         if (!subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
@@ -385,20 +393,6 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
     //--------------------------------------------------------------------------
     /**
-     * @param wspName
-     * @return The <code>WorkspaceSecurityConfig</code> for the given workspace
-     * name or <code>null</code>.
-     */
-    private WorkspaceSecurityConfig getWorkspaceSecurityConfig(String wspName) {
-        WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(wspName);
-        if (conf == null) {
-            return null;
-        } else {
-            return conf.getSecurityConfig();
-        }
-    }
-
-    /**
      * Returns the access control provider for the specified
      * <code>workspaceName</code>.
      *
@@ -409,12 +403,14 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      */
     private AccessControlProvider getAccessControlProvider(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
-
+        checkInitialized();
         synchronized (acProviders) {
             AccessControlProvider provider = (AccessControlProvider) acProviders.get(workspaceName);
             if (provider == null) {
                 SystemSession systemSession = repository.getSystemSession(workspaceName);
-                provider = acProviderFactory.createProvider(systemSession, getWorkspaceSecurityConfig(workspaceName));
+                WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
+                WorkspaceSecurityConfig secConf = (conf == null) ?  null : conf.getSecurityConfig();
+                provider = acProviderFactory.createProvider(systemSession, secConf);
                 acProviders.put(workspaceName, provider);
             }
             return provider;
@@ -422,43 +418,28 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * @return the WorkspaceAccessManager responsible for the repository.
-     */
-    private WorkspaceAccessManager createWorkspaceAccessManager() throws RepositoryException {
-        WorkspaceAccessManager wspAccess;
-        BeanConfig config = repository.getConfig().getSecurityConfig().getSecurityManagerConfig().getWorkspaceAccessConfig();
-        if (config != null) {
-            wspAccess = (WorkspaceAccessManager) config.newInstance();
-        } else {
-            // fallback -> the default implementation
-            log.debug("No WorkspaceAccessManager configured; using default.");
-            wspAccess = new WorkspaceAccessManagerImpl();
-        }
-        wspAccess.init(this);
-        return wspAccess;
-    }
-
-    /**
      * Make sure the 'administrators' group exists and the user with the
      * configured (or default) adminID is member of this user-group.
      *
+     * @param userManager
      * @param adminId
      * @param anonymousId
      * @throws RepositoryException
      */
-    private void createSystemUsers(String adminId,
-                                   String anonymousId) throws RepositoryException {
+    private static void createSystemUsers(UserManager userManager,
+                                          String adminId,
+                                          String anonymousId) throws RepositoryException {
         Principal pr = new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME);
-        Group admins = (Group) systemUserManager.getAuthorizable(pr);
+        Group admins = (Group) userManager.getAuthorizable(pr);
         if (admins == null) {
-            admins = systemUserManager.createGroup(new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME));
+            admins = userManager.createGroup(new PrincipalImpl(SecurityConstants.ADMINISTRATORS_NAME));
             log.debug("...created administrators group with name '"+SecurityConstants.ADMINISTRATORS_NAME+"'");
         }
 
         if (adminId != null) {
-            Authorizable admin = systemUserManager.getAuthorizable(adminId);
+            Authorizable admin = userManager.getAuthorizable(adminId);
             if (admin == null) {
-                admin = systemUserManager.createUser(adminId, adminId);
+                admin = userManager.createUser(adminId, adminId);
                 log.info("...created admin-user with id \'" + adminId + "\' ...");
                 admins.addMember(admin);
                 log.info("...added admin \'" + adminId + "\' as member of the administrators group.");
@@ -466,9 +447,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         }
 
         if (anonymousId != null) {
-            Authorizable anonymous = systemUserManager.getAuthorizable(anonymousId);
+            Authorizable anonymous = userManager.getAuthorizable(anonymousId);
             if (anonymous == null) {
-                systemUserManager.createUser(anonymousId, "");
+                userManager.createUser(anonymousId, "");
                 log.info("...created anonymous-user with id \'" + anonymousId + "\' ...");
             }
         }
@@ -491,8 +472,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         //-----------------------------------------< WorkspaceAccessManager >---
         /**
          * {@inheritDoc}
+         * @param securitySession
          */
-        public void init(JackrabbitSecurityManager securityManager) throws RepositoryException {
+        public void init(Session securitySession) throws RepositoryException {
             // nothing to do here.
         }
 
