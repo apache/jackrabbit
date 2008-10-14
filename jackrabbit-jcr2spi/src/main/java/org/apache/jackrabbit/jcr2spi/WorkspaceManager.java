@@ -703,7 +703,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, AccessManage
             try {
                 ItemState target = changeLog.getTarget();
                 batch = service.createBatch(sessionInfo, target.getId());
-                Iterator it = changeLog.getOperations();
+                Iterator it = changeLog.getOperations().iterator();
                 while (it.hasNext()) {
                     Operation op = (Operation) it.next();
                     log.debug("executing " + op.getName());

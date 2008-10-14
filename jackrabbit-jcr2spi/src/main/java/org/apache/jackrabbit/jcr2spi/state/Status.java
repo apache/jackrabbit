@@ -63,7 +63,7 @@ public final class Status {
     public static final int MODIFIED = 7;
 
     /**
-     * a new state was deleted and is now 'removed'
+     * a new state was removed and is now 'removed'
      * or an existing item has been removed by a workspace operation or
      * by an external modification.
      */
@@ -137,7 +137,7 @@ public final class Status {
      *
      * @param status the status to check.
      * @return <code>true</code> if <code>status</code> indicates that an item
-     *         state is stale.
+     *         state is transiently modified.
      */
     public static boolean isTransient(int status) {
         return status == EXISTING_MODIFIED || status == EXISTING_REMOVED || status == NEW;
@@ -184,10 +184,10 @@ public final class Status {
                 break;
             case STALE_MODIFIED:
             case STALE_DESTROYED:
-                isValid = (oldStatus == EXISTING_MODIFIED);
+                isValid = (oldStatus == EXISTING_MODIFIED || oldStatus == EXISTING_REMOVED || oldStatus == STALE_MODIFIED);
                 break;
             case REMOVED:
-                // external removal always possible -> getNewStatus(int, int)
+                // removal always possible -> getNewStatus(int, int)
                 isValid = true;
                 break;
             case MODIFIED:
@@ -220,7 +220,6 @@ public final class Status {
                     // temporarily set the state to MODIFIED in order to inform listeners.
                     newStatus = Status.MODIFIED;
                 } else if (oldStatus == Status.EXISTING_MODIFIED) {
-                    // TODO: try to merge changes
                     newStatus = Status.STALE_MODIFIED;
                 } else {
                     // old status is EXISTING_REMOVED (or any other) => ignore.
@@ -229,7 +228,7 @@ public final class Status {
                 }
                 break;
             case Status.REMOVED:
-                if (oldStatus == Status.EXISTING_MODIFIED) {
+                if (oldStatus == Status.EXISTING_MODIFIED || oldStatus == Status.STALE_MODIFIED) {
                     newStatus = Status.STALE_DESTROYED;
                 } else {
                     // applies both to NEW or to any other status

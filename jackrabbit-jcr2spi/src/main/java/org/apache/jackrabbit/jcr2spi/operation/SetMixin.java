@@ -36,7 +36,7 @@ public class SetMixin extends AbstractOperation {
     private final NodeState nodeState;
     private final Name[] mixinNames;
 
-    private SetMixin(NodeState nodeState, Name[] mixinNames) {
+    private SetMixin(NodeState nodeState, Name[] mixinNames) throws RepositoryException {
         this.nodeState = nodeState;
         this.nodeId = nodeState.getNodeId();
         this.mixinNames = mixinNames;
@@ -59,16 +59,26 @@ public class SetMixin extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
     /**
-     * Throws UnsupportedOperationException
-     *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        nodeState.getHierarchyEntry().complete(this);
+    }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_UNDO;
+        nodeState.getHierarchyEntry().complete(this);
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -86,7 +96,11 @@ public class SetMixin extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
 
-    public static Operation create(NodeState nodeState, Name[] mixinNames) {
+    public static Operation create(NodeState nodeState, Name[] mixinNames)
+            throws RepositoryException {
+        if (nodeState == null || mixinNames == null) {
+            throw new IllegalArgumentException();
+        }
         SetMixin sm = new SetMixin(nodeState, mixinNames);
         return sm;
     }

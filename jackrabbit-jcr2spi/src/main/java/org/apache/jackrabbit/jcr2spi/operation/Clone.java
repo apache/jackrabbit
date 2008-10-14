@@ -55,6 +55,7 @@ public class Clone extends AbstractCopy {
      * @param visitor
      */
     public void accept(OperationVisitor visitor) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -62,7 +63,9 @@ public class Clone extends AbstractCopy {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
         if (removeExisting) {
+            status = STATUS_PERSISTED;
             // invalidate the complete tree -> find root-hierarchy-entry
             HierarchyEntry he = destParentState.getHierarchyEntry();
             while (he.getParent() != null) {

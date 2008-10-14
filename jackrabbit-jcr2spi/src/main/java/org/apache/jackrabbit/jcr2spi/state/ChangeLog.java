@@ -17,22 +17,18 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.AddNode;
-import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.commons.collections.iterators.IteratorChain;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.HashSet;
-import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -50,101 +46,129 @@ public class ChangeLog {
      * in this changelog.
      */
     private final ItemState target;
-    /**
-     * Added states
-     */
-    private final Set addedStates = new LinkedHashSet();
-
-    /**
-     * Modified states
-     */
-    private final Set modifiedStates = new LinkedHashSet();
-
-    /**
-     * Deleted states
-     */
-    private final Set deletedStates = new LinkedHashSet();
 
     /**
      * Set of operations
      */
-    private Set operations = new LinkedHashSet();
+    private final Set operations;
+
+    private final Set affectedStates;
 
     /**
+     * Create a new change log and populates it with operations and states
+     * that are within the scope of this change set.
      *
      * @param target
+     * @param operations
+     * @param affectedStates
+     * @throws InvalidItemStateException
+     * @throws ConstraintViolationException
      */
-    ChangeLog(ItemState target) {
+    ChangeLog(ItemState target, Set operations, Set affectedStates)
+            throws InvalidItemStateException, ConstraintViolationException {
         this.target = target;
+        this.operations = operations;
+        this.affectedStates = affectedStates;
     }
 
     //-----------------------------------------------< Inform the ChangeLog >---
     /**
-     * Add the given operation to the list of operations to be recorded within
-     * the current update cycle of this ChangeLog.
-     *
-     * @param operation
-     */
-    public void addOperation(Operation operation) {
-        operations.add(operation);
-    }
-
-    /**
-     * A state has been added
-     *
-     * @param state state that has been added
-     */
-    public void added(ItemState state) {
-        addedStates.add(state);
-    }
-
-    /**
-     * A state has been modified. If the state is not a new state
-     * (not in the collection of added ones), then add
-     * it to the modified states collection.
-     *
-     * @param state state that has been modified
-     */
-    public void modified(ItemState state) {
-        if (!addedStates.contains(state)) {
-            modifiedStates.add(state);
-        }
-    }
-
-    /**
-     * A state has been deleted. If the state is not a new state
-     * (not in the collection of added ones), then remove
-     * it from the modified states collection and add it to the
-     * deleted states collection.
-     *
-     * @param state state that has been deleted
-     */
-    public void deleted(ItemState state) {
-        if (!addedStates.remove(state)) {
-            modifiedStates.remove(state);
-            deletedStates.add(state);
-        }
-    }
-
-    /**
      * Call this method when this change log has been sucessfully persisted.
-     * This implementation will call {@link ItemState#persisted(ChangeLog)
-     * ItemState.refresh(this)} on the target item of this change log.
+     * This implementation will call {@link Operation#persisted() on the
+     * individual operations followed by setting all remaining modified
+     * states to EXISTING.
      */
-    public void persisted() {
-        target.persisted(this);
+    public void persisted() throws RepositoryException {
+        List changedMixins = new ArrayList();
+        Operation[] ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
+        for (int i = 0; i < ops.length; i++) {
+            ops[i].persisted();
+            if (ops[i] instanceof SetMixin) {
+                changedMixins.add(((SetMixin) ops[i]).getNodeState());
+            }
+        }
+        // process all remaining states that were not covered by the
+        // operation persistence.
+        for (Iterator it = affectedStates.iterator(); it.hasNext();) {
+            ItemState state = (ItemState) it.next();
+            HierarchyEntry he = state.getHierarchyEntry();
+
+            switch (state.getStatus()) {
+                case Status.EXISTING_MODIFIED:
+                    state.setStatus(Status.EXISTING);
+                    if (state.isNode() && changedMixins.contains(state)) {
+                        // mixin changed for a node -> force reloading upon next
+                        // access in order to be aware of modified uniqueID.
+                        he.invalidate(false);
+                    }
+                    break;
+                case Status.EXISTING_REMOVED:
+                    he.remove();
+                    break;
+                case Status.NEW:
+                    // illegal. should not get here.
+                    log.error("ChangeLog still contains NEW state: " + state.getName());
+                    state.setStatus(Status.EXISTING);
+                    break;
+                case Status.MODIFIED:
+                case Status._UNDEFINED_:
+                case Status.STALE_DESTROYED:
+                case Status.STALE_MODIFIED:
+                    // illegal.
+                    log.error("ChangeLog contains state (" + state.getName() + ") with illegal status " + Status.getName(state.getStatus()));
+                    break;
+                case Status.EXISTING:
+                    if (state.isNode() && changedMixins.contains(state)) {
+                        // mixin changed for a node -> force reloading upon next
+                        // access in order to be aware of modified uniqueID.
+                        he.invalidate(false);
+                    }
+                    // otherwise: ignore. operations already have been completed
+                    break;
+                case Status.INVALIDATED:
+                case Status.REMOVED:
+                    // ignore. operations already have been completed
+                    break;
+            }
+        }
     }
 
     /**
      * Revert the changes listed within this changelog
      */
     public void undo() throws RepositoryException {
-        // TODO: check if states are reverted in the correct order
-        Iterator[] its = new Iterator[] {addedStates(), deletedStates(), modifiedStates()};
-        IteratorChain chain = new IteratorChain(its);
-        while (chain.hasNext()) {
-            ItemState state = (ItemState) chain.next();
-            state.getHierarchyEntry().revert();
+        Operation[] ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
+        for (int i = ops.length - 1; i >= 0; i--) {
+            ops[i].undo();
+        }
+
+        // process all remaining states that were not covered by the
+        // operation undo.
+        for (Iterator it = affectedStates.iterator(); it.hasNext();) {
+            ItemState state = (ItemState) it.next();
+            switch (state.getStatus()) {
+                case Status.EXISTING_MODIFIED:
+                case Status.EXISTING_REMOVED:
+                case Status.STALE_MODIFIED:
+                case Status.STALE_DESTROYED:
+                    state.getHierarchyEntry().revert();
+                    break;
+                case Status.NEW:
+                    // illegal. should not get here.
+                    log.error("ChangeLog still contains NEW state: " + state.getName());
+                    state.getHierarchyEntry().revert();
+                    break;
+                case Status.MODIFIED:
+                case Status._UNDEFINED_:
+                    // illegal.
+                    log.error("ChangeLog contains state (" + state.getName() + ") with illegal status " + Status.getName(state.getStatus()));
+                    break;
+                case Status.EXISTING:
+                case Status.REMOVED:
+                case Status.INVALIDATED:
+                    // ignore already processed
+                    break;
+            }
         }
     }
     //----------------------< Retrieve information present in the ChangeLog >---
@@ -156,264 +180,33 @@ public class ChangeLog {
     }
 
     /**
-     * @return <code>true</code> if this changelog is empty.
+     * @return true if no <code>operations</code> are present.
      */
     public boolean isEmpty() {
         return operations.isEmpty();
     }
 
     /**
-     * @return an iterator over all operations.
+     * @return set of operations.
      */
-    public Iterator getOperations() {
-        return operations.iterator();
+    public Set getOperations() {
+        return operations;
     }
 
     /**
-     * Return an iterator over all added states.
-     *
-     * @return iterator over all added states.
+     * @return set of the affected states.
      */
-    public Iterator addedStates() {
-        return addedStates.iterator();
-    }
-
-    /**
-     * Return an iterator over all modified states.
-     *
-     * @return iterator over all modified states.
-     */
-    public Iterator modifiedStates() {
-        return modifiedStates.iterator();
-    }
-
-    /**
-     * Return an iterator over all deleted states.
-     *
-     * @return iterator over all deleted states.
-     */
-    public Iterator deletedStates() {
-        return deletedStates.iterator();
-    }
-
-    /**
-     * Returns true, if this change log contains the given <code>ItemState</code>
-     * in the set of transiently removed states.
-     *
-     * @param state
-     * @return
-     */
-    public boolean containsDeletedState(ItemState state) {
-        return deletedStates.contains(state);
-    }
-
-    /**
-     * Removes the subset of this changelog represented by the given
-     * <code>ChangeLog</code> from this changelog.
-     *
-     * @param subChangeLog remove all entries (states, operations) present in
-     * the given changelog from this changelog.
-     */
-    public void removeAll(ChangeLog subChangeLog) {
-        addedStates.removeAll(subChangeLog.addedStates);
-        modifiedStates.removeAll(subChangeLog.modifiedStates);
-        deletedStates.removeAll(subChangeLog.deletedStates);
-
-        operations.removeAll(subChangeLog.operations);
-    }
-
-    /**
-     * Adjust this ChangeLog according to the status change with the given
-     * ItemState:
-     * Remove all entries and operation related to the given ItemState, that
-     * are not used any more (respecting the status change).
-     *
-     * @param state
-     */
-    public void statusChanged(ItemState state, int previousStatus) {
-        switch (state.getStatus()) {
-            case (Status.EXISTING):
-                switch (previousStatus) {
-                    case Status.EXISTING_MODIFIED:
-                        // was modified and is now refreshed
-                        modifiedStates.remove(state);
-                        break;
-                    case Status.EXISTING_REMOVED:
-                        // was removed and is now refreshed
-                        deletedStates.remove(state);
-                        break;
-                    case Status.STALE_MODIFIED:
-                        // was modified and state and is now refreshed
-                        modifiedStates.remove(state);
-                        break;
-                    case Status.NEW:
-                        // was new and has been saved now
-                        addedStates.remove(state);
-                        break;
-                }
-                // TODO: check if correct: changelog gets cleared any way -> no need to remove operations
-                break;
-            case Status.EXISTING_MODIFIED:
-                modified(state);
-                break;
-            case (Status.EXISTING_REMOVED):
-                deleted(state);
-                // removeAffectedOperations(state);
-                break;
-            case (Status.REMOVED):
-                switch (previousStatus) {
-                    case Status.EXISTING_REMOVED:
-                        // was removed and is now saved
-                        deletedStates.remove(state);
-                        removeAffectedOperations(state);
-                        break;
-                    case Status.NEW:
-                        newStateRemoved(state);
-                        break;
-                }
-                break;
-        }
-    }
-
-    private void newStateRemoved(ItemState state) {
-        NodeEntry parentEntry = state.getHierarchyEntry().getParent();
-        if (!parentEntry.isAvailable() || Status.isTerminal(parentEntry.getStatus())) {
-            return; // TODO: check if correct
-        }
-        // was new and now removed again
-        addedStates.remove(state);
-
-        // remove any operations performed on the removed state
-        removeAffectedOperations(state);
-
-        /* remove the add-operation as well:
-           since the affected state of an 'ADD' operation is the parent instead
-           of the added-state, the set of operations need to be searched for the
-           parent state && the proper operation type.
-           SET_MIXIN is considered as a special case of adding a property
-         */
-        NodeState parent;
-        try {
-            parent = parentEntry.getNodeState();
-        } catch (RepositoryException e) {
-            // should never occur
-            log.error("Internal error:", e);
-            return;
-        }
-        for (Iterator it = operations.iterator(); it.hasNext();) {
-            Operation op = (Operation) it.next();
-            if (op instanceof AddNode) {
-                AddNode operation = (AddNode) op;
-                if (operation.getParentState() == parent
-                        && operation.getNodeName().equals(state.getName())) {
-                    // TODO: this will not work for name name siblings!
-                    it.remove();
-                    break;
-                }
-            } else if (op instanceof AddProperty) {
-                AddProperty operation = (AddProperty) op;
-                if (operation.getParentState() == parent
-                        && operation.getPropertyName().equals(state.getName())) {
-                    it.remove();
-                    break;
-                }
-            } else if (op instanceof SetMixin &&
-                    NameConstants.JCR_MIXINTYPES.equals(state.getName()) &&
-                    ((SetMixin)op).getNodeState() == parent) {
-                it.remove();
-                break;
-            }
-        }
-    }
-
-    private void removeAffectedOperations(ItemState state) {
-        for (Iterator it = operations.iterator(); it.hasNext();) {
-            Operation op = (Operation) it.next();
-            if (op.getAffectedItemStates().contains(state)) {
-                it.remove();
-            }
-        }
-    }
-
-    /**
-     * Make sure that this ChangeLog is totally 'self-contained'
-     * and independant; items within the scope of this update operation
-     * must not have 'external' dependencies;
-     * (e.g. moving a node requires that the target node including both
-     * old and new parents are saved)
-     */
-    public void checkIsSelfContained() throws ConstraintViolationException {
-        Set affectedStates = new HashSet();
-        affectedStates.addAll(modifiedStates);
-        affectedStates.addAll(deletedStates);
-        affectedStates.addAll(addedStates);
-
-        // check if the affected states listed by the operations are all
-        // listed in the modified,deleted or added states collected by this
-        // changelog.
-        Iterator it = getOperations();
-        while (it.hasNext()) {
-            Operation op = (Operation) it.next();
-            Collection opStates = op.getAffectedItemStates();
-            if (!affectedStates.containsAll(opStates)) {
-                // need to save the parent as well
-                String msg = "ChangeLog is not self contained.";
-                throw new ConstraintViolationException(msg);
-            }
-        }
-    }
-
-    /**
-     * Populates this <code>ChangeLog</code> with operations that are within the
-     * scope of this change set.
-     *
-     * @param operations an Iterator of <code>Operation</code>s which are the
-     *                   candidates to be included in this <code>ChangeLog</code>.
-     */
-    public void collectOperations(Iterator operations) {
-        Set affectedStates = new HashSet();
-        affectedStates.addAll(addedStates);
-        affectedStates.addAll(deletedStates);
-        affectedStates.addAll(modifiedStates);
-        while (operations.hasNext()) {
-            Operation op = (Operation) operations.next();
-            Iterator states = op.getAffectedItemStates().iterator();
-            while (states.hasNext()) {
-                ItemState state = (ItemState) states.next();
-                if (affectedStates.contains(state)) {
-                    addOperation(op);
-                    break;
-                }
-            }
-        }
+    public Set getAffectedStates() {
+        return affectedStates;
     }
 
     /**
      * Reset this change log, removing all members inside the
      * maps we built.
      */
-    public void reset() {
-        addedStates.clear();
-        modifiedStates.clear();
-        deletedStates.clear();
+    void reset() {
+        affectedStates.clear();
         // also clear all operations
         operations.clear();
-    }
-
-    //-------------------------------------------------------------< Object >---
-    /**
-     * Returns a string representation of this change log for diagnostic
-     * purposes.
-     *
-     * @return a string representation of this change log
-     */
-    public String toString() {
-        StringBuffer buf = new StringBuffer();
-        buf.append("{");
-        buf.append("#addedStates=").append(addedStates.size());
-        buf.append(", #modifiedStates=").append(modifiedStates.size());
-        buf.append(", #deletedStates=").append(deletedStates.size());
-        buf.append("}");
-        return buf.toString();
     }
 }

@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
@@ -71,12 +72,10 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
      * @inheritDoc
      * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition)
      */
-    public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition) {
-        PropertyState propState = new PropertyState(entry, this, definition, defProvider);
-
+    public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition, QValue[] values, int propertyType) throws RepositoryException {
+        PropertyState propState = new PropertyState(entry, this, definition, defProvider, values, propertyType);
         // notify listeners that a property state has been created
         notifyCreated(propState);
-
         return propState;
     }
 

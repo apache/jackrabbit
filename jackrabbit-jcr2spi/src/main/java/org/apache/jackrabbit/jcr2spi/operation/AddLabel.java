@@ -16,22 +16,22 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 
 /**
  * <code>AddLabel</code>...
@@ -66,6 +66,7 @@ public class AddLabel extends AbstractOperation {
      * @throws VersionException
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -77,6 +78,8 @@ public class AddLabel extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         try {
             NodeEntry vhEntry = (NodeEntry) versionHistoryState.getHierarchyEntry();
             NodeEntry lnEntry = vhEntry.getNodeEntry(NameConstants.JCR_VERSIONLABELS, Path.INDEX_DEFAULT);
@@ -88,11 +91,11 @@ public class AddLabel extends AbstractOperation {
         }
     }
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getVersionHistoryId() {
+    public NodeId getVersionHistoryId() throws RepositoryException {
         return versionHistoryState.getNodeEntry().getWorkspaceId();
     }
 
-    public NodeId getVersionId() {
+    public NodeId getVersionId() throws RepositoryException {
         return versionState.getNodeEntry().getWorkspaceId();
     }
 

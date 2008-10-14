@@ -65,33 +65,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     private final NodeEntry parent;
     private final EntryFactory factory;
 
-    /**
-     * Create a new <code>ChildNodeEntries</code> collection and retrieve
-     * the entries from the persistent layer if the parent is neither
-     * NEW nor in a terminal status.
-     */
-    ChildNodeEntriesImpl(NodeEntry parent, EntryFactory factory) throws ItemNotFoundException, RepositoryException {
-        this.parent = parent;
-        this.factory = factory;
-
-        if (parent.getStatus() != Status.NEW && !Status.isTerminal(parent.getStatus())) {
-            NodeId id = parent.getWorkspaceId();
-            Iterator childNodeInfos = factory.getItemStateFactory().getChildNodeInfos(id);
-            // simply add all child entries to the empty collection
-            while (childNodeInfos.hasNext()) {
-                ChildInfo ci = (ChildInfo) childNodeInfos.next();
-                NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
-                add(entry, ci.getIndex());
-            }
-        } /* else: cannot retrieve child-entries from persistent layer. the parent
-           * is NEW (transient only) or already removed from the persistent layer.
-           */
-
-        /* all child infos have been read from the persistent layer therefore
-           mark this child-node-entries as 'complete' */
-        complete = true;
-    }
-
      /**
       * Create a new <code>ChildNodeEntries</code> collection from the given
       * <code>childNodeInfos</code> instead of retrieving them from the
@@ -122,10 +95,24 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      }
 
     /**
-     * @see ChildNodeEntries#getStatus()
+     * @param childEntry
+     * @return The node entry that directly follows the given <code>childEntry</code>
+     * or <code>null</code> if the given <code>childEntry</code> has no successor
+     * or was not found in this <code>ChildNodeEntries</code>.
      */
-    public int getStatus() {
-        return status;
+    NodeEntry getNext(NodeEntry childEntry) {
+        LinkedEntries.LinkNode ln = entries.getLinkNode(childEntry);
+        LinkedEntries.LinkNode nextLn = (ln == null) ? null : ln.getNextLinkNode();
+        return (nextLn == null) ? null : nextLn.getNodeEntry();
+    }
+
+    /**
+     * @see ChildNodeEntries#isComplete()
+     */
+    public boolean isComplete() {
+        return (status == STATUS_OK && complete) ||
+                parent.getStatus() == Status.NEW ||
+                Status.isTerminal(parent.getStatus());
     }
 
     /**
@@ -139,8 +126,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @see ChildNodeEntries#reload()
      */
     public synchronized void reload() throws ItemNotFoundException, RepositoryException {
-        if (status == STATUS_OK && complete ||
-            parent.getStatus() == Status.NEW || Status.isTerminal(parent.getStatus())) {
+        if (isComplete()) {
             // nothing to do
             return;
         }
@@ -150,45 +136,38 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         update(childNodeInfos);
     }
 
+    /**
+     * Update the child node entries according to the child-infos obtained
+     * from the persistent layer.
+     * NOTE: the status of the entries already present is not respected. Thus
+     * new or removed entries are not touched in order not to modify the
+     * transient status of the parent. Operations that affect the set or order
+     * of child entries (AddNode, Move, Reorder) currently assert the
+     * completeness of the ChildNodeEntries, therefore avoiding an update
+     * resulting in inconsistent entries.
+     *
+     * @param childNodeInfos
+     * @see HierarchyEntry#reload(boolean, boolean) that ignores items with
+     * pending changes.
+     * @see org.apache.jackrabbit.jcr2spi.operation.AddNode
+     * @see org.apache.jackrabbit.jcr2spi.operation.Move
+     * @see org.apache.jackrabbit.jcr2spi.operation.Reorder
+     */
     synchronized void update(Iterator childNodeInfos) {
-        // TODO: should existing (not-new) entries that are not present in the childInfos be removed?
-        // create list from all ChildInfos (for multiple loop)
-        List cInfos = new ArrayList();
+        // insert missing entries and reorder all if necessary.
+        LinkedEntries.LinkNode prevLN = null;
         while (childNodeInfos.hasNext()) {
-            cInfos.add(childNodeInfos.next());
-        }
-        // first make sure the ordering of all existing entries is ok
-        NodeEntry entry = null;
-        for (Iterator it = cInfos.iterator(); it.hasNext();) {
-            ChildInfo ci = (ChildInfo) it.next();
-            NodeEntry nextEntry = get(ci);
-            if (nextEntry != null) {
-                if (entry != null) {
-                    reorder(entry, nextEntry);
-                }
-                entry = nextEntry;
+            ChildInfo ci = (ChildInfo) childNodeInfos.next();
+            LinkedEntries.LinkNode ln = entriesByName.getLinkNode(ci.getName(), ci.getIndex(), ci.getUniqueID());
+            if (ln == null) {
+                // add missing at the correct position.
+                NodeEntry entry = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
+                ln = internalAddAfter(entry, ci.getIndex(), prevLN);
+            } else if (prevLN != null) {
+                // assert correct order of existing
+                reorderAfter(ln, prevLN);
             }
-        }
-        // then insert the 'new' entries
-        List newEntries = new ArrayList();
-        for (Iterator it = cInfos.iterator(); it.hasNext();) {
-            ChildInfo ci = (ChildInfo) it.next();
-            NodeEntry beforeEntry = get(ci);
-            if (beforeEntry == null) {
-                NodeEntry ne = factory.createNodeEntry(parent, ci.getName(), ci.getUniqueID());
-                newEntries.add(ne);
-            } else {
-                // insert all new entries from the list BEFORE the existing
-                // 'nextEntry'. Then clear the list.
-                for (int i = 0; i < newEntries.size(); i++) {
-                    add((NodeEntry) newEntries.get(i), beforeEntry);
-                }
-                newEntries.clear();
-            }
-        }
-        // deal with new entries at the end
-        for (int i = 0; i < newEntries.size(); i++) {
-            add((NodeEntry) newEntries.get(i));
+            prevLN = ln;
         }
         // finally reset the status
         status = STATUS_OK;
@@ -241,26 +220,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * @see ChildNodeEntries#get(ChildInfo)
-     */
-    public NodeEntry get(ChildInfo childInfo) {
-        String uniqueID = childInfo.getUniqueID();
-        NodeEntry child = null;
-        if (uniqueID != null) {
-            child = get(childInfo.getName(), uniqueID);
-        }
-        // try to load the child entry by name and index.
-        // this is required in case of a null uniqueID OR if the child entry has
-        // been created but never been resolved and therefore the uniqueID might
-        // be unknown.
-        if (child == null) {
-            int index = childInfo.getIndex();
-            child = entriesByName.getNodeEntry(childInfo.getName(), index);
-        }
-        return child;
-    }
-
-    /**
      * Adds a <code>NodeEntry</code> to the end of the list. Same as
      * {@link #add(NodeEntry, int)}, where the index is {@link Path#INDEX_UNDEFINED}.
      *
@@ -279,6 +238,24 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             throw new IllegalArgumentException("Invalid index" + index);
         }
         internalAdd(cne, index);
+    }
+
+    /**
+     * @see ChildNodeEntries#add(NodeEntry, int, NodeEntry)
+     */
+    public synchronized void add(NodeEntry entry, int index, NodeEntry beforeEntry) {
+        if (beforeEntry != null) {
+            // the link node where the new entry is ordered before
+            LinkedEntries.LinkNode beforeLN = entries.getLinkNode(beforeEntry);
+            if (beforeLN == null) {
+                throw new NoSuchElementException();
+            }
+            LinkedEntries.LinkNode insertLN = internalAdd(entry, index);
+            reorder(entry.getName(), insertLN, beforeLN);
+        } else {
+            // 'before' is null -> simply append new entry at the end
+            add(entry);
+        }
     }
 
     /**
@@ -308,8 +285,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
 
         // add new entry
-        LinkedEntries.LinkNode ln = entries.add(entry);
-        entriesByName.put(nodeName, ln);
+        LinkedEntries.LinkNode ln = entries.add(entry, index);
+        entriesByName.put(nodeName, index, ln);
 
         // reorder the child entries if, the new entry must be inserted rather
         // than appended at the end of the list.
@@ -320,21 +297,18 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * @see ChildNodeEntries#add(NodeEntry, NodeEntry)
+     * Add the specified new entry after the specified <code>insertAfter</code>.
+     *
+     * @param newEntry
+     * @param index
+     * @param insertAfter
+     * @return
      */
-    public synchronized void add(NodeEntry entry, NodeEntry beforeEntry) {
-        if (beforeEntry != null) {
-            // the link node where the new entry is ordered before
-            LinkedEntries.LinkNode beforeLN = entries.getLinkNode(beforeEntry);
-            if (beforeLN == null) {
-                throw new NoSuchElementException();
-            }
-            LinkedEntries.LinkNode insertLN = internalAdd(entry, Path.INDEX_UNDEFINED);
-            reorder(entry.getName(), insertLN, beforeLN);
-        } else {
-            // 'before' is null -> simply append new entry at the end
-            add(entry);
-        }
+    private LinkedEntries.LinkNode internalAddAfter(NodeEntry newEntry, int index,
+                                                    LinkedEntries.LinkNode insertAfter) {
+        LinkedEntries.LinkNode ln = entries.addAfter(newEntry, index, insertAfter);
+        entriesByName.put(newEntry.getName(), index, ln);
+        return ln;
     }
 
     /**
@@ -411,7 +385,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
                     if (ln == beforeLN) {
                         break;
-                    } else if (ln != insertLN && ln.getNodeEntry().getName().equals(insertName)) {
+                    } else if (ln != insertLN && insertName.equals(ln.qName)) {
                         position++;
                     } // else: ln == inserLN OR no SNS -> not relevant for position count
                 }
@@ -420,6 +394,60 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
         // reorder in linked list
         entries.reorderNode(insertLN, beforeLN);
+    }
+
+    /**
+     *
+     * @param insertEntry
+     * @param afterEntry
+     */
+    private void reorderAfter(LinkedEntries.LinkNode insertLN, LinkedEntries.LinkNode afterLN) {
+        // the link node to move
+        if (insertLN == null) {
+            throw new NoSuchElementException();
+        }
+        // the link node where insertLN is ordered after
+        if (afterLN == null) {
+            // move to first position
+            afterLN = entries.getHeader();
+        }
+
+        LinkedEntries.LinkNode currentAfter = afterLN.getNextLinkNode();
+        if (currentAfter == insertLN) {
+            log.debug("Already ordered behind 'afterEntry'.");
+            // nothing to do
+            return;
+        } else {
+            // reorder named map
+            Name insertName = insertLN.qName;
+            if (entriesByName.containsSiblings(insertName)) {
+                int position = -1; // default: reorder to the end.
+                if (afterLN == entries.getHeader()) {
+                    // move to the beginning
+                    position = 0;
+                } else {
+                    // count all SNS-entries that are before 'afterLN' in order to
+                    // determine the new position of the reordered node regarding
+                    // his siblings.
+                    position = 0;
+                    for (Iterator it = entries.linkNodeIterator(); it.hasNext(); ) {
+                        LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                        if (!insertName.equals(ln.qName)) {
+                            continue; // not a SNS -> not relevant for position count
+                        }
+                        if (ln != insertLN) {
+                            position++;
+                        } // ln == inserLN -> not relevant for position count
+                        if (ln == afterLN) {
+                            break;
+                        }
+                    }
+                }
+                entriesByName.reorder(insertName, insertLN, position);
+            }
+            // reorder in linked list
+            entries.reorderNode(insertLN, afterLN.getNextLinkNode());
+        }
     }
 
     //-------------------------------------------------< AbstractLinkedList >---
@@ -455,16 +483,46 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return null;
         }
 
+        private LinkedEntries.LinkNode getHeader() {
+            return (LinkedEntries.LinkNode) header;
+        }
+
         /**
-         * Adds a child node entry to this list.
+         * Adds a child node entry at the end of this list.
          *
          * @param cne the child node entry to add.
+         * @param index
          * @return the LinkNode which refers to the added <code>NodeEntry</code>.
          */
-        LinkedEntries.LinkNode add(NodeEntry cne) {
-            LinkedEntries.LinkNode ln = new LinkedEntries.LinkNode(cne);
+        LinkedEntries.LinkNode add(NodeEntry cne, int index) {
+            LinkedEntries.LinkNode ln = new LinkedEntries.LinkNode(cne, index);
             addNode(ln, header);
             return ln;
+        }
+
+        /**
+         * Adds the given child node entry to this list after the specified
+         * <code>entry</code> or at the beginning if <code>entry</code> is
+         * <code>null</code>.
+         *
+         * @param cne the child node entry to add.
+         * @param index
+         * @param node after which to insert the new entry
+         * @return the LinkNode which refers to the added <code>NodeEntry</code>.
+         */
+        LinkedEntries.LinkNode addAfter(NodeEntry cne, int index, LinkedEntries.LinkNode insertAfter) {
+            LinkedEntries.LinkNode newNode;
+            if (insertAfter == null) {
+                // insert at the beginning
+                newNode = new LinkedEntries.LinkNode(cne, index);
+                addFirst(cne);
+            } else if (insertAfter.getNextLinkNode() == null) {
+                newNode = add(cne, index);
+            } else {
+                newNode = new LinkedEntries.LinkNode(cne, index);
+                addNode(newNode, insertAfter.getNextLinkNode());
+            }
+            return newNode;
         }
 
         /**
@@ -507,7 +565,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          * @see AbstractLinkedList#createNode(Object)
          */
         protected Node createNode(Object value) {
-            return new LinkedEntries.LinkNode(value);
+            return new LinkedEntries.LinkNode(value, Path.INDEX_DEFAULT);
         }
 
         /**
@@ -538,8 +596,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 qName = null;
             }
 
-            protected LinkNode(Object value) {
-                super(new WeakReference(value));
+            protected LinkNode(Object value, int index) {
+                // add weak reference from linkNode to the NodeEntry (value)
+                // unless the entry is a SNSibling. TODO: review again.
+                super(index > Path.INDEX_DEFAULT ? value : new WeakReference(value));
                 qName = ((NodeEntry) value).getName();
             }
 
@@ -548,10 +608,17 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
 
             protected Object getValue() {
-                Reference val = (Reference) super.getValue();
+                Object val = super.getValue();
+                NodeEntry ne;
+                if (val == null) {
+                    ne = null;
+                } else if (val instanceof Reference) {
+                    ne = (NodeEntry) ((Reference) val).get();
+                } else {
+                    ne = (NodeEntry) val;
+                }
                 // if the nodeEntry has been g-collected in the mean time
                 // create a new NodeEntry in order to avoid returning null.
-                NodeEntry ne = (val == null) ?  null : (NodeEntry) val.get();
                 if (ne == null && this != header) {
                     ne = factory.createNodeEntry(parent, qName, null);
                     super.setValue(new WeakReference(ne));
@@ -715,7 +782,35 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public void put(Name qName, LinkedEntries.LinkNode value) {
+        public LinkedEntries.LinkNode getLinkNode(Name qName, int index, String uniqueID) {
+            if (uniqueID != null) {
+                // -> try if any entry matches.
+                // if none matches it be might that entry doesn't have uniqueID
+                // set yet -> search without uniqueID
+                LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(qName);
+                if (val != null) {
+                    if (uniqueID.equals(val.getNodeEntry().getUniqueID())) {
+                        return val;
+                    }
+                } else {
+                    // look in snsMap
+                    List l = (List) snsMap.get(qName);
+                    if (l != null) {
+                        for (Iterator it = l.iterator(); it.hasNext();) {
+                            LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
+                            if (uniqueID.equals(ln.getNodeEntry().getUniqueID())) {
+                                return ln;
+                            }
+                        }
+                    }
+                }
+            }
+            // no uniqueID passed or not match.
+            // try to load the child entry by name and index.
+            return getLinkNode(qName, index);
+        }
+
+        public void put(Name qName, int index, LinkedEntries.LinkNode value) {
             // if 'nameMap' already contains a single entry -> move it to snsMap
             LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(qName);
             List l;
@@ -729,9 +824,16 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
 
             if (l == null) {
+                // no same name siblings -> simply put to the name map.
                 nameMap.put(qName, value);
             } else {
-                l.add(value);
+                // sibling(s) already present -> insert into the list
+                int position = index - 1;
+                if (position < 0 || position > l.size()) {
+                    l.add(value); // invalid position -> append at the end.
+                } else {
+                    l.add(position, value); // insert with the correct index.
+                }
             }
         }
 
@@ -753,12 +855,11 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 return;
             }
             // reorder sns in the name-list
-            if (position < 0) {
+            sns.remove(insertValue);
+            if (position < 0 || position > sns.size()) {
                 // simply move to end of list
-                sns.remove(insertValue);
                 sns.add(insertValue);
             } else {
-                sns.remove(insertValue);
                 sns.add(position, insertValue);
             }
         }

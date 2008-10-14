@@ -236,15 +236,16 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     public void refresh(boolean keepChanges) throws InvalidItemStateException, RepositoryException {
         // check session status
         session.checkIsAlive();
+        int status = state.getStatus();
         // check if item has been removed by this or another session
-        if (Status.isTerminal(state.getStatus()) || Status.EXISTING_REMOVED == state.getStatus()) {
+        if (Status.isTerminal(status) || Status.EXISTING_REMOVED == status) {
             throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
         }
 
         /* If 'keepChanges' is true, items that do not have changes pending have
            their state refreshed to reflect the current saved state */
         if (keepChanges) {
-            if (state.getStatus() != Status.NEW  &&
+            if (status != Status.NEW  &&
                 session.getCacheBehaviour() != CacheBehaviour.OBSERVATION) {
                 // merge current transient modifications with latest changes
                 // from the 'server'.
@@ -254,7 +255,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             }
         } else {
             // check status of item state
-            if (state.getStatus() == Status.NEW) {
+            if (status == Status.NEW) {
                 String msg = "Cannot refresh a new item (" + safeGetJCRPath() + ").";
                 log.debug(msg);
                 throw new RepositoryException(msg);
@@ -416,7 +417,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         }
         // now check if valid
         if (!state.isValid()) {
-            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore");
+            throw new InvalidItemStateException("Item '" + this + "' doesn't exist anymore. (Status = " +Status.getName(state.getStatus())+ ")");
         }
     }
 

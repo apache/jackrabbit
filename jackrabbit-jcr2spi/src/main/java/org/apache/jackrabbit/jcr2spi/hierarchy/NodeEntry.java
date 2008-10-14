@@ -17,18 +17,19 @@
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.QValue;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -41,7 +42,7 @@ public interface NodeEntry extends HierarchyEntry {
     /**
      * @return the <code>NodeId</code> of this child node entry.
      */
-    public NodeId getId();
+    public NodeId getId() throws InvalidItemStateException, RepositoryException;
 
     /**
      * Returns the ID that must be used for resolving this entry OR loading its
@@ -52,7 +53,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return
      * @see #getId()
      */
-    public NodeId getWorkspaceId();
+    public NodeId getWorkspaceId() throws InvalidItemStateException, RepositoryException;
 
     /**
      * @return the unique ID of the node state which is referenced by this
@@ -71,8 +72,10 @@ public interface NodeEntry extends HierarchyEntry {
      * @return the index of this child node entry to suppport same-name siblings.
      * If the index of this entry cannot be determined
      * {@link org.apache.jackrabbit.spi.Path#INDEX_UNDEFINED} is returned.
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
      */
-    public int getIndex();
+    public int getIndex() throws InvalidItemStateException, RepositoryException;
 
     /**
      * @return the referenced <code>NodeState</code>.
@@ -206,7 +209,7 @@ public interface NodeEntry extends HierarchyEntry {
      * @return
      * @throws RepositoryException If an error occurs.
      */
-    public NodeState addNewNodeEntry(Name nodeName, String uniqueID, Name primaryNodeType, QNodeDefinition definition) throws RepositoryException;
+    public NodeEntry addNewNodeEntry(Name nodeName, String uniqueID, Name primaryNodeType, QNodeDefinition definition) throws RepositoryException;
 
     /**
      * Determines if there is a property entry with the specified <code>Name</code>.
@@ -275,18 +278,21 @@ public interface NodeEntry extends HierarchyEntry {
      * @throws ItemExistsException
      * @throws RepositoryException if an unexpected error occurs.
      */
-    public void addPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException;
+    public void setPropertyEntries(Collection propNames) throws ItemExistsException, RepositoryException;
 
     /**
      * Add a new, transient <code>PropertyEntry</code> to this <code>NodeEntry</code>
      * and return the <code>PropertyState</code> associated with the new entry.
      *
      * @param propName
-     * @return The PropertyState associated with the new property entry.
+     * @param definition
+     * @param values
+     * @param propertyType
+     * @return the new entry.
      * @throws ItemExistsException
-     * @throws RepositoryException if an unexpected error occurs.
+     * @throws RepositoryException
      */
-    public PropertyState addNewPropertyEntry(Name propName, QPropertyDefinition definition) throws ItemExistsException, RepositoryException;
+    public PropertyEntry addNewPropertyEntry(Name propName, QPropertyDefinition definition, QValue[] values, int propertyType) throws ItemExistsException, RepositoryException;
 
     /**
      * Reorders this NodeEntry before the sibling entry specified by the given

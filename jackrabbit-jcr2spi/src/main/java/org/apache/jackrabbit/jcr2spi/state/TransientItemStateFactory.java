@@ -21,6 +21,9 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>TransientItemStateFactory</code> extends the item state factory and
@@ -46,8 +49,12 @@ public interface TransientItemStateFactory extends ItemStateFactory {
      *
      * @param entry
      * @param definition
+     * @param values
+     * @param propertyType
      * @return the created <code>PropertyState</code>.
      */
     public PropertyState createNewPropertyState(PropertyEntry entry,
-                                                QPropertyDefinition definition);
+                                                QPropertyDefinition definition,
+                                                QValue[] values, int propertyType)
+            throws RepositoryException;
 }

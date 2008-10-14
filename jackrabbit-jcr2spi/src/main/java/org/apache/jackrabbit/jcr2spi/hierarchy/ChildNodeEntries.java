@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.ChildInfo;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -31,6 +30,13 @@ import java.util.Iterator;
  * also maintains the index values of same-name siblings on insertion and removal.
  */
 public interface ChildNodeEntries {
+
+    /**
+     * @return <code>true</code> if this <code>ChildNodeEntries</code> have
+     * been updated or completely loaded without being invalidated in the
+     * mean time.
+     */
+    boolean isComplete();
 
     /**
      * Mark <code>ChildNodeEntries</code> in order to force reloading the
@@ -88,16 +94,6 @@ public interface ChildNodeEntries {
     NodeEntry get(Name nodeName, String uniqueID);
 
     /**
-     * Find the matching NodeEntry for the given <code>ChildInfo</code>. Returns
-     * <code>null</code> if no matching entry can be found. NOTE, that no check
-     * for validity of the entries is made.
-     *
-     * @param childInfo
-     * @return matching entry or <code>null</code>.
-     */
-    NodeEntry get(ChildInfo childInfo);
-
-    /**
      * Adds a <code>NodeEntry</code> to the end of the list. Same as
      * {@link #add(NodeEntry, int)}, where the index is {@link Path#INDEX_UNDEFINED}.
      *
@@ -123,9 +119,10 @@ public interface ChildNodeEntries {
      * Adds a the new  <code>NodeEntry</code> before <code>beforeEntry</code>.
      *
      * @param entry
+     * @param index
      * @param beforeEntry
      */
-    void add(NodeEntry entry, NodeEntry beforeEntry);
+    void add(NodeEntry entry, int index, NodeEntry beforeEntry);
 
     /**
      * Removes the child node entry refering to the node state.

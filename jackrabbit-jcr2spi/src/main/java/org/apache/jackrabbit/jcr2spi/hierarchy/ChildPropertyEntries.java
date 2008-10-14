@@ -75,9 +75,9 @@ public interface ChildPropertyEntries {
     /**
      * Remove the collection entry with the given <code>Name</code>.
      *
-     * @param propertyName
-     * @return true If this <code>ChildPropertyEntries</code> contained any
-     * entry with the given <code>Name</code>. False otherwise.
+     * @param propertyEntry
+     * @return true If this <code>ChildPropertyEntries</code> contained the
+     * given entry. False otherwise.
      */
-    public boolean remove(Name propertyName);
+    public boolean remove(PropertyEntry propertyEntry);
 }

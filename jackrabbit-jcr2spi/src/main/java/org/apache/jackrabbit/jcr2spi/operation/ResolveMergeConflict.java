@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.NodeId;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 import java.util.Iterator;
 
 /**
@@ -55,6 +55,7 @@ public class ResolveMergeConflict extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -65,6 +66,8 @@ public class ResolveMergeConflict extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         // non-recursive invalidation BUT including all properties
         Iterator propEntries = ((NodeEntry) nodeState.getHierarchyEntry()).getPropertyEntries();
         while (propEntries.hasNext()) {
@@ -74,7 +77,7 @@ public class ResolveMergeConflict extends AbstractOperation {
         nodeState.getHierarchyEntry().invalidate(false);
     }
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 

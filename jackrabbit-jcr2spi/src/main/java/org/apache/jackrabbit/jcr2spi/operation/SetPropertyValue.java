@@ -41,7 +41,8 @@ public class SetPropertyValue extends AbstractOperation {
     private final QValue[] values;
     private final int valueType;
 
-    private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values) {
+    private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values)
+            throws RepositoryException {
         this.propertyState = propertyState;
 
         propertyId = (PropertyId) propertyState.getId();
@@ -58,16 +59,26 @@ public class SetPropertyValue extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
     /**
-     * Throws UnsupportedOperationException
-     *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        propertyState.getHierarchyEntry().complete(this);
+    }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_UNDO;
+        propertyState.getHierarchyEntry().complete(this);
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -93,7 +104,7 @@ public class SetPropertyValue extends AbstractOperation {
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(PropertyState propState, QValue[] qValues,
-                                   int valueType) {
+                                   int valueType) throws RepositoryException {
         // compact array (purge null entries)
         List list = new ArrayList();
         for (int i = 0; i < qValues.length; i++) {

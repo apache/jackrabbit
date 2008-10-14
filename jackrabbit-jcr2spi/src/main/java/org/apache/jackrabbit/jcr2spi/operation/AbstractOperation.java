@@ -38,6 +38,7 @@ public abstract class AbstractOperation implements Operation {
      * The collection of affected ItemIds.
      */
     private final Collection affectedStates = new ArrayList();
+    protected int status;
 
     /**
      * Returns the name of the class
@@ -54,6 +55,18 @@ public abstract class AbstractOperation implements Operation {
      */
     public Collection getAffectedItemStates() {
         return (affectedStates.isEmpty()) ? Collections.EMPTY_LIST : Collections.unmodifiableCollection(affectedStates);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        throw new UnsupportedOperationException("Undo not supported.");
+    }
+
+    public int getStatus() {
+        return status;
     }
 
     /**
@@ -80,5 +93,16 @@ public abstract class AbstractOperation implements Operation {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(nodePath, resolver));
         }
         return (NodeState) itemState;
+    }
+
+    /**
+     * Asserts that the NodeEntry of the given parent state has it's child node
+     * entries loaded.
+     *
+     * @param parentState
+     * @throws RepositoryException
+     */
+    protected static void assertChildNodeEntries(NodeState parentState) throws RepositoryException {
+        parentState.getNodeEntry().getNodeEntries();
     }
 }

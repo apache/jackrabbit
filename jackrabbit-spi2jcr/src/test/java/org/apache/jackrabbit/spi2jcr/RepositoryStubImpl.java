@@ -80,8 +80,7 @@ public class RepositoryStubImpl extends DefaultRepositoryStub {
 
         // TODO: make configurable
         BatchReadConfig brconfig = new BatchReadConfig();
-        brconfig.setDepth(NameConstants.NT_FILE, BatchReadConfig.DEPTH_INFINITE);
-        brconfig.setDepth(NameConstants.NT_RESOURCE, BatchReadConfig.DEPTH_INFINITE);
+        brconfig.setDepth(NameConstants.NT_UNSTRUCTURED, BatchReadConfig.DEPTH_INFINITE);
 
         return new RepositoryServiceImpl(jackrabbitRepo, brconfig);
     }

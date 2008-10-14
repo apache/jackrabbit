@@ -129,11 +129,19 @@ public class ReorderMoveTest extends AbstractJCRTest {
         // reorder
         srcParent.orderBefore(getRelPath(children[0]), null);
         testOrder(srcParent, new Node[] {children[3], children[0]});
+        assertTrue(srcParent.hasNode(snsName+"[1]"));
+        assertTrue(srcParent.hasNode(snsName+"[2]"));
+        assertFalse(srcParent.hasNode(snsName+"[3]"));
         assertFalse(srcParent.hasNode(snsName+"[4]"));
+        assertFalse(srcParent.hasNode(snsName+"[5]"));
 
         testRootNode.save();
         testOrder(srcParent, new Node[] {children[3], children[0]});
+        assertTrue(srcParent.hasNode(snsName+"[1]"));
+        assertTrue(srcParent.hasNode(snsName+"[2]"));
+        assertFalse(srcParent.hasNode(snsName+"[3]"));
         assertFalse(srcParent.hasNode(snsName+"[4]"));
+        assertFalse(srcParent.hasNode(snsName+"[5]"));
 
         // check if move have been successfull
         assertEquals(children[2].getPath(), destPath);
