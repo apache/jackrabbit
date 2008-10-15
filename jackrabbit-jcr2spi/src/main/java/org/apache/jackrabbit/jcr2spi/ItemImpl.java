@@ -251,7 +251,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 // from the 'server'.
                 // Note, that with Observation-CacheBehaviour no manuel refresh
                 // is required. changes get pushed automatically.
-                state.getHierarchyEntry().reload(true, true);
+                state.getHierarchyEntry().invalidate(true);
             }
         } else {
             // check status of item state
@@ -413,7 +413,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // check status of this item for read operation
         if (state.getStatus() == Status.INVALIDATED) {
             // refresh to get current status from persistent storage
-            state.getHierarchyEntry().reload(false, false);
+            state.getHierarchyEntry().reload(false);
         }
         // now check if valid
         if (!state.isValid()) {

@@ -743,6 +743,12 @@ public class SessionImpl extends AbstractSession
             itemState = ((NodeImpl) version).getItemState();
         } else {
             Path p = getQPath(version.getPath());
+            Path parentPath = p.getAncestor(1);
+            HierarchyEntry parentEntry = getHierarchyManager().lookup(parentPath);
+            if (parentEntry != null) {
+                // make sure the parent entry is up to date
+                parentEntry.invalidate(false);
+            }
             itemState = getHierarchyManager().getItemState(p);
         }
         return (NodeState) itemState;

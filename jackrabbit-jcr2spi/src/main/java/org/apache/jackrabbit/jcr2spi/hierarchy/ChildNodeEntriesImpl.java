@@ -147,7 +147,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * resulting in inconsistent entries.
      *
      * @param childNodeInfos
-     * @see HierarchyEntry#reload(boolean, boolean) that ignores items with
+     * @see HierarchyEntry#reload(boolean) that ignores items with
      * pending changes.
      * @see org.apache.jackrabbit.jcr2spi.operation.AddNode
      * @see org.apache.jackrabbit.jcr2spi.operation.Move
@@ -165,7 +165,14 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 ln = internalAddAfter(entry, ci.getIndex(), prevLN);
             } else if (prevLN != null) {
                 // assert correct order of existing
-                reorderAfter(ln, prevLN);
+                if (prevLN != ln) {
+                    reorderAfter(ln, prevLN);
+                } else {
+                    // there was an existing entry but it's the same as the one
+                    // created/retrieved before. getting here indicates that
+                    // the SPI implementation provided invalid childNodeInfos.
+                    log.error("ChildInfo iterator contains multiple entries with the same name|index or uniqueID -> ignore ChildNodeInfo.");
+                }
             }
             prevLN = ln;
         }
@@ -446,7 +453,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 entriesByName.reorder(insertName, insertLN, position);
             }
             // reorder in linked list
-            entries.reorderNode(insertLN, afterLN.getNextLinkNode());
+            entries.reorderNode(insertLN, currentAfter);
         }
     }
 
