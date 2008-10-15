@@ -14,22 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jackrabbit.benchmark;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import java.util.Calendar;
-
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Several tests for benchmarking the performance when iterating over
@@ -38,139 +31,162 @@ import org.slf4j.LoggerFactory;
  * Assumes the store supports nt:folder/nt:file/nt:resource below
  * the test root node.
  */
-public class BigCollectionTest extends AbstractJCRTest {
+public class BigCollectionTest extends AbstractBenchmarkTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BigCollectionTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BigCollectionTest.class);
 
-  private static int MEMBERS = 500;
-  private static int MEMBERSIZE = 1024;
-  private static String MIMETYPE = "application/octet-stream";
-  private static int MINTIME = 1000;
-  private static int MINCOUNT = 5;
+    private String bigcollPath;
 
-  protected void setUp() throws Exception {
-      super.setUp();
+    protected void setUp() throws Exception {
+        super.setUp();
+        bigcollPath =  testRootNode.getNode(getCollectionName()).getPath();
+    }
 
-      Session session = testRootNode.getSession();
-      Node folder = null;
-      try {
-          folder = testRootNode.getNode("bigcoll");
-      }
-      catch (RepositoryException ex) {
-        // nothing to do
-      }
-        
-      // delete when needed
-      if (folder != null) {
-          folder.remove();
-          session.save();
-      }
-        
-      folder = testRootNode.addNode("bigcoll", "nt:folder");
+    protected String getCollectionName() {
+        return "bigcoll";
+    }
 
-      long cnt = 0;
+    private void performTest(String testName, boolean getContentNode, boolean getLength) throws RepositoryException {
+        performTest(testName, getContentNode, getLength, false);
+    }
 
-      while (cnt < MEMBERS) {
-          InputStream is = new BufferedInputStream(new ContentGenerator(MEMBERSIZE), MEMBERSIZE);
-          Node l_new = folder.addNode("tst" + cnt, "nt:file");
-          Node l_cnew = l_new.addNode("jcr:content", "nt:resource");
-          l_cnew.setProperty("jcr:data", is);
-          l_cnew.setProperty("jcr:mimeType", MIMETYPE);
-          l_cnew.setProperty("jcr:lastModified", Calendar.getInstance());
-          cnt += 1;
-      }
-      session.save();
-  }
+    private void performTest(String testName, boolean getContentNode,
+                             boolean getLength, boolean refresh) throws RepositoryException {
 
-  protected void tearDown() throws Exception {
-      try {
-          Node folder = testRootNode.getNode("bigcoll");
-          folder.remove();
-          folder.getSession().save();
-      }
-      catch (RepositoryException ex) {
-          // nothing to do
-      }
-      super.tearDown();
-  }
-  
-  private void performTest(String testName, boolean getContentNode, boolean getLength) throws RepositoryException {
-      Session session = testRootNode.getSession();
-      
-      long start = System.currentTimeMillis();
-      long cnt = 0;
-  
-      while (System.currentTimeMillis() - start < MINTIME || cnt < MINCOUNT) {
-          Node dir = testRootNode.getNode("bigcoll");
-          int members = 0;
-          for (NodeIterator it = dir.getNodes(); it.hasNext(); ) {
-              Node child = it.nextNode();
-              Node content = getContentNode ? child.getNode("jcr:content") : null;
-              String type = getContentNode ? content.getProperty("jcr:mimeType").getString() : null;
-              long length = getLength ? content.getProperty("jcr:data").getLength() : -1;
-              assertTrue(child.isNode());
-              if (getContentNode) {
-                  assertEquals(MIMETYPE, type);
-              }
-              if (getLength) {
-                  assertEquals(MEMBERSIZE, length);
-              }
-              members += 1;
-          }
-          assertEquals(MEMBERS, members);
-          session.refresh(false);
-          cnt += 1;
-      }
-      
-      long elapsed = System.currentTimeMillis() - start;
-      
-      LOG.info(testName + ": " +  (double)elapsed / cnt + "ms per call (" + cnt + " iterations)");
-  }
-  
-  /**
-   * Get all children, but do not visit jcr:content child nodes
-   */
-  public void testGetChildren() throws RepositoryException {
-      performTest("testGetChildren", false, false);
-  } 
+        long start = System.currentTimeMillis();
+        long cnt = 0;
 
-  /**
-   * Get all children and their jcr:content child nodes, but
-   * do not visit jcr:data.
-   */
-  public void testBrowseMinusJcrData() throws RepositoryException {
-      performTest("testBrowseMinusJcrData", true, false);
-  }
+        while (System.currentTimeMillis() - start < MINTIME || cnt < MINCOUNT) {
+            Node dir = testRootNode.getNode(getCollectionName());
+            int members = 0;
+            for (NodeIterator it = dir.getNodes(); it.hasNext(); ) {
+                Node child = it.nextNode();
+                Node content = getContentNode ? child.getNode("jcr:content") : null;
+                String type = getContentNode ? content.getProperty("jcr:mimeType").getString() : null;
+                long length = getLength ? content.getProperty("jcr:data").getLength() : -1;
+                assertTrue(child.isNode());
+                if (getContentNode) {
+                    assertEquals(MIMETYPE, type);
+                }
+                if (getLength) {
+                    assertEquals(MEMBERSIZE, length);
+                }
+                members += 1;
+            }
+            assertEquals(MEMBERS, members);
+            if (refresh) {
+                dir.getSession().refresh(true);
+            }
+            cnt += 1;
+        }
 
-  /**
-   * Simulate what a UI usually does on a collection of files:
-   * obtain type and length of the files.
-   */
-  public void testBrowse() throws RepositoryException {
-      performTest("testBrowse", true, true);
-  }
+        long elapsed = System.currentTimeMillis() - start;
 
-  /**
-   * Generator for test content of a specific length.
-   */
-  private class ContentGenerator extends InputStream {
+        LOG.info(testName + ": " +  (double)elapsed / cnt + "ms per call (" + cnt + " iterations)");
+    }
 
-      private long length;
-      private long position;
-  
-      public ContentGenerator(long length) {
-          this.length = length;
-          this.position = 0;
-      }
-  
-      public int read() {
-          if (this.position++ < this.length) {
-              return 0;
-          }
-          else {
-              return -1;
-          }
-      }
-  }
+    private void performTestWithNewSession(String testName, boolean getContentNode, boolean getLength) throws RepositoryException {
 
+        long start = System.currentTimeMillis();
+        long cnt = 0;
+
+        while (System.currentTimeMillis() - start < MINTIME || cnt < MINCOUNT) {
+            Session s = helper.getReadOnlySession();
+            try {
+                Node dir = (Node) s.getItem(bigcollPath);
+                int members = 0;
+                for (NodeIterator it = dir.getNodes(); it.hasNext(); ) {
+                    Node child = it.nextNode();
+                    Node content = getContentNode ? child.getNode("jcr:content") : null;
+                    String type = getContentNode ? content.getProperty("jcr:mimeType").getString() : null;
+                    long length = getLength ? content.getProperty("jcr:data").getLength() : -1;
+                    assertTrue(child.isNode());
+                    if (getContentNode) {
+                        assertEquals(MIMETYPE, type);
+                    }
+                    if (getLength) {
+                        assertEquals(MEMBERSIZE, length);
+                    }
+                    members += 1;
+                }
+                assertEquals(MEMBERS, members);
+            } finally {
+                s.logout();
+            }
+            cnt += 1;
+        }
+
+        long elapsed = System.currentTimeMillis() - start;
+
+        LOG.info(testName + ": " +  (double)elapsed / cnt + "ms per call (" + cnt + " iterations)");
+    }
+
+    /**
+     * Get all children, but do not visit jcr:content child nodes
+     */
+    public void testGetChildren() throws RepositoryException {
+        performTest("testGetChildren", false, false);
+    }
+
+    /**
+     * Get all children, but do not visit jcr:content child nodes
+     */
+    public void testGetChildrenAfterRefresh() throws RepositoryException {
+        performTest("testGetChildrenAfterRefresh", false, false, true);
+    }
+
+    /**
+     * Get all children, but do not visit jcr:content child nodes
+     */
+    public void testGetChildrenAfterLogin() throws RepositoryException {
+        performTestWithNewSession("testGetChildrenAfterLogin", false, false);
+    }
+
+    /**
+     * Get all children and their jcr:content child nodes, but
+     * do not visit jcr:data.
+     */
+    public void testBrowseMinusJcrData() throws RepositoryException {
+        performTest("testBrowseMinusJcrData", true, false);
+    }
+
+    /**
+     * Get all children and their jcr:content child nodes, but
+     * do not visit jcr:data.
+     */
+    public void testBrowseMinusJcrDataAfterRefresh() throws RepositoryException {
+        performTest("testBrowseMinusJcrDataAfterRefresh", true, false, true);
+    }
+
+    /**
+     * Get all children and their jcr:content child nodes, but
+     * do not visit jcr:data.
+     */
+    public void testBrowseMinusJcrDataAfterLogin() throws RepositoryException {
+        performTestWithNewSession("testBrowseMinusJcrDataAfterLogin", true, false);
+    }
+
+    /**
+     * Simulate what a UI usually does on a collection of files:
+     * obtain type and length of the files.
+     */
+    public void testBrowse() throws RepositoryException {
+        performTest("testBrowse", true, true);
+    }
+
+    /**
+     * Simulate what a UI usually does on a collection of files:
+     * obtain type and length of the files.
+     */
+    public void testBrowseAfterRefresh() throws RepositoryException {
+        performTest("testBrowseAfterRefresh", true, true, true);
+    }
+
+    /**
+     * Simulate what a UI usually does on a collection of files:
+     * obtain type and length of the files.
+     */
+    public void testBrowseAfterLogin() throws RepositoryException {
+        performTestWithNewSession("testBrowseAfterLogin", true, true);
+    }
 }
