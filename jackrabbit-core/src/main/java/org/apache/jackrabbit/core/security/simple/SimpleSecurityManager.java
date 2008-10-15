@@ -170,13 +170,6 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * @see JackrabbitSecurityManager#getSecurityConfig()
-     */
-    public SecurityConfig getSecurityConfig() throws RepositoryException {
-        return config;
-    }
-
-    /**
      * @see JackrabbitSecurityManager#getAccessManager(Session,AMContext)
      */
     public AccessManager getAccessManager(Session session, AMContext amContext) throws RepositoryException {

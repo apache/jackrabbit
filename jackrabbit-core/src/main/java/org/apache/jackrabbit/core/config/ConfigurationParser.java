@@ -115,6 +115,36 @@ public class ConfigurationParser {
     }
 
     /**
+     * Parses a named bean configuration from the given element.
+     * Bean configuration uses the following format:
+     * <pre>
+     *   &lt;BeanName class="..."&gt;
+     *     &lt;param name="..." value="..."/&gt;
+     *     ...
+     *   &lt;/BeanName&gt;
+     * </pre>
+     * <p>
+     * The returned bean configuration object contains the configured
+     * class name and configuration parameters. Variable replacement
+     * is performed on the parameter values.
+     *
+     * @param element
+     * @return bean configuration,
+     * @throws ConfigurationException if the configuration element does not
+     *                                exist or is broken
+     */
+    protected BeanConfig parseBeanConfig(Element element)
+            throws ConfigurationException {
+        // Bean implementation class
+        String className = getAttribute(element, CLASS_ATTRIBUTE);
+
+        // Bean properties
+        Properties properties = parseParameters(element);
+
+        return new BeanConfig(className, properties);
+    }
+
+    /**
      * Parses the configuration parameters of the given element.
      * Parameters are stored as
      * <code>&lt;param name="..." value="..."/&gt;</code>
@@ -147,7 +177,8 @@ public class ConfigurationParser {
                     throw new ConfigurationException("Parameter value not set");
                 }
                 parameters.put(
-                        name.getValue(), replaceVariables(value.getValue()));
+                        name.getValue().trim(),
+                        replaceVariables(value.getValue()));
             }
         }
 

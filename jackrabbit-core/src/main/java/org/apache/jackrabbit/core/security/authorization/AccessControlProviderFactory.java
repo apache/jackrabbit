@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.core.config.WorkspaceSecurityConfig;
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -41,12 +40,11 @@ import javax.jcr.Session;
 public interface AccessControlProviderFactory {
 
     /**
-     * Initalize the Factory with JackrabbitSecurityManager.
-     * This allows to access Repsoitory's Security objects
+     * Initalize this factory.
      *
-     * @param securityManager
+     * @param securitySession
      */
-    void init(JackrabbitSecurityManager securityManager) throws RepositoryException;
+    void init(Session securitySession) throws RepositoryException;
 
     /**
      * Dispose this <code>AccessControlProviderFactory</code> and its resources.
@@ -65,7 +63,7 @@ public interface AccessControlProviderFactory {
      * @param systemSession the system session for the workspace the
      * <code>AccessControlProvider</code> should be created for.
      * @param config The security configuration for that workspace or
-     * <code>null</code> if the config entry is present. In this case the
+     * <code>null</code> if no config entry is present. In this case the
      * factory must use its default. The configuration is used to determine
      * the implementation of <code>AccessControlProvider</code> to be used
      * and to retrieve eventual configuration parameters.

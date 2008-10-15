@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
-
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Set;
 
 /**
@@ -31,10 +30,10 @@ public interface WorkspaceAccessManager {
     /**
      * Initialize this <code>WorkspaceAccessManager</code>.
      *
-     * @param securityManager
+     * @param securitySession
      * @throws RepositoryException if an error occurs.
      */
-    void init(JackrabbitSecurityManager securityManager) throws RepositoryException;
+    void init(Session securitySession) throws RepositoryException;
 
     /**
      * Dispose this <code>WorkspaceAccessManager</code> and its resources.

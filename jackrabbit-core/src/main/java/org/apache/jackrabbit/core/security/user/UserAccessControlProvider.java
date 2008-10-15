@@ -131,29 +131,28 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      */
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
+        if (systemSession instanceof SessionImpl) {
+            SessionImpl sImpl = (SessionImpl) systemSession;
+            userAdminGroup = (configuration.containsKey(USER_ADMIN_GROUP_NAME)) ? configuration.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
+            groupAdminGroup = (configuration.containsKey(GROUP_ADMIN_GROUP_NAME)) ? configuration.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
 
-         if (systemSession instanceof SessionImpl) {
-             SessionImpl sImpl = (SessionImpl) systemSession;
-             userAdminGroup = (configuration.containsKey(USER_ADMIN_GROUP_NAME)) ? configuration.get(USER_ADMIN_GROUP_NAME).toString() : USER_ADMIN_GROUP_NAME;
-             groupAdminGroup = (configuration.containsKey(GROUP_ADMIN_GROUP_NAME)) ? configuration.get(GROUP_ADMIN_GROUP_NAME).toString() : GROUP_ADMIN_GROUP_NAME;
+            // make sure the groups exist (and ev. create them).
+            UserManager uMgr = sImpl.getUserManager();
+            if (!initGroup(uMgr, userAdminGroup)) {
+                log.warn("Unable to initialize User admininistrator group -> no user admins.");
+                userAdminGroup = null;
+            }
+            if (!initGroup(uMgr, groupAdminGroup)) {
+                log.warn("Unable to initialize Group admininistrator group -> no group admins.");
+                groupAdminGroup = null;
+            }
 
-             // make sure the groups exist (and ev. create them).
-             UserManager uMgr = sImpl.getUserManager();
-             if (!initGroup(uMgr, userAdminGroup)) {
-                 log.warn("Unable to initialize User admininistrator group -> no user admins.");
-                 userAdminGroup = null;
-             }
-             if (!initGroup(uMgr, groupAdminGroup)) {
-                 log.warn("Unable to initialize Group admininistrator group -> no group admins.");
-                 groupAdminGroup = null;
-             }
-
-             usersPath = sImpl.getQPath(USERS_PATH);
-             groupsPath = sImpl.getQPath(GROUPS_PATH);
-         } else {
-             throw new RepositoryException("SessionImpl (system session) expected.");
-         }
-     }
+            usersPath = sImpl.getQPath(USERS_PATH);
+            groupsPath = sImpl.getQPath(GROUPS_PATH);
+        } else {
+            throw new RepositoryException("SessionImpl (system session) expected.");
+        }
+    }
 
     /**
      * @see AccessControlProvider#getEffectivePolicies(Path)
@@ -323,7 +322,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 privs = PrivilegeRegistry.NO_PRIVILEGE;
             }
 
-            Path abs2Path = path.subPath(0, 4);
+            Path abs2Path = (4 > path.getLength()) ? null : path.subPath(0, 4);
             if (usersPath.equals(abs2Path)) {
                 /*
                  below the user-tree
@@ -495,7 +494,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                     }
                                 }
                                 break;
-                            // default: other events are not relevant.
+                                // default: other events are not relevant.
                         }
                         // invalidate the cached results
                         clearCache();
