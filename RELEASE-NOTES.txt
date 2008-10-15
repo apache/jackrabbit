@@ -275,8 +275,11 @@ jackrabbit-core  (since 1.4.6)
   [JCR-1739] Do not use deletable anymore
   [JCR-1742] CacheManager resizeAll is slow
   [JCR-1745] Mark pending nodes in IndexingQueue directly in index
+  [JCR-1765] Config: make all elements in the security configuration optional
   [JCR-1775] Transaction-safe versioning
   [JCR-1789] Provide access to cluster records
+  [JCR-1805] Trim whitespace from parameter names in configuration files
+  [JCR-1812] WorkspaceUpdateChannel.updateCommitted logs too much
 
   Bug fixes
   [JCR-1466] ConfigurationException constructors are package private
@@ -297,6 +300,7 @@ jackrabbit-core  (since 1.4.6)
   [JCR-1734] Generated cluster node id should be persisted
   [JCR-1738] BeanConfig may incorrectly throw ConfigurationException
   [JCR-1764] Occasional IndexingQueueTest failures
+  [JCR-1803] Node.restore() throws java.lang.ClassCastException
 
   Known issues
   [JCR-43]   Restore on nodes creates same-name-sibling of ...
@@ -373,7 +377,7 @@ jackrabbit-jca (since 1.4)
   [JCR-607]  Importing XML at root level using a session from JCA ...
   [JCR-609]  Empty custom_nodetypes.xml after restart
   [JCR-769]  Unable to login with two different Credentials to the same ...
-  [JCR-861]  Connector should support LocalTransaction as well as XATransaction
+  [JCR-861]  Connector should support LocalTransaction as well as ...
   [JCR-1035] Jackrabbit JCA - The client can bypass the managed connection ...
   [JCR-1077] Changelog not persisted during two phase commit in prepare phase
   [JCR-1334] Deadlock with XA enabled
@@ -394,9 +398,10 @@ jackrabbit-jcr-commons (since 1.4.2)
   [JCR-1416] [PATCH] No need to call toString on a String
   [JCR-1486] Introduce Timer idle time
   [JCR-1579] Improved XML export handling
-  [JCR-1617] Remove commons-collections and slf4j-api dependencies from jcr-commons
+  [JCR-1617] Remove commons-collections and slf4j-api dependencies from ...
   [JCR-1636] Make shutdown hooks in TransientFileFactory removable
   [JCR-1698] Remove unnecessary TestAll classes in jcr-commons
+  [JCR-1793] Namespace handling in AbstractSession should be synchronized
 
   Bug fixes
   [JCR-1331] Improper deprecation of Locked class
@@ -495,12 +500,13 @@ jackrabbit-jcr2spi (since 1.4)
   [JCR-1578] Jcr2Spi: UpdateTest#testUpdateRemovesExtraProperty and ...
   [JCR-1638] Redundant calls to RepositoryService.getChildInfos
   [JCR-1658] Executing query throws ...
+  [JCR-1783] JCR2SPI: incomplete changelog when combining move with ...
+  [JCR-1799] JCR2SPI: updating events swallowed (CacheBehaviour.OBSERVATION)
+  [JCR-1800] JCR2SPI: lockmgr isn't aware about external locks ...
 
   Known issues
   [JCR-1293] ReorderReferenceableSNSTest failure
   [JCR-1508] Setting a new property value causes read of previous value
-  [JCR-1799] JCR2SPI: updating events swallowed (CacheBehaviour.OBSERVATION)
-  [JCR-1800] JCR2SPI: lockmgr isn't aware about external locks ...
 
 jackrabbit-spi (since 1.4)
 
@@ -567,7 +573,7 @@ jackrabbit-text-extractors (since 1.4)
   [JCR-1567] Upgrade to PDFBox 0.7.3
   [JCR-1655] Upgrade nekohtml dependency
   [JCR-1661] Extend mimetype list of text extractors
-  [JCR-1691] Includes new (old) mimetypes that OpenOfficeTextExtractor can handle
+  [JCR-1691] Includes new (old) mimetypes that OpenOfficeTextExtractor can ..
 
   Bug fixes
   [JCR-1504] MS Excel Mime Type missing in MsExcelTextExtractor
