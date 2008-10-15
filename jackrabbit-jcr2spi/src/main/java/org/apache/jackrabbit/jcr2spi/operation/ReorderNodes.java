@@ -40,7 +40,8 @@ public class ReorderNodes extends AbstractOperation {
     private final NodeState insert;
     private final NodeState before;
 
-    private ReorderNodes(NodeState parentState, NodeState insert, NodeState before) {
+    private ReorderNodes(NodeState parentState, NodeState insert, NodeState before)
+            throws RepositoryException {
         this.parentState = parentState;
         this.insert = insert;
         this.before = before;
@@ -58,6 +59,7 @@ public class ReorderNodes extends AbstractOperation {
      * @param visitor
      */
     public void accept(OperationVisitor visitor) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -66,9 +68,21 @@ public class ReorderNodes extends AbstractOperation {
      *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        insert.getHierarchyEntry().complete(this);
     }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_UNDO;
+        insert.getHierarchyEntry().complete(this);
+    }
+
     //----------------------------------------< Access Operation Parameters >---
 
     public NodeId getParentId() {
@@ -99,6 +113,9 @@ public class ReorderNodes extends AbstractOperation {
 
     public static Operation create(NodeState parentState, Path.Element srcName,
                                    Path.Element beforeName) throws ItemNotFoundException, RepositoryException {
+        // make sure the parent hierarchy entry has its child entries loaded
+        assertChildNodeEntries(parentState);
+
         NodeState insert = parentState.getChildNodeState(srcName.getName(), srcName.getNormalizedIndex());
         NodeState before = (beforeName == null) ? null : parentState.getChildNodeState(beforeName.getName(), beforeName.getNormalizedIndex());
         return new ReorderNodes(parentState, insert, before);

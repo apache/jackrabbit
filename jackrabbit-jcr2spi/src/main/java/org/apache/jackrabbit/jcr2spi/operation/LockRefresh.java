@@ -45,6 +45,7 @@ public class LockRefresh extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -52,12 +53,14 @@ public class LockRefresh extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         // nothing to do.
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
-        return nodeState.getNodeId();
+    public NodeId getNodeId() throws RepositoryException {
+        return (NodeId) nodeState.getNodeId();
     }
 
     //------------------------------------------------------------< Factory >---

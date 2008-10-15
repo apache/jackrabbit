@@ -40,12 +40,13 @@ public class RemoveVersion extends Remove {
 
     private NodeEntry versionableEntry = null;
 
-    protected RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr) {
+    protected RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr)
+            throws RepositoryException {
         super(removeState, parent);
         try {
             versionableEntry = mgr.getVersionableNodeEntry((NodeState) removeState);
         } catch (RepositoryException e) {
-            log.warn("Internal error", e);
+            log.warn("Failed to retrieve the hierarchy entry of the versionable node.", e);
         }
     }
 
@@ -54,6 +55,7 @@ public class RemoveVersion extends Remove {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -64,6 +66,8 @@ public class RemoveVersion extends Remove {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         // invaliate the versionable node as well (version related properties)
         if (versionableEntry != null) {
             Iterator propEntries = versionableEntry.getPropertyEntries();
@@ -80,12 +84,13 @@ public class RemoveVersion extends Remove {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public ItemId getRemoveId() {
+    public ItemId getRemoveId() throws RepositoryException {
         return removeState.getWorkspaceId();
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(NodeState versionState, NodeState vhState, VersionManager mgr) {
+    public static Operation create(NodeState versionState, NodeState vhState, VersionManager mgr)
+            throws RepositoryException {
         RemoveVersion rm = new RemoveVersion(versionState, vhState, mgr);
         return rm;
     }

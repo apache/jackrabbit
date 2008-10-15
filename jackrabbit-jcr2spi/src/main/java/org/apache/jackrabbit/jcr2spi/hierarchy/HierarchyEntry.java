@@ -19,8 +19,8 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.InvalidItemStateException;
@@ -106,9 +106,8 @@ public interface HierarchyEntry {
      * Set the ItemState this hierarchyEntry will be resolved to.
      *
      * @param state
-     * @throws IllegalStateException If the entry has already been resolved.
      */
-    public void setItemState(ItemState state) throws IllegalStateException;
+    public void setItemState(ItemState state);
 
     /**
      * Invalidates the underlying <code>ItemState</code> if available. If the
@@ -133,7 +132,7 @@ public interface HierarchyEntry {
     /**
      * Reloads this hierarchy entry and the corresponding ItemState, if this
      * entry has already been resolved. If '<code>keepChanges</code>' is true,
-     * states with transient changes are left untouched in order to obtain stale
+     * states with transient changes are left untouched in order to detect stale
      * item states. Otherwise this state gets its data reloaded from the
      * persistent storage. If '<code>recursive</code>' the complete hierarchy
      * below this entry is reloaded as well.
@@ -165,18 +164,9 @@ public interface HierarchyEntry {
     public void remove();
 
     /**
-     * Checks if the underlying <code>ItemState</code> is available and if it
-     * has been transiently modified or if is new or stale modified. If either of
-     * the conditions is true, the state is added to the <code>ChangeLog</code>.
-     * If this <code>HierarchyEntry</code> has children it will call
-     * {@link #collectStates(ChangeLog, boolean)} recursively.
+     * Clean up this entry upon {@link Operation#undo()} or {@link Operation#persisted()}.
      *
-     * @param changeLog the <code>ChangeLog</code> collecting the transient
-     * item states present in a given tree.
-     * @param throwOnStale If the given flag is true, this methods throws
-     * InvalidItemStateException if this state is stale.
-     * @throws InvalidItemStateException if <code>throwOnStale</code> is true and
-     * this state is stale.
+     * @param transientOperation
      */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException;
+    public void complete(Operation transientOperation) throws RepositoryException;
 }

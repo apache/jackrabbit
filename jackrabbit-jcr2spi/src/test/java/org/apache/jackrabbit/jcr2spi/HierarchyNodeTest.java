@@ -88,7 +88,11 @@ public class HierarchyNodeTest extends AbstractJCRTest {
 
     public void testGetProperties() throws RepositoryException {
         Session readSession = helper.getReadOnlySession();
-        dump((Node) readSession.getItem(fileNode.getPath()));
+        try {
+            dump((Node) readSession.getItem(fileNode.getPath()));
+        } finally {
+            readSession.logout();
+        }
     }
 
     /** Recursively outputs the contents of the given node. */

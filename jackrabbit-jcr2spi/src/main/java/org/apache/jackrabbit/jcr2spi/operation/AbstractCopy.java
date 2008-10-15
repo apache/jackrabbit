@@ -80,6 +80,8 @@ public abstract class AbstractCopy extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         destParentState.getHierarchyEntry().invalidate(false);
     }
 
@@ -88,11 +90,11 @@ public abstract class AbstractCopy extends AbstractOperation {
         return srcWorkspaceName;
     }
 
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return srcState.getNodeId();
     }
 
-    public NodeId getDestinationParentId() {
+    public NodeId getDestinationParentId() throws RepositoryException {
         return destParentState.getNodeId();
     }
 

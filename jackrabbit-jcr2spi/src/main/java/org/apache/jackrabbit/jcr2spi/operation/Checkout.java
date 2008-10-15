@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 import java.util.Iterator;
 
 /**
@@ -51,6 +51,7 @@ public class Checkout extends AbstractOperation {
 
     //----------------------------------------------------------< Operation >---
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -60,10 +61,15 @@ public class Checkout extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         try {
-            mgr.getVersionHistoryEntry(nodeState).invalidate(true);
+            NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
+            if (vhe != null) {
+                vhe.invalidate(true);
+            }
         } catch (RepositoryException e) {
-            log.warn("Internal error", e);
+            log.warn("Failed to access Version history entry -> skip invalidation.", e);
         }
         // non-recursive invalidation (but including all properties)
         NodeEntry nodeEntry = (NodeEntry) nodeState.getHierarchyEntry();
@@ -80,7 +86,7 @@ public class Checkout extends AbstractOperation {
      *
      * @return
      */
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 

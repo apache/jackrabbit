@@ -68,7 +68,6 @@
               <value>
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
-                org.apache.jackrabbit.jcr2spi.ReorderMoveTest#testRevertMoveAndReorderSNS
                 org.apache.jackrabbit.jcr2spi.ReorderMoveTest#testRevertMoveReorderedSNS
                 org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
               </value>

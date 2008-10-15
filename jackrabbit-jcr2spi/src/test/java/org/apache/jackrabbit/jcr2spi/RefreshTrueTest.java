@@ -16,18 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.AbstractJCRTest;
 
-import javax.jcr.Value;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.lock.LockException;
+import javax.jcr.Value;
 
 /**
  * <code>RefreshTrue</code>...
@@ -52,6 +50,22 @@ public class RefreshTrueTest extends AbstractJCRTest {
         super.tearDown();
     }
 
+    public void testNewNode() throws RepositoryException {
+        Node n = testRootNode.addNode(nodeName2);
+        Property p = n.setProperty(propertyName1, testValue);
+        testRootNode.refresh(true);
+
+        // n must still be new and accessible
+        String msg = "Refresh 'true' must not affect the new Node/Property.";
+        assertTrue(msg, testRootNode.hasNode(nodeName2));
+        assertTrue(msg, n.isNew());
+        assertTrue(msg, n.hasProperty(propertyName1));
+
+        // p must still be accessible
+        p.getString();
+        assertTrue(msg, p.isSame(n.getProperty(propertyName1)));
+    }
+
     public void testNewProperty() throws RepositoryException {
         Property p = testRootNode.setProperty(propertyName1, testValue);
         testRootNode.refresh(true);
@@ -63,7 +77,7 @@ public class RefreshTrueTest extends AbstractJCRTest {
         assertTrue("Refresh 'true' must not affect a new Property.", p.isSame(pAgain));
     }
 
-    public void testRemovedProperty() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
+    public void testRemovedProperty() throws RepositoryException {
         Property p = testRootNode.setProperty(propertyName1, testValue);
         testRootNode.save();
 
@@ -78,5 +92,31 @@ public class RefreshTrueTest extends AbstractJCRTest {
             //ok
         }
         assertFalse("Refresh 'true' must not revert removal of an item.", testRootNode.hasProperty(propertyName1));
+    }
+
+    public void testRemovedNewItem() throws RepositoryException {
+        Node n = testRootNode.addNode(nodeName2);
+        Property p = n.setProperty(propertyName1, testValue);
+        n.remove();
+
+        testRootNode.refresh(true);
+
+        // n must still be new and accessible
+        String msg = "Refresh 'true' must revert the removal of new a Node/Property.";
+        assertFalse(msg, testRootNode.hasNode(nodeName2));
+        assertFalse(msg, n.isNew() && n.isModified());
+        assertFalse(msg, p.isNew() && p.isModified());
+        try {
+            n.hasProperty(propertyName1);
+            fail(msg);
+        } catch (InvalidItemStateException e) {
+            // success
+        }
+        try {
+            p.getString();
+            fail(msg);
+        } catch (InvalidItemStateException e) {
+            // success
+        }
     }
 }

@@ -65,9 +65,8 @@ public class LogUtil {
         try {
             return safeGetJCRPath(itemState.getHierarchyEntry().getPath(), pathResolver);
         } catch (RepositoryException e) {
-            ItemId id = itemState.getId();
-            log.error("failed to convert " + id + " to JCR path.");
-            return id.toString();
+            log.error("failed to convert " + itemState.toString() + " to JCR path.");
+            return itemState.toString();
         }
     }
 

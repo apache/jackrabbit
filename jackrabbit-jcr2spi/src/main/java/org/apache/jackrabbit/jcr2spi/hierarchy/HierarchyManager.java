@@ -41,7 +41,7 @@ public interface HierarchyManager {
     public NodeEntry getRootEntry();
 
     /**
-     * Lookup of <code>HierarchyEntry</code> workspace Id, that may be different
+     * Lookup of <code>HierarchyEntry</code> by its workspace Id that may be different
      * if a entry (or any of its ancestors) has been transiently moved or
      * reordered.<p/>
      * If the Hierarchy already lists the entry with the given workspaceItemId it is
@@ -53,6 +53,20 @@ public interface HierarchyManager {
      * @return
      */
     public HierarchyEntry lookup(ItemId workspaceItemId);
+
+    /**
+     * Lookup of <code>HierarchyEntry</code> by its workspace path that may be different
+     * if a entry (or any of its ancestors) has been transiently moved or
+     * reordered.<p/>
+     * If the Hierarchy already lists the entry with the given path it is
+     * returned otherwise <code>null</code>. See {@link #getHierarchyEntry(Path)}
+     * for a method that resolves the ItemId including lookup in the persistence
+     * layer if the entry has not been loaded yet.
+     *
+     * @param workspaceItemId
+     * @return
+     */
+    public HierarchyEntry lookup(Path workspacePath);
 
     /**
      * Resolves a itemId into a <code>HierarchyEntry</code>.

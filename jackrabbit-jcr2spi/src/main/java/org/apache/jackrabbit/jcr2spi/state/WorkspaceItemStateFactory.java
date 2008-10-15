@@ -145,7 +145,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     public PropertyState createDeepPropertyState(PropertyId propertyId, NodeEntry anyParent) throws ItemNotFoundException, RepositoryException {
         try {
             PropertyInfo info = service.getPropertyInfo(sessionInfo, propertyId);
-            return createDeepPropertyState(info, anyParent, null);
+            PropertyState propState = createDeepPropertyState(info, anyParent, null);
+            assertValidState(propState, info);
+            return propState;
         } catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e.getMessage());
         }
@@ -210,7 +212,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                 // the given NodeEntry -> retrieve NodeState before executing
                 // validation check.
                 nodeState = createDeepNodeState(first, entry, infos);
-                assertMatchingPath(first, nodeState.getNodeEntry());
+                assertValidState(nodeState, first);
             } else {
                 // 'isDeep' == false -> the given NodeEntry must match to the
                 // first ItemInfo retrieved from the iterator.
@@ -261,9 +263,10 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        // now build the nodestate itself
-        NodeState state = new NodeState(entry, info, this, definitionProvider);
-        state.setMixinTypeNames(info.getMixins());
+        if (Status.isTransient(entry.getStatus()) || Status.isStale(entry.getStatus())) {
+            log.debug("Node has pending changes; omit resetting the state.");
+            return entry.getNodeState();
+        }
 
         // update NodeEntry from the information present in the NodeInfo (prop entries)
         List propNames = new ArrayList();
@@ -273,7 +276,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             propNames.add(propertyName);
         }
         try {
-            entry.addPropertyEntries(propNames);
+            entry.setPropertyEntries(propNames);
         } catch (ItemExistsException e) {
             // should not get here
             log.warn("Internal error", e);
@@ -286,8 +289,18 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             entry.setNodeEntries(childInfos);
         }
 
-        notifyCreated(state);
-        return state;
+        // now build or update the nodestate itself
+        NodeState tmp = new NodeState(entry, info, this, definitionProvider);
+        entry.setItemState(tmp);
+
+        NodeState nState = entry.getNodeState();
+        if (nState == tmp) {
+            // tmp state was used as resolution for the given entry i.e. the
+            // entry was not available before. otherwise the 2 states were
+            // merged. see HierarchyEntryImpl#setItemState
+            notifyCreated(nState);
+        }
+        return nState;
     }
 
     /**
@@ -298,7 +311,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * @param entry
      * @return the new <code>PropertyState</code>.
      */
-    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry) {
+    private PropertyState createPropertyState(PropertyInfo info, PropertyEntry entry)
+            throws RepositoryException {
         // make sure uuid part of id is correct
         String uniqueID = info.getId().getUniqueID();
         if (uniqueID != null) {
@@ -307,11 +321,23 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        // build the PropertyState
-        PropertyState state = new PropertyState(entry, info, this, definitionProvider);
+        if (Status.isTransient(entry.getStatus()) || Status.isStale(entry.getStatus())) {
+            log.debug("Property has pending changes; omit resetting the state.");
+            return entry.getPropertyState();
+        }
 
-        notifyCreated(state);
-        return state;
+        // now build or update the nodestate itself
+        PropertyState tmp = new PropertyState(entry, info, this, definitionProvider);
+        entry.setItemState(tmp);
+
+        PropertyState pState = entry.getPropertyState();
+        if (pState == tmp) {
+            // tmp state was used as resolution for the given entry i.e. the
+            // entry was not available before. otherwise the 2 states were
+            // merged. see HierarchyEntryImpl#setItemState
+            notifyCreated(pState);
+        }
+        return pState;
     }
 
     /**
@@ -326,9 +352,14 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             // node for nodeId exists -> build missing entries in hierarchy
             // Note, that the path contained in NodeId does not reveal which
             // entries are missing -> calculate relative path.
-            Path anyParentPath = anyParent.getPath();
+            Path anyParentPath = anyParent.getWorkspacePath();
             Path relPath = anyParentPath.computeRelativePath(info.getPath());
             Path.Element[] missingElems = relPath.getElements();
+
+            if (startsWithIllegalElement(missingElems)) {
+                log.error("Relative path to NodeEntry starts with illegal element -> ignore NodeInfo with path " + info.getPath());
+                return null;
+            }
 
             NodeEntry entry = anyParent;
             for (int i = 0; i < missingElems.length; i++) {
@@ -360,8 +391,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             Path anyParentPath = anyParent.getWorkspacePath();
             Path relPath = anyParentPath.computeRelativePath(info.getPath());
             Path.Element[] missingElems = relPath.getElements();
-            NodeEntry entry = anyParent;
 
+            // make sure the missing elements don't start with . or .. in which
+            // case the info is not within the tree as it is expected
+            // (see also JCR-1797)
+            if (startsWithIllegalElement(missingElems)) {
+                log.error("Relative path to PropertyEntry starts with illegal element -> ignore PropertyInfo with path " + info.getPath());
+                return null;
+            }
+
+            NodeEntry entry = anyParent;
             int i = 0;
             // NodeEntries except for the very last 'missingElem'
             while (i < missingElems.length - 1) {
@@ -402,6 +441,23 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
+     * Validation check: make sure the state is not null (was really created)
+     * and matches with the specified ItemInfo (path).
+     *
+     * @param state
+     * @param info
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     */
+    private static void assertValidState(ItemState state, ItemInfo info)
+            throws ItemNotFoundException, RepositoryException {
+        if (state == null) {
+            throw new ItemNotFoundException("HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
+        }
+        assertMatchingPath(info, state.getHierarchyEntry());
+    }
+
+    /**
      * Validation check: Path of the given ItemInfo must match to the Path of
      * the HierarchyEntry. This is required for Items that are identified by
      * a uniqueID that may move within the hierarchy upon restore or clone.
@@ -418,6 +474,22 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             // TODO: handle external move of nodes (parents) identified by uniqueID
             throw new ItemNotFoundException("HierarchyEntry does not belong the given ItemInfo.");
         }
+    }
+
+    /**
+     * Returns true if the given <code>missingElems</code> start with a parent (..),
+     * a current (.) or the root element, in which case the info is not within
+     * the tree as it is expected.
+     * See also #JCR-1797 for the corresponding enhancement request.
+     *
+     * @param missingElems
+     * @return
+     */
+    private static boolean startsWithIllegalElement(Path.Element[] missingElems) {
+        if (missingElems.length > 0) {
+            return !missingElems[0].denotesName();
+        }
+        return false;
     }
 
     /**

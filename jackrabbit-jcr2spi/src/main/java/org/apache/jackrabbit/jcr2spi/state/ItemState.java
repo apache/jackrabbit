@@ -16,25 +16,22 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.util.WeakIdentityCollection;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
@@ -108,10 +105,6 @@ public abstract class ItemState {
         this.hierarchyEntry = entry;
         this.isf = isf;
         this.definitionProvider = definitionProvider;
-
-        if (!entry.isAvailable()) {
-            entry.setItemState(this);
-        }
     }
 
     /**
@@ -144,17 +137,13 @@ public abstract class ItemState {
     }
 
     /**
-     * Returns <code>true</code> if this item state is valid, that is its status
-     * is one of:
-     * <ul>
-     * <li>{@link Status#EXISTING}</li>
-     * <li>{@link Status#EXISTING_MODIFIED}</li>
-     * <li>{@link Status#NEW}</li>
-     * </ul>
+     * Returns <code>true</code> if this item state is valid and can be accessed.
      * @return
+     * @see Status#isValid(int)
+     * @see Status#isStale(int)
      */
     public boolean isValid() {
-        return Status.isValid(getStatus());
+        return Status.isValid(getStatus()) || Status.isStale(getStatus());
     }
 
     /**
@@ -183,7 +172,7 @@ public abstract class ItemState {
      *
      * @return the identifier of this item state..
      */
-    public abstract ItemId getId();
+    public abstract ItemId getId() throws RepositoryException;
 
     /**
      * Utility method:
@@ -192,7 +181,7 @@ public abstract class ItemState {
      *
      * @return the identifier of this item state..
      */
-    public abstract ItemId getWorkspaceId();
+    public abstract ItemId getWorkspaceId() throws RepositoryException;
 
     /**
      * Utility method:
@@ -239,7 +228,7 @@ public abstract class ItemState {
             return;
         }
 
-        if (Status.isTerminal(oldStatus)) {
+        if (oldStatus == Status.REMOVED) {
             throw new IllegalStateException("State is already in terminal status " + Status.getName(oldStatus));
         }
         if (Status.isValidStatusChange(oldStatus, newStatus)) {
@@ -316,55 +305,6 @@ public abstract class ItemState {
      */
     public Iterator getListeners() {
         return Collections.unmodifiableCollection(listeners).iterator();
-    }
-
-    /**
-     * Used on the target state of a save call AFTER the changelog has been
-     * successfully submitted to the SPI..
-     *
-     * @param changeLog
-     * @throws IllegalStateException if this state is a 'workspace' state.
-     */
-    abstract void persisted(ChangeLog changeLog) throws IllegalStateException;
-
-    /**
-     * Retrieved a fresh ItemState from the persistent layer and merge its
-     * data with this state in order to reload it. In case of a NEW state retrieving
-     * the state from the persistent layer is only possible if the state has
-     * been persisted.
-     *
-     * @param keepChanges
-     */
-    public void reload(boolean keepChanges) {
-        ItemId id = getWorkspaceId();
-        ItemState tmp;
-        try {
-            if (isNode()) {
-                tmp = isf.createNodeState((NodeId) id, (NodeEntry) getHierarchyEntry());
-            } else {
-                tmp = isf.createPropertyState((PropertyId) id, (PropertyEntry) getHierarchyEntry());
-            }
-        } catch (ItemNotFoundException e) {
-            // TODO: deal with moved items separately
-            // remove hierarchyEntry (including all children and set
-            // state-status to REMOVED (or STALE_DESTROYED)
-            log.debug("Item '" + id + "' cannot be found on the persistent layer -> remove.");
-            getHierarchyEntry().remove();
-            return;
-        } catch (RepositoryException e) {
-            // TODO: rather throw? remove from parent?
-            log.warn("Exception while reloading item state: " + e);
-            log.debug("Stacktrace: ", e);
-            return;
-        }
-
-        boolean modified = merge(tmp, keepChanges);
-        if (status == Status.NEW || status == Status.INVALIDATED) {
-            setStatus(Status.EXISTING);
-        } else if (modified) {
-            // start notification by marking this state modified.
-            setStatus(Status.MODIFIED);
-        }
     }
 
     /**

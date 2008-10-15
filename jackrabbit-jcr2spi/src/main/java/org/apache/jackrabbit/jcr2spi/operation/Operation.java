@@ -32,6 +32,10 @@ import java.util.Collection;
  */
 public interface Operation {
 
+    int STATUS_PENDING = 0;
+    int STATUS_PERSISTED = 1;
+    int STATUS_UNDO = 2;
+
     /**
      * Returns the name of <code>this</code> operation.
      *
@@ -56,6 +60,22 @@ public interface Operation {
 
     /**
      * Informs this Operation that it has been successfully executed.
+     *
+     * @throws RepositoryException
      */
-    public void persisted();
+    public void persisted() throws RepositoryException;
+
+    /**
+     * Revert changes made by this operation.
+     * 
+     * @throws RepositoryException
+     */
+    public void undo() throws RepositoryException;
+
+    /**
+     * Returns the status of this operation.
+     *
+     * @return status of this operation.
+     */
+    public int getStatus();
 }

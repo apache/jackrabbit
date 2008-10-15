@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.PropertyId;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>PropertyEntry</code>...
@@ -30,7 +31,7 @@ public interface PropertyEntry extends HierarchyEntry {
     /**
      * @return the <code>NodeId</code> of this child node entry.
      */
-    public PropertyId getId();
+    public PropertyId getId() throws InvalidItemStateException, RepositoryException;
 
     /**
      * Returns the ID that must be used for resolving this entry OR loading its
@@ -41,7 +42,7 @@ public interface PropertyEntry extends HierarchyEntry {
      * @return
      * @see #getId()
      */
-    public PropertyId getWorkspaceId();
+    public PropertyId getWorkspaceId() throws InvalidItemStateException, RepositoryException;
 
     /**
      * @return the referenced <code>PropertyState</code>.

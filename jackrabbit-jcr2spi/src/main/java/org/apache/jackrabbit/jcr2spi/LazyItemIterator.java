@@ -127,12 +127,8 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             HierarchyEntry entry = (HierarchyEntry) iter.next();
             try {
                 nextItem = itemMgr.getItem(entry);
-            } catch (ItemNotFoundException e) {
-                log.debug("Ignoring nonexistent item " + entry);
-                // reduce the size ... and try the next one
-                size--;
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + entry + ", skipping...", e);
+                log.warn("Failed to fetch item " + entry + ", skipping.", e.getMessage());
                 // reduce the size... and try the next one
                 size--;
             }

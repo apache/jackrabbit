@@ -134,12 +134,12 @@ public class RemoveNodeTest extends RemoveItemTest {
             childNode.remove();
             superuser.save();
 
-            // try to remove already deleted node with session 2
+            // try to remove already removed node with session 2
             try {
                 childNode2.refresh(false);
                 childNode2.remove();
                 otherSession.save();
-                fail("Removing a node already deleted by other session should throw an InvalidItemStateException!");
+                fail("Removing a node already removed by other session should throw an InvalidItemStateException!");
             } catch (InvalidItemStateException e) {
                 //ok, works as expected
             }
