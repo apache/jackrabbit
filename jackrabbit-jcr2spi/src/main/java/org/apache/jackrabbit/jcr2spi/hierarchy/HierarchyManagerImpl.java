@@ -83,6 +83,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
+     * @see HierarchyManager#lookup(Path)
+     */
+    public HierarchyEntry lookup(Path workspacePath) {
+        return rootEntry.lookupDeepEntry(workspacePath);
+    }
+
+    /**
      * @see HierarchyManager#getHierarchyEntry(ItemId)
      */
     public HierarchyEntry getHierarchyEntry(ItemId itemId) throws ItemNotFoundException, RepositoryException {

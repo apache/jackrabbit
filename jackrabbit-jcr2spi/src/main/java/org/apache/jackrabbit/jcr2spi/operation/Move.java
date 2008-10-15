@@ -16,26 +16,26 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.version.VersionException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
 
 /**
  * <code>Move</code>...
@@ -54,7 +54,8 @@ public class Move extends AbstractOperation {
 
     private final boolean sessionMove;
 
-    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, Name destName, boolean sessionMove) {
+    private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, Name destName, boolean sessionMove)
+            throws RepositoryException {
 
         this.srcId = (NodeId) srcNodeState.getId();
         this.destParentId = destParentState.getNodeId();
@@ -77,6 +78,7 @@ public class Move extends AbstractOperation {
      * @param visitor
      */
     public void accept(OperationVisitor visitor) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -87,22 +89,39 @@ public class Move extends AbstractOperation {
      *
      * @see Operation#persisted()
      */
-    public void persisted() {
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         if (sessionMove) {
-            throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
-        }
-        // non-recursive invalidation
-        try {
-            srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
-            // TODO: TOBEFIXED. moved state ev. got a new definition.
-        } catch (RepositoryException e) {
-            // should not occure
-            log.error("Internal error", e);
-            srcParentState.getHierarchyEntry().invalidate(false);
-            destParentState.getHierarchyEntry().invalidate(false);
-            srcState.getHierarchyEntry().invalidate(false);
+            srcState.getNodeEntry().complete(this);
+        } else {
+            // non-recursive invalidation
+            try {
+                srcState.getNodeEntry().move(destName, destParentState.getNodeEntry(), false);
+                // TODO: TOBEFIXED. moved state ev. got a new definition.
+            } catch (RepositoryException e) {
+                // should not occure
+                log.error("Internal error", e);
+                srcParentState.getHierarchyEntry().invalidate(false);
+                destParentState.getHierarchyEntry().invalidate(false);
+                srcState.getHierarchyEntry().invalidate(false);
+            }
         }
     }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        if (sessionMove) {
+            status = STATUS_UNDO;
+            srcState.getHierarchyEntry().complete(this);
+        } else {
+            super.undo();
+        }
+    }
+
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getSourceId() {
         return srcId;
@@ -161,24 +180,28 @@ public class Move extends AbstractOperation {
         NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, resolver);
         Name destName = destElement.getName();
 
-        // for session-move perform a lazy check for existing items at destination.
-        // since the hierarchy may not be complete it is possible that an conflict
-        // is only detected upon saving the 'move'.
-        NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
-        if (destEntry.hasPropertyEntry(destName) && sessionMove) {
-            throw new ItemExistsException("Move destination already exists (Property).");
-        }
-        // force childnodeentries list to be present before the move is executed
-        // on the hierarchy entry.
-        if (destEntry.hasNodeEntry(destName)) {
-            NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
-            if (existing != null && sessionMove) {
-                try {
-                    if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
-                        throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+        if (sessionMove) {
+            NodeEntry destEntry = (NodeEntry) destParentState.getHierarchyEntry();
+            if (destEntry.hasPropertyEntry(destName)) {
+                // TODO: remove for 283
+                throw new ItemExistsException("Move destination already exists (Property).");
+            }
+
+            // force childnodeentries list to be present before the move is executed
+            // on the hierarchy entry.
+            assertChildNodeEntries(srcParentState);
+            assertChildNodeEntries(destParentState);
+
+            if (destEntry.hasNodeEntry(destName)) {
+                NodeEntry existing = destEntry.getNodeEntry(destName, Path.INDEX_DEFAULT);
+                if (existing != null && sessionMove) {
+                    try {
+                        if (!existing.getNodeState().getDefinition().allowsSameNameSiblings()) {
+                            throw new ItemExistsException("Node existing at move destination does not allow same name siblings.");
+                        }
+                    } catch (ItemNotFoundException e) {
+                        // existing apparent not valid any more -> probably no conflict
                     }
-                } catch (ItemNotFoundException e) {
-                    // existing apparent not valid any more -> probably no conflict
                 }
             }
         }

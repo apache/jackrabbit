@@ -118,6 +118,26 @@ public class AddMixinTest extends AbstractJCRTest {
         }
 
         assertTrue("Adding 2 mixins at once -> both must be present.", node.isNodeType(mixReferenceable) && node.isNodeType(mixLockable));
+    }
+
+    /**
+     * Implementation specific test adding a new Node with a nodeType, that has
+     * a mixin-supertype. The mixin must only take effect upon save.
+     *
+     * @throws NotExecutableException
+     * @throws RepositoryException
+     */
+    public void testAddMultipleAtOnce2() throws NotExecutableException, RepositoryException {
+        Node node;
+        try {
+            node = testRootNode.addNode(nodeName1, testNodeType);
+            node.addMixin(mixReferenceable);
+            node.addMixin(mixLockable);
+            testRootNode.save();
+        } catch (RepositoryException e) {
+            throw new NotExecutableException();
+        }
+
         List mixins = Arrays.asList(node.getMixinNodeTypes());
         assertTrue("Adding 2 mixins at once -> both must be present.", mixins.contains(ntMgr.getNodeType(mixReferenceable)) && mixins.contains(ntMgr.getNodeType(mixLockable)));
     }

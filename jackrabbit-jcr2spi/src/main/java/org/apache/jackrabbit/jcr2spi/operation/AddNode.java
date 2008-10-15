@@ -19,17 +19,19 @@ package org.apache.jackrabbit.jcr2spi.operation;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.RepositoryException;
-import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <code>AddNode</code>...
@@ -44,7 +46,10 @@ public class AddNode extends AbstractOperation {
     private final Name nodeTypeName;
     private final String uuid;
 
-    private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) {
+    private List addedStates = new ArrayList();
+
+    private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid)
+            throws RepositoryException {
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.nodeName = nodeName;
@@ -60,6 +65,7 @@ public class AddNode extends AbstractOperation {
      * @param visitor
      */
     public void accept(OperationVisitor visitor) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -68,9 +74,21 @@ public class AddNode extends AbstractOperation {
      *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        parentState.getHierarchyEntry().complete(this);
     }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_UNDO;
+        parentState.getHierarchyEntry().complete(this);
+    }
+
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getParentId() {
         return parentId;
@@ -92,10 +110,29 @@ public class AddNode extends AbstractOperation {
         return uuid;
     }
 
-    //------------------------------------------------------------< Factory >---
+    public void addedState(List newStates) {
+        addedStates.addAll(newStates);
+    }
 
+    public List getAddedStates() {
+        return addedStates;
+    }
+
+    //------------------------------------------------------------< Factory >---
+    /**
+     *
+     * @param parentState
+     * @param nodeName
+     * @param nodeTypeName
+     * @param uuid
+     * @return
+     */
     public static Operation create(NodeState parentState, Name nodeName,
-                                   Name nodeTypeName, String uuid) {
+                                   Name nodeTypeName, String uuid) throws RepositoryException {
+        // make sure the parent hierarchy entry has its child entries loaded
+        // in order to be able to detect conflicts.
+        assertChildNodeEntries(parentState);
+        
         AddNode an = new AddNode(parentState, nodeName, nodeTypeName, uuid);
         return an;
     }

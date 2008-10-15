@@ -30,7 +30,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Iterator;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -50,14 +49,15 @@ public class PropertyState extends ItemState {
     private final boolean multiValued;
 
     /**
-     *
+     * Value(s) and type of an existing property that has been transiently
+     * modified.
      */
-    private TransientData transientData;
+    private PropertyData transientData;
 
     /**
-     *
+     * Original value(s) and type of an existing or a new property.
      */
-    private PropertyInfo pInfo;
+    private PropertyData data;
 
     /**
      * Create a NEW PropertyState
@@ -69,12 +69,13 @@ public class PropertyState extends ItemState {
      */
     protected PropertyState(PropertyEntry entry, ItemStateFactory isf,
                             QPropertyDefinition definition,
-                            ItemDefinitionProvider definitionProvider) {
+                            ItemDefinitionProvider definitionProvider,
+                            QValue[] values, int propertyType)
+            throws ConstraintViolationException, RepositoryException {
         super(Status.NEW, entry, isf, definitionProvider);
         this.multiValued = definition.isMultiple();
         this.definition = definition;
-        this.transientData = null; // TODO: maybe type/values should be passed to constructor
-        this.pInfo = null;
+        setValues(values, propertyType);
     }
 
     /**
@@ -90,8 +91,8 @@ public class PropertyState extends ItemState {
                             ItemDefinitionProvider definitionProvider) {
         super(entry, isf, definitionProvider);
         this.multiValued = pInfo.isMultiValued();
+        this.data = new PropertyData(pInfo);
         this.transientData = null;
-        this.pInfo = pInfo;
     }
 
     //----------------------------------------------------------< ItemState >---
@@ -109,7 +110,7 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getId()
      */
-    public ItemId getId() {
+    public ItemId getId() throws RepositoryException {
         return ((PropertyEntry) getHierarchyEntry()).getId();
     }
 
@@ -117,15 +118,15 @@ public class PropertyState extends ItemState {
      * {@inheritDoc}
      * @see ItemState#getWorkspaceId()
      */
-    public ItemId getWorkspaceId() {
+    public ItemId getWorkspaceId() throws RepositoryException {
         return ((PropertyEntry) getHierarchyEntry()).getWorkspaceId();
     }
 
     /**
-     * If <code>keepChanges</code> is true, this method does nothing and returns
-     * false. Otherwise type and values of the other property state are compared
-     * to this state. If they differ, they will be copied to this state and
-     * this method returns true.
+     * If <code>keepChanges</code> is true, this method only compares the existing
+     * values with the values from 'another' and returns true, if the underlying
+     * persistent state is different to the stored persistent values. Otherwise
+     * the transient changes will be discarded.
      *
      * @see ItemState#merge(ItemState, boolean)
      */
@@ -136,14 +137,21 @@ public class PropertyState extends ItemState {
         if (another.isNode()) {
             throw new IllegalArgumentException("Attempt to merge property state with node state.");
         }
-        boolean modified = diff(this, (PropertyState) another);
-        this.pInfo = ((PropertyState) another).pInfo;
-        if (!keepChanges && transientData != null) {
-            modified = true;
+        // calculate if the persistent values of this state differ from the
+        // other state.
+        boolean diff = diff(data, ((PropertyState) another).data);
+        // reset the pInfo to point to the pInfo of another state.
+        this.data = ((PropertyState) another).data;
+        // if transient changes should be preserved OR if there are not
+        // transient changes, simply return diff to indicate if this state
+        // was internally changed.
+        if (keepChanges || transientData == null) {
+            return diff;
+        } else {
             transientData.discardValues();
             transientData = null;
+            return true;
         }
-        return modified;
     }
 
     /**
@@ -163,26 +171,6 @@ public class PropertyState extends ItemState {
         }
     }
 
-
-    /**
-     * {@inheritDoc}
-     * @see ItemState#persisted(ChangeLog)
-     */
-    void persisted(ChangeLog changeLog)
-        throws IllegalStateException {
-        for (Iterator it = changeLog.modifiedStates(); it.hasNext();) {
-            ItemState modState = (ItemState) it.next();
-            if (modState == this) {
-                /*
-                NOTE: Property can only be the changelog target, if it was
-                existing and has been modified. removal, add and implicit modification
-                of protected properties must be persisted by save on parent.
-                */
-                setStatus(Status.EXISTING);
-            }
-        }
-    }
-
     //------------------------------------------------------< PropertyState >---
     /**
      * Returns the type of the property value(s).
@@ -194,7 +182,7 @@ public class PropertyState extends ItemState {
      * type if the latter is {@link PropertyType#UNDEFINED}.
      */
     public int getType() {
-        return (transientData == null) ? pInfo.getType() : transientData.type;
+        return (transientData == null) ? data.type : transientData.type;
     }
 
     /**
@@ -236,8 +224,8 @@ public class PropertyState extends ItemState {
      * @return the value(s) of this property.
      */
     public QValue[] getValues() {
-        // if transientData are null the pInfo MUST be present (ev. add check)
-        return (transientData == null) ? pInfo.getValues() : transientData.values;
+        // if transientData are null the data MUST be present (ev. add check)
+        return (transientData == null) ? data.values : transientData.values;
     }
 
     /**
@@ -264,12 +252,20 @@ public class PropertyState extends ItemState {
      * @param values the new values
      */
     void setValues(QValue[] values, int type) throws RepositoryException {
-        if (transientData == null) {
-            transientData = new TransientData(type, values);
+        if (getStatus() == Status.NEW) {
+            if (data == null) {
+                data = new PropertyData(type, values);
+            } else {
+                data.setValues(type, values);
+            }
         } else {
-            transientData.setValues(type, values);
+            if (transientData == null) {
+                transientData = new PropertyData(type, values);
+            } else {
+                transientData.setValues(type, values);
+            }
+            markModified();
         }
-        markModified();
     }
 
     //------------------------------------------------------------< private >---
@@ -317,14 +313,14 @@ public class PropertyState extends ItemState {
      * @return if the 2 <code>PropertyState</code>s are different in terms of
      * type and/or values.
      */
-    private static boolean diff(PropertyState p1, PropertyState p2) {
+    private static boolean diff(PropertyData p1, PropertyData p2) {
         // compare type
-        if (p1.getType() != p2.getType()) {
+        if (p1.type != p2.type) {
             return true;
         }
 
-        QValue[] vs1 = p1.getValues();
-        QValue[] vs2 = p2.getValues();
+        QValue[] vs1 = p1.values;
+        QValue[] vs2 = p2.values;
         if (vs1.length != vs2.length) {
             return true;
         } else {
@@ -341,18 +337,23 @@ public class PropertyState extends ItemState {
 
     //--------------------------------------------------------< inner class >---
     /**
-     * Inner class storing transient property values an their type.
+     * Inner class storing property values an their type.
      */
-    private class TransientData {
+    private class PropertyData {
 
         private int type;
         private QValue[] values;
 
-        private TransientData(int type, QValue[] values) throws RepositoryException {
+        private PropertyData(PropertyInfo pInfo) {
+            this.type = pInfo.getType();
+            this.values = pInfo.getValues();
+        }
+
+        private PropertyData(int type, QValue[] values) throws ConstraintViolationException, RepositoryException {
             setValues(type, values);
         }
 
-        private void setValues(int type, QValue[] values) throws RepositoryException {
+        private void setValues(int type, QValue[] values) throws ConstraintViolationException, RepositoryException {
             // make sure the arguements are consistent and do not violate the
             // given property definition.
             validate(values, type, getDefinition());

@@ -22,9 +22,12 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
 
 /**
  * <code>PropertyEntryImpl</code> implements a reference to a property state.
@@ -78,14 +81,14 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     /**
      * @see PropertyEntry#getId()
      */
-    public PropertyId getId() {
+    public PropertyId getId() throws InvalidItemStateException, RepositoryException {
         return factory.getIdFactory().createPropertyId(parent.getId(), getName());
     }
 
     /**
      * @see PropertyEntry#getWorkspaceId()
      */
-    public PropertyId getWorkspaceId() {
+    public PropertyId getWorkspaceId() throws InvalidItemStateException, RepositoryException {
         return factory.getIdFactory().createPropertyId(parent.getWorkspaceId(), getName());
     }
 
@@ -100,7 +103,6 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     /**
      * Returns false.
      *
-     * @inheritDoc
      * @see HierarchyEntry#denotesNode()
      */
     public boolean denotesNode() {
@@ -108,13 +110,49 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     }
 
     /**
-     * @inheritDoc
      * @see HierarchyEntry#remove()
      */
     public void remove() {
-        removeEntry(this);
-        if (getStatus() != Status.STALE_DESTROYED) {
-            parent.internalRemovePropertyEntry(getName());
+        ItemState state = internalGetItemState();
+        int status = getStatus();
+        if (state != null) {
+            if (status == Status.EXISTING_MODIFIED) {
+                state.setStatus(Status.STALE_DESTROYED);
+            } else {
+                state.setStatus(Status.REMOVED);
+                parent.internalRemoveChildEntry(this);
+            }
+        } else {
+            // unresolved
+            parent.internalRemoveChildEntry(this);
+        }
+    }
+
+    /**
+     * @see HierarchyEntry#complete(Operation)
+     */
+    public void complete(Operation operation) throws RepositoryException {
+        if (!(operation instanceof SetPropertyValue)) {
+            throw new IllegalArgumentException();
+        }
+        SetPropertyValue op = (SetPropertyValue) operation;
+        if (op.getPropertyState().getHierarchyEntry() != this) {
+            throw new IllegalArgumentException();
+        }
+        switch (operation.getStatus()) {
+            case Operation.STATUS_PERSISTED:
+                /*
+                NOTE: Property can only be the changelog target, if it was
+                      existing and has been modified. removal, add and implicit modification
+                      of protected properties must be persisted by save on parent.
+                */
+                op.getPropertyState().setStatus(Status.EXISTING);
+                break;
+            case Operation.STATUS_UNDO:
+                revert();
+                break;
+            default:
+                // ignore
         }
     }
 }

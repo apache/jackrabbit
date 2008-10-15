@@ -44,7 +44,9 @@ public class AddProperty extends AbstractOperation {
 
     private final QPropertyDefinition definition;
 
-    private AddProperty(NodeState parentState, Name propName, int propertyType, QValue[] values, QPropertyDefinition definition) {
+    private AddProperty(NodeState parentState, Name propName,
+                        int propertyType, QValue[] values,
+                        QPropertyDefinition definition) throws RepositoryException {
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.propertyName = propName;
@@ -61,17 +63,27 @@ public class AddProperty extends AbstractOperation {
      * @param visitor
      */
     public void accept(OperationVisitor visitor) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
     /**
-     * Throws UnsupportedOperationException
-     *
      * @see Operation#persisted()
      */
-    public void persisted() {
-        throw new UnsupportedOperationException("persisted() not implemented for transient modification.");
+    public void persisted() throws RepositoryException {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
+        parentState.getHierarchyEntry().complete(this);
     }
+
+    /**
+     * @see Operation#undo()
+     */
+    public void undo() throws RepositoryException {
+        status = STATUS_UNDO;
+        parentState.getHierarchyEntry().complete(this);
+    }
+    
     //----------------------------------------< Access Operation Parameters >---
     public NodeId getParentId() {
         return parentId;
@@ -112,7 +124,7 @@ public class AddProperty extends AbstractOperation {
      * @return
      */
     public static Operation create(NodeState parentState, Name propName, int propertyType,
-                                   QPropertyDefinition def, QValue[] values) {
+                                   QPropertyDefinition def, QValue[] values) throws RepositoryException {
         AddProperty ap = new AddProperty(parentState, propName, propertyType, values, def);
         return ap;
     }

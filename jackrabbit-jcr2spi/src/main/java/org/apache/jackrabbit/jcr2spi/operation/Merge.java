@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.operation;
 
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ public class Merge extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -68,16 +70,21 @@ public class Merge extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         try {
-            mgr.getVersionHistoryEntry(nodeState).invalidate(true);
+            NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
+            if (vhe != null) {
+                vhe.invalidate(true);
+            }
         } catch (RepositoryException e) {
-            log.warn("Error while retrieving VersionHistory state:", e.getMessage());
+            log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
         }
         nodeState.getHierarchyEntry().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeEntry().getWorkspaceId();
     }
 

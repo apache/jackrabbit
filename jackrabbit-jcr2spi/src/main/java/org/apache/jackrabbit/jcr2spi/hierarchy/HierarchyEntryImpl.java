@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
-import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -93,8 +93,9 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (state == null) {
             try {
                 state = doResolve();
-                // only set 'target' if not already by upon resolution
-                if (!isAvailable()) {
+                // set the item state unless 'setItemState' has already been
+                // called by the ItemStateFactory (recall internalGetItemState)
+                if (internalGetItemState() == null) {
                     setItemState(state);
                 }
             } catch (ItemNotFoundException e) {
@@ -129,7 +130,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     abstract Path buildPath(boolean workspacePath) throws RepositoryException;
 
     /**
-     *
      * @return
      */
     ItemState internalGetItemState() {
@@ -140,16 +140,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         return state;
     }
 
-    /**
-     *
-     * @param entry
-     */
-    static void removeEntry(HierarchyEntryImpl entry) {
-        ItemState state = entry.internalGetItemState();
-        if (state != null) {
-            state.setStatus(Status.REMOVED);
-        }
-    }
     //-----------------------------------------------------< HierarchyEntry >---
     /**
      * @inheritDoc
@@ -218,13 +208,26 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#setItemState(ItemState)
      */
     public synchronized void setItemState(ItemState state) {
-        if (state == null || (denotesNode() && !state.isNode()) || (!denotesNode() && state.isNode())) {
+        ItemState currentState = internalGetItemState();
+        if (state == null || state == currentState || denotesNode() != state.isNode()) {
             throw new IllegalArgumentException();
         }
-        if (isAvailable()) {
-            throw new IllegalStateException("HierarchyEntry has already been resolved.");
+        if (currentState == null) {
+            // not connected yet to an item state. either a new entry or
+            // an unresolved hierarchy entry.
+            target = new WeakReference(state);
+        } else {
+            // was already resolved before -> merge the existing state
+            // with the passed state.
+            int currentStatus = currentState.getStatus();
+            boolean keepChanges = Status.isTransient(currentStatus) || Status.isStale(currentStatus);
+            boolean modified = currentState.merge(state, keepChanges);
+            if (currentStatus == Status.INVALIDATED) {
+                currentState.setStatus(Status.EXISTING);
+            } else if (modified) {
+                currentState.setStatus(Status.MODIFIED);
+            } // else: not modified. just leave status as it is.
         }
-        target = new WeakReference(state);
     }
 
     /**
@@ -234,10 +237,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     public void invalidate(boolean recursive) {
         ItemState state = internalGetItemState();
         if (state != null) {
-            // session-state TODO: only invalidate if existing?
-            if (state.getStatus() == Status.EXISTING) {
-                state.setStatus(Status.INVALIDATED);
-            }
+            state.setStatus(Status.INVALIDATED);
         }
     }
 
@@ -256,53 +256,71 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         switch (oldStatus) {
             case Status.EXISTING_MODIFIED:
             case Status.STALE_MODIFIED:
-                // revert state from overlayed
+                // revert state modifications
                 state.revert();
                 state.setStatus(Status.EXISTING);
                 break;
             case Status.EXISTING_REMOVED:
-                // revert state from overlayed
+                // revert state modifications
                 state.revert();
                 state.setStatus(Status.EXISTING);
-                if (!denotesNode()) {
-                    parent.revertPropertyRemoval((PropertyEntry) this);
-                }
                 break;
             case Status.NEW:
                 // reverting a NEW state is equivalent to its removal.
-                remove();
+                // however: don't remove the complete hierarchy
+                state.setStatus(Status.REMOVED);
+                parent.internalRemoveChildEntry(this);
                 break;
             case Status.STALE_DESTROYED:
-                // overlayed does not exist any more -> remove it
+                // overlayed does not exist any more -> reverting of pending
+                // transient changes (that lead to the stale status) can be
+                // omitted and the entry is complete removed instead.
                 remove();
                 break;
             default:
                 // Cannot revert EXISTING, REMOVED, INVALIDATED, MODIFIED states.
-                // State was implicitely reverted
+                // State was implicitely reverted or external modifications
+                // reverted the modification.
                 log.debug("State with status " + oldStatus + " cannot be reverted.");
         }
     }
 
-     /**
+    /**
      * {@inheritDoc}
      * @see HierarchyEntry#reload(boolean, boolean)
      */
     public void reload(boolean keepChanges, boolean recursive) {
-        ItemState state = internalGetItemState();
-        if (state == null) {
-            // nothing to do. entry will be validated upon resolution.
+        int status = getStatus();
+        if (status == Status._UNDEFINED_) {
+            // unresolved: entry will be loaded and validated upon resolution.
             return;
         }
-        /*
-        if keepChanges is true only existing or invalidated states must be
-        updated. otherwise the state gets updated and might be marked 'Stale'
-        if transient changes are present and the workspace-state is modified.
-        */
-        // TODO: check again if 'reload' is not possible for transiently-modified state
-        if (!keepChanges || state.getStatus() == Status.EXISTING
-            || state.getStatus() == Status.INVALIDATED) {
-            // reload the workspace state from the persistent layer
-            state.reload(keepChanges);
+        if (Status.isTransient(status) || Status.isStale(status) || Status.isTerminal(status)) {
+            // transient || stale: avoid reloading
+            // new || terminal: cannot be reloaded from persistent layer anyway.
+            log.debug("Skip reload for item with status " + Status.getName(status) + ".");
+            return;
+        }
+        /**
+         * Retrieved a fresh ItemState from the persistent layer. Which will
+         * then be merged into the current state.
+         */
+        try {
+            ItemStateFactory isf = factory.getItemStateFactory();
+            if (denotesNode()) {
+                NodeEntry ne = (NodeEntry) this;
+                isf.createNodeState(ne.getWorkspaceId(), ne);
+            } else {
+                PropertyEntry pe = (PropertyEntry) this;
+                isf.createPropertyState(pe.getWorkspaceId(), pe);
+            }
+        } catch (ItemNotFoundException e) {
+            // remove hierarchyEntry including all children
+            log.debug("Item '" + getName() + "' cannot be found on the persistent layer -> remove.");
+            remove();
+        } catch (RepositoryException e) {
+            // TODO: rather throw?
+            log.error("Exception while reloading item: " + e);
         }
     }
 
@@ -320,15 +338,12 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         // it in order to determine the current status.
         if (state.getStatus() == Status.INVALIDATED) {
             reload(false, false);
-            // check if upon reload the item has been removed -> nothing to do
-            if (Status.isTerminal(state.getStatus())) {
-                return;
-            }
         }
 
         switch (state.getStatus()) {
             case Status.NEW:
-                remove();
+                state.setStatus(Status.REMOVED);
+                parent.internalRemoveChildEntry(this);
                 break;
             case Status.EXISTING:
             case Status.EXISTING_MODIFIED:
@@ -342,40 +357,6 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 throw new InvalidItemStateException("Item has already been removed by someone else. Status = " + Status.getName(state.getStatus()));
             default:
                 throw new RepositoryException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see HierarchyEntry#collectStates(ChangeLog, boolean)
-     */
-    public void collectStates(ChangeLog changeLog, boolean throwOnStale) throws InvalidItemStateException {
-        ItemState state = internalGetItemState();
-        if (state == null) {
-            // nothing to do
-            return;
-        }
-
-        if (throwOnStale && Status.isStale(state.getStatus())) {
-            String msg = "Cannot save changes: " + state + " has been modified externally.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-        // only interested in transient modifications or stale states
-        switch (state.getStatus()) {
-            case Status.NEW:
-                changeLog.added(state);
-                break;
-            case Status.EXISTING_MODIFIED:
-            case Status.STALE_MODIFIED:
-            case Status.STALE_DESTROYED:
-                changeLog.modified(state);
-                break;
-            case Status.EXISTING_REMOVED:
-                changeLog.deleted(state);
-                break;
-            default:
-                log.debug("Collecting states: Ignored ItemState with status " + Status.getName(state.getStatus()));
         }
     }
 }

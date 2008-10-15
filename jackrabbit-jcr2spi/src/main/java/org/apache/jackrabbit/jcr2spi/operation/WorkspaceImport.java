@@ -55,6 +55,7 @@ public class WorkspaceImport extends AbstractOperation {
      * @see Operation#accept(OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
+        assert status == STATUS_PENDING;
         visitor.visit(this);
     }
 
@@ -65,6 +66,8 @@ public class WorkspaceImport extends AbstractOperation {
      * @see Operation#persisted()
      */
     public void persisted() {
+        assert status == STATUS_PENDING;
+        status = STATUS_PERSISTED;
         NodeEntry entry;
         if (uuidBehaviour == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING ||
                 uuidBehaviour == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
@@ -82,7 +85,7 @@ public class WorkspaceImport extends AbstractOperation {
     }
 
     //----------------------------------------< Access Operation Parameters >---
-    public NodeId getNodeId() {
+    public NodeId getNodeId() throws RepositoryException {
         return nodeState.getNodeId();
     }
 
