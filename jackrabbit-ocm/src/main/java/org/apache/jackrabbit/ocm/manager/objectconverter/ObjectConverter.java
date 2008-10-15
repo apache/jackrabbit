@@ -108,6 +108,16 @@ public interface ObjectConverter
 	 * Update the object
 	 *
 	 * @param session the JCR session
+	 * @param objectNode The node to store the object
+	 * @param object the object to update
+	 * @throws ObjectContentManagerException when it is not possible to update the object
+	 */
+    public void update(Session session, Node objectNode, Object object) throws ObjectContentManagerException;
+    
+	/**
+	 * Update the object
+	 *
+	 * @param session the JCR session
 	 * @param parentNode The parent node used to store the new JCR element (object)
 	 * @param nodeName The node name used to store the object
 	 * @param object the object to update

@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -64,6 +65,7 @@ import org.apache.jackrabbit.ocm.repository.NodeUtil;
  *
  * @author <a href="mailto:christophe.lombart@gmail.com">Lombart  Christophe </a>
  * @author <a href='mailto:the_mindstorm[at]evolva[dot]ro'>Alexandru Popescu</a>
+ * @author <a href='mailto:boni.g@bioimagene.com'>Boni Gopalan</a>
  */
 public class ObjectConverterImpl implements ObjectConverter {
 
@@ -275,6 +277,21 @@ public class ObjectConverterImpl implements ObjectConverter {
 		try {
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.getBeanClass(object));
 			Node objectNode = session.getNodeByUUID(uuId);
+			update(session, objectNode, object);
+		} catch (PathNotFoundException pnfe) {
+			throw new ObjectContentManagerException("Impossible to update the object with UUID: " + uuId , pnfe);
+		} catch (RepositoryException re) {
+			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to update the object with UUID: " + uuId, re);
+		}
+	}
+
+	/**
+	 *
+	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter#update(javax.jcr.Session,
+	 *      javax.jcr.Node, java.lang.Object)
+	 */
+	public void update(Session session, Node objectNode, Object object) {
+			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.getBeanClass(object));
 
 			checkNodeType(session, classDescriptor);
 
@@ -284,14 +301,9 @@ public class ObjectConverterImpl implements ObjectConverter {
 			updateBeanFields(session, object, classDescriptor, objectNode);
 			updateCollectionFields(session, object, classDescriptor, objectNode);
 			simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
-		} catch (PathNotFoundException pnfe) {
-			throw new ObjectContentManagerException("Impossible to update the object with UUID: " + uuId , pnfe);
-		} catch (RepositoryException re) {
-			throw new org.apache.jackrabbit.ocm.exception.RepositoryException("Impossible to update the object with UUID: " + uuId, re);
-		}
 	}
 	
-	
+
 	/**
 	 *
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter#update(javax.jcr.Session,
@@ -300,16 +312,8 @@ public class ObjectConverterImpl implements ObjectConverter {
 	public void update(Session session, Node parentNode, String nodeName, Object object) {
 		try {
 			ClassDescriptor classDescriptor = mapper.getClassDescriptorByClass(ReflectionUtils.getBeanClass(object));
-			Node objectNode = parentNode.getNode(nodeName);
-
-			checkNodeType(session, classDescriptor);
-
-			checkCompatiblePrimaryNodeTypes(session, objectNode, classDescriptor, false);
-
-			simpleFieldsHelp.storeSimpleFields(session, object, classDescriptor, objectNode);
-			updateBeanFields(session, object, classDescriptor, objectNode);
-			updateCollectionFields(session, object, classDescriptor, objectNode);
-			simpleFieldsHelp.refreshUuidPath(session, classDescriptor, objectNode, object);
+			Node objectNode = getNode(parentNode,classDescriptor,nodeName,object);
+			update(session, objectNode, object);
 		} catch (PathNotFoundException pnfe) {
 			throw new ObjectContentManagerException("Impossible to update the object: " + nodeName + " at node : " + parentNode, pnfe);
 		} catch (RepositoryException re) {
@@ -318,6 +322,36 @@ public class ObjectConverterImpl implements ObjectConverter {
 		}
 	}
 
+	/**
+	 * 
+	 * @param parentNode the parent node at which to look for the node element.
+	 * @param nodeName the node name to look for
+	 * @param object the data.
+	 * @param classDescriptor
+	 * @return The child node we are interested in.
+	 */
+	private Node getNode(Node parentNode, ClassDescriptor classDescriptor, String nodeName, Object object) throws RepositoryException{
+		if (parentNode == null) return null;
+		NodeIterator nodes = parentNode.getNodes(nodeName);
+		if (nodes.getSize() == 1) return nodes.nextNode();
+		if (classDescriptor.hasUUIdField()){
+            String uuidFieldName = classDescriptor.getUuidFieldDescriptor().getFieldName();
+            Object objUuid = ReflectionUtils.getNestedProperty(object, uuidFieldName);
+        	String currentItemUuid = (objUuid == null) ? null : objUuid.toString();
+        	if (currentItemUuid != null){
+        		//The Node already exists so we need to update the existing node 
+        		//rather than to replace it.
+        		return parentNode.getSession().getNodeByUUID(currentItemUuid);
+        	}
+        	else{
+        		throw new NullPointerException("Cannot locate the node to update since there is no UUID provided even though, " + classDescriptor.getClassName() + " has been mapped with a UUID field , " + uuidFieldName );
+        	}
+        		
+		}
+		return parentNode.getNode(nodeName);
+		
+	}
+	
 	/**
 	 * @see org.apache.jackrabbit.ocm.manager.objectconverter.ObjectConverter#getObject(javax.jcr.Session,
 	 *      java.lang.Class, java.lang.String)
