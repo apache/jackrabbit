@@ -296,43 +296,51 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * Parses the security manager configuration.
      *
      * @param security the &lt;security> element.
-     * @return the security manager configuration.
+     * @return the security manager configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */
     public SecurityManagerConfig parseSecurityManagerConfig(Element security)
             throws ConfigurationException {
+        // Optional security manager config entry
+        Element smElement = getElement(security, SECURITY_MANAGER_ELEMENT, false);
+        if (smElement != null) {
+            BeanConfig bc = parseBeanConfig(smElement);
+            String wspAttr = getAttribute(smElement, WSP_NAME_ATTRIBUTE, null);
 
-        BeanConfig bc = parseBeanConfig(security, SECURITY_MANAGER_ELEMENT);
-
-        Element smElement = getElement(security, SECURITY_MANAGER_ELEMENT);
-        String wspAttr = getAttribute(smElement, WSP_NAME_ATTRIBUTE, null);
-
-        BeanConfig wac = null;
-        Element element = getElement(smElement, WORKSPACE_ACCESS_ELEMENT, false);
-        if (element != null) {
-            wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
+            BeanConfig wac = null;
+            Element element = getElement(smElement, WORKSPACE_ACCESS_ELEMENT, false);
+            if (element != null) {
+                wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
+            }
+            return new SecurityManagerConfig(bc, wspAttr, wac);
+        } else {
+            return null;
         }
-        return new SecurityManagerConfig(bc, wspAttr, wac);
     }
 
     /**
      * Parses the access manager configuration.
      *
      * @param security the &lt;security> element.
-     * @return the access manager configuration.
+     * @return the access manager configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */
     public AccessManagerConfig parseAccessManagerConfig(Element security)
             throws ConfigurationException {
-        return new AccessManagerConfig(
-                parseBeanConfig(security, ACCESS_MANAGER_ELEMENT));
+        // Optional access manager config entry
+        Element accessMgr = getElement(security, ACCESS_MANAGER_ELEMENT, false);
+        if (accessMgr != null) {
+            return new AccessManagerConfig(parseBeanConfig(accessMgr));
+        } else {
+            return null;
+        }
     }
 
     /**
      * Parses the login module configuration.
      *
      * @param security the &lt;security> element.
-     * @return the login module configuration.
+     * @return the login module configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */
     public LoginModuleConfig parseLoginModuleConfig(Element security)

@@ -67,7 +67,7 @@
 
     it also specifies various security related managers to be used.
 -->
-<!ELEMENT Security (SecurityManager, AccessManager, LoginModule?)>
+<!ELEMENT Security (SecurityManager?, AccessManager?, LoginModule?)>
 <!ATTLIST Security appName CDATA #REQUIRED>
 
 <!--
