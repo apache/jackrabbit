@@ -3855,14 +3855,21 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
          * but also verify that node.isNodeType("mix:versionable")==true;
          * this would have a negative impact on performance though...
          */
-        NodeImpl node = this;
-        while (!node.hasProperty(NameConstants.JCR_ISCHECKEDOUT)) {
-            if (node.getDepth() == 0) {
-                return true;
+        try {
+            NodeState state = (NodeState) getItemState();
+            while (!state.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
+                ItemId parentId = state.getParentId();
+                if (parentId == null) {
+                    // root reached or out of hierarchy
+                    return true;
+                }
+                state = (NodeState) session.getItemStateManager().getItemState(parentId);
             }
-            node = (NodeImpl) node.getParent();
+            PropertyState ps = (PropertyState) session.getItemStateManager().getItemState(new PropertyId(state.getNodeId(), NameConstants.JCR_ISCHECKEDOUT));
+            return ps.getValues()[0].getBoolean();
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e.getMessage());
         }
-        return node.getProperty(NameConstants.JCR_ISCHECKEDOUT).getBoolean();
     }
 
     /**
