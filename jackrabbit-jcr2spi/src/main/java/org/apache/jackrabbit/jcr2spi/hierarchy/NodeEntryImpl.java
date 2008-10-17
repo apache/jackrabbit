@@ -190,11 +190,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * traversed and reloaded. Otherwise only this entry and the direct
      * decendants are reloaded.
      *
-     * @see HierarchyEntry#reload(boolean, boolean)
+     * @see HierarchyEntry#reload(boolean)
      */
-    public void reload(boolean keepChanges, boolean recursive) {
+    public void reload(boolean recursive) {
         // reload this entry
-        super.reload(keepChanges, recursive);
+        super.reload(recursive);
 
         // reload all children unless 'recursive' is false and the reload above
         // did not cause this entry to be removed -> therefore check status.
@@ -202,7 +202,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             // recursivly reload all entries including props that are in the attic.
             for (Iterator it = getAllChildEntries(true); it.hasNext();) {
                 HierarchyEntry ce = (HierarchyEntry) it.next();
-                ce.reload(keepChanges, recursive);
+                ce.reload(recursive);
             }
         }
     }
@@ -394,6 +394,12 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 return entry.properties.get(name);
             } else {
                 // no valid entry
+                // -> if cnes are complete -> assume that it doesn't exist.
+                //    refresh will bring up new entries added in the mean time
+                //    on the persistent layer.
+                if (entry.childNodeEntries.isComplete()) {
+                    throw new PathNotFoundException(path.toString());
+                }
                 // -> check for moved child entry in node-attic
                 // -> check if child points to a removed/moved sns
                 List siblings = entry.childNodeEntries.get(name);
@@ -532,7 +538,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
         if (cne == null && loadIfNotFound
                 && !containsAtticChild(entries, nodeName, index)
-                && Status.NEW != getStatus()) {
+                && !childNodeEntries.isComplete()) {
             PathFactory pf = factory.getPathFactory();
             NodeId cId = factory.getIdFactory().createNodeId(getWorkspaceId(), pf.create(nodeName, index));
             cne = loadNodeEntry(cId);

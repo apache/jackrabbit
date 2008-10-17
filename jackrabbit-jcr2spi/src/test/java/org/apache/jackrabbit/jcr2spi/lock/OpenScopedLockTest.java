@@ -45,6 +45,10 @@ public class OpenScopedLockTest extends AbstractLockTest {
         testRoot2.save();
 
         Lock lock2 = lockedNode2.lock(false, isSessionScoped());
+
+        // force reloading of the testroot in order to be aware of the
+        // locked noded added by another session
+        testRootNode.refresh(false);
         Node n2 = (Node) superuser.getItem(lockedNode2.getPath());
         try {
             String lockToken = lock2.getLockToken();

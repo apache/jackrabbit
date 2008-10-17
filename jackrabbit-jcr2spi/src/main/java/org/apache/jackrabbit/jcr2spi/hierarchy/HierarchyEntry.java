@@ -110,10 +110,11 @@ public interface HierarchyEntry {
     public void setItemState(ItemState state);
 
     /**
-     * Invalidates the underlying <code>ItemState</code> if available. If the
-     * <code>recursive</code> flag is true, the hierarchy is traverses and
-     * {@link #invalidate(boolean)} is called on all child entries.<br>
-     * Note, that in contrast to {@link HierarchyEntry#reload(boolean, boolean)}
+     * Invalidates the underlying <code>ItemState</code> if available and if it
+     * is not transiently modified. If the <code>recursive</code> flag is true,
+     * the hierarchy is traverses and {@link #invalidate(boolean)} is called on
+     * all child entries.<br>
+     * Note, that in contrast to {@link HierarchyEntry#reload(boolean)}
      * this method only sets the status of this item state to {@link
      * Status#INVALIDATED} and does not acutally update it with the persistent
      * state in the repository.
@@ -131,15 +132,12 @@ public interface HierarchyEntry {
 
     /**
      * Reloads this hierarchy entry and the corresponding ItemState, if this
-     * entry has already been resolved. If '<code>keepChanges</code>' is true,
-     * states with transient changes are left untouched in order to detect stale
-     * item states. Otherwise this state gets its data reloaded from the
-     * persistent storage. If '<code>recursive</code>' the complete hierarchy
-     * below this entry is reloaded as well.
+     * entry has already been resolved. If '<code>recursive</code>' the complete
+     * hierarchy below this entry is reloaded as well.
      *
-     * @param keepChanges
+     * @param recursive
      */
-    public void reload(boolean keepChanges, boolean recursive);
+    public void reload(boolean recursive);
 
     /**
      * Traverses the hierarchy and marks all available item states as transiently

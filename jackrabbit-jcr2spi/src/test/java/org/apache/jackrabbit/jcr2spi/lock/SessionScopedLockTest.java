@@ -61,6 +61,9 @@ public class SessionScopedLockTest extends AbstractLockTest {
         lockedNode2.addMixin(mixLockable);
         testRoot2.save();
 
+        // force reloading of the testroot in order to be aware of the
+        // locked noded added by another session
+        testRootNode.refresh(false);
         Node n2 = (Node) superuser.getItem(lockedNode2.getPath());
 
         // remove lock implicit by logout lock-holding session

@@ -104,7 +104,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             }
         } else if (state.getStatus() == Status.INVALIDATED) {
             // completely reload this entry, but don't reload recursively
-            reload(false, false);
+            reload(false);
         }
         return state;
     }
@@ -235,9 +235,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#invalidate(boolean)
      */
     public void invalidate(boolean recursive) {
-        ItemState state = internalGetItemState();
-        if (state != null) {
+        if (getStatus() == Status.EXISTING) {
+            ItemState state = internalGetItemState();
             state.setStatus(Status.INVALIDATED);
+        } else {
+            log.debug("Skip invalidation for HierarchyEntry " + name + " with status " + Status.getName(getStatus()));
         }
     }
 
@@ -287,9 +289,9 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
 
     /**
      * {@inheritDoc}
-     * @see HierarchyEntry#reload(boolean, boolean)
+     * @see HierarchyEntry#reload(boolean)
      */
-    public void reload(boolean keepChanges, boolean recursive) {
+    public void reload(boolean recursive) {
         int status = getStatus();
         if (status == Status._UNDEFINED_) {
             // unresolved: entry will be loaded and validated upon resolution.
@@ -337,7 +339,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         // if during recursive removal an invalidated entry is found, reload
         // it in order to determine the current status.
         if (state.getStatus() == Status.INVALIDATED) {
-            reload(false, false);
+            reload(false);
         }
 
         switch (state.getStatus()) {
