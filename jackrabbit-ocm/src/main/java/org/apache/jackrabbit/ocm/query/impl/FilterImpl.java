@@ -62,6 +62,9 @@ public class FilterImpl implements Filter {
         this.valueFactory = valueFactory;
     }
 
+    public Object clone(){
+    	return new FilterImpl(classDescriptor,atomicTypeConverters,claszz,valueFactory);
+    }
     /**
      *
      * @see org.apache.jackrabbit.ocm.query.Filter#getFilterClass()
