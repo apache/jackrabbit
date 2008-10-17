@@ -97,6 +97,7 @@ public interface Filter
 	Filter addJCRExpression(String jcrExpression);
 	
     Class getFilterClass();
+    Object clone();
 	
 
 }

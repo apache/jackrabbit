@@ -75,7 +75,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 
 	private Mapper mapper;
 
-	private AtomicTypeConverterProvider atomicTypeConverterProvider;
+	protected AtomicTypeConverterProvider atomicTypeConverterProvider;
 
 	private ProxyManager proxyManager;
 
@@ -925,7 +925,7 @@ public class ObjectConverterImpl implements ObjectConverter {
 	}
 
 
-	private CollectionConverter getCollectionConverter(Session session, CollectionDescriptor collectionDescriptor) {
+	public CollectionConverter getCollectionConverter(Session session, CollectionDescriptor collectionDescriptor) {
 		String className = collectionDescriptor.getCollectionConverter();
 		Map atomicTypeConverters = this.atomicTypeConverterProvider.getAtomicTypeConverters();
 		if (className == null) {

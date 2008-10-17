@@ -20,6 +20,8 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.ocm.exception.ObjectContentManagerException;
+import org.apache.jackrabbit.ocm.manager.collectionconverter.CollectionConverter;
+import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 
 /**
@@ -144,5 +146,7 @@ public interface ObjectConverter
      * @throws ObjectContentManagerException when it is not possible to retrieve the object path
      */
     public String getPath(Session session , Object object)  throws ObjectContentManagerException;
+    
+    public CollectionConverter getCollectionConverter(Session session, CollectionDescriptor collectionDescriptor);
 
 }
