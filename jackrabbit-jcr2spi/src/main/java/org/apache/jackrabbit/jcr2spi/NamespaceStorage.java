@@ -18,6 +18,9 @@ package org.apache.jackrabbit.jcr2spi;
 
 import java.util.Map;
 
+import javax.jcr.NamespaceException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -25,10 +28,14 @@ import javax.jcr.RepositoryException;
  */
 public interface NamespaceStorage {
 
-    Map getRegisteredNamespaces() throws RepositoryException;
+    public Map getRegisteredNamespaces() throws RepositoryException;
 
-    void registerNamespace(String prefix, String uri) throws RepositoryException;
+    public String getPrefix(String uri) throws NamespaceException, RepositoryException;
 
-    void unregisterNamespace(String uri) throws RepositoryException;
+    public String getURI(String prefix) throws NamespaceException, RepositoryException;
+
+    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
+
+    public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException;
 
 }

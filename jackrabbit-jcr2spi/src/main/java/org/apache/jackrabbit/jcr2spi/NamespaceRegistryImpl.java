@@ -16,12 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Collection;
 
-import javax.jcr.NamespaceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.NamespaceException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -30,14 +32,9 @@ import javax.jcr.RepositoryException;
  */
 public class NamespaceRegistryImpl implements NamespaceRegistry {
 
-    /**
-     * The namespace storage.
-     */
+    private static Logger log = LoggerFactory.getLogger(NamespaceRegistryImpl.class);
+
     private final NamespaceStorage storage;
-
-    private final Map prefixToUri = new HashMap();
-
-    private final Map uriToPrefix = new HashMap();
 
     /**
      * Create a new <code>NamespaceRegistryImpl</code>.
@@ -53,93 +50,58 @@ public class NamespaceRegistryImpl implements NamespaceRegistry {
     /**
      * @see NamespaceRegistry#registerNamespace(String, String)
      */
-    public synchronized void registerNamespace(String prefix, String uri)
-            throws RepositoryException {
+    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
         storage.registerNamespace(prefix, uri);
-        reloadNamespaces();
     }
 
     /**
      * @see NamespaceRegistry#unregisterNamespace(String)
      */
-    public synchronized void unregisterNamespace(String prefix)
-            throws RepositoryException {
+    public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
         storage.unregisterNamespace(prefix);
-        reloadNamespaces();
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      */
-    public synchronized String[] getPrefixes() throws RepositoryException {
-        reloadNamespaces();
-        return (String[]) prefixToUri.keySet().toArray(new String[prefixToUri.size()]);
+    public String[] getPrefixes() throws RepositoryException {
+        Collection prefixes = storage.getRegisteredNamespaces().keySet();
+        return (String[]) prefixes.toArray(new String[prefixes.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
-    public synchronized String[] getURIs() throws RepositoryException {
-        reloadNamespaces();
-        return (String[]) uriToPrefix.keySet().toArray(new String[uriToPrefix.size()]);
+    public String[] getURIs() throws RepositoryException {
+        Collection uris = storage.getRegisteredNamespaces().values();
+        return (String[]) uris.toArray(new String[uris.size()]);
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getURI(String)
      * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getURI(String)
      */
-    public synchronized String getURI(String prefix)
-            throws RepositoryException {
-        String uri = (String) prefixToUri.get(prefix);
-        if (uri == null) {
-            // Not found, try loading latest state from storage
-            reloadNamespaces();
-            uri = (String) prefixToUri.get(prefix);
+    public String getURI(String prefix) throws NamespaceException {
+        // try to load the uri
+        try {
+            return storage.getURI(prefix);
+        } catch (RepositoryException ex) {
+            log.debug("Internal error while loading registered namespaces.");
+            throw new NamespaceException(prefix + ": is not a registered namespace prefix.");
         }
-        if (uri == null) {
-            // Still not found, it's not a known prefix
-            throw new NamespaceException("Namespace not found: " + prefix);
-        }
-        return uri;
     }
 
     /**
      * @see javax.jcr.NamespaceRegistry#getPrefix(String)
      * @see org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver#getPrefix(String)
      */
-    public synchronized String getPrefix(String uri) throws RepositoryException {
-        String prefix = (String) uriToPrefix.get(uri);
-        if (prefix == null) {
-            // Not found, try loading latest state from storage
-            reloadNamespaces();
-            prefix = (String) uriToPrefix.get(uri);
-        }
-        if (prefix == null) {
-            // Still not found, it's not a known URI
-            throw new NamespaceException("Namespace not found: " + uri);
-        }
-        return prefix;
-    }
-
-    //-------------------------------------------------------------< private >
-
-    /**
-     * Clears the current namespace cache and loads new mappings from
-     * the underlying namespace storage.
-     *
-     * @throws RepositoryException if new mappings could not be loaded
-     */
-    private synchronized void reloadNamespaces() throws RepositoryException {
-        Map namespaces = storage.getRegisteredNamespaces();
-
-        prefixToUri.clear();
-        uriToPrefix.clear();
-
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            prefixToUri.put(entry.getKey(), entry.getValue());
-            uriToPrefix.put(entry.getValue(), entry.getKey());
+    public String getPrefix(String uri) throws NamespaceException {
+        // try to load the prefix
+        try {
+            return storage.getPrefix(uri);
+        } catch (RepositoryException ex) {
+            log.debug("Internal error while loading registered namespaces.");
+            throw new NamespaceException(uri + ": is not a registered namespace uri.");
         }
     }
 
