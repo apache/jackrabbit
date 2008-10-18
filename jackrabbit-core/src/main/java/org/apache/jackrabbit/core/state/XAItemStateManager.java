@@ -138,7 +138,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      */
     public void prepare(TransactionContext tx) throws TransactionException {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
-        if (txLog != null) {
+        if (txLog != null && txLog.hasUpdates()) {
             try {
                 if (virtualProvider != null) {
                     updateVirtualReferences(txLog);
@@ -159,7 +159,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      */
     public void commit(TransactionContext tx) throws TransactionException {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
-        if (txLog != null) {
+        if (txLog != null && txLog.hasUpdates()) {
             try {
                 update.end();
             } catch (ItemStateException ise) {
@@ -175,7 +175,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      */
     public void rollback(TransactionContext tx) {
         ChangeLog txLog = (ChangeLog) tx.getAttribute(attributeName);
-        if (txLog != null) {
+        if (txLog != null && txLog.hasUpdates()) {
             if (update != null) {
                 update.cancel();
             }
