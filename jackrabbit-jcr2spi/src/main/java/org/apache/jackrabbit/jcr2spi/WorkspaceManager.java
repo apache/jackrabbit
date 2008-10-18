@@ -16,102 +16,103 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.MergeException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.version.VersionException;
-
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistryImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeCache;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
+import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.TransientISFactory;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.Clone;
+import org.apache.jackrabbit.jcr2spi.operation.Copy;
+import org.apache.jackrabbit.jcr2spi.operation.Move;
+import org.apache.jackrabbit.jcr2spi.operation.Remove;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
+import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.Checkout;
+import org.apache.jackrabbit.jcr2spi.operation.Checkin;
+import org.apache.jackrabbit.jcr2spi.operation.Update;
+import org.apache.jackrabbit.jcr2spi.operation.Restore;
+import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
+import org.apache.jackrabbit.jcr2spi.operation.Merge;
+import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
+import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
+import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
+import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
+import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
+import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeCache;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistryImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeStorage;
-import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
-import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
-import org.apache.jackrabbit.jcr2spi.operation.AddNode;
-import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
-import org.apache.jackrabbit.jcr2spi.operation.Checkin;
-import org.apache.jackrabbit.jcr2spi.operation.Checkout;
-import org.apache.jackrabbit.jcr2spi.operation.Clone;
-import org.apache.jackrabbit.jcr2spi.operation.Copy;
-import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
-import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
-import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
-import org.apache.jackrabbit.jcr2spi.operation.Merge;
-import org.apache.jackrabbit.jcr2spi.operation.Move;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
-import org.apache.jackrabbit.jcr2spi.operation.Remove;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
-import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
-import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
-import org.apache.jackrabbit.jcr2spi.operation.Restore;
-import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
-import org.apache.jackrabbit.jcr2spi.operation.Update;
-import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
-import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.TransientISFactory;
-import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
-import org.apache.jackrabbit.spi.Batch;
-import org.apache.jackrabbit.spi.Event;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.ItemId;
-import org.apache.jackrabbit.spi.LockInfo;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.PropertyId;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.LockInfo;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.Batch;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Event;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Subscription;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
-import EDU.oswego.cs.dl.util.concurrent.Mutex;
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.MergeException;
+import javax.jcr.Session;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.version.VersionException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Collection;
+
 import EDU.oswego.cs.dl.util.concurrent.Sync;
+import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 /**
  * <code>WorkspaceManager</code>...
@@ -630,16 +631,28 @@ public class WorkspaceManager
     /**
      * @inheritDoc
      */
-    public void registerNamespace(String prefix, String uri)
-            throws RepositoryException {
+    public String getPrefix(String uri) throws NamespaceException, RepositoryException {
+        return service.getNamespacePrefix(sessionInfo, uri);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public String getURI(String prefix) throws NamespaceException, RepositoryException {
+        return service.getNamespaceURI(sessionInfo, prefix);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.registerNamespace(sessionInfo, prefix, uri);
     }
 
     /**
      * @inheritDoc
      */
-    public void unregisterNamespace(String uri)
-            throws RepositoryException {
+    public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         service.unregisterNamespace(sessionInfo, uri);
     }
 
