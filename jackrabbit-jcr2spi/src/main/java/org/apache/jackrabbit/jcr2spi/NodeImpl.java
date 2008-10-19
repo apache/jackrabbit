@@ -623,16 +623,15 @@ public class NodeImpl extends ItemImpl implements Node {
         VersionException, ConstraintViolationException, LockException, RepositoryException {
         checkIsWritable();
         Name mixinQName = getQName(mixinName);
-        if (!canAddMixin(mixinQName)) {
-            throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
-        }
 
         // get mixin types present in the jcr:mixintypes property without
         // modifying the NodeState.
         List mixinValue = getMixinTypes();
-        if (mixinValue.contains(mixinQName)) {
-            log.warn("Mixin " + mixinName + " has already been transiently added -> Ignored.");
-        } else {
+        if (!mixinValue.contains(mixinQName)) {
+            if (!canAddMixin(mixinQName)) {
+                throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
+            }
+
             mixinValue.add(mixinQName);
             // perform the operation
             Operation op = SetMixin.create(getNodeState(), (Name[]) mixinValue.toArray(new Name[mixinValue.size()]));
