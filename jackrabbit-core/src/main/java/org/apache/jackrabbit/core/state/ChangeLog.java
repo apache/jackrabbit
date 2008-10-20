@@ -49,6 +49,20 @@ public class ChangeLog {
     private final Map modifiedRefs = new LinkedMap();
 
     /**
+     * Checks whether this change log contains any changes. This method is
+     * used to avoid extra work on updates that contain no changes.
+     *
+     * @since Apache Jackrabbit 1.5
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1813">JCR-1813</a>
+     * @return <code>true</code> if this log contains at least one change,
+     *         <code>false</code> otherwise
+     */
+    public boolean hasUpdates() { 
+        return !(addedStates.isEmpty() && modifiedStates.isEmpty()
+                && deletedStates.isEmpty() && modifiedRefs.isEmpty()); 
+    }
+
+    /**
      * A state has been added
      *
      * @param state state that has been added
