@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 
@@ -372,6 +373,99 @@ public class QValueTest extends TestCase {
         assertTrue(v.getType() == PropertyType.BINARY);
     }
 
+
+    public void testBinaryFromByteArray() throws RepositoryException, IOException {
+        QValue v = factory.create(new byte[] {'a', 'b', 'c'});
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(3, v.getLength());
+
+        assertEquals("abc", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("abc", new String(out.toByteArray()));
+    }
+
+    public void testEmptyBinaryFromByteArray() throws RepositoryException, IOException {
+        QValue v = factory.create(new byte[0]);
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(0, v.getLength());
+
+        assertEquals("", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("", new String(out.toByteArray()));
+    }
+
+    public void testBinaryFromInputStream() throws RepositoryException, IOException {
+        InputStream in = new ByteArrayInputStream(new byte[] {'a', 'b', 'c'});
+
+        QValue v = factory.create(in);
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(3, v.getLength());
+
+        assertEquals("abc", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("abc", new String(out.toByteArray()));
+    }
+
+    public void testEmptyBinaryFromInputStream() throws RepositoryException, IOException {
+        InputStream in = new ByteArrayInputStream(new byte[0]);
+
+        QValue v = factory.create(in);
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(0, v.getLength());
+
+        assertEquals("", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("", new String(out.toByteArray()));
+    }
+
+
+    public void testBinaryFromFile() throws RepositoryException, IOException {
+        File f = File.createTempFile("QValueFactoryImplTest", ".txt");
+        f.deleteOnExit();
+        FileWriter fw = new FileWriter(f);
+        fw.write("abc");
+        fw.close();
+
+        QValue v = factory.create(f);
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(3, v.getLength());
+
+        assertEquals("abc", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("abc", new String(out.toByteArray()));
+    }
+
+    public void testEmptyBinaryFromFile() throws RepositoryException, IOException {
+        File f = File.createTempFile("QValueFactoryImplTest", ".txt");
+        f.deleteOnExit();
+
+        QValue v = factory.create(f);
+
+        assertEquals(PropertyType.BINARY, v.getType());
+        assertEquals(0, v.getLength());
+
+        assertEquals("", v.getString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        spool(out, v.getStream());
+        assertEquals("", new String(out.toByteArray()));
+    }
+
     public void testBinarySerializable() throws Exception {
         runBinarySerializableTest(1); // 1k
         runBinarySerializableTest(10); // 10k
@@ -416,6 +510,28 @@ public class QValueTest extends TestCase {
         } finally {
             v.discard();
             serValue.discard();
+        }
+    }
+
+    /**
+     *
+     * @param out
+     * @param in
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    private static void spool(OutputStream out, InputStream in) throws RepositoryException, IOException {
+        try {
+            byte[] buffer = new byte[0x2000];
+            int read;
+            while ((read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignore) {
+            }
         }
     }
 }
