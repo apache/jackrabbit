@@ -26,6 +26,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
@@ -183,11 +184,17 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         if (this == otherItem) {
             return true;
         }
+        if (isNode() != otherItem.isNode()) {
+            return false;
+        }
         if (otherItem instanceof ItemImpl) {
             ItemImpl other = (ItemImpl) otherItem;
             if (this.state == other.state) {
                 return true;
             }
+            // check status of the other item.
+            other.checkStatus();
+
             // 2 items may only be the same if the were accessed from Sessions
             // bound to the same workspace
             String otherWspName = other.session.getWorkspace().getName();
@@ -195,6 +202,10 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 // in addition they must provide the same id irrespective of
                 // any transient modifications.
                 if (state.getStatus() != Status.NEW && other.state.getStatus() != Status.NEW ) {
+                    // if any ancestor is _invalidated_ force it's reload in
+                    // order to detect id changes.
+                    updateId(state);
+                    updateId(other.state);
                     return state.getWorkspaceId().equals(other.state.getWorkspaceId());
                 }
                 /* else:
@@ -205,7 +216,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 - either of the two items does not have a workspace state.
                   therefore the items cannot be the same, since one has been
                   transiently added in one but not the other session.
-                  */
+                */
             }
         }
         return false;
@@ -530,5 +541,23 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     String safeGetJCRPath() {
         return LogUtil.safeGetJCRPath(getItemState(), session.getPathResolver());
+    }
+
+    /**
+     *
+     * @param state
+     * @throws RepositoryException
+     */
+    private static void updateId(ItemState state) throws RepositoryException {
+        HierarchyEntry he = state.getHierarchyEntry();
+        while (he.getStatus() != Status.INVALIDATED) {
+            he = he.getParent();
+            if (he == null) {
+                // root reached without intermediate invalidated entry
+                return;
+            }
+        }
+        // he is INVALIDATED -> force reloading in order to be aware of id changes
+        he.getItemState();
     }
 }

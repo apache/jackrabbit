@@ -94,6 +94,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(HierarchyNodeTest.class);
         suite.addTestSuite(LazyItemIteratorTest.class);
         suite.addTestSuite(ExternalModificationTest.class);
+        suite.addTestSuite(IsSameTest.class);
 
         return suite;
     }
