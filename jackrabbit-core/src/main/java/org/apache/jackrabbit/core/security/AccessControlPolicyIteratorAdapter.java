@@ -14,10 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.iterator;
+package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
 
 import javax.jcr.RangeIterator;
 import java.util.Collection;
