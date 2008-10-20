@@ -223,6 +223,7 @@ jackrabbit-core  (since 1.4.6)
   Improvements
   [JCR-1005] More Fine grained Permission Flags
   [JCR-1087] Maintain the cluster revision table
+  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
   [JCR-1237] Change default value for respectDocumentOrder
   [JCR-1290] tm-extractors.jar blocks usage of newer poi versions
   [JCR-1308] Unnecessary null check in EffectiveNodeType....
@@ -272,6 +273,7 @@ jackrabbit-core  (since 1.4.6)
   [JCR-1710] Promote ChildNodeEntry and ChildNodeEntries to top level classes.
   [JCR-1715] Prevent excessive Path.Element instances
   [JCR-1716] Prefer PathFactory.createElement() over createPath()....
+  [JCR-1729] Node#addNode fails with AccessDeniedException if session ...
   [JCR-1739] Do not use deletable anymore
   [JCR-1742] CacheManager resizeAll is slow
   [JCR-1745] Mark pending nodes in IndexingQueue directly in index
@@ -303,6 +305,7 @@ jackrabbit-core  (since 1.4.6)
   [JCR-1738] BeanConfig may incorrectly throw ConfigurationException
   [JCR-1764] Occasional IndexingQueueTest failures
   [JCR-1803] Node.restore() throws java.lang.ClassCastException
+  [JCR-1813] Invalid journal records during XATransactions
   [JCR-1817] Core: Misleading method naming with Workspace and Session ...
 
   Known issues
@@ -393,6 +396,7 @@ jackrabbit-jca (since 1.4)
 jackrabbit-jcr-commons (since 1.4.2)
 
   New features
+  [JCR-1248] Helper Method to escape illegal XPath Search Term
   [JCR-1350] Add a serializing content handler
   [JCR-1607] Add a NamespaceHelper in jcr-commons
   [JCR-1697] Simple Google style query
@@ -459,6 +463,9 @@ jackrabbit-jcr-servlet (since 1.4)
 
 jackrabbit-jcr-tests (since 1.4)
 
+  Improvements
+  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
+
   Bug fixes
   [JCR-1361] Lock test assumes that changes in one session are immediately ...
   [JCR-1468] LockTest.testLogout fails to refresh session before checking ...
@@ -489,11 +496,13 @@ jackrabbit-jcr2spi (since 1.4)
 
   Improvements
   [JCR-1011] JCR2SPI: add configurable cache for Item instances (ItemManager)
+  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
   [JCR-1327] SPI POM improvements
   [JCR-1417] [PATCH] remove code stutter
   [JCR-1577] Remove RepositoryService.getRootId()
   [JCR-1579] Improved XML export handling
   [JCR-1585] Remove calls to System.out in tests
+  [JCR-1612] Reintroduce NamespaceStorage
   [JCR-1683] JCR2SPI: Move test execution to SPI2JCR
   [JCR-1700] Deprecate NamespaceListener and AbstractNamespaceResolver
   [JCR-1720] Jcr2Spi: configuration entry for size of ItemCache
@@ -509,6 +518,7 @@ jackrabbit-jcr2spi (since 1.4)
   [JCR-1783] JCR2SPI: incomplete changelog when combining move with ...
   [JCR-1799] JCR2SPI: updating events swallowed (CacheBehaviour.OBSERVATION)
   [JCR-1800] JCR2SPI: lockmgr isn't aware about external locks ...
+  [JCR-1821] jcr2spi: Item.isSame may return wrong result if any ancestor ...
 
   Known issues
   [JCR-1293] ReorderReferenceableSNSTest failure
