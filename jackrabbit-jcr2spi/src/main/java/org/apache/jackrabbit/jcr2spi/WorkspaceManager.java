@@ -90,6 +90,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.InvalidItemStateException;
@@ -116,7 +117,8 @@ import EDU.oswego.cs.dl.util.concurrent.Mutex;
 /**
  * <code>WorkspaceManager</code>...
  */
-public class WorkspaceManager implements UpdatableItemStateManager, AccessManager {
+public class WorkspaceManager
+        implements UpdatableItemStateManager, NamespaceStorage, AccessManager {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
@@ -169,7 +171,7 @@ public class WorkspaceManager implements UpdatableItemStateManager, AccessManage
         this.pathFactory = service.getPathFactory();
 
         idFactory = service.getIdFactory();
-        nsRegistry = new NamespaceRegistryImpl(service, sessionInfo);
+        nsRegistry = new NamespaceRegistryImpl(this);
         ntRegistry = createNodeTypeRegistry(nsRegistry);
         changeFeed = createChangeFeed(pollTimeout, enableObservation);
         definitionProvider = createDefinitionProvider(getEffectiveNodeTypeProvider());
@@ -618,6 +620,40 @@ public class WorkspaceManager implements UpdatableItemStateManager, AccessManage
             }
         }
         return false;
+    }
+
+    //---------------------------------------------------< NamespaceStorage >---
+
+    public Map getRegisteredNamespaces() throws RepositoryException {
+        return service.getRegisteredNamespaces(sessionInfo);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public String getPrefix(String uri) throws NamespaceException, RepositoryException {
+        return service.getNamespacePrefix(sessionInfo, uri);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public String getURI(String prefix) throws NamespaceException, RepositoryException {
+        return service.getNamespaceURI(sessionInfo, prefix);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+        service.registerNamespace(sessionInfo, prefix, uri);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public void unregisterNamespace(String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+        service.unregisterNamespace(sessionInfo, uri);
     }
 
     //--------------------------------------------------------------------------
