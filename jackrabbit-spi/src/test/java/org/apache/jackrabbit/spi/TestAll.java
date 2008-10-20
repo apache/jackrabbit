@@ -29,6 +29,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(RepositoryServiceTest.class);
         suite.addTestSuite(SessionInfoTest.class);
+        suite.addTestSuite(QValueFactoryTest.class);
 
         return suite;
     }
