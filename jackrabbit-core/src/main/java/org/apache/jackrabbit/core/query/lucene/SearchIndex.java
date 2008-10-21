@@ -56,7 +56,10 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
-import org.apache.commons.collections.iterators.AbstractIteratorDecorator;
+import org.apache.commons.collections.iterators.TransformIterator;
+import org.apache.commons.collections.collection.TransformedCollection;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Transformer;
 import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
 
@@ -77,6 +80,7 @@ import java.util.Set;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collection;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -522,7 +526,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * This implementation forwards the call to
-     * {@link MultiIndex#update(java.util.Iterator, java.util.Iterator)} and
+     * {@link MultiIndex#update(Collection, Collection)} and
      * transforms the two iterators to the required types.
      *
      * @param remove uuids of nodes to remove.
@@ -536,62 +540,66 @@ public class SearchIndex extends AbstractQueryHandler {
             throws RepositoryException, IOException {
         checkOpen();
         final Map aggregateRoots = new HashMap();
-        final Set removedNodeIds = new HashSet();
-        final Set addedNodeIds = new HashSet();
-        index.update(new AbstractIteratorDecorator(remove) {
-            public Object next() {
-                NodeId nodeId = (NodeId) super.next();
-                removedNodeIds.add(nodeId);
-                return nodeId.getUUID();
-            }
-        }, new AbstractIteratorDecorator(add) {
-            public Object next() {
-                NodeState state = (NodeState) super.next();
-                if (state == null) {
-                    return null;
-                }
-                addedNodeIds.add(state.getNodeId());
-                removedNodeIds.remove(state.getNodeId());
-                Document doc = null;
-                try {
-                    doc = createDocument(state, getNamespaceMappings(),
-                            index.getIndexFormatVersion());
-                    retrieveAggregateRoot(state, aggregateRoots);
-                } catch (RepositoryException e) {
-                    log.warn("Exception while creating document for node: "
-                            + state.getNodeId() + ": " + e.toString());
-                }
-                return doc;
-            }
-        });
+        final HashSet removedUUIDs = new HashSet();
+        final Set addedUUIDs = new HashSet();
+
+        index.update(IteratorUtils.toList(new TransformIterator(remove,
+                new Transformer() {
+                    public Object transform(Object input) {
+                        UUID uuid = ((NodeId) input).getUUID();
+                        removedUUIDs.add(uuid);
+                        return uuid;
+                    }
+                })), IteratorUtils.toList(new TransformIterator(add,
+                new Transformer() {
+                    public Object transform(Object input) {
+                        NodeState state = (NodeState) input;
+                        if (state == null) {
+                            return null;
+                        }
+                        UUID uuid = state.getNodeId().getUUID();
+                        addedUUIDs.add(uuid);
+                        removedUUIDs.remove(uuid);
+                        Document doc = null;
+                        try {
+                            doc = createDocument(state, getNamespaceMappings(),
+                                    index.getIndexFormatVersion());
+                            retrieveAggregateRoot(state, aggregateRoots);
+                        } catch (RepositoryException e) {
+                            log.warn("Exception while creating document for node: "
+                                    + state.getNodeId() + ": " + e.toString());
+                        }
+                        return doc;
+                    }
+                })));
 
         // remove any aggregateRoot nodes that are new
         // and therefore already up-to-date
-        aggregateRoots.keySet().removeAll(addedNodeIds);
+        aggregateRoots.keySet().removeAll(addedUUIDs);
 
-        // based on removed NodeIds get affected aggregate root nodes
-        retrieveAggregateRoot(removedNodeIds, aggregateRoots);
+        // based on removed UUIDs get affected aggregate root nodes
+        retrieveAggregateRoot(removedUUIDs, aggregateRoots);
 
         // update aggregates if there are any affected
         if (aggregateRoots.size() > 0) {
-            index.update(new AbstractIteratorDecorator(
-                    aggregateRoots.keySet().iterator()) {
-                public Object next() {
-                    return ((NodeId) super.next()).getUUID();
-                }
-            }, new AbstractIteratorDecorator(aggregateRoots.values().iterator()) {
-                public Object next() {
-                    NodeState state = (NodeState) super.next();
-                    try {
-                        return createDocument(state, getNamespaceMappings(),
-                                index.getIndexFormatVersion());
-                    } catch (RepositoryException e) {
-                        log.warn("Exception while creating document for node: "
-                                + state.getNodeId() + ": " + e.toString());
-                    }
-                    return null;
-                }
-            });
+            Collection modified = TransformedCollection.decorate(
+                    new ArrayList(),
+                    new Transformer() {
+                        public Object transform(Object input) {
+                            NodeState state = (NodeState) input;
+                            try {
+                                return createDocument(state,
+                                        getNamespaceMappings(),
+                                        index.getIndexFormatVersion());
+                            } catch (RepositoryException e) {
+                                log.warn("Exception while creating document for node: "
+                                        + state.getNodeId() + ": " + e.toString());
+                            }
+                            return null;
+                        }
+                    });
+            modified.addAll(aggregateRoots.values());
+            index.update(aggregateRoots.keySet(), modified);
         }
     }
 
@@ -1143,7 +1151,7 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param state the node state for which we want to retrieve the aggregate
      *              root.
-     * @param map   aggregate roots are collected in this map. Key=NodeId,
+     * @param map   aggregate roots are collected in this map. Key=UUID,
      *              value=NodeState.
      */
     protected void retrieveAggregateRoot(NodeState state, Map map) {
@@ -1156,7 +1164,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 for (int i = 0; i < aggregateRules.length; i++) {
                     NodeState root = aggregateRules[i].getAggregateRoot(state);
                     if (root != null) {
-                        map.put(root.getNodeId(), root);
+                        map.put(root.getNodeId().getUUID(), root);
                         break;
                     }
                 }
@@ -1168,14 +1176,14 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Retrieves the root of the indexing aggregate for <code>removedNodeIds</code>
+     * Retrieves the root of the indexing aggregate for <code>removedUUIDs</code>
      * and puts it into <code>map</code>.
      *
-     * @param removedNodeIds the ids of removed nodes.
+     * @param removedUUIDs   the UUIDs of removed nodes.
      * @param map            aggregate roots are collected in this map.
-     *                       Key=NodeId, value=NodeState.
+     *                       Key=UUID, value=NodeState.
      */
-    protected void retrieveAggregateRoot(Set removedNodeIds, Map map) {
+    protected void retrieveAggregateRoot(Set removedUUIDs, Map map) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
@@ -1191,17 +1199,17 @@ public class SearchIndex extends AbstractQueryHandler {
                     TermDocs tDocs = reader.termDocs();
                     try {
                         ItemStateManager ism = getContext().getItemStateManager();
-                        Iterator it = removedNodeIds.iterator();
+                        Iterator it = removedUUIDs.iterator();
                         while (it.hasNext()) {
-                            NodeId id = (NodeId) it.next();
+                            UUID uuid = (UUID) it.next();
                             aggregateUUIDs = aggregateUUIDs.createTerm(
-                                    id.getUUID().toString());
+                                    uuid.toString());
                             tDocs.seek(aggregateUUIDs);
                             while (tDocs.next()) {
                                 Document doc = reader.document(tDocs.doc(), FieldSelectors.UUID);
-                                String uuid = doc.get(FieldNames.UUID);
-                                NodeId nId = new NodeId(UUID.fromString(uuid));
-                                map.put(nId, ism.getItemState(nId));
+                                NodeId nId = new NodeId(UUID.fromString(
+                                        doc.get(FieldNames.UUID)));
+                                map.put(nId.getUUID(), ism.getItemState(nId));
                                 found++;
                             }
                         }

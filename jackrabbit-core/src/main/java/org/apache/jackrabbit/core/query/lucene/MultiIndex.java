@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.commons.collections.iterators.EmptyIterator;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -50,6 +49,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * A <code>MultiIndex</code> consists of a {@link VolatileIndex} and multiple
@@ -406,14 +406,18 @@ public class MultiIndex {
      * Atomically updates the index by removing some documents and adding
      * others.
      *
-     * @param remove Iterator of <code>UUID</code>s that identify documents to
+     * @param remove collection of <code>UUID</code>s that identify documents to
      *               remove
-     * @param add    Iterator of <code>Document</code>s to add. Calls to
-     *               <code>next()</code> on this iterator may return
-     *               <code>null</code>, to indicate that a node could not be
-     *               indexed successfully.
+     * @param add    collection of <code>Document</code>s to add. Some of the
+     *               elements in this collection may be <code>null</code>, to
+     *               indicate that a node could not be indexed successfully.
      */
-    synchronized void update(Iterator remove, Iterator add) throws IOException {
+    synchronized void update(Collection remove, Collection add) throws IOException {
+        // make sure a reader is available during long updates
+        if (add.size() > handler.getBufferSize()) {
+            getIndexReader().release();
+        }
+
         synchronized (updateMonitor) {
             updateInProgress = true;
         }
@@ -422,11 +426,11 @@ public class MultiIndex {
             executeAndLog(new Start(transactionId));
 
             boolean flush = false;
-            while (remove.hasNext()) {
-                executeAndLog(new DeleteNode(transactionId, (UUID) remove.next()));
+            for (Iterator it = remove.iterator(); it.hasNext(); ) {
+                executeAndLog(new DeleteNode(transactionId, (UUID) it.next()));
             }
-            while (add.hasNext()) {
-                Document doc = (Document) add.next();
+            for (Iterator it = add.iterator(); it.hasNext(); ) {
+                Document doc = (Document) it.next();
                 if (doc != null) {
                     executeAndLog(new AddNode(transactionId, doc));
                     // commit volatile index if needed
@@ -456,8 +460,7 @@ public class MultiIndex {
      *                     index.
      */
     void addDocument(Document doc) throws IOException {
-        List add = Arrays.asList(new Document[]{doc});
-        update(EmptyIterator.INSTANCE, add.iterator());
+        update(Collections.EMPTY_LIST, Arrays.asList(new Document[]{doc}));
     }
 
     /**
@@ -467,8 +470,7 @@ public class MultiIndex {
      * @throws IOException if an error occurs while deleting the document.
      */
     void removeDocument(UUID uuid) throws IOException {
-        List remove = Arrays.asList(new UUID[]{uuid});
-        update(remove.iterator(), EmptyIterator.INSTANCE);
+        update(Arrays.asList(new UUID[]{uuid}), Collections.EMPTY_LIST);
     }
 
     /**
@@ -1196,8 +1198,7 @@ public class MultiIndex {
             }
 
             try {
-                update(finished.keySet().iterator(),
-                        finished.values().iterator());
+                update(finished.keySet(), finished.values());
             } catch (IOException e) {
                 // update failed
                 log.warn("Failed to update index with deferred text extraction", e);
