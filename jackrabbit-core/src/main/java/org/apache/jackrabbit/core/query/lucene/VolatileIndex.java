@@ -115,7 +115,7 @@ class VolatileIndex extends AbstractIndex {
      *
      * @return the number of valid documents in this index.
      */
-    int getNumDocuments() throws IOException {
+    int getNumDocuments() {
         return numDocs;
     }
 
@@ -142,6 +142,13 @@ class VolatileIndex extends AbstractIndex {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    long getRamSizeInBytes() {
+        return super.getRamSizeInBytes() + ((RAMDirectory) getDirectory()).sizeInBytes();
+    }
+
+    /**
      * Sets a new buffer size for pending documents to add to the index.
      * Higher values consume more memory, but help to avoid multiple index
      * cycles when a node is changed / saved multiple times.
@@ -154,6 +161,8 @@ class VolatileIndex extends AbstractIndex {
 
     /**
      * Commits pending documents to the index.
+     *
+     * @throws IOException if committing pending documents fails.
      */
     private void commitPending() throws IOException {
         if (pending.isEmpty()) {

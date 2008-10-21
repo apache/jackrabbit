@@ -417,6 +417,17 @@ abstract class AbstractIndex {
     }
 
     /**
+     * @return the number of bytes this index occupies in memory.
+     */
+    synchronized long getRamSizeInBytes() {
+        if (indexWriter != null) {
+            return indexWriter.ramSizeInBytes();
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * Closes the shared reader.
      *
      * @throws IOException if an error occurs while closing the reader.
