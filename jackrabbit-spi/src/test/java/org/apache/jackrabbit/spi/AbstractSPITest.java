@@ -35,7 +35,7 @@ public class AbstractSPITest extends TestCase {
 
     /**
      * Returns the value of the configuration property with <code>propName</code>.
-     * The sequence how configuration properties are read is the follwoing:
+     * The sequence how configuration properties are read is the following:
      * <ol>
      * <li><code>org.apache.jackrabbit.spi.&lt;testClassName>.&lt;testCaseName>.&lt;propName></code></li>
      * <li><code>org.apache.jackrabbit.spi.&lt;testClassName>.&lt;propName></code></li>
@@ -48,7 +48,7 @@ public class AbstractSPITest extends TestCase {
      * <li><code>&lt;testMethodName></code> is the name of the test method</li>
      * <li><code>&lt;packageName></code> is the name of the package of the test class.
      * </ul>
-     * @param propName the propName of the configration property.
+     * @param propName the propName of the configuration property.
      * @return the value of the property or <code>null</code> if the property
      *  does not exist.
      * @throws RepositoryException if an error occurs while reading from
