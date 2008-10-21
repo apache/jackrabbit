@@ -411,6 +411,7 @@ public class MultiIndex {
      * @param add    collection of <code>Document</code>s to add. Some of the
      *               elements in this collection may be <code>null</code>, to
      *               indicate that a node could not be indexed successfully.
+     * @throws IOException if an error occurs while updating the index.
      */
     synchronized void update(Collection remove, Collection add) throws IOException {
         // make sure a reader is available during long updates
@@ -985,7 +986,7 @@ public class MultiIndex {
 
     /**
      * Checks if it is needed to commit the volatile index according to {@link
-     * SearchIndex#getMinMergeDocs()}.
+     * SearchIndex#getMaxVolatileIndexSize()}.
      *
      * @return <code>true</code> if the volatile index has been committed,
      *         <code>false</code> otherwise.
@@ -993,7 +994,7 @@ public class MultiIndex {
      *                     index.
      */
     private boolean checkVolatileCommit() throws IOException {
-        if (volatileIndex.getNumDocuments() >= handler.getMinMergeDocs()) {
+        if (volatileIndex.getRamSizeInBytes() >= handler.getMaxVolatileIndexSize()) {
             commitVolatileIndex();
             return true;
         }

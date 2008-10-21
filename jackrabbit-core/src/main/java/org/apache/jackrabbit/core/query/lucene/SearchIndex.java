@@ -223,6 +223,12 @@ public class SearchIndex extends AbstractQueryHandler {
     private int minMergeDocs = DEFAULT_MIN_MERGE_DOCS;
 
     /**
+     * The maximum volatile index size in bytes until it is written to disk.
+     * The default value is 1048576 (1MB).
+     */
+    private long maxVolatileIndexSize = 1024 * 1024;
+
+    /**
      * volatileIdleTime config parameter.
      */
     private int volatileIdleTime = 3;
@@ -1874,6 +1880,22 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public String getSimilarityClass() {
         return similarity.getClass().getName();
+    }
+
+    /**
+     * Sets a new maxVolatileIndexSize value.
+     *
+     * @param maxVolatileIndexSize the new value.
+     */
+    public void setMaxVolatileIndexSize(long maxVolatileIndexSize) {
+        this.maxVolatileIndexSize = maxVolatileIndexSize;
+    }
+
+    /**
+     * @return the maxVolatileIndexSize in bytes.
+     */
+    public long getMaxVolatileIndexSize() {
+        return maxVolatileIndexSize;
     }
 
     //----------------------------< internal >----------------------------------
