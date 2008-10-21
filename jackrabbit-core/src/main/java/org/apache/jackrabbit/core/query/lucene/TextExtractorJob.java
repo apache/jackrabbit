@@ -123,7 +123,7 @@ public class TextExtractorJob extends FutureResult implements Runnable {
             // also covers TimeoutException
             // text not extracted within timeout or interrupted
             if (timeout > 0) {
-                log.info("Text extraction for {} timed out (>{}ms).",
+                log.debug("Text extraction for {} timed out (>{}ms).",
                         type, new Long(timeout));
                 timedOut = true;
             }
