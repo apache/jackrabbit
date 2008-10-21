@@ -182,13 +182,17 @@ public class QValueFactoryTest extends AbstractSPITest {
             factory.create((Calendar) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
         try {
             factory.create(null, PropertyType.DATE);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
     }
 
@@ -215,7 +219,9 @@ public class QValueFactoryTest extends AbstractSPITest {
             factory.create(null, PropertyType.REFERENCE);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
     }
 
@@ -256,7 +262,9 @@ public class QValueFactoryTest extends AbstractSPITest {
             factory.create((Name) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
     }
 
@@ -308,7 +316,9 @@ public class QValueFactoryTest extends AbstractSPITest {
             factory.create((Path) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
     }
 
@@ -361,19 +371,25 @@ public class QValueFactoryTest extends AbstractSPITest {
             factory.create((byte[]) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
         try {
             factory.create((InputStream) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
         try {
             factory.create((File) null);
             fail();
         } catch (IllegalArgumentException e) {
-            // ok
+          // ok
+        } catch (NullPointerException e) {
+          // ok
         }
     }
 
