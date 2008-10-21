@@ -135,6 +135,8 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * The default value for property {@link #extractorPoolSize}.
+     * @deprecated this value is not used anymore. Instead the default value
+     * is calculated as follows: 2 * Runtime.getRuntime().availableProcessors().
      */
     public static final int DEFAULT_EXTRACTOR_POOL_SIZE = 0;
 
@@ -239,7 +241,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * extractorPoolSize config parameter
      */
-    private int extractorPoolSize = DEFAULT_EXTRACTOR_POOL_SIZE;
+    private int extractorPoolSize = 2 * Runtime.getRuntime().availableProcessors();
 
     /**
      * extractorBackLog config parameter
