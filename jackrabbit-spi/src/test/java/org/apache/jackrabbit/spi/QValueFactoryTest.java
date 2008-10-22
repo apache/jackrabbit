@@ -19,23 +19,17 @@ package org.apache.jackrabbit.spi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
-import java.util.Calendar;
-import java.util.Arrays;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.File;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.FileWriter;
 import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.BufferedInputStream;
+import java.util.Calendar;
 
 /** <code>QValueFactoryTest</code>... */
 public class QValueFactoryTest extends AbstractSPITest {
@@ -59,6 +53,12 @@ public class QValueFactoryTest extends AbstractSPITest {
         reference = getProperty("reference");
     }
 
+    private static void assertValueLength(QValue v, long expectedLength) throws RepositoryException {
+        long length = v.getLength();
+        if (length != -1) {
+            assertEquals(expectedLength, length);
+        }
+    }
 
     public void testIllegalType() throws RepositoryException {
         try {
@@ -403,7 +403,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(new byte[] {'a', 'b', 'c'});
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(3, v.getLength());
+        assertValueLength(v, 3);
 
         assertEquals("abc", v.getString());
 
@@ -416,7 +416,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(new byte[0]);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(0, v.getLength());
+        assertValueLength(v, 0);
 
         assertEquals("", v.getString());
 
@@ -431,7 +431,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(in);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(3, v.getLength());
+        assertValueLength(v, 3);
 
         assertEquals("abc", v.getString());
 
@@ -446,7 +446,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(in);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(0, v.getLength());
+        assertValueLength(v, 0);
 
         assertEquals("", v.getString());
 
@@ -466,7 +466,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(f);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(3, v.getLength());
+        assertValueLength(v, 3);
 
         assertEquals("abc", v.getString());
 
@@ -482,60 +482,13 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(f);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertEquals(0, v.getLength());
+        assertValueLength(v, 0);
 
         assertEquals("", v.getString());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         spool(out, v.getStream());
         assertEquals("", new String(out.toByteArray()));
-    }
-
-    public void testBinarySerializable() throws Exception {
-        runBinarySerializableTest(1); // 1k
-        runBinarySerializableTest(10); // 10k
-        runBinarySerializableTest(100); // 100k
-        runBinarySerializableTest(1000); // 1M
-    }
-
-    /**
-     * Runs binary serializable test using a stream with a size of kBytes.
-     * @param size in kBytes.
-     */
-    private void runBinarySerializableTest(int size) throws Exception {
-        File tmp = File.createTempFile("test", "bin");
-        OutputStream out = new FileOutputStream(tmp);
-        byte[] stuff = new byte[1024];
-        Arrays.fill(stuff, (byte) 7);
-        for (int i = 0; i < size; i++) {
-            out.write(stuff);
-        }
-        out.close();
-        InputStream in = new FileInputStream(tmp);
-        QValue v = factory.create(in);
-        in.close();
-        tmp.delete();
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        ObjectOutputStream oout = new ObjectOutputStream(bout);
-        oout.writeObject(v);
-        oout.close();
-        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-        ObjectInputStream oin = new ObjectInputStream(bin);
-        QValue serValue = (QValue) oin.readObject();
-        try {
-            InputStream in1 = new BufferedInputStream(v.getStream());
-            InputStream in2 = new BufferedInputStream(serValue.getStream());
-            int i;
-            while ((i = in1.read()) > -1) {
-                assertEquals(i, in2.read());
-            }
-            assertEquals(in2.read(), -1);
-            in1.close();
-            in2.close();
-        } finally {
-            v.discard();
-            serValue.discard();
-        }
     }
 
     /**
