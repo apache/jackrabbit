@@ -53,7 +53,8 @@ public interface QValue {
     public int getType();
 
     /**
-     * Returns the length of the internal value.<br>
+     * Returns the length of the internal value or -1 if the implementation
+     * cannot determine the length at this time.<br>
      * NOTE: for {@link PropertyType#NAME} and {@link PropertyType#PATH} the
      * length of the internal value must not be used for indicating the length
      * of a property such as retrieved by calling {@link Property#getLength()}
