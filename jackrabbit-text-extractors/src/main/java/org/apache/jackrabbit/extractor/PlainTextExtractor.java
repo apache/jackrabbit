@@ -49,8 +49,8 @@ public class PlainTextExtractor extends AbstractTextExtractor {
     /**
      * Wraps the given input stream to an {@link InputStreamReader} using
      * the given encoding, or the platform default encoding if the encoding
-     * is not given. Closes the stream and returns an empty reader if the
-     * given encoding is not supported.
+     * is not given or is unsupported. Closes the stream and returns an empty
+     * reader if the given encoding is not supported.
      *
      * @param stream binary stream
      * @param type ignored
@@ -64,14 +64,12 @@ public class PlainTextExtractor extends AbstractTextExtractor {
         try {
             if (encoding != null) {
                 return new InputStreamReader(stream, encoding);
-            } else {
-                return new InputStreamReader(stream);
             }
         } catch (UnsupportedEncodingException e) {
-            logger.warn("Failed to extract plain text content", e);
-            stream.close();
-            return new StringReader("");
+            logger.warn("Unsupported encoding '{}', using default ({}) instead.",
+                    new Object[]{encoding, System.getProperty("file.encoding")});
         }
+        return new InputStreamReader(stream);
     }
 
 }
