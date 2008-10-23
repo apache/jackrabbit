@@ -110,7 +110,7 @@ public class XMLTextExtractorTest extends TestCase {
             Reader reader = extractor.extractText(
                     new ByteArrayInputStream(xml.getBytes()),
                     "text/xml", "unsupported");
-            assertEquals("", ExtractorHelper.read(reader));
+            assertEquals("attribute value text content", ExtractorHelper.read(reader));
         } catch (UnsupportedEncodingException e) {
             fail("XMLTextExtractor does not handle unsupported encodings");
         } catch (IOException e) {
