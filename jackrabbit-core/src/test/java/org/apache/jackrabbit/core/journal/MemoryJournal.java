@@ -29,11 +29,28 @@ import org.apache.jackrabbit.core.journal.InstanceRevision;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Memory-based journal, useful for testing purposes only.
  */
 public class MemoryJournal extends AbstractJournal {
+
+    /**
+     * Default read delay: none.
+     */
+    private static final long DEFAULT_READ_DELAY = 0;
+
+    /**
+     * Default write delay: none.
+     */
+    private static final long DEFAULT_WRITE_DELAY = 0;
+
+    /**
+     * Logger.
+     */
+    private static Logger log = LoggerFactory.getLogger(MemoryJournal.class);
 
     /**
      * Revision.
@@ -44,6 +61,23 @@ public class MemoryJournal extends AbstractJournal {
      * List of records.
      */
     private ArrayList records = new ArrayList();
+
+    /**
+     * Set the read delay, i.e. the time in ms to wait before returning
+     * a record.
+     */
+    private long readDelay = DEFAULT_READ_DELAY;
+
+    /**
+     * Set the write delay, i.e. the time in ms to wait before appending
+     * a record.
+     */
+    private long writeDelay = DEFAULT_WRITE_DELAY;
+
+    /**
+     * Flag indicating whether this journal is closed.
+     */
+    private boolean closed;
 
     /**
      * {@inheritDoc}
@@ -65,7 +99,7 @@ public class MemoryJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     protected void doLock() throws JournalException {
-        // not implemented
+        checkState();
     }
 
     /**
@@ -73,6 +107,8 @@ public class MemoryJournal extends AbstractJournal {
      */
     protected void append(AppendRecord record, InputStream in, int length)
             throws JournalException {
+
+        checkState();
 
         byte[] data = new byte[length];
         int off = 0;
@@ -90,6 +126,11 @@ public class MemoryJournal extends AbstractJournal {
                 throw new JournalException(msg, e);
             }
         }
+        try {
+            Thread.sleep(writeDelay);
+        } catch (InterruptedException e) {
+            throw new JournalException("Interrupted in append().");
+        }
         records.add(new MemoryRecord(getId(), record.getProducerId(), data));
         record.setRevision(records.size());
     }
@@ -98,7 +139,11 @@ public class MemoryJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     protected void doUnlock(boolean successful) {
-        // not implemented
+        try {
+            checkState();
+        } catch (JournalException e) {
+            log.warn("Journal already closed while unlocking.");
+        }
     }
 
     /**
@@ -106,6 +151,8 @@ public class MemoryJournal extends AbstractJournal {
      */
     protected RecordIterator getRecords(long startRevision)
             throws JournalException {
+
+        checkState();
 
         startRevision = Math.max(startRevision, 0);
         long stopRevision = records.size();
@@ -123,12 +170,56 @@ public class MemoryJournal extends AbstractJournal {
     }
 
     /**
+     * Return the read delay in milliseconds.
+     *
+     * @return read delay
+     */
+    public long getReadDelay() {
+        return readDelay;
+    }
+
+    /**
+     * Set the read delay in milliseconds.
+     *
+     * @param readDelay read delay
+     */
+    public void setReadDelay(long readDelay) {
+        this.readDelay = readDelay;
+    }
+
+    /**
+     * Return the write delay in milliseconds.
+     *
+     * @return write delay
+     */
+    public long getWriteDelay() {
+        return writeDelay;
+    }
+
+    /**
+     * Set the write delay in milliseconds.
+     *
+     * @param writeDelay write delay
+     */
+    public void setWriteDelay(long writeDelay) {
+        this.writeDelay = writeDelay;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void close() {
-        // nothing to be done here
+        closed = true;
     }
 
+    /**
+     * Check state of this journal.
+     */
+    private void checkState() throws JournalException {
+        if (closed) {
+            throw new JournalException("Journal closed.");
+        }
+    }
 
     /**
      * Memory record.
@@ -233,9 +324,17 @@ public class MemoryJournal extends AbstractJournal {
             int index = (int) revision;
             MemoryRecord record = (MemoryRecord) records.get(index);
 
+            checkState();
+
             byte[] data = record.getData();
             DataInputStream dataIn = new DataInputStream(
                     new ByteArrayInputStream(data));
+
+            try {
+                Thread.sleep(readDelay);
+            } catch (InterruptedException e) {
+                throw new JournalException("Interrupted in read().");
+            }
 
             return new ReadRecord(record.getJournalId(), record.getProducerId(),
                     ++revision, dataIn, data.length,
