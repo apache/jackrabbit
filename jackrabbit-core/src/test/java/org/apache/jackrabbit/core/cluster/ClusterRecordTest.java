@@ -17,16 +17,9 @@
 package org.apache.jackrabbit.core.cluster;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
-import javax.jcr.Session;
-import javax.jcr.observation.Event;
-
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.LockEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NamespaceEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NodeTypeEvent;
@@ -37,17 +30,9 @@ import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.JournalConfig;
 import org.apache.jackrabbit.core.journal.MemoryJournal;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.observation.EventState;
-import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.uuid.UUID;
 
@@ -63,34 +48,14 @@ public class ClusterRecordTest extends JUnitTest {
     private static final String DEFAULT_WORKSPACE = "default";
 
     /**
-     * Default user.
-     */
-    private static final String DEFAULT_USER = "admin";
-
-    /**
-     * Root node id.
-     */
-    private static final NodeId ROOT_NODE_ID = RepositoryImpl.ROOT_NODE_ID;
-
-    /**
      * Default sync delay: 5 seconds.
      */
     private static final long SYNC_DELAY = 5000;
 
     /**
-     * Default session, used for event state creation.
+     * Update event factory.
      */
-    private final Session session = new ClusterSession(DEFAULT_USER);
-
-    /**
-     * Name factory.
-     */
-    private NameFactory nameFactory = NameFactoryImpl.getInstance();
-
-    /**
-     * Path factory.
-     */
-    private PathFactory pathFactory = PathFactoryImpl.getInstance();
+    private final UpdateEventFactory factory = UpdateEventFactory.getInstance();
 
     /**
      * Records shared among multiple memory journals.
@@ -137,26 +102,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testUpdateOperation() throws Exception {
-        NodeState n1 = createNodeState();
-        NodeState n2 = createNodeState();
-        NodeState n3 = createNodeState();
-        PropertyState p1 = createPropertyState(n1.getNodeId(), "{}a");
-        PropertyState p2 = createPropertyState(n2.getNodeId(), "{}b");
-
-        ChangeLog changes = new ChangeLog();
-        changes.added(n1);
-        changes.added(p1);
-        changes.deleted(p2);
-        changes.modified(n2);
-        changes.deleted(n3);
-
-        List events = new ArrayList();
-        events.add(createEventState(n1, Event.NODE_ADDED, "{}n1"));
-        events.add(createEventState(p1, n1, Event.PROPERTY_ADDED));
-        events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED));
-        events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3"));
-
-        UpdateEvent update = new UpdateEvent(changes, events);
+        UpdateEvent update = factory.createUpdateOperation();
 
         UpdateEventChannel channel = master.createUpdateChannel(DEFAULT_WORKSPACE);
         channel.updateCreated(update);
@@ -327,89 +273,5 @@ public class ClusterRecordTest extends JUnitTest {
             ((MemoryJournal) clusterNode.getJournal()).setRecords(records);
         }
         return clusterNode;
-    }
-
-    /**
-     * Create a node state.
-     *
-     * @return node state
-     */
-    private NodeState createNodeState() {
-        Name ntName = nameFactory.create("{}testnt");
-        NodeState n = new NodeState(
-                new NodeId(UUID.randomUUID()), ntName,
-                ROOT_NODE_ID, NodeState.STATUS_EXISTING, false);
-        n.setMixinTypeNames(Collections.EMPTY_SET);
-        return n;
-    }
-
-    /**
-     * Create a property state.
-     *
-     * @param parentId parent node id
-     * @param name property name
-     */
-    private PropertyState createPropertyState(NodeId parentId, String name) {
-        Name propName = nameFactory.create(name);
-        return new PropertyState(
-                new PropertyId(parentId, propName),
-                NodeState.STATUS_EXISTING, false);
-    }
-
-    /**
-     * Create an event state for an operation on a node.
-     *
-     * @param n node state
-     * @param type <code>Event.NODE_ADDED</code> or <code>Event.NODE_REMOVED</code>
-     * @param name node name
-     * @return event state
-     */
-    private EventState createEventState(NodeState n, int type, String name) {
-        Path.Element relPath = pathFactory.createElement(nameFactory.create(name));
-
-        switch (type) {
-        case Event.NODE_ADDED:
-            return EventState.childNodeAdded(
-                    n.getParentId(), pathFactory.getRootPath(),
-                    n.getNodeId(), relPath, n.getNodeTypeName(),
-                    n.getMixinTypeNames(), session);
-        case Event.NODE_REMOVED:
-            return EventState.childNodeRemoved(
-                    n.getParentId(), pathFactory.getRootPath(),
-                    n.getNodeId(), relPath, n.getNodeTypeName(),
-                    n.getMixinTypeNames(), session);
-        }
-        return null;
-    }
-
-    /**
-     * Create an event state for a property operation.
-     *
-     * @param n node state
-     * @param type <code>Event.NODE_ADDED</code> or <code>Event.NODE_REMOVED</code>
-     * @param name property name
-     * @return event state
-     */
-    private EventState createEventState(PropertyState p, NodeState parent, int type) {
-        Path.Element relPath = pathFactory.createElement(p.getName());
-
-        switch (type) {
-        case Event.PROPERTY_ADDED:
-            return EventState.propertyAdded(
-                    p.getParentId(), pathFactory.getRootPath(), relPath,
-                    parent.getNodeTypeName(), parent.getMixinTypeNames(),
-                    session);
-        case Event.PROPERTY_CHANGED:
-            return EventState.propertyChanged(
-                    p.getParentId(), pathFactory.getRootPath(), relPath,
-                    parent.getNodeTypeName(), parent.getMixinTypeNames(),
-                    session);
-        case Event.PROPERTY_REMOVED:
-            return EventState.propertyRemoved(
-                    p.getParentId(), pathFactory.getRootPath(), relPath,
-                    parent.getNodeTypeName(), parent.getMixinTypeNames(),
-                    session);
-        }
-        return null;
     }
 }
