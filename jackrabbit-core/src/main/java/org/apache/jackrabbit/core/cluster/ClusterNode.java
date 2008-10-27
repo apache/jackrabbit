@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.uuid.UUID;
 
+import EDU.oswego.cs.dl.util.concurrent.Latch;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 import javax.jcr.RepositoryException;
@@ -67,6 +68,11 @@ public class ClusterNode implements Runnable,
      * Producer identifier.
      */
     private static final String PRODUCER_ID = "JR";
+
+    /**
+     * Default stop delay.
+     */
+    private static final long DEFAULT_STOP_DELAY = 5000;
 
     /**
      * Status constant.
@@ -104,14 +110,29 @@ public class ClusterNode implements Runnable,
     private long syncDelay;
 
     /**
+     * Stop delay, in milliseconds.
+     */
+    private long stopDelay;
+
+    /**
      * Journal used.
      */
     private Journal journal;
 
     /**
+     * Synchronization thread.
+     */
+    private Thread syncThread;
+
+    /**
      * Mutex used when syncing.
      */
     private final Mutex syncLock = new Mutex();
+
+    /**
+     * Latch used to communicate a stop request to the synchronization thread.
+     */
+    private final Latch stopLatch = new Latch();
 
     /**
      * Status flag, one of {@link #NONE}, {@link #STARTED} or {@link #STOPPED}.
@@ -209,6 +230,26 @@ public class ClusterNode implements Runnable,
     }
 
     /**
+     * Set the stop delay, i.e. number of millseconds to wait for the
+     * synchronization thread to stop.
+     *
+     * @param stopDelay stop delay in milliseconds
+     */
+    public void setStopDelay(long stopDelay) {
+        this.stopDelay = stopDelay;
+    }
+
+    /**
+     * Return the stop delay.
+     *
+     * @return stop delay
+     * @see #setStopDelay(long)
+     */
+    public long getStopDelay() {
+        return stopDelay;
+    }
+
+    /**
      * Starts this cluster node.
      *
      * @throws ClusterException if an error occurs
@@ -220,6 +261,7 @@ public class ClusterNode implements Runnable,
             Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
             t.setDaemon(true);
             t.start();
+            syncThread = t;
 
             status = STARTED;
         }
@@ -230,14 +272,13 @@ public class ClusterNode implements Runnable,
      */
     public void run() {
         for (;;) {
-            synchronized (this) {
-                try {
-                    wait(syncDelay);
-                } catch (InterruptedException e) {}
-
-                if (status == STOPPED) {
-                    return;
+            try {
+                if (stopLatch.attempt(syncDelay)) {
+                    break;
                 }
+            } catch (InterruptedException e) {
+                String msg = "Interrupted while waiting for stop latch.";
+                log.warn(msg);
             }
             try {
                 sync();
@@ -284,13 +325,24 @@ public class ClusterNode implements Runnable,
         if (status != STOPPED) {
             status = STOPPED;
 
+            stopLatch.release();
+
+            // Give synchronization thread some time to finish properly before
+            // closing down the journal (see JCR-1553)
+            if (syncThread != null) {
+                try {
+                    syncThread.join(stopDelay);
+                } catch (InterruptedException e) {
+                    String msg = "Interrupted while joining synchronization thread.";
+                    log.warn(msg);
+                }
+            }
             if (journal != null) {
                 journal.close();
             }
             if (instanceRevision != null) {
                 instanceRevision.close();
             }
-            notifyAll();
         }
     }
 
