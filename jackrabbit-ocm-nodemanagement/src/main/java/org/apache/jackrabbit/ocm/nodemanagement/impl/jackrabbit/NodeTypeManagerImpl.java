@@ -217,7 +217,6 @@ public class NodeTypeManagerImpl implements NodeTypeManager
         }
         catch (Exception e)
         {
-            e.printStackTrace();
             log.error("Could not create node types from class descriptor.", e);
             throw new NodeTypeCreationException(e);
         }

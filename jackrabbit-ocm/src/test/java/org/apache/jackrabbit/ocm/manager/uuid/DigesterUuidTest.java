@@ -89,7 +89,7 @@ public class DigesterUuidTest extends DigesterTestBase
             assertNotNull("a is null", a);
             uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
-            System.out.println("UUID : " + uuidA);
+            log.info("UUID : " + uuidA);
 
             // --------------------------------------------------------------------------------
             // Update the object
@@ -123,7 +123,7 @@ public class DigesterUuidTest extends DigesterTestBase
             catch(Exception e)
             {
             	//Throws an exception due to an invalid uuid
-            	System.out.println(e);
+            	log.info(e);
 
             }
 
@@ -164,7 +164,7 @@ public class DigesterUuidTest extends DigesterTestBase
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
-            System.out.println("UUID : " + uuidA);
+            log.info("UUID : " + uuidA);
 
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a reference to A
@@ -194,7 +194,7 @@ public class DigesterUuidTest extends DigesterTestBase
             catch(Exception e)
             {
             	//Throws an exception due to an invalid uuid
-            	System.out.println("Invalid uuid : " + e);
+            	log.info("Invalid uuid : " + e);
             	
             }
 
@@ -237,7 +237,7 @@ public class DigesterUuidTest extends DigesterTestBase
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
-            System.out.println("UUID : " + uuidA);
+            log.info("UUID : " + uuidA);
 
             // --------------------------------------------------------------------------------
             // Create and store an object B in the repository which has a reference to A
@@ -347,7 +347,7 @@ public class DigesterUuidTest extends DigesterTestBase
             catch(Exception e)
             {
             	//Throws an exception due to an invalid uuid
-            	System.out.println("Invalid uuid value in the collection : " + e);
+            	log.info("Invalid uuid value in the collection : " + e);
             	
             }
 
@@ -480,7 +480,7 @@ public class DigesterUuidTest extends DigesterTestBase
             assertNotNull("a is null", a);
             String uuidA = a.getUuid();
             assertNotNull("uuid is null", uuidA);
-            System.out.println("UUID : " + uuidA);
+            log.info("UUID : " + uuidA);
 
             // --------------------------------------------------------------------------------
             // Update the object

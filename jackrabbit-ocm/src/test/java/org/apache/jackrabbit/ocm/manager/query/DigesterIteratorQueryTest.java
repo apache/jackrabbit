@@ -95,15 +95,15 @@ public class DigesterIteratorQueryTest extends DigesterTestBase
     	
     	      long  start = System.currentTimeMillis();
     	      Iterator iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
+    	      log.info("getObject takes : " + (System.currentTimeMillis() - start));
     	          	
     	      start = System.currentTimeMillis();
     	      Collection result = ocm.getObjects(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
+    	      log.info("getObject takes : " + (System.currentTimeMillis() - start));
     	
     	      start = System.currentTimeMillis();
     	      iterator = ocm.getObjectIterator(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));       	
+    	      log.info("getObject takes : " + (System.currentTimeMillis() - start));       	
 
     	
         }

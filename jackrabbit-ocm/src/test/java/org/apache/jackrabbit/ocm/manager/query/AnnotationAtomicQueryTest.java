@@ -83,7 +83,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 
 			long start = System.currentTimeMillis();
 			Collection result = ocm.getObjects(query);
-			System.out.println("getObjects  : " + (System.currentTimeMillis() - start));
+			log.info("getObjects  : " + (System.currentTimeMillis() - start));
 
 			assertTrue("Invalid number of objects - should be = 50", result.size() == 50);
 
@@ -93,7 +93,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 
 			start = System.currentTimeMillis();
 			result = ocm.getObjects(query);
-			System.out.println("getObjects 2 : " + (System.currentTimeMillis() - start));
+			log.info("getObjects 2 : " + (System.currentTimeMillis() - start));
 			assertTrue("Invalid number of objects - should be = 0", result.size() == 0);
 
 
@@ -198,7 +198,7 @@ public class AnnotationAtomicQueryTest extends AnnotationTestBase
 
 		long start = System.currentTimeMillis();
 		Collection result = ocm.getObjects(query);
-		System.out.println("getObjects  : " + (System.currentTimeMillis() - start));
+		log.info("getObjects  : " + (System.currentTimeMillis() - start));
 
 		assertEquals(50, result.size());
 	}

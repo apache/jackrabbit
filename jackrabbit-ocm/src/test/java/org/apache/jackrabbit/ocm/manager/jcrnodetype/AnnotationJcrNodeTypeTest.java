@@ -85,17 +85,17 @@ public class AnnotationJcrNodeTypeTest extends AnnotationTestBase {
 			//---------------------------------------------------------------------------------------------------------						
 			folder = (Folder) ocm.getObject( "/folder1");
 			assertNotNull("folder is null", folder);
-			System.out.println("Folder creation date : " + folder.getCreationDate());
+			log.info("Folder creation date : " + folder.getCreationDate());
 			assertTrue("Invalid number of children", folder.getChildren().size() == 1);
 			file = (File) folder.getChildren().iterator().next();
 			assertNotNull("resource is null", file.getResource());	
-			System.out.println("File resource calendar: " + file.getResource().getLastModified());	// The prop is autocreated
+			log.info("File resource calendar: " + file.getResource().getLastModified());	// The prop is autocreated
 			
 			
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			log.error("testRetrieveSingleton failed", e);
 			fail();
 		}
 			
