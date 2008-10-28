@@ -106,7 +106,7 @@ public abstract class AbstractTestBase extends TestCase
 		}
 		catch (Exception e )
 		{
-			e.printStackTrace();
+		    log.error("setUp failed", e);
 		}
 	}
 
@@ -138,7 +138,7 @@ public abstract class AbstractTestBase extends TestCase
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			log.error("getObjectContentManager failed", e);
 			return null;
 		}
 	}
@@ -184,8 +184,7 @@ public abstract class AbstractTestBase extends TestCase
 		}
 		catch (Exception e)
 		{
-			System.out.println("Impossible to export the content from : " + nodePath);
-			e.printStackTrace();
+			log.error("Impossible to export the content from : " + nodePath, e);
 		}
 	}
 
@@ -200,8 +199,7 @@ public abstract class AbstractTestBase extends TestCase
 		}
 		catch (Exception e)
 		{
-			System.out.println("Impossible to import the content from : " + nodePath);
-			e.printStackTrace();
+			log.error("Impossible to import the content from : " + nodePath, e);
 		}
 
 	}
@@ -260,7 +258,7 @@ public abstract class AbstractTestBase extends TestCase
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			log.error("cleanUpRepository failed", e);
 		}
 	}
 

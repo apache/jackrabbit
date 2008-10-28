@@ -120,10 +120,10 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
             	 }
 
             	 Version baseVersion = ocm.getBaseVersion("/page");
-            	 System.out.println("Base version : " + baseVersion.getName());
+            	 log.info("Base version : " + baseVersion.getName());
 
             	 Version rootVersion = ocm.getRootVersion("/page");
-            	 System.out.println("Root version : " + rootVersion.getName());
+            	 log.info("Root version : " + rootVersion.getName());
             	 //this.exportDocument("/home/christophe/export.xml", "/jcr:system/jcr:versionStorage", true, false);
 
                  //Get the latest version
@@ -245,10 +245,10 @@ public class AnnotationBasicVersionningTest extends AnnotationTestBase
             	 }
 
             	 Version baseVersion = ocm.getBaseVersion("/page");
-            	 System.out.println("Base version : " + baseVersion.getName());
+            	 log.info("Base version : " + baseVersion.getName());
 
             	 Version rootVersion = ocm.getRootVersion("/page");
-            	 System.out.println("Root version : " + rootVersion.getName());
+            	 log.info("Root version : " + rootVersion.getName());
             	 //this.exportDocument("/home/christophe/export.xml", "/jcr:system/jcr:versionStorage", true, false);
 
                  //Get the latest version

@@ -33,6 +33,8 @@ import org.apache.jackrabbit.ocm.nodemanagement.TestBase;
 import org.apache.jackrabbit.ocm.nodemanagement.exception.NamespaceCreationException;
 import org.apache.jackrabbit.ocm.nodemanagement.exception.NodeTypeCreationException;
 import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /** JUnit test for NodeTypeManagerImpl.
@@ -40,6 +42,12 @@ import org.apache.jackrabbit.ocm.nodemanagement.impl.jackrabbit.NodeTypeManagerI
  * @author <a href="mailto:okiessler@apache.org">Oliver Kiessler</a>
  */
 public class NodeTypeManagerImplTest extends TestBase {
+
+    /**
+     * Logger instance.
+     */
+    private static final Logger log =
+        LoggerFactory.getLogger(NodeTypeManagerImpl.class);
 
     /** Class to test.
      */
@@ -136,11 +144,11 @@ public class NodeTypeManagerImplTest extends TestBase {
         assertTrue(containsProperty("jcr:mixinTypes", testNodeType.getPropertyDefinitions()));
 
         PropertyDefinition propDef1 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "ocm:a");
-        System.out.println(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef1));
+        log.info(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef1));
         // TODO test all properties
 
         PropertyDefinition propDef2 = getPropertyDefinition(testNodeType.getPropertyDefinitions(), "ocm:b");
-        System.out.println(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef2));
+        log.info(getJackrabbitNodeTypeManagerImpl().showPropertyDefinition(propDef2));
         // TODO test all properties
     }
 

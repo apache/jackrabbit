@@ -138,15 +138,15 @@ public class AnnotationJcrPropertyTest extends AnnotationTestBase
             	fail("Invalid value was accepted for mandatoryWithConstaintsProp");
             }
             catch(Exception e)
-            {                	
-                e.printStackTrace();
+            {
+                // expected
             }
 			
 			
 		}
 		catch (Exception e)
-		{			
-			e.printStackTrace();
+		{
+			log.error("testRequiredProperty failed", e);
 			fail();
 		}
 			
