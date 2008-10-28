@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -95,7 +96,13 @@ public class XMLTextExtractor extends AbstractTextExtractor {
                 }
             });
             if (encoding != null) {
-                source.setEncoding(encoding);
+                try {
+                    Charset.forName(encoding);
+                    source.setEncoding(encoding);
+                } catch (Exception e) {
+                    logger.warn("Unsupported encoding '{}', using default ({}) instead.",
+                            new Object[]{encoding, System.getProperty("file.encoding")});
+                }
             }
             reader.parse(source);
 

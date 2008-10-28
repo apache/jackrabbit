@@ -92,7 +92,7 @@ public class PlainTextExtractorTest extends TestCase {
             Reader reader = extractor.extractText(
                     new ByteArrayInputStream(text.getBytes()),
                     "text/plain", "unsupported");
-            assertEquals("", ExtractorHelper.read(reader));
+            assertEquals(text, ExtractorHelper.read(reader));
         } catch (UnsupportedEncodingException e) {
             fail("PlainTextExtractor does not handle unsupported encodings");
         }
