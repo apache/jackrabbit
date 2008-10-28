@@ -307,8 +307,11 @@ public class LocalItemStateManager
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }
-        update(changeLog);
-        changeLog.reset();
+        // JCR-1813: Only execute the update when there are some changes
+        if (changeLog.hasUpdates()) {
+            update(changeLog);
+            changeLog.reset();
+        }
 
         editMode = false;
     }
