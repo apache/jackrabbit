@@ -55,9 +55,21 @@ public class ClusterRecordDeserializer {
             clusterRecord = new NodeTypeRecord(record);
             clusterRecord.read();
             break;
+        case ClusterRecord.END_MARKER:
+            // JCR-1813: Invalid journal records during XATransactions
+            // Some journal records may be empty due to JCR-1813 and other
+            // issues. We handle such cases with this dummy sentinel record.
+            clusterRecord = new ClusterRecord(record) {
+                protected void doRead() {
+                }
+                protected void doWrite() {
+                }
+                public void process(ClusterRecordProcessor processor) {
+                }
+            };
+            break;
         default:
-            String msg = "Unknown record identifier: " + c;
-            throw new JournalException(msg);
+            throw new JournalException("Unknown record identifier: " + c);
         }
         return clusterRecord;
     }
