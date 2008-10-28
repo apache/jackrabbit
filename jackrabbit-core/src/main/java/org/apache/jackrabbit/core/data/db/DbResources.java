@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.data.db;
 
 import java.io.InputStream;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
 import org.slf4j.Logger;
@@ -33,36 +32,52 @@ public class DbResources {
 
     protected final ConnectionRecoveryManager conn;
     protected final ResultSet rs;
-    protected final Statement stmt;
     protected final InputStream in;
     protected final DbDataStore store;
     protected boolean closed;
+    
+    /**
+     * Construct a db resource using the specified input stream.
+     * 
+     * @param in the input stream
+     */
+    public DbResources(InputStream in) {
+        this(null, null, in, null);
+    }
 
-    public DbResources(ConnectionRecoveryManager conn, ResultSet rs, Statement stmt, InputStream in, DbDataStore store) {
+    /**
+     * Construct a db resource using the specified connection. The connection
+     * will be returned to the data store once the resource is fully read. If
+     * the connection is null, then this class is just a container for the input
+     * stream. This is to support other kinds of input streams as well.
+     * 
+     * @param conn the connection (may be null)
+     * @param rs the result set (may be null)
+     * @param in the input stream
+     * @param store the data store
+     */
+    public DbResources(ConnectionRecoveryManager conn, ResultSet rs, InputStream in, DbDataStore store) {
         this.conn = conn;
         this.rs = rs;
-        this.stmt = stmt;
         this.in = in;
         this.store = store;
-        this.closed = false;
+        if (conn == null) {
+            closed = true;
+        }
     }
 
-    public ConnectionRecoveryManager getConnection() {
-        return conn;
-    }
-
+    /**
+     * Get the input stream.
+     * 
+     * @return the input stream
+     */
     public InputStream getInputStream() {
         return in;
     }
 
-    public ResultSet getResultSet() {
-        return rs;
-    }
-
-    public Statement getStatement() {
-        return stmt;
-    }
-
+    /**
+     * Close the stream, and return the connection to the data store.
+     */
     public void close() {
         if (!closed) {
             closed = true;
