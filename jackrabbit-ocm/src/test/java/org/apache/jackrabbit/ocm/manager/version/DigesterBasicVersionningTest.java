@@ -116,10 +116,10 @@ public class DigesterBasicVersionningTest extends DigesterTestBase
         	 }
         	
         	 Version baseVersion = ocm.getBaseVersion("/page");
-        	 System.out.println("Base version : " + baseVersion.getName());
+        	 log.info("Base version : " + baseVersion.getName());
 
         	 Version rootVersion = ocm.getRootVersion("/page");
-        	 System.out.println("Root version : " + rootVersion.getName());
+        	 log.info("Root version : " + rootVersion.getName());
         	             	
              //Get the latest version
         	 page = (Page) ocm.getObject( "/page");

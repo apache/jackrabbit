@@ -111,7 +111,7 @@ public class AnnotationNullAtomicTest extends AnnotationTestBase
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("testNullValueAtomicFields failed", e);
             fail("Exception occurs during the unit test : " + e);
         }
 

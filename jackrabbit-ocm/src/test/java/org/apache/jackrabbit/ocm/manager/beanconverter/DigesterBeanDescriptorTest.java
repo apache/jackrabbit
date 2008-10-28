@@ -263,7 +263,7 @@ public class DigesterBeanDescriptorTest extends DigesterTestBase {
             page = (Page) ocm.getObject("/test");
             paragraphs = page.getParagraphs();
             for (Paragraph paragraph : paragraphs) {
-				System.out.println("Paragraph path : " + paragraph.getPath());				
+				log.info("Paragraph path : " + paragraph.getPath());				
 			}
             Paragraph p1 = (Paragraph) ocm.getObject("/test/paragraph[2]");
             Page paraPage = p1.getPage();
