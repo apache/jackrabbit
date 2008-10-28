@@ -39,10 +39,11 @@ public class DbInputStream extends FilterInputStream {
     protected DataIdentifier identifier;
 
     /**
-     * @param in the stream obtained by a call to ResultSet.getBinaryStream().
-     * @param con the connection to the DB. It must not be closed.
-     * @param rs the result set from wich the stream is obtained. It must not be closed.
-     * @param stmt the statemen that produced the result set. It must not be closed.
+     * Create a database input stream for the given identifier.
+     * Database access is delayed until the first byte is read from the stream.
+     * 
+     * @param store the database data store
+     * @param identifier the data identifier
      */
     protected DbInputStream(DbDataStore store, DataIdentifier identifier) {
         super(null);
@@ -88,15 +89,7 @@ public class DbInputStream extends FilterInputStream {
      * When the stream is consumed, the database resources held by the instance are closed.
      */
     public int read(byte[] b) throws IOException {
-        if (streamFinished) {
-            return -1;
-        }
-        int c = read(b, 0, b.length);
-        if (c == -1) {
-            streamFinished = true;
-            close();
-        }
-        return c;
+        return read(b, 0, b.length);
     }
 
     /**
@@ -127,6 +120,7 @@ public class DbInputStream extends FilterInputStream {
             streamClosed = true;
             // It may be null (see constructor)
             if (in != null) {
+                in.close();
                 super.close();
             }
             // resources may be null (if getStream() was not called)
