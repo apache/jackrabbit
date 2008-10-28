@@ -97,16 +97,16 @@ public class AnnotationIteratorQueryTest extends AnnotationTestBase
     	
     	      long  start = System.currentTimeMillis();
               ObjectIterator iterator = (ObjectIterator) ocm.getObjectIterator(query);
-              System.out.println("getObjectIterator takes : " + (System.currentTimeMillis() - start));
+              log.info("getObjectIterator takes : " + (System.currentTimeMillis() - start));
 
     	      start = System.currentTimeMillis();
     	      Collection result = ocm.getObjects(query);
-    	      System.out.println("getObject takes : " + (System.currentTimeMillis() - start));
+    	      log.info("getObject takes : " + (System.currentTimeMillis() - start));
     	
 
     	      start = System.currentTimeMillis();
     	      iterator = (ObjectIterator) ocm.getObjectIterator(query);
-              System.out.println("getObjectIterator takes : " + (System.currentTimeMillis() - start));
+              log.info("getObjectIterator takes : " + (System.currentTimeMillis() - start));
               assertEquals("wrong results count", 4, iterator.getSize());
               assertEquals("wrong initial position", 0, iterator.getPosition());
               assertTrue("no objects returned", iterator.hasNext());

@@ -85,7 +85,7 @@ public class AnnotationDefaultValueTest extends AnnotationTestBase
 	    }
 	    catch (Exception e)
 	    {
-	        e.printStackTrace();
+	        log.error("testDefaultValues failed", e);
 	        fail("Exception occurs during the unit test : " + e);
 	    }
 	
@@ -125,7 +125,7 @@ public class AnnotationDefaultValueTest extends AnnotationTestBase
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            log.error("testDefaultValuesRead failed", e);
             fail("Exception occurs during the unit test : " + e);
         }
 
