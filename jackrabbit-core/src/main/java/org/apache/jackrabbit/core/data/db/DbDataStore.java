@@ -62,7 +62,7 @@ import javax.jcr.RepositoryException;
  *     &lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/>
  *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
  *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
- *     &lt;param name="{@link #setCopyWhenReading(int) copyWhenReading}" value="true"/>
+ *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/>
  *     &lt;param name="{@link #setTablePrefix(int) tablePrefix}" value=""/>
  * &lt/DataStore>
  * </pre>
@@ -93,16 +93,6 @@ import javax.jcr.RepositoryException;
 public class DbDataStore implements DataStore {
 
     /**
-     * The digest algorithm used to uniquely identify records.
-     */
-    protected static final String DIGEST = "SHA-1";
-
-    /**
-     * Logger instance
-     */
-    private static Logger log = LoggerFactory.getLogger(DbDataStore.class);
-
-    /**
      * The default value for the minimum object size.
      */
     public static final int DEFAULT_MIN_RECORD_LENGTH = 100;
@@ -111,6 +101,37 @@ public class DbDataStore implements DataStore {
      * The default value for the maximum connections.
      */
     public static final int DEFAULT_MAX_CONNECTIONS = 3;
+    
+    /**
+     * Write to a temporary file to get the length (slow, but always works).
+     * This is the default setting.
+     */
+    public static final String STORE_TEMP_FILE = "tempFile";
+
+    /**
+     * Call PreparedStatement.setBinaryStream(..., -1)
+     */
+    public static final String STORE_SIZE_MINUS_ONE = "-1";
+
+    /**
+     * Call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
+     */
+    public static final String STORE_SIZE_MAX = "max";
+    
+    /**
+     * The digest algorithm used to uniquely identify records.
+     */
+    protected static final String DIGEST = "SHA-1";
+    
+    /**
+     * The prefix used for temporary objects.
+     */
+    protected static final String TEMP_PREFIX = "TEMP_";
+
+    /**
+     * Logger instance
+     */
+    private static Logger log = LoggerFactory.getLogger(DbDataStore.class);
 
     /**
      * The minimum modified date. If a file is accessed (read or write) with a modified date
@@ -157,11 +178,6 @@ public class DbDataStore implements DataStore {
      * A list of connections
      */
     protected Pool connectionPool;
-
-    /**
-     * The prefix used for temporary objects.
-     */
-    protected static final String TEMP_PREFIX = "TEMP_";
 
     /**
      * The prefix for the datastore table, empty by default.
@@ -251,26 +267,10 @@ public class DbDataStore implements DataStore {
     protected String storeStream = STORE_TEMP_FILE;
 
     /**
-     * Write to a temporary file to get the length (slow, but always works).
-     * This is the default setting.
-     */
-    public static final String STORE_TEMP_FILE = "tempFile";
-
-    /**
-     * Call PreparedStatement.setBinaryStream(..., -1)
-     */
-    public static final String STORE_SIZE_MINUS_ONE = "-1";
-
-    /**
-     * Call PreparedStatement.setBinaryStream(..., Integer.MAX_VALUE)
-     */
-    public static final String STORE_SIZE_MAX = "max";
-
-    /**
      * Copy the stream to a temp file before returning it.
      * Enabled by default to support concurrent reads.
      */
-    private boolean copyWhenReading = true;
+    protected boolean copyWhenReading = true;
 
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
@@ -366,7 +366,7 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not insert new record", e);
         } finally {
-            conn.closeSilently(rs);
+            DatabaseHelper.closeSilently(rs);
             putBack(conn);
             if (fileInput != null) {
                 try {
@@ -437,7 +437,7 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not read records", e);
         } finally {
-            conn.closeSilently(rs);
+            DatabaseHelper.closeSilently(rs);
             putBack(conn);
         }
     }
@@ -481,7 +481,7 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not read identifier " + identifier, e);
         } finally {
-            conn.closeSilently(rs);
+            DatabaseHelper.closeSilently(rs);
             putBack(conn);
         }
     }
@@ -507,23 +507,26 @@ public class DbDataStore implements DataStore {
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
-            InputStream result = null;
             InputStream stream = rs.getBinaryStream(2);
+            DbResources dbResource = null;
             if (stream == null) {
                 // If the stream is null, go ahead and close resources
-                result = new ByteArrayInputStream(new byte[0]);
+                stream = new ByteArrayInputStream(new byte[0]);
+                dbResource = new DbResources(stream);
+                DatabaseHelper.closeSilently(rs);
+                putBack(conn);
+            } else if (copyWhenReading) {
+                // If we copy while reading, create a temp file and close the stream
+                File temp = moveToTempFile(stream);
+                stream = new TempFileInputStream(temp);
+                dbResource = new DbResources(stream);
                 DatabaseHelper.closeSilently(rs);
                 putBack(conn);
             } else {
-                result = new BufferedInputStream(stream);
-                if (copyWhenReading) {
-                    File temp = moveToTempFile(result);
-                    result = new TempFileInputStream(temp);
-                }
+                stream = new BufferedInputStream(stream);
+                dbResource = new DbResources(conn, rs, stream, this);
             }
-
-            DbResources dbResources = new DbResources(conn, rs, prep, result, this);
-            return dbResources;
+            return dbResource;
         } catch (Exception e) {
             DatabaseHelper.closeSilently(rs);
             putBack(conn);
