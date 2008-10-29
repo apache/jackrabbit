@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.state;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +48,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -553,11 +553,9 @@ public class SharedItemStateManager
 
             try {
                 if (usesReferences) {
-                    /**
-                     * Update node references based on modifications in change log
-                     * (added/modified/removed REFERENCE properties)
-                     */
-                    updateReferences(local, virtualProvider);
+                    // Update node references based on modifications in change
+                    // log (added/modified/removed REFERENCE properties)
+                    updateReferences();
                 }
 
                 // If enabled, check whether reference targets
@@ -850,168 +848,96 @@ public class SharedItemStateManager
          *                        node references object
          * @throws ItemStateException if an error occurs
          */
-        private void updateReferences(
-                ChangeLog changes, VirtualItemStateProvider virtualProvider)
-                throws ItemStateException {
-            Iterator iterator;
-
+        private void updateReferences() throws ItemStateException {
             // process added REFERENCE properties
-            iterator = getReferenceProperties(changes.addedStates());
-            while (iterator.hasNext()) {
-                PropertyState prop = (PropertyState) iterator.next();
-                // add the new 'reference'
-                InternalValue[] vals = prop.getValues();
-                for (int i = 0; vals != null && i < vals.length; i++) {
-                    NodeReferencesId refsId = new NodeReferencesId(
-                            vals[i].getUUID());
-                    if (virtualProvider != null
-                            && virtualProvider.hasNodeReferences(refsId)) {
-                        continue;
-                    }
-                    NodeReferences refs =
-                        getOrCreateNodeReferences(refsId, changes);
-                    // add reference
-                    refs.addReference(prop.getPropertyId());
-                    // update change log
-                    changes.modified(refs);
-                }
+            for (Iterator i = local.addedStates(); i.hasNext(); ) {
+                addReferences((ItemState) i.next());
             }
 
             // process modified REFERENCE properties
-            iterator = getProperties(changes.modifiedStates());
-            while (iterator.hasNext()) {
-                PropertyState newProp = (PropertyState) iterator.next();
-                PropertyState oldProp =
-                    (PropertyState) getItemState(newProp.getId());
-
-                // check old type
-                if (oldProp.getType() == PropertyType.REFERENCE) {
-                    // this is a modified REFERENCE property:
-                    // remove the old 'reference' from the target
-                    InternalValue[] vals = oldProp.getValues();
-                    for (int i = 0; vals != null && i < vals.length; i++) {
-                        NodeReferencesId refsId = new NodeReferencesId(
-                                vals[i].getUUID());
-                        if (virtualProvider != null
-                                && virtualProvider.hasNodeReferences(refsId)) {
-                            continue;
-                        }
-                        // either get node references from change log or load from
-                        // persistence manager
-                        NodeReferences refs = changes.get(refsId);
-                        if (refs == null) {
-                            refs = getNodeReferences(refsId);
-                        }
-                        // remove reference
-                        refs.removeReference(oldProp.getPropertyId());
-                        // update change log
-                        changes.modified(refs);
-                    }
-                }
-
-                // check new type
-                if (newProp.getType() == PropertyType.REFERENCE) {
-                    // this is a modified REFERENCE property:
-                    // add the new 'reference' to the target
-                    InternalValue[] vals = newProp.getValues();
-                    for (int i = 0; vals != null && i < vals.length; i++) {
-                        NodeReferencesId refsId = new NodeReferencesId(
-                                vals[i].getUUID());
-                        if (virtualProvider != null
-                                && virtualProvider.hasNodeReferences(refsId)) {
-                            continue;
-                        }
-                        NodeReferences refs =
-                            getOrCreateNodeReferences(refsId, changes);
-                        // add reference
-                        refs.addReference(newProp.getPropertyId());
-                        // update change log
-                        changes.modified(refs);
-                    }
+            for (Iterator i = local.modifiedStates(); i.hasNext(); ) {
+                ItemState state = (ItemState) i.next();
+                if (!state.isNode()) {
+                    // remove old references from the target
+                    removeReferences(getItemState(state.getId()));
+                    // add new references to the target
+                    addReferences(state);
                 }
             }
 
             // process removed REFERENCE properties
-            iterator = getReferenceProperties(changes.deletedStates());
-            while (iterator.hasNext()) {
-                PropertyState prop = (PropertyState) iterator.next();
-                if (prop.getType() == PropertyType.REFERENCE) {
-                    // this is a removed REFERENCE property:
-                    // remove the 'reference' from the target
-                    InternalValue[] vals = prop.getValues();
-                    for (int i = 0; vals != null && i < vals.length; i++) {
-                        NodeReferencesId refsId = new NodeReferencesId(
-                                vals[i].getUUID());
-                        if (virtualProvider != null
-                                && virtualProvider.hasNodeReferences(refsId)) {
-                            continue;
-                        }
-                        // either get node references from change log or
-                        // load from persistence manager
-                        NodeReferences refs = changes.get(refsId);
-                        if (refs == null) {
-                            refs = getNodeReferences(refsId);
-                        }
-                        // remove reference
-                        refs.removeReference(prop.getPropertyId());
-                        // update change log
-                        changes.modified(refs);
+            for (Iterator i = local.deletedStates(); i.hasNext(); ) {
+                removeReferences((ItemState) i.next());
+            }
+        }
+
+        private void addReferences(ItemState state)
+                throws NoSuchItemStateException, ItemStateException {
+            if (!state.isNode()) {
+                PropertyState property = (PropertyState) state;
+                if (property.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] values = property.getValues();
+                    for (int i = 0; values != null && i < values.length; i++) {
+                        addReference(
+                                property.getPropertyId(), values[i].getUUID());
                     }
                 }
             }
         }
 
-        /**
-         * Returns a node references object using the following rules:
-         * <ol>
-         * <li>return a modified instance from the change log (if one exists)</li>
-         * <li>return an existing instance from <i>this</i> item state manager
-         * (if one exists)</li>
-         * <li>create and return a new instance</li>
-         * </ol>
-         *
-         * @param id  node references id
-         * @param changes change log
-         * @return a node references object
-         * @throws ItemStateException if an error occurs
-         */
-        private NodeReferences getOrCreateNodeReferences(
-                NodeReferencesId id, ChangeLog changes)
+        private void addReference(PropertyId id, UUID uuid)
                 throws ItemStateException {
-            // check change log
-            NodeReferences refs = changes.get(id);
-            if (refs != null) {
-                return refs;
-            } else  if (hasNodeReferences(id)) {
-                return getNodeReferences(id);
-            } else {
-                return new NodeReferences(id);
-            }
-        }
-
-        private Iterator getProperties(Iterator states) {
-            ArrayList properties = new ArrayList();
-            while (states.hasNext()) {
-                ItemState state = (ItemState) states.next();
-                if (!state.isNode()) {
-                    properties.add(state);
+            NodeReferencesId refsId = new NodeReferencesId(uuid);
+            if (virtualProvider == null
+                    || ! virtualProvider.hasNodeReferences(refsId)) {
+                // get or create the references instance
+                NodeReferences refs = local.get(refsId);
+                if (refs == null) {
+                    if (hasNodeReferences(refsId)) {
+                        refs = getNodeReferences(refsId);
+                    } else {
+                        refs = new NodeReferences(refsId);
+                    }
                 }
+                // add reference
+                refs.addReference(id);
+                // update change log
+                local.modified(refs);
             }
-            return properties.iterator();
         }
 
-        private Iterator getReferenceProperties(Iterator states) {
-            ArrayList properties = new ArrayList();
-            while (states.hasNext()) {
-                ItemState state = (ItemState) states.next();
-                if (!state.isNode()) {
-                    PropertyState property = (PropertyState) state;
-                    if (property.getType() == PropertyType.REFERENCE) {
-                        properties.add(property);
+        private void removeReferences(ItemState state)
+                throws NoSuchItemStateException, ItemStateException {
+            if (!state.isNode()) {
+                PropertyState property = (PropertyState) state;
+                if (property.getType() == PropertyType.REFERENCE) {
+                    InternalValue[] values = property.getValues();
+                    for (int i = 0; values != null && i < values.length; i++) {
+                        removeReference(
+                                property.getPropertyId(), values[i].getUUID());
                     }
                 }
             }
-            return properties.iterator();
+        }
+
+        private void removeReference(PropertyId id, UUID uuid)
+                throws ItemStateException {
+            NodeReferencesId refsId = new NodeReferencesId(uuid);
+            if (virtualProvider == null
+                    || !virtualProvider.hasNodeReferences(refsId)) {
+                // either get node references from change log or load from
+                // persistence manager
+                NodeReferences refs = local.get(refsId);
+                if (refs == null && hasNodeReferences(refsId)) {
+                    refs = getNodeReferences(refsId);
+                }
+                if (refs != null) {
+                    // remove reference
+                    refs.removeReference(id);
+                    // update change log
+                    local.modified(refs);
+                }
+            }
         }
 
     }
