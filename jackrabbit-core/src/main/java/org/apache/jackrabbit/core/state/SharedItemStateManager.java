@@ -16,21 +16,33 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.persistence.bundle.CachingPersistenceManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.bundle.CachingPersistenceManager;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
@@ -38,18 +50,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import java.io.PrintStream;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashMap;
 
 /**
  * Shared <code>ItemStateManager</code> (SISM). Caches objects returned from a
@@ -495,7 +495,7 @@ public class SharedItemStateManager
         /**
          * Virtual node references.
          */
-        private List[] virtualNodeReferences;
+        private ChangeLog[] virtualNodeReferences;
 
         /**
          * Events to dispatch.
@@ -533,7 +533,7 @@ public class SharedItemStateManager
         public void begin() throws ItemStateException, ReferentialIntegrityException {
             shared = new ChangeLog();
 
-            virtualNodeReferences = new List[virtualProviders.length];
+            virtualNodeReferences = new ChangeLog[virtualProviders.length];
 
             /* let listener know about change */
             if (eventChannel != null) {
@@ -660,12 +660,12 @@ public class SharedItemStateManager
                     NodeId id = refs.getId().getTargetId();
                     for (int i = 0; i < virtualProviders.length; i++) {
                         if (virtualProviders[i].hasItemState(id)) {
-                            List virtualRefs = virtualNodeReferences[i];
+                            ChangeLog virtualRefs = virtualNodeReferences[i];
                             if (virtualRefs == null) {
-                                virtualRefs = new LinkedList();
+                                virtualRefs = new ChangeLog();
                                 virtualNodeReferences[i] = virtualRefs;
                             }
-                            virtualRefs.add(refs);
+                            virtualRefs.modified(refs);
                             virtual = true;
                             break;
                         }
@@ -733,12 +733,9 @@ public class SharedItemStateManager
 
                 /* notify virtual providers about node references */
                 for (int i = 0; i < virtualNodeReferences.length; i++) {
-                    List virtualRefs = virtualNodeReferences[i];
+                    ChangeLog virtualRefs = virtualNodeReferences[i];
                     if (virtualRefs != null) {
-                        for (Iterator iter = virtualRefs.iterator(); iter.hasNext();) {
-                            NodeReferences refs = (NodeReferences) iter.next();
-                            virtualProviders[i].setNodeReferences(refs);
-                        }
+                        virtualProviders[i].setNodeReferences(virtualRefs);
                     }
                 }
 
