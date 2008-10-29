@@ -52,7 +52,7 @@ public class DBDataStoreTest extends TestCase {
             store.addRecord(new ByteArrayInputStream(data)).getIdentifier();
     }
 
-    protected void tearDow() {
+    protected void tearDown() {
         store.close();
 
         try {
