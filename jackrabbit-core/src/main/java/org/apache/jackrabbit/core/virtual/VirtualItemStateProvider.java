@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.spi.Name;
-
-import javax.jcr.RepositoryException;
 
 /**
  * This Interface defines a virtual item state provider.
@@ -75,13 +76,13 @@ public interface VirtualItemStateProvider extends ItemStateManager {
         throws RepositoryException;
 
     /**
-     * Informs this provider that the node references to one of its states has
-     * changed.
+     * Informs this provider that the node references to some of its states
+     * have changed.
      *
-     * @param refs
+     * @param references collection of {@link NodeReferences} instances
      * @return <code>true</code> if the reference target is one of its items.
      */
-    boolean setNodeReferences(NodeReferences refs);
+    boolean setNodeReferences(ChangeLog references);
 
 
     /**
