@@ -214,7 +214,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
             try {
                 QueryResultRow row = (QueryResultRow) rows.next();
                 nextId = row.getNodeId();
-                Item tmp = itemMgr.getItem(hierarchyMgr.getHierarchyEntry(nextId));
+                Item tmp = itemMgr.getItem(hierarchyMgr.getNodeEntry(nextId));
 
                 if (tmp.isNode()) {
                     next = (Node) tmp;

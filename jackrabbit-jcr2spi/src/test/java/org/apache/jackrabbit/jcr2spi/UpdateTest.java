@@ -16,27 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Session;
-import javax.jcr.Property;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
-import java.util.List;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <code>UpdateTest</code>...
@@ -53,7 +47,7 @@ public class UpdateTest extends AbstractJCRTest {
         currentWorkspace = testRootNode.getSession().getWorkspace().getName();
     }
 
-    public void testInvalidSrcWorkspace() throws RepositoryException, InvalidItemStateException, AccessDeniedException {
+    public void testInvalidSrcWorkspace() throws RepositoryException {
         String nonExistingWorkspace = "nonExistingWorkspace";
         String[] accessibleWorkspaces = testRootNode.getSession().getWorkspace().getAccessibleWorkspaceNames();
         List l = Arrays.asList(accessibleWorkspaces);
@@ -68,7 +62,7 @@ public class UpdateTest extends AbstractJCRTest {
         }
     }
 
-    public void testNoCorrespondingNode() throws RepositoryException, InvalidItemStateException, AccessDeniedException, NotExecutableException {
+    public void testNoCorrespondingNode() throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -96,7 +90,7 @@ public class UpdateTest extends AbstractJCRTest {
         }
     }
 
-    public void testSameWorkspace() throws RepositoryException, InvalidItemStateException, AccessDeniedException, NotExecutableException {
+    public void testSameWorkspace() throws RepositoryException, NotExecutableException {
         try {
             // update without corresponding node must be a nop
             testRootNode.update(currentWorkspace);
@@ -105,7 +99,7 @@ public class UpdateTest extends AbstractJCRTest {
         }
     }
 
-    public void testPendingChangesSameWorkspace() throws RepositoryException, InvalidItemStateException, AccessDeniedException, NotExecutableException {
+    public void testPendingChangesSameWorkspace() throws RepositoryException, NotExecutableException {
         testRootNode.addNode(nodeName2, testNodeType);
 
         try {
@@ -116,7 +110,7 @@ public class UpdateTest extends AbstractJCRTest {
         }
     }
 
-    public void testPendingChanges() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException, NotExecutableException {
+    public void testPendingChanges() throws RepositoryException, NotExecutableException {
         testRootNode.addNode(nodeName2, testNodeType);
 
         String srcWorkspace = getAnotherWorkspace();
@@ -128,7 +122,7 @@ public class UpdateTest extends AbstractJCRTest {
         }
     }
 
-    public void testPendingChangesOnOtherNode() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException, NotExecutableException {
+    public void testPendingChangesOnOtherNode() throws RepositoryException, NotExecutableException {
         try {
         Node root = testRootNode.getSession().getRootNode();
             if (root.isSame(testRootNode)) {

@@ -16,17 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
@@ -51,12 +48,9 @@ public abstract class AbstractCopy extends AbstractOperation {
                  ManagerProvider srcMgrProvider, ManagerProvider destMgrProvider)
         throws RepositoryException {
 
-        ItemState srcItemState = srcMgrProvider.getHierarchyManager().getItemState(srcPath);
-        if (!srcItemState.isNode()) {
-            throw new PathNotFoundException("Source path " + LogUtil.safeGetJCRPath(srcPath, srcMgrProvider.getPathResolver()) + " is not a valid path.");
-        }
+        NodeState srcItemState = getNodeState(srcPath, srcMgrProvider.getHierarchyManager());
         this.srcState = (NodeState)srcItemState;
-        this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager(), destMgrProvider.getNamePathResolver());
+        this.destParentState = getNodeState(destPath.getAncestor(1), destMgrProvider.getHierarchyManager());
 
         // check for illegal index present in destination path
         Path.Element destElement = destPath.getNameElement();

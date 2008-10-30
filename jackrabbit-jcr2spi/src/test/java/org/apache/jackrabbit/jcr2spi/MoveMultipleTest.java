@@ -16,21 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.util.Text;
 
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
-import javax.jcr.Node;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.AccessDeniedException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 
 /**
  * <code>MoveMultipleTest</code>...
@@ -54,7 +48,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
      * Transiently move a persisted node multiple times and check results
      * after each move as well as after saving.
      */
-    public void testMultipleMove() throws RepositoryException, ConstraintViolationException, ItemExistsException, VersionException {
+    public void testMultipleMove() throws RepositoryException {
         // 1. move
         doMove(moveNode.getPath(), destinationPath);
 
@@ -103,7 +97,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
     /**
      * Move a new node multiple times and check the hierarchy after saving.
      */
-    public void testMultipleMoveNewNode() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
+    public void testMultipleMoveNewNode() throws RepositoryException {
         // add additional nodes
         Node moveNode2 = moveNode.addNode(nodeName3, testNodeType);
 
@@ -140,7 +134,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
      * Separately move the persisted 'moveNode' and its transiently added
      * child node.
      */
-    public void testMoveParentAndChild() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
+    public void testMoveParentAndChild() throws RepositoryException {
         // add additional nodes
         Node moveNode2 = moveNode.addNode(nodeName3, testNodeType);
         Property childProperty = moveNode2.setProperty(propertyName2, "anyString");
@@ -175,7 +169,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
     /**
      * Move a node that has a child node and finally revert the 'move' operations.
      */
-    public void testRevertingMoveParentAndChild() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
+    public void testRevertingMoveParentAndChild() throws RepositoryException {
         Node moveNode2 = moveNode.addNode(nodeName3, testNodeType);
         // moveNode2 must be persisted in order not to have it removed upon
         // refresh(false).
@@ -198,7 +192,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
      * Separately move the new 'moveNode' and its child node. Save 'add' and
      * 'move' ops in one step.
      */
-    public void testMoveNewParentAndNewChild() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
+    public void testMoveNewParentAndNewChild() throws RepositoryException {
         Node moveNode2 = moveNode.addNode("moveNode2", testNodeType);
         Property childProperty = moveNode2.setProperty(propertyName2, "anyString");
         Node childNode = moveNode2.addNode("childNode", testNodeType);
@@ -222,7 +216,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
      * Check if reverting the changes removes the 'new' child and moves
      * the persisted moveNode back.
      */
-    public void testRevertingMoveParentAndNewChild() throws RepositoryException, LockException, ConstraintViolationException, NoSuchNodeTypeException, ItemExistsException, VersionException {
+    public void testRevertingMoveParentAndNewChild() throws RepositoryException {
         Node moveNode2 = moveNode.addNode(nodeName3, testNodeType);
 
         doMove(moveNode.getPath(), destinationPath);
@@ -247,7 +241,7 @@ public class MoveMultipleTest extends AbstractMoveTest {
      * Move a node with child items without having loaded the children before.
      * Test if children can be accessed afterwards.
      */
-    public void testAccessChildrenAfterMove() throws RepositoryException, ConstraintViolationException, InvalidItemStateException, AccessDeniedException, NoSuchNodeTypeException, ItemExistsException, VersionException {
+    public void testAccessChildrenAfterMove() throws RepositoryException {
         Property childProperty = moveNode.setProperty(propertyName2, "anyString");
         Node childNode = moveNode.addNode(nodeName2, testNodeType);
         testRootNode.save();

@@ -46,7 +46,6 @@ public class MoveTreeTest extends AbstractMoveTreeTest {
         assertTrue("Moving a node must move all child items as well.", ancestor.isSame(destParentNode));
         ancestor = grandChildNode.getAncestor(degree);
         assertTrue("Moving a node must move all child items as well.", ancestor.isSame(destParentNode));
-
     }
 
     public void testTreeEntries() throws RepositoryException {
@@ -65,17 +64,40 @@ public class MoveTreeTest extends AbstractMoveTreeTest {
         } catch (PathNotFoundException e) {
             // ok
         }
+    }
+
+    public void testOldPropertyPath() throws RepositoryException {
         try {
             superuser.getItem(srcPath + "/" + propertyName2);
             fail("Moving a node must move all child items as well.");
         } catch (PathNotFoundException e) {
             // ok
         }
-        try {
-            superuser.getItem(srcPath + "/" + nodeName2 + "/" + nodeName3);
-            fail("Moving a node must move all child items as well.");
-        } catch (PathNotFoundException e) {
-            // ok
+    }
+
+    public void testOldChildPath() throws RepositoryException {
+        for (int i = 0; i < childPaths.size(); i++) {
+            String path = childPaths.get(i).toString();
+            assertFalse(superuser.itemExists(path));
+            try {
+                superuser.getItem(path);
+                fail("Moving a node must move all child items as well.");
+            } catch (PathNotFoundException e) {
+                // ok
+            }
+        }
+    }
+
+    public void testOldChildPropertyPath() throws RepositoryException {
+        for (int i = 0; i < childPaths.size(); i++) {
+            String propPath = childPaths.get(i).toString() + "/" + jcrPrimaryType;
+            assertFalse(superuser.itemExists(propPath));
+            try {
+                superuser.getItem(propPath);
+                fail("Moving a node must move all child items as well.");
+            } catch (PathNotFoundException e) {
+                // ok
+            }
         }
     }
 

@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import java.util.Map;
-import java.util.Iterator;
 
 /**
  * <code>UniqueIdResolver</code> allows to retrieve <code>NodeEntry</code> instances
@@ -61,16 +60,15 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
         lookUp.clear();
     }
 
-    public NodeEntry lookup(NodeId nodeId) {
-        if (nodeId.getPath() != null) {
+    public NodeEntry lookup(String uniqueId) {
+        if (uniqueId == null) {
             throw new IllegalArgumentException();
         }
-        NodeEntry entry = (NodeEntry) lookUp.get(nodeId.getUniqueID());
-        return (entry != null) ? entry : null;
+        return (NodeEntry) lookUp.get(uniqueId);
     }
 
     public NodeEntry resolve(NodeId nodeId, NodeEntry rootEntry) throws ItemNotFoundException, RepositoryException {
-        NodeEntry entry = lookup(nodeId);
+        NodeEntry entry = lookup(nodeId.getUniqueID());
         if (entry == null) {
             NodeState state = isf.createDeepNodeState(nodeId, rootEntry);
             entry = state.getNodeEntry();
@@ -90,30 +88,45 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
      * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
      */
     public void statusChanged(ItemState state, int previousStatus) {
-        if (Status.isTerminal(state.getStatus())) {
-            if (state.isNode()) {
-                NodeState nodeState = (NodeState) state;
-                String uniqueID = nodeState.getUniqueID();
-                if (uniqueID != null) {
-                    lookUp.remove(uniqueID);
+        synchronized (lookUp) {
+            if (Status.isTerminal((state.getStatus()))) {
+                if (state.isNode()) {
+                    NodeEntry entry = (NodeEntry) state.getHierarchyEntry();
+                    String uniqueID = entry.getUniqueID();
+                    if (uniqueID != null) {
+                        NodeEntry mapEntry = (NodeEntry) lookUp.get(uniqueID);
+                        if (mapEntry == entry) {
+                            lookUp.remove(uniqueID);
+                        } // else: removed entry is not present in lookup but
+                          //       only it's replacement -> ignore
+                    }
                 }
-            }
-            state.removeListener(this);
-        } else {
-            putToCache(state);
+                // stop listening if a state reached status REMOVED.
+                if (Status.REMOVED == state.getStatus()) {
+                    state.removeListener(this);
+                }
+            } // else: any other status than REMOVED -> ignore.
         }
     }
 
     //------------------------------------------< ItemStateCreationListener >---
     /**
-     * Updates the internal id-lookup if the created state is a NodeState that
-     * is identified by a uniqueID.
+     * Nothing to do. The lookUp is filled entry creation and/or modification
+     * of its uniqueID
      *
      * @param state
      * @see ItemStateCreationListener#created(ItemState)
      */
     public void created(ItemState state) {
-        putToCache(state);
+        if (state.isNode()) {
+            NodeEntry entry = (NodeEntry) state.getHierarchyEntry();
+            String uniqueID = entry.getUniqueID();
+            if (uniqueID != null) {
+                if (!lookUp.containsKey(uniqueID) || lookUp.get(uniqueID) != entry) {
+                    log.error("Created NodeState identified by UniqueID that is not contained in the lookup.");
+                }
+            }
+        }
     }
 
     //-------------------------------------< EntryFactory.NodeEntryListener >---
@@ -124,15 +137,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
         synchronized (lookUp) {
             String uniqueID = entry.getUniqueID();
             if (uniqueID != null) {
-                // get an previous entry first and remove it before adding the
-                // new one. otherwise the newly added entry will be removed
-                // again upon removal of the original entry.
-                Object previous = lookUp.get(uniqueID);
-                if (previous != null) {
-                    lookUp.remove(uniqueID);
-                    ((NodeEntry) previous).remove();
-                }
-                lookUp.put(uniqueID, entry);
+                putToLookup(uniqueID, entry);
             }
         }
     }
@@ -144,56 +149,56 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
         synchronized (lookUp) {
             if (previousUniqueID != null) {
                 Object previous = lookUp.get(previousUniqueID);
-                if (previous != entry) {
-                    // changed entry was not in this cache -> return.
-                    return;
-                } else {
+                if (previous == entry) {
                     lookUp.remove(previousUniqueID);
-                }
+                } // else: previousUniqueID points to another entry -> ignore
             }
             String uniqueID = entry.getUniqueID();
             if (uniqueID != null) {
-                Object previous = lookUp.put(uniqueID, entry);
-                if (previous != null && previous != entry) {
-                    // some other entry existed before with the same uniqueID
-                    ((NodeEntry) previous).remove();
-                }
+                putToLookup(uniqueID, entry);
             }
         }
     }
-    //------------------------------------------------------------< private >---
-    /**
-     * Put the given <code>ItemState</code> in the internal cache.
-     *
-     * @param state
-     */
-    private void putToCache(ItemState state) {
-        if (!state.isNode()) {
-            return;
-        }
 
-        if (state.getStatus() == Status.EXISTING || state.getStatus() == Status.MODIFIED) {
-            NodeEntry entry = ((NodeState)state).getNodeEntry();
-            // NOTE: uniqueID is retrieved from the state and not from the NodeId.
-            String uniqueID = entry.getUniqueID();
-            synchronized (lookUp) {
-                if (uniqueID != null) {
-                    if (lookUp.get(uniqueID) != entry) {
-                        lookUp.put(uniqueID, entry);
-                    }
-                } else {
-                    // ev. uniqueID was removed -> remove the entry from the lookUp
-                    if (lookUp.containsValue(entry)) {
-                        for (Iterator it = lookUp.entrySet().iterator(); it.hasNext();) {
-                            Map.Entry next = (Map.Entry) it.next();
-                            if (next.getValue() == entry) {
-                                it.remove();
-                                break;
-                            }
-                        }
-                    }
+    //------------------------------------------------------------< private >---
+    private void putToLookup(String uniqueID, NodeEntry entry) {
+        Object previous = lookUp.put(uniqueID, entry);
+        if (previous != null) {
+            // some other entry existed before with the same uniqueID
+            if (!sameEntry((NodeEntry) previous, entry)) {
+                // if the new entry represents the externally moved/renamed
+                // correspondance of the previous the latter needs to marked
+                // removed/stale-destroyed.
+                // otherwise (both represent the same entry) the creation
+                // of entry is the result of gc of the node or any of the
+                // ancestors. in this case there is not need to 'remove'
+                // the previous entry. instead it is just removed from this
+                // cache and left for collection.
+                ((NodeEntry) previous).remove();
+            } else {
+                log.debug("Replacement of NodeEntry identified by UniqueID");
+            }
+        }
+    }
+
+    private static boolean sameEntry(NodeEntry previous, NodeEntry entry) {
+        if (previous == entry) {
+            return true;
+        } else if (Status.REMOVED != previous.getStatus() &&
+                previous.getName().equals(entry.getName())) {
+
+            NodeEntry parent = previous.getParent();
+            NodeEntry parent2 = entry.getParent();
+            if (parent == parent2) {
+                return true;
+            } else {
+                try {
+                    return parent.getPath().equals(parent2.getPath());
+                } catch (RepositoryException e) {
+                    // TODO: add some fallback
                 }
             }
         }
+        return false;
     }
 }

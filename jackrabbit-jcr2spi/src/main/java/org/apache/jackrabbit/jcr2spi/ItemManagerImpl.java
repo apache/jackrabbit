@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateCreationListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateCreationListener;
+import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
@@ -31,16 +32,17 @@ import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
+import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 import javax.jcr.Workspace;
 import java.io.PrintStream;
 import java.util.Iterator;
@@ -100,13 +102,30 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
     }
 
     /**
-     * @see ItemManager#itemExists(Path)
+     * @see ItemManager#nodeExists(Path)
      */
-    public boolean itemExists(Path path) {
+    public boolean nodeExists(Path path) {
         try {
             // session-sanity & permissions are checked upon itemExists(ItemState)
-            ItemState itemState = hierMgr.getItemState(path);
-            return itemExists(itemState);
+            NodeState nodeState = hierMgr.getNodeState(path);
+            return itemExists(nodeState);
+        } catch (PathNotFoundException pnfe) {
+            return false;
+        } catch (ItemNotFoundException infe) {
+            return false;
+        } catch (RepositoryException re) {
+            return false;
+        }
+    }
+
+    /**
+     * @see ItemManager#propertyExists(Path)
+     */
+    public boolean propertyExists(Path path) {
+        try {
+            // session-sanity & permissions are checked upon itemExists(ItemState)
+            PropertyState propState = hierMgr.getPropertyState(path);
+            return itemExists(propState);
         } catch (PathNotFoundException pnfe) {
             return false;
         } catch (ItemNotFoundException infe) {
@@ -151,13 +170,24 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
     }
 
     /**
-     * @see ItemManager#getItem(Path)
+     * @see ItemManager#getNode(Path)
      */
-    public synchronized Item getItem(Path path)
-            throws PathNotFoundException, AccessDeniedException, RepositoryException {
-        HierarchyEntry itemEntry = hierMgr.getHierarchyEntry(path);
+    public synchronized Node getNode(Path path) throws PathNotFoundException, RepositoryException {
+        NodeEntry nodeEntry = hierMgr.getNodeEntry(path);
         try {
-            return getItem(itemEntry);
+            return (Node) getItem(nodeEntry);
+        } catch (ItemNotFoundException infe) {
+            throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, session.getPathResolver()));
+        }
+    }
+
+    /**
+     * @see ItemManager#getProperty(Path)
+     */
+    public synchronized Property getProperty(Path path) throws PathNotFoundException, RepositoryException {
+        PropertyEntry propertyEntry = hierMgr.getPropertyEntry(path);
+        try {
+            return (Property) getItem(propertyEntry);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(LogUtil.safeGetJCRPath(path, session.getPathResolver()));
         }
@@ -166,34 +196,22 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
     /**
      * @see ItemManager#getItem(HierarchyEntry)
      */
-    public Item getItem(HierarchyEntry hierarchyEntry) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
-        ItemState itemState = hierarchyEntry.getItemState();
-        return getItem(itemState);
-    }
-
-    /**
-     *
-     * @param itemState
-     * @return
-     * @throws ItemNotFoundException
-     * @throws AccessDeniedException
-     * @throws RepositoryException
-     */
-    private Item getItem(ItemState itemState) throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+    public Item getItem(HierarchyEntry hierarchyEntry) throws ItemNotFoundException, RepositoryException {
         session.checkIsAlive();
-        if (!itemState.isValid()) {
+        ItemState state = hierarchyEntry.getItemState();
+        if (!state.isValid()) {
             throw new ItemNotFoundException();
         }
 
         // first try to access item from cache
-        Item item = itemCache.getItem(itemState);
+        Item item = itemCache.getItem(state);
         // not yet in cache, need to create instance
         if (item == null) {
             // create instance of item
-            if (itemState.isNode()) {
-                item = createNodeInstance((NodeState) itemState);
+            if (hierarchyEntry.denotesNode()) {
+                item = createNodeInstance((NodeState) state);
             } else {
-                item = createPropertyInstance((PropertyState) itemState);
+                item = createPropertyInstance((PropertyState) state);
             }
         }
         return item;
@@ -203,7 +221,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
      * @see ItemManager#hasChildNodes(NodeEntry)
      */
     public synchronized boolean hasChildNodes(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+            throws ItemNotFoundException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
 
@@ -226,7 +244,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
      * @see ItemManager#getChildNodes(NodeEntry)
      */
     public synchronized NodeIterator getChildNodes(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+            throws ItemNotFoundException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
 
@@ -238,7 +256,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
      * @see ItemManager#hasChildProperties(NodeEntry)
      */
     public synchronized boolean hasChildProperties(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+            throws ItemNotFoundException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
 
@@ -261,7 +279,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
      * @see ItemManager#getChildProperties(NodeEntry)
      */
     public synchronized PropertyIterator getChildProperties(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException {
+            throws ItemNotFoundException, RepositoryException {
         // check sanity of session
         session.checkIsAlive();
 
@@ -300,13 +318,13 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         Name ntName = state.getNodeTypeName();
         if (NameConstants.NT_VERSION.equals(ntName)) {
             // version
-            return new VersionImpl(this, session, state, listeners);
+            return new VersionImpl(session, state, listeners);
         } else if (NameConstants.NT_VERSIONHISTORY.equals(ntName)) {
             // version-history
-            return new VersionHistoryImpl(this, session, state, listeners);
+            return new VersionHistoryImpl(session, state, listeners);
         } else {
             // create common node object
-            return new NodeImpl(this, session, state, listeners);
+            return new NodeImpl(session, state, listeners);
         }
     }
 
@@ -319,7 +337,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         // in order to maintain item cache consistency
         ItemLifeCycleListener[] listeners = new ItemLifeCycleListener[]{itemCache};
         // create property object
-        PropertyImpl prop = new PropertyImpl(this, session, state, listeners);
+        PropertyImpl prop = new PropertyImpl(session, state, listeners);
         return prop;
     }
 
@@ -342,7 +360,11 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
     }
 
     public void statusChanged(ItemState state, int previousStatus) {
-        // nothing to do -> Item is listening to status changes and forces
-        // cleanup of cache entries through it's own status changes.
+        // stop listening if an state reached Status.REMOVED.
+        if (Status.REMOVED == state.getStatus()) {
+            state.removeListener(this);
+        }
+        // otherwise: nothing to do -> Item is listening to status changes and
+        // forces cleanup of cache entries through it's own status changes.
     }
 }

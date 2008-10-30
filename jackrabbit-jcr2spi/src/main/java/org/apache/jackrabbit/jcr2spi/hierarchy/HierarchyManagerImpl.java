@@ -16,19 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>HierarchyManagerImpl</code> implements the <code>HierarchyManager</code>
@@ -72,7 +74,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (uniqueID == null) {
             return rootEntry.lookupDeepEntry(workspaceItemId.getPath());
         } else {
-            NodeEntry nEntry = uniqueIdResolver.lookup(idFactory.createNodeId(uniqueID));
+            NodeEntry nEntry = uniqueIdResolver.lookup(uniqueID);
             Path path = workspaceItemId.getPath();
             if (path == null) {
                 return nEntry;
@@ -90,49 +92,101 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * @see HierarchyManager#getHierarchyEntry(ItemId)
+     * @see HierarchyManager#getNodeEntry(NodeId)
      */
-    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws ItemNotFoundException, RepositoryException {
-        String uniqueID = itemId.getUniqueID();
+    public NodeEntry getNodeEntry(NodeId nodeId)
+            throws ItemNotFoundException, RepositoryException {
+        String uniqueID = nodeId.getUniqueID();
         if (uniqueID == null) {
-            return getHierarchyEntry(itemId.getPath());
+            return getNodeEntry(nodeId.getPath());
         } else {
-            if (itemId.getPath() == null) {
-                NodeEntry nEntry = uniqueIdResolver.resolve((NodeId) itemId, rootEntry);
+            if (nodeId.getPath() == null) {
+                NodeEntry nEntry = uniqueIdResolver.resolve(nodeId, rootEntry);
                 return nEntry;
             } else {
                 NodeEntry nEntry = uniqueIdResolver.resolve(idFactory.createNodeId(uniqueID), rootEntry);
-                return nEntry.getDeepEntry(itemId.getPath());
+                return nEntry.getDeepNodeEntry(nodeId.getPath());
             }
         }
     }
 
     /**
-     * @see HierarchyManager#getHierarchyEntry(Path)
+     * @see HierarchyManager#getNodeEntry(Path)
      */
-    public HierarchyEntry getHierarchyEntry(Path qPath) throws PathNotFoundException, RepositoryException {
+    public NodeEntry getNodeEntry(Path qPath) throws PathNotFoundException, RepositoryException {
         NodeEntry rootEntry = getRootEntry();
         // shortcut
         if (qPath.denotesRoot()) {
             return rootEntry;
         }
-
         if (!qPath.isCanonical()) {
             String msg = "Path is not canonical";
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-
-        return rootEntry.getDeepEntry(qPath);
+        return rootEntry.getDeepNodeEntry(qPath);
     }
 
     /**
-     * @see HierarchyManager#getItemState(Path)
+     * @see HierarchyManager#getPropertyEntry(PropertyId)
      */
-    public ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException {
-        HierarchyEntry entry = getHierarchyEntry(qPath);
+    public PropertyEntry getPropertyEntry(PropertyId propertyId)
+            throws ItemNotFoundException, RepositoryException {
+        String uniqueID = propertyId.getUniqueID();
+        if (uniqueID == null) {
+            return getPropertyEntry(propertyId.getPath());
+        } else {
+            if (propertyId.getPath() == null) {
+                // a property id always contains a Path part.
+                throw new ItemNotFoundException();
+            } else {
+                NodeEntry nEntry = uniqueIdResolver.resolve(idFactory.createNodeId(uniqueID), rootEntry);
+                return nEntry.getDeepPropertyEntry(propertyId.getPath());
+            }
+        }
+    }
+
+    /**
+     * @see HierarchyManager#getPropertyEntry(Path)
+     */
+    public PropertyEntry getPropertyEntry(Path qPath)
+            throws PathNotFoundException, RepositoryException {
+        // shortcut
+        if (qPath.denotesRoot()) {
+            throw new PathNotFoundException("The root path never points to a Property.");
+        }
+        if (!qPath.isCanonical()) {
+            String msg = "Path is not canonical";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+        return getRootEntry().getDeepPropertyEntry(qPath);
+    }
+
+    /**
+     * @see HierarchyManager#getNodeState(Path)
+     */
+    public NodeState getNodeState(Path qPath) throws PathNotFoundException, RepositoryException {
+        NodeEntry entry = getNodeEntry(qPath);
         try {
-            ItemState state = entry.getItemState();
+            NodeState state = entry.getNodeState();
+            if (state.isValid()) {
+                return state;
+            } else {
+                throw new PathNotFoundException();
+            }
+        } catch (ItemNotFoundException e) {
+            throw new PathNotFoundException(e);
+        }
+    }
+
+    /**
+     * @see HierarchyManager#getPropertyState(Path)
+     */
+    public PropertyState getPropertyState(Path qPath) throws PathNotFoundException, RepositoryException {
+        PropertyEntry entry = getPropertyEntry(qPath);
+        try {
+            PropertyState state = entry.getPropertyState();
             if (state.isValid()) {
                 return state;
             } else {

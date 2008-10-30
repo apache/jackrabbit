@@ -18,7 +18,6 @@ package org.apache.jackrabbit.jcr2spi.xml;
 
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
@@ -29,7 +28,6 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -37,19 +35,19 @@ import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,11 +124,7 @@ public class SessionImporter implements Importer, SessionListener {
 
         // perform preliminary checks
         try {
-            ItemState itemState = session.getHierarchyManager().getItemState(parentPath);
-            if (!itemState.isNode()) {
-                throw new PathNotFoundException(LogUtil.safeGetJCRPath(parentPath, session.getPathResolver()));
-            }
-            importTarget = (NodeState) itemState;
+            importTarget = session.getHierarchyManager().getNodeState(parentPath);
 
             // check if import target is writable, not-locked and checked-out.
             int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
@@ -217,7 +211,7 @@ public class SessionImporter implements Importer, SessionListener {
                // potential uuid conflict
                try {
                    NodeId conflictingId = session.getIdFactory().createNodeId(nodeInfo.getUUID());
-                   HierarchyEntry conflicting = session.getHierarchyManager().getHierarchyEntry(conflictingId);
+                   NodeEntry conflicting = session.getHierarchyManager().getNodeEntry(conflictingId);
                    // assert that the entry is available
                    conflicting.getItemState();
 

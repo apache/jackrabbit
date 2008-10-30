@@ -421,7 +421,6 @@ public class ItemStateValidator {
             VersionException, LockException, ItemNotFoundException,
             ReferentialIntegrityException, RepositoryException {
 
-        // TODO: missing check if all affected child-states can be removed as well
         if (targetState.isNode() && ((NodeState)targetState).isRoot()) {
             // root node
             throw new ConstraintViolationException("Cannot remove root node.");

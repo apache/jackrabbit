@@ -61,7 +61,7 @@ public class VersionManagerImpl implements VersionManager {
     public NodeEntry checkin(NodeState nodeState) throws RepositoryException {
         Checkin ci = Checkin.create(nodeState, this);
         workspaceManager.execute(ci);
-        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(ci.getNewVersionId());
+        return workspaceManager.getHierarchyManager().getNodeEntry(ci.getNewVersionId());
     }
 
     public void checkout(NodeState nodeState) throws RepositoryException {
@@ -187,13 +187,13 @@ public class VersionManagerImpl implements VersionManager {
         String uniqueID = ps.getValue().getString();
 
         NodeId versionableId = workspaceManager.getIdFactory().createNodeId(uniqueID);
-        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(versionableId);
+        return workspaceManager.getHierarchyManager().getNodeEntry(versionableId);
     }
 
     public NodeEntry getVersionHistoryEntry(NodeState versionableState) throws RepositoryException {
         PropertyState ps = versionableState.getPropertyState(NameConstants.JCR_VERSIONHISTORY);
         String uniqueID = ps.getValue().getString();
         NodeId vhId = workspaceManager.getIdFactory().createNodeId(uniqueID);
-        return (NodeEntry) workspaceManager.getHierarchyManager().getHierarchyEntry(vhId);
+        return workspaceManager.getHierarchyManager().getNodeEntry(vhId);
     }
 }
