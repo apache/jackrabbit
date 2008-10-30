@@ -175,9 +175,9 @@ public class Move extends AbstractOperation {
             throw new RepositoryException(msg);
         }
 
-        NodeState srcState = getNodeState(srcPath, hierMgr, resolver);
-        NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr, resolver);
-        NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr, resolver);
+        NodeState srcState = getNodeState(srcPath, hierMgr);
+        NodeState srcParentState = getNodeState(srcPath.getAncestor(1), hierMgr);
+        NodeState destParentState = getNodeState(destPath.getAncestor(1), hierMgr);
         Name destName = destElement.getName();
 
         if (sessionMove) {

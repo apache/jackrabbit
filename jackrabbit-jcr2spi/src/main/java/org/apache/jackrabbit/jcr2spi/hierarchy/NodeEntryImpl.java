@@ -252,23 +252,25 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @see HierarchyEntry#remove()
      */
     public void remove() {
-        ItemState state = internalGetItemState();
-        if (state != null) {
-            if (getStatus() == Status.EXISTING_MODIFIED) {
-                state.setStatus(Status.STALE_DESTROYED);
-            } else {
-                state.setStatus(Status.REMOVED);
-                parent.internalRemoveChildEntry(this);
-            }
-        } else {
-            // unresolved: ignore.
-            parent.internalRemoveChildEntry(this);
-        }
-
-        // now remove all child-entries.
+        // handle this entry first
+        super.internalRemove(false);
+        boolean staleParent = (getStatus() == Status.STALE_DESTROYED);
+        // now remove all child-entries (or mark them accordingly)
         for (Iterator it = getAllChildEntries(true); it.hasNext();) {
             HierarchyEntryImpl ce = (HierarchyEntryImpl) it.next();
-            ce.remove();
+            ce.internalRemove(staleParent);
+        }
+    }
+
+    void internalRemove(boolean staleParent) {
+        // handle this entry first
+        super.internalRemove(staleParent);
+        staleParent = (staleParent || (getStatus() == Status.STALE_DESTROYED));
+
+        // now remove all child-entries (or mark them accordingly)
+        for (Iterator it = getAllChildEntries(true); it.hasNext();) {
+            HierarchyEntryImpl ce = (HierarchyEntryImpl) it.next();
+            ce.internalRemove(staleParent);
         }
     }
 
@@ -367,17 +369,17 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
 
     /**
      * @inheritDoc
-     * @see NodeEntry#getDeepEntry(Path)
+     * @see NodeEntry#getDeepNodeEntry(Path)
      */
-    public HierarchyEntry getDeepEntry(Path path) throws PathNotFoundException, RepositoryException {
+    public NodeEntry getDeepNodeEntry(Path path) throws PathNotFoundException, RepositoryException {
         NodeEntryImpl entry = this;
         Path.Element[] elems = path.getElements();
         for (int i = 0; i < elems.length; i++) {
             Path.Element elem = (Path.Element) elems[i];
             // check for root element
             if (elem.denotesRoot()) {
-                if (getParent() != null) {
-                    throw new RepositoryException("NodeEntry out of 'hierarchy'" + path.toString());
+                if (entry.getParent() != null) {
+                    throw new RepositoryException("NodeEntry out of 'hierarchy' " + path.toString());
                 }
                 continue;
             }
@@ -389,9 +391,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             NodeEntry cne = entry.getNodeEntry(name, index, false);
             if (cne != null) {
                 entry = (NodeEntryImpl) cne;
-            } else if (index == Path.INDEX_DEFAULT && i == path.getLength() - 1 && entry.properties.contains(name)) {
-                // property must not have index && must be final path element
-                return entry.properties.get(name);
             } else {
                 // no valid entry
                 // -> if cnes are complete -> assume that it doesn't exist.
@@ -404,6 +403,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 // -> check if child points to a removed/moved sns
                 List siblings = entry.childNodeEntries.get(name);
                 if (entry.containsAtticChild(siblings, name, index)) {
+                    throw new PathNotFoundException(path.toString());
+                }
+                // shortcut: entry is NEW and still unresolved remaining path
+                // elements -> hierarchy doesn't exist anyway.
+                if (entry.getStatus() == Status.NEW) {
                     throw new PathNotFoundException(path.toString());
                 }
                /*
@@ -423,12 +427,6 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 }
                 Path remainingPath = pb.getPath();
 
-                // shortcut: entry is NEW and still unresolved remaining path
-                // elements -> hierarchy doesn't exist anyway.
-                if (entry.getStatus() == Status.NEW) {
-                    throw new PathNotFoundException(path.toString());
-                }
-
                 NodeId parentId = entry.getWorkspaceId();
                 IdFactory idFactory = factory.getIdFactory();
 
@@ -437,22 +435,87 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 if (ne != null) {
                     return ne;
                 } else {
-                    if (index != Path.INDEX_DEFAULT) {
-                        throw new PathNotFoundException(path.toString());
-                    }
-                    // maybe a property entry exists
-                    parentId = (remainingPath.getLength() == 1) ? parentId : idFactory.createNodeId(parentId, remainingPath.getAncestor(1));
-                    PropertyId propId = idFactory.createPropertyId(parentId, remainingPath.getNameElement().getName());
-                    PropertyEntry pe = entry.loadPropertyEntry(propId);
-                    if (pe != null) {
-                        return pe;
-                    } else {
-                        throw new PathNotFoundException(path.toString());
-                    }
+                    throw new PathNotFoundException(path.toString());
                 }
             }
         }
         return entry;
+    }
+
+    /**
+     * @see NodeEntry#getDeepPropertyEntry(Path)
+     */
+    public PropertyEntry getDeepPropertyEntry(Path path) throws PathNotFoundException, RepositoryException {
+        NodeEntryImpl entry = this;
+        Path.Element[] elems = path.getElements();
+        int i = 0;
+        for (; i < elems.length-1; i++) {
+            Path.Element elem = (Path.Element) elems[i];
+            if (elems[i].denotesRoot()) {
+                if (entry.getParent() != null) {
+                    throw new RepositoryException("NodeEntry out of 'hierarchy' " + path.toString());
+                }
+                continue;
+            }
+
+            int index = elem.getNormalizedIndex();
+            Name name = elem.getName();
+
+            // first try to resolve to known node or property entry
+            NodeEntry cne = entry.getNodeEntry(name, index, false);
+            if (cne != null) {
+                entry = (NodeEntryImpl) cne;
+            } else {
+                // no valid ancestor node entry
+                // -> if cnes are complete -> assume that it doesn't exist.
+                //    refresh will bring up new entries added in the mean time
+                //    on the persistent layer.
+                if (entry.childNodeEntries.isComplete()) {
+                    throw new PathNotFoundException(path.toString());
+                }
+                // -> check for moved child entry in node-attic
+                // -> check if child points to a removed/moved sns
+                List siblings = entry.childNodeEntries.get(name);
+                if (entry.containsAtticChild(siblings, name, index)) {
+                    throw new PathNotFoundException(path.toString());
+                }
+                // break out of the loop and start deep loading the property
+                break;
+            }
+        }
+
+        int st = entry.getStatus();
+        PropertyEntry pe;
+        if (i == elems.length-1 && Status.INVALIDATED != st && Status._UNDEFINED_ != st) {
+            // all node entries present in the hierarchy and the direct ancestor
+            // has already been resolved and isn't invalidated -> no need to
+            // retrieve property entry from SPI
+            pe = entry.properties.get(path.getNameElement().getName());
+        } else {
+            /*
+            * Unknown parent entry (not-existing or not yet loaded) or a parent
+            * entry that has been invalidated:
+            * Skip all intermediate entries and directly try to load the
+            * PropertyState (including building the itermediate entries. If that
+            * fails ItemNotFoundException is thrown.
+            */
+            PathBuilder pb = new PathBuilder(factory.getPathFactory());
+            for (int j = i; j < elems.length; j++) {
+                pb.addLast(elems[j]);
+            }
+            Path remainingPath = pb.getPath();
+
+            IdFactory idFactory = factory.getIdFactory();
+            NodeId parentId = entry.getWorkspaceId();
+            parentId = (remainingPath.getLength() == 1) ? parentId : idFactory.createNodeId(parentId, remainingPath.getAncestor(1));
+            PropertyId propId = idFactory.createPropertyId(parentId, remainingPath.getNameElement().getName());
+            pe = entry.loadPropertyEntry(propId);
+        }
+
+        if (pe == null) {
+            throw new PathNotFoundException(path.toString());
+        }
+        return pe;
     }
 
     /**
@@ -528,10 +591,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         if (entries.size() >= index) {
             // position of entry might differ from index-1 if a SNS with lower
             // index has been transiently removed.
-            for (int i = index-1; i < entries.size() && cne == null; i++) {
+            int eIndex = 1;
+            for (int i = 0; i < entries.size() && cne == null; i++) {
                 NodeEntry ne = (NodeEntry) entries.get(i);
                 if (EntryValidation.isValidNodeEntry(ne)) {
-                    cne = ne;
+                    if (eIndex == index) {
+                        cne = ne;
+                    }
+                    eIndex++;
                 }
             }
         }
@@ -869,19 +936,11 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             case Event.PROPERTY_REMOVED:
                 if (child != null) {
                     int status = child.getStatus();
-                    if (Status.isTransient(status) || Status.isStale(status)) {
-                        if (Status.EXISTING_REMOVED == status) {
-                            // colliding item removal -> mark parent stale
-                            internalGetItemState().setStatus(Status.MODIFIED);
-                        }
-                        // pending changes -> don't remove entry in the hierarchy
-                        // but rather change status to 'STALE_DESTROYED'
-                        ItemState childState = ((HierarchyEntryImpl) child).internalGetItemState();
-                        childState.setStatus(Status.STALE_DESTROYED);
-                    } else {
-                        // no pending changes -> save to remove the entry.
-                        child.remove();
+                    if (Status.EXISTING_REMOVED == status) {
+                        // colliding item removal -> mark parent stale
+                        internalGetItemState().setStatus(Status.MODIFIED);
                     }
+                    child.remove();
                 } // else: child-Entry has not been loaded yet -> ignore
                 break;
 
@@ -1530,12 +1589,14 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         private final Name oldName;
         private final int oldIndex;
         private final NodeEntryImpl oldSuccessor;
+        private final NodeEntryImpl oldPredecessor;
 
         private RevertInfo() throws InvalidItemStateException, RepositoryException {
             this.oldParent = parent;
             this.oldName = name;
             this.oldIndex = getIndex();
             this.oldSuccessor = (NodeEntryImpl) ((ChildNodeEntriesImpl) parent.childNodeEntries).getNext(NodeEntryImpl.this);
+            this.oldPredecessor = (NodeEntryImpl) ((ChildNodeEntriesImpl) parent.childNodeEntries).getPrevious(NodeEntryImpl.this);
         }
 
         private boolean isMoved() {
@@ -1546,7 +1607,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             if (!persisted) {
                 NodeEntryImpl ne = NodeEntryImpl.this;
                 ChildNodeEntriesImpl parentCNEs = (ChildNodeEntriesImpl) parent.childNodeEntries;
-                parentCNEs.reorder(ne, revertInfo.oldSuccessor);
+                parentCNEs.reorderAfter(ne, revertInfo.oldPredecessor);
                 try {
                     if (oldIndex != ne.getIndex()) {
                         // TODO: TOBEFIXED

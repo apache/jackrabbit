@@ -21,12 +21,13 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 
 import javax.jcr.PathNotFoundException;
-import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
 
 /**
  * There's one <code>ItemManager</code> instance per <code>Session</code>
@@ -58,12 +59,20 @@ public interface ItemManager {
     public void dispose();
 
     /**
-     * Checks if the item with the given path exists.
+     * Checks if the node with the given path exists.
      *
-     * @param path path to the item to be checked
+     * @param path path to the node to be checked
      * @return true if the specified item exists
      */
-    public boolean itemExists(Path path);
+    public boolean nodeExists(Path path);
+
+    /**
+     * Checks if the property with the given path exists.
+     *
+     * @param path path to the property to be checked
+     * @return true if the specified item exists
+     */
+    public boolean propertyExists(Path path);
 
     /**
      * Checks if the item for given HierarchyEntry exists.
@@ -76,66 +85,63 @@ public interface ItemManager {
     /**
      *
      * @param path
-     * @return The item for the given path.
-     * @throws javax.jcr.PathNotFoundException
-     * @throws javax.jcr.AccessDeniedException
-     * @throws javax.jcr.RepositoryException
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
      */
-    public Item getItem(Path path)
-        throws PathNotFoundException, AccessDeniedException, RepositoryException;
+    public Node getNode(Path path) throws PathNotFoundException, RepositoryException;
+
+    /**
+     *
+     * @param path
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public Property getProperty(Path path) throws PathNotFoundException, RepositoryException;
 
     /**
      *
      * @param hierarchyEntry
      * @return
      * @throws ItemNotFoundException
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public Item getItem(HierarchyEntry hierarchyEntry)
-        throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public Item getItem(HierarchyEntry hierarchyEntry) throws ItemNotFoundException, RepositoryException;
 
     /**
      *
      * @param parentEntry
      * @return
      * @throws ItemNotFoundException
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public boolean hasChildNodes(NodeEntry parentEntry)
-        throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public boolean hasChildNodes(NodeEntry parentEntry) throws ItemNotFoundException, RepositoryException;
 
     /**
      *
      * @param parentEntry
      * @return
      * @throws ItemNotFoundException
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public NodeIterator getChildNodes(NodeEntry parentEntry)
-        throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public NodeIterator getChildNodes(NodeEntry parentEntry) throws ItemNotFoundException, RepositoryException;
 
     /**
      *
      * @param parentEntry
      * @return
      * @throws ItemNotFoundException
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public boolean hasChildProperties(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public boolean hasChildProperties(NodeEntry parentEntry) throws ItemNotFoundException, RepositoryException;
 
     /**
      *
      * @param parentEntry
      * @return
      * @throws ItemNotFoundException
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public PropertyIterator getChildProperties(NodeEntry parentEntry)
-            throws ItemNotFoundException, AccessDeniedException, RepositoryException;
+    public PropertyIterator getChildProperties(NodeEntry parentEntry) throws ItemNotFoundException, RepositoryException;
 }

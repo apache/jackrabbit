@@ -27,6 +27,8 @@ import javax.jcr.ItemExistsException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>AbstractMoveTreeTest</code>...
@@ -44,6 +46,7 @@ abstract class AbstractMoveTreeTest extends AbstractJCRTest {
 
     protected String srcPath;
     protected String destinationPath;
+    protected List childPaths = new ArrayList();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -58,6 +61,9 @@ abstract class AbstractMoveTreeTest extends AbstractJCRTest {
         childProperty = moveNode.setProperty(propertyName2, "anyString");
         childNode = moveNode.addNode(nodeName2, testNodeType);
         grandChildNode = childNode.addNode(nodeName3, testNodeType);
+
+        childPaths.add(grandChildNode.getPath());
+        childPaths.add(childNode.getPath());
 
         doMove(moveNode.getPath(), destinationPath);
     }

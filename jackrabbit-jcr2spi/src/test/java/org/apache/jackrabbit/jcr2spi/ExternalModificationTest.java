@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
+import javax.jcr.Property;
 
 /** <code>ExternalModificationTest</code>... */
 public class ExternalModificationTest extends AbstractJCRTest {
@@ -152,19 +153,14 @@ public class ExternalModificationTest extends AbstractJCRTest {
         superuser.move(refNode.getPath(), destParentNode.getPath() + "/" + nodeName2);
         superuser.save();
 
-        try {
-            refNode2.refresh(true);
-            Node parent = refNode2.getParent();
-        } catch (InvalidItemStateException e) {
-        }
+        testSession.getItem(destParentNode.getPath() + "/" + nodeName2);
 
-        if (isItemStatus(refNode2, Status.STALE_DESTROYED)) {
-            try {
-                refNode2.refresh(false);
-                fail();
-            } catch (InvalidItemStateException e) {
-                // correct behaviour
-            }
+        assertItemStatus(refNode2, Status.STALE_DESTROYED);
+        try {
+            refNode2.refresh(false);
+            fail();
+        } catch (InvalidItemStateException e) {
+            // correct behaviour
         }
     }
 
@@ -175,15 +171,230 @@ public class ExternalModificationTest extends AbstractJCRTest {
         superuser.move(refNode.getPath(), destParentNode.getPath() + "/" + nodeName2);
         superuser.save();
 
+        testSession.getItem(destParentNode.getPath() + "/" + nodeName2);
+
+        assertItemStatus(refNode2, Status.STALE_DESTROYED);
+        testSession.refresh(false);
+        assertItemStatus(refNode2, Status.REMOVED);
+    }
+
+    public void testStaleDestroyed3() throws RepositoryException, NotExecutableException {
+        String uuid = refNode.getUUID();
+
+        Node refNode2 = (Node) testSession.getItem(refNode.getPath());
+        // TODO: for generic jsr 170 test isSame must be replace by 'Item.isSame'
+        assertSame(refNode2, testSession.getNodeByUUID(uuid));
+        // add some modification
+        refNode2.addMixin(mixLockable);
+
+        String srcPath = refNode.getPath();
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(srcPath, destPath);
+        superuser.save();
+
+        testSession.getItem(destPath);
+
+        assertItemStatus(refNode2, Status.STALE_DESTROYED);
+        // the uuid must be transfered to the 'moved' node
+        Node n = testSession.getNodeByUUID(uuid);
+        // TODO: for generic jsr 170 test assertSame must be replace by 'Item.isSame'
+        assertSame(n, testSession.getItem(destPath));
+        assertSame(refNode2, testSession.getItem(srcPath));
+    }
+
+    public void testExternalRemoval() throws RepositoryException, NotExecutableException {
+        String uuid = refNode.getUUID();
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
+
+        String srcPath = refNode.getPath();
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(srcPath, destPath);
+        superuser.save();
+
         try {
             refNode2.refresh(true);
             Node parent = refNode2.getParent();
         } catch (InvalidItemStateException e) {
         }
 
-        if (isItemStatus(refNode2, Status.STALE_DESTROYED)) {
-            testSession.refresh(false);
-            assertItemStatus(refNode2, Status.REMOVED);
+        assertItemStatus(refNode2, Status.REMOVED);
+        // the uuid must be transfered to the 'moved' node
+        Node n = testSession.getNodeByUUID(uuid);
+        // TODO: for generic jsr 170 test assertSame must be replace by 'Item.isSame'
+        assertSame(n, testSession.getItem(destPath));
+    }
+
+    public void testExternalRemoval2() throws RepositoryException, NotExecutableException {
+        Node childN = refNode.addNode(nodeName3);
+        Property p = childN.setProperty(propertyName1, "anyvalue");
+        refNode.save();
+
+        String uuid = refNode.getUUID();
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
+        Node c2 =  (Node) testSession.getItem(childN.getPath());
+        Property p2 = (Property) testSession.getItem(p.getPath());
+        // transiently remove the property -> test effect of external removal.
+        p2.remove();
+
+        String srcPath = refNode.getPath();
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(srcPath, destPath);
+        superuser.save();
+
+        try {
+            refNode2.refresh(true);
+            Node parent = refNode2.getParent();
+        } catch (InvalidItemStateException e) {
         }
+
+        assertItemStatus(refNode2, Status.REMOVED);
+        assertItemStatus(c2, Status.STALE_DESTROYED);
+        assertItemStatus(p2, Status.REMOVED);
+    }
+
+    public void testExternalRemoval3() throws RepositoryException, NotExecutableException {
+        Node childN = refNode.addNode(nodeName3);
+        Property p = childN.setProperty(propertyName1, "anyvalue");
+        refNode.save();
+
+        String uuid = refNode.getUUID();
+        Node refNode2 = (Node) testSession.getNodeByUUID(uuid);
+        Node c2 =  (Node) testSession.getItem(childN.getPath());
+        Property p2 = (Property) testSession.getItem(p.getPath());
+        // transiently modify  -> test effect of external removal.
+        p2.setValue("changedValue");
+
+        String srcPath = refNode.getPath();
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(srcPath, destPath);
+        superuser.save();
+
+        try {
+            refNode2.refresh(true);
+            Node parent = refNode2.getParent();
+        } catch (InvalidItemStateException e) {
+        }
+
+        assertItemStatus(refNode2, Status.REMOVED);
+        assertItemStatus(c2, Status.REMOVED);
+        assertItemStatus(p2, Status.STALE_DESTROYED);
+        assertEquals("changedValue", p2.getString());
+    }
+
+    public void testNewItemsUponStaleDestroyed() throws RepositoryException, NotExecutableException {
+        String uuid = refNode.getUUID();
+        Node refNode2 = (Node) testSession.getItem(refNode.getPath());
+        refNode2.addMixin(mixLockable);
+
+        Node childN = refNode2.addNode(nodeName3);
+        String childNPath = childN.getPath();
+
+        Property childP = refNode2.setProperty(propertyName2, "someValue");
+        String childPPath = childP.getPath();
+
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(refNode.getPath(), destPath);
+        superuser.save();
+
+        testSession.refresh(true);
+        testSession.getItem(destPath);
+
+        assertItemStatus(refNode2, Status.STALE_DESTROYED);
+        assertItemStatus(refNode2.getProperty(jcrMixinTypes), Status.STALE_DESTROYED);
+        assertItemStatus(childN, Status.NEW);
+        assertItemStatus(childP, Status.NEW);
+        assertItemStatus(childN.getProperty(jcrPrimaryType), Status.NEW);
+
+        assertTrue(testSession.itemExists(childNPath));
+        assertSame(childN, testSession.getItem(childNPath));
+
+        assertTrue(testSession.itemExists(childPPath));
+        assertSame(childP, testSession.getItem(childPPath));
+
+        testSession.refresh(false);
+
+        assertItemStatus(childN, Status.REMOVED);
+        assertItemStatus(childP, Status.REMOVED);
+        assertFalse(testSession.itemExists(childNPath));
+        assertFalse(testSession.itemExists(childPPath));
+    }
+
+    public void testChildItemsUponStaleDestroyed() throws RepositoryException, NotExecutableException {
+        Node cNode = refNode.addNode(nodeName3);
+        Node cNode2 = cNode.addNode(nodeName4);
+        refNode.save();
+
+        String uuid = refNode.getUUID();
+        Node refNode2 = (Node) testSession.getItem(refNode.getPath());
+        refNode2.addMixin(mixLockable);
+
+        Node child =  (Node) testSession.getItem(cNode.getPath());
+        Node child2 = (Node) testSession.getItem(cNode2.getPath());
+        Node child3 = child2.addNode(nodeName4);
+        String child3Path = child3.getPath();
+
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(refNode.getPath(), destPath);
+        superuser.save();
+
+        testSession.refresh(true);
+        testSession.getItem(destPath);
+
+        assertItemStatus(refNode2, Status.STALE_DESTROYED);
+        assertItemStatus(refNode2.getProperty(jcrMixinTypes), Status.STALE_DESTROYED);
+        assertItemStatus(child, Status.REMOVED);
+        assertItemStatus(child2, Status.STALE_DESTROYED);
+        assertItemStatus(child3, Status.NEW);
+        assertItemStatus(child3.getProperty(jcrPrimaryType), Status.NEW);
+
+        testSession.refresh(false);
+
+        assertItemStatus(child2, Status.REMOVED);
+        assertItemStatus(child3, Status.REMOVED);
+    }
+
+    public void testUnmodifiedAncestorRemoved() throws RepositoryException, NotExecutableException {
+        String uuid = refNode.getUUID();
+        Node n3 = refNode.addNode(nodeName3, testNodeType);
+        refNode.save();
+
+        Node refNode2 = (Node) testSession.getItem(refNode.getPath());
+        // add transient modification to non-referenceable child node
+        Node node3 = (Node) testSession.getItem(n3.getPath());
+        node3.addMixin(mixLockable);
+
+        // add new child node and child property below
+        Node childN = node3.addNode(nodeName3);
+        String childNPath = childN.getPath();
+
+        Property childP = node3.setProperty(propertyName2, "someValue");
+        String childPPath = childP.getPath();
+
+        // externally move the 'refNode' in order to provoke uuid-conflict
+        // in testSession -> refNode2 gets removed, since it doesn't have
+        // transient modifications.
+        String destPath = destParentNode.getPath() + "/" + nodeName2;
+        superuser.move(refNode.getPath(), destPath);
+        superuser.save();
+
+        testSession.refresh(true);
+        testSession.getItem(destPath);
+
+        assertItemStatus(refNode2, Status.REMOVED);
+        assertItemStatus(node3, Status.STALE_DESTROYED);
+        assertItemStatus(childN, Status.NEW);
+        assertItemStatus(childP, Status.NEW);
+
+        // since 'refNode2' is removed -> child items must not be accessible
+        // any more.
+        assertFalse(testSession.itemExists(childNPath));
+        assertFalse(testSession.itemExists(childPPath));
+
+        // revert all pending changes...
+        testSession.refresh(false);
+        // must mark all modified/new items as removed.
+        assertItemStatus(node3, Status.REMOVED);
+        assertItemStatus(childN, Status.REMOVED);
+        assertItemStatus(childP, Status.REMOVED);
     }
 }

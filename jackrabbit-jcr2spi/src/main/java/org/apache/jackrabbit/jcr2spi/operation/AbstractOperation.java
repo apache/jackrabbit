@@ -16,17 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 
 /**
@@ -82,17 +80,13 @@ public abstract class AbstractOperation implements Operation {
      *
      * @param nodePath
      * @param hierMgr
-     * @param resolver
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    protected static NodeState getNodeState(Path nodePath, HierarchyManager hierMgr, PathResolver resolver) throws PathNotFoundException, RepositoryException {
-        ItemState itemState = hierMgr.getItemState(nodePath);
-        if (!itemState.isNode()) {
-            throw new PathNotFoundException(LogUtil.safeGetJCRPath(nodePath, resolver));
-        }
-        return (NodeState) itemState;
+    protected static NodeState getNodeState(Path nodePath, HierarchyManager hierMgr) throws PathNotFoundException, RepositoryException {
+        NodeState nodeState = hierMgr.getNodeState(nodePath);
+        return nodeState;
     }
 
     /**

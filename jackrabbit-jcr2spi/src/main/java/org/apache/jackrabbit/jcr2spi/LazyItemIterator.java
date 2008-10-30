@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyIterator;
@@ -106,7 +108,13 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
         List entries = new ArrayList();
         while (itemIds.hasNext()) {
             ItemId id = (ItemId) itemIds.next();
-            entries.add(hierarchyMgr.getHierarchyEntry(id));
+            HierarchyEntry entry;
+            if (id.denotesNode()) {
+                entry = hierarchyMgr.getNodeEntry((NodeId) id);
+            } else {
+                entry = hierarchyMgr.getPropertyEntry((PropertyId) id);
+            }
+            entries.add(entry);
         }
         iter = entries.iterator();
         size = entries.size();

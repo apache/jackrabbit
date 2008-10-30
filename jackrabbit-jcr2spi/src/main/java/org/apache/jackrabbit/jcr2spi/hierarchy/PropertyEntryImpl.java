@@ -110,25 +110,6 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     }
 
     /**
-     * @see HierarchyEntry#remove()
-     */
-    public void remove() {
-        ItemState state = internalGetItemState();
-        int status = getStatus();
-        if (state != null) {
-            if (status == Status.EXISTING_MODIFIED) {
-                state.setStatus(Status.STALE_DESTROYED);
-            } else {
-                state.setStatus(Status.REMOVED);
-                parent.internalRemoveChildEntry(this);
-            }
-        } else {
-            // unresolved
-            parent.internalRemoveChildEntry(this);
-        }
-    }
-
-    /**
      * @see HierarchyEntry#complete(Operation)
      */
     public void complete(Operation operation) throws RepositoryException {
