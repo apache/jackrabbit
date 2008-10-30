@@ -16,21 +16,22 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ChangeLog;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.ISMLocking;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import java.util.Iterator;
+
+import javax.jcr.ReferentialIntegrityException;
+
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.slf4j.Logger;
-
-import javax.jcr.ReferentialIntegrityException;
-import java.util.Iterator;
+import org.slf4j.LoggerFactory;
 
 /**
  * Spezialized SharedItemStateManager that filters out NodeReferences to
@@ -63,21 +64,28 @@ public class VersionItemStateManager extends SharedItemStateManager {
      * @param references
      * @return
      */
-    public boolean setNodeReferences(NodeReferences references) {
+    public boolean setNodeReferences(ChangeLog references) {
         try {
-            // filter out version storage intern ones
-            NodeReferences refs = new NodeReferences(references.getId());
-            Iterator iter = references.getReferences().iterator();
-            while (iter.hasNext()) {
-                PropertyId id = (PropertyId) iter.next();
-                if (!hasItemState(id.getParentId())) {
-                    refs.addReference(id);
+            ChangeLog log = new ChangeLog();
+
+            Iterator iterator = references.modifiedRefs();
+            while (iterator.hasNext()) {
+                // filter out version storage intern ones
+                NodeReferences source = (NodeReferences) iterator.next();
+                NodeReferences target = new NodeReferences(source.getId());
+                Iterator iter = source.getReferences().iterator();
+                while (iter.hasNext()) {
+                    PropertyId id = (PropertyId) iter.next();
+                    if (!hasItemState(id.getParentId())) {
+                        target.addReference(id);
+                    }
                 }
+                log.modified(target);
             }
 
-            ChangeLog log = new ChangeLog();
-            log.modified(refs);
-            pMgr.store(log);
+            if (log.hasUpdates()) {
+                pMgr.store(log);
+            }
             return true;
         } catch (ItemStateException e) {
             log.error("Error while setting references: " + e.toString());

@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
@@ -29,8 +32,6 @@ import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.spi.Name;
-
-import javax.jcr.RepositoryException;
 
 /**
  * This Class implements a virtual item state provider.
@@ -115,8 +116,8 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public boolean setNodeReferences(NodeReferences refs) {
-        return stateMgr.setNodeReferences(refs);
+    public boolean setNodeReferences(ChangeLog references) {
+        return stateMgr.setNodeReferences(references);
     }
 
     /**

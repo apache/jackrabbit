@@ -30,6 +30,9 @@ import org.apache.commons.collections.Predicate;
 
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.IdentityHashMap;
@@ -449,6 +452,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @throws ItemStateException if an error occurs
      */
     private void updateVirtualReferences(ChangeLog changes) throws ItemStateException {
+        ChangeLog references = new ChangeLog();
+
         for (Iterator iter = changes.addedStates(); iter.hasNext();) {
             ItemState state = (ItemState) iter.next();
             if (!state.isNode()) {
@@ -458,7 +463,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        addVirtualReference(prop.getPropertyId(), refsId);
+                        addVirtualReference(
+                                references, prop.getPropertyId(), refsId);
                     }
                 }
             }
@@ -474,7 +480,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        removeVirtualReference(oldProp.getPropertyId(), refsId);
+                        removeVirtualReference(
+                                references, oldProp.getPropertyId(), refsId);
                     }
                 }
                 if (newProp.getType() == PropertyType.REFERENCE) {
@@ -482,7 +489,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        addVirtualReference(newProp.getPropertyId(), refsId);
+                        addVirtualReference(
+                                references, newProp.getPropertyId(), refsId);
                     }
                 }
             }
@@ -496,11 +504,14 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         UUID uuid = vals[i].getUUID();
                         NodeReferencesId refsId = new NodeReferencesId(uuid);
-                        removeVirtualReference(prop.getPropertyId(), refsId);
+                        removeVirtualReference(
+                                references, prop.getPropertyId(), refsId);
                     }
                 }
             }
         }
+
+        virtualProvider.setNodeReferences(references);
     }
 
     /**
@@ -510,17 +521,20 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @param sourceId property id
      * @param refsId node references id
      */
-    private void addVirtualReference(PropertyId sourceId,
-                                     NodeReferencesId refsId)
+    private void addVirtualReference(
+            ChangeLog references, PropertyId sourceId, NodeReferencesId refsId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = virtualProvider.getNodeReferences(refsId);
+        NodeReferences refs = references.get(refsId);
+        if (refs == null) {
+            refs = virtualProvider.getNodeReferences(refsId);
+        }
         if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
             refs = new NodeReferences(refsId);
         }
         if (refs != null) {
             refs.addReference(sourceId);
-            virtualProvider.setNodeReferences(refs);
+            references.modified(refs);
         }
     }
 
@@ -531,17 +545,20 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @param sourceId property id
      * @param refsId node references id
      */
-    private void removeVirtualReference(PropertyId sourceId,
-                                        NodeReferencesId refsId)
+    private void removeVirtualReference(
+            ChangeLog references, PropertyId sourceId, NodeReferencesId refsId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = virtualProvider.getNodeReferences(refsId);
+        NodeReferences refs = references.get(refsId);
+        if (refs == null) {
+            refs = virtualProvider.getNodeReferences(refsId);
+        }
         if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
             refs = new NodeReferences(refsId);
         }
         if (refs != null) {
             refs.removeReference(sourceId);
-            virtualProvider.setNodeReferences(refs);
+            references.modified(refs);
         }
     }
 }

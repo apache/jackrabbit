@@ -16,6 +16,16 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
+
 import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
@@ -41,14 +51,6 @@ import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Implementation of a {@link VersionManager} that works in an XA environment.
@@ -242,13 +244,17 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public boolean setNodeReferences(NodeReferences refs) {
+    public boolean setNodeReferences(ChangeLog references) {
         ChangeLog changeLog = ((XAItemStateManager) stateMgr).getChangeLog();
         if (changeLog != null) {
-            changeLog.modified(refs);
+            Iterator iterator = references.modifiedRefs();
+            while (iterator.hasNext()) {
+                changeLog.modified((NodeReferences) iterator.next());
+            }
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     /**

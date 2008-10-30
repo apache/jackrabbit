@@ -37,8 +37,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -364,7 +364,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
             throws ConfigurationException {
         try {
             File file = new File(directory, WORKSPACE_XML);
-            InputSource xml = new InputSource(new FileReader(file));
+            InputSource xml = new InputSource(new FileInputStream(file));
             xml.setSystemId(file.toURI().toString());
 
             Properties variables = new Properties();
