@@ -561,7 +561,7 @@ public class SharedItemStateManager
                 // If enabled, check whether reference targets
                 // exist/were not removed
                 if (checkReferences) {
-                    checkReferentialIntegrity(local);
+                    checkReferentialIntegrity();
                 }
 
                 /**
@@ -940,6 +940,105 @@ public class SharedItemStateManager
             }
         }
 
+        /**
+         * Verifies that
+         * <ul>
+         * <li>no referenceable nodes are deleted if they are still being referenced</li>
+         * <li>targets of modified node references exist</li>
+         * </ul>
+         *
+         * @throws ReferentialIntegrityException if a new or modified REFERENCE
+         *                                       property refers to a non-existent
+         *                                       target or if a removed node is still
+         *                                       being referenced
+         * @throws ItemStateException            if another error occurs
+         */
+        private void checkReferentialIntegrity()
+                throws ReferentialIntegrityException, ItemStateException {
+
+            // check whether removed referenceable nodes are still being referenced
+            for (Iterator iter = local.deletedStates(); iter.hasNext();) {
+                ItemState state = (ItemState) iter.next();
+                if (state.isNode()) {
+                    NodeState node = (NodeState) state;
+                    if (isReferenceable(node)) {
+                        NodeReferencesId refsId = new NodeReferencesId(node.getNodeId());
+                        // either get node references from change log or
+                        // load from persistence manager
+                        NodeReferences refs = local.get(refsId);
+                        if (refs == null) {
+                            if (!hasNodeReferences(refsId)) {
+                                continue;
+                            }
+                            refs = getNodeReferences(refsId);
+                        }
+                        // in some versioning operations (such as restore) a node
+                        // may actually be deleted and then again added with the
+                        // same UUID, i.e. the node is still referenceable.
+                        if (refs.hasReferences() && !local.has(node.getNodeId())) {
+                            String msg = node.getNodeId()
+                                    + ": the node cannot be removed because it is still being referenced.";
+                            log.debug(msg);
+                            throw new ReferentialIntegrityException(msg);
+                        }
+                    }
+                }
+            }
+
+            // check whether targets of modified node references exist
+            for (Iterator iter = local.modifiedRefs(); iter.hasNext();) {
+                NodeReferences refs = (NodeReferences) iter.next();
+                NodeId id = refs.getTargetId();
+                // no need to check existence of target if there are no references
+                if (refs.hasReferences()) {
+                    // please note:
+                    // virtual providers are indirectly checked via 'hasItemState()'
+                    if (!local.has(id) && !hasItemState(id)) {
+                        String msg = "Target node " + id
+                                + " of REFERENCE property does not exist";
+                        log.debug(msg);
+                        throw new ReferentialIntegrityException(msg);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Determines whether the specified node is <i>referenceable</i>, i.e.
+         * whether the mixin type <code>mix:referenceable</code> is either
+         * directly assigned or indirectly inherited.
+         *
+         * @param state node state to check
+         * @return true if the specified node is <i>referenceable</i>, false otherwise.
+         * @throws ItemStateException if an error occurs
+         */
+        private boolean isReferenceable(NodeState state) throws ItemStateException {
+            // shortcut: check some well known built-in types first
+            Name primary = state.getNodeTypeName();
+            Set mixins = state.getMixinTypeNames();
+            if (mixins.contains(NameConstants.MIX_REFERENCEABLE)
+                    || mixins.contains(NameConstants.MIX_VERSIONABLE)
+                    || primary.equals(NameConstants.NT_RESOURCE)) {
+                return true;
+            }
+
+            // build effective node type
+            try {
+                EffectiveNodeType type = ntReg.getEffectiveNodeType(primary, mixins);
+                return type.includesNodeType(NameConstants.MIX_REFERENCEABLE);
+            } catch (NodeTypeConflictException ntce) {
+                String msg = "internal error: failed to build effective node type for node "
+                        + state.getNodeId();
+                log.debug(msg);
+                throw new ItemStateException(msg, ntce);
+            } catch (NoSuchNodeTypeException nsnte) {
+                String msg = "internal error: failed to build effective node type for node "
+                        + state.getNodeId();
+                log.debug(msg);
+                throw new ItemStateException(msg, nsnte);
+            }
+        }
+
     }
 
     /**
@@ -1289,106 +1388,6 @@ public class SharedItemStateManager
             state = persistMgr.load((PropertyId) id);
         }
         return state;
-    }
-
-    /**
-     * Determines whether the specified node is <i>referenceable</i>, i.e.
-     * whether the mixin type <code>mix:referenceable</code> is either
-     * directly assigned or indirectly inherited.
-     *
-     * @param state node state to check
-     * @return true if the specified node is <i>referenceable</i>, false otherwise.
-     * @throws ItemStateException if an error occurs
-     */
-    private boolean isReferenceable(NodeState state) throws ItemStateException {
-        // shortcut: check some well known built-in types first
-        Name primary = state.getNodeTypeName();
-        Set mixins = state.getMixinTypeNames();
-        if (mixins.contains(NameConstants.MIX_REFERENCEABLE)
-                || mixins.contains(NameConstants.MIX_VERSIONABLE)
-                || primary.equals(NameConstants.NT_RESOURCE)) {
-            return true;
-        }
-
-        // build effective node type
-        try {
-            EffectiveNodeType type = ntReg.getEffectiveNodeType(primary, mixins);
-            return type.includesNodeType(NameConstants.MIX_REFERENCEABLE);
-        } catch (NodeTypeConflictException ntce) {
-            String msg = "internal error: failed to build effective node type for node "
-                    + state.getNodeId();
-            log.debug(msg);
-            throw new ItemStateException(msg, ntce);
-        } catch (NoSuchNodeTypeException nsnte) {
-            String msg = "internal error: failed to build effective node type for node "
-                    + state.getNodeId();
-            log.debug(msg);
-            throw new ItemStateException(msg, nsnte);
-        }
-    }
-
-    /**
-     * Verifies that
-     * <ul>
-     * <li>no referenceable nodes are deleted if they are still being referenced</li>
-     * <li>targets of modified node references exist</li>
-     * </ul>
-     *
-     * @param changes change log
-     * @throws ReferentialIntegrityException if a new or modified REFERENCE
-     *                                       property refers to a non-existent
-     *                                       target or if a removed node is still
-     *                                       being referenced
-     * @throws ItemStateException            if another error occurs
-     */
-    protected void checkReferentialIntegrity(ChangeLog changes)
-            throws ReferentialIntegrityException, ItemStateException {
-
-        // check whether removed referenceable nodes are still being referenced
-        for (Iterator iter = changes.deletedStates(); iter.hasNext();) {
-            ItemState state = (ItemState) iter.next();
-            if (state.isNode()) {
-                NodeState node = (NodeState) state;
-                if (isReferenceable(node)) {
-                    NodeReferencesId refsId = new NodeReferencesId(node.getNodeId());
-                    // either get node references from change log or
-                    // load from persistence manager
-                    NodeReferences refs = changes.get(refsId);
-                    if (refs == null) {
-                        if (!hasNodeReferences(refsId)) {
-                            continue;
-                        }
-                        refs = getNodeReferences(refsId);
-                    }
-                    // in some versioning operations (such as restore) a node
-                    // may actually be deleted and then again added with the
-                    // same UUID, i.e. the node is still referenceable.
-                    if (refs.hasReferences() && !changes.has(node.getNodeId())) {
-                        String msg = node.getNodeId()
-                                + ": the node cannot be removed because it is still being referenced.";
-                        log.debug(msg);
-                        throw new ReferentialIntegrityException(msg);
-                    }
-                }
-            }
-        }
-
-        // check whether targets of modified node references exist
-        for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            NodeId id = refs.getTargetId();
-            // no need to check existence of target if there are no references
-            if (refs.hasReferences()) {
-                // please note:
-                // virtual providers are indirectly checked via 'hasItemState()'
-                if (!changes.has(id) && !hasItemState(id)) {
-                    String msg = "Target node " + id
-                            + " of REFERENCE property does not exist";
-                    log.debug(msg);
-                    throw new ReferentialIntegrityException(msg);
-                }
-            }
-        }
     }
 
     /**
