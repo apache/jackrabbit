@@ -128,7 +128,7 @@ public class XASessionImpl extends SessionImpl
         XAVersionManager versionMgr = (XAVersionManager) getVersionManager();
 
         /**
-         * Create array that contains all resources that paricipate in this
+         * Create array that contains all resources that participate in this
          * transactions. Some resources depend on each other, therefore you
          * should only change the sequence if you know what you are doing!
          *
@@ -137,12 +137,12 @@ public class XASessionImpl extends SessionImpl
          * acquires the write lock on the version manager in its prepare method,
          * while the end resource releases the write lock in either commit or
          * rollback. Please note that the write lock is only acquired if there
-         * is someting to commit by the version manager.
+         * is something to commit by the version manager.
          * For further information see JCR-335 and JCR-962.
          */
         txResources = new InternalXAResource[] {
             versionMgr.getXAResourceBegin(),
-            stateMgr, lockMgr, versionMgr,
+            versionMgr, stateMgr, lockMgr,
             versionMgr.getXAResourceEnd()
         };
         stateMgr.setVirtualProvider(versionMgr);
