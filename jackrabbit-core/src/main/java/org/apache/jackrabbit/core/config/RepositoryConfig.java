@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -45,6 +46,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Collection;
@@ -340,7 +343,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                         + "for default workspace: " + defaultWorkspace);
             }
             // create initial default workspace
-            createWorkspaceConfig(defaultWorkspace);
+            createWorkspaceConfig(defaultWorkspace, (StringBuffer)null);
         }
     }
 
@@ -460,12 +463,15 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      *
      * @param name workspace name
      * @param template the workspace template
+     * @param configContent optional stringbuffer that will have the content
+     *        of workspace configuration file written in
      * @return created workspace configuration
      * @throws ConfigurationException if creating the workspace configuration
      *                                failed
      */
     private synchronized WorkspaceConfig internalCreateWorkspaceConfig(String name,
-                                                                       Element template)
+                                                                       Element template,
+                                                                       StringBuffer configContent)
             throws ConfigurationException {
 
         // The physical workspace home directory on disk (TODO encode name?)
@@ -511,6 +517,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                 try {
                     // Create the directory
                     virtualFS.createFolder(configDir);
+
                     configWriter = new OutputStreamWriter(
                             virtualFS.getOutputStream(configFile));
                 } catch (FileSystemException e) {
@@ -537,8 +544,25 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                 TransformerFactory factory = TransformerFactory.newInstance();
                 Transformer transformer = factory.newTransformer();
                 transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                transformer.transform(
-                        new DOMSource(template), new StreamResult(configWriter));
+
+                if (configContent == null)
+                {
+                    transformer.transform(
+                            new DOMSource(template), new StreamResult(configWriter));
+                }
+                else
+                {
+                    StringWriter writer = new StringWriter();
+                    transformer.transform(
+                            new DOMSource(template), new StreamResult(writer));
+
+                    String s = writer.getBuffer().toString();
+                    configWriter.write(s);
+                    configContent.append(s);
+                }
+            } catch (IOException e) {
+                throw new ConfigurationException(
+                        "Cannot create a workspace configuration file", e);
             } catch (TransformerConfigurationException e) {
                 throw new ConfigurationException(
                         "Cannot create a workspace configuration writer", e);
@@ -585,14 +609,16 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      * the caller.
      *
      * @param name workspace name
+     * @param configContent optional StringBuffer that will have the content
+     *        of workspace configuration file written in
      * @return created workspace configuration
      * @throws ConfigurationException if creating the workspace configuration
      *                                failed
      */
-    public WorkspaceConfig createWorkspaceConfig(String name)
+    public WorkspaceConfig createWorkspaceConfig(String name, StringBuffer configContent)
             throws ConfigurationException {
         // use workspace template from repository.xml
-        return internalCreateWorkspaceConfig(name, template);
+        return internalCreateWorkspaceConfig(name, template, configContent);
     }
 
     /**
@@ -618,7 +644,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
             throws ConfigurationException {
         ConfigurationParser parser = new ConfigurationParser(new Properties());
         Element workspaceTemplate = parser.parseXML(template);
-        return internalCreateWorkspaceConfig(name, workspaceTemplate);
+        return internalCreateWorkspaceConfig(name, workspaceTemplate, null);
     }
 
     /**
