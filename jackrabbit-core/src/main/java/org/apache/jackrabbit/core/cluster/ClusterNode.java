@@ -16,43 +16,45 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.cluster.WorkspaceRecord.CreateWorkspaceAction;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.JournalConfig;
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.journal.AbstractJournal;
-import org.apache.jackrabbit.core.journal.Journal;
-import org.apache.jackrabbit.core.journal.RecordConsumer;
-import org.apache.jackrabbit.core.journal.Record;
-import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.InstanceRevision;
+import org.apache.jackrabbit.core.journal.Journal;
+import org.apache.jackrabbit.core.journal.JournalException;
+import org.apache.jackrabbit.core.journal.Record;
+import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.RecordProducer;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.uuid.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
-
-import javax.jcr.RepositoryException;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Collection;
 
 /**
  * Default clustered node implementation.
  */
 public class ClusterNode implements Runnable,
         NamespaceEventChannel, NodeTypeEventChannel, RecordConsumer,
-        ClusterRecordProcessor  {
+        ClusterRecordProcessor, WorkspaceEventChannel  {
 
     /**
      * System property specifying a node id to use.
@@ -68,11 +70,6 @@ public class ClusterNode implements Runnable,
      * Producer identifier.
      */
     private static final String PRODUCER_ID = "JR";
-
-    /**
-     * Default stop delay.
-     */
-    private static final long DEFAULT_STOP_DELAY = 5000;
 
     /**
      * Status constant.
@@ -159,6 +156,11 @@ public class ClusterNode implements Runnable,
      */
     private NamespaceEventListener namespaceListener;
 
+    /**
+     * Create workspace listener
+     */
+    private WorkspaceListener createWorkspaceListener;
+    
     /**
      * Node type listener.
      */
@@ -936,6 +938,58 @@ public class ClusterNode implements Runnable,
         } catch (RepositoryException e) {
             String msg = "Unable to deliver node type operation: " + e.getMessage();
             log.error(msg);
+        }
+    }
+
+    public void process(WorkspaceRecord record) {
+        if (createWorkspaceListener == null) {
+            String msg = "Create Workspace listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            if (record.getActionType() == WorkspaceRecord.CREATE_WORKSPACE_ACTION_TYPE) {
+                CreateWorkspaceAction action = record.getCreateWorkspaceAction();
+                createWorkspaceListener.externalWorkspaceCreated(record.getWorkspace(), action.getInputSource());
+            }
+        } catch (RepositoryException e) {
+            String msg = "Unable to create workspace: "
+                    + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    // -----------------------------------------------< CreateWorkspaceChannel >
+
+    public void setListener(WorkspaceListener listener) {
+        createWorkspaceListener = listener;
+    }
+
+    public void workspaceCreated(String workspaceName,
+            ClonedInputSource inputSource) {
+        if (status != STARTED) {
+            log.info("not started: namespace operation ignored.");
+            return;
+        }
+        ClusterRecord record = null;
+        boolean succeeded = false;
+
+        try {
+            record = new WorkspaceRecord(workspaceName, inputSource, producer.append());
+            record.write();
+            record.update();
+            setRevision(record.getRevision());
+            succeeded = true;
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        } finally {
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
+            }
         }
     }
 

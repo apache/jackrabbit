@@ -220,7 +220,7 @@ public class RepositoryConfigTest extends TestCase {
     public void testCreateWorkspaceConfig() throws Exception {
         RepositoryConfig config =
             RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-        config.createWorkspaceConfig("test-workspace");
+        config.createWorkspaceConfig("test-workspace", (StringBuffer)null);
         File workspaces_dir = new File(REPOSITORY_HOME, "workspaces");
         File workspace_dir = new File(workspaces_dir, "test-workspace");
         File workspace_xml = new File(workspace_dir, "workspace.xml");
@@ -231,7 +231,7 @@ public class RepositoryConfigTest extends TestCase {
         try {
             RepositoryConfig config =
                 RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-            config.createWorkspaceConfig("default");
+            config.createWorkspaceConfig("default", (StringBuffer)null);
             fail("No exception thrown when creating a duplicate workspace");
         } catch (ConfigurationException e) {
             // test passed
