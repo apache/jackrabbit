@@ -32,8 +32,6 @@ public interface RepositoryConfig {
 
     public RepositoryService getRepositoryService() throws RepositoryException;
 
-    public String getDefaultWorkspaceName();
-
     public CacheBehaviour getCacheBehaviour();
 
     public int getItemCacheSize();

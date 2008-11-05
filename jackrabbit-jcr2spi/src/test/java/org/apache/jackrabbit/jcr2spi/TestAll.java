@@ -96,6 +96,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ExternalModificationTest.class);
         suite.addTestSuite(IsSameTest.class);
 
+        // repository
+        suite.addTestSuite(LoginTest.class);
+        
         return suite;
     }
 }

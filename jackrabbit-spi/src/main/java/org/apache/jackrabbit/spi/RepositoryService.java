@@ -130,7 +130,8 @@ public interface RepositoryService {
      *
      * @param credentials the credentials of the user.
      * @param workspaceName the name of the workspace the <code>SessionInfo</code>
-     * should be built for.
+     * should be built for. If the specified workspaceName is <code>null</code>
+     * the implementation should select a default workspace.
      * @return a <code>SessionInfo</code> if authentication was successful.
      * @throws LoginException           if authentication of the user fails.
      * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>
@@ -146,7 +147,8 @@ public interface RepositoryService {
      *
      * @param sessionInfo for another workspace
      * @param workspaceName the name of the workspace the new <code>SessionInfo</code>
-     * should be built for.
+     * should be built for. If the specified workspaceName is <code>null</code>
+     * the implementation should select a default workspace.
      * @return a <code>SessionInfo</code> if authentication was successful.
      * @throws LoginException           if authentication of the user fails.
      * @throws NoSuchWorkspaceException if the specified <code>workspaceName</code>

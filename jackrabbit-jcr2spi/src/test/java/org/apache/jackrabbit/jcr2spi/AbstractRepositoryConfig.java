@@ -30,10 +30,6 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
 
     private static final int DEFAULT_ITEM_CACHE_SIZE = 5000;
 
-    public String getDefaultWorkspaceName() {
-        return null;
-    }
-
     public CacheBehaviour getCacheBehaviour() {
         return CacheBehaviour.INVALIDATE;
     }
