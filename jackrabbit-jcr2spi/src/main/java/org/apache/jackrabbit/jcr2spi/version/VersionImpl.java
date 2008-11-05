@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.NodeImpl;
-import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;

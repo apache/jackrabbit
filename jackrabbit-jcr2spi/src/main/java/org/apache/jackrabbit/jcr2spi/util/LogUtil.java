@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 
