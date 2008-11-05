@@ -111,6 +111,9 @@ public interface ItemResourceConstants {
      */
     public static final String XML_RELPATH = "relpath";
 
+    // name of the workspace for which the repository session has been created.
+    public static final DavPropertyName JCR_WORKSPACE_NAME = DavPropertyName.create("workspaceName", NAMESPACE);
+
     // general property names
     public static final DavPropertyName JCR_NAME = DavPropertyName.create("name", NAMESPACE);
     public static final DavPropertyName JCR_PATH = DavPropertyName.create("path", NAMESPACE);
@@ -119,7 +122,6 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_ISNEW = DavPropertyName.create("isnew", NAMESPACE);
     public static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create("ismodified", NAMESPACE);
     public static final DavPropertyName JCR_DEFINITION = DavPropertyName.create("definition", NAMESPACE);
-
 
     // property names used for resources representing jcr-nodes
     public static final DavPropertyName JCR_PRIMARYNODETYPE = DavPropertyName.create(XML_PRIMARYNODETYPE, NAMESPACE);
