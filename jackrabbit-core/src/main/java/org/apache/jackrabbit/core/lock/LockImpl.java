@@ -25,7 +25,7 @@ import javax.jcr.lock.LockException;
  * Implementation of a <code>Lock</code> that gets returned to clients asking
  * for a lock.
  */
-class LockImpl implements Lock {
+class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
 
     /**
      * Lock info containing latest information
@@ -54,6 +54,8 @@ class LockImpl implements Lock {
      * {@inheritDoc}
      */
     public String getLockOwner() {
+        // TODO:  TOBEFIXED for 2.0
+        // TODO   - respect ownerInfo supplied by the client -> see LockManager#lock
         return info.lockOwner;
     }
 
@@ -75,6 +77,14 @@ class LockImpl implements Lock {
      * {@inheritDoc}
      */
     public String getLockToken() {
+        // TODO: TOBEFIXED for 2.0
+        // TODO  - token must not be exposed for session-scoped locks (-> adjust tests and derived projects first)
+        // TODO  - openScoped tokens *may* be exposed even if session is not lock holder
+        /*
+        if (info.isSessionScoped()) {
+            return null;
+        }
+        */
         try {
             return info.getLockToken(node.getSession());
         } catch (RepositoryException e) {
@@ -108,18 +118,27 @@ class LockImpl implements Lock {
         if (getLockToken() == null) {
             throw new LockException("Session does not hold lock.");
         }
+        // TODO: TOBEFIXED for 2.0
+        // TODO  - add refresh if timeout is supported -> see #getSecondsRemaining
         // since a lock has no expiration date no other action is required
     }
 
     //--------------------------------------------------< new JSR 283 methods >
+
     /**
-     * Returns <code>true</code> if the current session is the owner of this
-     * lock, either because it is session-scoped and bound to this session or
-     * open-scoped and this session currently holds the token for this lock.
-     * Returns <code>false</code> otherwise.
+     * Always returns {@link Long#MAX_VALUE}.
      *
-     * @return a <code>boolean</code>.
-     * @since JCR 2.0
+     * @return Always returns {@link Long#MAX_VALUE}.
+     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
+     */
+    public long getSecondsRemaining() {
+        // TODO: TOBEFIXED for 2.0
+        // TODO  - add support for timeout specified by the API user -> LockManager#lock
+        return Long.MAX_VALUE;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
      */
     public boolean isLockOwningSession() {
         try {
