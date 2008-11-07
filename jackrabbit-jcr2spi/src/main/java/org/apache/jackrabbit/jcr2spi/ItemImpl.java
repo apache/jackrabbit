@@ -17,40 +17,39 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.operation.Remove;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.Remove;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateLifeCycleListener;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.Name;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.AccessDeniedException;
-import javax.jcr.Item;
-import javax.jcr.ItemVisitor;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.Repository;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import java.util.Map;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * <code>ItemImpl</code>...
@@ -61,8 +60,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
     private ItemState state;
 
-    // protected fields for VersionImpl and VersionHistoryImpl
-    protected ItemManager itemMgr;
+    /**
+     * The session that created this item.
+     */
     protected SessionImpl session;
 
     /**
@@ -70,11 +70,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     protected final Map listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
-    public ItemImpl(ItemManager itemManager, SessionImpl session, ItemState state,
+    public ItemImpl(SessionImpl session, ItemState state,
                     ItemLifeCycleListener[] listeners) {
         this.session = session;
-
-        this.itemMgr = itemManager;
         this.state = state;
 
         if (listeners != null) {
@@ -119,7 +117,11 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 throw new ItemNotFoundException();
             }
             Path ancestorPath = path.getAncestor(relDegree);
-            return itemMgr.getItem(ancestorPath);
+            if (relDegree == 0) {
+                return this;
+            } else {
+                return getItemManager().getNode(ancestorPath);
+            }
         } catch (PathNotFoundException pnfe) {
             throw new ItemNotFoundException();
         }
@@ -139,7 +141,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         }
 
         NodeEntry parentEntry = getItemState().getHierarchyEntry().getParent();
-        return (Node) itemMgr.getItem(parentEntry);
+        return (Node) getItemManager().getItem(parentEntry);
     }
 
     /**
@@ -315,25 +317,23 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
              * - Status#EXISTING : modifications reverted or saved
              * - Status#EXISTING_MODIFIED : transient modification
              * - Status#STALE_MODIFIED : external modifications while transient changes pending
+             * - Status#STALE_DESTROYED : external modifications while transient changes pending
              * - Status#MODIFIED : externaly modified -> marker for sessionISM states only
+             * - Status#EXISTING_REMOVED : transient removal
              */
             case Status.EXISTING:
             case Status.EXISTING_MODIFIED:
             case Status.STALE_MODIFIED:
+            case Status.STALE_DESTROYED:
             case Status.MODIFIED:
+            case Status.EXISTING_REMOVED:
                 break;
             /**
              * Notify listeners that this item is transiently or permanently
              * destroyed.
-             * - Status#EXISTING_REMOVED : transient removal
              * - Status#REMOVED : permanent removal. item will never get back to life
-             * - Status#STALE_DESTROYED : permanent removal. item will never get back to life
              */
-            case Status.EXISTING_REMOVED:
-                notifyDestroyed();
-                break;
             case Status.REMOVED:
-            case Status.STALE_DESTROYED:
                 state.removeListener(this);
                 notifyDestroyed();
                 break;
@@ -531,6 +531,15 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     protected ItemState getItemState() {
         return state;
+    }
+
+    /**
+     * Returns the ItemManager associated with this item's Session.
+     *
+     * @return ItemManager
+     */
+    protected ItemManager getItemManager() {
+        return session.getItemManager();
     }
 
     /**

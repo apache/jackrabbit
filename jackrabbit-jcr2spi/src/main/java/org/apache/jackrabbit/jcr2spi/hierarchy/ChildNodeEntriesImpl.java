@@ -35,8 +35,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.lang.ref.WeakReference;
 import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
@@ -104,6 +104,18 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         LinkedEntries.LinkNode ln = entries.getLinkNode(childEntry);
         LinkedEntries.LinkNode nextLn = (ln == null) ? null : ln.getNextLinkNode();
         return (nextLn == null) ? null : nextLn.getNodeEntry();
+    }
+
+    /**
+     * @param childEntry
+     * @return The node entry that directly preceeds the given <code>childEntry</code>
+     * or <code>null</code> if the given <code>childEntry</code> is the first
+     * or was not found in this <code>ChildNodeEntries</code>.
+     */
+    NodeEntry getPrevious(NodeEntry childEntry) {
+        LinkedEntries.LinkNode ln = entries.getLinkNode(childEntry);
+        LinkedEntries.LinkNode prevLn = (ln == null) ? null : ln.getPreviousLinkNode();
+        return (prevLn == null) ? null : prevLn.getNodeEntry();
     }
 
     /**
@@ -191,7 +203,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         }
         return Collections.unmodifiableList(l).iterator();
     }
-    
+
     /**
      * @see ChildNodeEntries#get(Name)
      */
@@ -367,6 +379,27 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             reorder(insertEntry.getName(), insertLN, beforeLN);
         }
         return previousBefore;
+    }
+
+    /**
+     * @see ChildNodeEntries#reorderAfter(NodeEntry, NodeEntry)
+     */
+    public void reorderAfter(NodeEntry insertEntry, NodeEntry afterEntry) {
+        // the link node to move
+        LinkedEntries.LinkNode insertLN = entries.getLinkNode(insertEntry);
+        if (insertLN == null) {
+            throw new NoSuchElementException();
+        }
+        // the link node where insertLN is ordered before
+        LinkedEntries.LinkNode afterLN = (afterEntry != null) ? entries.getLinkNode(afterEntry) : null;
+        if (afterEntry != null && afterLN == null) {
+            throw new NoSuchElementException();
+        }
+
+        LinkedEntries.LinkNode previousLN = insertLN.getPreviousLinkNode();
+        if (previousLN != afterLN) {
+            reorderAfter(insertLN, afterLN);
+        } // else: already in correct position. nothing to do
     }
 
     /**
@@ -652,6 +685,13 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
              */
             public LinkedEntries.LinkNode getNextLinkNode() {
                 return (LinkedEntries.LinkNode) super.getNextNode();
+            }
+
+            /**
+             * @return the next LinkNode.
+             */
+            public LinkedEntries.LinkNode getPreviousLinkNode() {
+                return (LinkedEntries.LinkNode) super.getPreviousNode();
             }
         }
 

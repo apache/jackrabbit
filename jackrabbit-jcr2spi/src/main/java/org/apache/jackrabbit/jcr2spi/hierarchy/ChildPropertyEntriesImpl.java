@@ -79,7 +79,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
     public Collection getPropertyEntries() {
         synchronized (properties) {
             Set entries = new HashSet(properties.size());
-            for (Iterator it = getPropertyNames().iterator(); it.hasNext();) {
+            for (Iterator it = properties.keySet().iterator(); it.hasNext();) {
                 Name propName = (Name) it.next();
                 entries.add(get(propName));
             }
@@ -91,15 +91,17 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      * @see ChildPropertyEntries#getPropertyNames()
      */
     public Collection getPropertyNames() {
-        return properties.keySet();
+        return Collections.unmodifiableCollection(properties.keySet());
     }
 
     /**
      * @see ChildPropertyEntries#add(PropertyEntry)
      */
     public void add(PropertyEntry propertyEntry) {
-        Reference ref = new WeakReference(propertyEntry);
-        properties.put(propertyEntry.getName(), ref);
+        synchronized (properties) {
+            Reference ref = new WeakReference(propertyEntry);
+            properties.put(propertyEntry.getName(), ref);
+        }
     }
 
     /**
@@ -118,13 +120,15 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      * @see ChildPropertyEntries#remove(PropertyEntry)
      */
     public boolean remove(PropertyEntry propertyEntry) {
-        Name pName = propertyEntry.getName();
-        PropertyEntry pe = get(pName);
-        if (pe == propertyEntry) {
-            properties.remove(pName);
-            return true;
-        } else {
-            return false;
+        synchronized (properties) {
+            Name pName = propertyEntry.getName();
+            PropertyEntry pe = get(pName);
+            if (pe == propertyEntry) {
+                properties.remove(pName);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 }

@@ -53,9 +53,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public static final int UNDEFINED_PROPERTY_LENGTH = -1;
 
-    public PropertyImpl(ItemManagerImpl itemManager, SessionImpl session,
-                        PropertyState state, ItemLifeCycleListener[] listeners) {
-        super(itemManager, session, state, listeners);
+    public PropertyImpl(SessionImpl session, PropertyState state, ItemLifeCycleListener[] listeners) {
+        super(session, state, listeners);
         // value will be read (and converted from qualified value) on demand.
     }
 

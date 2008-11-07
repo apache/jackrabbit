@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.NodeImpl;
-import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
@@ -58,10 +57,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     private final NodeEntry vhEntry;
     private final NodeEntry labelNodeEntry;
 
-    public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session,
-                              NodeState state, ItemLifeCycleListener[] listeners)
-        throws VersionException, RepositoryException {
-        super(itemMgr, session, state, listeners);
+    public VersionHistoryImpl(SessionImpl session, NodeState state, ItemLifeCycleListener[] listeners)
+            throws VersionException, RepositoryException {
+        super(session, state, listeners);
         this.vhEntry = (NodeEntry) state.getHierarchyEntry();
 
         // retrieve hierarchy entry of the jcr:versionLabels node
@@ -99,7 +97,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             log.error(msg);
             throw new RepositoryException(msg);
         }
-        return (Version) itemMgr.getItem(vEntry);
+        return (Version) getItemManager().getItem(vEntry);
     }
 
     /**
@@ -120,7 +118,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 versionEntries.add(entry);
             }
         }
-        return new LazyItemIterator(itemMgr, new RangeIteratorAdapter(versionEntries));
+        return new LazyItemIterator(getItemManager(), new RangeIteratorAdapter(versionEntries));
     }
 
     /**
@@ -134,7 +132,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
-        return (Version) itemMgr.getItem(vState.getHierarchyEntry());
+        return (Version) getItemManager().getItem(vState.getHierarchyEntry());
     }
 
     /**
@@ -378,7 +376,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         if (pEntry == null) {
             throw new VersionException("Version with label '" + qLabel + "' does not exist.");
         }
-        Node version = ((Property) itemMgr.getItem(pEntry)).getNode();
+        Node version = ((Property) getItemManager().getItem(pEntry)).getNode();
         return (Version) version;
     }
 

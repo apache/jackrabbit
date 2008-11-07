@@ -313,7 +313,7 @@ public class TransientItemStateManager implements ItemStateCreationListener {
         removedStates.add(state);
     }
 
-   /**
+    /**
      *
      * @param parent
      * @param state
@@ -321,26 +321,26 @@ public class TransientItemStateManager implements ItemStateCreationListener {
      */
     private static boolean containedInTree(ItemState parent, ItemState state) {
         HierarchyEntry he = state.getHierarchyEntry();
-       HierarchyEntry pHe = parent.getHierarchyEntry();
-       // short cuts first
-       if (he == pHe || he.getParent() == pHe) {
-           return true;
-       }
-       if (!parent.isNode() || he == pHe.getParent()) {
-           return false;
-       }
-       // none of the simple cases: walk up hierarchy
-       HierarchyEntry pe = he.getParent();
-       while (pe != null) {
-           if (pe == pHe) {
-               return true;
-           }
-           pe = pe.getParent();
-       }
+        HierarchyEntry pHe = parent.getHierarchyEntry();
+        // short cuts first
+        if (he == pHe || he.getParent() == pHe) {
+            return true;
+        }
+        if (!parent.isNode() || he == pHe.getParent()) {
+            return false;
+        }
+        // none of the simple cases: walk up hierarchy
+        HierarchyEntry pe = he.getParent();
+        while (pe != null) {
+            if (pe == pHe) {
+                return true;
+            }
+            pe = pe.getParent();
+        }
 
-       // state isn't descendant of 'parent'
-       return false;
-   }
+        // state isn't descendant of 'parent'
+        return false;
+    }
 
     //-----------------------------------------< ItemStateLifeCycleListener >---
     /**
@@ -404,14 +404,16 @@ public class TransientItemStateManager implements ItemStateCreationListener {
                         removed(state);
                         break;
                 }
+                // in any case: stop listening to status changes
+                state.removeListener(this);
                 break;
             case Status.STALE_DESTROYED:
             case Status.STALE_MODIFIED:
                 /**
-                state is stale due to external modification -> move it to
-                the collection of stale item states.
-                validation omitted for only 'existing_modified' states can
-                become stale see {@link Status#isValidStatusChange(int, int)}
+                 state is stale due to external modification -> move it to
+                 the collection of stale item states.
+                 validation omitted for only 'existing_modified' states can
+                 become stale see {@link Status#isValidStatusChange(int, int)}
                  */
                 modifiedStates.remove(state);
                 staleStates.add(state);

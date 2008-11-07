@@ -16,72 +16,71 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
-import org.apache.jackrabbit.jcr2spi.operation.AddNode;
-import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.Update;
-import org.apache.jackrabbit.jcr2spi.lock.LockManager;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
-import org.apache.jackrabbit.jcr2spi.util.StateUtility;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.jcr2spi.lock.LockManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.Update;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
+import org.apache.jackrabbit.jcr2spi.util.StateUtility;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemVisitor;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.PropertyType;
-import javax.jcr.NodeIterator;
-import javax.jcr.PropertyIterator;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.lock.LockException;
-import javax.jcr.lock.Lock;
-import javax.jcr.version.VersionException;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-
 import java.io.InputStream;
-import java.util.Calendar;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>NodeImpl</code>...
@@ -92,9 +91,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
     private Name primaryTypeName;
 
-    protected NodeImpl(ItemManager itemMgr, SessionImpl session,
-                       NodeState state, ItemLifeCycleListener[] listeners) {
-        super(itemMgr, session, state, listeners);
+    protected NodeImpl(SessionImpl session, NodeState state, ItemLifeCycleListener[] listeners) {
+        super(session, state, listeners);
         Name nodeTypeName = state.getNodeTypeName();
         // make sure the nodetype name is valid
         if (session.getNodeTypeManager().hasNodeType(nodeTypeName)) {
@@ -153,30 +151,28 @@ public class NodeImpl extends ItemImpl implements Node {
     public Node addNode(String relPath, String primaryNodeTypeName) throws ItemExistsException, PathNotFoundException, NoSuchNodeTypeException, LockException, VersionException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
         // 1. build qualified path and retrieve parent node
-        Path nodePath = getQPath(relPath);
+        Path nodePath = getQPath(relPath).getNormalizedPath();
         if (nodePath.getNameElement().getIndex() != Path.INDEX_UNDEFINED) {
             String msg = "Illegal subscript specified: " + relPath;
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        Path parentPath = nodePath.getAncestor(1);
+
         NodeImpl parentNode;
-        try {
-            Item parent = itemMgr.getItem(parentPath);
-            if (!parent.isNode()) {
+        if (nodePath.getLength() == 1) {
+            parentNode = this;
+        } else {
+            Path parentPath = nodePath.getAncestor(1);
+            ItemManager itemMgr = getItemManager();
+            if (itemMgr.nodeExists(parentPath)) {
+                parentNode = (NodeImpl) itemMgr.getNode(parentPath);
+            } else if (itemMgr.propertyExists(parentPath)) {
                 String msg = "Cannot add a node to property " + LogUtil.safeGetJCRPath(parentPath, session.getPathResolver());
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
-            } else if (!(parent instanceof NodeImpl)) {
-                // should never occur
-                String msg = "Incompatible Node object: " + parent + "(" + safeGetJCRPath() + ")";
-                log.debug(msg);
-                throw new RepositoryException(msg);
             } else {
-                parentNode = (NodeImpl) parent;
+                throw new PathNotFoundException("Cannot add a new node to a non-existing parent at " + LogUtil.safeGetJCRPath(parentPath, session.getPathResolver()));
             }
-        } catch (AccessDeniedException ade) {
-            throw new PathNotFoundException(relPath);
         }
 
         // 2. get qualified names for node and nt
@@ -401,7 +397,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new PathNotFoundException(relPath);
         }
         try {
-            return (Node) itemMgr.getItem(nodeEntry);
+            return (Node) getItemManager().getItem(nodeEntry);
         } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(relPath, e);
         }
@@ -415,7 +411,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // NOTE: Don't use a class derived from TraversingElementVisitor to traverse
         // the child nodes because this would lead to an infinite recursion.
         try {
-            return itemMgr.getChildNodes(getNodeEntry());
+            return getItemManager().getChildNodes(getNodeEntry());
         } catch (ItemNotFoundException infe) {
             String msg = "Failed to list the child nodes of " + safeGetJCRPath();
             log.debug(msg);
@@ -448,7 +444,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new PathNotFoundException(relPath);
         }
         try {
-            return (Property) itemMgr.getItem(entry);
+            return (Property) getItemManager().getItem(entry);
         } catch (AccessDeniedException e) {
             throw new PathNotFoundException(relPath);
         } catch (ItemNotFoundException e) {
@@ -462,7 +458,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyIterator getProperties() throws RepositoryException {
         checkStatus();
         try {
-            return itemMgr.getChildProperties(getNodeEntry());
+            return getItemManager().getChildProperties(getNodeEntry());
         } catch (ItemNotFoundException infe) {
             String msg = "Failed to list the child properties of " + getPath();
             log.debug(msg);
@@ -534,7 +530,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyIterator getReferences() throws RepositoryException {
         checkStatus();
         List refs = Arrays.asList(getNodeState().getNodeReferences());
-        return new LazyItemIterator(itemMgr, session.getHierarchyManager(), refs.iterator());
+        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
     }
 
     /**
@@ -543,7 +539,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean hasNode(String relPath) throws RepositoryException {
         checkStatus();
         NodeEntry nodeEntry = resolveRelativeNodePath(relPath);
-        return (nodeEntry != null) && itemMgr.itemExists(nodeEntry);
+        return (nodeEntry != null) && getItemManager().itemExists(nodeEntry);
     }
 
     /**
@@ -552,7 +548,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean hasProperty(String relPath) throws RepositoryException {
         checkStatus();
         PropertyEntry childEntry = resolveRelativePropertyPath(relPath);
-        return (childEntry != null) && itemMgr.itemExists(childEntry);
+        return (childEntry != null) && getItemManager().itemExists(childEntry);
     }
 
     /**
@@ -571,7 +567,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasNodes() throws RepositoryException {
         checkStatus();
-        return itemMgr.hasChildNodes(getNodeEntry());
+        return getItemManager().hasChildNodes(getNodeEntry());
     }
 
     /**
@@ -579,7 +575,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public boolean hasProperties() throws RepositoryException {
         checkStatus();
-        return itemMgr.hasChildProperties(getNodeEntry());
+        return getItemManager().hasChildProperties(getNodeEntry());
     }
 
     /**
@@ -755,7 +751,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsLocked();
         if (isCheckedOut()) {
             NodeEntry newVersion = session.getVersionManager().checkin(getNodeState());
-            return (Version) itemMgr.getItem(newVersion);
+            return (Version) getItemManager().getItem(newVersion);
         } else {
             // nothing to do
             log.debug("Node " + safeGetJCRPath() + " is already checked in.");
@@ -870,7 +866,7 @@ public class NodeImpl extends ItemImpl implements Node {
         session.checkAccessibleWorkspace(srcWorkspace);
 
         Iterator failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
-        return new LazyItemIterator(itemMgr, session.getHierarchyManager(), failedIds);
+        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), failedIds);
     }
 
     /**
@@ -895,7 +891,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // otherwise access referenceable ancestor and calcuate correspond. path.
             String correspondingPath;
             if (referenceableNode.getDepth() == Path.ROOT_DEPTH) {
-                if (!srcSession.getItemManager().itemExists(getQPath())) {
+                if (!srcSession.getItemManager().nodeExists(getQPath())) {
                     throw new ItemNotFoundException("No corresponding path found in workspace " + workspaceName + "(" + safeGetJCRPath() + ")");
                 } else {
                     correspondingPath = getPath();
@@ -970,17 +966,16 @@ public class NodeImpl extends ItemImpl implements Node {
             // node at 'relPath' does not yet exist -> build the NodeId
             Path nPath = getQPath(relPath);
             Path parentPath = nPath.getAncestor(1);
-            if (itemMgr.itemExists(parentPath)) {
-                Item parent = itemMgr.getItem(parentPath);
-                if (parent.isNode()) {
-                    Path relQPath = parentPath.computeRelativePath(nPath);
-                    NodeImpl parentNode = ((NodeImpl)parent);
-                    // call the restore
-                    restore(parentNode, relQPath, version, removeExisting);
-                } else {
-                    // the item at parentParentPath is Property
-                    throw new ConstraintViolationException("Cannot restore to a parent presenting a property (relative path = '" + relPath + "'");
-                }
+            ItemManager itemMgr = getItemManager();
+            if (itemMgr.nodeExists(parentPath)) {
+                Node parent = itemMgr.getNode(parentPath);
+                Path relQPath = parentPath.computeRelativePath(nPath);
+                NodeImpl parentNode = ((NodeImpl)parent);
+                // call the restore
+                restore(parentNode, relQPath, version, removeExisting);
+            } else if (itemMgr.propertyExists(parentPath)) {
+                // the item at parentParentPath is Property
+                throw new ConstraintViolationException("Cannot restore to a parent presenting a property (relative path = '" + relPath + "'");
             } else {
                 // although the node itself must not exist, is direct ancestor must.
                 throw new PathNotFoundException("Cannot restore to relative path '" + relPath + ": Ancestor does not exist.");
@@ -1273,7 +1268,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // finally retrieve the new node
         List addedStates = ((AddNode) an).getAddedStates();
-        return (Node) itemMgr.getItem(((NodeState) addedStates.get(0)).getHierarchyEntry());
+        ItemState nState = (ItemState) addedStates.get(0);
+        return (Node) getItemManager().getItem(nState.getHierarchyEntry());
     }
 
     /**
@@ -1291,7 +1287,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (pEntry == null) {
                 throw new PathNotFoundException(qName.toString());
             }
-            return (Property) itemMgr.getItem(pEntry);
+            return (Property) getItemManager().getItem(pEntry);
         } catch (AccessDeniedException e) {
             throw new PathNotFoundException(qName.toString());
         }
@@ -1539,10 +1535,7 @@ public class NodeImpl extends ItemImpl implements Node {
             } else {
                 // rp length > 1
                 Path p = getQPath(rp);
-                HierarchyEntry entry = session.getHierarchyManager().getHierarchyEntry(p.getCanonicalPath());
-                if (entry.denotesNode()) {
-                    targetEntry = (NodeEntry) entry;
-                } // else:  not a node
+                targetEntry = session.getHierarchyManager().getNodeEntry(p.getCanonicalPath());
             }
         } catch (PathNotFoundException e) {
             // item does not exist -> ignore and return null
@@ -1581,10 +1574,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 // build and resolve absolute path
                 Path p = getQPath(rp).getCanonicalPath();
                 try {
-                    HierarchyEntry entry = session.getHierarchyManager().getHierarchyEntry(p);
-                    if (!entry.denotesNode()) {
-                        targetEntry = (PropertyEntry) entry;
-                    } // else: not a property
+                    targetEntry = session.getHierarchyManager().getPropertyEntry(p);
                 } catch (PathNotFoundException e) {
                     // ignore -> return null;
                 }

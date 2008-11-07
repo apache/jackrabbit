@@ -324,17 +324,12 @@ public class LockManagerImpl implements LockManager, SessionListener {
         if (lockNodeId.equals(nId)) {
             lockHoldingState = nodeState;
         } else {
-            HierarchyEntry lockedEntry = wspManager.getHierarchyManager().getHierarchyEntry(lockNodeId);
-            if (lockedEntry.denotesNode()) {
-                try {
-                    lockHoldingState = ((NodeEntry) lockedEntry).getNodeState();
-                } catch (RepositoryException e) {
-                    log.warn("Cannot build LockState");
-                    throw new RepositoryException("Cannot build LockState", e);
-                }
-            } else {
-                // should never occur
-                throw new RepositoryException("Internal error: NodeId points to a Property.");
+            NodeEntry lockedEntry = wspManager.getHierarchyManager().getNodeEntry(lockNodeId);
+            try {
+                lockHoldingState = ((NodeEntry) lockedEntry).getNodeState();
+            } catch (RepositoryException e) {
+                log.warn("Cannot build LockState");
+                throw new RepositoryException("Cannot build LockState", e);
             }
         }
 
@@ -547,7 +542,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 try {
                     if (!lockHoldingState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
                         // force reloading of the lock holding node.
-                        itemManager.getItem(lockHoldingState.getNodeEntry().getPath());
+                        itemManager.getItem(lockHoldingState.getNodeEntry());
                     }
                     PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
                     ps.addListener(this);
