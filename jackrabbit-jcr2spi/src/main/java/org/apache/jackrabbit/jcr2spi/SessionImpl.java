@@ -16,48 +16,48 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.commons.AbstractSession;
+import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
-import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
-import org.apache.jackrabbit.jcr2spi.xml.SessionImporter;
-import org.apache.jackrabbit.jcr2spi.xml.Importer;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
-import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.jcr2spi.state.SessionItemStateManager;
+import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
+import org.apache.jackrabbit.jcr2spi.xml.Importer;
+import org.apache.jackrabbit.jcr2spi.xml.SessionImporter;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.XASessionInfo;
-import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.XASessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -82,12 +82,11 @@ import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.parsers.SAXParser;
+import javax.jcr.version.VersionException;
 import javax.xml.parsers.ParserConfigurationException;
-
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.AccessControlException;
@@ -248,8 +247,8 @@ public class SessionImpl extends AbstractSession
         // check sanity of this session
         checkIsAlive();
         try {
-            HierarchyEntry hierarchyEntry = getHierarchyManager().getHierarchyEntry(id);
-            Item item = getItemManager().getItem(hierarchyEntry);
+            NodeEntry nodeEntry = getHierarchyManager().getNodeEntry(id);
+            Item item = getItemManager().getItem(nodeEntry);
             if (item.isNode()) {
                 return (Node) item;
             } else {
@@ -267,8 +266,13 @@ public class SessionImpl extends AbstractSession
     public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         checkIsAlive();
         try {
-            Path qPath = getQPath(absPath);
-            return getItemManager().getItem(qPath.getNormalizedPath());
+            Path qPath = getQPath(absPath).getNormalizedPath();
+            ItemManager itemMgr = getItemManager();
+            if (itemMgr.nodeExists(qPath)) {
+                return itemMgr.getNode(qPath);
+            } else {
+                return itemMgr.getProperty(qPath);
+            }
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(absPath);
         }
@@ -279,8 +283,9 @@ public class SessionImpl extends AbstractSession
      */
     public boolean itemExists(String absPath) throws RepositoryException {
         checkIsAlive();
-        Path qPath = getQPath(absPath);
-        return getItemManager().itemExists(qPath.getNormalizedPath());
+        Path qPath = getQPath(absPath).getNormalizedPath();
+        ItemManager itemMgr = getItemManager();
+        return (itemMgr.nodeExists(qPath)) ? true : itemMgr.propertyExists(qPath);
     }
 
     /**
@@ -346,19 +351,19 @@ public class SessionImpl extends AbstractSession
 
         boolean isGranted;
         // The given abs-path may point to a non-existing item
-        if (itemExists(absPath)) {
-            ItemState itemState = getHierarchyManager().getItemState(targetPath);
-            isGranted = getAccessManager().isGranted(itemState, actionsArr);
+        if (itemManager.nodeExists(targetPath)) {
+            NodeState nState = getHierarchyManager().getNodeState(targetPath);
+            isGranted = getAccessManager().isGranted(nState, actionsArr);
+        } else if (itemManager.propertyExists(targetPath)) {
+            PropertyState pState = getHierarchyManager().getPropertyState(targetPath);
+            isGranted = getAccessManager().isGranted(pState, actionsArr);
         } else {
             NodeState parentState = null;
             Path parentPath = targetPath;
             while (parentState == null) {
                 parentPath = parentPath.getAncestor(1);
-                if (itemManager.itemExists(parentPath)) {
-                    ItemState itemState = getHierarchyManager().getItemState(parentPath);
-                    if (itemState.isNode()) {
-                        parentState = (NodeState) itemState;
-                    }
+                if (itemManager.nodeExists(parentPath)) {
+                    parentState = getHierarchyManager().getNodeState(parentPath);
                 }
             }
             // parentState is the nearest existing nodeState or the root state.
@@ -738,9 +743,9 @@ public class SessionImpl extends AbstractSession
      * @return the NodeState associated with the specified version.
      */
     NodeState getVersionState(Version version) throws RepositoryException {
-        ItemState itemState;
+        NodeState nodeState;
         if (version.getSession() == this) {
-            itemState = ((NodeImpl) version).getItemState();
+            nodeState = (NodeState) ((NodeImpl) version).getItemState();
         } else {
             Path p = getQPath(version.getPath());
             Path parentPath = p.getAncestor(1);
@@ -749,9 +754,9 @@ public class SessionImpl extends AbstractSession
                 // make sure the parent entry is up to date
                 parentEntry.invalidate(false);
             }
-            itemState = getHierarchyManager().getItemState(p);
+            nodeState = getHierarchyManager().getNodeState(p);
         }
-        return (NodeState) itemState;
+        return nodeState;
     }
     //------------------------------------------------------< check methods >---
     /**

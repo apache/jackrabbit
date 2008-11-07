@@ -89,16 +89,29 @@ public interface NodeEntry extends HierarchyEntry {
     /**
      * Traverse the tree below this entry and return the child entry matching
      * the given path. If that entry has not been loaded yet, try to do so.
-     * NOTE: In contrast to 'getNodeEntry', getNodeEntries, getPropertyEntry
-     * and getPropertyEntries this method may return invalid entries, i.e.
-     * entries connected to a removed or stale ItemState.
+     * NOTE: In contrast to getNodeEntry, getNodeEntries this method may return
+     * invalid entries, i.e. entries connected to a removed or stale ItemState.
      *
      * @param path
      * @return the entry at the given path.
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public HierarchyEntry getDeepEntry(Path path) throws PathNotFoundException, RepositoryException;
+    public NodeEntry getDeepNodeEntry(Path path) throws PathNotFoundException, RepositoryException;
+
+    /**
+     * Traverse the tree below this entry and return the child entry matching
+     * the given path. If that entry has not been loaded yet, try to do so.
+     * NOTE: In contrast to getPropertyEntry and getPropertyEntries this method
+     * may return invalid entries, i.e. entries connected to a removed or stale
+     * ItemState.
+     *
+     * @param path
+     * @return the property entry at the given path.
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public PropertyEntry getDeepPropertyEntry(Path path) throws PathNotFoundException, RepositoryException;
 
     /**
      * Traverse the tree below this entry and return the child entry matching

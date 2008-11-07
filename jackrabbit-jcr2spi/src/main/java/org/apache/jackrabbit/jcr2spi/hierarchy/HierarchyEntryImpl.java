@@ -28,6 +28,7 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.lang.ref.WeakReference;
+import java.lang.ref.Reference;
 
 /**
  * <code>HierarchyEntryImpl</code> implements base functionality for child node
@@ -40,7 +41,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     /**
      * Cached weak reference to the target ItemState.
      */
-    private WeakReference target;
+    private Reference target;
 
     /**
      * The name of the target item state.
@@ -269,7 +270,9 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 break;
             case Status.NEW:
                 // reverting a NEW state is equivalent to its removal.
-                // however: don't remove the complete hierarchy
+                // however: no need remove the complete hierarchy as revert is
+                // always related to Item#refresh(false) which affects the
+                // complete tree (and all add-operations within it) anyway.
                 state.setStatus(Status.REMOVED);
                 parent.internalRemoveChildEntry(this);
                 break;
@@ -359,6 +362,40 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 throw new InvalidItemStateException("Item has already been removed by someone else. Status = " + Status.getName(state.getStatus()));
             default:
                 throw new RepositoryException("Cannot transiently remove an ItemState with status " + Status.getName(state.getStatus()));
+        }
+    }
+
+    /**
+     * @see HierarchyEntry#remove()
+     */
+    public void remove() {
+        internalRemove(false);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     *
+     * @param keepNew
+     */
+    void internalRemove(boolean staleParent) {
+        ItemState state = internalGetItemState();
+        int status = getStatus();
+        if (state != null) {
+            if (status == Status.EXISTING_MODIFIED) {
+                state.setStatus(Status.STALE_DESTROYED);
+            } else if (status == Status.NEW && staleParent) {
+                // keep status NEW
+            } else {
+                state.setStatus(Status.REMOVED);
+                if (!staleParent) {
+                    parent.internalRemoveChildEntry(this);
+                }
+            }
+        } else {
+            // unresolved
+            if (!staleParent) {
+                parent.internalRemoveChildEntry(this);
+            }
         }
     }
 }

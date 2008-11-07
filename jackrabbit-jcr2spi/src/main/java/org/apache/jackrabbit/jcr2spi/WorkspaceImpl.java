@@ -16,67 +16,66 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
-import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
-import org.apache.jackrabbit.jcr2spi.operation.Move;
-import org.apache.jackrabbit.jcr2spi.operation.Copy;
-import org.apache.jackrabbit.jcr2spi.operation.Clone;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
-import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.apache.jackrabbit.jcr2spi.lock.LockManager;
-import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
-import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.jcr2spi.version.VersionManagerImpl;
-import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.jcr2spi.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.jcr2spi.operation.Clone;
+import org.apache.jackrabbit.jcr2spi.operation.Copy;
+import org.apache.jackrabbit.jcr2spi.operation.Move;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
+import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
+import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.version.VersionManagerImpl;
+import org.apache.jackrabbit.jcr2spi.xml.WorkspaceContentHandler;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
-import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.query.QueryManager;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.version.Version;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.Workspace;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidSerializedDataException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Repository;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.ValueFactory;
-import java.io.InputStream;
+import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.observation.ObservationManager;
+import javax.jcr.query.QueryManager;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * <code>WorkspaceImpl</code>...
@@ -314,17 +313,14 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
 
         Path parentPath = session.getQPath(parentAbsPath);
-        ItemState parentState = getHierarchyManager().getItemState(parentPath);
-        if (parentState.isNode()) {
-            // make sure the given import target is accessible, not locked and checked out.
-            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-            getValidator().checkIsWritable((NodeState) parentState, options);
+        NodeState parentState = getHierarchyManager().getNodeState(parentPath);
 
-            // build the content handler
-            return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);
-        } else {
-            throw new PathNotFoundException("No node at path " + parentAbsPath);
-        }
+        // make sure the given import target is accessible, not locked and checked out.
+        int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+        getValidator().checkIsWritable((NodeState) parentState, options);
+
+        // build the content handler
+        return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);
     }
 
     /**
@@ -339,18 +335,13 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         session.checkIsAlive();
 
         Path parentPath = session.getQPath(parentAbsPath);
-        ItemState itemState = getHierarchyManager().getItemState(parentPath);
-        if (itemState.isNode()) {
-            // make sure the given import target is accessible, not locked and checked out.
-            NodeState parentState = (NodeState) itemState;
-            int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-            getValidator().checkIsWritable(parentState, options);
+        NodeState parentState = getHierarchyManager().getNodeState(parentPath);
+        // make sure the given import target is accessible, not locked and checked out.
+        int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
+        getValidator().checkIsWritable(parentState, options);
 
-            // run the import
-            wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
-        } else {
-            throw new PathNotFoundException("No node at path " + parentAbsPath);
-        }
+        // run the import
+        wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
     }
 
     //----------------------------------------------------< ManagerProvider >---

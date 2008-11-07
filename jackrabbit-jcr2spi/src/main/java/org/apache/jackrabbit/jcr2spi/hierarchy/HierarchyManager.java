@@ -16,13 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PropertyId;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
 
 /**
  * <code>HierarchyManager</code>...
@@ -45,9 +48,10 @@ public interface HierarchyManager {
      * if a entry (or any of its ancestors) has been transiently moved or
      * reordered.<p/>
      * If the Hierarchy already lists the entry with the given workspaceItemId it is
-     * returned otherwise <code>null</code>. See {@link #getHierarchyEntry(ItemId)}
-     * for a method that resolves the ItemId including lookup in the persistence
-     * layer if the entry has not been loaded yet.
+     * returned otherwise <code>null</code>. See {@link #getNodeEntry(NodeId)}
+     * or {@link #getPropertyEntry(PropertyId)} for methods that resolves the
+     * ItemId including lookup in the persistence layer if the entry has not been
+     * loaded yet.
      *
      * @param workspaceItemId
      * @return
@@ -59,9 +63,9 @@ public interface HierarchyManager {
      * if a entry (or any of its ancestors) has been transiently moved or
      * reordered.<p/>
      * If the Hierarchy already lists the entry with the given path it is
-     * returned otherwise <code>null</code>. See {@link #getHierarchyEntry(Path)}
-     * for a method that resolves the ItemId including lookup in the persistence
-     * layer if the entry has not been loaded yet.
+     * returned otherwise <code>null</code>. See {@link #getNodeEntry(Path)}
+     * or {@link #getPropertyEntry(Path)} for methods that resolves the path
+     * including lookup in the persistence layer if the entry has not been loaded yet.
      *
      * @param workspaceItemId
      * @return
@@ -71,33 +75,64 @@ public interface HierarchyManager {
     /**
      * Resolves a itemId into a <code>HierarchyEntry</code>.
      *
-     * @param itemId
+     * @param nodeId
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public HierarchyEntry getHierarchyEntry(ItemId itemId) throws ItemNotFoundException, RepositoryException;
+    public NodeEntry getNodeEntry(NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Resolves a path into a <code>HierarchyEntry</code>.
+     * Resolves a path into a <code>NodeEntry</code>.
      *
      * @param qPath
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public HierarchyEntry getHierarchyEntry(Path qPath) throws PathNotFoundException, RepositoryException;
+    public NodeEntry getNodeEntry(Path qPath) throws PathNotFoundException, RepositoryException;
 
     /**
-     * Retrieves the <code>HierarchyEntry</code> corresponding to the given
-     * path and resolves it to the underlying <code>ItemState</code>.
+     * Resolves a propertyId into a <code>PropertyEntry</code>.
+     *
+     * @param propertyId
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public PropertyEntry getPropertyEntry(PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
+
+    /**
+     * Resolves a path into a <code>PropertyEntry</code>.
      *
      * @param qPath
      * @return
      * @throws PathNotFoundException
      * @throws RepositoryException
      */
-    public ItemState getItemState(Path qPath) throws PathNotFoundException, RepositoryException;
+    public PropertyEntry getPropertyEntry(Path qPath) throws PathNotFoundException, RepositoryException;
+
+     /**
+     * Retrieves the <code>NodeEntry</code> corresponding to the given
+     * path and resolves it to the underlying <code>NodeState</code>.
+     *
+     * @param qPath
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public NodeState getNodeState(Path qPath) throws PathNotFoundException, RepositoryException;
+
+     /**
+     * Retrieves the <code>PropertyEntry</code> corresponding to the given
+     * path and resolves it to the underlying <code>PropertyState</code>.
+     *
+     * @param qPath
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    public PropertyState getPropertyState(Path qPath) throws PathNotFoundException, RepositoryException;
 
     /**
      * Returns the depth of the specified item. The depth reflects the

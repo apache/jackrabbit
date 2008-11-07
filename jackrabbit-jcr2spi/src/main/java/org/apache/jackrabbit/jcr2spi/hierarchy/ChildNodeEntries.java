@@ -147,4 +147,19 @@ public interface ChildNodeEntries {
      * in this <code>ChildNodeEntries</code>.
      */
     NodeEntry reorder(NodeEntry insertEntry, NodeEntry beforeEntry);
+
+    /**
+     * Reorders an existing <code>NodeEntry</code> after another
+     * <code>NodeEntry</code>. If <code>afterEntry</code> is
+     * <code>null</code> <code>insertEntry</code> is moved to the beginning of
+     * the child node entries.
+     *
+     * @param insertEntry the NodeEntry to move.
+     * @param afterEntry the NodeEntry where <code>insertEntry</code> is
+     * reordered behind.
+     * @throws NoSuchElementException if <code>insertEntry</code> or
+     * <code>afterEntry</code> does not have a <code>NodeEntry</code>
+     * in this <code>ChildNodeEntries</code>.
+     */
+    void reorderAfter(NodeEntry insertEntry, NodeEntry afterEntry);
 }
