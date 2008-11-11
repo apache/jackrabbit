@@ -2096,11 +2096,14 @@ public class RepositoryImpl extends AbstractRepository
         /**
          * {@inheritDoc}
          */
-        public void externalUpdate(ChangeLog external, List events) throws RepositoryException {
+        public void externalUpdate(ChangeLog external,
+                                   List events,
+                                   long timestamp) throws RepositoryException {
             try {
                 EventStateCollection esc = new EventStateCollection(
                         getObservationDispatcher(), null, null);
                 esc.addAll(events);
+                esc.setTimestamp(timestamp);
 
                 getItemStateProvider().externalUpdate(external, esc);
             } catch (IllegalStateException e) {

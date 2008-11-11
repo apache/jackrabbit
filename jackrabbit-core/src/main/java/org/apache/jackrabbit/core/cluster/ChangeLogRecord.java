@@ -43,6 +43,11 @@ import org.apache.jackrabbit.spi.Path;
 public class ChangeLogRecord extends ClusterRecord {
 
     /**
+     * Identifier: DATE
+     */
+    static final char DATE_IDENTIFIER = 'D';
+
+    /**
      * Identifier: NODE.
      */
     static final char NODE_IDENTIFIER = 'N';
@@ -78,6 +83,11 @@ public class ChangeLogRecord extends ClusterRecord {
     private ChangeLog changes;
 
     /**
+     * The time when the changes happened. Milliseconds since January 1 1970 UTC.
+     */
+    private long timestamp = System.currentTimeMillis();
+
+    /**
      * List of <code>EventState</code>s.
      */
     private List events;
@@ -96,7 +106,7 @@ public class ChangeLogRecord extends ClusterRecord {
      * Create a new instance of this class. Used when serializing.
      *
      * @param changes changes
-     * @param list of <code>EventState</code>s
+     * @param events list of <code>EventState</code>s
      * @param record record
      * @param workspace workspace
      */
@@ -131,6 +141,9 @@ public class ChangeLogRecord extends ClusterRecord {
 
         while (identifier != END_MARKER) {
             switch (identifier) {
+            case DATE_IDENTIFIER:
+                readTimestampRecord();
+                break;
             case NODE_IDENTIFIER:
                 readNodeRecord();
                 break;
@@ -155,6 +168,15 @@ public class ChangeLogRecord extends ClusterRecord {
         // This record type uses the end marker itself to indicate that
         // no more node/property/event records are available, so
         // do not try read it twice
+    }
+
+    /**
+     * Reads the timestamp record.
+     *
+     * @throws JournalException if an error occurs.
+     */
+    private void readTimestampRecord() throws JournalException {
+        timestamp = record.readLong();
     }
 
     /**
@@ -288,6 +310,7 @@ public class ChangeLogRecord extends ClusterRecord {
      * {@inheritDoc}
      */
     protected void doWrite() throws JournalException {
+        writeTimestampRecord();
         Iterator deletedStates = changes.deletedStates();
         while (deletedStates.hasNext()) {
             ItemState state = (ItemState) deletedStates.next();
@@ -321,6 +344,16 @@ public class ChangeLogRecord extends ClusterRecord {
             EventState event = (EventState) iter.next();
             writeEventRecord(event);
         }
+    }
+
+    /**
+     * Writes the timestamp record.
+     *
+     * @throws JournalException if an error occurs.
+     */
+    private void writeTimestampRecord() throws JournalException {
+        record.writeChar(DATE_IDENTIFIER);
+        record.writeLong(timestamp);
     }
 
     /**
@@ -397,9 +430,17 @@ public class ChangeLogRecord extends ClusterRecord {
      * Return the events.
      *
      * @return events
-     * @return
      */
     public List getEvents() {
         return Collections.unmodifiableList(events);
+    }
+
+    /**
+     * Returns the timestamp.
+     *
+     * @return the timestamp.
+     */
+    public long getTimestamp() {
+        return timestamp;
     }
 }

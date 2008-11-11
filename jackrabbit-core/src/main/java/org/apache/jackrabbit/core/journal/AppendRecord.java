@@ -205,6 +205,20 @@ public class AppendRecord extends AbstractRecord {
     /**
      * {@inheritDoc}
      */
+    public void writeLong(long n) throws JournalException {
+        checkOutput();
+
+        try {
+            dataOut.writeLong(n);
+        } catch (IOException e) {
+            String msg = "I/O error while writing long.";
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void writeString(String s) throws JournalException {
         checkOutput();
 
@@ -383,6 +397,10 @@ public class AppendRecord extends AbstractRecord {
     }
 
     public int readInt() throws JournalException {
+        throw unsupported();
+    }
+
+    public long readLong() throws JournalException {
         throw unsupported();
     }
 

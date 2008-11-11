@@ -116,7 +116,7 @@ public class UpdateEventFactory {
         events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED));
         events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3"));
 
-        return new UpdateEvent(changes, events);
+        return new UpdateEvent(changes, events, System.currentTimeMillis());
     }
 
 
@@ -139,6 +139,7 @@ public class UpdateEventFactory {
      *
      * @param parentId parent node id
      * @param name property name
+     * @return property state.
      */
     protected PropertyState createPropertyState(NodeId parentId, String name) {
         Name propName = nameFactory.create(name);
@@ -176,9 +177,9 @@ public class UpdateEventFactory {
     /**
      * Create an event state for a property operation.
      *
-     * @param n node state
+     * @param p property state
+     * @param parent parent node state
      * @param type <code>Event.NODE_ADDED</code> or <code>Event.NODE_REMOVED</code>
-     * @param name property name
      * @return event state
      */
     protected EventState createEventState(PropertyState p, NodeState parent, int type) {

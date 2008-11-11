@@ -57,4 +57,11 @@ public interface Update {
      */
     List getEvents();
 
+    /**
+     * Returns the timestamp whe this update occured.
+     *
+     * @return the timestamp whe this update occured.
+     */
+    long getTimestamp();
+
 }

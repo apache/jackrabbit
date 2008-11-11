@@ -81,6 +81,14 @@ public interface Record {
     int readInt() throws JournalException;
 
     /**
+     * Read a long from the underlying stream.
+     *
+     * @return long value.
+     * @throws JournalException if an error occurs
+     */
+    long readLong() throws JournalException;
+
+    /**
      * Read a string from the underlying stream.
      *
      * @return string or <code>null</code>
@@ -175,6 +183,14 @@ public interface Record {
      * @throws JournalException if an error occurs
      */
     void writeInt(int n) throws JournalException;
+
+    /**
+     * Write a long to the underlying stream.
+     *
+     * @param n long
+     * @throws JournalException if an error occurs
+     */
+    void writeLong(long n) throws JournalException;
 
     /**
      * Write a string to the underlying stream.

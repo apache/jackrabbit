@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
 
 /**
  * Implementation of the {@link javax.jcr.observation.Event} and
@@ -46,14 +45,14 @@ public final class EventImpl implements JackrabbitEvent {
     private final SessionImpl session;
 
     /**
-     * The <code>ItemManager</code> of the session.
-     */
-    //private final ItemManager itemMgr;
-
-    /**
      * The shared {@link EventState} object.
      */
     private final EventState eventState;
+
+    /**
+     * The timestamp of this event.
+     */
+    private final long timestamp;
 
     /**
      * Cached String value of this <code>Event</code> instance.
@@ -67,10 +66,12 @@ public final class EventImpl implements JackrabbitEvent {
      * @param session    the session of the registerd <code>EventListener</code>
      *                   where this <code>Event</code> will be delivered to.
      * @param eventState the underlying <code>EventState</code>.
+     * @param timestamp  the time when the change occured that caused this event.
      */
-    EventImpl(SessionImpl session, EventState eventState) {
+    EventImpl(SessionImpl session, EventState eventState, long timestamp) {
         this.session = session;
         this.eventState = eventState;
+        this.timestamp = timestamp;
     }
 
     //---------------------------------------------------------------< Event >
@@ -94,6 +95,13 @@ public final class EventImpl implements JackrabbitEvent {
      */
     public String getUserID() {
         return eventState.getUserId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getDate() {
+        return timestamp;
     }
 
     //-----------------------------------------------------------< EventImpl >

@@ -88,6 +88,11 @@ public final class EventStateCollection {
     private final Path pathPrefix;
 
     /**
+     * Timestamp when this collection was created.
+     */
+    private long timestamp = System.currentTimeMillis();
+
+    /**
      * Creates a new empty <code>EventStateCollection</code>.
      * <p/>
      * Because the item state manager in {@link #createEventStates} may represent
@@ -431,6 +436,22 @@ public final class EventStateCollection {
      */
     public Path getPathPrefix() {
         return pathPrefix;
+    }
+
+    /**
+     * @return the timestamp when this collection was created.
+     */
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    /**
+     * Sets a new timestamp for this collection.
+     *
+     * @param timestamp the new timestamp value.
+     */
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 
     /**

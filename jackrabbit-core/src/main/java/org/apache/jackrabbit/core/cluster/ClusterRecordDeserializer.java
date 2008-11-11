@@ -40,6 +40,7 @@ public class ClusterRecordDeserializer {
         case ChangeLogRecord.NODE_IDENTIFIER:
         case ChangeLogRecord.PROPERTY_IDENTIFIER:
         case ChangeLogRecord.EVENT_IDENTIFIER:
+        case ChangeLogRecord.DATE_IDENTIFIER:
             clusterRecord = new ChangeLogRecord(c, record, workspace);
             clusterRecord.read();
             break;
