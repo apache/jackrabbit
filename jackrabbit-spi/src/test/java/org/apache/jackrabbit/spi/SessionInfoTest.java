@@ -42,7 +42,11 @@ public class SessionInfoTest extends AbstractSPITest {
     }
 
     public void testGetWorkspaceName() {
-        assertEquals(workspaceName, sessionInfo.getWorkspaceName());
+        if (workspaceName == null) {
+            assertNotNull(sessionInfo.getWorkspaceName());
+        } else {
+            assertEquals(workspaceName, sessionInfo.getWorkspaceName());
+        }
     }
 
     // TODO: add more tests

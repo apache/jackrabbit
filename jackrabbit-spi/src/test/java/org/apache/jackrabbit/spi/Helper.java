@@ -101,14 +101,16 @@ public class Helper {
     public SessionInfo getAdminSessionInfo() throws RepositoryException {
         // force assignment of repoStub
         getRepositoryService();
-        String wspName = repoServiceStub.getProperty(RepositoryServiceStub.PROP_WORKSPACE);
+        String propName = RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_WORKSPACE;
+        String wspName = repoServiceStub.getProperty(propName);
         return getRepositoryService().obtain(getAdminCredentials(), wspName);
     }
 
     public SessionInfo getReadOnlySessionInfo() throws RepositoryException {
         // force assignment of repoStub
         getRepositoryService();
-        String wspName = repoServiceStub.getProperty(RepositoryServiceStub.PROP_WORKSPACE);
+        String propName = RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_WORKSPACE;
+        String wspName = repoServiceStub.getProperty(propName);
         return getRepositoryService().obtain(getReadOnlyCredentials(), wspName);
     }
 }
