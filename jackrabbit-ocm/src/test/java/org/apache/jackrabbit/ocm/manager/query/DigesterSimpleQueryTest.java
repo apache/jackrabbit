@@ -195,6 +195,69 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
 
     }
 
+    /**
+     * Build an or expression within a single filter
+     * @author Shrirang Edgaonkar
+     */
+    public void testGetObjectsOrForSingleFilter() {
+
+        try {
+
+            // Build the Query Object
+            QueryManager queryManager = this.getQueryManager();
+            Filter filter1 = queryManager.createFilter(Paragraph.class);
+            filter1.addOrFilter("text", new String[]{"Para 1","Para 2"});
+            filter1.setScope("/test/");
+
+            Query query = queryManager.createQuery(filter1);
+
+            ObjectContentManager ocm = this.getObjectContentManager();
+            Collection result = ocm.getObjects(query);
+            assertEquals("Invalid number of objects - should be = 2", 2, result.size());
+
+            Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 1"));
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);
+        }
+
+    }
+
+    /**
+     * Build an or expression within a single filter
+     * @author Shrirang Edgaonkar
+     */
+    public void testGetObjectsOrWithAndForSingleFilter() {
+
+        try {
+
+            // Build the Query Object
+            QueryManager queryManager = this.getQueryManager();
+            Filter filter1 = queryManager.createFilter(Paragraph.class);
+            filter1.addOrFilter("text", new String[]{"Para 1","Another Para "}).addLike("text", "Para%");
+            filter1.setScope("/test/");
+
+            Query query = queryManager.createQuery(filter1);
+
+            ObjectContentManager ocm = this.getObjectContentManager();
+            Collection result = ocm.getObjects(query);
+            assertEquals("Invalid number of objects - should be = 1", 1, result.size());
+
+            Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
+            assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 1"));
+            //assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Exception occurs during the unit test : " + e);
+        }
+
+    }
+   
+    
     public void testGetObjectOrderBy() {
 
         try {

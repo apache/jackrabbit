@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.ocm.query;
 
 
-
 /**
  *
  * JCR Filter interface.
@@ -79,7 +78,7 @@ public interface Filter
 	Filter addGreaterThan(String arg0, Object arg1);
 
 	Filter addLessOrEqualThan(String arg0, Object arg1);
-	
+
 	Filter addLessThan(String arg0, Object arg1);
 
 	Filter addLike(String arg0, Object arg1);
@@ -89,15 +88,17 @@ public interface Filter
 	Filter addNotNull(String arg0);
 
 	Filter addIsNull(String arg0);
-	
+
+	Filter addOrFilter(String fieldAttributeName, String[] valueList);
+
 	Filter addOrFilter(Filter arg0);
 
 	Filter addAndFilter(Filter filter);
-	
+
 	Filter addJCRExpression(String jcrExpression);
-	
+
     Class getFilterClass();
     Object clone();
-	
+
 
 }
