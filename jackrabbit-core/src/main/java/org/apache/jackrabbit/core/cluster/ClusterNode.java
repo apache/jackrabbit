@@ -849,7 +849,8 @@ public class ClusterNode implements Runnable,
             }
         }
         try {
-            listener.externalUpdate(record.getChanges(), record.getEvents());
+            listener.externalUpdate(record.getChanges(),
+                    record.getEvents(), record.getTimestamp());
         } catch (RepositoryException e) {
             String msg = "Unable to deliver update events: " + e.getMessage();
             log.error(msg);

@@ -154,6 +154,20 @@ public class ReadRecord extends AbstractRecord {
     /**
      * {@inheritDoc}
      */
+    public long readLong() throws JournalException {
+        consumed = true;
+
+        try {
+            return dataIn.readLong();
+        } catch (IOException e) {
+            String msg = "I/O error while reading long.";
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public String readString() throws JournalException {
         consumed = true;
 
@@ -238,6 +252,10 @@ public class ReadRecord extends AbstractRecord {
     }
 
     public void writeInt(int n) throws JournalException {
+        throw unsupported();
+    }
+
+    public void writeLong(long n) throws JournalException {
         throw unsupported();
     }
 

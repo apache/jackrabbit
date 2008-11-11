@@ -515,6 +515,11 @@ public class SharedItemStateManager
         private HashMap attributes;
 
         /**
+         * Timestamp when this update was created.
+         */
+        private long timestamp = System.currentTimeMillis();
+
+        /**
          * Create a new instance of this class.
          */
         public Update(ChangeLog local, EventStateCollectionFactory factory,
@@ -835,6 +840,13 @@ public class SharedItemStateManager
         }
 
         /**
+         * {@inheritDoc}
+         */
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        /**
          * Updates the target node references collections based on the
          * modifications in the change log (i.e. added/removed/modified
          * <code>REFERENCE</code> properties).
@@ -843,9 +855,6 @@ public class SharedItemStateManager
          * only be called <i>once</i> per change log and the change log
          * should not be modified anymore afterwards.
          *
-         * @param changes change log
-         * @param virtualProvider virtual provider that may already contain a
-         *                        node references object
          * @throws ItemStateException if an error occurs
          */
         private void updateReferences() throws ItemStateException {

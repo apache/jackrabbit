@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -413,10 +412,10 @@ public class SimpleEventListener implements LockEventListener,
     /**
      * {@inheritDoc}
      */
-    public void externalUpdate(ChangeLog changes, List events)
+    public void externalUpdate(ChangeLog changes, List events, long timestamp)
             throws RepositoryException {
 
-        clusterEvents.add(new UpdateEvent(changes, events));
+        clusterEvents.add(new UpdateEvent(changes, events, timestamp));
 
     }
 
@@ -441,14 +440,21 @@ public class SimpleEventListener implements LockEventListener,
         private final transient Map attributes = new HashMap();
 
         /**
+         * Timestamp when the changes in this update event occured.
+         */
+        private final long timestamp;
+
+        /**
          * Create a new instance of this class.
          *
          * @param changes change log
          * @param events list of <code>EventState</code>s
+         * @param timestamp time when the changes in this event occured.
          */
-        public UpdateEvent(ChangeLog changes, List events) {
+        public UpdateEvent(ChangeLog changes, List events, long timestamp) {
             this.changes = changes;
             this.events = events;
+            this.timestamp = timestamp;
         }
 
         /**
@@ -472,6 +478,13 @@ public class SimpleEventListener implements LockEventListener,
         /**
          * {@inheritDoc}
          */
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
         public void setAttribute(String name, Object value) {
             attributes.put(name, value);
         }
@@ -487,7 +500,7 @@ public class SimpleEventListener implements LockEventListener,
          * {@inheritDoc}
          */
         public int hashCode() {
-            return changes.hashCode() ^ events.hashCode();
+            return changes.hashCode() ^ events.hashCode() ^ (int) (timestamp ^ (timestamp >>> 32));
         }
 
         /**
@@ -497,7 +510,8 @@ public class SimpleEventListener implements LockEventListener,
             if (obj instanceof UpdateEvent) {
                 UpdateEvent other = (UpdateEvent) obj;
                 return SimpleEventListener.equals(changes, other.changes) &&
-                    SimpleEventListener.equals(events, other.events);
+                    SimpleEventListener.equals(events, other.events) &&
+                    timestamp == other.timestamp;
             }
             return false;
         }

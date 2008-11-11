@@ -63,6 +63,11 @@ class FilteredEventIterator implements EventIterator {
     private long pos = 0;
 
     /**
+     * The timestamp when the events occured.
+     */
+    private long timestamp;
+
+    /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
      * @param c      an unmodifiable Collection of {@link javax.jcr.observation.Event}s.
@@ -78,6 +83,7 @@ class FilteredEventIterator implements EventIterator {
         actualEvents = c.iterator();
         this.filter = filter;
         this.denied = denied;
+        this.timestamp = c.getTimestamp();
         fetchNext();
     }
 
@@ -158,7 +164,8 @@ class FilteredEventIterator implements EventIterator {
             // check denied set
             if (denied == null || !denied.contains(state.getTargetId())) {
                 try {
-                    next = filter.blocks(state) ? null : new EventImpl(filter.getSession(), state);
+                    next = filter.blocks(state) ? null : new EventImpl(
+                            filter.getSession(), state, timestamp);
                 } catch (RepositoryException e) {
                     log.error("Exception while applying filter.", e);
                 }

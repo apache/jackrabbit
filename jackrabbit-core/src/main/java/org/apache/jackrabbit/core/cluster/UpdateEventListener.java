@@ -30,8 +30,10 @@ public interface UpdateEventListener {
      *
      * @param changes external changes containing only node and property ids.
      * @param events events to deliver
+     * @param timestamp when the change occured.
      * @throws RepositoryException if the update cannot be processed
      */
-    void externalUpdate(ChangeLog changes, List events) throws RepositoryException;
+    void externalUpdate(ChangeLog changes, List events, long timestamp)
+            throws RepositoryException;
 
 }
