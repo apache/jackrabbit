@@ -92,24 +92,4 @@ public class AccessControlPolicyIteratorTest extends AbstractAccessControlTest {
             throw new NotExecutableException();
         }
     }
-
-    // TODO: uncomment as soon as RangeIterator is adjusted.
-    /*
-    public void testgetNumberRemaining() throws NotExecutableException, RepositoryException {
-        checkCanReadAc(path);
-        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-
-        long remaining = it.getNumberRemaining();
-        assertTrue("Number of remaining entries must be >= -1", remaining >= -1);
-
-        while (it.hasNext()) {
-            it.nextAccessControlPolicy();
-            long rem = it.getNumberRemaining();
-            if (remaining != -1) {
-                assertTrue("Number of remaining entries must decrease or be -1", rem == -1 || rem < remaining);
-            }
-            remaining = rem;
-        }
-    }
-    */
 }
