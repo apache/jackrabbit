@@ -31,6 +31,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  * A file record log is a file containing {@link Record}s. Every file record
@@ -140,7 +142,8 @@ public class FileRecordLog {
         this.logFile = logFile;
 
         if (logFile.exists()) {
-            DataInputStream in = new DataInputStream(new FileInputStream(logFile));
+            DataInputStream in = new DataInputStream(
+                    new BufferedInputStream(new FileInputStream(logFile), 128));
 
             try {
                 readHeader(in);
@@ -160,7 +163,8 @@ public class FileRecordLog {
      */
     public void init(long previousRevision) throws IOException {
         if (isNew) {
-            DataOutputStream out = new DataOutputStream(new FileOutputStream(logFile));
+            DataOutputStream out = new DataOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(logFile), 128));
 
             try {
                 writeHeader(out);
@@ -274,12 +278,14 @@ public class FileRecordLog {
     public long append(String journalId, String producerId, InputStream in, int length)
             throws IOException {
 
-        DataOutputStream out = new DataOutputStream(new FileOutputStream(logFile, true));
+        OutputStream out = new FileOutputStream(logFile, true);
 
         try {
-            out.writeUTF(journalId);
-            out.writeUTF(producerId);
-            out.writeInt(length);
+            DataBuffer buffer = new DataBuffer();
+            buffer.writeUTF(journalId);
+            buffer.writeUTF(producerId);
+            buffer.writeInt(length);
+            buffer.copy(out);
 
             IOUtils.copy(in, out);
             out.flush();
@@ -425,5 +431,29 @@ public class FileRecordLog {
             }
         }
         return utflen;
+    }
+
+    /**
+     * A simple helper class that writes to a buffer. The current buffer can
+     * be {@link #copy copied} to an output stream.
+     */
+    private static final class DataBuffer extends DataOutputStream {
+
+        public DataBuffer() {
+            super(new ByteArrayOutputStream());
+        }
+
+        /**
+         * Copies the bytes the are currently held in the buffer to the given
+         * output stream.
+         *
+         * @param out the output stream where the buffered data is written.
+         * @throws IOException if an error occurs while writing data to
+         *          <code>out</code>.
+         */
+        public void copy(OutputStream out) throws IOException {
+            byte[] buffer = ((ByteArrayOutputStream) super.out).toByteArray();
+            out.write(buffer);
+        }
     }
 }
