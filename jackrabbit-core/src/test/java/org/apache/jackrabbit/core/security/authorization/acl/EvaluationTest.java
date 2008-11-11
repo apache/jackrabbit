@@ -170,7 +170,7 @@ public class EvaluationTest extends AbstractEvaluationTest {
            content that requires jcr:modifyAccessControl privilege instead.
          */
         String policyPath = childNPath + "/rep:policy";
-        assertFalse(testSession.hasPermission(policyPath, SessionImpl.REMOVE_ACTION));
+        assertFalse(testSession.hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 }

@@ -107,29 +107,29 @@ import java.util.Arrays;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
+        implements org.apache.jackrabbit.api.jsr283.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
-     * TODO deprecate as soon as present with Session interface (JSR 283)
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_READ} instead.
      */
-    public static final String READ_ACTION = "read";
+    public static final String READ_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_READ;
 
     /**
-     * TODO deprecate as soon as present with Session interface (JSR 283)
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_REMOVE} instead.
      */
-    public static final String REMOVE_ACTION = "remove";
+    public static final String REMOVE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE;
 
     /**
-     * TODO deprecate as soon as present with Session interface (JSR 283)
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_ADD_NODE} instead.
      */
-    public static final String ADD_NODE_ACTION = "add_node";
+    public static final String ADD_NODE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE;
 
     /**
-     * TODO deprecate as soon as present with Session interface (JSR 283)
+     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_SET_PROPERTY} instead.
      */
-    public static final String SET_PROPERTY_ACTION = "set_property";
+    public static final String SET_PROPERTY_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY;
 
     /**
      * flag indicating whether this session is alive
@@ -1315,20 +1315,7 @@ public class SessionImpl extends AbstractSession
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * Returns the node specified by the given identifier. Applies to both
-     * referenceable and non-referenceable nodes.
-     * <p/>
-     * An <code>ItemNotFoundException</code> is thrown if no node with the
-     * specified identifier exists. This exception is also thrown if this
-     * <code>Session<code> does not have read access to the node with the
-     * specified identifier.
-     * <p/>
-     * A <code>RepositoryException</code> is thrown if another error occurs.
-     *
-     * @param id An identifier.
-     * @return A <code>Node</code>.
-     * @throws ItemNotFoundException if the specified identifier is not found.
-     * @throws RepositoryException if another error occurs.
+     * @see org.apache.jackrabbit.api.jsr283.Session#getNodeByIdentifier(String) 
      * @since JCR 2.0
      */
     public Node getNodeByIdentifier(String id)
@@ -1343,13 +1330,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the node at the specified absolute path in the workspace.
-     * If no node exists, then a <code>PathNotFoundException</code> is thrown.
-     *
-     * @param absPath An absolute path.
-     * @return the specified <code>Node</code>.
-     * @throws PathNotFoundException If no node exists.
-     * @throws RepositoryException If another error occurs.
+     * @see org.apache.jackrabbit.api.jsr283.Session#getNode(String)
      * @since JCR 2.0
      */
     public Node getNode(String absPath)
@@ -1373,13 +1354,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the property at the specified absolute path in the workspace.
-     * If no property exists, then a <code>PathNotFoundException</code> is thrown.
-     *
-     * @param absPath An absolute path.
-     * @return the specified <code>Property</code>.
-     * @throws PathNotFoundException If no property exists.
-     * @throws RepositoryException if another error occurs.
+     * @see org.apache.jackrabbit.api.jsr283.Session#getProperty(String)
      * @since JCR 2.0
      */
     public Property getProperty(String absPath)
@@ -1403,17 +1378,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns <code>true</code> if a node exists at <code>absPath</code>
-     * and this <code>Session</code> has read access to it; otherwise returns
-     * <code>false</code>.
-     * <p/>
-     * Throws a <code>RepositoryException</code> if <code>absPath</code>
-     * is not a well-formed absolute path.
-     *
-     * @param absPath An absolute path.
-     * @return a <code>boolean</code>
-     * @throws RepositoryException if <code>absPath</code> is not a well-formed
-     *         absolute path.
+     * @see org.apache.jackrabbit.api.jsr283.Session#nodeExists(String)
      * @since JCR 2.0
      */
     public boolean nodeExists(String absPath) throws RepositoryException {
@@ -1434,17 +1399,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns <code>true</code> if a property exists at <code>absPath</code>
-     * and this <code>Session</code> has read access to it; otherwise returns
-     * <code>false</code>.
-     * <p/>
-     * Throws a <code>RepositoryException</code> if <code>absPath</code>
-     * is not a well-formed absolute path.
-     *
-     * @param absPath An absolute path.
-     * @return a <code>boolean</code>
-     * @throws RepositoryException if <code>absPath</code> is not a well-formed
-     *         absolute path.
+     * @see org.apache.jackrabbit.api.jsr283.Session#propertyExists(String)
      * @since JCR 2.0
      */
     public boolean propertyExists(String absPath) throws RepositoryException {
@@ -1465,7 +1420,32 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see Session#hasPermission(String, String)
+     * @see org.apache.jackrabbit.api.jsr283.Session#removeItem(String)
+     * @since JCR 2.0
+     */
+    public void removeItem(String absPath) throws VersionException,
+            LockException, ConstraintViolationException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
+        Item item;
+        try {
+            Path p = getQPath(absPath).getNormalizedPath();
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("not an absolute path: " + absPath);
+            }
+            item = getItemManager().getItem(p);
+        } catch (AccessDeniedException e) {
+            throw new PathNotFoundException(absPath);
+        } catch (NameException e) {
+            String msg = "invalid path:" + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        item.remove();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.Session#hasPermission(String, String)
      * @since 2.0
      */
     public boolean hasPermission(String absPath, String actions) throws RepositoryException {
@@ -1479,16 +1459,16 @@ public class SessionImpl extends AbstractSession
 
         Set s = new HashSet(Arrays.asList(actions.split(",")));
         int permissions = 0;
-        if (s.remove(SessionImpl.READ_ACTION)) {
+        if (s.remove(ACTION_READ)) {
             permissions |= Permission.READ;
         }
-        if (s.remove(SessionImpl.ADD_NODE_ACTION)) {
+        if (s.remove(ACTION_ADD_NODE)) {
             permissions |= Permission.ADD_NODE;
         }
-        if (s.remove(SessionImpl.SET_PROPERTY_ACTION)) {
+        if (s.remove(ACTION_SET_PROPERTY)) {
             permissions |= Permission.SET_PROPERTY;
         }
-        if (s.remove(SessionImpl.REMOVE_ACTION)) {
+        if (s.remove(ACTION_REMOVE)) {
             if (nodeExists(absPath)) {
                 permissions |= (propertyExists(absPath)) ?
                         (Permission.REMOVE_NODE | Permission.REMOVE_PROPERTY) :
@@ -1515,7 +1495,17 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see Session#getAccessControlManager()
+     * @see org.apache.jackrabbit.api.jsr283.Session#checkCapability(String, Object, Map)
+     * @since JCR 2.0
+     */
+    public boolean checkCapability(String methodType, Object target, Map arguments)
+            throws RepositoryException {
+        //TODO
+        throw new UnsupportedRepositoryOperationException("Not yet implemented");
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.Session#getAccessControlManager()
      * @since JCR 2.0
      */
     public AccessControlManager getAccessControlManager()
@@ -1528,7 +1518,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see Session#getRetentionManager()
+     * @see org.apache.jackrabbit.api.jsr283.Session#getRetentionManager()
      * @since JCR 2.0
      */
     public synchronized RetentionManager getRetentionManager()
