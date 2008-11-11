@@ -165,8 +165,8 @@ public interface Node extends javax.jcr.Node {
      * instead of waiting until <code>save</code>.
      * @throws RepositoryException if another error occurs.
      * @see #removeSharedSet()
-     * @see Item#remove()
-     * @see javax.jcr.Workspace#removeItem
+     * @see javax.jcr.Item#remove()
+     * @see Session#removeItem(String)
      * @since JCR 2.0
      */
     public void removeShare() throws VersionException, LockException, ConstraintViolationException, RepositoryException;
@@ -191,8 +191,8 @@ public interface Node extends javax.jcr.Node {
      * instead of waiting until <code>save</code>.
      * @throws RepositoryException if another error occurs.@throws VersionException if
      * @see #removeShare()
-     * @see Item#remove()
-     * @see javax.jcr.Workspace#removeItem
+     * @see javax.jcr.Item#remove()
+     * @see Session#removeItem(String)
      * @since JCR 2.0
      */
     public void removeSharedSet() throws VersionException, LockException, ConstraintViolationException, RepositoryException;
