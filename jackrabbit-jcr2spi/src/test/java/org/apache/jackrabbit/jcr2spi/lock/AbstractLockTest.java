@@ -333,4 +333,13 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         // lock token not present within tokens returned by Session.getLockTokens.
         fail("Upon successful call to Node.lock, the lock token must automatically be added to the set of tokens held by the Session.");
     }
+
+    public void testRemoveLockedNode() throws RepositoryException {
+        Node n = (Node) otherSession.getItem(lockedNode.getPath());
+
+        // since removing a node is a modification of the non-locked parent
+        // the removal must succeed.
+        n.remove();
+        otherSession.save();
+    }
 }

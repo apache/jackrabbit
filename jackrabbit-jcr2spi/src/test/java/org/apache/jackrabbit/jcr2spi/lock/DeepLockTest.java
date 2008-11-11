@@ -23,6 +23,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
@@ -140,6 +141,20 @@ public class DeepLockTest extends AbstractJCRTest {
             fail("Creating a deep lock on a parent of a locked node must fail.");
         } catch (LockException e) {
             // expected
+        }
+    }
+
+    public void testRemoveLockedChild() throws RepositoryException {
+        Session otherSession = helper.getReadWriteSession();
+        try {
+            Node child = (Node) otherSession.getItem(childNode.getPath());
+            child.remove();
+            otherSession.save();
+            fail("A node below a deeply locked node cannot be removed by another Session.");
+        } catch (LockException e) {
+            // success
+        } finally {
+            otherSession.logout();
         }
     }
 }
