@@ -615,7 +615,7 @@ public class ClusterNode implements Runnable,
 
             try {
                 ChangeLogRecord clr = new ChangeLogRecord(changes, events,
-                        record, workspace);
+                        record, workspace, update.getTimestamp());
                 clr.write();
                 succeeded = true;
             } catch (JournalException e) {

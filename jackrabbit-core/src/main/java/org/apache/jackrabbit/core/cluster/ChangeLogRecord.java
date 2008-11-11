@@ -109,13 +109,15 @@ public class ChangeLogRecord extends ClusterRecord {
      * @param events list of <code>EventState</code>s
      * @param record record
      * @param workspace workspace
+     * @param timestamp when the changes for this record were persisted.
      */
     public ChangeLogRecord(ChangeLog changes, List events,
-                           Record record, String workspace) {
+                           Record record, String workspace, long timestamp) {
         super(record, workspace);
 
         this.changes = changes;
         this.events = events;
+        this.timestamp = timestamp;
     }
 
     /**
