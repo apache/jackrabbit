@@ -73,7 +73,7 @@ class SysViewImportHandler extends TargetImportHandler {
      * Constructs a new <code>SysViewImportHandler</code>.
      *
      * @param importer
-     * @param nsContext
+     * @param resolver
      */
     SysViewImportHandler(Importer importer, NamePathResolver resolver) {
         super(importer, resolver);
