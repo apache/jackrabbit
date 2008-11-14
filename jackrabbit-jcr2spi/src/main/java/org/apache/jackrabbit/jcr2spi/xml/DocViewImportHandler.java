@@ -57,7 +57,8 @@ class DocViewImportHandler extends TargetImportHandler {
      * Constructs a new <code>DocViewImportHandler</code>.
      *
      * @param importer
-     * @param nsContext
+     * @param resolver
+     * @param nameFactory
      */
     DocViewImportHandler(Importer importer, NamePathResolver resolver,
                          NameFactory nameFactory) {
@@ -158,7 +159,7 @@ class DocViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      * <p/>
-     * See also {@link DocViewSAXEventGenerator#leavingProperties(javax.jcr.Node, int)}
+     * See also {@link org.apache.jackrabbit.commons.xml.DocumentViewExporter#exportProperty(String, String, int, javax.jcr.Value[])}
      * regarding special handling of multi-valued properties on export.
      */
     public void startElement(String namespaceURI, String localName,
