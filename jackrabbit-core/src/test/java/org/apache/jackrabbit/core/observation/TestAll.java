@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MixinTest.class);
         suite.addTestSuite(VersionEventsTest.class);
         suite.addTestSuite(MoveInPlaceTest.class);
+        suite.addTestSuite(EventJournalTest.class);
 
         return suite;
     }

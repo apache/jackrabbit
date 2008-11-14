@@ -230,16 +230,6 @@ public abstract class AbstractJournal implements Journal {
     }
 
     /**
-     * Return an iterator over all records after the specified revision.
-     * Subclass responsibility.
-     *
-     * @param startRevision start point (exlusive)
-     * @throws JournalException if an error occurs
-     */
-    protected abstract RecordIterator getRecords(long startRevision)
-            throws JournalException;
-
-    /**
      * Lock the journal revision, disallowing changes from other sources until
      * {@link #unlock has been called, and synchronizes to the latest change.
      *

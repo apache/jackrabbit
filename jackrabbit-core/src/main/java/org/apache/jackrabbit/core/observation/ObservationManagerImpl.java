@@ -102,42 +102,9 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                                  boolean noLocal)
             throws RepositoryException {
 
-        // create NodeType instances from names
-        NodeTypeImpl[] nodeTypes;
-        if (nodeTypeName == null) {
-            nodeTypes = null;
-        } else {
-            NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-            nodeTypes = new NodeTypeImpl[nodeTypeName.length];
-            for (int i = 0; i < nodeTypes.length; i++) {
-                nodeTypes[i] = (NodeTypeImpl) ntMgr.getNodeType(nodeTypeName[i]);
-            }
-        }
-
-        Path path;
-        try {
-            path = session.getQPath(absPath).getNormalizedPath();
-        } catch (NameException e) {
-            String msg = "invalid path syntax: " + absPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        NodeId[] ids = null;
-        if (uuid != null) {
-            ids = new NodeId[uuid.length];
-            for (int i = 0; i < uuid.length; i++) {
-                ids[i] = NodeId.valueOf(uuid[i]);
-            }
-        }
         // create filter
-        EventFilter filter = new EventFilter(itemMgr,
-                session,
-                eventTypes,
-                path,
-                isDeep,
-                ids,
-                nodeTypes,
-                noLocal);
+        EventFilter filter = createEventFilter(eventTypes, absPath,
+                isDeep, uuid, nodeTypeName, noLocal);
 
         dispatcher.addConsumer(new EventConsumer(session, listener, filter));
     }
@@ -178,6 +145,60 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             log.error("Internal error: Unable to dispose ObservationManager.", e);
         }
 
+    }
+
+    /**
+     * Creates a new event filter with the given restrictions.
+     *
+     * @param eventTypes A combination of one or more event type constants encoded as a bitmask.
+     * @param absPath an absolute path.
+     * @param isDeep a <code>boolean</code>.
+     * @param uuid array of UUIDs.
+     * @param nodeTypeName array of node type names.
+     * @param noLocal a <code>boolean</code>.
+     * @return the event filter with the given restrictions.
+     * @throws RepositoryException if an error occurs.
+     */
+    public EventFilter createEventFilter(int eventTypes,
+                                         String absPath,
+                                         boolean isDeep,
+                                         String[] uuid,
+                                         String[] nodeTypeName,
+                                         boolean noLocal)
+            throws RepositoryException {
+        // create NodeType instances from names
+        NodeTypeImpl[] nodeTypes;
+        if (nodeTypeName == null) {
+            nodeTypes = null;
+        } else {
+            NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+            nodeTypes = new NodeTypeImpl[nodeTypeName.length];
+            for (int i = 0; i < nodeTypes.length; i++) {
+                nodeTypes[i] = (NodeTypeImpl) ntMgr.getNodeType(nodeTypeName[i]);
+            }
+        }
+
+        Path path;
+        try {
+            path = session.getQPath(absPath).getNormalizedPath();
+        } catch (NameException e) {
+            String msg = "invalid path syntax: " + absPath;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
+        if (!path.isAbsolute()) {
+            throw new RepositoryException("absPath must be absolute");
+        }
+        NodeId[] ids = null;
+        if (uuid != null) {
+            ids = new NodeId[uuid.length];
+            for (int i = 0; i < uuid.length; i++) {
+                ids[i] = NodeId.valueOf(uuid[i]);
+            }
+        }
+        // create filter
+        return new EventFilter(itemMgr, session, eventTypes, path,
+                isDeep, ids, nodeTypes, noLocal);
     }
 
     //------------------------------------------< EventStateCollectionFactory >

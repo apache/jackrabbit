@@ -123,4 +123,11 @@
     <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
         <param name="path" value="${rep.home}/repository/index"/>
     </SearchIndex>
+    
+    <!--
+        Run with a cluster journal
+    -->
+    <Cluster id="node1">
+        <Journal class="org.apache.jackrabbit.core.journal.MemoryJournal"/>
+    </Cluster>
 </Repository>

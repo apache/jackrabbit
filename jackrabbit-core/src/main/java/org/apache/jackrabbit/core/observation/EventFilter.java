@@ -32,7 +32,7 @@ import javax.jcr.RepositoryException;
  * The <code>EventFilter</code> class implements the filter logic based
  * on the session's access rights and the specified filter rules.
  */
-class EventFilter {
+public class EventFilter {
 
     static final EventFilter BLOCK_ALL = new BlockAllFilter();
 
@@ -131,6 +131,7 @@ class EventFilter {
     }
 
     /**
+     * TODO: remove this unused method.
      * Returns the <code>ItemManager</code> associated with this
      * <code>EventFilter</code>.
      *

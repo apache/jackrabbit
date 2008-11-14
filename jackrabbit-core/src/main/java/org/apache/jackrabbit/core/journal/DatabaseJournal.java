@@ -435,7 +435,7 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected RecordIterator getRecords(long startRevision)
+    public RecordIterator getRecords(long startRevision)
             throws JournalException {
 
         try {
@@ -444,6 +444,28 @@ public class DatabaseJournal extends AbstractJournal {
             selectRevisionsStmt.clearParameters();
             selectRevisionsStmt.clearWarnings();
             selectRevisionsStmt.setLong(1, startRevision);
+            selectRevisionsStmt.execute();
+
+            return new DatabaseRecordIterator(
+                    selectRevisionsStmt.getResultSet(), getResolver(), getNamePathResolver());
+        } catch (SQLException e) {
+            close(true);
+
+            String msg = "Unable to return record iterator.";
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RecordIterator getRecords() throws JournalException {
+        try {
+            checkConnection();
+
+            selectRevisionsStmt.clearParameters();
+            selectRevisionsStmt.clearWarnings();
+            selectRevisionsStmt.setLong(1, Long.MIN_VALUE);
             selectRevisionsStmt.execute();
 
             return new DatabaseRecordIterator(
