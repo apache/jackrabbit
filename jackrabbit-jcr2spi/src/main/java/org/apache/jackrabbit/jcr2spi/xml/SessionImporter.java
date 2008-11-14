@@ -634,7 +634,10 @@ public class SessionImporter implements Importer, SessionListener {
     private void checkIncludesMixReferenceable(Importer.NodeInfo nodeInfo) throws RepositoryException {
         List l = new ArrayList();
         l.add(nodeInfo.getNodeTypeName());
-        l.addAll(Arrays.asList(nodeInfo.getMixinNames()));
+        Name[] mixinNames = nodeInfo.getMixinNames();
+        if (mixinNames != null && mixinNames.length > 0) {
+            l.addAll(Arrays.asList(nodeInfo.getMixinNames()));
+        }
         if (l.contains(NameConstants.MIX_REFERENCEABLE)) {
             // shortcut
             return;

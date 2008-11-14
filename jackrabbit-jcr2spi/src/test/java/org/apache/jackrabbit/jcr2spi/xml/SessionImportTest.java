@@ -16,21 +16,26 @@
  */
 package org.apache.jackrabbit.jcr2spi.xml;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.uuid.UUID;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.PropertyType;
-import javax.jcr.Session;
 import javax.jcr.Item;
 import javax.jcr.Property;
-import java.util.List;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.ConstraintViolationException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <code>SessionImportTest</code>...
@@ -108,6 +113,73 @@ public class SessionImportTest extends AbstractJCRTest {
         superuser.save();
     }
 
+    /**
+     * Test case for issue <a href="https://issues.apache.org/jira/browse/JCR-1857">JCR-1857</href>
+     *
+     * @throws IOException
+     * @throws RepositoryException
+     */
+    public void testEmptyMixins() throws IOException, RepositoryException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\"\n" +
+                "         xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\"\n" +
+                "         xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\"\n" +
+                "         xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n" +
+                "         sv:name=\"testnode1\">\n" +
+                "    <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">\n" +
+                "        <sv:value>nt:unstructured</sv:value>\n" +
+                "    </sv:property>\n" +
+                "    <sv:property sv:name=\"jcr:title\" sv:type=\"String\">\n" +
+                "        <sv:value>Test Node</sv:value>\n" +
+                "    </sv:property>\n" +
+                "    <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">\n" +
+                "        <sv:value>1234</sv:value>\n" +
+                "    </sv:property>\n" +
+                "</sv:node>";
+
+        InputStream in = new ByteArrayInputStream(xml.getBytes());
+        try {
+            superuser.importXML(testRootNode.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+            fail("jcr:uuid cannot be created if mix:referenceable is not part of the effective nodetype.");
+        } catch (ConstraintViolationException e) {
+            // ok.
+        }
+    }
+
+    /**
+     * Test case for issue <a href="https://issues.apache.org/jira/browse/JCR-1857">JCR-1857</href>
+     *
+     * @throws IOException
+     * @throws RepositoryException
+     */
+    public void testEmptyMixins2() throws IOException, RepositoryException {
+        /*
+        JSR 170: nt:resource includes mix:referenceable
+        TODO: tests needs to be adjusted for JSR 283 (-> define test-property)
+        */
+        String referenceableNt = "nt:resource";
+        /*
+        TODO: retrieve valid jcr:uuid value from test-properties.
+        */
+        String uuid = UUID.randomUUID().toString();
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<sv:node xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\"\n" +
+                "         xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\"\n" +
+                "         xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\"\n" +
+                "         xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n" +
+                "         sv:name=\"testnode1\">\n" +
+                "    <sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">\n" +
+                "        <sv:value>" + referenceableNt + "</sv:value>\n" +
+                "    </sv:property>\n" +
+                "    <sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">\n" +
+                "        <sv:value>" + uuid + "</sv:value>\n" +
+                "    </sv:property>\n" +
+                "</sv:node>";
+
+        InputStream in = new ByteArrayInputStream(xml.getBytes());
+        superuser.importXML(testRootNode.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+    }
+
     private static String getUnknownURI(Session session, String uriHint) throws RepositoryException {
         String uri = uriHint;
         int index = 0;
@@ -122,7 +194,7 @@ public class SessionImportTest extends AbstractJCRTest {
     /**
      * Returns a prefix that is unique among the already registered prefixes.
      *
-     * @param uriHint namespace uri that serves as hint for the prefix generation
+     * @param session
      * @return a unique prefix
      */
     public static String getUniquePrefix(Session session) throws RepositoryException {
