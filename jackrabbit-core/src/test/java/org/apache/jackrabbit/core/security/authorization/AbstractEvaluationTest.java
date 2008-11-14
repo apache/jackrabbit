@@ -108,7 +108,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
         // make sure all ac info is removed
         clearACInfo();
-        if (testGroup != null) {
+        if (testGroup != null && testUser != null) {
             testGroup.removeMember(testUser);
             testGroup.remove();
         }
@@ -123,7 +123,6 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         if (!(session instanceof JackrabbitSession)) {
             throw new NotExecutableException();
         }
-
         try {
             return ((JackrabbitSession) session).getUserManager();
         } catch (RepositoryException e) {
@@ -899,6 +898,20 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         assertTrue(testSession.hasPermission(childPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE));
     }
 
+    public void testAclReferingToRemovedPrincipal() throws
+            NotExecutableException, RepositoryException {
+
+        JackrabbitAccessControlList acl = givePrivileges(path, privilegesFromName(Privilege.JCR_WRITE), getRestrictions(path));
+        String acPath = acl.getPath();
+
+        // remove the test user
+        testUser.remove();
+        testUser = null;
+
+        // try to retrieve the acl again
+        AccessControlManager acMgr = getAccessControlManager(helper.getSuperuserSession());
+        acMgr.getPolicies(acPath);
+    }
 
     private static Node findPolicyNode(Node start) throws RepositoryException {
         Node policyNode = null;
