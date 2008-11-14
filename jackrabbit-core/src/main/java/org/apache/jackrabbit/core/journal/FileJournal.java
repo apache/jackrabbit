@@ -154,7 +154,7 @@ public class FileJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected RecordIterator getRecords(long startRevision)
+    public RecordIterator getRecords(long startRevision)
             throws JournalException {
 
         long stopRevision = getGlobalRevision();
@@ -165,6 +165,32 @@ public class FileJournal extends AbstractJournal {
             files = new File[logFiles.length];
             for (int i = 0; i < files.length; i++) {
                 files[i] = logFiles[i].getFile();
+            }
+        }
+        return new FileRecordIterator(files, startRevision, stopRevision,
+                getResolver(), getNamePathResolver());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RecordIterator getRecords() throws JournalException {
+        long stopRevision = getGlobalRevision();
+        long startRevision = 0;
+
+        RotatingLogFile[] logFiles = RotatingLogFile.listFiles(rootDirectory, basename);
+        File[] files = new File[logFiles.length];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = logFiles[i].getFile();
+            if (i == 0) {
+                try {
+                    FileRecordLog log = new FileRecordLog(files[i]);
+                    startRevision = log.getPreviousRevision();
+                } catch (IOException e) {
+                    String msg = "Unable to read startRevision from first " +
+                            "record log file";
+                    throw new JournalException(msg, e);
+                }
             }
         }
         return new FileRecordIterator(files, startRevision, stopRevision,

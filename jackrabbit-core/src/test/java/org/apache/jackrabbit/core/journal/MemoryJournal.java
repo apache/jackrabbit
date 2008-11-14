@@ -23,11 +23,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
-import org.apache.jackrabbit.core.journal.AbstractJournal;
-import org.apache.jackrabbit.core.journal.AppendRecord;
-import org.apache.jackrabbit.core.journal.InstanceRevision;
-import org.apache.jackrabbit.core.journal.JournalException;
-import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,7 +144,7 @@ public class MemoryJournal extends AbstractJournal {
     /**
      * {@inheritDoc}
      */
-    protected RecordIterator getRecords(long startRevision)
+    public RecordIterator getRecords(long startRevision)
             throws JournalException {
 
         checkState();
@@ -158,6 +153,13 @@ public class MemoryJournal extends AbstractJournal {
         long stopRevision = records.size();
 
         return new MemoryRecordIterator(startRevision, stopRevision);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RecordIterator getRecords() throws JournalException {
+        return new MemoryRecordIterator(0, records.size());
     }
 
     /**

@@ -63,6 +63,7 @@ public interface Journal {
      * Return the record producer for a given identifier.
      *
      * @param identifier identifier
+     * @return the record producer for a given identifier.
      * @throws JournalException if an error occurs
      */
     RecordProducer getProducer(String identifier) throws JournalException;
@@ -79,4 +80,22 @@ public interface Journal {
      * @throws JournalException on error
      */
     public InstanceRevision getInstanceRevision() throws JournalException;
+
+    /**
+     * Return an iterator over all records after the specified revision.
+     *
+     * @param startRevision start point (exlusive)
+     * @return an iterator over all records after the specified revision.
+     * @throws JournalException if an error occurs
+     */
+    public RecordIterator getRecords(long startRevision)
+            throws JournalException;
+
+    /**
+     * Return an iterator over all available records in the journal.
+     *
+     * @return an iterator over all records.
+     * @throws JournalException if an error occurs
+     */
+    public RecordIterator getRecords() throws JournalException;
 }

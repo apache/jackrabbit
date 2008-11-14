@@ -70,20 +70,22 @@ class FilteredEventIterator implements EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
-     * @param c      an unmodifiable Collection of {@link javax.jcr.observation.Event}s.
+     * @param eventStates an iterator over unfiltered {@link EventState}s.
+     * @param timestamp the time when the event were created.
      * @param filter only event that pass the filter will be dispatched to the
      *               event listener.
      * @param denied <code>Set</code> of <code>ItemId</code>s of denied <code>ItemState</code>s
      *               rejected by the <code>AccessManager</code>. If
      *               <code>null</code> no <code>ItemState</code> is denied.
      */
-    public FilteredEventIterator(EventStateCollection c,
+    public FilteredEventIterator(Iterator eventStates,
+                                 long timestamp,
                                  EventFilter filter,
                                  Set denied) {
-        actualEvents = c.iterator();
+        this.actualEvents = eventStates;
         this.filter = filter;
         this.denied = denied;
-        this.timestamp = c.getTimestamp();
+        this.timestamp = timestamp;
         fetchNext();
     }
 
