@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
@@ -81,12 +82,19 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         PrincipalManager prMgr = getSession().getPrincipalManager();
         for (Iterator it = getRefereeValues().iterator(); it.hasNext();) {
             String refName = ((Value) it.next()).getString();
+            Principal princ = null;
             if (prMgr.hasPrincipal(refName)) {
-                coll.add(prMgr.getPrincipal(refName));
-            } else {
-                log.warn("Principal "+ refName +" unknown to PrincipalManager.");
-                coll.add(new PrincipalImpl(refName));
+                try {
+                    princ = prMgr.getPrincipal(refName);
+                } catch (NoSuchPrincipalException e) {
+                    // should not get here
+                }
             }
+            if (princ == null) {
+                log.warn("Principal "+ refName +" unknown to PrincipalManager.");
+                princ = new PrincipalImpl(refName);
+            }
+            coll.add(princ);
         }
         return new PrincipalIteratorAdapter(coll);
     }

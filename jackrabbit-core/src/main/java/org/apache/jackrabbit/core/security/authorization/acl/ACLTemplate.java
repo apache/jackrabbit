@@ -22,6 +22,7 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -29,6 +30,9 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -49,6 +53,8 @@ import java.util.Map;
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
 class ACLTemplate implements JackrabbitAccessControlList {
+
+    private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
 
     /**
      * Path of the node this ACL template has been created for.
@@ -103,22 +109,36 @@ class ACLTemplate implements JackrabbitAccessControlList {
         NodeIterator itr = aclNode.getNodes();
         while (itr.hasNext()) {
             NodeImpl aceNode = (NodeImpl) itr.nextNode();
+            try {
+                String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
+                Principal princ = null;
+                if (principalMgr.hasPrincipal(principalName)) {
+                    try {
+                        princ = principalMgr.getPrincipal(principalName);
+                    } catch (NoSuchPrincipalException e) {
+                        // should not get here.
+                    }
+                }
+                if (princ == null) {
+                    log.debug("Principal with name " + principalName + " unknown to PrincipalManager.");
+                    princ = new PrincipalImpl(principalName);
+                }
 
-            String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
-            Principal princ = principalMgr.getPrincipal(principalName);
-
-            Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
-            Privilege[] privs = new Privilege[privValues.length];
-            for (int i = 0; i < privValues.length; i++) {
-                privs[i] = acMgr.privilegeFromName(privValues[i].getString());
+                Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
+                Privilege[] privs = new Privilege[privValues.length];
+                for (int i = 0; i < privValues.length; i++) {
+                    privs[i] = acMgr.privilegeFromName(privValues[i].getString());
+                }
+                // create a new ACEImpl (omitting validation check)
+                Entry ace = new Entry(
+                        princ,
+                        privs,
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
+                // add the entry
+                internalAdd(ace);
+            } catch (RepositoryException e) {
+                log.debug("Failed to build ACE from content.", e.getMessage());
             }
-            // create a new ACEImpl (omitting validation check)
-            Entry ace = new Entry(
-                    princ,
-                    privs,
-                    aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
-            // add the entry
-            internalAdd(ace);
         }
     }
 
@@ -144,7 +164,18 @@ class ACLTemplate implements JackrabbitAccessControlList {
             String principalName = aceNode.getProperty(AccessControlConstants.P_PRINCIPAL_NAME).getString();
             // only process aceNode if 'principalName' is contained in the given set
             if (princToEntries.containsKey(principalName)) {
-                Principal princ = principalMgr.getPrincipal(principalName);
+                Principal princ = null;
+                if (principalMgr.hasPrincipal(principalName)) {
+                    try {
+                        princ = principalMgr.getPrincipal(principalName);
+                    } catch (NoSuchPrincipalException e) {
+                        // should not get here
+                    }
+                }
+                if (princ == null) {
+                    log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
+                    princ = new PrincipalImpl(principalName);
+                }
 
                 Value[] privValues = aceNode.getProperty(AccessControlConstants.P_PRIVILEGES).getValues();
                 Privilege[] privs = new Privilege[privValues.length];

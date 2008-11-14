@@ -18,6 +18,7 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SecurityItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -326,14 +327,18 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             throw new RepositoryException("Expected node of type rep:AccessControl.");
         }
 
-        Principal principal;
+        Principal principal = null;
         String principalName = Text.unescapeIllegalJcrChars(acNode.getName());
         PrincipalManager pMgr = ((SessionImpl) acNode.getSession()).getPrincipalManager();
         if (pMgr.hasPrincipal(principalName)) {
-            principal = pMgr.getPrincipal(principalName);
-        } else {
+            try {
+                principal = pMgr.getPrincipal(principalName);
+            } catch (NoSuchPrincipalException e) {
+                // should not get here. 
+            }
+        }
+        if (principal == null) {
             log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
-            // TODO: rather throw?
             principal = new PrincipalImpl(principalName);
         }
         return new ACLTemplate(principal, acNode);
