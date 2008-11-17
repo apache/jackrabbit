@@ -58,7 +58,18 @@ public class RepositoryServiceTest extends AbstractSPITest {
         assertTrue("Workspace names must contain at least a single workspace", workspaceNames.length > 0);
 
         String wspName = getProperty(RepositoryServiceStub.PROP_WORKSPACE);
-        assertTrue("Workspace name used for retrieving the SessionInfo must be included in the available workspaces.", Arrays.asList(workspaceNames).contains(wspName));
+        if (wspName != null) {
+            assertTrue("Workspace name used for retrieving the SessionInfo must be included in the available workspaces.", Arrays.asList(workspaceNames).contains(wspName));
+        }
+    }
+
+    public void testNullWorkspaceName() throws RepositoryException {
+        SessionInfo sInfo = service.obtain(helper.getAdminCredentials(), null);
+        try {
+            assertNotNull(sInfo.getWorkspaceName());
+        } finally {
+            service.dispose(sInfo);
+        }
     }
 
     // TODO: add more tests
