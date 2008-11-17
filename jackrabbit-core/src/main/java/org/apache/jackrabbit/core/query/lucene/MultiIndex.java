@@ -17,8 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -35,11 +34,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.store.Directory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
-import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -90,16 +88,6 @@ public class MultiIndex {
     private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
 
     /**
-     * Default name of the redo log file
-     */
-    private static final String REDO_LOG = "redo.log";
-
-    /**
-     * Name of the file that contains the indexing queue log.
-     */
-    private static final String INDEXING_QUEUE_FILE = "indexing_queue.log";
-
-    /**
      * Names of active persistent index directories.
      */
     private final IndexInfos indexNames = new IndexInfos("indexes");
@@ -123,9 +111,14 @@ public class MultiIndex {
     private final NamespaceMappings nsMappings;
 
     /**
-     * The base filesystem to store the index.
+     * The directory manager.
      */
-    private final File indexDir;
+    private final DirectoryManager directoryManager;
+
+    /**
+     * The base directory to store the index.
+     */
+    private final Directory indexDir;
 
     /**
      * The query handler
@@ -223,24 +216,20 @@ public class MultiIndex {
     /**
      * Creates a new MultiIndex.
      *
-     * @param indexDir the base file system
      * @param handler the search handler
      * @param excludedIDs   Set&lt;NodeId> that contains uuids that should not
      *                      be indexed nor further traversed.
-     * @param mapping the namespace mapping to use
      * @throws IOException if an error occurs
      */
-    MultiIndex(File indexDir,
-               SearchIndex handler,
-               Set excludedIDs,
-               NamespaceMappings mapping) throws IOException {
-
-        this.indexDir = indexDir;
+    MultiIndex(SearchIndex handler,
+               Set excludedIDs) throws IOException {
+        this.directoryManager = handler.getDirectoryManager();
+        this.indexDir = directoryManager.getDirectory(".");
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
-        this.redoLog = new RedoLog(new File(indexDir, REDO_LOG));
+        this.redoLog = new RedoLog(indexDir);
         this.excludedIDs = new HashSet(excludedIDs);
-        this.nsMappings = mapping;
+        this.nsMappings = handler.getNamespaceMappings();
 
         if (indexNames.exists(indexDir)) {
             indexNames.read(indexDir);
@@ -255,34 +244,26 @@ public class MultiIndex {
         merger.setMergeFactor(handler.getMergeFactor());
         merger.setMinMergeDocs(handler.getMinMergeDocs());
 
-        IndexingQueueStore store;
-        try {
-            LocalFileSystem fs = new LocalFileSystem();
-            fs.setRoot(indexDir);
-            fs.init();
-            store = new IndexingQueueStore(fs, INDEXING_QUEUE_FILE);
-        } catch (FileSystemException e) {
-            throw Util.createIOException(e);
-        }
+        IndexingQueueStore store = new IndexingQueueStore(indexDir);
 
         // initialize indexing queue
         this.indexingQueue = new IndexingQueue(store);
 
         // open persistent indexes
         for (int i = 0; i < indexNames.size(); i++) {
-            File sub = new File(indexDir, indexNames.getName(i));
+            String name = indexNames.getName(i);
             // only open if it still exists
             // it is possible that indexNames still contains a name for
             // an index that has been deleted, but indexNames has not been
             // written to disk.
-            if (!sub.exists()) {
-                log.debug("index does not exist anymore: " + sub.getAbsolutePath());
+            if (!directoryManager.hasDirectory(name)) {
+                log.debug("index does not exist anymore: " + name);
                 // move on to next index
                 continue;
             }
-            PersistentIndex index = new PersistentIndex(indexNames.getName(i),
-                    sub, handler.getTextAnalyzer(), handler.getSimilarity(),
-                    cache, indexingQueue);
+            PersistentIndex index = new PersistentIndex(name,
+                    handler.getTextAnalyzer(), handler.getSimilarity(),
+                    cache, indexingQueue, directoryManager);
             index.setMaxMergeDocs(handler.getMaxMergeDocs());
             index.setMergeFactor(handler.getMergeFactor());
             index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -580,16 +561,14 @@ public class MultiIndex {
         }
 
         // otherwise open / create it
-        File sub;
         if (indexName == null) {
-            sub = newIndexFolder();
-            indexName = sub.getName();
-        } else {
-            sub = new File(indexDir, indexName);
+            do {
+                indexName = indexNames.newName();
+            } while (directoryManager.hasDirectory(indexName));
         }
-        PersistentIndex index = new PersistentIndex(indexName, sub,
+        PersistentIndex index = new PersistentIndex(indexName,
                 handler.getTextAnalyzer(), handler.getSimilarity(),
-                cache, indexingQueue);
+                cache, indexingQueue, directoryManager);
         index.setMaxMergeDocs(handler.getMaxMergeDocs());
         index.setMergeFactor(handler.getMergeFactor());
         index.setMinMergeDocs(handler.getMinMergeDocs());
@@ -608,8 +587,10 @@ public class MultiIndex {
      *
      * @param indexName the name of the index segment.
      * @return <code>true</code> if it exists; otherwise <code>false</code>.
+     * @throws IOException if an error occurs while checking existence of
+     *          directory.
      */
-    synchronized boolean hasIndex(String indexName) {
+    synchronized boolean hasIndex(String indexName) throws IOException {
         // check existing
         for (Iterator it = indexes.iterator(); it.hasNext();) {
             PersistentIndex idx = (PersistentIndex) it.next();
@@ -618,7 +599,7 @@ public class MultiIndex {
             }
         }
         // check if it exists on disk
-        return new File(indexDir, indexName).exists();
+        return directoryManager.hasDirectory(indexName);
     }
 
     /**
@@ -920,18 +901,15 @@ public class MultiIndex {
      * Enqueues unused segments for deletion in {@link #deletable}. This method
      * does not synchronize on {@link #deletable}! A caller must ensure that it
      * is the only one acting on the {@link #deletable} map.
+     *
+     * @throws IOException if an error occurs while reading directories.
      */
-    private void enqueueUnusedSegments() {
+    private void enqueueUnusedSegments() throws IOException {
         // walk through index segments
-        File[] segmentDirs = indexDir.listFiles(new FileFilter() {
-            public boolean accept(File pathname) {
-                return pathname.isDirectory() && pathname.getName().startsWith("_");
-            }
-        });
-        for (int i = 0; i < segmentDirs.length; i++) {
-            String name = segmentDirs[i].getName();
-            if (!indexNames.contains(name)) {
-                deletable.add(name);
+        String[] dirNames = directoryManager.getDirectoryNames();
+        for (int i = 0; i < dirNames.length; i++) {
+            if (dirNames[i].startsWith("_") && !indexNames.contains(dirNames[i])) {
+                deletable.add(dirNames[i]);
             }
         }
     }
@@ -1078,8 +1056,7 @@ public class MultiIndex {
         synchronized (deletable) {
             for (Iterator it = deletable.iterator(); it.hasNext(); ) {
                 String indexName = (String) it.next();
-                File dir = new File(indexDir, indexName);
-                if (deleteIndex(dir)) {
+                if (directoryManager.delete(indexName)) {
                     it.remove();
                 } else {
                     log.info("Unable to delete obsolete index: " + indexName);
@@ -1093,52 +1070,14 @@ public class MultiIndex {
      * in Jackrabbit versions >= 1.5.
      */
     private void removeDeletable() {
-        File deletable = new File(indexDir, "deletable");
-        if (deletable.exists()) {
-            deletable.delete();
-        }
-    }
-
-    /**
-     * Deletes the index <code>directory</code>.
-     *
-     * @param directory the index directory to delete.
-     * @return <code>true</code> if the delete was successful,
-     *         <code>false</code> otherwise.
-     */
-    private boolean deleteIndex(File directory) {
-        // trivial if it does not exist anymore
-        if (!directory.exists()) {
-            return true;
-        }
-        // delete files first
-        File[] files = directory.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].delete()) {
-                return false;
+        String fileName = "deletable";
+        try {
+            if (indexDir.fileExists(fileName)) {
+                indexDir.deleteFile(fileName);
             }
+        } catch (IOException e) {
+            log.warn("Unable to remove file 'deletable'.", e);
         }
-        // now delete directory itself
-        return directory.delete();
-    }
-
-    /**
-     * Returns an new index folder which is empty.
-     *
-     * @return the new index folder.
-     * @throws IOException if the folder cannot be created.
-     */
-    private File newIndexFolder() throws IOException {
-        // create new index folder. make sure it does not exist
-        File sub;
-        do {
-            sub = new File(indexDir, indexNames.newName());
-        } while (sub.exists());
-
-        if (!sub.mkdir()) {
-            throw new IOException("Unable to create directory: " + sub.getAbsolutePath());
-        }
-        return sub;
     }
 
     /**
