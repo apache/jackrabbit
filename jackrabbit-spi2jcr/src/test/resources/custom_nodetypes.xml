@@ -242,6 +242,19 @@
     </childNodeDefinition>
   </nodeType>
 
+  <!-- Defines a test nodetype with mandatory non-protected child definitions -->
+  <nodeType name="test:mandatoryChildDefs" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+    <supertypes>
+      <supertype>nt:base</supertype>
+    </supertypes>
+    <propertyDefinition name="mandatoryProp" requiredType="undefined" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="false" multiple="false"/>
+    <childNodeDefinition name="mandatoryNode" defaultPrimaryType="nt:unstructured" autoCreated="false" mandatory="true" onParentVersion="COMPUTE" protected="false" sameNameSiblings="false">
+      <requiredPrimaryTypes>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+      </requiredPrimaryTypes>
+    </childNodeDefinition>
+  </nodeType>
+
 
   <!-- ======================================================== -->
   <!-- Node type definitions only required for jackrabbit core  -->
