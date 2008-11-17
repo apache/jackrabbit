@@ -19,15 +19,16 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+
+import org.apache.lucene.store.Directory;
+import org.apache.jackrabbit.core.query.lucene.directory.IndexInputStream;
+import org.apache.jackrabbit.core.query.lucene.directory.IndexOutputStream;
 
 /**
  * Stores a sequence of index names.
@@ -74,9 +75,10 @@ class IndexInfos {
      *
      * @param dir the directory where to look for the index infos.
      * @return <code>true</code> if it exists; <code>false</code> otherwise.
+     * @throws IOException if an error occurs while reading from the directory.
      */
-    boolean exists(File dir) {
-        return new File(dir, name).exists();
+    boolean exists(Directory dir) throws IOException {
+        return dir.fileExists(name);
     }
 
     /**
@@ -94,8 +96,8 @@ class IndexInfos {
      * @param dir the directory from where to read the index infos.
      * @throws IOException if an error occurs.
      */
-    void read(File dir) throws IOException {
-        InputStream in = new FileInputStream(new File(dir, name));
+    void read(Directory dir) throws IOException {
+        InputStream in = new IndexInputStream(dir.openInput(name));
         try {
             DataInputStream di = new DataInputStream(in);
             counter = di.readInt();
@@ -115,14 +117,13 @@ class IndexInfos {
      * @param dir the directory where to write the index infos.
      * @throws IOException if an error occurs.
      */
-    void write(File dir) throws IOException {
+    void write(Directory dir) throws IOException {
         // do not write if not dirty
         if (!dirty) {
             return;
         }
 
-        File nu = new File(dir, name + ".new");
-        OutputStream out = new FileOutputStream(nu);
+        OutputStream out = new IndexOutputStream(dir.createOutput(name + ".new"));
         try {
             DataOutputStream dataOut = new DataOutputStream(out);
             dataOut.writeInt(counter);
@@ -134,13 +135,10 @@ class IndexInfos {
             out.close();
         }
         // delete old
-        File old = new File(dir, name);
-        if (old.exists() && !old.delete()) {
-            throw new IOException("Unable to delete file: " + old.getAbsolutePath());
+        if (dir.fileExists(name)) {
+            dir.deleteFile(name);
         }
-        if (!nu.renameTo(old)) {
-            throw new IOException("Unable to rename file: " + nu.getAbsolutePath());
-        }
+        dir.renameFile(name + ".new", name);
         dirty = false;
     }
 

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.query.lucene.directory.IndexInputStream;
+import org.apache.lucene.store.Directory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -31,7 +31,7 @@ import java.util.HashSet;
 /**
  * <code>IndexingQueueStore</code> implements a store that keeps the uuids of
  * nodes that are pending in the indexing queue. Until Jackrabbit 1.4 this store
- * was also persisted to a {@link FileSystem}. Starting with 1.5 the pending
+ * was also persisted to disk. Starting with 1.5 the pending
  * nodes are marked directly in the index with a special field.
  * See {@link FieldNames#REINDEXING_REQUIRED}.
  */
@@ -58,33 +58,28 @@ class IndexingQueueStore {
     private static final String REMOVE = "REMOVE";
 
     /**
+     * Name of the file that contains the indexing queue log.
+     */
+    private static final String INDEXING_QUEUE_FILE = "indexing_queue.log";
+
+    /**
      * The UUID Strings of the pending documents.
      */
     private final Set pending = new HashSet();
 
     /**
-     * The file system from where to read pending document UUIDs.
+     * The directory from where to read pending document UUIDs.
      */
-    private final FileSystem fs;
+    private final Directory dir;
 
     /**
-     * The name of the file for the pending document UUIDs.
-     */
-    private final String fileName;
-
-    /**
-     * Creates a new <code>IndexingQueueStore</code> using the given file
-     * system.
+     * Creates a new <code>IndexingQueueStore</code> using the given directory.
      *
-     * @param fs       the file system to use.
-     * @param fileName the name of the file where to write the pending UUIDs
-     *                 to.
-     * @throws FileSystemException if an error ocurrs while reading pending
-     *                             UUIDs.
+     * @param directory the directory to use.
+     * @throws IOException if an error ocurrs while reading pending UUIDs.
      */
-    IndexingQueueStore(FileSystem fs, String fileName) throws FileSystemException {
-        this.fs = fs;
-        this.fileName = fileName;
+    IndexingQueueStore(Directory directory) throws IOException {
+        this.dir = directory;
         readStore();
     }
 
@@ -119,11 +114,11 @@ class IndexingQueueStore {
     public void close() {
         if (pending.isEmpty()) {
             try {
-                if (fs.exists(fileName)) {
-                    fs.deleteFile(fileName);
+                if (dir.fileExists(INDEXING_QUEUE_FILE)) {
+                    dir.deleteFile(INDEXING_QUEUE_FILE);
                 }
-            } catch (FileSystemException e) {
-                log.warn("unable to delete " + fileName);
+            } catch (IOException e) {
+                log.warn("unable to delete " + INDEXING_QUEUE_FILE);
             }
         }
     }
@@ -134,39 +129,35 @@ class IndexingQueueStore {
      * Reads all pending UUIDs from the file and puts them into {@link
      * #pending}.
      *
-     * @throws FileSystemException if an error occurs while reading.
+     * @throws IOException if an error occurs while reading.
      */
-    private void readStore() throws FileSystemException {
-        if (fs.exists(fileName)) {
+    private void readStore() throws IOException {
+        if (dir.fileExists(INDEXING_QUEUE_FILE)) {
+            InputStream in = new IndexInputStream(dir.openInput(INDEXING_QUEUE_FILE));
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(in, ENCODING));
             try {
-                InputStream in = fs.getInputStream(fileName);
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(in, ENCODING));
-                try {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        int idx = line.indexOf(' ');
-                        if (idx == -1) {
-                            // invalid line
-                            log.warn("invalid line in {}: {}", fileName, line);
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int idx = line.indexOf(' ');
+                    if (idx == -1) {
+                        // invalid line
+                        log.warn("invalid line in {}: {}", INDEXING_QUEUE_FILE, line);
+                    } else {
+                        String cmd = line.substring(0, idx);
+                        String uuid = line.substring(idx + 1, line.length());
+                        if (ADD.equals(cmd)) {
+                            pending.add(uuid);
+                        } else if (REMOVE.equals(cmd)) {
+                            pending.remove(uuid);
                         } else {
-                            String cmd = line.substring(0, idx);
-                            String uuid = line.substring(idx + 1, line.length());
-                            if (ADD.equals(cmd)) {
-                                pending.add(uuid);
-                            } else if (REMOVE.equals(cmd)) {
-                                pending.remove(uuid);
-                            } else {
-                                // invalid line
-                                log.warn("invalid line in {}: {}", fileName, line);
-                            }
+                            // invalid line
+                            log.warn("invalid line in {}: {}", INDEXING_QUEUE_FILE, line);
                         }
                     }
-                } finally {
-                    in.close();
                 }
-            } catch (IOException e) {
-                throw new FileSystemException(e.getMessage(), e);
+            } finally {
+                in.close();
             }
         }
     }

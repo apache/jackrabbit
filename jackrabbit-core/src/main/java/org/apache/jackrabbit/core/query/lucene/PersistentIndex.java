@@ -22,12 +22,10 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.NativeFSLockFactory;
 import org.apache.lucene.search.Similarity;
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 
 import java.io.IOException;
-import java.io.File;
 
 /**
  * Implements a lucene index which is based on a
@@ -45,26 +43,27 @@ class PersistentIndex extends AbstractIndex {
     private IndexListener listener;
 
     /**
-     * Creates a new <code>PersistentIndex</code> based on the file system
-     * <code>indexDir</code>.
+     * Creates a new <code>PersistentIndex</code>.
+     *
      * @param name the name of this index.
-     * @param indexDir the directory to store the index.
      * @param analyzer the analyzer for text tokenizing.
      * @param similarity the similarity implementation.
      * @param cache the document number cache
      * @param indexingQueue the indexing queue.
+     * @param directoryManager the directory manager.
      * @throws IOException if an error occurs while opening / creating the
      *  index.
      */
-    PersistentIndex(String name, File indexDir, Analyzer analyzer,
+    PersistentIndex(String name, Analyzer analyzer,
                     Similarity similarity, DocNumberCache cache,
-                    IndexingQueue indexingQueue)
+                    IndexingQueue indexingQueue,
+                    DirectoryManager directoryManager)
             throws IOException {
-        super(analyzer, similarity, FSDirectory.getDirectory(indexDir, new NativeFSLockFactory(indexDir)),
+        super(analyzer, similarity, directoryManager.getDirectory(name),
                 cache, indexingQueue);
         this.name = name;
         if (isExisting()) {
-            IndexMigration.migrate(this, indexDir);
+            IndexMigration.migrate(this, directoryManager);
         }
     }
 

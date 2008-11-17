@@ -28,6 +28,8 @@ import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
+import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -405,6 +407,16 @@ public class SearchIndex extends AbstractQueryHandler {
     private Similarity similarity = Similarity.getDefault();
 
     /**
+     * The name of the directory manager class implementation.
+     */
+    private String directoryManagerClass = FSDirectoryManager.class.getName();
+
+    /**
+     * The directory manager.
+     */
+    private DirectoryManager directoryManager;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -437,8 +449,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
         extractor = createTextExtractor();
         synProvider = createSynonymProvider();
-
-        File indexDir = new File(path);
+        directoryManager = createDirectoryManager();
 
         if (context.getParentHandler() instanceof SearchIndex) {
             // use system namespace mappings
@@ -446,7 +457,7 @@ public class SearchIndex extends AbstractQueryHandler {
             nsMappings = sysIndex.getNamespaceMappings();
         } else {
             // read local namespace mappings
-            File mapFile = new File(indexDir, NS_MAPPING_FILE);
+            File mapFile = new File(new File(path), NS_MAPPING_FILE);
             if (mapFile.exists()) {
                 // be backward compatible and use ns_mappings.properties from
                 // index folder
@@ -463,7 +474,7 @@ public class SearchIndex extends AbstractQueryHandler {
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
 
-        index = new MultiIndex(indexDir, this, excludedIDs, nsMappings);
+        index = new MultiIndex(this, excludedIDs);
         if (index.numDocs() == 0) {
             Path rootPath;
             if (excludedIDs.isEmpty()) {
@@ -849,6 +860,13 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * @return the directory manager for this search index.
+     */
+    public DirectoryManager getDirectoryManager() {
+        return directoryManager;
+    }
+
+    /**
      * Returns an index reader for this search index. The caller of this method
      * is responsible for closing the index reader when he is finished using
      * it.
@@ -999,6 +1017,31 @@ public class SearchIndex extends AbstractQueryHandler {
             }
         }
         return sp;
+    }
+
+    /**
+     * @return an initialized {@link DirectoryManager}.
+     * @throws IOException if the directory manager cannot be instantiated or
+     *          an exception occurs while initializing the manager.
+     */
+    protected DirectoryManager createDirectoryManager()
+            throws IOException {
+        try {
+            Class clazz = Class.forName(directoryManagerClass);
+            if (!DirectoryManager.class.isAssignableFrom(clazz)) {
+                throw new IOException(directoryManagerClass +
+                        " is not a DirectoryManager implementation");
+            }
+            DirectoryManager df = (DirectoryManager) clazz.newInstance();
+            df.init(this);
+            return df;
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            IOException ex = new IOException();
+            ex.initCause(e);
+            throw ex;
+        }
     }
 
     /**
@@ -1896,6 +1939,23 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public long getMaxVolatileIndexSize() {
         return maxVolatileIndexSize;
+    }
+
+    /**
+     * @return the name of the directory manager class.
+     */
+    public String getDirectoryManagerClass() {
+        return directoryManagerClass;
+    }
+
+    /**
+     * Sets name of the directory manager class. The class must implement
+     * {@link DirectoryManager}.
+     *
+     * @param className the name of the class that implements directory manager.
+     */
+    public void setDirectoryManagerClass(String className) {
+        this.directoryManagerClass = className;
     }
 
     //----------------------------< internal >----------------------------------

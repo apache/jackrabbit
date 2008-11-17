@@ -23,18 +23,16 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.NoLockFactory;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.document.Field;
-import org.apache.jackrabbit.core.fs.local.FileUtil;
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.io.File;
 
 /**
  * <code>IndexMigration</code> implements a utility that migrates a Jackrabbit
@@ -56,11 +54,14 @@ public class IndexMigration {
      * Checks if the given <code>index</code> needs to be migrated.
      *
      * @param index the index to check and migration if needed.
-     * @param indexDir the directory where the index is stored.
+     * @param directoryManager the directory manager.
      * @throws IOException if an error occurs while migrating the index.
      */
-    public static void migrate(PersistentIndex index, File indexDir) throws IOException {
-        log.debug("Checking {} ...", indexDir.getAbsolutePath());
+    public static void migrate(PersistentIndex index,
+                               DirectoryManager directoryManager)
+            throws IOException {
+        Directory indexDir = index.getDirectory();
+        log.debug("Checking {} ...", indexDir);
         ReadOnlyIndexReader reader = index.getReadOnlyIndexReader();
         try {
             if (IndexFormatVersion.getVersion(reader).getVersion() >=
@@ -87,24 +88,20 @@ public class IndexMigration {
         }
 
         // if we get here then the index must be migrated
-        log.debug("Index requires migration {}", indexDir.getAbsolutePath());
+        log.debug("Index requires migration {}", indexDir);
 
         // make sure readers are closed, otherwise the directory
         // cannot be deleted
         index.releaseWriterAndReaders();
 
-        File migrationDir = new File(indexDir.getAbsoluteFile().getParentFile(), indexDir.getName() + "_v2.3");
-        if (migrationDir.exists()) {
-            FileUtil.delete(migrationDir);
+        String migrationName = index.getName() + "_v2.3";
+        if (directoryManager.hasDirectory(migrationName)) {
+            directoryManager.delete(migrationName);
         }
-        if (!migrationDir.mkdirs()) {
-            throw new IOException("failed to create directory " +
-                    migrationDir.getAbsolutePath());
-        }
-        FSDirectory fsDir = FSDirectory.getDirectory(migrationDir,
-                NoLockFactory.getNoLockFactory());
+
+        Directory migrationDir = directoryManager.getDirectory(migrationName);
         try {
-            IndexWriter writer = new IndexWriter(fsDir, new JackrabbitAnalyzer());
+            IndexWriter writer = new IndexWriter(migrationDir, new JackrabbitAnalyzer());
             try {
                 IndexReader r = new MigrationIndexReader(
                         IndexReader.open(index.getDirectory()));
@@ -118,14 +115,14 @@ public class IndexMigration {
                 writer.close();
             }
         } finally {
-            fsDir.close();
+            migrationDir.close();
         }
-        FileUtil.delete(indexDir);
-        if (!migrationDir.renameTo(indexDir)) {
+        directoryManager.delete(index.getName());
+        if (!directoryManager.rename(migrationName, index.getName())) {
             throw new IOException("failed to move migrated directory " +
-                    migrationDir.getAbsolutePath());
+                    migrationDir);
         }
-        log.info("Migrated " + indexDir.getAbsolutePath());
+        log.info("Migrated " + index.getName());
     }
 
     //---------------------------< internal helper >----------------------------

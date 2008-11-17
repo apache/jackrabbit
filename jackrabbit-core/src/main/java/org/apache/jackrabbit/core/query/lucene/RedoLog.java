@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.lucene.store.Directory;
+import org.apache.jackrabbit.core.query.lucene.directory.IndexOutputStream;
+import org.apache.jackrabbit.core.query.lucene.directory.IndexInputStream;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -26,10 +29,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.OutputStream;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +50,11 @@ class RedoLog {
     private static final Logger log = LoggerFactory.getLogger(RedoLog.class);
 
     /**
+     * Default name of the redo log file
+     */
+    private static final String REDO_LOG = "redo.log";
+
+    /**
      * Implements a {@link ActionCollector} that counts all entries and sets
      * {@link #entryCount}.
      */
@@ -60,9 +65,9 @@ class RedoLog {
     };
 
     /**
-     * The log file
+     * The directory where the log file is stored.
      */
-    private final File logFile;
+    private final Directory dir;
 
     /**
      * The number of log entries in the log file
@@ -75,17 +80,14 @@ class RedoLog {
     private Writer out;
 
     /**
-     * Creates a new <code>RedoLog</code> instance based on the file
-     * <code>logFile</code>
-     * @param log the redo log file.
+     * Creates a new <code>RedoLog</code> instance, which stores its log in the
+     * given directory.
+     *
+     * @param dir the directory where the redo log file is located.
+     * @throws IOException if an error occurs while reading the redo log.
      */
-    RedoLog(File log) throws IOException {
-        this.logFile = log;
-        // create the log file if not there
-        if (!log.exists()) {
-            log.getParentFile().mkdirs();
-            log.createNewFile();
-        }
+    RedoLog(Directory dir) throws IOException {
+        this.dir = dir;
         read(ENTRY_COUNTER);
     }
 
@@ -157,8 +159,7 @@ class RedoLog {
             out.close();
             out = null;
         }
-        // truncate file
-        new FileOutputStream(logFile).close();
+        dir.deleteFile(REDO_LOG);
         entryCount = 0;
     }
 
@@ -169,7 +170,7 @@ class RedoLog {
      */
     private void initOut() throws IOException {
         if (out == null) {
-            OutputStream os = new FileOutputStream(logFile, true);
+            OutputStream os = new IndexOutputStream(dir.createOutput(REDO_LOG));
             out = new BufferedWriter(new OutputStreamWriter(os));
         }
     }
@@ -182,7 +183,10 @@ class RedoLog {
      * log file.
      */
     private void read(ActionCollector collector) throws IOException {
-        InputStream in = new FileInputStream(logFile);
+        if (!dir.fileExists(REDO_LOG)) {
+            return;
+        }
+        InputStream in = new IndexInputStream(dir.openInput(REDO_LOG));
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
