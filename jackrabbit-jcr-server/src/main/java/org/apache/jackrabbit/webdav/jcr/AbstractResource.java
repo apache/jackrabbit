@@ -85,23 +85,23 @@ import java.util.List;
  * resources.
  */
 abstract class AbstractResource implements DavResource, TransactionResource,
-    DeltaVResource, SearchResource {
+        DeltaVResource, SearchResource {
 
     private static Logger log = LoggerFactory.getLogger(AbstractResource.class);
 
     private static final String COMPLIANCE_CLASSES =
-        DavCompliance.concatComplianceClasses(new String[] {
-        DavCompliance._1_,
-        DavCompliance._2_,
-        DavCompliance._3_,
-        DavCompliance.VERSION_CONTROL,
-        DavCompliance.VERSION_HISTORY,
-        DavCompliance.CHECKOUT_IN_PLACE,
-        DavCompliance.LABEL,
-        DavCompliance.MERGE,
-        DavCompliance.UPDATE,
-        DavCompliance.WORKSPACE
-    });
+            DavCompliance.concatComplianceClasses(new String[] {
+                    DavCompliance._1_,
+                    DavCompliance._2_,
+                    DavCompliance._3_,
+                    DavCompliance.VERSION_CONTROL,
+                    DavCompliance.VERSION_HISTORY,
+                    DavCompliance.CHECKOUT_IN_PLACE,
+                    DavCompliance.LABEL,
+                    DavCompliance.MERGE,
+                    DavCompliance.UPDATE,
+                    DavCompliance.WORKSPACE
+            });
 
     private final DavResourceLocator locator;
     private final JcrDavSession session;
@@ -229,8 +229,8 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
     public MultiStatusResponse alterProperties(DavPropertySet setProperties,
-                                DavPropertyNameSet removePropertyNames)
-        throws DavException {
+                                               DavPropertyNameSet removePropertyNames)
+            throws DavException {
         List changeList = new ArrayList();
         if (removePropertyNames != null) {
             DavPropertyNameIterator it = removePropertyNames.iterator();
@@ -442,7 +442,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
             // DAV:workspace-collection-set is supported.
             if (optionsInfo.containsElement(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE)) {
                 String[] hrefs = new String[] {
-                    getLocatorFromItemPath(ItemResourceConstants.VERSIONSTORAGE_PATH).getHref(true)
+                        getLocatorFromItemPath(ItemResourceConstants.VERSIONSTORAGE_PATH).getHref(true)
                 };
                 oR.addEntry(DeltaVConstants.XML_VH_COLLECTION_SET, DeltaVConstants.NAMESPACE, hrefs);
             }
@@ -595,18 +595,22 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
         properties.add(new SupportedMethodSetProperty(getSupportedMethods().split(",\\s")));
 
-	// DeltaV properties
-	properties.add(supportedReports);
-	// creator-displayname, comment: not value available from jcr
-	properties.add(new DefaultDavProperty(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
-	properties.add(new DefaultDavProperty(DeltaVConstants.COMMENT, null, true));
+        // DeltaV properties
+        properties.add(supportedReports);
+        // creator-displayname, comment: not value available from jcr
+        properties.add(new DefaultDavProperty(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
+        properties.add(new DefaultDavProperty(DeltaVConstants.COMMENT, null, true));
 
-	// 'workspace' property as defined by RFC 3253
-	String workspaceHref = getWorkspaceHref();
-	if (workspaceHref != null) {
-	    properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
-	}
-	// TODO: required supported-live-property-set
+        // 'workspace' property as defined by RFC 3253
+        String workspaceHref = getWorkspaceHref();
+        if (workspaceHref != null) {
+            properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
+        }
+        // name of the jcr workspace
+        properties.add(new DefaultDavProperty(ItemResourceConstants.JCR_WORKSPACE_NAME,
+                getRepositorySession().getWorkspace().getName()));
+
+        // TODO: required supported-live-property-set
     }
 
     /**
@@ -685,11 +689,11 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     protected void initSupportedReports() {
         if (exists()) {
             supportedReports = new SupportedReportSetProperty(new ReportType[] {
-                ReportType.EXPAND_PROPERTY,
-                NodeTypesReport.NODETYPES_REPORT,
-                LocateByUuidReport.LOCATE_BY_UUID_REPORT,
-                RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
-                RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
+                    ReportType.EXPAND_PROPERTY,
+                    NodeTypesReport.NODETYPES_REPORT,
+                    LocateByUuidReport.LOCATE_BY_UUID_REPORT,
+                    RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT,
+                    RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT
             });
         }
     }
