@@ -52,4 +52,11 @@ public interface ClusterRecordProcessor {
      * @param record node type record
      */
     public void process(NodeTypeRecord record);
+
+    /**
+     * Process a workspace record
+     * @param record workspace record
+     */
+    public void process(WorkspaceRecord record);
+
 }

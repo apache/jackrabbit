@@ -27,6 +27,8 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.cluster.WorkspaceEventChannel;
+import org.apache.jackrabbit.core.cluster.WorkspaceListener;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
@@ -64,6 +66,7 @@ import org.apache.jackrabbit.core.util.RepositoryLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
@@ -89,6 +92,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.Arrays;
@@ -103,7 +107,7 @@ import java.util.Set;
  * A <code>RepositoryImpl</code> ...
  */
 public class RepositoryImpl extends AbstractRepository
-        implements JackrabbitRepository, SessionListener, EventListener {
+        implements JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
@@ -230,6 +234,11 @@ public class RepositoryImpl extends AbstractRepository
     private final ItemStateCacheFactory cacheFactory = new ManagedMLRUItemStateCacheFactory(cacheMgr);
 
     /**
+     * Chanel for posting create workspace messages.
+     */
+    private WorkspaceEventChannel createWorkspaceEventChannel;
+
+    /**
      * private constructor
      *
      * @param repConfig
@@ -292,6 +301,9 @@ public class RepositoryImpl extends AbstractRepository
                 clusterNode = createClusterNode();
                 nsReg.setEventChannel(clusterNode);
                 ntReg.setEventChannel(clusterNode);
+                
+                createWorkspaceEventChannel = clusterNode;
+                clusterNode.setListener(this);
             }
 
             // init version manager
@@ -789,13 +801,59 @@ public class RepositoryImpl extends AbstractRepository
                         + workspaceName + "' already exists.");
             }
 
+            // needed to get newly created workspace config file content when runnin in clustered environment
+            StringBuffer workspaceConfigContent = clusterNode != null ? new StringBuffer() : null;
+
             // create the workspace configuration
-            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName);
+            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, workspaceConfigContent);
+            WorkspaceInfo info = createWorkspaceInfo(config);
+            wspInfos.put(workspaceName, info);
+
+            if (workspaceConfigContent != null && createWorkspaceEventChannel != null) {
+                // notify other cluster node that workspace has been created
+                InputSource s = new InputSource(new StringReader(workspaceConfigContent.toString()));
+                createWorkspaceEventChannel.workspaceCreated(workspaceName, new ClonedInputSource(s));
+            }
+        }
+    }
+
+    public void externalWorkspaceCreated(String workspaceName,
+            InputSource configTemplate) throws RepositoryException {
+
+        createWorkspaceInternal(workspaceName, configTemplate);
+    }
+
+    /**
+     * Creates a workspace with the given name and given workspace configuration
+     * template.
+     * 
+     * The difference between this method and {@link #createWorkspace(String, InputSource)}
+     * is that the later notifies the other cluster node that workspace has been created
+     * whereas this method only creates the workspace.
+     *
+     * @param workspaceName  name of the new workspace
+     * @param configTemplate the workspace configuration template of the new
+     *                       workspace
+     * @throws RepositoryException if a workspace with the given name already
+     *                             exists or if another error occurs
+     * @see SessionImpl#createWorkspace(String,InputSource)
+     */
+    private void createWorkspaceInternal(String workspaceName,
+                                   InputSource configTemplate)
+            throws RepositoryException {
+        synchronized (wspInfos) {
+            if (wspInfos.containsKey(workspaceName)) {
+                throw new RepositoryException("workspace '"
+                        + workspaceName + "' already exists.");
+            }
+
+            // create the workspace configuration
+            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, configTemplate);
             WorkspaceInfo info = createWorkspaceInfo(config);
             wspInfos.put(workspaceName, info);
         }
     }
-
+    
     /**
      * Creates a workspace with the given name and given workspace configuration
      * template.
@@ -810,16 +868,15 @@ public class RepositoryImpl extends AbstractRepository
     protected void createWorkspace(String workspaceName,
                                    InputSource configTemplate)
             throws RepositoryException {
-        synchronized (wspInfos) {
-            if (wspInfos.containsKey(workspaceName)) {
-                throw new RepositoryException("workspace '"
-                        + workspaceName + "' already exists.");
-            }
 
-            // create the workspace configuration
-            WorkspaceConfig config = repConfig.createWorkspaceConfig(workspaceName, configTemplate);
-            WorkspaceInfo info = createWorkspaceInfo(config);
-            wspInfos.put(workspaceName, info);
+        if (createWorkspaceEventChannel == null) {
+            createWorkspaceInternal(workspaceName, configTemplate);
+        }
+        else {
+        
+            ClonedInputSource template = new ClonedInputSource(configTemplate);
+            createWorkspaceInternal(workspaceName, template.cloneInputSource());
+            createWorkspaceEventChannel.workspaceCreated(workspaceName, template);
         }
     }
 
