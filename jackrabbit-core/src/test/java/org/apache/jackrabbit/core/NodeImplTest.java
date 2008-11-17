@@ -104,6 +104,9 @@ public class NodeImplTest extends AbstractJCRTest {
             assertFalse(tn.internalIsCheckedOut());
         } finally {
             readOnly.logout();
+            // reset the denied read-access
+            n.checkout();
+            changeReadPermission(principal, n, true);
         }
     }
 }
