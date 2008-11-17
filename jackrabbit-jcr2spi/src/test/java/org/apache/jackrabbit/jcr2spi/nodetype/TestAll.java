@@ -30,6 +30,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(AddMixinTest.class);
         suite.addTestSuite(RemoveMixinTest.class);
+        suite.addTestSuite(MandatoryItemTest.class);
 
         return suite;
     }
