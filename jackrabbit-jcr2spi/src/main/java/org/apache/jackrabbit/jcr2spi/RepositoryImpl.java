@@ -79,8 +79,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
      * @see Repository#login(javax.jcr.Credentials, String)
      */
     public Session login(Credentials credentials, String workspaceName) throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        String wspName = (workspaceName == null) ? config.getDefaultWorkspaceName() : workspaceName;
-        SessionInfo info = config.getRepositoryService().obtain(credentials, wspName);
+        SessionInfo info = config.getRepositoryService().obtain(credentials, workspaceName);
         try {
             if (info instanceof XASessionInfo) {
                 return new XASessionImpl((XASessionInfo) info, this, config);
