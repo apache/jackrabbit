@@ -18,6 +18,7 @@
 package org.apache.jackrabbit.ocm.query.impl;
 
 
+
 import java.util.Map;
 
 import javax.jcr.ValueFactory;
@@ -221,6 +222,18 @@ public class FilterImpl implements Filter {
         return this;
     }
 
+    public Filter addOrFilter(String fieldAttributeName, String[] valueList) {
+        String jcrExpression = "";
+        for(Object object: valueList){
+        jcrExpression =	"@" + this.getJcrFieldName(fieldAttributeName) + " = "
+        + this.getStringValue(fieldAttributeName, object);
+        orExpression(jcrExpression);
+        }
+        addExpression(jcrExpression);
+        return this;
+    }
+    
+    
     /**
      * @see org.apache.jackrabbit.ocm.query.Filter#addOrFilter(org.apache.jackrabbit.ocm.query.Filter)
      */
@@ -266,6 +279,13 @@ public class FilterImpl implements Filter {
         return this;
     }
 
+    public Filter orJCRExpression(String jcrExpression) {
+        orExpression(jcrExpression);
+
+         return this;
+     }
+   
+    
     private String getJcrFieldName(String fieldAttribute) {
         String jcrFieldName = classDescriptor.getJcrName(fieldAttribute);
         if (jcrFieldName == null) {
@@ -315,6 +335,15 @@ public class FilterImpl implements Filter {
         this.jcrExpression += jcrExpression ;
     }
 
+    private void orExpression(String jcrExpression) {
+
+	     if (this.jcrExpression.length() >0) {
+         	this.jcrExpression += " or ";
+	     }
+	     this.jcrExpression += jcrExpression ;
+    }
+    
+    
 	public String toString() {
 		return getJcrExpression();
 	}
