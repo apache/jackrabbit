@@ -520,7 +520,7 @@ public class ItemStateValidator {
     }
 
     /**
-     * An item state cannot be removed if it is either protected or mandatory.
+     * An item state cannot be removed if it is protected.
      *
      * @param itemState
      * @throws ConstraintViolationException
@@ -535,9 +535,6 @@ public class ItemStateValidator {
             definition = ((PropertyState)itemState).getDefinition();
         }
         checkProtection(definition);
-        if (definition.isMandatory()) {
-            throw new ConstraintViolationException("Cannot remove mandatory item");
-        }
     }
 
     /**
