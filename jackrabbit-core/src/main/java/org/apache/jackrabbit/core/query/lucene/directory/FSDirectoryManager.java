@@ -55,7 +55,12 @@ public class FSDirectoryManager implements DirectoryManager {
      */
     public Directory getDirectory(String name)
             throws IOException {
-        File dir = new File(baseDir, name);
+        File dir;
+        if (name.equals(".")) {
+            dir = baseDir;
+        } else {
+            dir = new File(baseDir, name);
+        }
         return FSDirectory.getDirectory(dir, new NativeFSLockFactory(dir));
     }
 
