@@ -16,27 +16,35 @@
  */
 package org.apache.jackrabbit.core.data.db;
 
-import java.io.FilterInputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.ResultSet;
+
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class represents an input stream backed by a database. It allows the stream to be used by
- * keeping the DB resources open until the stream is closed. When the stream is finished or
- * close()d, then the resources are freed.
+ * This class represents an input stream backed by a database. It allows the
+ * stream to be used by keeping the database objects open until the stream is
+ * closed. When the stream is finished or closed, then the database objects are
+ * freed.
  */
-public class DbInputStream extends FilterInputStream {
+public class DbInputStream extends InputStream {
 
     private static Logger log = LoggerFactory.getLogger(DbInputStream.class);
 
-    protected DbResources resources;
-    protected boolean streamFinished;
-    protected boolean streamClosed;
     protected DbDataStore store;
     protected DataIdentifier identifier;
+    protected boolean endOfStream;
+    protected InputStream in;
+    
+    protected ConnectionRecoveryManager conn;
+    protected ResultSet rs;
+    
 
     /**
      * Create a database input stream for the given identifier.
@@ -46,39 +54,42 @@ public class DbInputStream extends FilterInputStream {
      * @param identifier the data identifier
      */
     protected DbInputStream(DbDataStore store, DataIdentifier identifier) {
-        super(null);
-        streamFinished = false;
-        streamClosed = true;
         this.store = store;
         this.identifier = identifier;
     }
 
-    private void getStream() throws IOException {
-        try {
-            resources = store.getDatabaseResources(identifier);
-            in = resources.getInputStream();
-            streamClosed = false;
-        } catch (DataStoreException e) {
-            IOException e2 = new IOException(e.getMessage());
-            e2.initCause(e);
-            throw e2;
+    /**
+     * Open the stream if required.
+     * 
+     * @throws IOException
+     */
+    protected void openStream() throws IOException {
+        if (endOfStream) {
+            throw new EOFException();
+        }
+        if (in == null) {
+            try {
+                in = store.openStream(this, identifier);
+            } catch (DataStoreException e) {
+                IOException e2 = new IOException(e.getMessage());
+                e2.initCause(e);
+                throw e2;
+            }
         }
     }
 
     /**
      * {@inheritDoc}
-     * When the stream is consumed, the database resources held by the instance are closed.
+     * When the stream is consumed, the database objects held by the instance are closed.
      */
     public int read() throws IOException {
-        if (streamFinished) {
+        if (endOfStream) {
             return -1;
         }
-        if (in == null) {
-            getStream();
-        }
+        openStream();
         int c = in.read();
         if (c == -1) {
-            streamFinished = true;
+            endOfStream = true;
             close();
         }
         return c;
@@ -86,7 +97,7 @@ public class DbInputStream extends FilterInputStream {
 
     /**
      * {@inheritDoc}
-     * When the stream is consumed, the database resources held by the instance are closed.
+     * When the stream is consumed, the database objects held by the instance are closed.
      */
     public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
@@ -94,18 +105,16 @@ public class DbInputStream extends FilterInputStream {
 
     /**
      * {@inheritDoc}
-     * When the stream is consumed, the database resources held by the instance are closed.
+     * When the stream is consumed, the database objects held by the instance are closed.
      */
     public int read(byte[] b, int off, int len) throws IOException {
-        if (streamFinished) {
+        if (endOfStream) {
             return -1;
         }
-        if (in == null) {
-            getStream();
-        }
+        openStream();
         int c = in.read(b, off, len);
         if (c == -1) {
-            streamFinished = true;
+            endOfStream = true;
             close();
         }
         return c;
@@ -113,19 +122,24 @@ public class DbInputStream extends FilterInputStream {
 
     /**
      * {@inheritDoc}
-     * When the stream is consumed, the database resources held by the instance are closed.
+     * When the stream is consumed, the database objects held by the instance are closed.
      */
     public void close() throws IOException {
-        if (!streamClosed) {
-            streamClosed = true;
-            // It may be null (see constructor)
-            if (in != null) {
-                in.close();
-                super.close();
+        if (in != null) {
+            in.close();
+            in = null;
+            // some additional database objects 
+            // may need to be closed
+            if (rs != null) {
+                DatabaseHelper.closeSilently(rs);
+                rs = null;
             }
-            // resources may be null (if getStream() was not called)
-            if (resources != null) {
-                resources.close();
+            if (conn != null) {
+                try {
+                    store.putBack(conn);
+                } catch (DataStoreException e) {
+                    log.info("Error closing DbResource", e);
+                }
             }
         }
     }
@@ -134,9 +148,10 @@ public class DbInputStream extends FilterInputStream {
      * {@inheritDoc}
      */
     public long skip(long n) throws IOException {
-        if (in == null) {
-            getStream();
-        }
+        if (endOfStream) {
+            return -1;
+        }        
+        openStream();
         return in.skip(n);
     }
 
@@ -144,9 +159,10 @@ public class DbInputStream extends FilterInputStream {
      * {@inheritDoc}
      */
     public int available() throws IOException {
-        if (in == null) {
-            getStream();
-        }
+        if (endOfStream) {
+            return 0;
+        }        
+        openStream();
         return in.available();
     }
 
@@ -154,12 +170,13 @@ public class DbInputStream extends FilterInputStream {
      * {@inheritDoc}
      */
     public void mark(int readlimit) {
-        if (in == null) {
-            try {
-                getStream();
-            } catch (IOException e) {
-                log.info("Error getting underlying stream: ", e);
-            }
+        if (endOfStream) {
+            return;
+        } 
+        try {
+            openStream();
+        } catch (IOException e) {
+            log.info("Error getting underlying stream: ", e);
         }
         in.mark(readlimit);
     }
@@ -168,9 +185,10 @@ public class DbInputStream extends FilterInputStream {
      * {@inheritDoc}
      */
     public void reset() throws IOException {
-        if (in == null) {
-            getStream();
-        }
+        if (endOfStream) {
+            throw new EOFException();
+        }         
+        openStream();
         in.reset();
     }
 
@@ -178,14 +196,36 @@ public class DbInputStream extends FilterInputStream {
      * {@inheritDoc}
      */
     public boolean markSupported() {
-        if (in == null) {
-            try {
-                getStream();
-            } catch (IOException e) {
-                log.info("Error getting underlying stream: ", e);
-                return false;
-            }
+        if (endOfStream) {
+            return false;
+        }      
+        try {
+            openStream();
+        } catch (IOException e) {
+            log.info("Error getting underlying stream: ", e);
+            return false;
         }
         return in.markSupported();
     }
+
+    /**
+     * Set the database connection of this input stream. This object must be
+     * closed once the stream is closed.
+     * 
+     * @param conn the connection
+     */
+    void setConnection(ConnectionRecoveryManager conn) {
+        this.conn = conn;
+    }
+
+    /**
+     * Set the result set of this input stream. This object must be closed once
+     * the stream is closed.
+     * 
+     * @param rs the result set
+     */
+    void setResultSet(ResultSet rs) {
+        this.rs = rs;
+    }
+
 }

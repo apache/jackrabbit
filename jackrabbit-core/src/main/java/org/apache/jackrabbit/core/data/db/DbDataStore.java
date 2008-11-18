@@ -485,18 +485,17 @@ public class DbDataStore implements DataStore {
             putBack(conn);
         }
     }
-
+    
     /**
-     * getDatabaseResources() does NOT close the DB resources on success. It's up to the client of
-     * the stream backed by these resources to close it and therefore close the DB resources.
-     *
+     * Open the input stream. This method sets those fields of the caller
+     * that need to be closed once the input stream is read.
+     * 
+     * @param inputStream the database input stream object
      * @param identifier data identifier
-     * @return database resources that will back the stream corresponding
-     *                     to the passed data identifier
-     * @throws DataStoreException if the data store could not be accessed,
-     *                     or if the given identifier is invalid
-     */
-    public DbResources getDatabaseResources(DataIdentifier identifier) throws DataStoreException {
+     * @throws DataStoreException if the data store could not be accessed, 
+     *          or if the given identifier is invalid
+     */    
+    InputStream openStream(DbInputStream inputStream, DataIdentifier identifier) throws DataStoreException {
         ConnectionRecoveryManager conn = null;
         ResultSet rs = null;
         try {
@@ -508,32 +507,29 @@ public class DbDataStore implements DataStore {
                 throw new DataStoreException("Record not found: " + identifier);
             }
             InputStream stream = rs.getBinaryStream(2);
-            DbResources dbResource = null;
             if (stream == null) {
-                // If the stream is null, go ahead and close resources
                 stream = new ByteArrayInputStream(new byte[0]);
-                dbResource = new DbResources(stream);
                 DatabaseHelper.closeSilently(rs);
                 putBack(conn);
             } else if (copyWhenReading) {
                 // If we copy while reading, create a temp file and close the stream
                 File temp = moveToTempFile(stream);
                 stream = new TempFileInputStream(temp);
-                dbResource = new DbResources(stream);
                 DatabaseHelper.closeSilently(rs);
                 putBack(conn);
             } else {
                 stream = new BufferedInputStream(stream);
-                dbResource = new DbResources(conn, rs, stream, this);
+                inputStream.setConnection(conn);
+                inputStream.setResultSet(rs);
             }
-            return dbResource;
+            return stream;
         } catch (Exception e) {
             DatabaseHelper.closeSilently(rs);
             putBack(conn);
-            throw convert("Retrieving database resources ", e);
+            throw convert("Retrieving database resource ", e);
         }
     }
-
+    
     /**
      * {@inheritDoc}
      */
