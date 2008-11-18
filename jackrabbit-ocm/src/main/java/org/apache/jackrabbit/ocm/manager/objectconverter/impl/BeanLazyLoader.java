@@ -17,6 +17,8 @@
 
 package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 
+import java.io.Serializable;
+
 import javax.jcr.Node;
 import javax.jcr.Session;
 
@@ -24,7 +26,7 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 
-public class BeanLazyLoader extends AbstractLazyLoader {
+public class BeanLazyLoader extends AbstractLazyLoader implements Serializable {
 
 	private BeanConverter beanConverter;
 	private Session session;
