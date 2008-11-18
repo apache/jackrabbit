@@ -18,23 +18,24 @@ package org.apache.jackrabbit.ocm.manager.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.query.QueryResult;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.DigesterTestBase;
+import org.apache.jackrabbit.ocm.RepositoryLifecycleTestSetup;
 import org.apache.jackrabbit.ocm.exception.JcrMappingException;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.query.Filter;
 import org.apache.jackrabbit.ocm.query.Query;
 import org.apache.jackrabbit.ocm.query.QueryManager;
+import org.apache.jackrabbit.ocm.query.impl.QueryImpl;
 import org.apache.jackrabbit.ocm.testmodel.Page;
 import org.apache.jackrabbit.ocm.testmodel.Paragraph;
 
@@ -86,6 +87,7 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
             filter.addEqualTo("text", "Para 1");
 
             Query query = queryManager.createQuery(filter);
+            
 
             ObjectContentManager ocm = this.getObjectContentManager();
             Paragraph paragraph = (Paragraph) ocm.getObject(query);
@@ -280,11 +282,80 @@ public class DigesterSimpleQueryTest extends DigesterTestBase {
             assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 2"));
             assertTrue("Invalid paragraph found", this.containsText(paragraphs,"Para 3"));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("Exception occurs during the unit test : " + e);
-        }
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            fail("Exception occurs during the unit test : " + e);
+	        }
 
+    	}
+
+        
+        
+        public void testGetObjectOrderByWithUpdatableJCRExpression() {
+
+            try {
+
+                // Build the Query Object
+                QueryManager queryManager = this.getQueryManager();
+                Filter filter = queryManager.createFilter(Paragraph.class);
+                filter.addLike("text", "Para%");
+                filter.setScope("/test/");
+
+                Query query = queryManager.createQuery(filter);
+                query.addOrderByDescending("text");
+
+                String strQueryBuilderStringWithDescending = ((QueryImpl)query).getOrderByExpression();
+                
+                ObjectContentManager ocm = this.getObjectContentManager();
+                Collection result = ocm.getObjects(query);
+                assertEquals("Invalid number of objects - should be = 3", 3, result.size());
+
+                //Text is Descending
+                Paragraph[] paragraphs = (Paragraph[]) result.toArray(new Paragraph[result.size()]);
+                Iterator iterator = result.iterator();
+                Paragraph para = (Paragraph)iterator.next();
+                assertEquals("Para 3",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 2",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 1",para.getText());
+
+                //Text is Ascending
+                query = queryManager.createQuery(filter);
+                query.addOrderByAscending("text");
+
+                ocm = this.getObjectContentManager();
+                result = ocm.getObjects(query);
+                assertEquals("Invalid number of objects - should be = 3", 3, result.size());
+                iterator = result.iterator();
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 1",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 2",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 3",para.getText());
+
+                //Text is Descending
+                query = queryManager.createQuery(filter);
+                ((QueryImpl)query).addJCRExpression(strQueryBuilderStringWithDescending);
+                ocm = this.getObjectContentManager();
+                result = ocm.getObjects(query);
+                assertEquals("Invalid number of objects - should be = 3", 3, result.size());
+                iterator = result.iterator();
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 3",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 2",para.getText());
+                para = (Paragraph)iterator.next();
+                assertEquals("Para 1",para.getText());
+                
+            
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("Exception occurs during the unit test : " + e);
+            }
+        
+        
     }
 
     public void testGetObjectsByClassNameAndPath() {

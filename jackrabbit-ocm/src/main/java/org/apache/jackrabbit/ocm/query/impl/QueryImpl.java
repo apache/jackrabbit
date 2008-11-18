@@ -38,7 +38,9 @@ public class QueryImpl implements Query
 	
     ClassDescriptor classDescriptor;
 
-    private ArrayList orderByExpressions = new ArrayList();
+    private final static String ORDER_BY_STRING =  "order by ";
+    
+    private String jcrExpression = "";
 
 	/**
 	 * Constructor
@@ -70,7 +72,9 @@ public class QueryImpl implements Query
 
 	public void addOrderByDescending(String fieldNameAttribute)
 	{
-		orderByExpressions.add("@" + this.getJcrFieldName(fieldNameAttribute) + " descending");
+		//Changes made to maintain the query state updated with every addition
+		//@author Shrirang Edgaonkar
+		addExpression("@" + this.getJcrFieldName(fieldNameAttribute) + " descending");
 	}
 
 	/**
@@ -79,31 +83,39 @@ public class QueryImpl implements Query
 	 */
 	public void addOrderByAscending(String fieldNameAttribute)
 	{
-		orderByExpressions.add("@" + this.getJcrFieldName(fieldNameAttribute) + " ascending");
+		addExpression("@" + this.getJcrFieldName(fieldNameAttribute) + " ascending");
 	}
 	
+    public void addJCRExpression(String jcrExpression) {
+        addExpression(jcrExpression);
+     }
+	
+	
+    private void addExpression(String jcrExpression) {
+		 //@author Shrirang Edgaonkar
+    	 // First time comma is not required
+    	 if(this.jcrExpression.equals(""))
+    	 {	
+    		 this.jcrExpression += jcrExpression ;
+    	 }else
+    		 this.jcrExpression += (" , " + jcrExpression) ;
+    }
+
+	
+    
 	public String getOrderByExpression()
 	{
-		
-		if (orderByExpressions.size() == 0)
-		{
-		   return "";	
+		if(jcrExpression.equals(""))
+			return "";
+		else
+		{	
+			//@author Shrirang Edgaonkar
+			//Ensure that the OrderBy string is added only once
+			if(this.jcrExpression.contains(ORDER_BY_STRING))
+				return this.jcrExpression;
+			else
+				return (ORDER_BY_STRING + this.jcrExpression);
 		}
-		
-		String orderByExpression = "order by ";
-		Iterator iterator   = orderByExpressions.iterator();
-		int count=1;
-		while (iterator.hasNext())
-		{
-			   if (count > 1)
-			   {
-				   orderByExpression += " , ";
-			   }
-			   orderByExpression+= (String) iterator.next();
-			   count++;
-		}
-		
-		return orderByExpression;
 	}
 	
 	
