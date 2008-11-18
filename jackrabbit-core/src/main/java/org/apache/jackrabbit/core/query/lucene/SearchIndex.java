@@ -143,7 +143,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The default value for property {@link #extractorBackLog}.
      */
-    public static final int DEFAULT_EXTRACTOR_BACK_LOG = 100;
+    public static final int DEFAULT_EXTRACTOR_BACK_LOG = Integer.MAX_VALUE;
 
     /**
      * The default timeout in milliseconds which is granted to the text
