@@ -479,13 +479,4 @@ public class ConnectionRecoveryManager {
         }
     }
 
-    public void closeSilently(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                // ignore
-            }
-        }
-    }
 }
