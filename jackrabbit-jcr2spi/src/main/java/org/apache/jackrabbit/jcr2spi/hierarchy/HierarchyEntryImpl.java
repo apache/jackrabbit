@@ -131,7 +131,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     abstract Path buildPath(boolean workspacePath) throws RepositoryException;
 
     /**
-     * @return
+     * @return the item state or <code>null</code> if the entry isn't resolved.
      */
     ItemState internalGetItemState() {
         ItemState state = null;
@@ -374,8 +374,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
 
     //--------------------------------------------------------------------------
     /**
-     *
-     * @param keepNew
+     * @param staleParent
      */
     void internalRemove(boolean staleParent) {
         ItemState state = internalGetItemState();

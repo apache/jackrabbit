@@ -404,8 +404,7 @@ public class WorkspaceManager
     }
 
     /**
-     *
-     * @return
+     * @return a new instance of <code>TransientItemStateFactory</code>.
      */
     private TransientItemStateFactory createItemStateFactory() {
         WorkspaceItemStateFactory isf = new WorkspaceItemStateFactory(service, sessionInfo, getItemDefinitionProvider());
@@ -414,16 +413,14 @@ public class WorkspaceManager
     }
 
     /**
-     *
-     * @return
+     * @return a new instance of <code>HierarchyManager</code>.
      */
     private HierarchyManager createHierarchyManager(TransientItemStateFactory tisf, IdFactory idFactory) throws RepositoryException {
         return new HierarchyManagerImpl(tisf, idFactory, getPathFactory());
     }
 
     /**
-     *
-     * @return
+     * @return a new InternalEventListener
      */
     private InternalEventListener createHierarchyListener(HierarchyManager hierarchyMgr) {
         InternalEventListener listener = new HierarchyEventListener(this, hierarchyMgr, cacheBehaviour);
@@ -431,9 +428,8 @@ public class WorkspaceManager
     }
 
     /**
-     *
      * @param nsRegistry
-     * @return
+     * @return an instance of <code>NodeTypeRegistryImpl</code>.
      */
     private NodeTypeRegistryImpl createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
         NodeTypeStorage ntst = new NodeTypeStorage() {
@@ -459,9 +455,8 @@ public class WorkspaceManager
     }
 
     /**
-     *
      * @param entProvider
-     * @return
+     * @return  a new instance of <code>ItemDefinitionProvider</code>.
      */
     private ItemDefinitionProvider createDefinitionProvider(EffectiveNodeTypeProvider entProvider) {
         return new ItemDefinitionProviderImpl(entProvider, service, sessionInfo);

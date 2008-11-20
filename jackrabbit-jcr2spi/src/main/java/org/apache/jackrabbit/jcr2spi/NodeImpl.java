@@ -556,7 +556,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * qualified name.
      *
      * @param propertyName
-     * @return
+     * @return <code>true</code>, if this <code>Node</code> has a property with
+     * the given name.
      */
     private boolean hasProperty(Name propertyName) {
         return getNodeEntry().hasPropertyEntry(propertyName);
@@ -678,7 +679,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * NOTE, that the result of this method, does NOT represent the list of
      * mixin-types that currently affect this node.
      *
-     * @return
+     * @return mixin names present with the jcr:mixinTypes property.
      */
     private List getMixinTypes() {
         Name[] mixinValue;
@@ -1285,11 +1286,11 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             PropertyEntry pEntry = getNodeEntry().getPropertyEntry(qName, true);
             if (pEntry == null) {
-                throw new PathNotFoundException(qName.toString());
+                throw new PathNotFoundException(LogUtil.saveGetJCRName(qName, session.getNameResolver()));
             }
             return (Property) getItemManager().getItem(pEntry);
         } catch (AccessDeniedException e) {
-            throw new PathNotFoundException(qName.toString());
+            throw new PathNotFoundException(LogUtil.saveGetJCRName(qName, session.getNameResolver()));
         }
     }
 

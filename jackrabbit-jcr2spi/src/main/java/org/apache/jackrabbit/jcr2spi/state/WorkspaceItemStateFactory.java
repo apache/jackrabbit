@@ -102,7 +102,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
             return nodeState;
         } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
+            throw new ItemNotFoundException(e.getMessage());
         }
     }
 
@@ -115,7 +115,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             Iterator infos = service.getItemInfos(sessionInfo, nodeId);
             return createItemStates(nodeId, infos, anyParent, true);
         } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
+            throw new ItemNotFoundException(e.getMessage());
         }
     }
 
@@ -372,7 +372,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             }
             return createNodeState(info, entry);
         } catch (PathNotFoundException e) {
-            throw new ItemNotFoundException(e.getMessage(), e);
+            throw new ItemNotFoundException(e.getMessage());
         }
     }
 
@@ -483,7 +483,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      * See also #JCR-1797 for the corresponding enhancement request.
      *
      * @param missingElems
-     * @return
+     * @return true if the first element doesn't denote a named element.
      */
     private static boolean startsWithIllegalElement(Path.Element[] missingElems) {
         if (missingElems.length > 0) {
