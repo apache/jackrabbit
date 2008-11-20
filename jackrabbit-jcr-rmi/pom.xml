@@ -28,8 +28,9 @@
   <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit</artifactId>
+    <artifactId>jackrabbit-parent</artifactId>
     <version>1.6-SNAPSHOT</version>
+    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-rmi</artifactId>
   <name>Jackrabbit JCR-RMI</name>
@@ -106,11 +107,13 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
+      <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

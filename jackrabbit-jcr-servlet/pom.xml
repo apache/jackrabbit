@@ -28,8 +28,9 @@
 <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit</artifactId>
+    <artifactId>jackrabbit-parent</artifactId>
     <version>1.6-SNAPSHOT</version>
+    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-servlet</artifactId>
   <name>Jackrabbit JCR Servlets</name>
@@ -42,7 +43,6 @@
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -52,15 +52,18 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-rmi</artifactId>
+      <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
+      <version>${project.version}</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
