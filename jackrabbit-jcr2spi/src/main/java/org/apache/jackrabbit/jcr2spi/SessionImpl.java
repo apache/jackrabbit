@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
@@ -40,6 +41,7 @@ import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.xml.ImportHandler;
 import org.apache.jackrabbit.jcr2spi.xml.Importer;
 import org.apache.jackrabbit.jcr2spi.xml.SessionImporter;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.NodeId;
@@ -143,7 +145,12 @@ public class SessionImpl extends AbstractSession
         validator = new ItemStateValidator(this, getPathFactory());
 
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
-        itemManager = createItemManager(getHierarchyManager());
+        HierarchyManager hMgr = getHierarchyManager();
+        itemManager = createItemManager(hMgr);
+
+        if (hMgr instanceof HierarchyManagerImpl) {
+            ((HierarchyManagerImpl) hMgr).setResolver(npResolver);
+        }
     }
 
     //--------------------------------------------------< Session interface >---
@@ -253,10 +260,10 @@ public class SessionImpl extends AbstractSession
                 return (Node) item;
             } else {
                 log.error("NodeId '" + id + " does not point to a Node");
-                throw new ItemNotFoundException(id.toString());
+                throw new ItemNotFoundException(LogUtil.saveGetIdString(id, getPathResolver()));
             }
         } catch (AccessDeniedException e) {
-            throw new ItemNotFoundException(id.toString());
+            throw new ItemNotFoundException(LogUtil.saveGetIdString(id, getPathResolver()));
         }
     }
 

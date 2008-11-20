@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
@@ -84,6 +85,35 @@ public class LogUtil {
         } catch (NamespaceException e) {
             log.error("failed to convert " + qName + " to JCR name.");
             return qName.toString();
+        }
+    }
+
+    /**
+     * Failsafe conversion of an <code>ItemId</code> to a human readable string
+     * resolving the path part of the specified id using the given path resolver.
+     *
+     * @param itemId
+     * @param pathResolver
+     * @return a String representation of the given <code>ItemId</code>.
+     */
+    public static String saveGetIdString(ItemId itemId, PathResolver pathResolver) {
+        Path p = itemId.getPath();
+        if (p == null || pathResolver == null) {
+            return itemId.toString();
+        } else {
+            StringBuffer bf = new StringBuffer();
+            String uniqueID = itemId.getUniqueID();
+            if (uniqueID != null) {
+                bf.append(uniqueID).append(" - ");
+            }
+            String jcrPath;
+            try {
+                jcrPath = pathResolver.getJCRPath(p);
+            } catch (NamespaceException e) {
+                jcrPath = p.toString();
+            }
+            bf.append(jcrPath);
+            return bf.toString();
         }
     }
 }

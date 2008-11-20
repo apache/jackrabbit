@@ -30,11 +30,13 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -55,7 +57,7 @@ class RowIteratorImpl implements RowIterator {
     /**
      * The <code>NamePathResolver</code> of the user <code>Session</code>.
      */
-    private final org.apache.jackrabbit.spi.commons.conversion.NamePathResolver resolver;
+    private final NamePathResolver resolver;
 
     /**
      * The JCR value factory.
@@ -256,7 +258,7 @@ class RowIteratorImpl implements RowIterator {
                     getValues();
                 }
                 return values[idx.intValue()];
-            } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
+            } catch (NameException e) {
                 throw new RepositoryException(e.getMessage(), e);
             }
         }

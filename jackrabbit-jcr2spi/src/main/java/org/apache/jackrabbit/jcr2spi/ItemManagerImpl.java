@@ -200,7 +200,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         session.checkIsAlive();
         ItemState state = hierarchyEntry.getItemState();
         if (!state.isValid()) {
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException(LogUtil.safeGetJCRPath(state, session.getPathResolver()));
         }
 
         // first try to access item from cache
