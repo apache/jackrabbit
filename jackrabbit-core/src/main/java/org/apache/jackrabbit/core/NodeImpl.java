@@ -1168,6 +1168,18 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             }
         }
 
+        /*
+         * mix:lockable: the mixin cannot be removed if the node is currently
+         * locked even if the editing session is the lock holder.
+         */
+        if ((NameConstants.MIX_LOCKABLE.equals(mixinName)
+                || mixin.isDerivedFrom(NameConstants.MIX_LOCKABLE))
+                && !entRemaining.includesNodeType(NameConstants.MIX_LOCKABLE)
+                && isLocked()) {
+            throw new ConstraintViolationException(mixinName + " can not be removed: the node is locked.");
+        }
+
+
         // modify the state of this node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
         thisState.setMixinTypeNames(remainingMixins);
