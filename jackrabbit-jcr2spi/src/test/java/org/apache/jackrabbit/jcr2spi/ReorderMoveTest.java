@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.name.Path;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.NodeIterator;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>ReorderMoveTest</code> testing various combinations of move/rename

@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.name.Path;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.NodeIterator;
 
 /**
  * <code>SNSIndexTest</code>...

@@ -20,7 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.name.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -35,8 +36,9 @@ public class AccessByRelativePathTest extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(AccessByRelativePathTest.class);
 
-    private static String DOT = Path.CURRENT_ELEMENT.getName().getLocalName();
-    private static String DOTDOT = Path.PARENT_ELEMENT.getName().getLocalName();
+    private static final PathFactory P_FACTORY = PathFactoryImpl.getInstance();
+    private static String DOT = P_FACTORY.getCurrentElement().getName().getLocalName();
+    private static String DOTDOT = P_FACTORY.getParentElement().getName().getLocalName();
 
     /**
      * <code>Node.hasNode(".") </code> applied to the root node must return
