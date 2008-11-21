@@ -36,7 +36,6 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
