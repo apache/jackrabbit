@@ -653,16 +653,23 @@ public class NodeImpl extends ItemImpl implements Node {
         // removed, if any references are left to this node.
         NodeTypeImpl mixin = session.getNodeTypeManager().getNodeType(ntName);
         if (mixin.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-            // build effective node type of remaining mixin's & primary type
-            Name[] allRemaining = (Name[]) mixinValue.toArray(new Name[mixinValue.size() + 1]);
-            allRemaining[mixinValue.size()] = primaryTypeName;
-            EffectiveNodeType entRemaining = session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
-
+            EffectiveNodeType entRemaining = getRemainingENT(mixinValue);
             if (!entRemaining.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
                 PropertyIterator iter = getReferences();
                 if (iter.hasNext()) {
                     throw new ConstraintViolationException("Mixin type " + mixinName + " can not be removed: the node is being referenced through at least one property of type REFERENCE");
                 }
+            }
+        }
+
+        /*
+         * mix:lockable: the mixin cannot be removed if the node is currently
+         * locked even if the editing session is the lock holder.
+         */
+        if (mixin.isNodeType((NameConstants.MIX_LOCKABLE))) {
+            EffectiveNodeType entRemaining = getRemainingENT(mixinValue);
+            if (!entRemaining.includesNodeType(NameConstants.MIX_LOCKABLE) && isLocked()) {
+                throw new ConstraintViolationException(mixinName + " can not be removed: the node is locked.");
             }
         }
 
@@ -706,6 +713,21 @@ public class NodeImpl extends ItemImpl implements Node {
         List l = new ArrayList();
         l.addAll(Arrays.asList(mixinValue));
         return l;
+    }
+
+    /**
+     * Build the effective node type of remaining mixin's & primary type
+     *
+     * @param remainingMixins
+     * @return effective node type
+     * @throws ConstraintViolationException
+     * @throws NoSuchNodeTypeException
+     */
+    private EffectiveNodeType getRemainingENT(List remainingMixins)
+            throws ConstraintViolationException, NoSuchNodeTypeException {
+        Name[] allRemaining = (Name[]) remainingMixins.toArray(new Name[remainingMixins.size() + 1]);
+        allRemaining[remainingMixins.size()] = primaryTypeName;
+        return session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
     }
 
     /**
