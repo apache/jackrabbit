@@ -40,6 +40,8 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -47,12 +49,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.ArrayList;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
  * nodes selected by another <code>Query</code>.
  */
 class ChildAxisQuery extends Query implements JackrabbitQuery {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(ChildAxisQuery.class);
+
+    /**
+     * Threshold when children calculation is switched to
+     * {@link HierarchyResolvingChildrenCalculator}.
+     */
+    private static int CONTEXT_SIZE_THRESHOLD = 10;
 
     /**
      * The item state manager containing persistent item states.
@@ -222,13 +237,20 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
     }
 
     /**
-     * Always returns 'ChildAxisQuery'.
-     *
-     * @param field the name of a field.
-     * @return 'ChildAxisQuery'.
+     * {@inheritDoc}
      */
     public String toString(String field) {
-        return "ChildAxisQuery";
+        StringBuffer sb = new StringBuffer();
+        sb.append("ChildAxisQuery(");
+        sb.append(contextQuery);
+        sb.append(", ");
+        sb.append(nameTest);
+        if (position != LocationStepQueryNode.NONE) {
+            sb.append(", ");
+            sb.append(position);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     //-------------------< JackrabbitQuery >------------------------------------
@@ -416,57 +438,42 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
         private void calculateChildren() throws IOException {
             if (hits == null) {
 
-                // collect all context nodes
-                Map uuids = new HashMap();
-                final Hits contextHits = new AdaptingHits();
-                contextScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        contextHits.set(doc);
-                    }
-                });
-
-                // read the uuids of the context nodes
-                for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
-                    String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
-                    uuids.put(new Integer(i), uuid);
-                }
-
-                // collect all children of the context nodes
-                Hits childrenHits = new AdaptingHits();
-                if (nameTestScorer != null) {
-                    Hits nameHits = new ScorerHits(nameTestScorer);
-                    for (int h = nameHits.next(); h > -1; h = nameHits.next()) {
-                        if (uuids.containsKey(new Integer(hResolver.getParent(h)))) {
-                            childrenHits.set(h);
+                final ChildrenCalculator[] calc = new ChildrenCalculator[1];
+                if (nameTestScorer == null) {
+                    // always use simple in that case
+                    calc[0] = new SimpleChildrenCalculator(reader, hResolver);
+                    contextScorer.score(new HitCollector() {
+                        public void collect(int doc, float score) {
+                            calc[0].collectContextHit(doc);
                         }
-                    }
+                    });
                 } else {
-                    // get child node entries for each hit
-                    for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
-                        String uuid = (String) it.next();
-                        NodeId id = new NodeId(UUID.fromString(uuid));
-                        try {
-                            NodeState state = (NodeState) itemMgr.getItemState(id);
-                            Iterator entries = state.getChildNodeEntries().iterator();
-                            while (entries.hasNext()) {
-                                NodeId childId = ((ChildNodeEntry) entries.next()).getId();
-                                Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
-                                TermDocs docs = reader.termDocs(uuidTerm);
-                                try {
-                                    if (docs.next()) {
-                                        childrenHits.set(docs.doc());
+                    // start simple but switch once threshold is reached
+                    calc[0] = new SimpleChildrenCalculator(reader, hResolver);
+                    contextScorer.score(new HitCollector() {
+
+                        private List docIds = new ArrayList();
+
+                        public void collect(int doc, float score) {
+                            calc[0].collectContextHit(doc);
+                            if (docIds != null) {
+                                docIds.add(new Integer(doc));
+                                if (docIds.size() > CONTEXT_SIZE_THRESHOLD) {
+                                    // switch
+                                    calc[0] = new HierarchyResolvingChildrenCalculator(
+                                            reader, hResolver);
+                                    for (Iterator it = docIds.iterator(); it.hasNext(); ) {
+                                        calc[0].collectContextHit(((Integer) it.next()).intValue());
                                     }
-                                } finally {
-                                    docs.close();
+                                    // indicate that we switched
+                                    docIds = null;
                                 }
                             }
-                        } catch (ItemStateException e) {
-                            // does not exist anymore -> ignore
                         }
-                    }
+                    });
                 }
 
-                hits = childrenHits;
+                hits = calc[0].getHits();
             }
         }
 
@@ -535,6 +542,174 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                 }
             }
             return true;
+        }
+    }
+
+    /**
+     * Base class to calculate the children for a context query.
+     */
+    private abstract class ChildrenCalculator {
+
+        /**
+         * The current index reader.
+         */
+        protected final IndexReader reader;
+
+        /**
+         * The current hierarchy resolver.
+         */
+        protected final HierarchyResolver hResolver;
+
+        /**
+         * Creates a new children calculator with the given index reader and
+         * hierarchy resolver.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public ChildrenCalculator(IndexReader reader,
+                                  HierarchyResolver hResolver) {
+            this.reader = reader;
+            this.hResolver = hResolver;
+        }
+
+        /**
+         * Collects a context hit.
+         *
+         * @param doc the lucene document number of the context hit.
+         */
+        protected abstract void collectContextHit(int doc);
+
+        /**
+         * @return the hits that contains the children.
+         * @throws IOException if an error occurs while reading from the index.
+         */
+        public abstract Hits getHits() throws IOException;
+    }
+
+    /**
+     * An implementation of a children calculator using the item state manager.
+     */
+    private final class SimpleChildrenCalculator extends ChildrenCalculator {
+
+        /**
+         * The context hits.
+         */
+        private final Hits contextHits = new AdaptingHits();
+
+        /**
+         * Creates a new simple children calculator.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public SimpleChildrenCalculator(IndexReader reader,
+                                        HierarchyResolver hResolver) {
+            super(reader, hResolver);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        protected void collectContextHit(int doc) {
+            contextHits.set(doc);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Hits getHits() throws IOException {
+            // read the uuids of the context nodes
+            Map uuids = new HashMap();
+            for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
+                String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
+                uuids.put(new Integer(i), uuid);
+            }
+
+            // get child node entries for each hit
+            Hits childrenHits = new AdaptingHits();
+            for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
+                String uuid = (String) it.next();
+                NodeId id = new NodeId(UUID.fromString(uuid));
+                try {
+                    long time = System.currentTimeMillis();
+                    NodeState state = (NodeState) itemMgr.getItemState(id);
+                    time = System.currentTimeMillis() - time;
+                    log.debug("got NodeState with id {} in {} ms.", id, new Long(time));
+                    Iterator entries;
+                    if (nameTest != null) {
+                        entries = state.getChildNodeEntries(nameTest).iterator();
+                    } else {
+                        // get all children
+                        entries = state.getChildNodeEntries().iterator();
+                    }
+                    while (entries.hasNext()) {
+                        NodeId childId = ((ChildNodeEntry) entries.next()).getId();
+                        Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
+                        TermDocs docs = reader.termDocs(uuidTerm);
+                        try {
+                            if (docs.next()) {
+                                childrenHits.set(docs.doc());
+                            }
+                        } finally {
+                            docs.close();
+                        }
+                    }
+                } catch (ItemStateException e) {
+                    // does not exist anymore -> ignore
+                }
+            }
+            return childrenHits;
+        }
+    }
+
+    /**
+     * An implementation of a children calculator that uses the hierarchy
+     * resolver. This implementation requires that
+     * {@link ChildAxisQuery#nameTestScorer} is non null.
+     */
+    private final class HierarchyResolvingChildrenCalculator
+            extends ChildrenCalculator {
+
+        /**
+         * The document numbers of the context hits.
+         */
+        private final Set docIds = new HashSet();
+
+        /**
+         * Creates a new hierarchy resolving children calculator.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public HierarchyResolvingChildrenCalculator(IndexReader reader,
+                                                    HierarchyResolver hResolver) {
+            super(reader, hResolver);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        protected void collectContextHit(int doc) {
+            docIds.add(new Integer(doc));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Hits getHits() throws IOException {
+            long time = System.currentTimeMillis();
+            Hits childrenHits = new AdaptingHits();
+            Hits nameHits = new ScorerHits(nameTestScorer);
+            for (int h = nameHits.next(); h > -1; h = nameHits.next()) {
+                if (docIds.contains(new Integer(hResolver.getParent(h)))) {
+                    childrenHits.set(h);
+                }
+            }
+            time = System.currentTimeMillis() - time;
+
+            log.debug("Filtered hits in {} ms.", new Long(time));
+            return childrenHits;
         }
     }
 }

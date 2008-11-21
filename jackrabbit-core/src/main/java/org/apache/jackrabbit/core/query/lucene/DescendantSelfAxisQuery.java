@@ -26,6 +26,8 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -42,6 +44,11 @@ import java.util.Iterator;
  * nodes selected by a context query.
  */
 class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(DescendantSelfAxisQuery.class);
 
     /**
      * The context query
@@ -169,13 +176,18 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
     }
 
     /**
-     * Always returns 'DescendantSelfAxisQuery'.
-     *
-     * @param field the name of a field.
-     * @return 'DescendantSelfAxisQuery'.
+     * {@inheritDoc}
      */
     public String toString(String field) {
-        return "DescendantSelfAxisQuery";
+        StringBuffer sb = new StringBuffer();
+        sb.append("DescendantSelfAxisQuery(");
+        sb.append(contextQuery);
+        sb.append(", ");
+        sb.append(subQuery);
+        sb.append(", ");
+        sb.append(minLevels);
+        sb.append(")");
+        return sb.toString();
     }
 
     /**
@@ -477,12 +489,22 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
         private void collectContextHits() throws IOException {
             if (!contextHitsCalculated) {
+                long time = System.currentTimeMillis();
                 contextScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
                         contextHits.set(doc);
                     }
                 }); // find all
                 contextHitsCalculated = true;
+                time = System.currentTimeMillis() - time;
+                if (log.isDebugEnabled()) {
+                    log.debug("Collected {} context hits in {} ms for {}",
+                            new Object[]{
+                                    new Integer(contextHits.cardinality()),
+                                    new Long(time),
+                                    DescendantSelfAxisQuery.this
+                            });
+                }
             }
         }
 
