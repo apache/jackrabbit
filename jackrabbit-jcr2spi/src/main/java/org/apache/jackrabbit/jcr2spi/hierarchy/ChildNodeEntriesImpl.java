@@ -163,7 +163,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * pending changes.
      * @see org.apache.jackrabbit.jcr2spi.operation.AddNode
      * @see org.apache.jackrabbit.jcr2spi.operation.Move
-     * @see org.apache.jackrabbit.jcr2spi.operation.Reorder
+     * @see org.apache.jackrabbit.jcr2spi.operation.ReorderNodes
      */
     synchronized void update(Iterator childNodeInfos) {
         // insert missing entries and reorder all if necessary.
@@ -321,7 +321,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @param newEntry
      * @param index
      * @param insertAfter
-     * @return
+     * @return the <code>LinkNode</code> associated with the <code>newEntry</code>.
      */
     private LinkedEntries.LinkNode internalAddAfter(NodeEntry newEntry, int index,
                                                     LinkedEntries.LinkNode insertAfter) {
@@ -438,8 +438,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     /**
      *
-     * @param insertEntry
-     * @param afterEntry
+     * @param insertLN
+     * @param afterLN
      */
     private void reorderAfter(LinkedEntries.LinkNode insertLN, LinkedEntries.LinkNode afterLN) {
         // the link node to move
@@ -547,7 +547,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
          *
          * @param cne the child node entry to add.
          * @param index
-         * @param node after which to insert the new entry
+         * @param insertAfter after which to insert the new entry
          * @return the LinkNode which refers to the added <code>NodeEntry</code>.
          */
         LinkedEntries.LinkNode addAfter(NodeEntry cne, int index, LinkedEntries.LinkNode insertAfter) {
