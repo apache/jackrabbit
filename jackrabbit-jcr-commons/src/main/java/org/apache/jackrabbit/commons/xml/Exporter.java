@@ -61,7 +61,7 @@ public abstract class Exporter {
     private final AttributesImpl attributes = new AttributesImpl();
 
     /**
-     * Stack of namespace mappings. 
+     * Stack of namespace mappings.
      */
     private final LinkedList stack = new LinkedList();
 
@@ -158,7 +158,7 @@ public abstract class Exporter {
      * the abstract property export methods so the subclass can decide what
      * SAX events to emit for each exported item.
      *
-     * @param uri node namespace, or <code>null</code>
+     * @param uri node namespace
      * @param local node name
      * @param node node
      * @throws RepositoryException if a repository error occurs
@@ -171,7 +171,7 @@ public abstract class Exporter {
      * Called by {@link #processProperties(Node)} to process a single-valued
      * property.
      *
-     * @param uri property namespace, or <code>null</code>
+     * @param uri property namespace
      * @param local property name
      * @param value property value
      * @throws RepositoryException if a repository error occurs
@@ -185,7 +185,7 @@ public abstract class Exporter {
      * Called by {@link #processProperties(Node)} to process a multivalued
      * property.
      *
-     * @param uri property namespace, or <code>null</code>
+     * @param uri property namespace
      * @param local property name
      * @param type property type
      * @param value property values
@@ -292,7 +292,7 @@ public abstract class Exporter {
             String name = node.getName();
             int colon = name.indexOf(':');
             if (colon == -1) {
-                exportNode(null, name, node);
+                exportNode("", name, node);
             } else {
                 String uri = session.getNamespaceURI(name.substring(0, colon));
                 exportNode(uri, name.substring(colon + 1), node);
@@ -348,7 +348,7 @@ public abstract class Exporter {
      */
     private void exportProperty(String name, Property property)
             throws RepositoryException, SAXException {
-        String uri = null;
+        String uri = "";
         String local = name;
         int colon = name.indexOf(':');
         if (colon != -1) {
@@ -468,14 +468,14 @@ public abstract class Exporter {
      * it is created based on the namespace mappings of the current JCR
      * session.
      *
-     * @param uri namespace URI, or <code>null</code>
+     * @param uri namespace URI
      * @param local local name
      * @return prefixed XML name
      * @throws RepositoryException if a JCR namespace mapping is not available
      */
     protected String getXMLName(String uri, String local)
             throws RepositoryException {
-        if (uri == null) {
+        if (uri.length() == 0) {
             return local;
         } else {
             String prefix = getPrefix(uri);

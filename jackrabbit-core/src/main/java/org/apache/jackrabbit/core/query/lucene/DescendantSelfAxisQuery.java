@@ -471,7 +471,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                     return next();
                 }
             } else {
-                return true;
+                return false;
             }
         }
 
