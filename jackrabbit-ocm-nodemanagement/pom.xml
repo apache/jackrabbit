@@ -28,8 +28,9 @@
   <!-- ====================================================================== -->
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>jackrabbit</artifactId>
+    <artifactId>jackrabbit-parent</artifactId>
     <version>1.5.0-SNAPSHOT</version>
+    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-ocm-nodemanagement</artifactId>
   <name>Jackrabbit OCM Node management</name>
@@ -49,10 +50,12 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-ocm</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
