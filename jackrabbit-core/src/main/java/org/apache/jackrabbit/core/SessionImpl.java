@@ -1017,6 +1017,15 @@ public class SessionImpl extends AbstractSession
             index = 1;
         }
 
+        // check permissions
+        AccessManager acMgr = getAccessManager();
+        if (!(acMgr.isGranted(srcPath, Permission.REMOVE_NODE) &&
+                acMgr.isGranted(destPath, Permission.ADD_NODE))) {
+            String msg = "Not allowed to move node " + srcAbsPath + " to " + destAbsPath;
+            log.debug(msg);
+            throw new AccessDeniedException(msg);
+        }
+
         if (srcParentNode.isSame(destParentNode)) {
             // do rename
             destParentNode.renameChildNode(srcName.getName(), index, targetId, destName.getName());
