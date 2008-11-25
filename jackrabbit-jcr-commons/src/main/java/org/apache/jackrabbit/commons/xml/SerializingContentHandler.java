@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -191,6 +192,22 @@ public class SerializingContentHandler extends DefaultContentHandler {
      */
     private boolean hasMappings = false;
 
+    /**
+     * Stack of the prefixes of explicitly generated prefix mapping calls
+     * per each element level. An entry is appended at the beginning of each
+     * {@link #startElement(String, String, String, Attributes)} call and
+     * removed at the end of each {@link #endElement(String, String, String)}
+     * call. By default the entry for each element is <code>null</code> to
+     * avoid losing performance, but whenever the code detects a new prefix
+     * mapping that needs to be registered, the <code>null</code> entry is
+     * replaced with a list of explicitly registered prefixes for that node.
+     * When that element is closed, the listed prefixes get unmapped.
+     *
+     * @see #checkPrefixMapping(String, String)
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1767">JCR-1767</a>
+     */
+    private final List addedPrefixMappings = new ArrayList();
+
     private SerializingContentHandler(ContentHandler handler) {
         super(handler);
     }
@@ -230,6 +247,50 @@ public class SerializingContentHandler extends DefaultContentHandler {
     }
 
     /**
+     * Checks whether a prefix mapping already exists for the given namespace
+     * and generates the required {@link #startPrefixMapping(String, String)}
+     * call if the mapping is not found. By default the registered prefix
+     * is taken from the given qualified name, but a different prefix is
+     * automatically selected if that prefix is already used.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1767">JCR-1767</a>
+     * @param uri namespace URI
+     * @param qname element name with the prefix, or <code>null</code>
+     * @throws SAXException if the prefix mapping can not be added
+     */
+    private void checkPrefixMapping(String uri, String qname)
+            throws SAXException {
+        // Only add the prefix mapping if the URI is not already known
+        if (uri != null && uri.length() > 0 && !uri.startsWith("xml")
+                && !uriToPrefixMap.containsKey(uri)) {
+            // Get the prefix
+            String prefix = "ns";
+            if (qname != null && qname.length() > 0) {
+                int colon = qname.indexOf(':');
+                if (colon != -1) {
+                    prefix = qname.substring(0, colon);
+                }
+            }
+
+            // Make sure that the prefix is unique
+            String base = prefix;
+            for (int i = 2; prefixToUriMap.containsKey(prefix); i++) {
+                prefix = base + i;
+            }
+
+            int last = addedPrefixMappings.size() - 1;
+            List prefixes = (List) addedPrefixMappings.get(last);
+            if (prefixes == null) {
+                prefixes = new ArrayList();
+                addedPrefixMappings.set(last, prefixes);
+            }
+            prefixes.add(prefix);
+
+            startPrefixMapping(prefix, uri);
+        }
+    }
+
+    /**
      * Ensure all namespace declarations are present as <code>xmlns:</code> attributes
      * and add those needed before calling superclass. This is a workaround for a Xalan bug
      * (at least in version 2.0.1) : <code>org.apache.xalan.serialize.SerializerToXML</code>
@@ -238,6 +299,12 @@ public class SerializingContentHandler extends DefaultContentHandler {
     public void startElement(
             String eltUri, String eltLocalName, String eltQName, Attributes attrs)
             throws SAXException {
+        // JCR-1767: Generate extra prefix mapping calls where needed
+        addedPrefixMappings.add(null);
+        checkPrefixMapping(eltUri, eltQName);
+        for (int i = 0; i < attrs.getLength(); i++) {
+            checkPrefixMapping(attrs.getURI(i), attrs.getQName(i));
+        }
 
         // try to restore the qName. The map already contains the colon
         if (null != eltUri && eltUri.length() != 0 && this.uriToPrefixMap.containsKey(eltUri)) {
@@ -313,7 +380,18 @@ public class SerializingContentHandler extends DefaultContentHandler {
         if (null != eltUri && eltUri.length() != 0 && this.uriToPrefixMap.containsKey(eltUri)) {
             eltQName = this.uriToPrefixMap.get(eltUri) + eltLocalName;
         }
+
         super.endElement(eltUri, eltLocalName, eltQName);
+
+        // JCR-1767: Generate extra prefix un-mapping calls where needed
+        int last = addedPrefixMappings.size() - 1;
+        List prefixes = (List) addedPrefixMappings.remove(last);
+        if (prefixes != null) {
+            Iterator iterator = prefixes.iterator();
+            while (iterator.hasNext()) {
+                endPrefixMapping((String) iterator.next());
+            }
+        }
     }
 
     /**

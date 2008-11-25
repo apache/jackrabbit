@@ -61,6 +61,45 @@ public class SerializingContentHandlerTest extends TestCase {
         assertContains(xml, "</p:a>");
     }
 
+    /**
+     * Test case for JCR-1767.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1767">JCR-1767</a>
+     */
+    public void testNoPrefixMappingCalls() throws Exception {
+        StringWriter writer = new StringWriter();
+
+        ContentHandler handler =
+            SerializingContentHandler.getSerializer(writer);
+        handler.startDocument();
+        handler.startElement("uri", "a", "p:a", new AttributesImpl());
+        AttributesImpl attributes = new AttributesImpl();
+        attributes.addAttribute("uri", "foo", "p:foo", "CDATA", "bar");
+        handler.startElement(null, "b", "b", attributes);
+        handler.characters("abc".toCharArray(), 0, 3);
+        handler.endElement(null, "b", "b");
+        handler.startElement(null, "c", "c", new AttributesImpl());
+        handler.endElement(null, "c", "c");
+        handler.characters("xyz".toCharArray(), 0, 3);
+        handler.endElement("uri", "a", "p:a");
+        handler.endDocument();
+
+        String xml = writer.toString();
+        assertContains(xml, "<p:a");
+        assertContains(xml, "xmlns:p");
+        assertContains(xml, "=");
+        assertContains(xml, "uri");
+        assertContains(xml, ">");
+        assertContains(xml, "<b");
+        assertContains(xml, "p:foo");
+        assertContains(xml, "bar");
+        assertContains(xml, "abc");
+        assertContains(xml, "</b>");
+        assertContains(xml, "<c/>");
+        assertContains(xml, "xyz");
+        assertContains(xml, "</p:a>");
+    }
+
     private void assertContains(String haystack, String needle) {
         if (haystack.indexOf(needle) == -1) {
             fail("'" + haystack + "' does not contain '" + needle+ "'");
