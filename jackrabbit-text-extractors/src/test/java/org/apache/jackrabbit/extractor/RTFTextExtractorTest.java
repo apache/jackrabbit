@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 
+import javax.swing.text.DefaultStyledDocument;
+
 import junit.framework.TestCase;
 
 /**
@@ -30,6 +32,13 @@ import junit.framework.TestCase;
 public class RTFTextExtractorTest extends TestCase {
 
     public void testExtractor() throws IOException {
+        // JCR-1881: Only run the test if the underlying libraries work
+        try {
+            new DefaultStyledDocument();
+        } catch (Throwable t) {
+            return;
+        }
+
         TextExtractor extractor = new RTFTextExtractor();
         InputStream in = getClass().getResourceAsStream("test.rtf");
         Reader r = extractor.extractText(in, "application/rtf", null);

@@ -61,8 +61,8 @@ public class RTFTextExtractor extends AbstractTextExtractor {
             rek.read(stream, doc, 0);
             String text = doc.getText(0, doc.getLength());
             return new StringReader(text);
-        } catch (BadLocationException e) {
-            logger.warn("Failed to extract RTF text content", e);
+        } catch (Throwable t) {
+            logger.warn("Failed to extract RTF text content", t);
             return new StringReader("");
         } finally {
             stream.close();
