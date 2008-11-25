@@ -28,6 +28,7 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
@@ -69,6 +70,49 @@ public class SerializingContentHandler extends DefaultContentHandler {
     private static final String XML = "http://www.w3.org/XML/1998/namespace";
 
     /**
+     * The factory used to create serializing SAX transformers.
+     */
+    private static final SAXTransformerFactory FACTORY =
+        // Note that the cast from below is strictly speaking only valid when
+        // the factory instance supports the SAXTransformerFactory.FEATURE
+        // feature. But since this class would be useless without this feature,
+        // it's no problem to fail with a ClassCastException here and prevent
+        // this class from even being loaded. AFAIK all common JAXP
+        // implementations do support this feature.
+        (SAXTransformerFactory) TransformerFactory.newInstance();
+
+    /**
+     * Flag that indicates whether we need to work around the issue of
+     * the serializer not automatically generating the required xmlns
+     * attributes for the namespaces used in the document.
+     */
+    private static final boolean NEEDS_XMLNS_ATTRIBUTES =
+        needsXmlnsAttributes();
+
+    /**
+     * Probes the available XML serializer for xmlns support. Used to set
+     * the value of the {@link #NEEDS_XMLNS_ATTRIBUTES} flag.
+     *
+     * @return whether the XML serializer needs explicit xmlns attributes
+     */
+    private static boolean needsXmlnsAttributes() {
+        try {
+            StringWriter writer = new StringWriter();
+            TransformerHandler probe = FACTORY.newTransformerHandler();
+            probe.setResult(new StreamResult(writer));
+            probe.startDocument();
+            probe.startPrefixMapping("p", "uri");
+            probe.startElement("uri", "e", "p:e", new AttributesImpl());
+            probe.endElement("uri", "e", "p:e");
+            probe.endPrefixMapping("p");
+            probe.endDocument();
+            return writer.toString().indexOf("xmlns") == -1;
+        } catch (Exception e) {
+            throw new UnsupportedOperationException("XML serialization fails");
+        }
+    }
+
+    /**
      * Creates a serializing content handler that writes to the given stream.
      *
      * @param stream serialization target
@@ -102,10 +146,7 @@ public class SerializingContentHandler extends DefaultContentHandler {
     public static DefaultHandler getSerializer(Result result)
             throws SAXException {
         try {
-            SAXTransformerFactory factory = (SAXTransformerFactory)
-            SAXTransformerFactory.newInstance();
-
-            TransformerHandler handler = factory.newTransformerHandler();
+            TransformerHandler handler = FACTORY.newTransformerHandler();
             handler.setResult(result);
 
             // Specify the output properties to avoid surprises especially in
@@ -116,17 +157,7 @@ public class SerializingContentHandler extends DefaultContentHandler {
             transformer.setOutputProperty(OutputKeys.ENCODING, ENCODING);
             transformer.setOutputProperty(OutputKeys.INDENT, "no");
 
-            // Test whether the NamespaceAsAttributes wrapper is needed
-            StringWriter writer = new StringWriter();
-            TransformerHandler probe = factory.newTransformerHandler();
-            probe.setResult(new StreamResult(writer));
-            probe.startDocument();
-            probe.startPrefixMapping("p", "uri");
-            probe.startElement("uri", "e", "p:e", new AttributesImpl());
-            probe.endElement("uri", "e", "p:e");
-            probe.endPrefixMapping("p");
-            probe.endDocument();
-            if (writer.toString().indexOf("xmlns") == -1) {
+            if (NEEDS_XMLNS_ATTRIBUTES) {
                 // The serializer does not output xmlns declarations,
                 // so we need to do it explicitly with this wrapper
                 return new SerializingContentHandler(handler);
