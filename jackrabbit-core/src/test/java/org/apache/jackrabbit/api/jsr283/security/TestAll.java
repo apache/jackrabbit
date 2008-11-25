@@ -46,6 +46,7 @@ public class TestAll extends TestCase {
         // tests with read only session:
         suite.addTestSuite(RSessionAccessControlDiscoveryTest.class);
         suite.addTestSuite(RSessionAccessControlPolicyTest.class);
+        suite.addTestSuite(RSessionAccessControlTest.class);
 
         return suite;
     }

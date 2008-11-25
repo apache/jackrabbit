@@ -728,7 +728,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
         // add 'remove_child_nodes' at 'path
         givePrivileges(path, rmChildNodes, getRestrictions(path));
-        // deny 'remove_nodes' at 'path'
+        // deny 'remove_node' at 'path'
         withdrawPrivileges(path, rmNode, getRestrictions(path));
         // and allow 'remove_node' at childNPath
         givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
@@ -738,6 +738,108 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
          */
         assertTrue(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
+    }
+
+    public void testSessionMove() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        String destPath = path + "/" + nodeName1;
+
+        // give 'add_child_nodes' privilege
+        // -> not sufficient privileges for a move
+        givePrivileges(path, privilegesFromName(Privilege.JCR_ADD_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.move(childNPath, destPath);
+            testSession.save();
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // add 'remove_child_nodes' at 'path
+        // -> not sufficient for a move since 'remove_node' privilege is missing
+        //    on the move-target
+        givePrivileges(path, privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.move(childNPath, destPath);
+            testSession.save();
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // allow 'remove_node' at childNPath
+        // -> now move must succeed
+        givePrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE), getRestrictions(childNPath));
+        testSession.move(childNPath, destPath);
+        testSession.save();
+
+        // withdraw  'add_child_nodes' privilege on former src-parent
+        // -> moving child-node back must fail
+        withdrawPrivileges(path, privilegesFromName(Privilege.JCR_ADD_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.move(destPath, childNPath);
+            testSession.save();
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+    }
+
+    public void testWorkspaceMove() throws RepositoryException, NotExecutableException {
+        SessionImpl testSession = getTestSession();
+        AccessControlManager testAcMgr = getTestACManager();
+        /*
+          precondition:
+          testuser must have READ-only permission on test-node and below
+        */
+        checkReadOnly(path);
+        checkReadOnly(childNPath);
+
+        String destPath = path + "/" + nodeName1;
+
+        // give 'add_child_nodes' privilege
+        // -> not sufficient privileges for a move.
+        givePrivileges(path, privilegesFromName(Privilege.JCR_ADD_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.getWorkspace().move(childNPath, destPath);
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // add 'remove_child_nodes' at 'path
+        // -> no sufficient for a move since 'remove_node' privilege is missing
+        //    on the move-target
+        givePrivileges(path, privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.getWorkspace().move(childNPath, destPath);
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // allow 'remove_node' at childNPath
+        // -> now move must succeed
+        givePrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE), getRestrictions(childNPath));
+        testSession.getWorkspace().move(childNPath, destPath);
+
+        // withdraw  'add_child_nodes' privilege on former src-parent
+        // -> moving child-node back must fail
+        withdrawPrivileges(path, privilegesFromName(Privilege.JCR_ADD_CHILD_NODES), getRestrictions(path));
+        try {
+            testSession.getWorkspace().move(destPath, childNPath);
+            fail("Move requires add and remove permission.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
     }
 
     public void testGroupPermissions() throws NotExecutableException, RepositoryException {
