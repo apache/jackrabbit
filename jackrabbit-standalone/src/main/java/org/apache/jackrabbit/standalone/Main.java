@@ -39,7 +39,7 @@ public class Main {
 
         WebAppContext webapp = new WebAppContext();
         webapp.setContextPath("/");
-        webapp.setWar(location.toURI().toString());
+        webapp.setWar(location.toString());
         webapp.setExtractWAR(false);
         webapp.setTempDirectory(new File(jackrabbit, "jetty"));
 
