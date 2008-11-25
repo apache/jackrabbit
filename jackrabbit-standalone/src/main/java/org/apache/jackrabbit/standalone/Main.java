@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.standalone;
 
 import java.io.File;
+import java.net.URL;
 
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.webapp.WebAppContext;
@@ -30,17 +31,21 @@ public class Main {
      * @param args
      */
     public static void main(String[] argv) throws Exception {
+        URL location =
+            Main.class.getProtectionDomain().getCodeSource().getLocation();
+
         File jackrabbit = new File("jackrabbit");
         jackrabbit.mkdirs();
 
         WebAppContext webapp = new WebAppContext();
         webapp.setContextPath("/");
-        webapp.setWar("target/jackrabbit-standalone-SNAPSHOT-jar-with-dependencies.jar");
+        webapp.setWar(location.toURI().toString());
         webapp.setExtractWAR(false);
         webapp.setTempDirectory(new File(jackrabbit, "jetty"));
 
-        Server server = new Server(8080);
+        Server server = new Server(1234);
         server.setHandler(webapp);
+        server.setStopAtShutdown(true);
         server.start();
         server.join();
     }
