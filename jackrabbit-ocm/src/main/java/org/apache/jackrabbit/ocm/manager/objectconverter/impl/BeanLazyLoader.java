@@ -17,8 +17,6 @@
 
 package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 
-import java.io.Serializable;
-
 import javax.jcr.Node;
 import javax.jcr.Session;
 
@@ -26,15 +24,15 @@ import org.apache.jackrabbit.ocm.manager.beanconverter.BeanConverter;
 import org.apache.jackrabbit.ocm.mapper.model.BeanDescriptor;
 import org.apache.jackrabbit.ocm.mapper.model.ClassDescriptor;
 
-public class BeanLazyLoader extends AbstractLazyLoader implements Serializable {
+public class BeanLazyLoader extends AbstractLazyLoader {
 
-	private BeanConverter beanConverter;
-	private Session session;
-	private Node parentNode;
-	private BeanDescriptor beanDescriptor;
-	private ClassDescriptor beanClassDescriptor;
-	private Class<?> beanClass;
-	private Object parent;
+	private volatile BeanConverter beanConverter;
+	private volatile Session session;
+	private volatile Node parentNode;
+	private volatile BeanDescriptor beanDescriptor;
+	private volatile ClassDescriptor beanClassDescriptor;
+	private volatile Class<?> beanClass;
+	private volatile Object parent;
 
 	public BeanLazyLoader(BeanConverter beanConverter, Session session, Node parentNode, BeanDescriptor beanDescriptor,
 			ClassDescriptor beanClassDescriptor, Class<?> beanClass, Object parent) {
@@ -53,6 +51,10 @@ public class BeanLazyLoader extends AbstractLazyLoader implements Serializable {
 			throw new IllegalStateException("Proxy already initialized");
 		}
 
+		if (session == null) {
+			throw new IllegalStateException("Session null, probably because bean was serialized. Impossible to lazy load.");
+		}
+
 		Object target = beanConverter.getObject(session, parentNode, beanDescriptor, beanClassDescriptor, beanClass, parent);
 
 		clean();
@@ -64,6 +66,7 @@ public class BeanLazyLoader extends AbstractLazyLoader implements Serializable {
 		 session = null;
 		 parentNode = null;
 		 beanDescriptor = null;
+		 beanClassDescriptor = null;
 		 parent = null;
 	}
 }

@@ -1,5 +1,6 @@
 package org.apache.jackrabbit.ocm.manager.objectconverter.impl;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -13,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @author <a href="mailto:slandelle@excilys.com">Stephane LANDELLE</a>
  */
-public abstract class AbstractLazyLoader implements InvocationHandler {
+public abstract class AbstractLazyLoader implements InvocationHandler, Serializable {
 
 	/**
 	 * The logger
