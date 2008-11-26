@@ -26,10 +26,10 @@ import org.apache.jackrabbit.ocm.mapper.model.CollectionDescriptor;
 
 public class CollectionLazyLoader extends AbstractLazyLoader {
 
-	private CollectionConverter collectionConverter;
-	private Session session;
-	private Node collectionParentNode;
-	private CollectionDescriptor collectionDescriptor;
+	private volatile CollectionConverter collectionConverter;
+	private volatile Session session;
+	private volatile Node collectionParentNode;
+	private volatile CollectionDescriptor collectionDescriptor;
 	private Class<?> collectionFieldClass;
 
 	public CollectionLazyLoader(CollectionConverter collectionConverter, Session session, Node parentNode,
@@ -46,6 +46,11 @@ public class CollectionLazyLoader extends AbstractLazyLoader {
 		if (isInitialized()) {
 			throw new IllegalStateException("Proxy already initialized");
 		}
+
+		if (session == null) {
+			throw new IllegalStateException("Session null, probably because bean was serialized. Impossible to lazy load.");
+		}
+
 		ManageableObjects objects = collectionConverter.getCollection(session, collectionParentNode, collectionDescriptor,
 				collectionFieldClass);
 		Object target = objects.getObjects();
