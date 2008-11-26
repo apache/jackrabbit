@@ -399,7 +399,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     protected void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, RepositoryException {
         checkValidNodePath(absPath);
         if (!internalHasPrivileges(absPath, privileges)) {
-            throw new AccessDeniedException("No privilege " + privileges + " at " + absPath);
+            throw new AccessDeniedException("Access denied at " + absPath);
         }
     }
 
