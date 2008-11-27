@@ -19,6 +19,7 @@ package org.apache.jackrabbit.standalone;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.BindException;
 import java.net.URL;
 
 import org.apache.commons.cli.CommandLine;
@@ -125,14 +126,21 @@ public class Main {
             prepareConnector();
             server.addConnector(connector);
             prepareShutdown();
-            server.start();
 
-            String host = connector.getHost();
-            if (host == null) {
-                host = "localhost";
+            try {
+                server.start();
+
+                String host = connector.getHost();
+                if (host == null) {
+                    host = "localhost";
+                }
+                message("Apache Jackrabbit is now running at "
+                        +"http://" + host + ":" + connector.getPort() + "/");
+            } catch (Throwable t) {
+                System.err.println(
+                        "Unable to start the server: " + t.getMessage());
+                System.exit(1);
             }
-            message("Apache Jackrabbit is now running at "
-                    +"http://" + host + ":" + connector.getPort() + "/");
         }
     }
 
