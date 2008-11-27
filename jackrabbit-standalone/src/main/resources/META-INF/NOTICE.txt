@@ -40,3 +40,24 @@ Automatique, Keio University). All Rights Reserved.
 This product includes the Concurrent library, portions of which are
 based on code from Sun Microsystems.
 Copyright (c) 1994-2000 Sun Microsystems, Inc. All rights reserved.
+
+This product includes the Jetty Web Container that is Copyright Mort Bay
+Consulting Pty Ltd unless otherwise noted.
+
+The javax.servlet package used by Jetty is copyright  Sun Microsystems, Inc
+and Apache Software Foundation.
+
+The UnixCrypt.java code in Jetty is Copyright 1996 Aki Yoshida, modified
+April 2001  by Iris Van den Broeke, Daniel Deville. Permission to use, copy,
+modify and distribute UnixCrypt  for non-commercial or commercial purposes
+and without fee is granted provided that the copyright notice appears in
+all copies.
+
+The JSP implementation in Jetty is provided by the Glassfish JSP engine from
+project Glassfish http://glassfish.dev.java.net.
+Copyright 2005 Sun Microsystems, Inc. and portions Copyright Apache Software
+Foundation.
+
+Some portions of Jetty are Copyright:
+  2006 Tim Vernum 
+  1999 Jason Gilbert.
