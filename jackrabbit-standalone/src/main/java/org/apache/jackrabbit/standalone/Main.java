@@ -27,7 +27,9 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.DailyRollingFileAppender;
+import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -36,6 +38,7 @@ import org.mortbay.jetty.NCSARequestLog;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.handler.RequestLogHandler;
+import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 /**
@@ -53,8 +56,6 @@ public class Main {
     private final Options options = new Options();
 
     private final CommandLine command;
-
-    private final Logger serverLog = Logger.getRootLogger();
 
     private final RequestLogHandler accessLog = new RequestLogHandler();
 
@@ -115,19 +116,14 @@ public class Main {
 
             message("Writing log messages to " + log);
             prepareServerLog(log);
-            prepareAccessLog(log);
-
-            message("Preparing the server...");
-            server.setStopAtShutdown(true);
-
-            prepareWebapp(file, tmp);
-            accessLog.setHandler(webapp);
-            server.setHandler(accessLog);
-
-            prepareConnector();
-            server.addConnector(connector);
 
             message("Starting the server...");
+            prepareWebapp(file, repository, tmp);
+            accessLog.setHandler(webapp);
+            prepareAccessLog(log);
+            server.setHandler(accessLog);
+            prepareConnector();
+            server.addConnector(connector);
             prepareShutdown();
             server.start();
 
@@ -142,30 +138,53 @@ public class Main {
 
     private void prepareServerLog(File log)
             throws IOException {
-        serverLog.addAppender(new DailyRollingFileAppender(
-                new PatternLayout("%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n"),
-                new File(log, "server.log.yyyy-MM-dd").getPath(),
-                "yyyy-mm-dd"));
+        Layout layout =
+            new PatternLayout("%d{dd.MM.yyyy HH:mm:ss} *%-5p* %c{1}: %m%n");
+
+        Logger jackrabbitLog = Logger.getRootLogger();
+        jackrabbitLog.addAppender(new FileAppender(
+                layout, new File(log, "jackrabbit.log").getPath()));
+
+        Logger jettyLog = Logger.getLogger("org.mortbay.log");
+        jettyLog.addAppender(new FileAppender(
+                layout, new File(log, "jetty.log").getPath()));
+        jettyLog.setAdditivity(false);
 
         if (command.hasOption("debug")) {
-            serverLog.setLevel(Level.DEBUG);
+            jackrabbitLog.setLevel(Level.DEBUG);
+            jettyLog.setLevel(Level.DEBUG);
         } else {
-            serverLog.setLevel(Level.WARN);
+            jackrabbitLog.setLevel(Level.INFO);
+            jettyLog.setLevel(Level.INFO);
         }
+
+        System.setProperty(
+                "derby.stream.error.file",
+                new File(log, "derby.log").getPath());
     }
 
     private void prepareAccessLog(File log) {
-        String path = new File(log, "access.log.yyyy-MM-dd").getPath();
-        NCSARequestLog ncsa = new NCSARequestLog(path);
+        NCSARequestLog ncsa = new NCSARequestLog(
+                new File(log, "access.log.yyyy_mm_dd").getPath());
         ncsa.setFilenameDateFormat("yyyy-MM-dd");
         accessLog.setRequestLog(ncsa);
     }
 
-    private void prepareWebapp(File file, File tmp) {
+    private void prepareWebapp(File file, File repository, File tmp) {
         webapp.setContextPath("/");
         webapp.setWar(file.getPath());
         webapp.setExtractWAR(false);
         webapp.setTempDirectory(tmp);
+
+        ServletHolder servlet =
+            new ServletHolder(JackrabbitRepositoryServlet.class);
+        servlet.setInitOrder(1);
+        servlet.setInitParameter("repository.home", repository.getPath());
+        String conf = command.getOptionValue("conf");
+        if (conf != null) {
+            servlet.setInitParameter("repository.config", conf);
+        }
+        webapp.addServlet(servlet, "/repository.properties");
     }
 
     private void prepareConnector() {
