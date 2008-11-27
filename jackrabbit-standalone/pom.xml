@@ -62,6 +62,7 @@
               <excludes>
                 LICENSE*, NOTICE*, META-INF/LICENSE*, META-INF/NOTICE*,
                 license, license/**/*, test, test/**/*,
+                WEB-INF/web.xml, WEB-INF/log4j.*,
                 WEB-INF/lib, WEB-INF/lib/**/*,
                 WEB-INF/classes, WEB-INF/classes/**/*
               </excludes>
