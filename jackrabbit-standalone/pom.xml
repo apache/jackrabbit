@@ -39,12 +39,35 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
+        <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>org.apache.jackrabbit.standalone.Main</mainClass>
+            </manifest>
+          </archive>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack-dependencies</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <excludes>
+                LICENSE*, NOTICE*, META-INF/LICENSE*, META-INF/NOTICE*,
+                license, license/**/*, test, test/**/*,
+                WEB-INF/lib, WEB-INF/lib/**/*,
+                WEB-INF/classes, WEB-INF/classes/**/*
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -54,12 +77,19 @@
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
       <version>1.0</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
       <version>${project.version}</version>
       <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-webapp</artifactId>
+      <version>${project.version}</version>
+      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
@@ -70,11 +100,6 @@
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jsp-2.1</artifactId>
       <version>6.1.11</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>1.3.0</version>
     </dependency>
   </dependencies>
 
