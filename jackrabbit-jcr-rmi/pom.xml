@@ -99,6 +99,12 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>1.6-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
     <!-- Runtime dependencies -->
     <dependency>
       <groupId>javax.jcr</groupId>
