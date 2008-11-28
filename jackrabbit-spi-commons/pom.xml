@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.0-b3</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-spi-commons</artifactId>
@@ -189,12 +189,12 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>1.5.0-SNAPSHOT</version>
+      <version>1.5.0-b3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.0-SNAPSHOT</version>
+      <version>1.5.0-b3</version>
     </dependency>
     <dependency>
       <groupId>commons-collections</groupId>
