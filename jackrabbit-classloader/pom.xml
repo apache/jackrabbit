@@ -50,12 +50,12 @@ loading Java classes from content repositories that implement the Content Reposi
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>${project.version}</version>
+      <version>1.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>${project.version}</version>
+      <version>1.5-SNAPSHOT</version>
     </dependency>
 
     <!-- Logging -->
@@ -73,7 +73,7 @@ loading Java classes from content repositories that implement the Content Reposi
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>${project.version}</version>
+      <version>1.5-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
