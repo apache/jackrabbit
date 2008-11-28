@@ -305,7 +305,7 @@ class IndexMerger extends Thread implements IndexListener {
 
                         // force initializing of caches
                         time = System.currentTimeMillis();
-                        index.getReadOnlyIndexReader().release();
+                        index.getReadOnlyIndexReader(true).release();
                         time = System.currentTimeMillis() - time;
                         log.debug("reader obtained in {} ms", new Long(time));
                     } finally {
