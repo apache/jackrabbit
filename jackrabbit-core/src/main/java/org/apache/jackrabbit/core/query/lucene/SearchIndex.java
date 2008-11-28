@@ -159,6 +159,11 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final long DEFAULT_EXTRACTOR_TIMEOUT = 100;
 
     /**
+     * The default value for {@link #termInfosIndexDivisor}.
+     */
+    public static final int DEFAULT_TERM_INFOS_INDEX_DIVISOR = 1;
+
+    /**
      * The path of the root node.
      */
     private static final Path ROOT_PATH;
@@ -415,6 +420,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * The directory manager.
      */
     private DirectoryManager directoryManager;
+
+    /**
+     * The termInfosIndexDivisor.
+     */
+    private int termInfosIndexDivisor = DEFAULT_TERM_INFOS_INDEX_DIVISOR;
 
     /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
@@ -1956,6 +1966,22 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setDirectoryManagerClass(String className) {
         this.directoryManagerClass = className;
+    }
+
+    /**
+     * @return the current value for termInfosIndexDivisor.
+     */
+    public int getTermInfosIndexDivisor() {
+        return termInfosIndexDivisor;
+    }
+
+    /**
+     * Sets a new value for termInfosIndexDivisor.
+     *
+     * @param termInfosIndexDivisor the new value.
+     */
+    public void setTermInfosIndexDivisor(int termInfosIndexDivisor) {
+        this.termInfosIndexDivisor = termInfosIndexDivisor;
     }
 
     //----------------------------< internal >----------------------------------

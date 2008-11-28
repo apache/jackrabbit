@@ -92,6 +92,9 @@ abstract class AbstractIndex {
     /** maxFieldLength config parameter */
     private int maxFieldLength = SearchIndex.DEFAULT_MAX_FIELD_LENGTH;
 
+    /** termInfosIndexDivisor config parameter */
+    private int termInfosIndexDivisor = SearchIndex.DEFAULT_MIN_MERGE_DOCS;
+
     /**
      * The document number cache if this index may use one.
      */
@@ -245,7 +248,9 @@ abstract class AbstractIndex {
             indexWriter = null;
         }
         if (indexReader == null) {
-            indexReader = new CommittableIndexReader(IndexReader.open(getDirectory()));
+            IndexReader reader = IndexReader.open(getDirectory());
+            reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
+            indexReader = new CommittableIndexReader(reader);
         }
         return indexReader;
     }
@@ -295,7 +300,9 @@ abstract class AbstractIndex {
         }
         if (sharedReader == null) {
             // create new shared reader
-            CachingIndexReader cr = new CachingIndexReader(IndexReader.open(getDirectory()), cache);
+            IndexReader reader = IndexReader.open(getDirectory());
+            reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
+            CachingIndexReader cr = new CachingIndexReader(reader, cache);
             sharedReader = new SharedIndexReader(cr);
         }
         readOnlyReader = new ReadOnlyIndexReader(sharedReader, deleted, modCount);
@@ -546,6 +553,22 @@ abstract class AbstractIndex {
         if (indexWriter != null) {
             indexWriter.setMaxFieldLength(maxFieldLength);
         }
+    }
+
+    /**
+     * @return the current value for termInfosIndexDivisor.
+     */
+    public int getTermInfosIndexDivisor() {
+        return termInfosIndexDivisor;
+    }
+
+    /**
+     * Sets a new value for termInfosIndexDivisor.
+     *
+     * @param termInfosIndexDivisor the new value.
+     */
+    public void setTermInfosIndexDivisor(int termInfosIndexDivisor) {
+        this.termInfosIndexDivisor = termInfosIndexDivisor;
     }
 
     //------------------------------< internal >--------------------------------

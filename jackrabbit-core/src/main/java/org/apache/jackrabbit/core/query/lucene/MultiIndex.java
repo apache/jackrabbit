@@ -269,6 +269,7 @@ public class MultiIndex {
             index.setMinMergeDocs(handler.getMinMergeDocs());
             index.setMaxFieldLength(handler.getMaxFieldLength());
             index.setUseCompoundFile(handler.getUseCompoundFile());
+            index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
             indexes.add(index);
             merger.indexAdded(index.getName(), index.getNumDocuments());
         }
@@ -574,6 +575,7 @@ public class MultiIndex {
         index.setMinMergeDocs(handler.getMinMergeDocs());
         index.setMaxFieldLength(handler.getMaxFieldLength());
         index.setUseCompoundFile(handler.getUseCompoundFile());
+        index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
 
         // add to list of open indexes and return it
         indexes.add(index);
