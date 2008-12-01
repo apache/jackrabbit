@@ -204,6 +204,11 @@ public final class GQL {
     private final String commonPathPrefix;
 
     /**
+     * An optional filter that may include/exclude result rows.
+     */
+    private final Filter filter;
+
+    /**
      * Maps local names of node types to prefixed names.
      */
     private Map ntNames;
@@ -249,11 +254,14 @@ public final class GQL {
      * @param statement the GQL query.
      * @param session the session that will execute the query.
      * @param commonPathPrefix a common path prefix for the GQL query.
+     * @param filter an optional filter that may include/exclude result rows.
      */
-    private GQL(String statement, Session session, String commonPathPrefix) {
+    private GQL(String statement, Session session,
+                String commonPathPrefix, Filter filter) {
         this.statement = statement;
         this.session = session;
         this.commonPathPrefix = commonPathPrefix;
+        this.filter = filter;
     }
 
     /**
@@ -279,9 +287,45 @@ public final class GQL {
     public static RowIterator execute(String statement,
                                       Session session,
                                       String commonPathPrefix) {
-        GQL query = new GQL(statement, session, commonPathPrefix);
+        return execute(statement, session, commonPathPrefix, null);
+    }
+
+    /**
+     * Executes the GQL query and returns the result as a row iterator.
+     *
+     * @param statement the GQL query.
+     * @param session the session that will execute the query.
+     * @param commonPathPrefix a common path prefix for the GQL query.
+     * @param filter an optional filter that may include/exclude result rows.
+     * @return the result.
+     */
+    public static RowIterator execute(String statement,
+                                      Session session,
+                                      String commonPathPrefix,
+                                      Filter filter) {
+        GQL query = new GQL(statement, session, commonPathPrefix, filter);
         return query.execute();
     }
+
+    /**
+     * Defines a filter for query result rows.
+     */
+    public interface Filter {
+
+        /**
+         * Returns <code>true</code> if the given <code>row</code> should be
+         * included in the result.
+         *
+         * @param row the row to check.
+         * @return <code>true</code> if the row should be included,
+         *         <code>false</code> otherwise.
+         * @throws RepositoryException if an error occurs while reading from the
+         *                             repository.
+         */
+        public boolean include(Row row) throws RepositoryException;
+    }
+
+    //-----------------------------< internal >---------------------------------
 
     /**
      * Executes the GQL query and returns the result as a row iterator.
@@ -293,6 +337,9 @@ public final class GQL {
             String stmt = translateStatement();
             QueryManager qm = session.getWorkspace().getQueryManager();
             RowIterator nodes = qm.createQuery(stmt, Query.XPATH).execute().getRows();
+            if (filter != null) {
+                nodes = new FilteredRowIterator(nodes);
+            }
             if (offset > 0) {
                 try {
                     nodes.skip(offset);
@@ -1000,4 +1047,114 @@ public final class GQL {
             return size;
         }
     }
+
+    /**
+     * A row iterator that applies a {@link GQL#filter} on the underlying rows.
+     */
+    private final class FilteredRowIterator implements RowIterator {
+
+        /**
+         * The underlying rows.
+         */
+        private final RowIterator rows;
+
+        /**
+         * The next row to return or <code>null</code> if there is none.
+         */
+        private Row next;
+
+        /**
+         * The current position.
+         */
+        private long position = 0;
+
+        /**
+         * Filters the given <code>rows</code>.
+         *
+         * @param rows the rows to filter.
+         */
+        public FilteredRowIterator(RowIterator rows) {
+            this.rows = rows;
+            fetchNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void skip(long skipNum) {
+            while (skipNum-- > 0 && hasNext()) {
+                nextRow();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public long getSize() {
+            return -1;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public long getPosition() {
+            return position;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Object next() {
+            return nextRow();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Row nextRow() {
+            if (next == null) {
+                throw new NoSuchElementException();
+            } else {
+                try {
+                    return next;
+                } finally {
+                    position++;
+                    fetchNext();
+                }
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        /**
+         * Fetches the next {@link Row}.
+         */
+        private void fetchNext() {
+            next = null;
+            while (next == null && rows.hasNext()) {
+                Row r = rows.nextRow();
+                try {
+                    if (filter.include(r)) {
+                        next = r;
+                        return;
+                    }
+                } catch (RepositoryException e) {
+                    // ignore
+                }
+            }
+        }
+    }
 }
+
