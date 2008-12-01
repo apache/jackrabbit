@@ -22,6 +22,8 @@ import org.apache.jackrabbit.commons.query.GQL;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.RowIterator;
+import javax.jcr.query.Row;
+
 import java.util.Calendar;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -238,7 +240,40 @@ public class GQLTest extends AbstractQueryTest {
         String stmt = createStatement("order:jcr:title");
         RowIterator rows = GQL.execute(stmt, superuser);
         checkResultSequence(rows, new Node[]{n1, n2, n3});
+    }
 
+    public void testFilter() throws RepositoryException {
+        final Node n1 = testRootNode.addNode("node1");
+        n1.setProperty("jcr:title", "a");
+        Node n2 = testRootNode.addNode("node2");
+        n2.setProperty("jcr:title", "b");
+        Node n3 = testRootNode.addNode("node3");
+        n3.setProperty("jcr:title", "c");
+        superuser.save();
+        String stmt = createStatement("order:jcr:title");
+        RowIterator rows = GQL.execute(stmt, superuser, null, new GQL.Filter() {
+            public boolean include(Row row) throws RepositoryException {
+                return !n1.getPath().equals(row.getValue("jcr:path").getString());
+            }
+        });
+        checkResultSequence(rows, new Node[]{n2, n3});
+    }
+
+    public void testFilterLimit() throws RepositoryException {
+        final Node n1 = testRootNode.addNode("node1");
+        n1.setProperty("jcr:title", "a");
+        Node n2 = testRootNode.addNode("node2");
+        n2.setProperty("jcr:title", "b");
+        Node n3 = testRootNode.addNode("node3");
+        n3.setProperty("jcr:title", "c");
+        superuser.save();
+        String stmt = createStatement("order:jcr:title limit:1");
+        RowIterator rows = GQL.execute(stmt, superuser, null, new GQL.Filter() {
+            public boolean include(Row row) throws RepositoryException {
+                return !n1.getPath().equals(row.getValue("jcr:path").getString());
+            }
+        });
+        checkResultSequence(rows, new Node[]{n2});
     }
 
     public void XXXtestQueryDestruction() throws RepositoryException {
