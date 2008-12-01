@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.5.0-b3</version>
+    <version>1.5.0-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-classloader</artifactId>
@@ -50,12 +50,12 @@ loading Java classes from content repositories that implement the Content Reposi
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>1.5.0-b3</version>
+      <version>1.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.0-b3</version>
+      <version>1.5.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Logging -->
@@ -73,7 +73,7 @@ loading Java classes from content repositories that implement the Content Reposi
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>1.5.0-b3</version>
+      <version>1.5.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
