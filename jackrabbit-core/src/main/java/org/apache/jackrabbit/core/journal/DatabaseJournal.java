@@ -49,8 +49,8 @@ import javax.jcr.RepositoryException;
  * property with no default value</li>
  * <li><code>url</code>: the JDBC connection url; this is a required property with
  * no default value </li>
- * <li><code>schema</code>: the schema to be used; if not specified, this is the
- * second field inside the JDBC connection url, delimeted by colons</li>
+ * <li><code>databaseType</code>: the database type to be used; if not specified, this is the
+ * second field inside the JDBC connection url, delimited by colons</li>
  * <li><code>schemaObjectPrefix</code>: the schema object prefix to be used;
  * defaults to an empty string</li>
  * <li><code>user</code>: username to specify when connecting</li>
@@ -118,9 +118,9 @@ public class DatabaseJournal extends AbstractJournal {
     private String url;
 
     /**
-     * Schema name, bean property.
+     * Database type, bean property.
      */
-    private String schema;
+    private String databaseType;
 
     /**
      * User name, bean property.
@@ -317,7 +317,7 @@ public class DatabaseJournal extends AbstractJournal {
      * Completes initialization of this database journal. Base implementation
      * checks whether the required bean properties <code>driver</code> and
      * <code>url</code> have been specified and optionally deduces a valid
-     * schema. Should be overridden by subclasses that use a different way to
+     * database type. Should be overridden by subclasses that use a different way to
      * create a connection and therefore require other arguments.
      *
      * @see #getConnection()
@@ -333,11 +333,11 @@ public class DatabaseJournal extends AbstractJournal {
             throw new JournalException(msg);
         }
 
-        if (schema == null) {
+        if (databaseType == null) {
             try {
-                schema = getSchemaFromURL(url);
+                databaseType = getDatabaseTypeFromURL(url);
             } catch (IllegalArgumentException e) {
-                String msg = "Unable to derive schema from URL: " + e.getMessage();
+                String msg = "Unable to derive database type from URL: " + e.getMessage();
                 throw new JournalException(msg);
             }
         }
@@ -414,14 +414,14 @@ public class DatabaseJournal extends AbstractJournal {
     }
 
     /**
-     * Derive a schema from a JDBC connection URL. This simply treats the given URL
+     * Derive a database type from a JDBC connection URL. This simply treats the given URL
      * as delimeted by colons and takes the 2nd field.
      *
      * @param url JDBC connection URL
-     * @return schema
+     * @return the database type
      * @throws IllegalArgumentException if the JDBC connection URL is invalid
      */
-    private static String getSchemaFromURL(String url) throws IllegalArgumentException {
+    private static String getDatabaseTypeFromURL(String url) throws IllegalArgumentException {
         int start = url.indexOf(':');
         if (start != -1) {
             int end = url.indexOf(':', start + 1);
@@ -774,9 +774,9 @@ public class DatabaseJournal extends AbstractJournal {
      */
     private void checkSchema() throws Exception {
         if (!tableExists(connection.getMetaData(), schemaObjectPrefix + DEFAULT_JOURNAL_TABLE)) {            // read ddl from resources
-            InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
+            InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
             if (in == null) {
-                String msg = "No schema-specific DDL found: '" + schema + ".ddl"
+                String msg = "No database-specific DDL found: '" + databaseType + ".ddl"
                     + "', falling back to '" + DEFAULT_DDL_NAME + "'.";
                 log.info(msg);
                 in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
@@ -817,9 +817,9 @@ public class DatabaseJournal extends AbstractJournal {
         if (!tableExists(connection.getMetaData(), schemaObjectPrefix + LOCAL_REVISIONS_TABLE)) {
             log.info("Creating " + schemaObjectPrefix + LOCAL_REVISIONS_TABLE + " table");
             // read ddl from resources
-            InputStream in = DatabaseJournal.class.getResourceAsStream(schema + ".ddl");
+            InputStream in = DatabaseJournal.class.getResourceAsStream(databaseType + ".ddl");
             if (in == null) {
-                String msg = "No schema-specific DDL found: '" + schema + ".ddl" +
+                String msg = "No database-specific DDL found: '" + databaseType + ".ddl" +
                         "', falling back to '" + DEFAULT_DDL_NAME + "'.";
                 log.info(msg);
                 in = DatabaseJournal.class.getResourceAsStream(DEFAULT_DDL_NAME);
@@ -949,8 +949,24 @@ public class DatabaseJournal extends AbstractJournal {
         return url;
     }
 
+    /**
+     * Get the database type.
+     * 
+     * @return the database type
+     */
+    public String getDatabaseType() {
+        return databaseType;
+    }
+
+    /**
+     * Get the database type.
+     * @deprecated
+     * This method is deprecated; {@link getDatabaseType} should be used instead.
+     * 
+     * @return the database type
+     */
     public String getSchema() {
-        return schema;
+        return databaseType;
     }
 
     public String getSchemaObjectPrefix() {
@@ -992,8 +1008,24 @@ public class DatabaseJournal extends AbstractJournal {
         this.url = url;
     }
 
-    public void setSchema(String schema) {
-        this.schema = schema;
+    /**
+     * Set the database type.
+     * 
+     * @param databaseType the database type
+     */
+    public void setDatabaseType(String databaseType) {
+        this.databaseType = databaseType;
+    }
+
+    /**
+     * Set the database type.
+    * @deprecated
+    * This method is deprecated; {@link getDatabaseType} should be used instead.
+     * 
+     * @param databaseType the database type
+     */
+    public void setSchema(String databaseType) {
+        this.databaseType = databaseType;
     }
 
     public void setSchemaObjectPrefix(String schemaObjectPrefix) {
