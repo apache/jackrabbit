@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.0</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-benchmark</artifactId>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-tests</artifactId>
-      <version>1.5.0-SNAPSHOT</version>
+      <version>1.5.0</version>
     </dependency>
   </dependencies>
 
