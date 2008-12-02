@@ -70,7 +70,7 @@ public final class TransientISFactory extends AbstractItemStateFactory implement
 
     /**
      * @inheritDoc
-     * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition)
+     * @see TransientItemStateFactory#createNewPropertyState(PropertyEntry, QPropertyDefinition, QValue[], int)
      */
     public PropertyState createNewPropertyState(PropertyEntry entry, QPropertyDefinition definition, QValue[] values, int propertyType) throws RepositoryException {
         PropertyState propState = new PropertyState(entry, this, definition, defProvider, values, propertyType);
