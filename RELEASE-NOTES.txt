@@ -14,7 +14,37 @@ Apache Jackrabbit 1.5 is an incremental feature release. While
 remaining compatible with previous releases, Jackrabbit 1.5 introduces
 a number of new features, improvements and fixes to known issues.
 
-TODO: Notable new features
+The most notable changes in this release are:
+
+  * The standalone Jackrabbit server component. The runnable
+    jackrabbit-standalone jar makes it very easy to start and run
+    Jackrabbit as a standalone server with WebDAV and RMI access.
+
+  * Search performance improvements. The performance of certain kinds
+    of hierarchical XPath queries has improved notably.
+
+  * Simple Google-style query language. The new GQL query syntax
+    makes it very easy to express simple full text queries.
+
+  * Transaction-safe versioning. Mixing transactions and versioning
+    operations has traditionally been troublesome in Jackrabbit.
+    This release contains a number of improvements in this area and
+    has specifically been reviewed against potential deadlock issues.
+
+  * Clustered workspace creation. A new workspace created in one
+    cluster node will now automatically appear also in the other
+    nodes of the cluster.
+
+  * SPI improvements. The SPI layer introduced in Jackrabbit 1.4
+    has seen a lot of improvements and bug fixes, and is shaping
+    up as a solid framework for implementing JCR connectors.
+
+  * Development preview: JSR 283 features. We have implemented
+    a number of new features defined in the public review draft of
+    JCR 2.0, created in JSR 283. These new features are accessible
+    through special "jsr283" interfaces in the Jackrabbit API. Note
+    however that none of these features are ready for production use,
+    and will be replaced with final JCR 2.0 versions in Jackrabbit 2.0.
 
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
@@ -44,6 +74,9 @@ parenthesis) being built and installed in your local Maven repository.
 Pre-built binary artifacts of these components are also available on
 the on the central Maven repository.
 
+  * Jackrabbit Parent POM (jackrabbit-parent)
+    The Maven parent POM for all Jackrabbit components.
+
   * Jackrabbit API (jackrabbit-api)
     Interface extensions that Apache Jackrabbit supports in
     addition to the standard JCR API.
@@ -54,6 +87,9 @@ the on the central Maven repository.
   * Jackrabbit JCR Tests (jackrabbit-jcr-tests)
     Set of JCR API test cases designed for testing the compliance
     of an implementation. Note that this is not the official JCR TCK!
+
+  * Jackrabbit JCR Benchmarks (jackrabbit-jcr-benchmark)
+    Framework for JCR performance tests.
 
   * Jackrabbit Core (jackrabbit-core)
     Core of the Apache Jackrabbit content repository implementation.
@@ -116,7 +152,38 @@ the on the central Maven repository.
 Upgrading to Jackrabbit 1.5
 ---------------------------
 
-TODO
+Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
+A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
+the relevant jar files with the new versions and adding some new dependencies.
+No changes to repository contents are needed.
+
+The Lucene dependency was upgraded to 2.3.2. No index file changes are needed.
+Note that Jackrabbit 1.5 only works with Lucene 2.3, not even with 2.2 or 2.4.
+
+The SLF4J dependency was upgraded to 1.5.3 as the default, but Jackrabbit will
+work with any SLF4J 1.x version in your classpath.
+
+The PDFBox dependency was upgraded to 0.7.3, which introduced new dependencies
+to the FontBox 0.1.0 and JempBox 0.2.0 libraries.
+
+The NekoHTML dependency has been upgraded to 1.9.7.
+
+The POI dependency was upgraded to 3.0.2-FINAL, which introduced new
+dependencies to commons-logging and log4j. If you use the Maven dependency
+mechanism then you may want to override these dependencies with something
+like jcl104-over-slf4j to avoid using multiple different logging frameworks.
+
+A new dependency to Commons IO 1.4 has been added. Make sure that Commons IO
+is available in your classpath.
+
+Repository configuration has been extended with options for the new JSR 283
+security. However, no changes to existing configuration files are needed
+unless you want to enable these new features. Note that the new JSR 283
+security feature is a development preview and may change before JCR 2.0.
+
+Note that the configuration file parser will now use strict XML validation
+if you include a <!DOCTYPE> setting in your configuration file. You can
+disable this feature simply by removing the <!DOCTYPE> setting.
 
 Upgrading to Jackrabbit 1.4
 ---------------------------
@@ -199,6 +266,8 @@ jackrabbit (since 1.4)
 
   Improvements
   [JCR-871]  Provide Readme's for subprojects jcr-mapping and ...
+  [JCR-1357] Create "quick start" developer bundles for model 1,2,3 deployment
+  [JCR-1437] add framework for performance tests
   [JCR-1619] Update copyright years in READMEs and NOTICEs
   [JCR-1649] Separate NOTICEs and LICENSEs for binary and source packages
   [JCR-1751] Update slf4j
@@ -419,6 +488,11 @@ jackrabbit-jca (since 1.4)
   [JCR-1665] In JCAConnectionRequestInfo, equals() and hashCode() ...
   [JCR-1692] jackrabbit exceptions on jboss shutdown
 
+jackrabbit-jcr-benchmark (introduced in 1.5)
+
+  New features
+  [JCR-1437] add framework for performance tests
+
 jackrabbit-jcr-commons (since 1.4.2)
 
   New features
@@ -561,6 +635,12 @@ jackrabbit-jcr2spi (since 1.4)
 
   Known issues
   [JCR-1868] Inconsistent state when removing mix:lockable from a locked Node
+  [JCR-1886] jcr2spi: Unprocessed ItemInfos call to RepositoryService#...
+
+jackrabbit-parent (introduced in 1.5)
+
+  Improvements
+  [JCR-1863] Create jackrabbit-parent
 
 jackrabbit-spi (since 1.4)
 
@@ -624,6 +704,11 @@ jackrabbit-spi2jcr (since 1.4)
 
   Known issues:
   [JCR-1802] SPI2JCR: Missing SPI events due to exception (warning in logfile)
+
+jackrabbit-standalone (introduced in 1.5)
+
+  Improvements
+  [JCR-1357] Create "quick start" developer bundles for model 1,2,3 deployment
 
 jackrabbit-text-extractors (since 1.4)
 
@@ -732,6 +817,7 @@ jackrabbit-ocm (since 1.4)
 
   Known issues
   [JCR-1858] ClassDescriptor ReflectionUtils ClassLoader Defect
+  [JCR-1889] Incorrect support for java interfaces in typed collection fields
 
 jackrabbit-ocm-nodemanagement (since 1.4)
 
