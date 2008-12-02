@@ -1345,7 +1345,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             int index = Path.INDEX_DEFAULT;
             for (Iterator it = sns.iterator(); it.hasNext(); ) {
                 NodeEntry entry = (NodeEntry) it.next();
-                if (entry == cne) {
+                if (entry == cne) { // TODO see below
                     return index;
                 }
                 // for wsp index ignore all transiently added items.
@@ -1358,9 +1358,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     index++;
                 }
             }
-            // not found, since child entries are only weakly connected to the
-            // LinkNode in ChildNodeEntries, equality may not determine the
-            // correct matching entry -> return default index.
+            // not found, since child entries are only connected with soft refs
+            // to the LinkNode in ChildNodeEntries, equality may not determine
+            // the correct matching entry -> return default index.
             return Path.INDEX_DEFAULT;
         }
     }

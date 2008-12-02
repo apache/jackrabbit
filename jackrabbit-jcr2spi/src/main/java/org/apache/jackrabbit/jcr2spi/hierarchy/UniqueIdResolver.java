@@ -50,7 +50,7 @@ public class UniqueIdResolver implements ItemStateCreationListener, EntryFactory
      * Creates a new <code>UniqueIdResolver</code>.
      */
     public UniqueIdResolver(ItemStateFactory isf) {
-        this.lookUp = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        this.lookUp = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         this.isf = isf;
         isf.addCreationListener(this);
     }

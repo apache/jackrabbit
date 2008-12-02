@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 
 /**
  * <code>ChildPropertyEntriesImpl</code>...
@@ -99,7 +99,7 @@ public class ChildPropertyEntriesImpl implements ChildPropertyEntries {
      */
     public void add(PropertyEntry propertyEntry) {
         synchronized (properties) {
-            Reference ref = new WeakReference(propertyEntry);
+            Reference ref = new SoftReference(propertyEntry);
             properties.put(propertyEntry.getName(), ref);
         }
     }

@@ -316,13 +316,22 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             /**
              * Nothing to do for
              * - Status#EXISTING : modifications reverted or saved
+             *   inform listeneres about an update (status was MODIFIED before)
+             *   or a simple refresh without modification (status was INVALIDATED).
+             */
+            case Status.EXISTING:
+                if (previousStatus == Status.INVALIDATED || previousStatus == Status.MODIFIED) {
+                    notifyUpdated(previousStatus == Status.MODIFIED);
+                }
+                break;
+            /**
+             * Nothing to do for
              * - Status#EXISTING_MODIFIED : transient modification
              * - Status#STALE_MODIFIED : external modifications while transient changes pending
              * - Status#STALE_DESTROYED : external modifications while transient changes pending
              * - Status#MODIFIED : externaly modified -> marker for sessionISM states only
              * - Status#EXISTING_REMOVED : transient removal
              */
-            case Status.EXISTING:
             case Status.EXISTING_MODIFIED:
             case Status.STALE_MODIFIED:
             case Status.STALE_DESTROYED:
@@ -351,8 +360,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     //----------------------------------------------------------< LiveCycle >---
 
     /**
-     * Notify the listeners that this instance has been discarded
-     * (i.e. it has been temporarily rendered 'invalid').
+     * Notify the listeners that this instance has been created.
      */
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
@@ -363,22 +371,20 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     }
 
     /**
-     * Notify the listeners that this instance has been invalidated
-     * (i.e. it has been temporarily rendered 'invalid').
+     * Notify the listeners that this instance has been updated.
      */
-    private  void notifyInvalidated() {
+    private void notifyUpdated(boolean modified) {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = (ItemLifeCycleListener[]) listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
-                la[i].itemInvalidated(this);
+                la[i].itemUpdated(this, modified);
             }
         }
     }
 
     /**
-     * Notify the listeners that this instance has been destroyed
-     * (i.e. it has been permanently rendered 'invalid').
+     * Notify the listeners that this instance has been destroyed.
      */
     private void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
