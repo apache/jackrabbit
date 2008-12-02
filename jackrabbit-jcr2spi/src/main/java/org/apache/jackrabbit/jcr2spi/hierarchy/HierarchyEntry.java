@@ -64,9 +64,9 @@ public interface HierarchyEntry {
     public NodeEntry getParent();
 
     /**
-     * Unless this <code>HierarchyEntry</code> has been resolved this method
-     * returns {@link Status#_UNDEFINED_} otherwise it returns the status of
-     * the underlying ItemState.
+     * If this <code>HierarchyEntry</code> provides an underlying
+     * <code>ItemState</code> this method returns the status of that state,
+     * otherwise it returns {@link Status#_UNDEFINED_}.
      *
      * @return Status of the ItemState or {@link Status#_UNDEFINED_} if this
      * entry has not been resolved yet.
