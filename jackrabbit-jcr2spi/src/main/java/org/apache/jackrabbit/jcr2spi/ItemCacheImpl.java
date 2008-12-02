@@ -72,19 +72,22 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
         cacheItem(((ItemImpl)item).getItemState(), item);
     }
 
-    /**
-     * @see ItemLifeCycleListener#itemInvalidated(Item)
-     */
-    public void itemInvalidated(Item item) {
+    public void itemUpdated(Item item, boolean modified) {
         if (!(item instanceof ItemImpl)) {
             String msg = "Incompatible Item object: " + ItemImpl.class.getName() + " expected.";
             throw new IllegalArgumentException(msg);
         }
         if (log.isDebugEnabled()) {
-            log.debug("invalidated item " + item);
+            log.debug("update item " + item);
         }
-        // remove instance from cache
-        evictItem(((ItemImpl)item).getItemState());
+
+        ItemState state = ((ItemImpl) item).getItemState();
+        // touch the corresponding cache entry
+        Item cacheEntry = getItem(state);
+        if (cacheEntry == null) {
+            // .. or add the item to the cache, if not present yet.
+            cacheItem(state, item);
+        }
     }
 
     /**

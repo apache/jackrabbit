@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
@@ -637,9 +637,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
 
             protected LinkNode(Object value, int index) {
-                // add weak reference from linkNode to the NodeEntry (value)
+                // add soft reference from linkNode to the NodeEntry (value)
                 // unless the entry is a SNSibling. TODO: review again.
-                super(index > Path.INDEX_DEFAULT ? value : new WeakReference(value));
+                super(index > Path.INDEX_DEFAULT ? value : new SoftReference(value));
                 qName = ((NodeEntry) value).getName();
             }
 
@@ -661,7 +661,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 // create a new NodeEntry in order to avoid returning null.
                 if (ne == null && this != header) {
                     ne = factory.createNodeEntry(parent, qName, null);
-                    super.setValue(new WeakReference(ne));
+                    super.setValue(new SoftReference(ne));
                 }
                 return ne;
             }

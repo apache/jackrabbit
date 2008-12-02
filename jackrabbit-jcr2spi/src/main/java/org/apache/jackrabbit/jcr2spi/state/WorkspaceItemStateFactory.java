@@ -198,8 +198,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         NodeState nodeState;
         ItemInfos infos = new ItemInfos(itemInfos);
         // first entry in the iterator is the originally requested Node.
-        if (itemInfos.hasNext()) {
-            NodeInfo first = (NodeInfo) itemInfos.next();
+        if (infos.hasNext()) {
+            NodeInfo first = (NodeInfo) infos.next();
             if (isDeep) {
                 // for a deep state, the hierarchy entry does not correspond to
                 // the given NodeEntry -> retrieve NodeState before executing
@@ -219,8 +219,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         // deal with all additional ItemInfos that may be present.
         NodeEntry parentEntry = nodeState.getNodeEntry();
-        while (itemInfos.hasNext()) {
-            ItemInfo info = (ItemInfo) itemInfos.next();
+        while (infos.hasNext()) {
+            ItemInfo info = (ItemInfo) infos.next();
             if (info.denotesNode()) {
                 createDeepNodeState((NodeInfo) info, parentEntry, infos);
             } else {
@@ -254,7 +254,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        if (Status.isTransient(entry.getStatus()) || Status.isStale(entry.getStatus())) {
+        int previousStatus = entry.getStatus();
+        if (Status.isTransient(previousStatus) || Status.isStale(previousStatus)) {
             log.debug("Node has pending changes; omit resetting the state.");
             return entry.getNodeState();
         }
@@ -285,11 +286,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         entry.setItemState(tmp);
 
         NodeState nState = entry.getNodeState();
-        if (nState == tmp) {
+        if (previousStatus == Status._UNDEFINED_) {
             // tmp state was used as resolution for the given entry i.e. the
             // entry was not available before. otherwise the 2 states were
             // merged. see HierarchyEntryImpl#setItemState
             notifyCreated(nState);
+        } else {
+            notifyUpdated(nState, previousStatus);
         }
         return nState;
     }
@@ -312,7 +315,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             parent.setUniqueID(uniqueID);
         }
 
-        if (Status.isTransient(entry.getStatus()) || Status.isStale(entry.getStatus())) {
+        int previousStatus = entry.getStatus();
+        if (Status.isTransient(previousStatus) || Status.isStale(previousStatus)) {
             log.debug("Property has pending changes; omit resetting the state.");
             return entry.getPropertyState();
         }
@@ -322,11 +326,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         entry.setItemState(tmp);
 
         PropertyState pState = entry.getPropertyState();
-        if (pState == tmp) {
+        if (previousStatus == Status._UNDEFINED_) {
             // tmp state was used as resolution for the given entry i.e. the
             // entry was not available before. otherwise the 2 states were
             // merged. see HierarchyEntryImpl#setItemState
             notifyCreated(pState);
+        }  else {
+            notifyUpdated(pState, previousStatus);
         }
         return pState;
     }
@@ -421,7 +427,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     private static NodeEntry createIntermediateNodeEntry(NodeEntry parentEntry,
                                                          Name name, int index,
                                                          ItemInfos infos) throws RepositoryException {
-        if (infos != null && !parentEntry.hasNodeEntry(name, index)) {
+        if (infos != null) {
             Iterator childInfos = infos.getChildInfos(parentEntry.getWorkspaceId());
             if (childInfos != null) {
                 parentEntry.setNodeEntries(childInfos);
@@ -535,7 +541,11 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             if (prefetchQueue.isEmpty()) {
                 throw new NoSuchElementException();
             } else {
-                return prefetchQueue.remove(0);
+                Object next = prefetchQueue.remove(0);
+                if (next instanceof NodeInfo) {
+                    nodeInfos.remove(((NodeInfo) next).getId());
+                }
+                return next;
             }
         }
 
@@ -551,7 +561,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
          * @param parentId
          * @return The children <code>NodeInfo</code>s for the parent identified
          * by the given <code>parentId</code> or <code>null</code> if the parent
-         * has not been read yet or does not provide child infos.
+         * has not been read yet, has already been processed (childInfo is up
+         * to date) or does not provide child infos.
          */
         private Iterator getChildInfos(NodeId parentId) {
             NodeInfo nodeInfo = (NodeInfo) nodeInfos.get(parentId);
