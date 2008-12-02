@@ -82,7 +82,7 @@ import org.slf4j.LoggerFactory;
  * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
  * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
  * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value=""/>
+ * <li>&lt;param name="{@link #setDatabaseType(String) databaseType}" value=""/>
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
  * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/>
@@ -118,8 +118,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /** the jdbc password */
     protected String password;
 
-    /** the schema identifier */
-    protected String schema;
+    /** the database type */
+    protected String databaseType;
 
     /** the prefix for the database objects */
     protected String schemaObjectPrefix;
@@ -279,22 +279,46 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     }
 
     /**
-     * Returns the configured schema identifier.
-     * @return the schema identifier.
+     * Returns the configured database type name.
+     * @deprecated
+     * This method is deprecated; {@link getDatabaseType} should be used instead.
+     * 
+     * @return the database type name.
      */
     public String getSchema() {
-        return schema;
+        return databaseType;
     }
 
     /**
-     * Sets the schema identifier. This identifier is used to load and execute
+     * Returns the configured database type name.
+     * @return the database type name.
+     */
+    public String getDatabaseType() {
+        return databaseType;
+    }
+
+    /**
+     * Sets the database type. This identifier is used to load and execute
+     * the respective .ddl resource in order to create the required schema
+     * objects.
+     * @deprecated
+     * This method is deprecated; {@link setDatabaseType} should be used instead.
+     *
+     * @param database type name
+     */
+    public void setSchema(String databaseType) {
+        this.databaseType = databaseType;
+    }
+    
+    /**
+     * Sets the database type. This identifier is used to load and execute
      * the respective .ddl resource in order to create the required schema
      * objects.
      *
-     * @param schema the schema identifier.
+     * @param database type name
      */
-    public void setSchema(String schema) {
-        this.schema = schema;
+    public void setDatabaseType(String databaseType) {
+        this.databaseType = databaseType;
     }
 
     /**
@@ -418,9 +442,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected void checkSchema() throws SQLException, RepositoryException {
         if (!checkTablesExist()) {
             // read ddl from resources
-            InputStream in = BundleDbPersistenceManager.class.getResourceAsStream(schema + ".ddl");
+            InputStream in = BundleDbPersistenceManager.class.getResourceAsStream(databaseType + ".ddl");
             if (in == null) {
-                String msg = "Configuration error: The resource '" + schema + ".ddl' could not be found";
+                String msg = "Configuration error: The resource '" + databaseType + ".ddl' could not be found";
                 log.debug(msg);
                 throw new RepositoryException(msg);
             }
@@ -441,7 +465,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     sql = reader.readLine();
                 }
             } catch (IOException e) {
-                String msg = "Configuration error: unable to read the resource '" + schema + ".ddl': " + e;
+                String msg = "Configuration error: unable to read the resource '" + databaseType + ".ddl': " + e;
                 log.debug(msg);
                 throw new RepositoryException(msg, e);
             } catch (SQLException e) {
