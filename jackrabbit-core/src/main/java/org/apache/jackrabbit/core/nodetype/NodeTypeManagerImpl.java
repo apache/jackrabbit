@@ -845,13 +845,13 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                 // FIXME when JCR 2.0 API has been finalized
                 names = ((NodeDefinitionTemplateImpl) ndefs[i]).getRequiredPrimaryTypeNames();
                 qnames = new Name[names.length];
-                for (int j = 0; i < names.length; j++) {
+                for (int j = 0; j < names.length; j++) {
                     try {
-                        qnames[i] = session.getQName(names[i]);
+                        qnames[j] = session.getQName(names[j]);
                     } catch (NamespaceException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[i], e);
+                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[j], e);
                     } catch (NameException e) {
-                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[i], e);
+                        throw new InvalidNodeTypeDefinitionException("Invalid required primary type: " + names[j], e);
                     }
                 }
                 qndef.setRequiredPrimaryTypes(qnames);
