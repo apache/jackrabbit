@@ -93,7 +93,7 @@ abstract class AbstractIndex {
     private int maxFieldLength = SearchIndex.DEFAULT_MAX_FIELD_LENGTH;
 
     /** termInfosIndexDivisor config parameter */
-    private int termInfosIndexDivisor = SearchIndex.DEFAULT_MIN_MERGE_DOCS;
+    private int termInfosIndexDivisor = SearchIndex.DEFAULT_TERM_INFOS_INDEX_DIVISOR;
 
     /**
      * The document number cache if this index may use one.
