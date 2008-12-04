@@ -37,15 +37,24 @@ public class DirectoryManagerTest extends TestCase {
 
     private static final SearchIndex INDEX = new SearchIndex();
 
+    private static final String TEST = "test";
+
+    private static final String RENAMED = "renamed";
+
     static {
         INDEX.setPath(new File(new File("target"), "directory-factory-test").getAbsolutePath());
+    }
+
+    protected void tearDown() throws Exception {
+        new File(INDEX.getPath(), TEST).delete();
+        new File(INDEX.getPath(), RENAMED).delete();
     }
 
     public void testHasDirectory() throws Exception {
         execute(new Callable(){
             public void call(DirectoryManager directoryManager) throws Exception {
-                Directory dir = directoryManager.getDirectory("test");
-                assertTrue(directoryManager.hasDirectory("test"));
+                Directory dir = directoryManager.getDirectory(TEST);
+                assertTrue(directoryManager.hasDirectory(TEST));
                 dir.close();
             }
         });
@@ -54,9 +63,9 @@ public class DirectoryManagerTest extends TestCase {
     public void testDelete() throws Exception {
         execute(new Callable(){
             public void call(DirectoryManager directoryManager) throws Exception {
-                directoryManager.getDirectory("test").close();
-                directoryManager.delete("test");
-                assertFalse(directoryManager.hasDirectory("test"));
+                directoryManager.getDirectory(TEST).close();
+                directoryManager.delete(TEST);
+                assertFalse(directoryManager.hasDirectory(TEST));
             }
         });
     }
@@ -64,8 +73,8 @@ public class DirectoryManagerTest extends TestCase {
     public void testGetDirectoryNames() throws Exception {
         execute(new Callable(){
             public void call(DirectoryManager directoryManager) throws Exception {
-                directoryManager.getDirectory("test").close();
-                assertTrue(Arrays.asList(directoryManager.getDirectoryNames()).contains("test"));
+                directoryManager.getDirectory(TEST).close();
+                assertTrue(Arrays.asList(directoryManager.getDirectoryNames()).contains(TEST));
             }
         });
     }
@@ -73,10 +82,10 @@ public class DirectoryManagerTest extends TestCase {
     public void testRename() throws Exception {
         execute(new Callable(){
             public void call(DirectoryManager directoryManager) throws Exception {
-                directoryManager.getDirectory("test").close();
-                directoryManager.rename("test", "renamed");
-                assertTrue(directoryManager.hasDirectory("renamed"));
-                assertFalse(directoryManager.hasDirectory("test"));
+                directoryManager.getDirectory(TEST).close();
+                directoryManager.rename(TEST, RENAMED);
+                assertTrue(directoryManager.hasDirectory(RENAMED));
+                assertFalse(directoryManager.hasDirectory(TEST));
             }
         });
     }
