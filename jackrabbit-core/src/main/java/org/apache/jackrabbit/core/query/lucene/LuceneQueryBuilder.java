@@ -37,8 +37,6 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.lucene.fulltext.ParseException;
-import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -73,6 +71,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryParser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -379,39 +379,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 tmp.append(propName.getLocalName());
                 fieldname = tmp.toString();
             }
-            QueryParser parser = new QueryParser(
+            QueryParser parser = new JackrabbitQueryParser(
                     fieldname, analyzer, synonymProvider);
-            parser.setOperator(QueryParser.DEFAULT_OPERATOR_AND);
-            // replace escaped ' with just '
-            StringBuffer query = new StringBuffer();
-            String textsearch = node.getQuery();
-            // the default lucene query parser recognizes 'AND' and 'NOT' as
-            // keywords.
-            textsearch = textsearch.replaceAll("AND", "and");
-            textsearch = textsearch.replaceAll("NOT", "not");
-            boolean escaped = false;
-            for (int i = 0; i < textsearch.length(); i++) {
-                if (textsearch.charAt(i) == '\\') {
-                    if (escaped) {
-                        query.append("\\\\");
-                        escaped = false;
-                    } else {
-                        escaped = true;
-                    }
-                } else if (textsearch.charAt(i) == '\'') {
-                    if (escaped) {
-                        escaped = false;
-                    }
-                    query.append(textsearch.charAt(i));
-                } else {
-                    if (escaped) {
-                        query.append('\\');
-                        escaped = false;
-                    }
-                    query.append(textsearch.charAt(i));
-                }
-            }
-            Query context = parser.parse(query.toString());
+            Query context = parser.parse(node.getQuery());
             if (relPath != null && (!node.getReferencesProperty() || relPath.getLength() > 1)) {
                 // text search on some child axis
                 Path.Element[] elements = relPath.getElements();
