@@ -936,25 +936,27 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      */
     public Set getParentElements() {
         try {
-            //TODO remove this check once jcr2 is out
-            if (!(this.node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
-                DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
-                        this.locator.getPrefix(), this.locator.getWorkspacePath(), this.node.getParent().getPath(), false);
-                return Collections.singleton(new ParentElement(loc.getHref(true), this.node.getName()));
+            if (this.node.getDepth() > 0) {
+                //TODO remove this check once jcr2 is out
+                if (!(this.node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
+                    DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
+                            this.locator.getPrefix(), this.locator.getWorkspacePath(), this.node.getParent().getPath(), false);
+                    return Collections.singleton(new ParentElement(loc.getHref(true), this.node.getName()));
+                }
+                Set ps = new HashSet();
+                NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) this.node).getSharedSet();
+                while (sharedSetIterator.hasNext()) {
+                    Node sharednode = sharedSetIterator.nextNode();
+                    DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
+                            this.locator.getPrefix(), this.locator.getWorkspacePath(), sharednode.getParent().getPath(), false);
+                    ps.add(new ParentElement(loc.getHref(true), sharednode.getName()));
+                }
+                return ps;
             }
-            Set ps = new HashSet();
-            NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) this.node).getSharedSet();
-            while (sharedSetIterator.hasNext()) {
-                Node sharednode = sharedSetIterator.nextNode();
-                DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
-                        this.locator.getPrefix(), this.locator.getWorkspacePath(), sharednode.getParent().getPath(), false);
-                ps.add(new ParentElement(loc.getHref(true), sharednode.getName()));
-            }
-            return ps;
         } catch (RepositoryException e) {
             log.warn("unable to calculate parent set", e);
-            return Collections.EMPTY_SET; 
         }
+        return Collections.EMPTY_SET;
     }
 
     /**
