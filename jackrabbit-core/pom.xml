@@ -65,23 +65,6 @@
         </dependencies>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>javacc-maven-plugin</artifactId>
-        <version>2.4.1</version>
-        <executions>
-          <execution>
-            <id>fulltext</id>
-            <configuration>
-              <sourceDirectory>${basedir}/src/main/javacc/fulltext</sourceDirectory>
-              <packageName>org.apache.jackrabbit.core.query.lucene.fulltext</packageName>
-            </configuration>
-            <goals>
-              <goal>jjtree-javacc</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>

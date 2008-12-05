@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.lucene.fulltext.QueryParser;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -66,6 +65,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.QueryParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -354,39 +354,9 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
             tmp.append(propName.getLocalName());
             fieldname = tmp.toString();
         }
-        QueryParser parser = new QueryParser(
+        QueryParser parser = new JackrabbitQueryParser(
                 fieldname, analyzer, synonymProvider);
-        parser.setOperator(QueryParser.DEFAULT_OPERATOR_AND);
-        // replace escaped ' with just '
-        StringBuffer query = new StringBuffer();
-        String textsearch = node.getFullTextSearchExpression();
-        // the default lucene query parser recognizes 'AND' and 'NOT' as
-        // keywords.
-        textsearch = textsearch.replaceAll("AND", "and");
-        textsearch = textsearch.replaceAll("NOT", "not");
-        boolean escaped = false;
-        for (int i = 0; i < textsearch.length(); i++) {
-            if (textsearch.charAt(i) == '\\') {
-                if (escaped) {
-                    query.append("\\\\");
-                    escaped = false;
-                } else {
-                    escaped = true;
-                }
-            } else if (textsearch.charAt(i) == '\'') {
-                if (escaped) {
-                    escaped = false;
-                }
-                query.append(textsearch.charAt(i));
-            } else {
-                if (escaped) {
-                    query.append('\\');
-                    escaped = false;
-                }
-                query.append(textsearch.charAt(i));
-            }
-        }
-        return parser.parse(query.toString());
+        return parser.parse(node.getFullTextSearchExpression());
     }
 
     public Object visit(FullTextSearchScoreImpl node, Object data) {
