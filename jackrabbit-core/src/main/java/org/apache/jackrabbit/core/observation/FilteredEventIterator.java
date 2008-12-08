@@ -68,10 +68,16 @@ class FilteredEventIterator implements EventIterator {
     private long timestamp;
 
     /**
+     * The user data associated with these events.
+     */
+    private final String userData;
+
+    /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
      * @param eventStates an iterator over unfiltered {@link EventState}s.
      * @param timestamp the time when the event were created.
+     * @param userData   the user data associated with these events.
      * @param filter only event that pass the filter will be dispatched to the
      *               event listener.
      * @param denied <code>Set</code> of <code>ItemId</code>s of denied <code>ItemState</code>s
@@ -80,12 +86,14 @@ class FilteredEventIterator implements EventIterator {
      */
     public FilteredEventIterator(Iterator eventStates,
                                  long timestamp,
+                                 String userData,
                                  EventFilter filter,
                                  Set denied) {
         this.actualEvents = eventStates;
         this.filter = filter;
         this.denied = denied;
         this.timestamp = timestamp;
+        this.userData = userData;
         fetchNext();
     }
 
@@ -167,7 +175,7 @@ class FilteredEventIterator implements EventIterator {
             if (denied == null || !denied.contains(state.getTargetId())) {
                 try {
                     next = filter.blocks(state) ? null : new EventImpl(
-                            filter.getSession(), state, timestamp);
+                            filter.getSession(), state, timestamp, userData);
                 } catch (RepositoryException e) {
                     log.error("Exception while applying filter.", e);
                 }

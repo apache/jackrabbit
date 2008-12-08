@@ -25,16 +25,13 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
 
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
  */
-public class EventJournalTest extends AbstractJCRTest {
-
-    private static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
+public class EventJournalTest extends AbstractObservationTest {
 
     private EventJournal journal;
 
@@ -178,6 +175,20 @@ public class EventJournalTest extends AbstractJCRTest {
         checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
     }
 
+    public void testUserData() throws RepositoryException {
+        testRootNode.addNode(nodeName1);
+        String data = createRandomString(5);
+        getObservationManager().setUserData(data);
+
+        journal = getEventJournal(ALL_TYPES, testRoot, true, null, null);
+        journal.skipTo(System.currentTimeMillis());
+
+        superuser.save();
+
+        assertTrue("no more events", journal.hasNext());
+        assertEquals("Wrong user data", data, getUserData(journal.nextEvent()));
+    }
+
     //-------------------------------< internal >-------------------------------
 
     private EventJournal getEventJournal(int eventTypes,
@@ -186,6 +197,7 @@ public class EventJournalTest extends AbstractJCRTest {
                                         String[] uuid,
                                         String[] nodeTypeName)
             throws RepositoryException {
+        // TODO: remove cast when JCR 2.0 is final
         return ((WorkspaceImpl) superuser.getWorkspace()).getEventJournal(
                 eventTypes, absPath, isDeep, uuid, nodeTypeName);
     }

@@ -239,7 +239,7 @@ class EventConsumer {
         }
         // check if filtered iterator has at least one event
         EventIterator it = new FilteredEventIterator(events.iterator(),
-                events.getTimestamp(), filter, denied);
+                events.getTimestamp(), events.getUserData(), filter, denied);
         if (it.hasNext()) {
             listener.onEvent(it);
         } else {

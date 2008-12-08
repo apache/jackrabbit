@@ -633,7 +633,7 @@ public class EventState {
         } else if (eventType == Event.PROPERTY_ADDED) {
             return "PropertyAdded";
         } else if (eventType == Event.PROPERTY_CHANGED) {
-            return "PropertyOperation";
+            return "PropertyChanged";
         } else if (eventType == Event.PROPERTY_REMOVED) {
             return "PropertyRemoved";
         } else {

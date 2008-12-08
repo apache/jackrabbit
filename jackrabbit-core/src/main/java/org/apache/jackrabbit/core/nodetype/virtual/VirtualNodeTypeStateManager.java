@@ -155,7 +155,8 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveAdd(events, root, child);
-                obsDispatcher.dispatch(events, systemSession, NODE_TYPES_PATH);
+                obsDispatcher.dispatch(events, systemSession,
+                        NODE_TYPES_PATH, null);
             }
         } catch (RepositoryException e) {
             log.error("Unable to index new nodetype: " + e.toString());
@@ -182,7 +183,8 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 NodeImpl child = root.getNode(ntName);
                 List events = new ArrayList();
                 recursiveRemove(events, root, child);
-                obsDispatcher.dispatch(events, systemSession, NODE_TYPES_PATH);
+                obsDispatcher.dispatch(events, systemSession,
+                        NODE_TYPES_PATH, null);
             }
             if (virtProvider != null) {
                 // allow provider to update

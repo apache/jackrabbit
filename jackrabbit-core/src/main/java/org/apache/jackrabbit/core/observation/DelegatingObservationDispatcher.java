@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 /**
  * This Class implements an observation dispatcher, that delegates events to
  * a set of underlying dispatchers.
@@ -73,7 +75,14 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      */
     public EventStateCollection createEventStateCollection(SessionImpl session,
                                                            Path pathPrefix) {
-        return new EventStateCollection(this, session, pathPrefix);
+        String userData = null;
+        try {
+            userData = ((ObservationManagerImpl) session.getWorkspace().getObservationManager()).getUserData();
+        } catch (RepositoryException e) {
+            // should never happen because this
+            // implementation supports observation
+        }
+        return new EventStateCollection(this, session, pathPrefix, userData);
     }
 
     //------------------------------------------------------< EventDispatcher >
@@ -96,7 +105,8 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * {@inheritDoc}
      */
     void dispatchEvents(EventStateCollection events) {
-        dispatch(events.getEvents(), events.getSession(), events.getPathPrefix());
+        dispatch(events.getEvents(), events.getSession(),
+                events.getPathPrefix(), events.getUserData());
     }
 
     /**
@@ -107,8 +117,10 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param eventList list of events
      * @param session current session
      * @param pathPrefix event path prefix
+     * @param userData the user data
      */
-    public void dispatch(List eventList, SessionImpl session, Path pathPrefix) {
+    public void dispatch(List eventList, SessionImpl session,
+                         Path pathPrefix, String userData) {
         ObservationDispatcher[] disp;
         synchronized (dispatchers) {
             disp = (ObservationDispatcher[]) dispatchers.toArray(
@@ -116,7 +128,8 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
         }
         for (int i = 0; i < disp.length; i++) {
             EventStateCollection events =
-                    new EventStateCollection(disp[i], session, pathPrefix);
+                    new EventStateCollection(disp[i], session,
+                            pathPrefix, userData);
             try {
                 events.addAll(eventList);
                 events.prepare();

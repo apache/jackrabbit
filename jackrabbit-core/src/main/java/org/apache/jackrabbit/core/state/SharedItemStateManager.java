@@ -846,6 +846,10 @@ public class SharedItemStateManager
             return timestamp;
         }
 
+        public String getUserData() {
+            return events.getUserData();
+        }
+
         /**
          * Updates the target node references collections based on the
          * modifications in the change log (i.e. added/removed/modified

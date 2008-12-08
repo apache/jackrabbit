@@ -412,10 +412,11 @@ public class SimpleEventListener implements LockEventListener,
     /**
      * {@inheritDoc}
      */
-    public void externalUpdate(ChangeLog changes, List events, long timestamp)
+    public void externalUpdate(ChangeLog changes, List events,
+                               long timestamp, String userData)
             throws RepositoryException {
 
-        clusterEvents.add(new UpdateEvent(changes, events, timestamp));
+        clusterEvents.add(new UpdateEvent(changes, events, timestamp, userData));
 
     }
 
@@ -445,16 +446,24 @@ public class SimpleEventListener implements LockEventListener,
         private final long timestamp;
 
         /**
+         * The user data associated with this update.
+         */
+        private final String userData;
+
+        /**
          * Create a new instance of this class.
          *
          * @param changes change log
          * @param events list of <code>EventState</code>s
          * @param timestamp time when the changes in this event occured.
+         * @param userData the user data associated with this update.
          */
-        public UpdateEvent(ChangeLog changes, List events, long timestamp) {
+        public UpdateEvent(ChangeLog changes, List events,
+                           long timestamp, String userData) {
             this.changes = changes;
             this.events = events;
             this.timestamp = timestamp;
+            this.userData = userData;
         }
 
         /**
@@ -482,6 +491,10 @@ public class SimpleEventListener implements LockEventListener,
             return timestamp;
         }
 
+        public String getUserData() {
+            return userData;
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -500,7 +513,11 @@ public class SimpleEventListener implements LockEventListener,
          * {@inheritDoc}
          */
         public int hashCode() {
-            return changes.hashCode() ^ events.hashCode() ^ (int) (timestamp ^ (timestamp >>> 32));
+            int h = changes.hashCode() ^ events.hashCode() ^ (int) (timestamp ^ (timestamp >>> 32));
+            if (userData != null) {
+                h = h ^ userData.hashCode();
+            }
+            return h;
         }
 
         /**
@@ -511,7 +528,8 @@ public class SimpleEventListener implements LockEventListener,
                 UpdateEvent other = (UpdateEvent) obj;
                 return SimpleEventListener.equals(changes, other.changes) &&
                     SimpleEventListener.equals(events, other.events) &&
-                    timestamp == other.timestamp;
+                    timestamp == other.timestamp &&
+                    SimpleEventListener.equals(userData, other.userData);
             }
             return false;
         }
