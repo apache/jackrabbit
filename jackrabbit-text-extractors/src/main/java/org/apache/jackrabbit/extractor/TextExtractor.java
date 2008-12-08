@@ -48,7 +48,7 @@ public interface TextExtractor {
      * stream latest when the returned reader is closed. The caller on the
      * other hand is responsible for closing the returned reader.
      * <p>
-     * The implemenation should only throw an exception on transient
+     * The implementation should only throw an exception on transient
      * errors, i.e. when it can expect to be able to successfully extract
      * the text content of the same binary at another time. An effort
      * should be made to recover from syntax errors and other similar problems.
