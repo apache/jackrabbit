@@ -116,7 +116,7 @@ public class UpdateEventFactory {
         events.add(createEventState(p2, n2, Event.PROPERTY_REMOVED));
         events.add(createEventState(n3, Event.NODE_REMOVED, "{}n3"));
 
-        return new UpdateEvent(changes, events, System.currentTimeMillis());
+        return new UpdateEvent(changes, events, System.currentTimeMillis(), "user-data");
     }
 
 

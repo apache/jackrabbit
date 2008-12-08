@@ -63,6 +63,11 @@ public class ChangeLogRecord extends ClusterRecord {
     static final char EVENT_IDENTIFIER = 'E';
 
     /**
+     * Identifier: USER DATA.
+     */
+    static final char USER_DATA_IDENTIFIER = 'U';
+
+    /**
      * Operation type: added.
      */
     private static final int ADDED = 1;
@@ -93,6 +98,11 @@ public class ChangeLogRecord extends ClusterRecord {
     private List events;
 
     /**
+     * The user data.
+     */
+    private String userData;
+
+    /**
      * First identifier read.
      */
     private int identifier;
@@ -110,14 +120,17 @@ public class ChangeLogRecord extends ClusterRecord {
      * @param record record
      * @param workspace workspace
      * @param timestamp when the changes for this record were persisted.
+     * @param userData the user data associated with these changes.
      */
     public ChangeLogRecord(ChangeLog changes, List events,
-                           Record record, String workspace, long timestamp) {
+                           Record record, String workspace,
+                           long timestamp, String userData) {
         super(record, workspace);
 
         this.changes = changes;
         this.events = events;
         this.timestamp = timestamp;
+        this.userData = userData;
     }
 
     /**
@@ -145,6 +158,9 @@ public class ChangeLogRecord extends ClusterRecord {
             switch (identifier) {
             case DATE_IDENTIFIER:
                 readTimestampRecord();
+                break;
+            case USER_DATA_IDENTIFIER:
+                readUserDataRecord();
                 break;
             case NODE_IDENTIFIER:
                 readNodeRecord();
@@ -179,6 +195,15 @@ public class ChangeLogRecord extends ClusterRecord {
      */
     private void readTimestampRecord() throws JournalException {
         timestamp = record.readLong();
+    }
+
+    /**
+     * Reads the user data record.
+     *
+     * @throws JournalException if an error occurs.
+     */
+    private void readUserDataRecord() throws JournalException {
+        userData = record.readString();
     }
 
     /**
@@ -313,6 +338,7 @@ public class ChangeLogRecord extends ClusterRecord {
      */
     protected void doWrite() throws JournalException {
         writeTimestampRecord();
+        writeUserDataRecord();
         Iterator deletedStates = changes.deletedStates();
         while (deletedStates.hasNext()) {
             ItemState state = (ItemState) deletedStates.next();
@@ -356,6 +382,18 @@ public class ChangeLogRecord extends ClusterRecord {
     private void writeTimestampRecord() throws JournalException {
         record.writeChar(DATE_IDENTIFIER);
         record.writeLong(timestamp);
+    }
+
+    /**
+     * Writes the user data record.
+     *
+     * @throws JournalException if an error occurs.
+     */
+    private void writeUserDataRecord() throws JournalException {
+        if (userData != null) {
+            record.writeChar(USER_DATA_IDENTIFIER);
+            record.writeString(userData);
+        }
     }
 
     /**
@@ -444,5 +482,14 @@ public class ChangeLogRecord extends ClusterRecord {
      */
     public long getTimestamp() {
         return timestamp;
+    }
+
+    /**
+     * Returns the user data.
+     *
+     * @return the user data.
+     */
+    public String getUserData() {
+        return userData;
     }
 }

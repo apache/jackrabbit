@@ -64,4 +64,10 @@ public interface Update {
      */
     long getTimestamp();
 
+    /**
+     * Returns the user data associated with this update.
+     *
+     * @return the user data associated with this update.
+     */
+    String getUserData();
 }

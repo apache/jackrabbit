@@ -2098,10 +2098,11 @@ public class RepositoryImpl extends AbstractRepository
          */
         public void externalUpdate(ChangeLog external,
                                    List events,
-                                   long timestamp) throws RepositoryException {
+                                   long timestamp,
+                                   String userData) throws RepositoryException {
             try {
                 EventStateCollection esc = new EventStateCollection(
-                        getObservationDispatcher(), null, null);
+                        getObservationDispatcher(), null, null, userData);
                 esc.addAll(events);
                 esc.setTimestamp(timestamp);
 

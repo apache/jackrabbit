@@ -93,6 +93,11 @@ public final class EventStateCollection {
     private long timestamp = System.currentTimeMillis();
 
     /**
+     * The user data attached to this event state collection.
+     */
+    private String userData;
+
+    /**
      * Creates a new empty <code>EventStateCollection</code>.
      * <p/>
      * Because the item state manager in {@link #createEventStates} may represent
@@ -104,13 +109,16 @@ public final class EventStateCollection {
      * @param session    the session that created these events.
      * @param pathPrefix the path to prefix the event paths or <code>null</code>
      *                   if no prefix should be used.
+     * @param userData   the user data attached to this event state collection.
      */
     public EventStateCollection(EventDispatcher dispatcher,
                                 SessionImpl session,
-                                Path pathPrefix) {
+                                Path pathPrefix,
+                                String userData) {
         this.dispatcher = dispatcher;
         this.session = session;
         this.pathPrefix = pathPrefix;
+        this.userData = userData;
     }
 
     /**
@@ -478,6 +486,24 @@ public final class EventStateCollection {
     SessionImpl getSession() {
         return session;
     }
+
+    /**
+     * @return the user data attached to this event state collection.
+     */
+    public String getUserData() {
+        return userData;
+    }
+
+    /**
+     * Sets the user data for this event state collection.
+     *
+     * @param userData the user data.
+     */
+    public void setUserData(String userData) {
+        this.userData = userData;
+    }
+
+    //----------------------------< internal >----------------------------------
 
     /**
      * Resolves the node type name in <code>node</code> into a {@link javax.jcr.nodetype.NodeType}

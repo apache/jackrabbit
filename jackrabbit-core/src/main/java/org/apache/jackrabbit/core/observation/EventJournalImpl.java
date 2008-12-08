@@ -270,7 +270,7 @@ public class EventJournalImpl implements EventJournal {
             List events = record.getEvents();
             if (!events.isEmpty()) {
                 EventBundle bundle = new EventBundle(events,
-                        record.getTimestamp(), filter);
+                        record.getTimestamp(), record.getUserData(), filter);
                 if (bundle.events.hasNext()) {
                     // only queue bundle if there is an event
                     eventBundleBuffer.add(bundle);
@@ -400,13 +400,15 @@ public class EventJournalImpl implements EventJournal {
          *
          * @param eventStates the {@link EventState}s that belong to this bundle.
          * @param timestamp the timestamp when the events were created.
+         * @param userData the user data associated with this event.
          * @param filter the event filter.
          */
         private EventBundle(List eventStates,
                             long timestamp,
+                            String userData,
                             EventFilter filter) {
             this.events = new FilteredEventIterator(eventStates.iterator(),
-                    timestamp, filter, Collections.EMPTY_SET);
+                    timestamp, userData, filter, Collections.EMPTY_SET);
             this.timestamp = timestamp;
         }
     }

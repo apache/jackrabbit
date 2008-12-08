@@ -41,6 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(VersionEventsTest.class);
         suite.addTestSuite(MoveInPlaceTest.class);
         suite.addTestSuite(EventJournalTest.class);
+        suite.addTestSuite(UserDataTest.class);
 
         return suite;
     }

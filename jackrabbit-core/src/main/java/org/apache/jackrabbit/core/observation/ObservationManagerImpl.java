@@ -59,6 +59,11 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      */
     private final ObservationDispatcher dispatcher;
 
+    /**
+     * The currently set user data.
+     */
+    private String userData;
+
     static {
         // preload EventListenerIteratorImpl to prevent classloader issues during shutdown
         EventListenerIteratorImpl.class.hashCode();
@@ -128,6 +133,20 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                 session,
                 dispatcher.getSynchronousConsumers(),
                 dispatcher.getAsynchronousConsumers());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setUserData(String userData) throws RepositoryException {
+        this.userData = userData;
+    }
+
+    /**
+     * @return the currently set user data.
+     */
+    String getUserData() {
+        return userData;
     }
 
     /**
@@ -210,6 +229,6 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * which is attached to this <code>ObservationManager</code> instance.
      */
     public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(dispatcher, session, null);
+        return new EventStateCollection(dispatcher, session, null, userData);
     }
 }

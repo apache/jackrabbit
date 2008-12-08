@@ -615,7 +615,8 @@ public class ClusterNode implements Runnable,
 
             try {
                 ChangeLogRecord clr = new ChangeLogRecord(changes, events,
-                        record, workspace, update.getTimestamp());
+                        record, workspace, update.getTimestamp(),
+                        update.getUserData());
                 clr.write();
                 succeeded = true;
             } catch (JournalException e) {
@@ -849,8 +850,8 @@ public class ClusterNode implements Runnable,
             }
         }
         try {
-            listener.externalUpdate(record.getChanges(),
-                    record.getEvents(), record.getTimestamp());
+            listener.externalUpdate(record.getChanges(), record.getEvents(),
+                    record.getTimestamp(), record.getUserData());
         } catch (RepositoryException e) {
             String msg = "Unable to deliver update events: " + e.getMessage();
             log.error(msg);

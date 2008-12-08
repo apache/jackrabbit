@@ -55,6 +55,11 @@ public final class EventImpl implements JackrabbitEvent {
     private final long timestamp;
 
     /**
+     * The user data associated with this event.
+     */
+    private final String userData;
+
+    /**
      * Cached String value of this <code>Event</code> instance.
      */
     private String stringValue;
@@ -67,11 +72,14 @@ public final class EventImpl implements JackrabbitEvent {
      *                   where this <code>Event</code> will be delivered to.
      * @param eventState the underlying <code>EventState</code>.
      * @param timestamp  the time when the change occured that caused this event.
+     * @param userData   the user data associated with this event.
      */
-    EventImpl(SessionImpl session, EventState eventState, long timestamp) {
+    EventImpl(SessionImpl session, EventState eventState,
+              long timestamp, String userData) {
         this.session = session;
         this.eventState = eventState;
         this.timestamp = timestamp;
+        this.userData = userData;
     }
 
     //---------------------------------------------------------------< Event >
@@ -102,6 +110,13 @@ public final class EventImpl implements JackrabbitEvent {
      */
     public long getDate() {
         return timestamp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getUserData() {
+        return userData;
     }
 
     //-----------------------------------------------------------< EventImpl >
@@ -177,6 +192,8 @@ public final class EventImpl implements JackrabbitEvent {
             }
             sb.append(", ").append(EventState.valueOf(getType())).append(": ");
             sb.append(", UserId: ").append(getUserID());
+            sb.append(", Timestamp: ").append(timestamp);
+            sb.append(", UserData: ").append(userData);
             stringValue = sb.toString();
         }
         return stringValue;
@@ -186,7 +203,11 @@ public final class EventImpl implements JackrabbitEvent {
      * @see Object#hashCode()
      */
     public int hashCode() {
-        return eventState.hashCode() ^ session.hashCode();
+        int h = eventState.hashCode() ^ new Long(timestamp).hashCode() ^ session.hashCode();
+        if (userData != null) {
+            h = h ^ userData.hashCode();
+        }
+        return h;
     }
 
     /**
@@ -209,8 +230,26 @@ public final class EventImpl implements JackrabbitEvent {
         if (obj instanceof EventImpl) {
             EventImpl other = (EventImpl) obj;
             return this.eventState.equals(other.eventState)
-                    && this.session.equals(other.session);
+                    && this.session.equals(other.session)
+                    && this.timestamp == other.timestamp
+                    && equals(this.userData, other.userData);
         }
         return false;
+    }
+
+    /**
+     * Returns <code>true</code> if the objects are equal or both are
+     * <code>null</code>; otherwise returns <code>false</code>.
+     *
+     * @param o1 an object.
+     * @param o2 another object.
+     * @return <code>true</code> if equal; <code>false</code> otherwise.
+     */
+    private static boolean equals(Object o1, Object o2) {
+        if (o1 == null) {
+            return o2 == null;
+        } else {
+            return o1.equals(o2);
+        }
     }
 }
