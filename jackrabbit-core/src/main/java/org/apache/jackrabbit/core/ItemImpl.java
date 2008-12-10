@@ -1171,8 +1171,17 @@ public abstract class ItemImpl implements Item {
             switch (transientState.getStatus()) {
                 case ItemState.STATUS_STALE_MODIFIED:
                 case ItemState.STATUS_STALE_DESTROYED:
-                case ItemState.STATUS_EXISTING_MODIFIED:
                     // add this item's state to the list
+                    list.add(transientState);
+                    break;
+
+                case ItemState.STATUS_EXISTING_MODIFIED:
+                    if (!transientState.getParentId().equals(
+                            transientState.getOverlayedState().getParentId())) {
+                        throw new RepositoryException(
+                                "Cannot refresh a moved item: " + this +
+                                " - possible solution: refresh the parent");
+                    }
                     list.add(transientState);
                     break;
 
