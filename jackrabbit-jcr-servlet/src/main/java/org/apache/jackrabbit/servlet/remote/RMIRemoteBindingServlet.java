@@ -89,10 +89,10 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
     public void destroy() {
         try {
             Naming.unbind(url);
+        } catch (NotBoundException e) {
+            // Ignore, perhaps the reference was already manually removed
         } catch (MalformedURLException e) {
             log("Invalid RMI URL: " + url, e);
-        } catch (NotBoundException e) {
-            log("Repository not bound in RMI: " + url, e);
         } catch (RemoteException e) {
             log("Failed to unbind repository from RMI: " + url, e);
         }
