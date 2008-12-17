@@ -75,15 +75,11 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
             url = "//localhost/javax/jcr/Repository";
         }
         try {
-            Naming.bind(url, getRemoteRepository());
+            Naming.rebind(url, getRemoteRepository());
         } catch (MalformedURLException e) {
-            throw new ServletException("Invalid RMI URL: " + url, e);
-        } catch (AlreadyBoundException e) {
-            throw new ServletException(
-                    "RMI URL is already bound: " + url, e);
+            log("Invalid RMI URL: " + url, e);
         } catch (RemoteException e) {
-            throw new ServletException(
-                    "Failed to bind repository to RMI: " + url, e);
+            log("Failed to bind repository to RMI: " + url, e);
         }
     }
 
@@ -93,10 +89,10 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
     public void destroy() {
         try {
             Naming.unbind(url);
-        } catch (MalformedURLException e) {
-            log("Invalid RMI URL: " + url, e);
         } catch (NotBoundException e) {
-            log("Repository not bound in RMI: " + url, e);
+            // Ignore, perhaps the reference was already manually removed
+        } catch (MalformedURLException e) {
+            // Ignore, we already logged a warning about this during init()
         } catch (RemoteException e) {
             log("Failed to unbind repository from RMI: " + url, e);
         }
