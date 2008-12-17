@@ -77,13 +77,11 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
         try {
             Naming.bind(url, getRemoteRepository());
         } catch (MalformedURLException e) {
-            throw new ServletException("Invalid RMI URL: " + url, e);
+            log("Invalid RMI URL: " + url, e);
         } catch (AlreadyBoundException e) {
-            throw new ServletException(
-                    "RMI URL is already bound: " + url, e);
+            log("RMI URL is already bound: " + url, e);
         } catch (RemoteException e) {
-            throw new ServletException(
-                    "Failed to bind repository to RMI: " + url, e);
+            log("Failed to bind repository to RMI: " + url, e);
         }
     }
 
