@@ -63,7 +63,8 @@ import javax.jcr.RepositoryException;
  *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
  *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
  *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/>
- *     &lt;param name="{@link #setTablePrefix(int) tablePrefix}" value=""/>
+ *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/>
+ *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
  * &lt/DataStore>
  * </pre>
  * <p>
@@ -185,11 +186,16 @@ public class DbDataStore implements DataStore {
     protected String tablePrefix = "";
 
     /**
+     * The prefix of the table names. By default it is empty.
+     */
+    protected String schemaObjectPrefix = "";
+
+    /**
      * This is the property 'table'
      * in the [databaseType].properties file, initialized with the default value.
      */
     protected String tableSQL = "DATASTORE";
-
+    
     /**
      * This is the property 'createTable'
      * in the [databaseType].properties file, initialized with the default value.
@@ -541,7 +547,7 @@ public class DbDataStore implements DataStore {
             DatabaseMetaData meta = conn.getConnection().getMetaData();
             log.info("Using JDBC driver " + meta.getDriverName() + " " + meta.getDriverVersion());
             meta.getDriverVersion();
-            ResultSet rs = meta.getTables(null, null, tableSQL, null);
+            ResultSet rs = meta.getTables(null, null, schemaObjectPrefix + tableSQL, null);
             boolean exists = rs.next();
             rs.close();
             if (!exists) {
@@ -550,7 +556,7 @@ public class DbDataStore implements DataStore {
             putBack(conn);
         } catch (Exception e) {
             throw convert("Can not init data store, driver=" + driver + " url=" + url + " user=" + user + 
-                    " tableSQL=" + tableSQL + " createTableSQL=" + createTableSQL, e);
+                    " schemaObjectPrefix=" + schemaObjectPrefix + " tableSQL=" + tableSQL + " createTableSQL=" + createTableSQL, e);
         }
     }
 
@@ -624,7 +630,7 @@ public class DbDataStore implements DataStore {
     /**
      * Get the expanded property value. The following placeholders are supported:
      * ${table}: the table name (the default is DATASTORE) and
-     * ${tablePrefix}: the prefix as set in the configuration (empty by default).
+     * ${tablePrefix}: tablePrefix plus schemaObjectPrefix as set in the configuration 
      *
      * @param prop the properties object
      * @param key the key
@@ -634,7 +640,7 @@ public class DbDataStore implements DataStore {
     protected String getProperty(Properties prop, String key, String defaultValue) {
         String sql = prop.getProperty(key, defaultValue);
         sql = Text.replace(sql, "${table}", tableSQL).trim();
-        sql = Text.replace(sql, "${tablePrefix}", tablePrefix).trim();
+        sql = Text.replace(sql, "${tablePrefix}", tablePrefix + schemaObjectPrefix).trim();
         return sql;
     }
 
@@ -883,7 +889,7 @@ public class DbDataStore implements DataStore {
     }
 
     /**
-     * Get the table prefix. The default is empty.
+     * Get the table prefix. 
      *
      * @return the table prefix.
      */
@@ -892,12 +898,34 @@ public class DbDataStore implements DataStore {
     }
 
     /**
-     * Set the new table prefix.
+     * Set the new table prefix. The default is empty.
+     * The table name is constructed like this:
+     * ${tablePrefix}${schemaObjectPrefix}${tableName}
      *
      * @param tablePrefix the new value
      */
     public void setTablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
     }
+    
+    /**
+     * Get the schema prefix.
+     * 
+     * @return the schema object prefix
+     */
+    public String getSchemaObjectPrefix() {
+        return schemaObjectPrefix;
+    }
+
+    /**
+     * Set the schema object prefix. The default is empty.
+     * The table name is constructed like this:
+     * ${tablePrefix}${schemaObjectPrefix}${tableName}
+     * 
+     * @param schemaObjectPrefix the new prefix
+     */
+    public void setSchemaObjectPrefix(String schemaObjectPrefix) {
+        this.schemaObjectPrefix = schemaObjectPrefix;
+    }    
 
 }
