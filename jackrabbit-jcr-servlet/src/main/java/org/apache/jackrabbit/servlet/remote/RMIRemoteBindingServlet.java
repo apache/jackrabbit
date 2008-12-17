@@ -92,7 +92,7 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
         } catch (NotBoundException e) {
             // Ignore, perhaps the reference was already manually removed
         } catch (MalformedURLException e) {
-            log("Invalid RMI URL: " + url, e);
+            // Ignore, we already logged a warning about this during init()
         } catch (RemoteException e) {
             log("Failed to unbind repository from RMI: " + url, e);
         }
