@@ -75,11 +75,9 @@ public class RMIRemoteBindingServlet extends RemoteBindingServlet {
             url = "//localhost/javax/jcr/Repository";
         }
         try {
-            Naming.bind(url, getRemoteRepository());
+            Naming.rebind(url, getRemoteRepository());
         } catch (MalformedURLException e) {
             log("Invalid RMI URL: " + url, e);
-        } catch (AlreadyBoundException e) {
-            log("RMI URL is already bound: " + url, e);
         } catch (RemoteException e) {
             log("Failed to bind repository to RMI: " + url, e);
         }
