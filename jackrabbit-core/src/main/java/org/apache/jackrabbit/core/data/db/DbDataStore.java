@@ -43,6 +43,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
@@ -276,6 +277,11 @@ public class DbDataStore implements DataStore {
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
     protected Map inUse = Collections.synchronizedMap(new WeakHashMap());
+    
+    /**
+     * The temporary identifiers that are currently in use.
+     */
+    protected List temporaryInUse = Collections.synchronizedList(new ArrayList());
 
     /**
      * {@inheritDoc}
@@ -284,8 +290,8 @@ public class DbDataStore implements DataStore {
         ResultSet rs = null;
         TempFileInputStream fileInput = null;
         ConnectionRecoveryManager conn = getConnection();
+        String id = null, tempId = null;
         try {
-            String id = null, tempId = null;
             long now;
             for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
                 try {
@@ -309,6 +315,7 @@ public class DbDataStore implements DataStore {
                 log.error(msg);
                 throw new DataStoreException(msg);
             }
+            temporaryInUse.add(tempId);
             MessageDigest digest = getDigest();
             DigestInputStream dIn = new DigestInputStream(stream, digest);
             TrackingInputStream in = new TrackingInputStream(dIn);
@@ -366,6 +373,9 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not insert new record", e);
         } finally {
+            if (tempId != null) {
+                temporaryInUse.remove(tempId);
+            }
             DatabaseHelper.closeSilently(rs);
             putBack(conn);
             if (fileInput != null) {
@@ -398,12 +408,18 @@ public class DbDataStore implements DataStore {
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
         try {
-            Iterator it = new ArrayList(inUse.keySet()).iterator();
-            while (it.hasNext()) {
+            ArrayList touch = new ArrayList();
+            for (Iterator it = new ArrayList(inUse.keySet()).iterator(); it.hasNext();) {
                 DataIdentifier identifier = (DataIdentifier) it.next();
                 if (identifier != null) {
-                    touch(identifier, 0);
+                    touch.add(identifier.toString());
                 }
+            }
+            touch.addAll(temporaryInUse);
+            Iterator it = touch.iterator();
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                updateLastModifiedDate(key, 0);
             }
             // DELETE FROM DATASTORE WHERE LAST_MODIFIED<?
             PreparedStatement prep = conn.executeStmt(deleteOlderSQL, new Long[]{new Long(min)});
@@ -671,6 +687,10 @@ public class DbDataStore implements DataStore {
      */
     long touch(DataIdentifier identifier, long lastModified) throws DataStoreException {
         usesIdentifier(identifier);
+        return updateLastModifiedDate(identifier.toString(), lastModified);
+    }
+
+    private long updateLastModifiedDate(String key, long lastModified) throws DataStoreException {
         if (lastModified < minModifiedDate) {
             long now = System.currentTimeMillis();
             Long n = new Long(now);
@@ -678,7 +698,7 @@ public class DbDataStore implements DataStore {
             try {
                 // UPDATE DATASTORE SET LAST_MODIFIED = ? WHERE ID = ? AND LAST_MODIFIED < ?
                 conn.executeStmt(updateLastModifiedSQL, new Object[]{
-                        n, identifier.toString(), n
+                        n, key, n
                 });
                 return now;
             } catch (Exception e) {
