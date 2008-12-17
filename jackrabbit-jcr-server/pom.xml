@@ -34,6 +34,7 @@
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
   <name>Jackrabbit JCR Server</name>
+  <version>1.5.1-SNAPSHOT</version>
   <description>WebDAV server implementations for JCR</description>
 
   <scm>

@@ -35,6 +35,7 @@
   <artifactId>jackrabbit-webapp</artifactId>
   <packaging>war</packaging>
   <name>Jackrabbit Web Application</name>
+  <version>1.5.1-SNAPSHOT</version>
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
 
   <scm>
@@ -66,7 +67,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1-SNAPSHOT</version>
       <exclusions>
         <!-- JCR-683: The commons-httpclient dependency from            -->
         <!-- jackrabbit-webapp depends on commons-logging. Since this   -->
