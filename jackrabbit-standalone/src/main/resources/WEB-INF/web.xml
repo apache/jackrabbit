@@ -91,6 +91,7 @@
             <param-name>url</param-name>
             <param-value>//localhost/jackrabbit.repository</param-value>
         </init-param>
+        <load-on-startup>6</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->
