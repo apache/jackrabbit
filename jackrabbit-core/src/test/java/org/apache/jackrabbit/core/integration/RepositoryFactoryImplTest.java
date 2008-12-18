@@ -24,8 +24,6 @@ import java.util.Iterator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Repository;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.Credentials;
 import javax.naming.InitialContext;
 import javax.naming.Context;
 import javax.imageio.spi.ServiceRegistry;
@@ -35,17 +33,13 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
-
-import junit.framework.TestCase;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * <code>RepositoryFactoryImplTest</code> performs tests on
  * {@link RepositoryFactoryImpl}.
  */
-public class RepositoryFactoryImplTest extends TestCase {
-
-    private static final Credentials CREDENTIALS
-            = new SimpleCredentials("user", "pass".toCharArray());
+public class RepositoryFactoryImplTest extends AbstractJCRTest {
 
     private static final File TARGET = new File("target");
 
@@ -155,7 +149,7 @@ public class RepositoryFactoryImplTest extends TestCase {
     //-------------------------< internal helper >------------------------------
 
     private static void checkRepository(Repository r) throws RepositoryException {
-        r.login(CREDENTIALS).logout();
+        r.login(helper.getSuperuserCredentials()).logout();
     }
 
     private static void setProperties() {
