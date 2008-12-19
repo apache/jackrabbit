@@ -16,33 +16,34 @@
  */
 package org.apache.jackrabbit.test.rmi.repository;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
 
-import javax.jcr.Repository;
-import javax.jcr.Credentials;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.RepositoryException;
 import javax.imageio.spi.ServiceRegistry;
-
-import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
-import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.core.RepositoryFactoryImpl;
-import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
-import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
+import javax.jcr.Credentials;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
 
 import junit.framework.TestCase;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
+import org.apache.jackrabbit.core.RepositoryFactoryImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.rmi.jackrabbit.JackrabbitServerAdapterFactory;
+import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 
 /**
  * <code>RepositoryFactoryImplTest</code>...
@@ -58,54 +59,59 @@ public class RepositoryFactoryImplTest extends TestCase {
 
     private static final File REPO_CONF = new File(REPO_HOME, "repository.xml");
 
-    private static final String RMI_URL = "rmi://localhost/repository";
+    /**
+     * Use a random port in the range 10k-60k for the RMI registry we use
+     * in this test. This way it's very unlikely for the test to interfere
+     * with normal runtime services.
+     */
+    private static final int RMI_PORT = new Random().nextInt(50000) + 10000;
 
-    static {
-        REPO_HOME.mkdirs();
-        if (!REPO_CONF.exists()) {
-            try {
-                // get default configuration from jackrabbit-core
-                InputStream in = RepositoryImpl.class.getResourceAsStream("repository.xml");
-                try {
-                    OutputStream out = new FileOutputStream(REPO_CONF);
-                    try {
-                        byte[] buffer = new byte[1024];
-                        int len;
-                        while ((len = in.read(buffer)) != -1) {
-                            out.write(buffer, 0, len);
-                        }
-                    } finally {
-                        out.close();
-                    }
-                } finally {
-                    in.close();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        // try to create a registry
-        try {
-            LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-        } catch (RemoteException e) {
-            // ignore
-        }
-    }
+    private static final String RMI_URL =
+        "rmi://localhost:" + RMI_PORT + "/repository";
 
     private Repository repository;
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        REPO_HOME.mkdirs();
+        if (!REPO_CONF.exists()) {
+            // get default configuration from jackrabbit-core
+            InputStream in = RepositoryImpl.class.getResourceAsStream("repository.xml");
+            try {
+                OutputStream out = new FileOutputStream(REPO_CONF);
+                try {
+                    IOUtils.copy(in, out);
+                } finally {
+                    out.close();
+                }
+            } finally {
+                in.close();
+            }
+        }
+
+        // Make sure that a local RMI registry is running at the selected port
+        try {
+            Registry registry = LocateRegistry.getRegistry(RMI_PORT);
+            registry.list();
+        } catch (RemoteException e) {
+            LocateRegistry.createRegistry(RMI_PORT);
+        }
+
         // get a local repository
         Map params = new HashMap();
         params.put(RepositoryFactoryImpl.REPOSITORY_CONF, REPO_CONF.getAbsolutePath());
         params.put(RepositoryFactoryImpl.REPOSITORY_HOME, REPO_HOME.getAbsolutePath());
         repository = RepositoryManager.getRepository(params);
-        
+
+        // setup remote repository
+        RemoteAdapterFactory raf = new JackrabbitServerAdapterFactory();
+        Naming.bind(RMI_URL, raf.getRemoteRepository(repository));
     }
 
     protected void tearDown() throws Exception {
+        Naming.unbind(RMI_URL);
+
         // shutdown local repository
         if (repository instanceof JackrabbitRepository) {
             ((JackrabbitRepository) repository).shutdown();
@@ -114,10 +120,6 @@ public class RepositoryFactoryImplTest extends TestCase {
     }
 
     public void testConnect() throws Exception {
-        // setup remote repository
-        RemoteAdapterFactory raf = new JackrabbitServerAdapterFactory();
-        Naming.bind(RMI_URL, raf.getRemoteRepository(repository));
-
         Map params = new HashMap();
         params.put(org.apache.jackrabbit.rmi.repository.RepositoryFactoryImpl.REPOSITORY_RMI_URL, RMI_URL);
         Repository r = RepositoryManager.getRepository(params);
