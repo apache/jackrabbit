@@ -53,6 +53,18 @@ public class BeanConfig {
     private final Properties properties;
 
     /**
+     * Flag to validate the configured bean property names against
+     * the configured bean class. By default this is <code>true</code>
+     * to prevent incorrect property names. However, in some cases this
+     * validation should not be performed as client classes may access
+     * the configuration parameters directly through the
+     * {@link #getParameters()} method.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1920">JCR-1920</a>
+     */
+    private boolean validate = true;
+
+    /**
      * Creates a bean configuration. Note that a copy of the given
      * bean properties is stored as a part of the created configuration
      * object. Thus the caller is free to modify the given properties
@@ -73,6 +85,16 @@ public class BeanConfig {
      */
     public BeanConfig(BeanConfig config) {
         this(config.getClassName(), config.getParameters());
+    }
+
+    /**
+     * Allows subclasses to control whether the configured bean property
+     * names should be validated.
+     *
+     * @param validate flag to validate the configured property names
+     */
+    protected void setValidate(boolean validate) {
+        this.validate = validate;
     }
 
     /**
@@ -101,9 +123,12 @@ public class BeanConfig {
      */
     public Object newInstance() throws ConfigurationException {
         try {
+            // Instantiate the object using the default constructor
             Class objectClass =
                 Class.forName(getClassName(), true, getClassLoader());
             Object object = objectClass.newInstance();
+
+            // Set all configured bean properties
             BeanMap map = new BeanMap(object);
             Iterator iterator = map.keyIterator();
             while (iterator.hasNext()) {
@@ -113,15 +138,23 @@ public class BeanConfig {
                     map.put(name, properties.getProperty(name));
                 }
             }
-            Iterator it = properties.keySet().iterator();
-            while (it.hasNext()) {
-                String key = (String) it.next();
-                if (!map.containsKey(key) && properties.getProperty(key) != null) {
-                    String msg = object.getClass().getName() + " does not support '" + key;
-                    log.error(msg);
-                    throw new ConfigurationException(msg);
+
+            if (validate) {
+                // Check that no invalid property names were configured
+                Iterator it = properties.keySet().iterator();
+                while (it.hasNext()) {
+                    String key = (String) it.next();
+                    if (!map.containsKey(key) && properties.getProperty(key) != null) {
+                        String msg =
+                            "Configured class " + object.getClass().getName()
+                            + " does not contain the property " + key
+                            + ". Please fix the repository configuration.";
+                        log.error(msg);
+                        throw new ConfigurationException(msg);
+                    }
                 }
             }
+
             return object;
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(

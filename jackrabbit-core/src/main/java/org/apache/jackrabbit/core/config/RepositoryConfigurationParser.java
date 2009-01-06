@@ -522,6 +522,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             Element provFact = getElement(element, AC_PROVIDER_ELEMENT, false);
             if (provFact !=null ) {
                 factConf = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
+                factConf.setValidate(false); // JCR-1920
             }
         }
         return new WorkspaceSecurityConfig(factConf);

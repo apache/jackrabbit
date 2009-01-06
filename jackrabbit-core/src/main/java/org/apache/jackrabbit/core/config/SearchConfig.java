@@ -50,6 +50,7 @@ public class SearchConfig extends BeanConfig implements FileSystemFactory {
     public SearchConfig(
             String className, Properties properties, FileSystemFactory fsf) {
         super(className, properties);
+        setValidate(false); // JCR-1920: SearchManager uses getParameters()
         this.fsf = fsf;
     }
 
