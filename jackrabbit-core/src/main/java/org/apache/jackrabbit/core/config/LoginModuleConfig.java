@@ -56,6 +56,7 @@ public class LoginModuleConfig extends BeanConfig {
      */
     public LoginModuleConfig(BeanConfig config) {
         super(config);
+        setValidate(false); // JCR-1920
     }
 
     public LoginModule getLoginModule() throws ConfigurationException {
