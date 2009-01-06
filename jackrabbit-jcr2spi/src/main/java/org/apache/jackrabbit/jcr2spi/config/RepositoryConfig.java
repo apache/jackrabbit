@@ -35,4 +35,10 @@ public interface RepositoryConfig {
     public CacheBehaviour getCacheBehaviour();
 
     public int getItemCacheSize();
+
+    /**
+     * Specifies an interval used for polling the {@link RepositoryService} for changes.
+     * @return  the poll timeout in milliseconds.
+     */
+    public int getPollTimeout();
 }
