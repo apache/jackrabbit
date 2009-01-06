@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.config;
 
 /**
- * Respresentation of workspace specific security settings.
+ * Representation of workspace specific security settings.
  */
 public class WorkspaceSecurityConfig {
 
