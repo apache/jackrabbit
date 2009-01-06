@@ -111,7 +111,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
                 config.getRepositoryService(),
                 sessionInfo,
                 session.getCacheBehaviour(),
-                3 * 1000); // 3 seconds poll timeout
+                session.getPollTimeout());
     }
 
     //----------------------------------------------------------< Workspace >---
@@ -317,7 +317,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
 
         // make sure the given import target is accessible, not locked and checked out.
         int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-        getValidator().checkIsWritable((NodeState) parentState, options);
+        getValidator().checkIsWritable(parentState, options);
 
         // build the content handler
         return new WorkspaceContentHandler(this, parentAbsPath, uuidBehavior);

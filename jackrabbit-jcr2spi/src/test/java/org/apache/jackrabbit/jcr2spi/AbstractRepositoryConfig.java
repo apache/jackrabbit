@@ -29,6 +29,7 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
     private static Logger log = LoggerFactory.getLogger(AbstractRepositoryConfig.class);
 
     private static final int DEFAULT_ITEM_CACHE_SIZE = 5000;
+    private static final int DEFAULT_POLL_TIMEOUT = 3000; // 3 seconds
 
     public CacheBehaviour getCacheBehaviour() {
         return CacheBehaviour.INVALIDATE;
@@ -37,4 +38,9 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
     public int getItemCacheSize() {
         return DEFAULT_ITEM_CACHE_SIZE;
     }
+
+    public int getPollTimeout() {
+        return DEFAULT_POLL_TIMEOUT;
+    }
+
 }

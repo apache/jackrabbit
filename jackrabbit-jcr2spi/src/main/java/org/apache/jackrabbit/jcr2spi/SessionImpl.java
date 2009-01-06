@@ -705,6 +705,10 @@ public class SessionImpl extends AbstractSession
         return config.getCacheBehaviour();
     }
 
+    int getPollTimeout() {
+        return config.getPollTimeout();
+    }
+
     //--------------------------------------------------------------------------
     SessionImpl switchWorkspace(String workspaceName) throws AccessDeniedException,
         NoSuchWorkspaceException, RepositoryException {
@@ -858,4 +862,5 @@ public class SessionImpl extends AbstractSession
             throw new NoSuchWorkspaceException("Unknown workspace: '" + workspaceName + "'.");
         }
     }
+
 }
