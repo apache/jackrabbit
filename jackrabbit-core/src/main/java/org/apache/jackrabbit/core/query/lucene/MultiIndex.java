@@ -767,15 +767,8 @@ public class MultiIndex {
                 ((PersistentIndex) indexes.get(i)).close();
             }
 
-            // close indexing queue
+            // finally close indexing queue
             indexingQueue.close();
-
-            // finally close directory
-            try {
-                indexDir.close();
-            } catch (IOException e) {
-                log.error("Exception while closing directory.", e);
-            }
         }
     }
 
