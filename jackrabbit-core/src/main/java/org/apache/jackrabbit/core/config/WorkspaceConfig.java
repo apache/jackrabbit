@@ -20,6 +20,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.ISMLockingFactory;
 
 /**
  * Workspace configuration. This configuration class is used to create
@@ -30,7 +32,7 @@ import org.apache.jackrabbit.core.fs.FileSystemFactory;
  * the item state manager locking configuration. The search index and the item
  * state manager locking and the security config are optional parts.
  */
-public class WorkspaceConfig implements FileSystemFactory {
+public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
 
     /**
      * Workspace home directory.
@@ -63,9 +65,9 @@ public class WorkspaceConfig implements FileSystemFactory {
     private SearchConfig sc;
 
     /**
-     * The item state manager locking configuration.
+     * The item state manager locking factory.
      */
-    private ISMLockingConfig ismLockingConfig;
+    private ISMLockingFactory ismLockingFactory;
 
     /**
      * Workspace security configuration. Can be <code>null</code>.
@@ -80,13 +82,12 @@ public class WorkspaceConfig implements FileSystemFactory {
      * @param fsc file system factory
      * @param pmc persistence manager configuration
      * @param sc search index configuration
-     * @param ismLockingConfig the item state manager locking configuration. If
-     * <code>null</code> is passed, a default configuration is taken.
+     * @param ismLockingFactory the item state manager locking factory
      * @param workspaceSecurityConfig the workspace specific security configuration.
      */
     public WorkspaceConfig(String home, String name, boolean clustered,
                            FileSystemFactory fsf, PersistenceManagerConfig pmc,
-                           SearchConfig sc, ISMLockingConfig ismLockingConfig,
+                           SearchConfig sc, ISMLockingFactory ismLockingFactory,
                            WorkspaceSecurityConfig workspaceSecurityConfig) {
         this.home = home;
         this.name = name;
@@ -94,11 +95,7 @@ public class WorkspaceConfig implements FileSystemFactory {
         this.fsf = fsf;
         this.pmc = pmc;
         this.sc = sc;
-        if (ismLockingConfig != null) {
-            this.ismLockingConfig = ismLockingConfig;
-        } else {
-            this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
-        }
+        this.ismLockingFactory = ismLockingFactory;
         this.workspaceSecurityConfig = workspaceSecurityConfig;
     }
 
@@ -131,10 +128,13 @@ public class WorkspaceConfig implements FileSystemFactory {
     }
 
     /**
-     * @return the configuration for the item state locking.
+     * Creates and returns the configured workspace locking strategy.
+     *
+     * @return the configured {@link ISMLocking}
+     * @throws RepositoryException if the locking strategy can not be created
      */
-    public ISMLockingConfig getISMLockingConfig() {
-        return ismLockingConfig;
+    public ISMLocking getISMLocking() throws RepositoryException {
+        return ismLockingFactory.getISMLocking();
     }
 
     /**
