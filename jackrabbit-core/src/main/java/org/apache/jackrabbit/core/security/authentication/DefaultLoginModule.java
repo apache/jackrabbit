@@ -33,7 +33,6 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import java.security.Principal;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * The <code>DefaultLoginModule</code> authenticates Credentials related to

@@ -25,7 +25,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.util.ToStringUtils;
 import org.apache.jackrabbit.spi.Name;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 

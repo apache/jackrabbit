@@ -23,10 +23,8 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 
-import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.util.Set;
 
