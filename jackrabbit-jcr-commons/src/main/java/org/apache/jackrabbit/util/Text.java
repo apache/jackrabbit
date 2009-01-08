@@ -402,15 +402,19 @@ public class Text {
         ByteArrayOutputStream out = new ByteArrayOutputStream(string.length());
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
-            if (c == escape) {
+            if (c != escape) {
+                out.write(c);
+            } else if (i + 2 < string.length()) {
                 try {
                     out.write(Integer.parseInt(string.substring(i + 1, i + 3), 16));
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException(
+                            "Escape sequence is not hexadecimal: " + string);
                 }
                 i += 2;
             } else {
-                out.write(c);
+                throw new IllegalArgumentException(
+                        "Escape sequence is too short: " + string);
             }
         }
 
