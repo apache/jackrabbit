@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.BitSet;
 import java.io.IOException;
 
