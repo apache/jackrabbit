@@ -73,7 +73,7 @@ Repository repository = (Repository) context.lookup(...);
 
 ServletContext context = ...; // <em>context of your servlet</em>
 ServletContext jackrabbit =
-    context.getContext("<em><%= request.getContextPath() %></em>");
+    context.getContext("<em><%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %></em>");
 Repository repository = (Repository)
     context.getAttribute(Repository.<b>class</b>.getName()).
 </pre>

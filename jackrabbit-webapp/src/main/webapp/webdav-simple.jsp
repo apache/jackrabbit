@@ -15,7 +15,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%
+--%><%@page import="org.apache.jackrabbit.util.Text"%><%
 request.setAttribute("title", "Standard WebDAV Server");
 
 URI uri = new URI(request.getRequestURL().toString());
@@ -24,6 +24,7 @@ String href =
     + request.getContextPath()
     + SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext())
     + "/default/";
+href = Text.encodeIllegalXMLCharacters(href);
 %><jsp:include page="header.jsp"/>
 
 <p>
@@ -76,8 +77,8 @@ String href =
 
 <h3>Configuration</h3>
 <ul>
-    <li>Context path: <%= request.getContextPath() %></li>
-    <li>Resource path prefix: <%= SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext()) %></li>
+    <li>Context path: <%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %></li>
+    <li>Resource path prefix: <%= Text.encodeIllegalXMLCharacters(SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext())) %></li>
     <li>Servlet configuration: see <i>/WEB-INF/web.xml</i></li>
     <li>WebDAV specific resource configuration: see <i>/WEB-INF/config.xml</i></li>
 </ul>

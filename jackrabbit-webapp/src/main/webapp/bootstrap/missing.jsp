@@ -13,7 +13,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%
+--%><%@page import="org.apache.jackrabbit.util.Text"%><%
 request.setAttribute("title", "Content Repository Setup");
 %><jsp:include page="../header.jsp"/>
 <p>
@@ -27,7 +27,7 @@ request.setAttribute("title", "Content Repository Setup");
 </p>
 
 <h3>Create a new content repository</h3>
-<form action="<%= request.getContextPath() %>/admin" method="POST">
+<form action="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/admin" method="POST">
   <input type="hidden" name="mode" value="new"/>
   <p>
     Use this form to create a new content repository in the given directory.
@@ -44,7 +44,7 @@ request.setAttribute("title", "Content Repository Setup");
 </form>
 
 <h3>Use an existing content repository</h3>
-<form action="<%= request.getContextPath() %>/admin" method="POST">
+<form action="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/admin" method="POST">
   <input type="hidden" name="mode" value="existing"/>
   <p>
     Use this form to access an existing content repository in the given

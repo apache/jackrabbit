@@ -18,7 +18,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%
+--%><%@page import="org.apache.jackrabbit.util.Text"%><%
 request.setAttribute("title", "JCR WebDAV Server");
 
 URI uri = new URI(request.getRequestURL().toString());
@@ -26,6 +26,7 @@ String href =
     uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort()
     + request.getContextPath()
     + JCRWebdavServerServlet.getPathPrefix(pageContext.getServletContext());
+href = Text.encodeIllegalXMLCharacters(href);
 String shref = href + "/default/jcr:root";
 %><jsp:include page="header.jsp"/>
 <p>
@@ -74,8 +75,8 @@ String shref = href + "/default/jcr:root";
 
 <h3>Configuration</h3>
 <ul>
-  <li>Context Path: <%= request.getContextPath() %></li>
-  <li>Resource Path Prefix: <%= JCRWebdavServerServlet.getPathPrefix(pageContext.getServletContext()) %></li>
+  <li>Context Path: <%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %></li>
+  <li>Resource Path Prefix: <%= Text.encodeIllegalXMLCharacters(JCRWebdavServerServlet.getPathPrefix(pageContext.getServletContext())) %></li>
   <li>Workspace Name: <i>optional</i> (available workspaces are mapped as resources)</li>
   <li>Additional servlet configuration: see <i>/WEB-INF/web.xml</i></li>
 </ul>
