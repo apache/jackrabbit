@@ -20,13 +20,15 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
+import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.util.Collections;
 import java.util.Map;
 import java.security.Principal;
@@ -34,7 +36,7 @@ import java.security.Principal;
 /**
  * <code>EvaluationTest</code>...
  */
-public class EvaluationTest extends AbstractEvaluationTest {
+public class WriteTest extends AbstractWriteTest {
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -64,7 +66,7 @@ public class EvaluationTest extends AbstractEvaluationTest {
         throw new NotExecutableException("ACLTemplate expected.");
     }
 
-    protected Map getRestrictions(String path) {
+    protected Map getRestrictions(Session s, String path) {
         return Collections.EMPTY_MAP;
     }
 
@@ -80,7 +82,7 @@ public class EvaluationTest extends AbstractEvaluationTest {
                 Privilege.JCR_READ_ACCESS_CONTROL,
                 Privilege.JCR_MODIFY_ACCESS_CONTROL
         });
-        JackrabbitAccessControlList tmpl = givePrivileges(path, privileges, getRestrictions(path));
+        JackrabbitAccessControlList tmpl = givePrivileges(path, privileges, getRestrictions(superuser, path));
         /*
          testuser must
          - still have the inherited READ permission.
@@ -94,6 +96,7 @@ public class EvaluationTest extends AbstractEvaluationTest {
         // make sure the 'rep:policy' node has been created.
         assertTrue(superuser.itemExists(tmpl.getPath() + "/rep:policy"));
 
+        SessionImpl testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
         // test: MODIFY_AC granted at 'path'
         assertTrue(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL)));
@@ -123,16 +126,16 @@ public class EvaluationTest extends AbstractEvaluationTest {
         // test if testuser can modify AC-items
         // 1) add an ac-entry
         ACLTemplate acl = (ACLTemplate) policies[0];
-        acl.addAccessControlEntry(getTestUser().getPrincipal(), privilegesFromName(Privilege.JCR_WRITE));
+        acl.addAccessControlEntry(getTestUser().getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE));
         testAcMgr.setPolicy(path, acl);
-        getTestSession().save();
+        testSession.save();
 
         assertTrue(testAcMgr.hasPrivileges(path,
                 privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES)));
 
         // 2) remove the policy
         testAcMgr.removePolicy(path, policies[0]);
-        getTestSession().save();
+        testSession.save();
 
         // Finally: testuser removed the policy that granted him permission
         // to modify the AC content. Since testuser removed the policy, it's
@@ -149,7 +152,6 @@ public class EvaluationTest extends AbstractEvaluationTest {
     }
 
     public void testRemovePermission9() throws NotExecutableException, RepositoryException {
-        SessionImpl testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
         /*
           precondition:
@@ -162,15 +164,15 @@ public class EvaluationTest extends AbstractEvaluationTest {
         Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
 
         // add 'remove_child_nodes' at 'path and allow 'remove_node' at childNPath
-        givePrivileges(path, rmChildNodes, getRestrictions(path));
-        givePrivileges(childNPath, rmNode, getRestrictions(childNPath));
+        givePrivileges(path, rmChildNodes, getRestrictions(superuser, path));
+        givePrivileges(childNPath, rmNode, getRestrictions(superuser, childNPath));
         /*
          expected result:
          - rep:policy node can still not be remove for it is access-control
            content that requires jcr:modifyAccessControl privilege instead.
          */
         String policyPath = childNPath + "/rep:policy";
-        assertFalse(testSession.hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(getTestSession().hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 }

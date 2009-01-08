@@ -18,7 +18,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("security.authorization.combined tests");
 
-        suite.addTestSuite(EvaluationTest.class);
+        suite.addTestSuite(WriteTest.class);
 
         return suite;
     }

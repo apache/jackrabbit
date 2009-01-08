@@ -66,10 +66,25 @@ public abstract class AbstractLockInfo {
      */
     public AbstractLockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
                     String lockOwner) {
+        this(lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+    }
+
+    /**
+     * Create a new instance of this class.
+     *
+     * @param lockToken     lock token
+     * @param sessionScoped whether lock token is session scoped
+     * @param deep          whether lock is deep
+     * @param lockOwner     owner of lock
+     * @param timeoutHint   the timeoutHint
+     */
+    public AbstractLockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
+                            String lockOwner, long timeoutHint) {
         this.lockToken = lockToken;
         this.sessionScoped = sessionScoped;
         this.deep = deep;
         this.lockOwner = lockOwner;
+        // TODO: TOBEFIXED for 2.0 respect and deal timeout hint.
     }
 
     /**
@@ -145,6 +160,17 @@ public abstract class AbstractLockInfo {
     }
 
     /**
+     * Return the number of seconds remaining until the lock expires.
+     *
+     * @return number of seconds remaining until the lock expires.
+     */
+    public long getSecondsRemaining() {
+        // TODO: TOBEFIXED for 2.0
+        // TODO  - add support for timeout specified by the API user -> LockManager#lock
+        return Long.MAX_VALUE;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public String toString() {
@@ -162,6 +188,7 @@ public abstract class AbstractLockInfo {
         } else {
             buffer.append("none");
         }
+        buffer.append("owner:").append(lockOwner);
         buffer.append(')');
         return buffer.toString();
     }

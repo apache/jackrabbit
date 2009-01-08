@@ -23,6 +23,7 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +40,9 @@ import java.util.Map;
 /**
  * <code>EvaluationTest</code>...
  */
-public class EvaluationTest extends org.apache.jackrabbit.core.security.authorization.acl.EvaluationTest {
+public class WriteTest extends org.apache.jackrabbit.core.security.authorization.acl.WriteTest {
 
-    private static Logger log = LoggerFactory.getLogger(EvaluationTest.class);
+    private static Logger log = LoggerFactory.getLogger(WriteTest.class);
 
     private List toClear = new ArrayList();
 
@@ -88,7 +89,7 @@ public class EvaluationTest extends org.apache.jackrabbit.core.security.authoriz
                                                        Map restrictions,
                                                        boolean nodeBased) throws NotExecutableException, RepositoryException {
         if (nodeBased) {
-            return givePrivileges(nPath, principal, privileges, getRestrictions(nPath));
+            return givePrivileges(nPath, principal, privileges, getRestrictions(superuser, nPath));
         } else {
             JackrabbitAccessControlList tmpl = getPrincipalBasedPolicy(acMgr, nPath, principal);
             tmpl.addEntry(principal, privileges, true, restrictions);
@@ -106,7 +107,7 @@ public class EvaluationTest extends org.apache.jackrabbit.core.security.authoriz
                                                        Map restrictions,
                                                        boolean nodeBased) throws NotExecutableException, RepositoryException {
         if (nodeBased) {
-            return withdrawPrivileges(nPath, principal, privileges, getRestrictions(nPath));
+            return withdrawPrivileges(nPath, principal, privileges, getRestrictions(superuser, nPath));
         } else {
             JackrabbitAccessControlList tmpl = getPrincipalBasedPolicy(acMgr, nPath, principal);
             tmpl.addEntry(principal, privileges, false, restrictions);
@@ -141,7 +142,7 @@ public class EvaluationTest extends org.apache.jackrabbit.core.security.authoriz
 
         Privilege[] readPrivs = privilegesFromName(Privilege.JCR_READ);
         // nodebased: remove READ privilege for 'testUser' at 'path'
-        withdrawPrivileges(path, readPrivs, getRestrictions(path));
+        withdrawPrivileges(path, readPrivs, getRestrictions(superuser, path));
         // principalbased: add READ privilege for 'testGroup'
         givePrivileges(path, testGroup.getPrincipal(), readPrivs, getPrincipalBasedRestrictions(path), false);
         /*
@@ -166,8 +167,8 @@ public class EvaluationTest extends org.apache.jackrabbit.core.security.authoriz
         assertTrue(testAcMgr.hasPrivileges(path, readPrivs));
 
         // nodebased: add WRITE privilege for 'testUser' at 'path'
-        Privilege[] wrtPrivileges = privilegesFromName(Privilege.JCR_WRITE);
-        givePrivileges(path, wrtPrivileges, getRestrictions(path));
+        Privilege[] wrtPrivileges = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        givePrivileges(path, wrtPrivileges, getRestrictions(superuser, path));
         // userbased: deny MODIFY_PROPERTIES privileges for 'testUser'
         Privilege[] modPropPrivs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
         withdrawPrivileges(path, getTestUser().getPrincipal(), modPropPrivs, getPrincipalBasedRestrictions(path), false);
@@ -180,7 +181,7 @@ public class EvaluationTest extends org.apache.jackrabbit.core.security.authoriz
 
         // nodebased: deny MODIFY_PROPERTIES privileges for 'testUser'
         //            on a child node.
-        withdrawPrivileges(childNPath, getTestUser().getPrincipal(), modPropPrivs, getRestrictions(childNPath));
+        withdrawPrivileges(childNPath, getTestUser().getPrincipal(), modPropPrivs, getRestrictions(superuser, childNPath));
         /*
          expected result:
          - MODIFY_PROPERTIES privilege still present at 'path'

@@ -46,9 +46,9 @@ public class LockRecord extends ClusterRecord {
     private boolean isDeep;
 
     /**
-     * User id.
+     * Lock owner.
      */
-    private String userId;
+    private String lockOwner;
 
     /**
      * Create a new instance of this class. Used when a lock operation should
@@ -56,18 +56,18 @@ public class LockRecord extends ClusterRecord {
      *
      * @param nodeId node id
      * @param isDeep flag indicating whether the lock is deep
-     * @param userId user id
+     * @param lockOwner the name of the lock owner.
      * @param record journal record
      * @param workspace workspace
      */
-    public LockRecord(NodeId nodeId, boolean isDeep, String userId,
+    public LockRecord(NodeId nodeId, boolean isDeep, String lockOwner,
                       Record record, String workspace) {
         super(record, workspace);
 
         this.nodeId = nodeId;
         this.isLock = true;
         this.isDeep = isDeep;
-        this.userId = userId;
+        this.lockOwner = lockOwner;
     }
 
     /**
@@ -104,7 +104,7 @@ public class LockRecord extends ClusterRecord {
         isLock = record.readBoolean();
         if (isLock) {
             isDeep = record.readBoolean();
-            userId = record.readString();
+            lockOwner = record.readString();
         }
     }
 
@@ -117,7 +117,7 @@ public class LockRecord extends ClusterRecord {
         record.writeBoolean(isLock);
         if (isLock) {
             record.writeBoolean(isDeep);
-            record.writeString(userId);
+            record.writeString(lockOwner);
         }
     }
 
@@ -161,8 +161,18 @@ public class LockRecord extends ClusterRecord {
      * Return the user id associated with the lock operation.
      *
      * @return user id
+     * @deprecated User {@link #getOwner()} instead.
      */
     public String getUserId() {
-        return userId;
+        return lockOwner;
+    }
+
+    /**
+     * Return the lock owner associated with the lock operation.
+     *
+     * @return lock owner associated with the lock operation.
+     */
+    public String getOwner() {
+        return lockOwner;
     }
 }

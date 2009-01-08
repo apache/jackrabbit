@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.ItemImpl;
@@ -189,7 +190,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 // no 'user' within set of principals -> READ-only
                 return getReadOnlyPermissions();
             } else {
-                return new CompiledPermissionsImpl(principals, userNode);
+                return new CompiledPermissionsImpl(principals, userNode.getPath());
             }
         }
     }
@@ -251,6 +252,11 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         }
     }
 
+    private int getPrivilegeBits(String privName) throws RepositoryException {
+        Privilege[] privs = new Privilege[] {session.getAccessControlManager().privilegeFromName(privName)};
+        return PrivilegeRegistry.getBits(privs);
+    }
+
     private static boolean containsGroup(Set principals, String groupName) {
         for (Iterator it = principals.iterator(); it.hasNext() && groupName != null;) {
             Principal p = (Principal) it.next();
@@ -289,13 +295,13 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     private class CompiledPermissionsImpl extends AbstractCompiledPermissions
             implements SynchronousEventListener {
 
-        private final NodeImpl userNode;
+        private final String userNodePath;
 
         private boolean isUserAdmin;
         private boolean isGroupAdmin;
 
-        protected CompiledPermissionsImpl(Set principals, NodeImpl userNode) throws RepositoryException {
-            this.userNode = userNode;
+        protected CompiledPermissionsImpl(Set principals, String userNodePath) throws RepositoryException {
+            this.userNodePath = userNodePath;
             isUserAdmin = containsGroup(principals, userAdminGroup);
             isGroupAdmin = containsGroup(principals, groupAdminGroup);
 
@@ -308,6 +314,22 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
         protected Result buildResult(Path path) throws RepositoryException {
+            NodeImpl userNode = null;
+            try {
+                if (session.nodeExists(userNodePath)) {
+                    userNode = (NodeImpl) session.getNode(userNodePath);
+                }
+            } catch (RepositoryException e) {
+                // ignore
+            }
+
+            if (userNode == null) {
+                // no Node corresponding to user for which the permissions are
+                // calculated -> no permissions/priviles.
+                log.debug("No node at " + userNodePath);
+                return new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
+            }
+
             // no explicit denied permissions:
             int denies = Permission.NONE;
             // default allow permission and default privileges
@@ -317,7 +339,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             // Generally, privileges can only be determined for existing nodes.
             boolean calcPrivs = session.nodeExists(resolver.getJCRPath(path.getNormalizedPath()));
             if (calcPrivs) {
-                privs = PrivilegeRegistry.READ;
+                privs = getPrivilegeBits(Privilege.JCR_READ);
             } else {
                 privs = PrivilegeRegistry.NO_PRIVILEGE;
             }
@@ -370,23 +392,32 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                             3) special treatment for rep:group property which can
                                only be modified by group-administrators
                             */
+                            Path aPath = session.getQPath(authN.getPath());
                             if (requiredGroups) {
                                 // principals contain 'user-admin'
                                 // -> user can modify items below the user-node except rep:group.
                                 // principals contains 'user-admin' + 'group-admin'
                                 // -> user can modify rep:group property as well.
-                                allows = Permission.ALL;
+                                if (path.equals(aPath)) {
+                                    allows |= (Permission.ADD_NODE | Permission.REMOVE_PROPERTY | Permission.SET_PROPERTY);
+                                } else {
+                                    allows |= Permission.ALL;
+                                }
                                 if (calcPrivs) {
                                     // grant WRITE privilege
                                     // note: ac-read/modification is not included
-                                    privs |= PrivilegeRegistry.WRITE;
+                                    //       remove_node is not included
+                                    privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                                    if (!path.equals(aPath)) {
+                                       privs |= getPrivilegeBits(Privilege.JCR_REMOVE_NODE);
+                                    }
                                 }
                             } else if (userNode.isSame(node) && (!isGroupProp || isGroupAdmin)) {
                                 // user can only read && write his own props
                                 // except for the rep:group property.
                                 allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
                                 if (calcPrivs) {
-                                    privs |= PrivilegeRegistry.MODIFY_PROPERTIES;
+                                    privs |= getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES);
                                 }
                             } // else some other node below but not U-admin -> read-only.
                             break;
@@ -406,7 +437,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                 if (calcPrivs) {
                                     // grant WRITE privilege
                                     // note: ac-read/modification is not included
-                                    privs |= PrivilegeRegistry.WRITE;
+                                    privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
                                 }
                             }
                     }
@@ -419,7 +450,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 if (isGroupAdmin) {
                     allows = Permission.ALL;
                     if (calcPrivs) {
-                        privs |= PrivilegeRegistry.WRITE;
+                        privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
                     }
                 }
             } // else outside of user/group tree -> read only.
@@ -473,7 +504,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                     String repGroups = session.getJCRName(UserConstants.P_GROUPS);
                     // TODO: add better evaluation.
                     if (repGroups.equals(Text.getName(evPath)) &&
-                            userNode.getPath().equals(Text.getRelativeParent(evPath, 1))) {
+                            userNodePath.equals(Text.getRelativeParent(evPath, 1))) {
                         // recalculate the is...Admin flags
                         switch (ev.getType()) {
                             case Event.PROPERTY_REMOVED:
@@ -482,15 +513,17 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                                 break;
                             case Event.PROPERTY_ADDED:
                             case Event.PROPERTY_CHANGED:
-                                Value[] vs = session.getProperty(evPath).getValues();
-                                String princName = session.getJCRName(P_PRINCIPAL_NAME);
-                                for (int i = 0; i < vs.length; i++) {
-                                    Node groupNode = session.getNodeByUUID(vs[i].getString());
-                                    String pName = groupNode.getProperty(princName).getString();
-                                    if (userAdminGroup.equals(pName)) {
-                                        isUserAdmin = true;
-                                    } else if (groupAdminGroup.equals(pName)) {
-                                        isGroupAdmin = true;
+                                if (session.propertyExists(evPath)) {
+                                    Value[] vs = session.getProperty(evPath).getValues();
+                                    String princName = session.getJCRName(P_PRINCIPAL_NAME);
+                                    for (int i = 0; i < vs.length; i++) {
+                                        Node groupNode = session.getNodeByUUID(vs[i].getString());
+                                        String pName = groupNode.getProperty(princName).getString();
+                                        if (userAdminGroup.equals(pName)) {
+                                            isUserAdmin = true;
+                                        } else if (groupAdminGroup.equals(pName)) {
+                                            isGroupAdmin = true;
+                                        }
                                     }
                                 }
                                 break;

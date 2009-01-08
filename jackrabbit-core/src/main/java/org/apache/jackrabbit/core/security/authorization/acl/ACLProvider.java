@@ -38,7 +38,6 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryIterator;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -480,8 +479,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
             int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
 
-            while (entries.hasNext() && allows != PrivilegeRegistry.ALL) {
-                JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entries.next();
+            while (entries.hasNext() && allows != privAll) {
+                ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
                 // Determine if the ACE is defined on the node at absPath (locally):
                 // Except for READ-privileges the permissions must be determined
                 // from privileges defined for the parent. Consequently aces
@@ -497,11 +496,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 }
                 if (ace.isAllow()) {
                     allowPrivileges |= Permission.diff(entryBits, denyPrivileges);
-                    int permissions = Permission.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
+                    int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
                     allows |= Permission.diff(permissions, denies);
                 } else {
                     denyPrivileges |= Permission.diff(entryBits, allowPrivileges);
-                    int permissions = Permission.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
+                    int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
                     denies |= Permission.diff(permissions, allows);
                 }
             }

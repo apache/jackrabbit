@@ -40,40 +40,77 @@ import java.util.Set;
  */
 public final class PrivilegeRegistry {
 
-    private static final Set REGISTERED_PRIVILEGES = new HashSet(10);
+    /**
+     * Jackrabbit specific write privilege that combines {@link Privilege#JCR_WRITE}
+     * and {@link Privilege#NODE_TYPE_MNGMT}.
+     */
+    public static final String REP_WRITE = "{" + Name.NS_REP_URI + "}write";
+
+    private static final Set REGISTERED_PRIVILEGES = new HashSet(20);
     private static final Map BITS_TO_PRIVILEGES = new HashMap();
     private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
     private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
 
     public static final int NO_PRIVILEGE = 0;
-    public static final int READ = 1;
-    public static final int MODIFY_PROPERTIES = 2;
-    public static final int ADD_CHILD_NODES = 4;
-    public static final int REMOVE_CHILD_NODES = 8;
-    public static final int REMOVE_NODE = 16;
-    public static final int READ_AC = 32;
-    public static final int MODIFY_AC = 64;
-    public static final int WRITE = 14;
-    public static final int ALL = 127;
+
+    private static final int READ = 1;
+    private static final int MODIFY_PROPERTIES = 2;
+    private static final int ADD_CHILD_NODES = 4;
+    private static final int REMOVE_CHILD_NODES = 8;
+    private static final int REMOVE_NODE = 16;
+    
+    private static final int READ_AC = 32;
+    private static final int MODIFY_AC = 64;
+
+    private static final int NODE_TYPE_MNGMT = 128;
+    private static final int VERSION_MNGMT = 256;
+    private static final int LOCK_MNGMT = 512;
+    private static final int LIFECYCLE_MNGMT = 1024;
+    private static final int RETENTION_MNGMT = 2048;
+
+    private static final int WRITE = 30;
+    private static final int JACKRABBIT_WRITE = 158;
+    private static final int ALL = 4095;
 
     private static final InternalPrivilege READ_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ, READ));
     private static final InternalPrivilege MODIFY_PROPERTIES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_PROPERTIES, MODIFY_PROPERTIES));
     private static final InternalPrivilege ADD_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ADD_CHILD_NODES, ADD_CHILD_NODES));
     private static final InternalPrivilege REMOVE_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_CHILD_NODES, REMOVE_CHILD_NODES));
     private static final InternalPrivilege REMOVE_NODE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_NODE, REMOVE_NODE));
+
     private static final InternalPrivilege READ_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ_ACCESS_CONTROL, READ_AC));
     private static final InternalPrivilege MODIFY_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL, MODIFY_AC));
+
+    private static final InternalPrivilege NODE_TYPE_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_NODE_TYPE_MANAGEMENT, NODE_TYPE_MNGMT));
+    private static final InternalPrivilege VERSION_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_VERSION_MANAGEMENT, VERSION_MNGMT));
+    private static final InternalPrivilege LOCK_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_LOCK_MANAGEMENT, LOCK_MNGMT));
+    private static final InternalPrivilege LIFECYCLE_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_LIFECYCLE_MANAGEMENT, LIFECYCLE_MNGMT));
+    private static final InternalPrivilege RETENTION_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_RETENTION_MANAGEMENT, RETENTION_MNGMT));
+
     private static final InternalPrivilege WRITE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_WRITE, new InternalPrivilege[] {
             MODIFY_PROPERTIES_PRIVILEGE,
             ADD_CHILD_NODES_PRIVILEGE,
-            REMOVE_CHILD_NODES_PRIVILEGE }));
+            REMOVE_CHILD_NODES_PRIVILEGE,
+            REMOVE_NODE_PRIVILEGE,
+    }));
+
+    private static final InternalPrivilege JACKRABBIT_WRITE_PRIVILEGE = registerPrivilege(new InternalPrivilege(REP_WRITE, new InternalPrivilege[] {
+            WRITE_PRIVILEGE,
+            NODE_TYPE_MANAGEMENT_PRIVILEGE
+    }));
+
     private static final InternalPrivilege ALL_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ALL, new InternalPrivilege[] {
             READ_PRIVILEGE,
             WRITE_PRIVILEGE,
-            REMOVE_NODE_PRIVILEGE,
+            JACKRABBIT_WRITE_PRIVILEGE,
             READ_AC_PRIVILEGE,
-            MODIFY_AC_PRIVILEGE}));
+            MODIFY_AC_PRIVILEGE,
+            VERSION_MANAGEMENT_PRIVILEGE,
+            LOCK_MANAGEMENT_PRIVILEGE,
+            LIFECYCLE_MANAGEMENT_PRIVILEGE,
+            RETENTION_MANAGEMENT_PRIVILEGE
+    }));
 
     /**
      * The name resolver used to determine the correct privilege
@@ -180,6 +217,88 @@ public final class PrivilegeRegistry {
     }
 
     /**
+     * Build the permissions granted by evaluating the given privileges.
+     *
+     * @param privs The privileges granted on the Node itself (for properties
+     * the ACL of the direct ancestor).
+     * @param parentPrivs The privileges granted on the parent of the Node. Not
+     * relevant for properties since it only is used to determine permissions
+     * on a Node (add_child_nodes, remove_child_nodes).
+     * @param isAllow
+     * @param protectsPolicy
+     * @return the permissions granted evaluating the given privileges.
+     */
+    public static int calculatePermissions(int privs, int parentPrivs, boolean isAllow, boolean protectsPolicy) {
+        int perm = Permission.NONE;
+        if (protectsPolicy) {
+            if ((parentPrivs & PrivilegeRegistry.READ_AC) == PrivilegeRegistry.READ_AC) {
+                perm |= Permission.READ;
+            }
+            if ((parentPrivs & PrivilegeRegistry.MODIFY_AC) == PrivilegeRegistry.MODIFY_AC) {
+                perm |= Permission.ADD_NODE;
+                perm |= Permission.SET_PROPERTY;
+                perm |= Permission.REMOVE_NODE;
+                perm |= Permission.REMOVE_PROPERTY;
+                perm |= Permission.NODE_TYPE_MNGMT;
+            }
+        } else {
+            if ((privs & READ) == READ) {
+                perm |= Permission.READ;
+            }
+            if ((privs & MODIFY_PROPERTIES) == MODIFY_PROPERTIES) {
+                perm |= Permission.SET_PROPERTY;
+                perm |= Permission.REMOVE_PROPERTY;
+            }
+            // add_node permission is granted through privilege on the parent.
+            if ((parentPrivs & ADD_CHILD_NODES) == ADD_CHILD_NODES) {
+                perm |= Permission.ADD_NODE;
+            }
+            /*
+             remove_node is
+             allowed: only if remove_child_nodes privilege is present on
+                      the parent AND remove_node is present on the node itself
+             denied : if either remove_child_nodes is denied on the parent
+                      OR remove_node is denied on the node itself.
+            */
+            if (isAllow) {
+                if ((parentPrivs & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES &&
+                        (privs & REMOVE_NODE) == REMOVE_NODE) {
+                    perm |= Permission.REMOVE_NODE;
+                }
+            } else {
+                if ((parentPrivs & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES ||
+                        (privs & REMOVE_NODE) == REMOVE_NODE) {
+                    perm |= Permission.REMOVE_NODE;
+                }
+            }
+        }
+
+        // the remaining (special) permissions are simply defined on the node
+        if ((privs & READ_AC) == READ_AC) {
+            perm |= Permission.READ_AC;
+        }
+        if ((privs & MODIFY_AC) == MODIFY_AC) {
+            perm |= Permission.MODIFY_AC;
+        }
+        if ((privs & LIFECYCLE_MNGMT) == LIFECYCLE_MNGMT) {
+            perm |= Permission.LIFECYCLE_MNGMT;
+        }
+        if ((privs & LOCK_MNGMT) == LOCK_MNGMT) {
+            perm |= Permission.LOCK_MNGMT;
+        }
+        if ((privs & NODE_TYPE_MNGMT) == NODE_TYPE_MNGMT) {
+            perm |= Permission.NODE_TYPE_MNGMT;
+        }
+        if ((privs & RETENTION_MNGMT) == RETENTION_MNGMT) {
+            perm |= Permission.RETENTION_MNGMT;
+        }
+        if ((privs & VERSION_MNGMT) == VERSION_MNGMT) {
+            perm |= Permission.VERSION_MNGMT;
+        }
+        return perm;
+    }
+    
+    /**
      *
      * @param bits
      * @return InternalPrivilege that corresponds to the given bits.
@@ -193,7 +312,9 @@ public final class PrivilegeRegistry {
             if ((bits & READ) == READ) {
                 privileges.add(READ_PRIVILEGE);
             }
-            if ((bits & WRITE) == WRITE) {
+            if ((bits & JACKRABBIT_WRITE) == JACKRABBIT_WRITE) {
+                privileges.add(JACKRABBIT_WRITE_PRIVILEGE);
+            } else if ((bits & WRITE) == WRITE) {
                 privileges.add(WRITE_PRIVILEGE);
             } else {
                 if ((bits & MODIFY_PROPERTIES) == MODIFY_PROPERTIES) {
@@ -205,15 +326,30 @@ public final class PrivilegeRegistry {
                 if ((bits & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES) {
                     privileges.add(REMOVE_CHILD_NODES_PRIVILEGE);
                 }
-            }
-            if ((bits & REMOVE_NODE) == REMOVE_NODE) {
-                privileges.add(REMOVE_NODE_PRIVILEGE);
+                if ((bits & REMOVE_NODE) == REMOVE_NODE) {
+                    privileges.add(REMOVE_NODE_PRIVILEGE);
+                }
+                if ((bits & NODE_TYPE_MNGMT) == NODE_TYPE_MNGMT) {
+                    privileges.add(NODE_TYPE_MANAGEMENT_PRIVILEGE);
+                }
             }
             if ((bits & READ_AC) == READ_AC) {
                 privileges.add(READ_AC_PRIVILEGE);
             }
             if ((bits & MODIFY_AC) == MODIFY_AC) {
                 privileges.add(MODIFY_AC_PRIVILEGE);
+            }
+            if ((bits & VERSION_MNGMT) == VERSION_MNGMT) {
+                privileges.add(VERSION_MANAGEMENT_PRIVILEGE);
+            }
+            if ((bits & LOCK_MNGMT) == LOCK_MNGMT) {
+                privileges.add(LOCK_MANAGEMENT_PRIVILEGE);
+            }
+            if ((bits & LIFECYCLE_MNGMT) == LIFECYCLE_MNGMT) {
+                privileges.add(LIFECYCLE_MANAGEMENT_PRIVILEGE);
+            }
+            if ((bits & RETENTION_MNGMT) == RETENTION_MNGMT) {
+                privileges.add(RETENTION_MANAGEMENT_PRIVILEGE);
             }
 
             InternalPrivilege[] privs;
@@ -241,7 +377,7 @@ public final class PrivilegeRegistry {
     private static class InternalPrivilege {
 
         private final Name name;
-        private final boolean isAbstract = false;
+        private final boolean isAbstract;
         private final boolean isAggregate;
         private final InternalPrivilege[] declaredAggregates;
         private final Set aggregates;
@@ -258,6 +394,7 @@ public final class PrivilegeRegistry {
             this.name = NAME_FACTORY.create(name);
             this.bits = bits;
 
+            isAbstract = false;
             declaredAggregates = null;
             aggregates = null;
             isAggregate = false;
@@ -271,8 +408,8 @@ public final class PrivilegeRegistry {
                 throw new IllegalArgumentException("A privilege must have a name.");
             }
             this.name = NAME_FACTORY.create(name);
+            this.isAbstract = false;
             this.declaredAggregates = declaredAggregates;
-
             Set aggrgt = new HashSet();
             int bts = 0;
             for (int i = 0; i < declaredAggregates.length; i++) {

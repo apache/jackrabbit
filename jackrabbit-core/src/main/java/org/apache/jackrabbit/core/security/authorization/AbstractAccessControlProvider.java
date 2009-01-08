@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,9 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     protected ObservationManager observationMgr;
     protected NamePathResolver resolver;
 
+    protected int privAll;
+    protected int privRead;
+
     private boolean initialized;
 
     protected AbstractAccessControlProvider() {
@@ -65,15 +69,15 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
 
     /**
      * Returns compiled permissions for the administrator i.e. permissions
-     * that grants everything and returns {@link PrivilegeRegistry#ALL}
+     * that grants everything and returns the int representation of {@link Privilege#JCR_ALL}
      * upon {@link CompiledPermissions#getPrivileges(Path)} for all
      * paths.
      *
      * @return an implementation of <code>CompiledPermissions</code> that
-     * grants everything and always returns {@link PrivilegeRegistry#ALL}
-     * upon {@link CompiledPermissions#getPrivileges(Path)}.
+     * grants everything and always returns the int representation of
+     * {@link Privilege#JCR_ALL} upon {@link CompiledPermissions#getPrivileges(Path)}.
      */
-    protected static CompiledPermissions getAdminPermissions() {
+    protected CompiledPermissions getAdminPermissions() {
         return new CompiledPermissions() {
             public void close() {
                 //nop
@@ -82,7 +86,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 return true;
             }
             public int getPrivileges(Path absPath) {
-                return PrivilegeRegistry.ALL;
+                return privAll;
             }
             public boolean canReadAll() {
                 return true;
@@ -114,7 +118,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return PrivilegeRegistry.READ;
+                    return privRead;
                 }
             }
             public boolean canReadAll() {
@@ -165,6 +169,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         session = (SessionImpl) systemSession;
         observationMgr = systemSession.getWorkspace().getObservationManager();
         resolver = (SessionImpl) systemSession;
+
+        privAll = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_ALL)});
+        privRead = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ)});
+
         initialized = true;
     }
 

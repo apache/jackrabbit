@@ -19,30 +19,40 @@ package org.apache.jackrabbit.core.lock;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
 import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
-import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.Lock;
@@ -229,27 +239,33 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
     /**
      * Internal <code>lock</code> implementation that takes the same parameters
-     * as the public method but will not modify content.
+     * as the public method.
+     *
      * @param node node to lock
      * @param isDeep whether the lock applies to this node only
      * @param isSessionScoped whether the lock is session scoped
+     * @param timeoutHint
+     * @param ownerInfo
      * @return lock
      * @throws LockException       if the node is already locked
      * @throws RepositoryException if another error occurs
      */
-    AbstractLockInfo internalLock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
+    AbstractLockInfo internalLock(NodeImpl node, boolean isDeep,
+                                  boolean isSessionScoped, long timeoutHint,
+                                  String ownerInfo)
             throws LockException, RepositoryException {
 
         SessionImpl session = (SessionImpl) node.getSession();
+        String lockOwner = (ownerInfo != null) ? ownerInfo : session.getUserID();
         LockInfo info = new LockInfo(new LockToken(node.getNodeId()),
-                isSessionScoped, isDeep, session.getUserID());
+                isSessionScoped, isDeep, lockOwner, timeoutHint);
 
         ClusterOperation operation = null;
         boolean successful = false;
 
         // Cluster is only informed about open-scoped locks
         if (eventChannel != null && !isSessionScoped) {
-            operation = eventChannel.create(node.getNodeId(), isDeep, session.getUserID());
+            operation = eventChannel.create(node.getNodeId(), isDeep, lockOwner);
         }
 
         acquire();
@@ -277,7 +293,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             info.setLockHolder(session);
             info.setLive(true);
             session.addListener(info);
-            session.addLockToken(info.lockToken.toString(), false);
+            // TODO: TOBEFIXED for 2.0
+            // TODO  only tokens of open-scoped locks must be added to the session.
+            // if (!info.isSessionScoped()) {
+                session.addLockToken(info.lockToken.toString(), false);
+            //}
             lockMap.put(path, info);
 
             if (!info.sessionScoped) {
@@ -314,7 +334,6 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         try {
             SessionImpl session = (SessionImpl) node.getSession();
-
             // check whether node is locked by this session
             PathMap.Element element = lockMap.map(getPath(node.getId()), true);
             if (element == null) {
@@ -327,6 +346,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             if (session != info.getLockHolder()) {
                 throw new LockException("Node not locked by session: " + node);
             }
+
             session.removeLockToken(info.getLockToken(session), false);
 
             element.set(null);
@@ -402,8 +422,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
+        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
 
-        AbstractLockInfo info = internalLock(node, isDeep, isSessionScoped);
+    public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
+            throws LockException, RepositoryException {
+        AbstractLockInfo info = internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
+        writeLockProperties(node, info.lockOwner, info.deep);
+
         return new LockImpl(info, node);
     }
 
@@ -466,6 +492,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     public void unlock(NodeImpl node)
             throws LockException, RepositoryException {
 
+        removeLockProperties(node);
         internalUnlock(node);
     }
 
@@ -679,6 +706,125 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         release();
     }
 
+    /**
+     * Add the lock related properties to the target node.
+     *
+     * @param node
+     * @param lockOwner
+     * @param isDeep
+     */
+    protected void writeLockProperties(NodeImpl node, String lockOwner, boolean isDeep) throws RepositoryException {
+        boolean success = false;
+
+        SessionImpl editingSession = (SessionImpl) node.getSession();
+        WorkspaceImpl wsp = (WorkspaceImpl) editingSession.getWorkspace();
+        UpdatableItemStateManager stateMgr = wsp.getItemStateManager();
+        ItemValidator helper = new ItemValidator(editingSession.getNodeTypeManager().getNodeTypeRegistry(), wsp.getHierarchyManager(), editingSession);
+
+        synchronized (stateMgr) {
+            if (stateMgr.inEditMode()) {
+                throw new RepositoryException("Unable to write lock properties.");
+            }
+            stateMgr.edit();
+            try {
+                // add properties to content
+                NodeId nodeId = node.getNodeId();
+                NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+
+                PropertyState propState;
+                if (!nodeState.hasPropertyName(NameConstants.JCR_LOCKOWNER)) {
+                    PropDef def = helper.findApplicablePropertyDefinition(NameConstants.JCR_LOCKOWNER, PropertyType.STRING, false, nodeState);
+                    propState = stateMgr.createNew(NameConstants.JCR_LOCKOWNER, nodeId);
+                    propState.setDefinitionId(def.getId());
+                    propState.setType(PropertyType.STRING);
+                    propState.setMultiValued(false);
+                } else {
+                    propState = (PropertyState) stateMgr.getItemState(new PropertyId(nodeId, NameConstants.JCR_LOCKOWNER));
+                }
+                propState.setValues(new InternalValue[] { InternalValue.create(lockOwner) });
+                nodeState.addPropertyName(NameConstants.JCR_LOCKOWNER);
+                stateMgr.store(nodeState);
+
+                if (!nodeState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
+                    PropDef def = helper.findApplicablePropertyDefinition(NameConstants.JCR_LOCKISDEEP, PropertyType.BOOLEAN, false, nodeState);
+                    propState = stateMgr.createNew(NameConstants.JCR_LOCKISDEEP, nodeId);
+                    propState.setDefinitionId(def.getId());
+                    propState.setType(PropertyType.BOOLEAN);
+                    propState.setMultiValued(false);
+                } else {
+                    propState = (PropertyState) stateMgr.getItemState(new PropertyId(nodeId, NameConstants.JCR_LOCKISDEEP));
+                }
+                propState.setValues(new InternalValue[] { InternalValue.create(isDeep) });
+                nodeState.addPropertyName(NameConstants.JCR_LOCKISDEEP);
+                stateMgr.store(nodeState);
+
+                stateMgr.update();
+                success = true;
+            } catch (ItemStateException e) {
+                throw new RepositoryException("Error while creating lock.", e);
+            } finally {
+                if (!success) {
+                    // failed to set lock meta-data content, cleanup
+                    stateMgr.cancel();
+                    try {
+                        unlock(node);
+                    } catch (RepositoryException e) {
+                        // cleanup failed
+                        log.error("error while cleaning up after failed lock attempt", e);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param node
+     * @throws RepositoryException
+     */
+    protected void removeLockProperties(NodeImpl node) throws RepositoryException {
+        boolean success = false;
+
+        SessionImpl editingSession = (SessionImpl) node.getSession();
+        WorkspaceImpl wsp = (WorkspaceImpl) editingSession.getWorkspace();
+        UpdatableItemStateManager stateMgr = wsp.getItemStateManager();
+
+        synchronized (stateMgr) {
+            try {
+                // add properties to content
+                NodeId nodeId = node.getNodeId();
+                NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
+
+                if (stateMgr.inEditMode()) {
+                    throw new RepositoryException("Unable to remove lock properties.");
+                }
+                stateMgr.edit();
+                if (nodeState.hasPropertyName(NameConstants.JCR_LOCKOWNER)) {
+                    PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(nodeId, NameConstants.JCR_LOCKOWNER));
+                    nodeState.removePropertyName(NameConstants.JCR_LOCKOWNER);
+                    stateMgr.destroy(propState);
+                    stateMgr.store(nodeState);
+                }
+
+                if (nodeState.hasPropertyName(NameConstants.JCR_LOCKISDEEP)) {
+                    PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(nodeId, NameConstants.JCR_LOCKISDEEP));
+                    nodeState.removePropertyName(NameConstants.JCR_LOCKISDEEP);
+                    stateMgr.destroy(propState);
+                    stateMgr.store(nodeState);
+                }
+
+                stateMgr.update();
+                success = true;
+            } catch (ItemStateException e) {
+                throw new RepositoryException("Error while removing lock.", e);
+            } finally {
+                if (!success) {
+                    // failed to set lock meta-data content, cleanup
+                    stateMgr.cancel();
+                }
+            }
+        }
+    }
 
     //----------------------------------------------< SynchronousEventListener >
 
@@ -945,7 +1091,21 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
          */
         public LockInfo(LockToken lockToken, boolean sessionScoped,
                         boolean deep, String lockOwner) {
-            super(lockToken, sessionScoped, deep, lockOwner);
+            this(lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+        }
+
+        /**
+         * Create a new instance of this class.
+         *
+         * @param lockToken     lock token
+         * @param sessionScoped whether lock token is session scoped
+         * @param deep          whether lock is deep
+         * @param lockOwner     owner of lock
+         * @param timeoutHint
+         */
+        public LockInfo(LockToken lockToken, boolean sessionScoped,
+                        boolean deep, String lockOwner, long timeoutHint) {
+            super(lockToken, sessionScoped, deep, lockOwner, timeoutHint);
         }
 
         /**
@@ -969,9 +1129,19 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                         NodeImpl node = (NodeImpl) session.getItemManager().getItem(getId());
                         node.unlock();
                     } catch (RepositoryException e) {
-                        log.warn("Unable to remove session-scoped lock on node '"
-                                + lockToken + "': " + e.getMessage());
-                        log.debug("Root cause: ", e);
+                        // Session is not allowed/able to unlock.
+                        // Use system session present with lock-mgr as fallback
+                        // in order to make sure, that session-scoped locks are
+                        // properly cleaned.
+                        SessionImpl systemSession = LockManagerImpl.this.session;
+                        setLockHolder(systemSession);
+                        try {
+                            NodeImpl node = (NodeImpl) systemSession.getItemManager().getItem(getId());
+                            node.unlock();
+                        } catch (RepositoryException re) {
+                            log.warn("Unable to remove session-scoped lock on node '" + lockToken + "': " + e.getMessage());
+                            log.debug("Root cause: ", e);
+                        }
                     }
                 } else {
                     if (session == lockHolder) {
@@ -1004,14 +1174,14 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * {@inheritDoc}
      */
-    public void externalLock(NodeId nodeId, boolean isDeep, String userId) throws RepositoryException {
+    public void externalLock(NodeId nodeId, boolean isDeep, String lockOwner) throws RepositoryException {
         acquire();
 
         try {
             Path path = getPath(nodeId);
 
             // create lock token
-            LockInfo info = new LockInfo(new LockToken(nodeId), false, isDeep, userId);
+            LockInfo info = new LockInfo(new LockToken(nodeId), false, isDeep, lockOwner);
             info.setLive(true);
             lockMap.put(path, info);
 

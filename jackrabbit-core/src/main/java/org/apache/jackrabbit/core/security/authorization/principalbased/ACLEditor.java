@@ -60,6 +60,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     private final String acRootPath;
 
     ACLEditor(SessionImpl session, Path acRootPath) throws RepositoryException {
+        super(true);
         this.session = session;
         this.acRootPath = session.getJCRPath(acRootPath);
     }
@@ -69,13 +70,18 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             throw new AccessControlException("Unknown principal.");
         }
         String nPath = getPathToAcNode(principal);
+        ACLTemplate acl = null;
         if (session.nodeExists(nPath)) {
-            return (ACLTemplate) getPolicies(nPath)[0];
-        } else {
-            // no policy for the given principal
-            log.debug("No combined policy template for Principal " + principal.getName());
-            return null;
+            AccessControlPolicy[] plcs = getPolicies(nPath);
+            if (plcs.length > 0) {
+                acl = (ACLTemplate) plcs[0];
+            }
         }
+        if (acl == null) {
+            // no policy for the given principal
+            log.debug("No policy template for Principal " + principal.getName());
+        }
+        return acl;
     }
 
     //------------------------------------------------< AccessControlEditor >---
@@ -86,7 +92,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         checkProtectsNode(nodePath);
 
         NodeImpl acNode = getAcNode(nodePath);
-        if (acNode != null) {
+        if (isAccessControlled(acNode)) {
             return new AccessControlPolicy[] {createTemplate(acNode)};
         } else {
             return new AccessControlPolicy[0];
@@ -121,10 +127,13 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             throw new AccessControlException("Unknown principal.");
         }
         String nPath = getPathToAcNode(principal);
+        NodeImpl acNode;
         if (!session.nodeExists(nPath)) {
-            createAcNode(nPath);
+            acNode = createAcNode(nPath);
+        } else {
+            acNode = (NodeImpl) session.getNode(nPath);
         }
-        return getPolicies(nPath);
+        return new AccessControlPolicy[] {createTemplate(acNode)};
     }
 
     /**
@@ -193,18 +202,16 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         checkValidPolicy(nodePath, policy);
 
         NodeImpl acNode = getAcNode(nodePath);
-        if (acNode != null) {
-            if (isAccessControlled(acNode)) {
-                // build the template in order to have a return value
-                AccessControlPolicy tmpl = createTemplate(acNode);
-                if (tmpl.equals(policy)) {
-                    removeSecurityItem(acNode.getNode(N_POLICY));
-                    return;
-                }
+        if (isAccessControlled(acNode)) {
+            // build the template in order to have a return value
+            AccessControlPolicy tmpl = createTemplate(acNode);
+            if (tmpl.equals(policy)) {
+                removeSecurityItem(acNode.getNode(N_POLICY));
+                return;
             }
         }
         // node either not access-controlled or the passed policy didn't apply
-        // to the node at 'nodePath' -> throw exception.no policy was removed
+        // to the node at 'nodePath' -> throw exception. no policy was removed
         throw new AccessControlException("Policy " + policy + " does not apply to " + nodePath);
     }
 
@@ -312,8 +319,8 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      * @return
      * @throws RepositoryException
      */
-    private boolean isAccessControlled(NodeImpl node) throws RepositoryException {
-        return node.isNodeType(NT_REP_ACCESS_CONTROL) && node.hasNode(N_POLICY);
+    private static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
+        return node != null && node.isNodeType(NT_REP_ACCESS_CONTROL) && node.hasNode(N_POLICY);
     }
 
     /**
@@ -322,7 +329,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
      * @return
      * @throws RepositoryException
      */
-    private AccessControlPolicy createTemplate(NodeImpl acNode) throws RepositoryException {
+    private static AccessControlPolicy createTemplate(NodeImpl acNode) throws RepositoryException {
         if (!acNode.isNodeType(NT_REP_ACCESS_CONTROL)) {
             throw new RepositoryException("Expected node of type rep:AccessControl.");
         }

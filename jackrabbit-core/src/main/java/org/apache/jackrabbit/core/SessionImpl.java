@@ -872,6 +872,28 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
+     * Determines if there are pending unsaved changes either on the passed
+     * item or on any item in it's subtree.
+     *
+     * @param Item start of the subtree to be tested for pending changes.
+     * @return <code>true</code> if there are pending unsaved changes,
+     *         <code>false</code> otherwise.
+     * @throws RepositoryException if an error occurred
+     */
+    public boolean hasPendingChanges(Item item) throws RepositoryException {
+        if (!(item instanceof ItemImpl) || ((ItemImpl) item).session != this) {
+            throw new IllegalArgumentException();
+        }
+        sanityCheck();
+        ItemImpl itemImpl = (ItemImpl) item;
+        if (itemImpl.isTransient()) {
+            return true;
+        } else {
+            return item.isNode() && ((NodeImpl) item).hasPendingChanges();
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public void move(String srcAbsPath, String destAbsPath)
@@ -1020,7 +1042,7 @@ public class SessionImpl extends AbstractSession
         // check permissions
         AccessManager acMgr = getAccessManager();
         if (!(acMgr.isGranted(srcPath, Permission.REMOVE_NODE) &&
-                acMgr.isGranted(destPath, Permission.ADD_NODE))) {
+                acMgr.isGranted(destPath, Permission.ADD_NODE | Permission.NODE_TYPE_MNGMT))) {
             String msg = "Not allowed to move node " + srcAbsPath + " to " + destAbsPath;
             log.debug(msg);
             throw new AccessDeniedException(msg);
@@ -1324,7 +1346,7 @@ public class SessionImpl extends AbstractSession
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getNodeByIdentifier(String) 
+     * @see org.apache.jackrabbit.api.jsr283.Session#getNodeByIdentifier(String)
      * @since JCR 2.0
      */
     public Node getNodeByIdentifier(String id)

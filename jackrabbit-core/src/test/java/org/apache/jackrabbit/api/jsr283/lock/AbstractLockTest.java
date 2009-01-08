@@ -108,9 +108,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         assertTrue("Seconds remaining must be a positive long or 0.", lock.getSecondsRemaining() >= 0);
     }
 
-
-
-
     public void testRemoveMixLockableFromLockedNode() throws RepositoryException {
         try {
             lockedNode.removeMixin(mixLockable);

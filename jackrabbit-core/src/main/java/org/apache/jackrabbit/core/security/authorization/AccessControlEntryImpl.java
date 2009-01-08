@@ -96,9 +96,15 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         if (principal == null) {
             throw new IllegalArgumentException();
         }
+        // make sure no abstract privileges are passed.
+        for (int i = 0; i < privileges.length; i++) {
+            if (privileges[i].isAbstract()) {
+                throw new AccessControlException("Privilege " + privileges[i] + " is abstract.");
+            }
+        }
         this.principal = principal;
         this.privileges = privileges;
-        this.privilegeBits = PrivilegeRegistry.getBits(privileges);;
+        this.privilegeBits = PrivilegeRegistry.getBits(privileges);
         this.allow = isAllow;
         if (restrictions == null) {
             this.restrictions = Collections.EMPTY_MAP;
@@ -119,6 +125,13 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
                 this.restrictions.put(key.toString(), value);
             }
         }
+    }
+
+    /**
+     * @return the int representation of the privileges defined for this entry.
+     */
+    public int getPrivilegeBits() {
+        return privilegeBits;
     }
 
     /**
@@ -160,13 +173,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
-     * @see JackrabbitAccessControlEntry#getPrivilegeBits()
-     */
-    public int getPrivilegeBits() {
-        return privilegeBits;
-    }
-
-    /**
      * @see JackrabbitAccessControlEntry#getRestrictionNames()
      */
     public String[] getRestrictionNames() {
@@ -196,10 +202,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
-     * Returns true if the principal and all privileges are equal / the same.
-     *
-     * @param obj
-     * @return
      * @see Object#equals(Object)
      */
     public boolean equals(Object obj) {

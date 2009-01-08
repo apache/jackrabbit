@@ -18,15 +18,6 @@ package org.apache.jackrabbit.api.jsr283.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.lock.LockException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Node;
 
 /** <code>SessionScopedLockTest</code>... */
 public class SessionScopedLockTest extends AbstractLockTest {
@@ -47,5 +38,4 @@ public class SessionScopedLockTest extends AbstractLockTest {
     public void testGetLockToken() {
         assertNull("A session scoped lock may never expose the token.", lock.getLockToken());
     }
-
 }

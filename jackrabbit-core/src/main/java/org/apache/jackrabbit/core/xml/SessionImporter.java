@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.xml;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -27,6 +28,7 @@ import org.apache.jackrabbit.value.ReferenceValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -65,7 +67,7 @@ public class SessionImporter implements Importer {
      * @param importTargetNode
      * @param session
      * @param uuidBehavior     any of the constants declared by
-     *                         {@link ImportUUIDBehavior}
+     *                         {@link javax.jcr.ImportUUIDBehavior}
      */
     public SessionImporter(NodeImpl importTargetNode,
                            SessionImpl session,
@@ -184,6 +186,13 @@ public class SessionImporter implements Importer {
             log.debug("Skipping node: " + nodeName);
             return;
         }
+
+        // make sure the editing session is allowed create nodes with a
+        // specified node type (and ev. mixins)
+        if (!session.getAccessManager().isGranted(session.getQPath(parent.getPath()), nodeName, Permission.NODE_TYPE_MNGMT)) {
+            throw new AccessDeniedException("Insufficient permission.");
+        }
+
         if (parent.hasNode(nodeName)) {
             // a node with that name already exists...
             NodeImpl existing = parent.getNode(nodeName);

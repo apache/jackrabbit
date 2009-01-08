@@ -71,6 +71,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     private final Map idPathMap = new LRUMap(1000);
 
     public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
+        super(false);
         this.session = session;
         this.adminId = adminId;
 
@@ -222,7 +223,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             setSecurityProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
             parent.save();
 
-            log.info("User created: " + userID + "; " + userNode.getPath());
+            log.debug("User created: " + userID + "; " + userNode.getPath());
             return createUser(userNode);
         } catch (RepositoryException e) {
             // something went wrong -> revert changes and rethrow
@@ -274,7 +275,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             setSecurityProperty(groupNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
             parent.save();
 
-            log.info("Group created: " + groupID + "; " + groupNode.getPath());
+            log.debug("Group created: " + groupID + "; " + groupNode.getPath());
 
             return createGroup(groupNode);
         } catch (RepositoryException e) {

@@ -13,8 +13,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
@@ -30,13 +30,16 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("security.authorization.combined tests");
+        TestSuite suite = new TestSuite("security.authorization.principalbased tests");
 
         suite.addTestSuite(ACLTemplateTest.class);
         suite.addTestSuite(EntryTest.class);
         suite.addTestSuite(GlobPatternTest.class);
 
-        suite.addTestSuite(EvaluationTest.class);
+        suite.addTestSuite(WriteTest.class);
+        suite.addTestSuite(LockTest.class);
+        suite.addTestSuite(VersionTest.class);
+        suite.addTestSuite(NodeTypeTest.class);
 
         return suite;
     }

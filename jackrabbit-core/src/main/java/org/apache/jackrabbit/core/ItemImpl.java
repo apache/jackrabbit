@@ -27,13 +27,13 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.state.StaleItemStateException;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.core.version.VersionManager;
@@ -244,17 +244,17 @@ public abstract class ItemImpl implements Item {
 
                     case ItemState.STATUS_STALE_MODIFIED:
                         throw new InvalidItemStateException(
-                                "Item cannot be saved because it has been"
+                                "Item cannot be saved because it has been "
                                 + "modified externally: " + this);
 
                     case ItemState.STATUS_STALE_DESTROYED:
                         throw new InvalidItemStateException(
-                                "Item cannot be saved because it has been"
+                                "Item cannot be saved because it has been "
                                 + "deleted externally: " + this);
 
                     case ItemState.STATUS_UNDEFINED:
                         throw new InvalidItemStateException(
-                                "Item cannot be saved; it seems to have been"
+                                "Item cannot be saved; it seems to have been "
                                 + "removed externally: " + this);
 
                     default:
@@ -348,7 +348,7 @@ public abstract class ItemImpl implements Item {
          * the following validations/checks are performed on transient items:
          *
          * for every transient item:
-         * - if it is 'modified' check the WRITE permission
+         * - if it is 'modified' or 'new' check the corresponding write permission.
          * - if it is 'removed' check the REMOVE permission
          *
          * for every transient node:
@@ -365,42 +365,44 @@ public abstract class ItemImpl implements Item {
          * Node.addMixin/removeMixin/setPrimaryType (for type changes on nodes)
          * and in Property.setValue (for properties to be modified).
          */
-
         AccessManager accessMgr = session.getAccessManager();
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         // walk through list of dirty transient items and validate each
         while (dirtyIter.hasNext()) {
             ItemState itemState = (ItemState) dirtyIter.next();
-
-            if (itemState.getStatus() != ItemState.STATUS_NEW) {
-                /* transient item is not 'new', therefore it has to be 'modified'
-                   detect the effective set of modification:
-                   - child additions -> add_node perm on the child
-                   - property additions, modifications or removals -> set_property permission
+            ItemDefinition def;
+            if (itemState.isNode()) {
+                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+            } else {
+                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+            }
+            /* check permissions for non-protected items. protected items are
+               only added through API methods which need to assert that
+               permissions are not violated.
+             */
+            if (!def.isProtected()) {
+                /* detect the effective set of modification:
+                   - new added node -> add_node perm on the child
+                   - new property added -> set_property permission
+                   - property modified -> set_property permission
+                   - modified nodes can be ignored for changes only included
+                     child-item addition or removal or changes of protected
+                     properties such as mixin-types which are covered separately
                    note: removed items are checked later on.
                 */
-                // check WRITE permission
                 Path path = stateMgr.getHierarchyMgr().getPath(itemState.getId());
                 boolean isGranted = true;
                 if (itemState.isNode()) {
-                    // modified node state -> check possible modifications
-                    NodeState nState = (NodeState) itemState;
-                    for (Iterator it = nState.getAddedChildNodeEntries().iterator();
-                         it.hasNext() && isGranted;) {
-                        Name nodeName = ((ChildNodeEntry) it.next()).getName();
-                        isGranted = accessMgr.isGranted(path, nodeName, Permission.ADD_NODE);
-                    }
-                    for (Iterator it = nState.getAddedPropertyNames().iterator();
-                         it.hasNext() && isGranted;) {
-                        Name propName = (Name) it.next();
-                        isGranted = accessMgr.isGranted(path, propName, Permission.SET_PROPERTY);
-                    }
+                    if (itemState.getStatus() == ItemState.STATUS_NEW) {
+                        isGranted = accessMgr.isGranted(path, Permission.ADD_NODE);
+                    } // else: modified node (see comment above)
                 } else {
+                    // modified or new property: set_property permission
                     isGranted = accessMgr.isGranted(path, Permission.SET_PROPERTY);
                 }
 
                 if (!isGranted) {
-                    String msg = itemMgr.safeGetJCRPath(path) + ": not allowed to modify item";
+                    String msg = itemMgr.safeGetJCRPath(path) + ": not allowed to add or modify item";
                     log.debug(msg);
                     throw new AccessDeniedException(msg);
                 }
@@ -410,7 +412,7 @@ public abstract class ItemImpl implements Item {
                 // the transient item is a node
                 NodeState nodeState = (NodeState) itemState;
                 ItemId id = nodeState.getNodeId();
-                NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
+                NodeDefinition nodeDef = (NodeDefinition) def;
                 // primary type
                 NodeTypeImpl pnt = ntMgr.getNodeType(nodeState.getNodeTypeName());
                 // effective node type (primary type incl. mixins)
@@ -423,7 +425,7 @@ public abstract class ItemImpl implements Item {
                 if (nodeState.getStatus() == ItemState.STATUS_NEW
                         || !nodeState.getNodeTypeName().equals(
                             ((NodeState) nodeState.getOverlayedState()).getNodeTypeName())) {
-                    NodeType[] nta = def.getRequiredPrimaryTypes();
+                    NodeType[] nta = nodeDef.getRequiredPrimaryTypes();
                     for (int i = 0; i < nta.length; i++) {
                         NodeTypeImpl ntReq = (NodeTypeImpl) nta[i];
                         if (!(pnt.getQName().equals(ntReq.getQName())
@@ -476,8 +478,7 @@ public abstract class ItemImpl implements Item {
                 // the transient item is a property
                 PropertyState propState = (PropertyState) itemState;
                 ItemId propId = propState.getPropertyId();
-                PropertyDefinitionImpl def =
-                        ntMgr.getPropertyDefinition(propState.getDefinitionId());
+                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) def;
 
                 /**
                  * check value constraints
@@ -486,12 +487,12 @@ public abstract class ItemImpl implements Item {
                  * cannot be set by the user through the api)
                  */
                 if (!def.isProtected()) {
-                    String[] constraints = def.getValueConstraints();
+                    String[] constraints = propDef.getValueConstraints();
                     if (constraints != null) {
                         InternalValue[] values = propState.getValues();
                         try {
                             EffectiveNodeType.checkSetPropertyValueConstraints(
-                                    def.unwrap(), values);
+                                    propDef.unwrap(), values);
                         } catch (RepositoryException e) {
                             // repack exception for providing more verbose error message
                             String msg = itemMgr.safeGetJCRPath(propId) + ": " + e.getMessage();
@@ -505,7 +506,7 @@ public abstract class ItemImpl implements Item {
                          * be checked)
                          */
                         if (constraints.length > 0
-                                && def.getRequiredType() == PropertyType.REFERENCE) {
+                                && propDef.getRequiredType() == PropertyType.REFERENCE) {
                             for (int i = 0; i < values.length; i++) {
                                 boolean satisfied = false;
                                 String constraintViolationMsg = null;
@@ -569,14 +570,22 @@ public abstract class ItemImpl implements Item {
         // walk through list of removed transient items and check REMOVE permission
         while (removedIter.hasNext()) {
             ItemState itemState = (ItemState) removedIter.next();
-            Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());
-            // check REMOVE permission
-            int permission = (itemState.isNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
-            if (!accessMgr.isGranted(path, permission)) {
-                String msg = itemMgr.safeGetJCRPath(path)
-                        + ": not allowed to remove item";
-                log.debug(msg);
-                throw new AccessDeniedException(msg);
+            ItemDefinition def;
+            if (itemState.isNode()) {
+                def = ntMgr.getNodeDefinition(((NodeState) itemState).getDefinitionId());
+            } else {
+                def = ntMgr.getPropertyDefinition(((PropertyState) itemState).getDefinitionId());
+            }
+            if (!def.isProtected()) {
+                Path path = stateMgr.getAtticAwareHierarchyMgr().getPath(itemState.getId());
+                // check REMOVE permission
+                int permission = (itemState.isNode()) ? Permission.REMOVE_NODE : Permission.REMOVE_PROPERTY;
+                if (!accessMgr.isGranted(path, permission)) {
+                    String msg = itemMgr.safeGetJCRPath(path)
+                            + ": not allowed to remove item";
+                    log.debug(msg);
+                    throw new AccessDeniedException(msg);
+                }
             }
         }
     }
@@ -1018,16 +1027,14 @@ public abstract class ItemImpl implements Item {
                     for (Iterator cneIt =
                             nodeState.getRemovedChildNodeEntries().iterator();
                          cneIt.hasNext();) {
-                        ChildNodeEntry cne =
-                                (ChildNodeEntry) cneIt.next();
+                        ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
                     // added child node entries
                     for (Iterator cneIt =
                             nodeState.getAddedChildNodeEntries().iterator();
                          cneIt.hasNext();) {
-                        ChildNodeEntry cne =
-                                (ChildNodeEntry) cneIt.next();
+                        ChildNodeEntry cne = (ChildNodeEntry) cneIt.next();
                         dependentIDs.add(cne.getId());
                     }
 

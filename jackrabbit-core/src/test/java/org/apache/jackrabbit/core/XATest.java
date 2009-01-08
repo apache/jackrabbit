@@ -24,6 +24,8 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
@@ -88,7 +90,7 @@ public class XATest extends AbstractJCRTest {
     }
 
     /**
-     * @see junit.framework#runTest
+     * @see junit.framework.TestCase#runTest
      *
      * Make sure that tested repository supports transactions
      */
@@ -746,38 +748,39 @@ public class XATest extends AbstractJCRTest {
      */
     public void testLockCommit() throws Exception {
         Session other = helper.getSuperuserSession();
+        try {
+            // add node that is both lockable and referenceable, save
+            Node n = testRootNode.addNode(nodeName1);
+            n.addMixin(mixLockable);
+            n.addMixin(mixReferenceable);
+            testRootNode.save();
 
-        // add node that is both lockable and referenceable, save
-        Node n = testRootNode.addNode(nodeName1);
-        n.addMixin(mixLockable);
-        n.addMixin(mixReferenceable);
-        testRootNode.save();
+            // reference node in second session
+            Node nOther = other.getNodeByUUID(n.getUUID());
 
-        // reference node in second session
-        Node nOther = other.getNodeByUUID(n.getUUID());
+            // verify node is not locked in either session
+            assertFalse("Node not locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
 
-        // verify node is not locked in either session
-        assertFalse("Node not locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
+            // get user transaction object, start and lock node
+            UserTransaction utx = new UserTransactionImpl(superuser);
+            utx.begin();
+            n.lock(false, true);
 
-        // get user transaction object, start and lock node
-        UserTransaction utx = new UserTransactionImpl(superuser);
-        utx.begin();
-        n.lock(false, true);
+            // verify node is locked in first session only
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
 
-        // verify node is locked in first session only
-        assertTrue("Node locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
+            // commit in first session
+            utx.commit();
 
-        // commit in first session
-        utx.commit();
-
-        // verify node is locked in both sessions
-        assertTrue("Node locked in session 1", n.isLocked());
-        assertTrue("Node locked in session 2", nOther.isLocked());
-
-        // logout
-        other.logout();
+            // verify node is locked in both sessions
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertTrue("Node locked in session 2", nOther.isLocked());
+        } finally {
+            // logout
+            other.logout();
+        }
     }
 
     /**
@@ -787,38 +790,41 @@ public class XATest extends AbstractJCRTest {
      */
     public void testLockRollback() throws Exception {
         Session other = helper.getSuperuserSession();
+        try {
+            // add node that is both lockable and referenceable, save
+            Node n = testRootNode.addNode(nodeName1);
+            n.addMixin(mixLockable);
+            n.addMixin(mixReferenceable);
+            testRootNode.save();
 
-        // add node that is both lockable and referenceable, save
-        Node n = testRootNode.addNode(nodeName1);
-        n.addMixin(mixLockable);
-        n.addMixin(mixReferenceable);
-        testRootNode.save();
+            // reference node in second session
+            Node nOther = other.getNodeByUUID(n.getUUID());
 
-        // reference node in second session
-        Node nOther = other.getNodeByUUID(n.getUUID());
+            // verify node is not locked in either session
+            assertFalse("Node not locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
 
-        // verify node is not locked in either session
-        assertFalse("Node not locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
+            // get user transaction object, start and lock node
+            UserTransaction utx = new UserTransactionImpl(superuser);
+            utx.begin();
+            n.lock(false, true);
 
-        // get user transaction object, start and lock node
-        UserTransaction utx = new UserTransactionImpl(superuser);
-        utx.begin();
-        n.lock(false, true);
+            // verify node is locked in first session only
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
+            assertFalse("Node not locked in session 2", nOther.hasProperty(jcrLockOwner));
 
-        // verify node is locked in first session only
-        assertTrue("Node locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
+            // rollback in first session
+            utx.rollback();
 
-        // rollback in first session
-        utx.rollback();
-
-        // verify node is not locked in either session
-        assertFalse("Node not locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
-
-        // logout
-        other.logout();
+            // verify node is not locked in either session
+            assertFalse("Node not locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
+            assertFalse("Node not locked in session 2", nOther.hasProperty(jcrlockIsDeep));
+        } finally {
+            // logout
+            other.logout();
+        }
     }
 
     /**
@@ -828,46 +834,50 @@ public class XATest extends AbstractJCRTest {
      */
     public void testLockTwice() throws Exception {
         Session other = helper.getSuperuserSession();
-
-        // add node that is both lockable and referenceable, save
-        Node n = testRootNode.addNode(nodeName1);
-        n.addMixin(mixLockable);
-        n.addMixin(mixReferenceable);
-        testRootNode.save();
-
-        // reference node in second session
-        Node nOther = other.getNodeByUUID(n.getUUID());
-
-        // verify node is not locked in either session
-        assertFalse("Node not locked in session 1", n.isLocked());
-        assertFalse("Node not locked in session 2", nOther.isLocked());
-
-        // get user transaction object, start and lock node
-        UserTransaction utx = new UserTransactionImpl(superuser);
-        utx.begin();
-        n.lock(false, true);
-
-        // lock node in non-transactional session, too
-        nOther.lock(false, true);
-
-        // verify node is locked in both sessions
-        assertTrue("Node locked in session 1", n.isLocked());
-        assertTrue("Node locked in session 2", nOther.isLocked());
-
-        // assertion: commit must fail since node has already been locked
         try {
-            utx.commit();
-            fail("Commit succeeds with double locking");
-        } catch (RollbackException e) {
-            /* expected */
+            // add node that is both lockable and referenceable, save
+            Node n = testRootNode.addNode(nodeName1);
+            n.addMixin(mixLockable);
+            n.addMixin(mixReferenceable);
+            testRootNode.save();
+
+            // reference node in second session
+            Node nOther = other.getNodeByUUID(n.getUUID());
+
+            // verify node is not locked in either session
+            assertFalse("Node not locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
+
+            // get user transaction object, start and lock node
+            UserTransaction utx = new UserTransactionImpl(superuser);
+            utx.begin();
+            n.lock(false, true);
+
+            // lock node in non-transactional session, too
+            nOther.lock(false, true);
+
+            // verify node is locked in both sessions
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertTrue("Node locked in session 2", nOther.isLocked());
+            assertTrue("Node locked in session 2", nOther.hasProperty(jcrLockOwner));
+
+            // assertion: commit must fail since node has already been locked
+            try {
+                utx.commit();
+                fail("Commit succeeds with double locking");
+            } catch (RollbackException e) {
+                /* expected */
+            }
+
+            // verify node is locked in both sessions
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertTrue("Node locked in session 2", nOther.isLocked());
+            assertTrue("Node locked in session 2", nOther.hasProperty(jcrlockIsDeep));
+
+        } finally {
+            // logout
+            other.logout();
         }
-
-        // verify node is locked in both sessions
-        assertTrue("Node locked in session 1", n.isLocked());
-        assertTrue("Node locked in session 2", nOther.isLocked());
-
-        // logout
-        other.logout();
     }
 
     /**
@@ -984,6 +994,126 @@ public class XATest extends AbstractJCRTest {
 
         // verify lock is live again
         assertTrue("Lock live", lock.isLive());
+    }
+
+    /**
+     * Test correct behaviour of lock related properties within transaction.
+     *
+     * @throws Exception
+     */
+    public void testLockProperties() throws Exception {
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // get user transaction object, start and lock node
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+        Lock lock = n.lock(false, true);
+
+        // verify that the lock properties have been created and are neither
+        // NEW nor MODIFIED.
+        assertTrue(n.hasProperty(jcrLockOwner));
+        Property lockOwner = n.getProperty(jcrLockOwner);
+        assertFalse(lockOwner.isNew());
+        assertFalse(lockOwner.isModified());
+
+        assertTrue(n.hasProperty(jcrlockIsDeep));
+        Property lockIsDeep = n.getProperty(jcrlockIsDeep);
+        assertFalse(lockIsDeep.isNew());
+        assertFalse(lockIsDeep.isModified());
+
+        // rollback
+        utx.rollback();
+
+        // verify that the lock properties have been removed again.
+        assertFalse(n.hasProperty(jcrLockOwner));
+        try {
+            lockOwner.getPath();
+            fail("jcr:lockIsDeep property must have been invalidated.");
+        } catch (InvalidItemStateException e) {
+            // success
+        }
+        assertFalse(n.hasProperty(jcrlockIsDeep));
+        try {
+            lockIsDeep.getPath();
+            fail("jcr:lockIsDeep property must have been invalidated.");
+        } catch (InvalidItemStateException e) {
+            // success
+        }
+    }
+
+    /**
+     * Test correct behaviour of lock related properties within transaction.
+     *
+     * @throws Exception
+     */
+    public void testLockProperties2() throws Exception {
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        Lock lock = n.lock(false, true);
+
+        // get user transaction object, start
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // verify that the lock properties are present
+        assertTrue(n.hasProperty(jcrLockOwner));
+        assertTrue(n.hasProperty(jcrlockIsDeep));
+
+        // unlock
+        n.unlock();
+
+        // verify that the lock properties have been removed.
+        assertFalse(n.hasProperty(jcrLockOwner));
+        assertFalse(n.hasProperty(jcrlockIsDeep));
+
+        // rollback
+        utx.rollback();
+
+        // verify lock is live again -> properties must be present
+        assertTrue(n.hasProperty(jcrLockOwner));
+        assertTrue(n.hasProperty(jcrlockIsDeep));
+    }
+
+    /**
+     * Test visibility of lock properties by another session.
+     */
+    public void testLockProperties3() throws Exception {
+        // add node that is both lockable and referenceable, save
+        Node n = testRootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        Lock lock = n.lock(false, true);
+
+        // get user transaction object, start
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // unlock
+        n.unlock();
+
+        Node n2 = (Node) otherSuperuser.getItem(n.getPath());
+        assertTrue(n2.isLocked());
+        assertTrue(n2.hasProperty(jcrLockOwner));
+        assertTrue(n2.hasProperty(jcrlockIsDeep));
+        Lock lock2 = n2.getLock();
+
+        // rollback
+        utx.commit();
+
+        n2.refresh(false);
+        assertFalse(lock2.isLive());
+        assertFalse(n2.isLocked());
+        assertFalse(n2.hasProperty(jcrLockOwner));
+        assertFalse(n2.hasProperty(jcrlockIsDeep));
     }
 
     //-----------------------------------------------------------< versioning >

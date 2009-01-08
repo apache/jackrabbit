@@ -277,8 +277,8 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
             checkValidEntry();
 
             // TODO: review again
-            nodePath = ((Value) getRestriction(jcrNodePathName)).getString();
-            Value glob = ((Value) getRestriction(jcrGlobName));
+            nodePath = getRestriction(jcrNodePathName).getString();
+            Value glob = getRestriction(jcrGlobName);
             if (glob != null) {
                 StringBuffer b = new StringBuffer(nodePath);
                 b.append(glob.getString());
