@@ -143,4 +143,23 @@ public class TextTest extends TestCase {
             assertEquals(strs[1], Text.getName(strs[0], '='));
         }
     }
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1926">JCR-1926</a>
+     */
+    public void testUnescapeWithInvalidInput() {
+        assertInvalidUnescape("%");   // too short
+        assertInvalidUnescape("%%");  // too short
+        assertInvalidUnescape("%%%"); // not a number
+    }
+
+    private void assertInvalidUnescape(String string) {
+        try {
+            Text.unescape(string);
+        } catch (IllegalArgumentException expected) {
+        } catch (RuntimeException unexpected) {
+            fail("Text.unescape(" + string + "): " + unexpected.getMessage());
+        }
+    }
+
 }
