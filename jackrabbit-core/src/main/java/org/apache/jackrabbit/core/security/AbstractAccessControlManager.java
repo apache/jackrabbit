@@ -22,6 +22,7 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      */
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         log.debug("Implementation does not provide applicable policies -> getPolicy() always returns an empty array.");
         return new AccessControlPolicy[0];
@@ -87,7 +88,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         log.debug("Implementation does not provide applicable policies -> returning empty iterator.");
         return AccessControlPolicyIteratorAdapter.EMPTY;
@@ -100,7 +101,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+        checkPermission(absPath, Permission.MODIFY_AC);
 
         throw new AccessControlException("AccessControlPolicy " + policy + " cannot be applied.");
     }
@@ -112,7 +113,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      */
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+        checkPermission(absPath, Permission.MODIFY_AC);
 
         throw new AccessControlException("No AccessControlPolicy has been set through this API -> Cannot be removed.");
     }
@@ -139,14 +140,14 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      * Check if the specified privileges are granted at <code>absPath</code>.
      *
      * @param absPath
-     * @param privileges
+     * @param permission
      * @throws AccessDeniedException if the session does not have the
      * specified privileges.
      * @throws PathNotFoundException if no node exists at <code>absPath</code>
-     * of if the session does not have the privilege to READ it.
+     * of if the session does not have the permission to READ it.
      * @throws RepositoryException
      */
-    protected abstract void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException;
+    protected abstract void checkPermission(String absPath, int permission) throws AccessDeniedException, PathNotFoundException, RepositoryException;
 
     /**
      * @return the privilege registry

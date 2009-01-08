@@ -65,13 +65,21 @@ public class XALockManager implements LockManager, InternalXAResource {
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
+        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
 
+    /**
+     * @see LockManager#lock(NodeImpl, boolean, boolean, long, String)
+     */
+    public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
+            throws LockException, RepositoryException {
         AbstractLockInfo info;
         if (isInXA()) {
-            info = xaEnv.lock(node, isDeep, isSessionScoped);
+            info = xaEnv.lock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
         } else {
-            info = lockMgr.internalLock(node, isDeep, isSessionScoped);
+            info = lockMgr.internalLock(node, isDeep, isSessionScoped, timoutHint, ownerInfo);
         }
+        lockMgr.writeLockProperties(node, info.lockOwner, info.deep);
         return new XALock(this, info, node);
     }
 
@@ -118,10 +126,11 @@ public class XALockManager implements LockManager, InternalXAResource {
      * {@inheritDoc}
      */
     public void unlock(NodeImpl node) throws LockException, RepositoryException {
+        lockMgr.removeLockProperties(node);
         if (isInXA()) {
             xaEnv.unlock(node);
         } else {
-            lockMgr.unlock(node);
+            lockMgr.internalUnlock(node);
         }
     }
 

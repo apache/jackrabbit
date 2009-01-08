@@ -23,7 +23,6 @@ import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -96,24 +95,25 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     }
 
     public void testMultipleEntryEffect2() throws RepositoryException, NotExecutableException {
-        Privilege[] privileges = privilegesFromName(Privilege.JCR_WRITE);
+        Privilege[] privileges = privilegesFromName(PrivilegeRegistry.REP_WRITE);
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         pt.addAccessControlEntry(testPrincipal, privileges);
 
         // add deny entry for mod_props
-        privileges = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
-        assertTrue(pt.addEntry(testPrincipal, privileges, false, null));
+        Privilege[] privileges2 = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        assertTrue(pt.addEntry(testPrincipal, privileges2, false, null));
 
         // net-effect: 2 entries with the allow entry being adjusted
         assertTrue(pt.size() == 2);
         AccessControlEntry[] entries = pt.getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
-            JackrabbitAccessControlEntry entry = (JackrabbitAccessControlEntry) entries[i];
+            ACLTemplate.Entry entry = (ACLTemplate.Entry) entries[i];
             int privs = entry.getPrivilegeBits();
             if (entry.isAllow()) {
-                assertEquals(privs, (PrivilegeRegistry.ADD_CHILD_NODES | PrivilegeRegistry.REMOVE_CHILD_NODES));
+                int bits = PrivilegeRegistry.getBits(privileges) ^ PrivilegeRegistry.getBits(privileges2);
+                assertEquals(privs, bits);
             } else {
-                assertEquals(privs, PrivilegeRegistry.MODIFY_PROPERTIES);
+                assertEquals(privs, PrivilegeRegistry.getBits(privileges2));
             }
         }
     }

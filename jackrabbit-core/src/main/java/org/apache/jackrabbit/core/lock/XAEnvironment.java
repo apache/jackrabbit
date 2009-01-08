@@ -107,6 +107,23 @@ class XAEnvironment {
      */
     public AbstractLockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
+        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
+
+    /**
+     * Lock some node.
+     * @param node node to lock
+     * @param isDeep <code>true</code> to deep lock this node;
+     *               <code>false</code> otherwise
+     * @param isSessionScoped <code>true</code> if lock should be session scoped;
+     *                        <code>false</code> otherwise
+     * @param timeoutHint
+     * @param ownerInfo
+     * @throws LockException if node is already locked
+     * @throws RepositoryException if an error occurs
+     */
+    public AbstractLockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo)
+            throws LockException, RepositoryException {
 
         NodeId id = node.getNodeId();
 
@@ -127,11 +144,12 @@ class XAEnvironment {
         }
 
         // create a new lock info for this node
-        info = new LockInfo(node, new LockToken(id),
-                isSessionScoped, isDeep, node.getSession().getUserID());
+        String lockOwner = (ownerInfo != null) ? ownerInfo : node.getSession().getUserID();
+        info = new LockInfo(node, new LockToken(id), isSessionScoped, isDeep, lockOwner);
         SessionImpl session = (SessionImpl) node.getSession();
         info.setLockHolder(session);
         info.setLive(true);
+
         session.addLockToken(info.lockToken.toString(), false);
         lockedNodesMap.put(id, info);
         operations.add(info);
@@ -374,8 +392,21 @@ class XAEnvironment {
         public LockInfo(NodeImpl node, LockToken lockToken,
                         boolean sessionScoped, boolean deep, String lockOwner) {
 
-            super(lockToken, sessionScoped, deep, lockOwner);
+            this(node, lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+        }
 
+        /**
+         * Create a new instance of this class.
+         * @param lockToken     lock token
+         * @param sessionScoped whether lock token is session scoped
+         * @param deep          whether lock is deep
+         * @param lockOwner     owner of lock
+         */
+        public LockInfo(NodeImpl node, LockToken lockToken,
+                        boolean sessionScoped, boolean deep, String lockOwner,
+                        long timeoutHint) {
+
+            super(lockToken, sessionScoped, deep, lockOwner, timeoutHint);
             this.node = node;
         }
 
@@ -384,7 +415,7 @@ class XAEnvironment {
          * unlock operation on some existing lock information.
          */
         public LockInfo(NodeImpl node, AbstractLockInfo info) {
-            super(info.lockToken, info.sessionScoped, info.deep, info.lockOwner);
+            super(info.lockToken, info.sessionScoped, info.deep, info.lockOwner, info.getSecondsRemaining());
 
             this.node = node;
             this.isUnlock = true;
@@ -406,7 +437,7 @@ class XAEnvironment {
             if (isUnlock) {
                 lockMgr.internalUnlock(node);
             } else {
-                lockMgr.internalLock(node, deep, sessionScoped);
+                lockMgr.internalLock(node, deep, sessionScoped, getSecondsRemaining(), lockOwner);
             }
         }
 
@@ -415,7 +446,7 @@ class XAEnvironment {
          */
         public void undo() throws LockException, RepositoryException {
             if (isUnlock) {
-                lockMgr.internalLock(node, deep, sessionScoped);
+                lockMgr.internalLock(node, deep, sessionScoped, getSecondsRemaining(), lockOwner);
             } else {
                 lockMgr.internalUnlock(node);
             }

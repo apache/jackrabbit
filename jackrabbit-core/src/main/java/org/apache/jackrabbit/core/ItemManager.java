@@ -508,7 +508,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
         if (parentId == null) {
             return (NodeImpl) getItem(id);
         }
-        AbstractNodeData data = (AbstractNodeData) retrieveItem(id, parentId);
+        AbstractNodeData data = retrieveItem(id, parentId);
         if (data == null) {
             data = (AbstractNodeData) getItemData(id);
         }

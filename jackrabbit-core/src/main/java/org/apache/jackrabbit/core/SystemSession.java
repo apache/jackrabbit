@@ -151,6 +151,13 @@ class SystemSession extends SessionImpl {
 
         /**
          * {@inheritDoc}
+         */
+        public void checkPermission(Path absPath, int permissions) throws AccessDeniedException, RepositoryException {
+            // allow everything
+        }
+
+        /**
+         * {@inheritDoc}
          *
          * @return always <code>true</code>
          * @throws ItemNotFoundException is never thrown
@@ -211,9 +218,9 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AbstractAccessControlManager#checkPrivileges(String, int)
+         * @see AbstractAccessControlManager#checkPermission(String,int)
          */
-        protected void checkPrivileges(String absPath, int privileges) throws
+        protected void checkPermission(String absPath, int permission) throws
                 AccessDeniedException, PathNotFoundException, RepositoryException {
             // allow everything
         }
@@ -257,7 +264,7 @@ class SystemSession extends SessionImpl {
         public Privilege[] getPrivileges(String absPath)
                 throws PathNotFoundException, RepositoryException {
             checkValidNodePath(absPath);
-            return getPrivilegeRegistry().getPrivileges(PrivilegeRegistry.ALL);
+            return new Privilege[] {getPrivilegeRegistry().getPrivilege(Privilege.JCR_ALL)};
         }
 
         /**

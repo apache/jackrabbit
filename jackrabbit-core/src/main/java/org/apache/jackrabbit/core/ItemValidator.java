@@ -202,6 +202,86 @@ public class ItemValidator {
     }
 
     /**
+     * Helper method that finds the applicable definition for a child node with
+     * the given name and node type in the parent node's node type and
+     * mixin types.
+     *
+     * @param name
+     * @param nodeTypeName
+     * @param parentState
+     * @return a <code>NodeDef</code>
+     * @throws ConstraintViolationException if no applicable child node definition
+     *                                      could be found
+     * @throws RepositoryException          if another error occurs
+     */
+    public NodeDef findApplicableNodeDefinition(Name name,
+                                                Name nodeTypeName,
+                                                NodeState parentState)
+            throws RepositoryException, ConstraintViolationException {
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
+        return entParent.getApplicableChildNodeDef(name, nodeTypeName, ntReg);
+    }
+
+    /**
+     * Helper method that finds the applicable definition for a property with
+     * the given name, type and multiValued characteristic in the parent node's
+     * node type and mixin types. If there more than one applicable definitions
+     * then the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * </ul>
+     *
+     * @param name
+     * @param type
+     * @param multiValued
+     * @param parentState
+     * @return a <code>PropDef</code>
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException          if another error occurs
+     */
+    public PropDef findApplicablePropertyDefinition(Name name,
+                                                    int type,
+                                                    boolean multiValued,
+                                                    NodeState parentState)
+            throws RepositoryException, ConstraintViolationException {
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
+        return entParent.getApplicablePropertyDef(name, type, multiValued);
+    }
+
+    /**
+     * Helper method that finds the applicable definition for a property with
+     * the given name, type in the parent node's node type and mixin types.
+     * Other than <code>{@link #findApplicablePropertyDefinition(Name, int, boolean, NodeState)}</code>
+     * this method does not take the multiValued flag into account in the
+     * selection algorithm. If there more than one applicable definitions then
+     * the following rules are applied:
+     * <ul>
+     * <li>named definitions are preferred to residual definitions</li>
+     * <li>definitions with specific required type are preferred to definitions
+     * with required type UNDEFINED</li>
+     * <li>single-value definitions are preferred to multiple-value definitions</li>
+     * </ul>
+     *
+     * @param name
+     * @param type
+     * @param parentState
+     * @return a <code>PropDef</code>
+     * @throws ConstraintViolationException if no applicable property definition
+     *                                      could be found
+     * @throws RepositoryException          if another error occurs
+     */
+    public PropDef findApplicablePropertyDefinition(Name name,
+                                                    int type,
+                                                    NodeState parentState)
+            throws RepositoryException, ConstraintViolationException {
+        EffectiveNodeType entParent = getEffectiveNodeType(parentState);
+        return entParent.getApplicablePropertyDef(name, type);
+    }
+
+    /**
      * Failsafe conversion of internal <code>Path</code> to JCR path for use in
      * error messages etc.
      *

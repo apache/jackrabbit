@@ -13,7 +13,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
+import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Session;
 import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
@@ -35,9 +36,9 @@ import java.util.Iterator;
 /**
  * <code>EvaluationTest</code>...
  */
-public class EvaluationTest extends AbstractEvaluationTest {
+public class WriteTest extends AbstractWriteTest {
 
-    private static Logger log = LoggerFactory.getLogger(org.apache.jackrabbit.core.security.authorization.principalbased.EvaluationTest.class);
+    private static Logger log = LoggerFactory.getLogger(WriteTest.class);
 
     private List toClear = new ArrayList();
 
@@ -78,10 +79,10 @@ public class EvaluationTest extends AbstractEvaluationTest {
         throw new NotExecutableException();
     }
 
-    protected Map getRestrictions(String path) throws RepositoryException, NotExecutableException {
-        if (superuser instanceof SessionImpl) {
+    protected Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
+        if (s instanceof SessionImpl) {
             Map restr = new HashMap();
-            restr.put(((SessionImpl) superuser).getJCRName(ACLTemplate.P_NODE_PATH), path);
+            restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), path);
             return restr;
         } else {
             throw new NotExecutableException();

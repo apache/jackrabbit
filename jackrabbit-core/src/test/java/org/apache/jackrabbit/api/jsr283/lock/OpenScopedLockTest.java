@@ -18,8 +18,6 @@ package org.apache.jackrabbit.api.jsr283.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 /** <code>OpenScopedLockTest</code>... */
 public class OpenScopedLockTest extends AbstractLockTest {

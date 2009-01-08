@@ -31,10 +31,10 @@ public interface LockEventListener {
      * @param nodeId node id
      * @param isDeep <code>true</code> if the lock is deep;
      *               <code>false</code> otherwise
-     * @param userId user id
+     * @param lockOwner lock owner
      * @throws RepositoryException if the lock cannot be processed
      */
-    void externalLock(NodeId nodeId, boolean isDeep, String userId) throws RepositoryException;
+    void externalLock(NodeId nodeId, boolean isDeep, String lockOwner) throws RepositoryException;
 
     /**
      * Handle an external unlock operation.

@@ -883,7 +883,7 @@ public class ClusterNode implements Runnable,
         try {
             if (record.isLock()) {
                 listener.externalLock(record.getNodeId(), record.isDeep(),
-                        record.getUserId());
+                        record.getOwner());
             } else {
                 listener.externalUnlock(record.getNodeId());
             }

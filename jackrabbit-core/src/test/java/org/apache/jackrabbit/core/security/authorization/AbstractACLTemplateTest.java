@@ -110,8 +110,8 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                 public boolean isAllow() {
                     return false;
                 }
-                public int getPrivilegeBits() {
-                    return PrivilegeRegistry.READ;
+                public int getPrivilegeBits() throws RepositoryException, NotExecutableException {
+                    return PrivilegeRegistry.getBits(privilegesFromName(Privilege.JCR_READ));
                 }
                 public String[] getRestrictionNames() {
                     return new String[0];
@@ -182,11 +182,13 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
 
     public void testEffect() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
-        pt.addAccessControlEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ));
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] modProp = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
+
+        pt.addAccessControlEntry(testPrincipal, read);
 
         // add deny entry for mod_props
-        assertTrue(pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES),
-                false, null));
+        assertTrue(pt.addEntry(testPrincipal, modProp, false, null));
 
         // test net-effect
         int allows = PrivilegeRegistry.NO_PRIVILEGE;
@@ -195,7 +197,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         for (int i = 0; i < entries.length; i++) {
             AccessControlEntry ace = entries[i];
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
-                int entryBits = ((JackrabbitAccessControlEntry) ace).getPrivilegeBits();
+                int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {
                     allows |= Permission.diff(entryBits, denies);
                 } else {
@@ -203,8 +205,8 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                 }
             }
         }
-        assertEquals(PrivilegeRegistry.READ, allows);
-        assertEquals(PrivilegeRegistry.MODIFY_PROPERTIES, denies);
+        assertEquals(PrivilegeRegistry.getBits(read), allows);
+        assertEquals(PrivilegeRegistry.getBits(modProp), denies);
     }
 
     public void testEffect2() throws RepositoryException, NotExecutableException {
@@ -221,7 +223,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         for (int i = 0; i < entries.length; i++) {
             AccessControlEntry ace = entries[i];
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
-                int entryBits = ((JackrabbitAccessControlEntry) ace).getPrivilegeBits();
+                int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {
                     allows |= Permission.diff(entryBits, denies);
                 } else {
@@ -231,7 +233,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         }
 
         assertEquals(PrivilegeRegistry.NO_PRIVILEGE, allows);
-        assertEquals(PrivilegeRegistry.READ, denies);
+        assertEquals(PrivilegeRegistry.getBits(privilegesFromName(Privilege.JCR_READ)), denies);
     }
 
     public void testRemoveEntry() throws RepositoryException,

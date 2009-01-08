@@ -113,7 +113,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
                     allows |= bits;
                 }
             }
-            assertEquals(PrivilegeRegistry.ALL, allows);
+            assertEquals(PrivilegeRegistry.getBits(priv), allows);
         } else {
             AccessControlEntry[] entries = templ.getAccessControlEntries();
             assertEquals("Grant ALL not successful -> entries must not have changed.", entriesBefore, Arrays.asList(entries));
@@ -122,7 +122,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
 
     public void testAddEntry2() throws NotExecutableException, RepositoryException {
         Principal princ = getValidPrincipal();
-        Privilege[] privs = privilegesFromName(Privilege.JCR_WRITE);
+        Privilege[] privs = privilegesFromName(PrivilegeRegistry.REP_WRITE);
 
         int allows = 0;
         templ.addEntry(princ, privs, true, Collections.EMPTY_MAP);
@@ -136,12 +136,12 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
                 allows |= bits;
             }
         }
-        assertTrue("After successfully granting WRITE, the entries must reflect this", allows >= PrivilegeRegistry.WRITE);
+        assertTrue("After successfully granting WRITE, the entries must reflect this", allows >= PrivilegeRegistry.getBits(privs));
     }
 
     public void testAllowWriteDenyRemove() throws NotExecutableException, RepositoryException {
         Principal princ = getValidPrincipal();
-        Privilege[] grPriv = privilegesFromName(Privilege.JCR_WRITE);
+        Privilege[] grPriv = privilegesFromName(PrivilegeRegistry.REP_WRITE);
         Privilege[] dePriv = privilegesFromName(Privilege.JCR_REMOVE_CHILD_NODES);
 
         templ.addEntry(princ, grPriv, true, Collections.EMPTY_MAP);
@@ -154,7 +154,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             AccessControlEntry en = entries[i];
             if (princ.equals(en.getPrincipal()) && en instanceof JackrabbitAccessControlEntry) {
                 JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) en;
-                int entryBits = ace.getPrivilegeBits();
+                int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
                 if (ace.isAllow()) {
                     allows |= Permission.diff(entryBits, denies);
                 } else {
@@ -163,15 +163,15 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             }
         }
 
-        int expectedAllows = Permission.diff(PrivilegeRegistry.WRITE, PrivilegeRegistry.REMOVE_CHILD_NODES);
-        assertEquals(expectedAllows, allows & expectedAllows);
-        int expectedDenies = PrivilegeRegistry.REMOVE_CHILD_NODES;
+        int expectedAllows = PrivilegeRegistry.getBits(grPriv) ^ PrivilegeRegistry.getBits(dePriv);
+        assertEquals(expectedAllows, allows);
+        int expectedDenies = PrivilegeRegistry.getBits(dePriv);
         assertEquals(expectedDenies, denies);
     }
 
     public void testRemoveEntry() throws NotExecutableException, RepositoryException {
         Principal princ = getValidPrincipal();
-        Privilege[] grPriv = privilegesFromName(Privilege.JCR_WRITE);
+        Privilege[] grPriv = privilegesFromName(PrivilegeRegistry.REP_WRITE);
 
         templ.addEntry(princ, grPriv, true, Collections.EMPTY_MAP);
         AccessControlEntry[] entries = templ.getAccessControlEntries();

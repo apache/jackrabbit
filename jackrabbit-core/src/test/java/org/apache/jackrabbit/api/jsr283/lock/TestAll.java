@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(LockManagerTest.class);
         suite.addTestSuite(OpenScopedLockTest.class);
         suite.addTestSuite(SessionScopedLockTest.class);
+        suite.addTestSuite(DeepLockTest.class);
         */
 
         return suite;

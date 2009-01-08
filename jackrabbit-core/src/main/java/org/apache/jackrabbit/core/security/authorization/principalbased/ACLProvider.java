@@ -360,7 +360,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                     acPaths.add(editor.getPathToAcNode(princ));
                 } else {
                     // retrieve the ACEs from the node
-                    AccessControlEntry[] aces = (AccessControlEntry[]) acl.getAccessControlEntries();
+                    AccessControlEntry[] aces = acl.getAccessControlEntries();
                     allACEs.addAll(Arrays.asList(aces));
                     acPaths.add(acl.getPath());
                 }
@@ -426,11 +426,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 if (matches) {
                     if (entr.isAllow()) {
                         allowPrivileges |= Permission.diff(privs, denyPrivileges);
-                        int permissions = Permission.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
+                        int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
                         allows |= Permission.diff(permissions, denies);
                     } else {
                         denyPrivileges |= Permission.diff(privs, allowPrivileges);
-                        int permissions = Permission.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
+                        int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
                         denies |= Permission.diff(permissions, allows);
                     }
                 }

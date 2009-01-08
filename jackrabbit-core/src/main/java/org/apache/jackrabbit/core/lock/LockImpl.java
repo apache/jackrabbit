@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.core.lock;
 
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 
 /**
@@ -54,8 +57,6 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockOwner() {
-        // TODO:  TOBEFIXED for 2.0
-        // TODO   - respect ownerInfo supplied by the client -> see LockManager#lock
         return info.lockOwner;
     }
 
@@ -118,6 +119,11 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
         if (getLockToken() == null) {
             throw new LockException("Session does not hold lock.");
         }
+        // make sure the current session has sufficient privileges to refresh
+        // the lock.
+        SessionImpl s = (SessionImpl) node.getSession();
+        s.getAccessManager().checkPermission(((NodeImpl) node).getPrimaryPath(), Permission.LOCK_MNGMT);
+
         // TODO: TOBEFIXED for 2.0
         // TODO  - add refresh if timeout is supported -> see #getSecondsRemaining
         // since a lock has no expiration date no other action is required
@@ -126,15 +132,10 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
     //--------------------------------------------------< new JSR 283 methods >
 
     /**
-     * Always returns {@link Long#MAX_VALUE}.
-     *
-     * @return Always returns {@link Long#MAX_VALUE}.
      * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
      */
     public long getSecondsRemaining() {
-        // TODO: TOBEFIXED for 2.0
-        // TODO  - add support for timeout specified by the API user -> LockManager#lock
-        return Long.MAX_VALUE;
+        return info.getSecondsRemaining();
     }
 
     /**

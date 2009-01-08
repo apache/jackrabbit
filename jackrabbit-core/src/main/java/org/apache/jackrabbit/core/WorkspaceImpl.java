@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.SessionLockManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
@@ -117,6 +118,8 @@ public class WorkspaceImpl extends AbstractWorkspace
      * The <code>LockManager</code> for this <code>Workspace</code>
      */
     protected LockManager lockMgr;
+
+    private org.apache.jackrabbit.api.jsr283.lock.LockManager jcr283LockManager;
 
     /**
      * Protected constructor.
@@ -262,6 +265,21 @@ public class WorkspaceImpl extends AbstractWorkspace
         rep.getWorkspaceInfo(name);
         // todo implement deleteWorkspace
         throw new UnsupportedRepositoryOperationException("not yet implemented");
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager
+     */
+    // TODO: rename to 'getLockManager'.
+    // TODO  in order not to break compatilibiy with the 1.x releases
+    // TODO  the 283 method has been tmp. renamed since it conflicts with an
+    // TODO  existing public method, exposing the internal lock manager.
+    public org.apache.jackrabbit.api.jsr283.lock.LockManager get283LockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (jcr283LockManager == null) {
+            jcr283LockManager = new SessionLockManager(session, session.getLockManager());
+        }
+        return jcr283LockManager;
     }
 
     //-------------------------------< JackrabbitWorkspace/new JSR 283 method >
@@ -847,6 +865,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throw new InvalidItemStateException(msg);
         }
 
+        boolean success = false;
         try {
             // now restore all versions that have a node in the ws
             int numRestored = 0;
@@ -878,17 +897,19 @@ public class WorkspaceImpl extends AbstractWorkspace
                     }
                 }
             }
-        } catch (RepositoryException e) {
-            // revert session
-            try {
-                log.error("reverting changes applied during restore...");
-                session.refresh(false);
-            } catch (RepositoryException e1) {
-                // ignore this
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
+                // revert session
+                try {
+                    log.debug("reverting changes applied during restore...");
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes applied during restore.", e);
+                }
             }
-            throw e;
         }
-        session.save();
     }
 
     /**

@@ -107,6 +107,31 @@ public interface Privilege {
     public static final String JCR_MODIFY_ACCESS_CONTROL = "{http://www.jcp.org/jcr/1.0}modifyAccessControl";
 
     /**
+     * A constant representing <code>jcr:retentionManagement</code>.
+     */
+    public static final String JCR_RETENTION_MANAGEMENT = "{http://www.jcp.org/jcr/1.0}retentionManagement";
+
+    /**
+     * A constant representing <code>jcr:lifecycleManagement</code>.
+     */
+    public static final String JCR_LIFECYCLE_MANAGEMENT = "{http://www.jcp.org/jcr/1.0}lifecycleManagement";
+
+    /**
+     * A constant representing <code>jcr:versionManagement</code>.
+     */
+    public static final String JCR_VERSION_MANAGEMENT = "{http://www.jcp.org/jcr/1.0}versionManagement";
+
+    /**
+     * A constant representing <code>jcr:lockManagement</code>.
+     */
+    public static final String JCR_LOCK_MANAGEMENT = "{http://www.jcp.org/jcr/1.0}lockManagement";
+
+    /**
+     * A constant representing <code>jcr:nodeTypeManagement</code>.
+     */
+    public static final String JCR_NODE_TYPE_MANAGEMENT = "{http://www.jcp.org/jcr/1.0}nodeTypeManagement";
+
+    /**
      * A constant representing <code>jcr:all</code> (in extended form), an aggregate privilege that contains
      * all predefined privileges:
      * <ul>

@@ -33,71 +33,21 @@ public final class Permission {
 
     public static final int REMOVE_PROPERTY = 16;
 
-    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE | REMOVE_PROPERTY);
+    public static final int READ_AC = 32;
+    
+    public static final int MODIFY_AC = 64;
 
-    /**
-     * Build the permissions granted by evaluating the given privileges. If
-     * <code>protectesPolicy</code> is <code>true</code> read and write
-     * permission are only granted if the corresponding ac-privilege is
-     * present.
-     *
-     * @param privs The privileges granted on the Node itself (for properties
-     * the ACL of the direct ancestor).
-     * @param parentPrivs The privileges granted on the parent of the Node. Not
-     * relevant for properties since it only is used to determine permissions
-     * on a Node (add_child_nodes, remove_child_nodes).
-     * @param isAllow
-     * @param protectsPolicy
-     * @return the permissions granted evaluating the given privileges.
-     */
-    public static int calculatePermissions(int privs, int parentPrivs,
-                                           boolean isAllow, boolean protectsPolicy) {
-        int perm = Permission.NONE;
-        if (protectsPolicy) {
-            if ((parentPrivs & PrivilegeRegistry.READ_AC) == PrivilegeRegistry.READ_AC) {
-                perm |= Permission.READ;
-            }
-            if ((parentPrivs & PrivilegeRegistry.MODIFY_AC) == PrivilegeRegistry.MODIFY_AC) {
-                perm |= Permission.ADD_NODE;
-                perm |= Permission.SET_PROPERTY;
-                perm |= Permission.REMOVE_NODE;
-                perm |= Permission.REMOVE_PROPERTY;
-            }
-        } else {
-            if ((privs & PrivilegeRegistry.READ) == PrivilegeRegistry.READ) {
-                perm |= Permission.READ;
-            }
-            if ((privs & PrivilegeRegistry.MODIFY_PROPERTIES) == PrivilegeRegistry.MODIFY_PROPERTIES) {
-                perm |= Permission.SET_PROPERTY;
-                perm |= Permission.REMOVE_PROPERTY;
-            }
-            // add_node permission is granted through privilege on the parent.
-            if ((parentPrivs & PrivilegeRegistry.ADD_CHILD_NODES) == PrivilegeRegistry.ADD_CHILD_NODES) {
-                perm |= Permission.ADD_NODE;
-            }
-            /*
-             remove_node is
-             allowed: only if remove_child_nodes privilege is present on
-                      the parent AND remove_node is present on the node itself
-             denied : if either remove_child_nodes is denied on the parent
-                      OR remove_node is denied on the node itself.
-            */
-            if (isAllow) {
-                if ((parentPrivs & PrivilegeRegistry.REMOVE_CHILD_NODES) ==
-                        PrivilegeRegistry.REMOVE_CHILD_NODES &&
-                        (privs & PrivilegeRegistry.REMOVE_NODE) == PrivilegeRegistry.REMOVE_NODE) {
-                    perm |= Permission.REMOVE_NODE;
-                }
-            } else {
-                if ((parentPrivs & PrivilegeRegistry.REMOVE_CHILD_NODES) ==
-                        PrivilegeRegistry.REMOVE_CHILD_NODES ||
-                        (privs & PrivilegeRegistry.REMOVE_NODE) == PrivilegeRegistry.REMOVE_NODE) {
-                    perm |= Permission.REMOVE_NODE;
-                }
-            }
-        }
-        return perm;
-    }
+    public static final int NODE_TYPE_MNGMT = 128;
+
+    public static final int VERSION_MNGMT = 256;
+
+    public static final int LOCK_MNGMT = 512;
+
+    public static final int LIFECYCLE_MNGMT = 1024;
+
+    public static final int RETENTION_MNGMT = 2048;
+
+    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT);
 
     /**
      * Returns those bits from <code>permissions</code> that are not present in

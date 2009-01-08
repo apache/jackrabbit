@@ -45,6 +45,24 @@ public interface LockManager {
             throws LockException, RepositoryException;
 
     /**
+     * Lock a node. Checks whether the node is not locked and then
+     * returns a lock object for this node.
+     *
+     * @param node
+     * @param isDeep whether the lock applies to this node only
+     * @param isSessionScoped whether the lock is session scoped
+     * @param timoutHint
+     * @param ownerInfo
+     * @return
+     * @throws LockException if this node already is locked, or some descendant
+     *         node is locked and <code>isDeep</code> is <code>true</code>
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @throws RepositoryException
+     */
+    Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
+            throws LockException, RepositoryException;
+
+    /**
      * Returns the Lock object that applies to a node. This may be either a lock
      * on this node itself or a deep lock on a node above this node.
      * @param node node

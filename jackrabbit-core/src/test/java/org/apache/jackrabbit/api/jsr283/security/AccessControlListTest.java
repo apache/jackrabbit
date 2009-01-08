@@ -16,24 +16,24 @@
  */
 package org.apache.jackrabbit.api.jsr283.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>AccessControlEntryTest</code>...
@@ -88,7 +88,6 @@ public class AccessControlListTest extends AbstractAccessControlTest {
 
     protected void tearDown() throws Exception {
         try {
-            // TODO: review if correct.
             // restore original entries (remove others).
             AccessControlList list = getList(acMgr, path);
             AccessControlEntry[] entries = list.getAccessControlEntries();
@@ -98,10 +97,15 @@ public class AccessControlListTest extends AbstractAccessControlTest {
                     list.removeAccessControlEntry(ace);
                 }
             }
-            list.addAccessControlEntry(testPrincipal, (Privilege[]) privilegesToRestore.toArray(new Privilege[privilegesToRestore.size()]));
-            superuser.save();
+            if (!privilegesToRestore.isEmpty()) {
+                list.addAccessControlEntry(testPrincipal, (Privilege[]) privilegesToRestore.toArray(new Privilege[privilegesToRestore.size()]));
+            }
+            if (list.getAccessControlEntries().length > 0 && acMgr.getPolicies(path).length > 0) {
+                acMgr.setPolicy(path, list);
+                superuser.save();                
+            }
         } catch (Exception e) {
-            AccessControlListTest.log.error("Unexpected error while removing test entries.", e);
+            log.warn("Unexpected error while removing test entries.", e);
         }
         super.tearDown();
     }
@@ -212,6 +216,30 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         for (int i = 0; i < privs.length; i++) {
             boolean modified = acl.addAccessControlEntry(testPrincipal, new Privilege[] {privs[i]});
             assertFalse("Adding the aggregated privs individually later on must not modify the policy", modified);
+        }
+    }
+
+    public void testAddAbstractPrivilege() throws NotExecutableException, RepositoryException {
+        checkCanModifyAc(path);
+
+        Privilege abstractPriv = null;
+        Privilege[] allPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
+        for (int i = 0; i < allPrivs.length; i++) {
+            if (allPrivs[i].isAbstract()) {
+                abstractPriv = allPrivs[i];
+                break;
+            }
+        }
+        if (abstractPriv == null) {
+            throw new NotExecutableException("No abstract privilege found.");
+        }
+
+        AccessControlList acl = getList(acMgr, path);
+        try {
+            acl.addAccessControlEntry(testPrincipal, new Privilege[] {abstractPriv});
+            fail("Adding an ACE with an abstract privilege must fail.");
+        } catch (AccessControlException e) {
+            // success
         }
     }
 

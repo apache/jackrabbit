@@ -305,7 +305,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             return true;
         } catch (RepositoryException e) {
             // revert all pending changes and rethrow.
-            log.error("Error while editing group membership:", e.getMessage());
+            log.warn("Error while editing group membership:", e.getMessage());
             getSession().refresh(false);
             throw e;
         }

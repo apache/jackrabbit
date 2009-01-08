@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
-import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -45,6 +44,8 @@ import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -55,6 +56,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.api.jsr283.lock.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -765,6 +767,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         if (nodeType == null) {
             // use default node type
             nodeType = (NodeTypeImpl) def.getDefaultPrimaryType();
+        } else {
+            // adding a node with explicit specifying the node type name
+            // requires the editing session to have nt_management privilege.
+            session.getAccessManager().checkPermission(nodePath, Permission.NODE_TYPE_MNGMT);
         }
 
         // check for name collisions
@@ -1013,6 +1019,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock status
         checkLock();
+        // check permissions
+        Path p = getPrimaryPath();
+        AccessManager acMgr = session.getAccessManager();
+        acMgr.checkPermission(p, Permission.NODE_TYPE_MNGMT);
+        // special handling of mix:versionable. since adding the mixin alters
+        // the version storage jcr:versionManagement privilege is required
+        // in addition.
+        if (NameConstants.MIX_VERSIONABLE.equals(mixinName)) {
+            acMgr.checkPermission(p, Permission.VERSION_MNGMT);
+        }
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
@@ -1127,6 +1143,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock status
         checkLock();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.NODE_TYPE_MNGMT);
 
         // check if mixin is assigned
         final NodeState state = data.getNodeState();
@@ -1195,37 +1213,47 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             return;
         }
 
-        // walk through properties and child nodes and remove those that have been
-        // defined by the specified mixin type
-
-        // use temp set to avoid ConcurrentModificationException
-        HashSet set = new HashSet(thisState.getPropertyNames());
-        for (Iterator iter = set.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
-            PropertyImpl prop = (PropertyImpl) itemMgr.getItem(
-                    new PropertyId(thisState.getNodeId(), propName));
-            // check if property has been defined by mixin type (or one of its supertypes)
-            NodeTypeImpl declaringNT = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
-            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                // the remaining effective node type doesn't include the
-                // node type that declared this property, it is thus safe
-                // to remove it
-                removeChildProperty(propName);
+        // walk through properties and child nodes and remove those that have
+        // been defined by the specified mixin type
+        boolean success = false;
+        try {
+            // use temp set to avoid ConcurrentModificationException
+            HashSet set = new HashSet(thisState.getPropertyNames());
+            for (Iterator iter = set.iterator(); iter.hasNext();) {
+                Name propName = (Name) iter.next();
+                PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(thisState.getNodeId(), propName));
+                // check if property has been defined by mixin type (or one of its supertypes)
+                PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
+                NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
+                if (!entRemaining.includesNodeType(declaringNT.getQName())) {
+                    // the remaining effective node type doesn't include the
+                    // node type that declared this property, it is thus safe
+                    // to remove it
+                    removeChildProperty(propName);
+                }
             }
-        }
-        // use temp array to avoid ConcurrentModificationException
-        ArrayList list = new ArrayList(thisState.getChildNodeEntries());
-        // start from tail to avoid problems with same-name siblings
-        for (int i = list.size() - 1; i >= 0; i--) {
-            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
-            NodeImpl node = (NodeImpl) itemMgr.getItem(entry.getId());
-            // check if node has been defined by mixin type (or one of its supertypes)
-            NodeTypeImpl declaringNT = (NodeTypeImpl) node.getDefinition().getDeclaringNodeType();
-            if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                // the remaining effective node type doesn't include the
-                // node type that declared this child node, it is thus safe
-                // to remove it
-                removeChildNode(entry.getName(), entry.getIndex());
+            // use temp array to avoid ConcurrentModificationException
+            ArrayList list = new ArrayList(thisState.getChildNodeEntries());
+            // start from tail to avoid problems with same-name siblings
+            for (int i = list.size() - 1; i >= 0; i--) {
+                ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
+                NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
+                NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
+                // check if node has been defined by mixin type (or one of its supertypes)
+                NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
+                if (!entRemaining.includesNodeType(declaringNT.getQName())) {
+                    // the remaining effective node type doesn't include the
+                    // node type that declared this child node, it is thus safe
+                    // to remove it
+                    removeChildNode(entry.getName(), entry.getIndex());
+                }
+            }
+            success = true;
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Failed to clean up child items defined by removed mixin " + session.getJCRName(mixinName));
+        } finally {
+            if (!success) {
+                // TODO revert changes made to the jcr:mixinTypes property
             }
         }
     }
@@ -2119,6 +2147,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         if (nt.isMixin()) {
             throw new RepositoryException(nodeTypeName + ": not a primary node type");
         }
+
         return internalAddNode(relPath, nt);
     }
 
@@ -2842,6 +2871,21 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     "invalid mixin type name: " + mixinName, e);
         }
 
+        // check permissions
+        Path p = getPrimaryPath();
+        AccessManager acMgr = session.getAccessManager();
+        if (!acMgr.isGranted(p, Permission.NODE_TYPE_MNGMT)) {
+            return false;
+        }
+        // special handling of mix:versionable. since adding the mixin alters
+        // the version storage jcr:versionManagement privilege is required
+        // in addition.
+        if (NameConstants.MIX_VERSIONABLE.equals(ntName)) {
+            if (!acMgr.isGranted(p, Permission.VERSION_MNGMT)) {
+                return false;
+            }
+        }
+
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(ntName);
         if (!mixin.isMixin()) {
@@ -3299,12 +3343,28 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock status
         checkLock();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
         Version v = session.getVersionManager().checkin(this);
-        internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
-        internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
-        internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
-        save();
+        boolean success = false;
+        try {
+            internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
+            internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+            internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+            save();
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    // TODO: need to revert changes made within the version manager as well.
+                    refresh(false);
+                } catch (RepositoryException e) {
+                    // cleanup failed
+                    log.error("Error while cleaning up after failed Node.checkin", e);
+                }
+            }
+        }
         return v;
     }
 
@@ -3329,25 +3389,37 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock status
         checkLock();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
-        boolean hasPendingChanges = session.hasPendingChanges();
-
+        boolean hasPendingChanges = hasPendingChanges();
         Property[] props = new Property[2];
-        props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-        props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
-                new InternalValue[]{
-                        InternalValue.create(new UUID(getBaseVersion().getUUID()))
-                });
-        if (hasPendingChanges) {
-            for (int i = 0; i < props.length; i++) {
-                props[i].save();
+        boolean success = false;
+        try {
+            props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
+            props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+                    new InternalValue[]{
+                            InternalValue.create(new UUID(getBaseVersion().getUUID()))
+                    });
+            if (hasPendingChanges) {
+                for (int i = 0; i < props.length; i++) {
+                    props[i].save();
+                }
+            } else {
+                save();
             }
-        } else {
-            try {
-                session.save();
-            } catch (RepositoryException e) {
-                session.refresh(false);
-                throw e;
+            success = true;
+        } finally {
+            if (!success) {
+                for (int i = 0; i < props.length; i++) {
+                    if (props[i] != null) {
+                        try {
+                            props[i].refresh(false);
+                        } catch (RepositoryException e) {
+                            log.error("Error while cleaning up after failed Node.checkout", e);
+                        }
+                    }
+                }
             }
         }
     }
@@ -3748,7 +3820,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     }
 
     /**
-     * {@inheritDoc}
+     * Perform {@link Node#cancelMerge(Version)} or {@link Node#doneMerge(Version)}
+     * depending on the value of <code>cancel</code>.
      */
     private void internalFinishMerge(Version version, boolean cancel)
             throws VersionException, InvalidItemStateException,
@@ -3769,6 +3842,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock
         checkLock();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
         // check if checked out
         if (!internalIsCheckedOut()) {
@@ -3787,22 +3862,33 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new VersionException(msg);
         }
 
-        // remove version from mergeFailed list
-        internalSetMergeFailed(failed);
+        boolean success = false;
+        try {
+            // remove version from mergeFailed list
+            internalSetMergeFailed(failed);
 
-        if (!cancel) {
-            // add version to jcr:predecessors list
-            Value[] vals = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-            InternalValue[] v = new InternalValue[vals.length + 1];
-            for (int i = 0; i < vals.length; i++) {
-                v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
+            if (!cancel) {
+                // add version to jcr:predecessors list
+                Value[] vals = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
+                InternalValue[] v = new InternalValue[vals.length + 1];
+                for (int i = 0; i < vals.length; i++) {
+                    v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
+                }
+                v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
+                internalSetProperty(NameConstants.JCR_PREDECESSORS, v);
             }
-            v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
-            internalSetProperty(NameConstants.JCR_PREDECESSORS, v);
-        }
 
-        // save
-        save();
+            save();
+            success = true;
+        } finally {
+            if (!success) {
+                try {
+                    refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes upon failed Node.doneMerge or Node.cancelMerge, respectively.", e);
+                }
+            }
+        }
     }
 
     /**
@@ -3973,7 +4059,19 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     }
 
     /**
-     * {@inheritDoc}
+     * Executes the Node#update or Node#merge call.
+     *
+     * @param srcWorkspaceName Name of the source workspace as passed to
+     * {@link Node#merge(String, boolean)} or {@link Node#update(String)}.
+     * @param failedIds List to place the failed ids or <code>null</code> if
+     * {@link Node#update(String)} should be executed.
+     * @param bestEffort Flag passed to {@link Node#merge(String, boolean)} or
+     * false if {@link Node#update(String)} should be executed.
+     * @throws NoSuchWorkspaceException
+     * @throws AccessDeniedException
+     * @throws LockException
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
      */
     private void internalMerge(String srcWorkspaceName,
                                List failedIds, boolean bestEffort)
@@ -3987,6 +4085,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // do checks
         sanityCheck();
         checkSessionHasPending();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
         // if same workspace, ignore
         if (srcWorkspaceName.equals(session.getWorkspace().getName())) {
@@ -3994,22 +4094,22 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
 
         SessionImpl srcSession = null;
+        boolean success = false;
         try {
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
             srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
-            try {
-                internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
-            } catch (RepositoryException e) {
+            internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
                 try {
                     session.refresh(false);
-                } catch (RepositoryException e1) {
-                    // ignore
+                } catch (RepositoryException e) {
+                    log.error("Error while cleaning up after failed merge/update", e);
                 }
-                throw e;
             }
-            session.save();
-        } finally {
             if (srcSession != null) {
                 // we don't need the other session anymore, logout
                 srcSession.logout();
@@ -4156,19 +4256,22 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
             throws UnsupportedRepositoryOperationException, RepositoryException {
 
+        boolean success = false;
         try {
             internalRestore((VersionImpl) version, vsel, removeExisting);
-        } catch (RepositoryException e) {
-            // revert session
-            try {
-                log.error("reverting changes applied during restore...");
-                session.refresh(false);
-            } catch (RepositoryException e1) {
-                // ignore this
+            session.save();
+            success = true;
+        } finally {
+            if (!success) {
+                // revert session
+                try {
+                    log.debug("reverting changes applied during restore...");
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes applied during restore.", e);
+                }
             }
-            throw e;
         }
-        session.save();
     }
 
     /**
@@ -4188,6 +4291,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         if (version.isRootVersion()) {
             throw new VersionException("Restore of root version not allowed.");
         }
+
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
         // set jcr:isCheckedOut property to true, in order to avoid any conflicts
         internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
@@ -4451,45 +4557,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg = "Unable to lock node. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        checkLockable();
-
-        LockManager lockMgr = session.getLockManager();
-        synchronized (lockMgr) {
-            Lock lock = lockMgr.lock(this, isDeep, isSessionScoped);
-
-            boolean succeeded = false;
-
-            try {
-                // add properties to content
-                internalSetProperty(NameConstants.JCR_LOCKOWNER,
-                        InternalValue.create(getSession().getUserID()));
-                internalSetProperty(NameConstants.JCR_LOCKISDEEP,
-                        InternalValue.create(isDeep));
-                save();
-                succeeded = true;
-            } finally {
-                if (!succeeded) {
-                    // failed to set lock meta-data content, cleanup
-                    try {
-                        lockMgr.unlock(this);
-                        refresh(false);
-                    } catch (RepositoryException re) {
-                        // cleanup failed
-                        log.error("error while cleaning up after failed lock attempt", re);
-                    }
-                }
-            }
-
-            return lock;
-        }
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
     /**
@@ -4500,11 +4569,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        if (isNew()) {
-            throw new LockException("New node can not be locked: " + this);
-        }
-        return session.getLockManager().getLock(this);
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        return lockMgr.getLock(getPath());
     }
 
     /**
@@ -4516,28 +4582,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg = "Unable to unlock node. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        checkLockable();
-
-        LockManager lockMgr = session.getLockManager();
-        synchronized (lockMgr) {
-            if (lockMgr.isLockHolder(session, this)) {
-                // save first, and unlock later. this guards concurrent access
-
-                // remove properties in content
-                internalSetProperty(NameConstants.JCR_LOCKOWNER, (InternalValue) null);
-                internalSetProperty(NameConstants.JCR_LOCKISDEEP, (InternalValue) null);
-                save();
-            }
-            lockMgr.unlock(this);
-        }
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        lockMgr.unlock(getPath());
     }
 
     /**
@@ -4546,12 +4592,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        if (!isNodeType(NameConstants.MIX_LOCKABLE) || isNew()) {
-            // a node that is new or not lockable never holds a lock
-            return false;
-        }
-        return session.getLockManager().holdsLock(this);
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        return lockMgr.holdsLock(getPath());
     }
 
     /**
@@ -4560,27 +4602,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        if (isNew()) {
-            return false;
-        }
-        return session.getLockManager().isLocked(this);
-    }
-
-    /**
-     * Checks if this node is lockable, i.e. has 'mix:lockable'.
-     *
-     * @throws LockException       if this node is not lockable
-     * @throws RepositoryException if another error occurs
-     */
-    private void checkLockable() throws LockException, RepositoryException {
-        if (!isNodeType(NameConstants.MIX_LOCKABLE)) {
-            String msg =
-                "Unable to perform a locking operation on"
-                + " a non-lockable node: " + this;
-            log.debug(msg);
-            throw new LockException(msg);
-        }
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        return lockMgr.isLocked(getPath());
     }
 
     /**
@@ -4682,6 +4705,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // check lock status
         checkLock();
+        // check permission
+        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.NODE_TYPE_MNGMT);
 
         Name ntName;
         try {
@@ -4703,13 +4728,13 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // build effective node type of new primary type & existing mixin's
         // in order to detect conflicts
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
-        EffectiveNodeType entNew, entOld;
+        EffectiveNodeType entNew, entOld, entAll;
         try {
             entNew = ntReg.getEffectiveNodeType(ntName);
             entOld = ntReg.getEffectiveNodeType(state.getNodeTypeName());
 
             // try to build new effective node type (will throw in case of conflicts)
-            ntReg.getEffectiveNodeType(ntName, state.getMixinTypeNames());
+            entAll = ntReg.getEffectiveNodeType(ntName, state.getMixinTypeNames());
         } catch (NodeTypeConflictException ntce) {
             throw new ConstraintViolationException(ntce.getMessage());
         }
@@ -4731,6 +4756,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
         Set newDefs = new HashSet(Arrays.asList(entNew.getAllItemDefs()));
+        Set allDefs = new HashSet(Arrays.asList(entAll.getAllItemDefs()));
 
         // added child item definitions
         Set addedDefs = new HashSet(newDefs);
@@ -4770,14 +4796,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(
                                 new PropertyId(thisState.getNodeId(), propName));
-                if (!newDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
+                if (!allDefs.contains(ntReg.getPropDef(propState.getDefinitionId()))) {
                     // try to find new applicable definition first and
                     // redefine property if possible
-
-                    PropertyDefinitionImpl pdi = null;
                     try {
                         PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
-                        pdi = getApplicablePropertyDefinition(
+                        PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
                                 propName, propState.getType(),
                                 propState.isMultiValued(), false);
                         if (pdi.getRequiredType() != PropertyType.UNDEFINED
@@ -4813,8 +4837,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         // update collection of added definitions
                         addedDefs.remove(pdi.unwrap());
                     } catch (ValueFormatException vfe) {
-                        // value conversion failed,
-                        // remove it
+                        // value conversion failed, remove it
                         removeChildProperty(propName);
                     } catch (ConstraintViolationException cve) {
                         // no suitable definition found for this property,
@@ -4835,19 +4858,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         for (int i = list.size() - 1; i >= 0; i--) {
             ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
             try {
-                NodeState nodeState =
-                        (NodeState) stateMgr.getItemState(entry.getId());
-                if (!newDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
+                NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
+                if (!allDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
                     // try to find new applicable definition first and
                     // redefine node if possible
-
-                    NodeDefinitionImpl ndi = null;
                     try {
-                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
-                        ndi = getApplicableChildNodeDefinition(
+                        NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
-                        // redefine property
+                        // redefine node
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
                         node.onRedefine(ndi.unwrap().getId());
                         // update collection of added definitions
                         addedDefs.remove(ndi.unwrap());
@@ -4864,7 +4884,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             }
         }
 
-        // create new 'auto-create' items
+        // create items that are defined as auto-created by the new primary node
+        // type and at the same time were not present with the old nt
         for (Iterator iter = addedDefs.iterator(); iter.hasNext();) {
             ItemDef def = (ItemDef) iter.next();
             if (def.isAutoCreated()) {

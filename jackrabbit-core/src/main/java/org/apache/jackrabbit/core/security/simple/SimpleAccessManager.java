@@ -131,6 +131,15 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * {@inheritDoc}
      */
+    public void checkPermission(Path absPath, int permissions) throws AccessDeniedException, RepositoryException {
+        if (!isGranted(absPath, permissions)) {
+            throw new AccessDeniedException("Access denied");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         checkInitialized();
         if (system) {
@@ -200,12 +209,11 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
             // null or empty privilege array -> return true
             return true;
         } else {
-            int bits = privilegeRegistry.getBits(privileges);
             if (system) {
                 // system has always all permissions
                 return true;
             } else if (anonymous) {
-                if (bits != PrivilegeRegistry.READ) {
+                if (privileges.length != 1 || !privileges[0].equals(privilegeRegistry.getPrivilege(Privilege.JCR_READ))) {
                     // anonymous is only granted READ premissions
                     return false;
                 }
@@ -223,14 +231,16 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         checkInitialized();
         checkValidNodePath(absPath);
 
+        Privilege priv;
         if (anonymous) {
-            return privilegeRegistry.getPrivileges(PrivilegeRegistry.READ);
+            priv = privilegeRegistry.getPrivilege(Privilege.JCR_READ);
         } else if (system) {
-            return privilegeRegistry.getPrivileges(PrivilegeRegistry.ALL);
+            priv = privilegeRegistry.getPrivilege(Privilege.JCR_ALL);
         } else {
             // @todo check permission based on principals
-            return privilegeRegistry.getPrivileges(PrivilegeRegistry.ALL);
+            priv = privilegeRegistry.getPrivilege(Privilege.JCR_ALL);
         }
+        return new Privilege[] {priv};
     }
 
     /**
@@ -238,7 +248,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      */
     public AccessControlPolicy[] getEffectivePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         return new AccessControlPolicy[] {POLICY};
     }
@@ -254,11 +264,11 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     }
 
     /**
-     * @see AbstractAccessControlManager#checkPrivileges(String, int)
+     * @see AbstractAccessControlManager#checkPermission(String,int)
      */
-    protected void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, PathNotFoundException, RepositoryException {
+    protected void checkPermission(String absPath, int permission) throws AccessDeniedException, PathNotFoundException, RepositoryException {
         checkValidNodePath(absPath);
-        if (anonymous && privileges != PrivilegeRegistry.READ) {
+        if (anonymous && permission != Permission.READ) {
             throw new AccessDeniedException("Anonymous may only READ.");
         }
     }

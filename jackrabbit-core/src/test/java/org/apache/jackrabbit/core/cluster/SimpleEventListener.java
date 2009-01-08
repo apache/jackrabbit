@@ -50,10 +50,10 @@ public class SimpleEventListener implements LockEventListener,
     /**
      * {@inheritDoc}
      */
-    public void externalLock(NodeId nodeId, boolean isDeep, String userId)
+    public void externalLock(NodeId nodeId, boolean isDeep, String lockOwner)
             throws RepositoryException {
 
-        clusterEvents.add(new LockEvent(nodeId, isDeep, userId));
+        clusterEvents.add(new LockEvent(nodeId, isDeep, lockOwner));
     }
 
     /**

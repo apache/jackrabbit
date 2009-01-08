@@ -31,8 +31,6 @@ import org.apache.commons.collections.Predicate;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.IdentityHashMap;

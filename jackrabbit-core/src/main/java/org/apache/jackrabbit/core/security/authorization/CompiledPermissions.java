@@ -50,10 +50,11 @@ public interface CompiledPermissions {
     boolean grants(Path absPath, int permissions) throws RepositoryException;
 
     /**
-     * Returns the <code>Privilege</code>s granted by the underlying policy
+     * Returns the <code>Privilege</code> bits granted by the underlying policy
      * if the given <code>absPath</code> denotes an existing <code>Node</code>,
      * otherwise it returns zero.
      *
+     * @param absPath Absolute path to a <code>Node</code>.
      * @return the granted privileges at <code>absPath</code> or zero if
      * the path does not denote an existing <code>Node</code>.
      * @throws RepositoryException if an error occurs

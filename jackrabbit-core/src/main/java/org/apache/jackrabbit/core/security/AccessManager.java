@@ -106,6 +106,19 @@ public interface AccessManager {
             throws AccessDeniedException, ItemNotFoundException, RepositoryException;
 
     /**
+     *      * Determines whether the specified <code>permissions</code> are granted
+     * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).
+     *
+     * @param absPath
+     * @param permissions A combination of one or more of the
+     * {@link org.apache.jackrabbit.core.security.authorization.Permission}
+     * constants encoded as a bitmask value.
+     * @throws AccessDeniedException if permission is denied
+     * @throws RepositoryException   it another error occurs
+     */
+    void checkPermission(Path absPath, int permissions) throws AccessDeniedException, RepositoryException;
+    
+    /**
      * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).
      *
@@ -131,15 +144,9 @@ public interface AccessManager {
      * item, that may or may not yet exist).
      *
      * @param absPath     the absolute path to test
-     * @param permissions A combination of one or more of the following constants
-     *                    encoded as a bitmask value:
-     * <ul>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#READ READ}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#ADD_NODE ADD_NODE}</code></li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#REMOVE_NODE REMOVE_NODE}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#SET_PROPERTY SET_PROPERTY}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#REMOVE_PROPERTY REMOVE_PROPERTY}</li>
-     * </ul>
+     * @param permissions A combination of one or more of the
+     * {@link org.apache.jackrabbit.core.security.authorization.Permission}
+     * constants encoded as a bitmask value.
      * @return <code>true</code> if the specified permissions are granted;
      * otherwise <code>false</code>.
      * @throws RepositoryException if an error occurs.
@@ -154,15 +161,9 @@ public interface AccessManager {
      *
      * @param parentPath  Path to an existing parent node.
      * @param childName   Name of the child item that may or may not exist yet.
-     * @param permissions A combination of one or more of the following constants
-     *                    encoded as a bitmask value:
-     * <ul>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#READ READ}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#ADD_NODE ADD_NODE}</code></li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#REMOVE_NODE REMOVE_NODE}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#SET_PROPERTY SET_PROPERTY}</li>
-     * <li>{@link org.apache.jackrabbit.core.security.authorization.Permission#REMOVE_PROPERTY REMOVE_PROPERTY}</li>
-     * </ul>
+     * @param permissions A combination of one or more of the
+     * {@link org.apache.jackrabbit.core.security.authorization.Permission}
+     * constants encoded as a bitmask value.
      * @return <code>true</code> if the specified permissions are granted;
      * otherwise <code>false</code>.
      * @throws RepositoryException if an error occurs.

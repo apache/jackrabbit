@@ -16,21 +16,23 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.AbstractNodeData;
+import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.NodeIterator;
-import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -51,10 +53,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * Create a new instance of this class.
      * @param itemMgr item manager
      * @param session session
-     * @param id node id
-     * @param state node state
-     * @param definition node definition
-     * @param listeners life cycle listeners
+     * @param data
      */
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
         super(itemMgr, session, data);
@@ -132,6 +131,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public void addVersionLabel(String versionName, String label, boolean move)
             throws VersionException, RepositoryException {
         try {
+            // check permissions
+            checkVersionManagementPermission();
             session.getVersionManager().setVersionLabel(
                     this, session.getQName(versionName),
                     session.getQName(label), move);
@@ -145,8 +146,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public void removeVersionLabel(String label) throws RepositoryException {
         try {
-            Version existing = session.getVersionManager().setVersionLabel(
-                    this, null, session.getQName(label), true);
+            // check permissions
+            checkVersionManagementPermission();
+            Version existing = session.getVersionManager().setVersionLabel(this, null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -215,8 +217,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             throws UnsupportedRepositoryOperationException, VersionException,
             RepositoryException {
         try {
-            session.getVersionManager().removeVersion(
-                    this, session.getQName(versionName));
+            // check permissions
+            checkVersionManagementPermission();
+            session.getVersionManager().removeVersion(this, session.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
@@ -246,6 +249,19 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         return getInternalVersionHistory().getVersionableUUID().toString();
     }
 
+    /**
+     * 
+     * @return
+     * @throws RepositoryException
+     */
+    private void checkVersionManagementPermission() throws RepositoryException {
+        try {
+            session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+        } catch (ItemNotFoundException e) {
+            // ignore.
+        }
+    }
+    
     /**
      * Checks if the given version belongs to this history
      *

@@ -187,7 +187,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public void checkPermission(ItemId id, int permissions) throws AccessDeniedException, ItemNotFoundException, RepositoryException {
         if (!isGranted(id, permissions)) {
-            throw new AccessDeniedException("Not sufficient privileges for permissions : " + permissions + " on " + id);
+            throw new AccessDeniedException("Access denied.");
+        }
+    }
+
+    /**
+     * @see AccessManager#checkPermission(Path, int)
+     */
+    public void checkPermission(Path absPath, int permissions) throws AccessDeniedException, RepositoryException {
+        if (!isGranted(absPath, permissions)) {
+            throw new AccessDeniedException("Access denied.");
         }
     }
 
@@ -268,11 +277,12 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         checkValidNodePath(absPath);
         if (privileges == null || privileges.length == 0) {
             // null or empty privilege array -> return true
-            log.debug("No privileges defined for hasPrivilege test.");
+            log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = privilegeRegistry.getBits(privileges);
-            return internalHasPrivileges(absPath, privs);
+            int privs = PrivilegeRegistry.getBits(privileges);
+            Path p = resolver.getQPath(absPath);
+            return (compiledPermissions.getPrivileges(p) | ~privs) == -1;
         }
     }
 
@@ -293,7 +303,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         AccessControlPolicy[] policies;
         if (editor != null) {
@@ -309,7 +319,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public AccessControlPolicy[] getEffectivePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         // TODO: acProvider may not retrieve the correct policy in case of transient modifications
         return acProvider.getEffectivePolicies(getPath(absPath));
@@ -320,7 +330,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.READ_AC);
+        checkPermission(absPath, Permission.READ_AC);
 
         if (editor != null) {
             try {
@@ -339,7 +349,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+        checkPermission(absPath, Permission.MODIFY_AC);
         if (editor == null) {
             throw new UnsupportedRepositoryOperationException("Modification of AccessControlPolicies is not supported. ");
         }
@@ -351,7 +361,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
-        checkPrivileges(absPath, PrivilegeRegistry.MODIFY_AC);
+        checkPermission(absPath, Permission.MODIFY_AC);
         if (editor == null) {
             throw new UnsupportedRepositoryOperationException("Removal of AccessControlPolicies is not supported.");
         }
@@ -394,11 +404,12 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AbstractAccessControlManager#checkPrivileges(String, int)
+     * @see AbstractAccessControlManager#checkPermission(String,int)
      */
-    protected void checkPrivileges(String absPath, int privileges) throws AccessDeniedException, RepositoryException {
+    protected void checkPermission(String absPath, int permission) throws AccessDeniedException, RepositoryException {
         checkValidNodePath(absPath);
-        if (!internalHasPrivileges(absPath, privileges)) {
+        Path p = resolver.getQPath(absPath);
+        if (!compiledPermissions.grants(p, permission)) {
             throw new AccessDeniedException("Access denied at " + absPath);
         }
     }
@@ -412,18 +423,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     //------------------------------------------------------------< private >---
-    /**
-     *
-     * @param absPath
-     * @param privileges
-     * @return
-     * @throws RepositoryException
-     */
-    private boolean internalHasPrivileges(String absPath, int privileges) throws RepositoryException {
-        Path p = resolver.getQPath(absPath);
-        return (compiledPermissions.getPrivileges(p) | ~privileges) == -1;
-    }
-
     private Path getPath(String absPath) throws RepositoryException {
         return resolver.getQPath(absPath);
     }

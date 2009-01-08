@@ -65,6 +65,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     private final AccessControlUtils utils;
 
     ACLEditor(Session editingSession, AccessControlUtils utils) {
+        super(true);
         if (editingSession instanceof SessionImpl) {
             session = ((SessionImpl) editingSession);
             // TODO: review and find better solution
