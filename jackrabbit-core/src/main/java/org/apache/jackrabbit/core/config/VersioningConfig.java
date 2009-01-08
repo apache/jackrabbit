@@ -22,6 +22,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.ISMLockingFactory;
 
 /**
  * Versioning configuration. This configuration class is used to
@@ -33,7 +35,7 @@ import org.apache.jackrabbit.core.fs.FileSystemFactory;
  *
  * @see RepositoryConfig#getVersioningConfig()
  */
-public class VersioningConfig implements FileSystemFactory {
+public class VersioningConfig implements FileSystemFactory, ISMLockingFactory {
 
     /**
      * Versioning home directory.
@@ -51,9 +53,9 @@ public class VersioningConfig implements FileSystemFactory {
     private final PersistenceManagerConfig pmc;
 
     /**
-     * ISM locking configuration
+     * ISM locking factory
      */
-    private final ISMLockingConfig ismLockingConfig;
+    private final ISMLockingFactory ismLockingFactory;
 
     /**
      * Creates a versioning configuration object.
@@ -61,22 +63,16 @@ public class VersioningConfig implements FileSystemFactory {
      * @param home             home directory
      * @param fsf              file system factory
      * @param pmc              persistence manager configuration
-     * @param ismLockingConfig the item state manager locking configuration, if
-     *                         <code>null</code> is passed a default
-     *                         configuration is used.
+     * @param ismLockingFactory the item state manager locking factory
      */
     public VersioningConfig(String home,
                             FileSystemFactory fsf,
                             PersistenceManagerConfig pmc,
-                            ISMLockingConfig ismLockingConfig) {
+                            ISMLockingFactory ismLockingFactory) {
         this.home = home;
         this.fsf = fsf;
         this.pmc = pmc;
-        if (ismLockingConfig != null) {
-            this.ismLockingConfig = ismLockingConfig;
-        } else {
-            this.ismLockingConfig = ISMLockingConfig.createDefaultConfig();
-        }
+        this.ismLockingFactory = ismLockingFactory;
     }
 
     /**
@@ -108,10 +104,13 @@ public class VersioningConfig implements FileSystemFactory {
     }
 
     /**
-     * @return name of the ISM locking configuration
+     * Creates and returns the configured versioning locking strategy.
+     *
+     * @return the configured {@link ISMLocking}
+     * @throws RepositoryException if the locking strategy can not be created
      */
-    public ISMLockingConfig getISMLockingConfig() {
-        return ismLockingConfig;
+    public ISMLocking getISMLocking() throws RepositoryException {
+        return ismLockingFactory.getISMLocking();
     }
 
 }

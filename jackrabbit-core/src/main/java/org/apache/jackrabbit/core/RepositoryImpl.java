@@ -455,7 +455,7 @@ public class RepositoryImpl extends AbstractRepository
                 ntReg,
                 dataStore);
 
-        ISMLocking ismLocking = vConfig.getISMLockingConfig().createISMLocking();
+        ISMLocking ismLocking = vConfig.getISMLocking();
 
         return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
                 VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory,
@@ -1906,7 +1906,7 @@ public class RepositoryImpl extends AbstractRepository
                     ntReg,
                     dataStore);
 
-            ISMLocking ismLocking = config.getISMLockingConfig().createISMLocking();
+            ISMLocking ismLocking = config.getISMLocking();
 
             // create item state manager
             try {

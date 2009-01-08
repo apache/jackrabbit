@@ -21,6 +21,9 @@ import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
+import org.apache.jackrabbit.core.state.DefaultISMLocking;
+import org.apache.jackrabbit.core.state.ISMLocking;
+import org.apache.jackrabbit.core.state.ISMLockingFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -436,12 +439,15 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         SearchConfig sc = tmpParser.parseSearchConfig(root);
 
         // Item state manager locking configuration (optional)
-        ISMLockingConfig ismLockingConfig = tmpParser.parseISMLockingConfig(root);
+        ISMLockingFactory ismLockingFactory =
+            tmpParser.getISMLockingFactory(root);
 
         // workspace specific security configuration
         WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
 
-        return new WorkspaceConfig(home, name, clustered, fsf, pmc, sc, ismLockingConfig, workspaceSecurityConfig);
+        return new WorkspaceConfig(
+                home, name, clustered, fsf, pmc, sc,
+                ismLockingFactory, workspaceSecurityConfig);
     }
 
     /**
@@ -529,7 +535,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     }
 
     /**
-     * Parses ism locking configuration. ism locking configuration  uses the
+     * Returns an ISM locking factory that creates {@link ISMLocking} instances
+     * based on the given configuration. ISM locking configuration uses the
      * following format:
      * <pre>
      *   &lt;ISMLocking class="..."&gt;
@@ -537,37 +544,35 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     ...
      *   &lt;/ISMLocking&gt;
      * </pre>
-     * <p/>
+     * <p>
      * The <code>ISMLocking</code> is a
      * {@link #parseBeanConfig(Element,String) bean configuration} element.
-     * <p/>
-     * The ism locking is an optional part of the  workspace configuration. If
-     * the ism locking element is not found, then this method returns
-     * <code>null</code>.
+     * <p>
+     * ISM locking is an optional part of the  workspace configuration. If
+     * the ISM locking element is not found, then the returned factory will
+     * create instances of the {@link DefaultISMLocking} class.
      *
      * @param parent parent of the <code>ISMLocking</code> element
-     * @return search configuration, or <code>null</code>
-     * @throws ConfigurationException if the configuration is broken
+     * @return ISM locking factory
      */
-    protected ISMLockingConfig parseISMLockingConfig(Element parent)
-            throws ConfigurationException {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            if (child.getNodeType() == Node.ELEMENT_NODE
-                    && ISM_LOCKING_ELEMENT.equals(child.getNodeName())) {
-                Element element = (Element) child;
-
-                // ism locking implementation class
-                String className = getAttribute(element, CLASS_ATTRIBUTE);
-
-                // ism locking parameters
-                Properties parameters = parseParameters(element);
-
-                return new ISMLockingConfig(className, parameters);
+    protected ISMLockingFactory getISMLockingFactory(final Element parent) {
+        return new ISMLockingFactory() {
+            public ISMLocking getISMLocking() throws RepositoryException {
+                Element element = getElement(parent, ISM_LOCKING_ELEMENT, false);
+                if (element != null) {
+                    BeanConfig config = parseBeanConfig(element);
+                    try {
+                        return (ISMLocking) config.newInstance();
+                    } catch (ClassCastException e) {
+                        throw new RepositoryException(
+                                "Invalid ISMLocking class: "
+                                + config.getClassName(), e);
+                    }
+                } else {
+                    return new DefaultISMLocking();
+                }
             }
-        }
-        return null;
+        };
     }
 
     /**
@@ -606,9 +611,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         PersistenceManagerConfig pmc = parsePersistenceManagerConfig(element);
 
         // Item state manager locking configuration (optional)
-        ISMLockingConfig ismLockingConfig = parseISMLockingConfig(element);
+        ISMLockingFactory ismLockingFactory =
+            getISMLockingFactory(element);
 
-        return new VersioningConfig(home, fsf, pmc, ismLockingConfig);
+        return new VersioningConfig(home, fsf, pmc, ismLockingFactory);
     }
 
     /**
