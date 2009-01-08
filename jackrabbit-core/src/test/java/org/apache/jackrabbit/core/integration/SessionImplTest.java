@@ -30,7 +30,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class SessionImplTest extends AbstractJCRTest {
 
     /**
-     * <a href="https://issues.apache.org/jira/browse/JCR-1389">JCR-1731</a>:
+     * <a href="https://issues.apache.org/jira/browse/JCR-1731">JCR-1731</a>:
      * Session.checkPermission("/", "add_node") throws PathNotFoundException
      * instead of AccessControlException
      */
@@ -48,5 +48,4 @@ public class SessionImplTest extends AbstractJCRTest {
             session.logout();
         }
     }
-
 }
