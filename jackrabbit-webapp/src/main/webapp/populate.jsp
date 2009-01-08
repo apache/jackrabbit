@@ -273,7 +273,6 @@ request.setAttribute("title", "Populate workspace " + wspName);
       <tr><td>&nbsp;</td><td><input type="submit" value="Populate!"/></td></tr>
       </table>
     </form>
-  </div>
 <jsp:include page="footer.jsp"/>
 <%    }
     } finally {
