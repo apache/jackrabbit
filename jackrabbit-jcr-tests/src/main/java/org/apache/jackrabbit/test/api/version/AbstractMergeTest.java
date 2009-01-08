@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
