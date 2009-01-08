@@ -21,8 +21,6 @@ import javax.jcr.Node;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
-import javax.jcr.PropertyIterator;
-import javax.jcr.Property;
 
 /**
  * <code>CheckoutTest</code> covers tests related to {@link

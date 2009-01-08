@@ -19,7 +19,6 @@ package org.apache.jackrabbit.test.api.query;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
-import javax.jcr.query.Row;
 import javax.jcr.Value;
 import javax.jcr.NodeIterator;
 
