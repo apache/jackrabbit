@@ -18,7 +18,6 @@ package org.apache.jackrabbit.webdav.jcr.property;
 
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

@@ -28,10 +28,6 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.lock.LockManager;
 import org.apache.jackrabbit.webdav.lock.SimpleLockManager;
 import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
-import org.apache.jackrabbit.webdav.simple.DavSessionProviderImpl;
-import org.apache.jackrabbit.webdav.simple.LocatorFactoryImplEx;
-import org.apache.jackrabbit.webdav.simple.ResourceConfig;
-import org.apache.jackrabbit.webdav.simple.ResourceFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
