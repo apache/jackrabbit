@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.value;
 
-import java.io.ByteArrayInputStream;
-
 import junit.framework.TestCase;
 
 /**
