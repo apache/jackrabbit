@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.*;
+import javax.jcr.Node;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import java.util.Calendar;

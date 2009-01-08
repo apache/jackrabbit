@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.core.journal.InstanceRevision;
-import org.apache.jackrabbit.core.journal.JournalException;
-
 /**
  * Memory-based revision, useful for testing purposes only.
  */

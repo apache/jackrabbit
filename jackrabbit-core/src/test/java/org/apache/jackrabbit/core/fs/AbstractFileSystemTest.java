@@ -23,9 +23,6 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-
 public abstract class AbstractFileSystemTest extends TestCase {
 
     private FileSystem fs;
