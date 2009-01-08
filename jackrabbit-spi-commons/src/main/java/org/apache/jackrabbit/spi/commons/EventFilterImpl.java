@@ -176,4 +176,22 @@ public class EventFilterImpl implements EventFilter, Serializable {
     public boolean getNoLocal() {
         return noLocal;
     }
+
+    /**
+     * Returns a string representation of this EventFilter instance.
+     * {@inheritDoc}
+     */
+    public String toString() {
+        return new StringBuffer(getClass().getName())
+            .append("[")
+            .append("eventTypes: ").append(eventTypes).append(", ")
+            .append("absPath: ").append(absPath).append(", ")
+            .append("isDeep: ").append(isDeep).append(", ")
+            .append("uuids: ").append(uuids).append(", ")
+            .append("nodeTypeNames: ").append(nodeTypeNames).append(", ")
+            .append("noLocal: ").append(noLocal)
+            .append("]")
+            .toString();
+    }
+
 }
