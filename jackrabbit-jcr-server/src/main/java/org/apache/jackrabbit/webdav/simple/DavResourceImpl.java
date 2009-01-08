@@ -145,7 +145,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                     node = (Node) item;
                     // define what is a collection in webdav
                     isCollection = config.isCollectionResource(node);
-                    this.initRfc4122Uri();
+                    initRfc4122Uri();
                 }
             } catch (PathNotFoundException e) {
                 // ignore: exists field evaluates to false
@@ -201,7 +201,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                 this.node = node;
                 // define what is a collection in webdav
                 isCollection = config.isCollectionResource(node);
-                this.initRfc4122Uri();
+                initRfc4122Uri();
             }
         } else {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -219,7 +219,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                 String uuid = node.getUUID();
                 try {
                     UUID.fromString(uuid);
-                    this.rfc4122Uri = "urn:uuid:" + uuid;
+                    rfc4122Uri = "urn:uuid:" + uuid;
                 } catch (IllegalArgumentException e) {
                     //no, this is not a UUID
                 }
@@ -390,7 +390,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             properties.add(new HrefProperty(BindConstants.RESOURCEID, rfc4122Uri, true));
         }
 
-        Set parentElements = this.getParentElements();
+        Set parentElements = getParentElements();
         if (!parentElements.isEmpty()) {
             properties.add(new ParentSet(parentElements));
         }
@@ -883,16 +883,16 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
         checkSameWorkspace(collection.getLocator());
         try {
-            if (!this.node.isNodeType(MIX_SHAREABLE)) {
-                if (!this.node.canAddMixin(MIX_SHAREABLE)) {
+            if (!node.isNodeType(MIX_SHAREABLE)) {
+                if (!node.canAddMixin(MIX_SHAREABLE)) {
                     //DAV:binding-allowed
                     throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
                 }
-                this.node.addMixin(MIX_SHAREABLE);
-                this.node.save();
+                node.addMixin(MIX_SHAREABLE);
+                node.save();
             }
-            Workspace workspace = this.session.getRepositorySession().getWorkspace();
-            workspace.clone(workspace.getName(), this.node.getPath(), newBinding.getLocator().getRepositoryPath(), false);
+            Workspace workspace = session.getRepositorySession().getWorkspace();
+            workspace.clone(workspace.getName(), node.getPath(), newBinding.getLocator().getRepositoryPath(), false);
 
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
@@ -921,8 +921,8 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
         checkSameWorkspace(collection.getLocator());
         try {
-            if (!this.node.isNodeType(MIX_REFERENCEABLE)) {
-                throw new DavException(this.node.canAddMixin(MIX_REFERENCEABLE)?
+            if (!node.isNodeType(MIX_REFERENCEABLE)) {
+                throw new DavException(node.canAddMixin(MIX_REFERENCEABLE)?
                                        DavServletResponse.SC_CONFLICT : DavServletResponse.SC_METHOD_NOT_ALLOWED);
             }
             getJcrSession().getWorkspace().move(locator.getRepositoryPath(), newBinding.getLocator().getRepositoryPath());
@@ -936,19 +936,19 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      */
     public Set getParentElements() {
         try {
-            if (this.node.getDepth() > 0) {
+            if (node.getDepth() > 0) {
                 //TODO remove this check once jcr2 is out
-                if (!(this.node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
-                    DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
-                            this.locator.getPrefix(), this.locator.getWorkspacePath(), this.node.getParent().getPath(), false);
-                    return Collections.singleton(new ParentElement(loc.getHref(true), this.node.getName()));
+                if (!(node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
+                    DavResourceLocator loc = locator.getFactory().createResourceLocator(
+                            locator.getPrefix(), locator.getWorkspacePath(), node.getParent().getPath(), false);
+                    return Collections.singleton(new ParentElement(loc.getHref(true), node.getName()));
                 }
                 Set ps = new HashSet();
-                NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) this.node).getSharedSet();
+                NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) node).getSharedSet();
                 while (sharedSetIterator.hasNext()) {
                     Node sharednode = sharedSetIterator.nextNode();
-                    DavResourceLocator loc = this.locator.getFactory().createResourceLocator(
-                            this.locator.getPrefix(), this.locator.getWorkspacePath(), sharednode.getParent().getPath(), false);
+                    DavResourceLocator loc = locator.getFactory().createResourceLocator(
+                            locator.getPrefix(), locator.getWorkspacePath(), sharednode.getParent().getPath(), false);
                     ps.add(new ParentElement(loc.getHref(true), sharednode.getName()));
                 }
                 return ps;
@@ -973,7 +973,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      *
      * @param inputCtx
      * @param systemId
-     * @return
+     * @return a new <code>ImportContext</code>
      * @throws IOException
      */
     protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
@@ -984,7 +984,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * Returns a new <code>ExportContext</code>
      *
      * @param outputCtx
-     * @return
+     * @return a new <code>ExportContext</code>
      * @throws IOException
      */
     protected ExportContext getExportContext(OutputContext outputCtx) throws IOException {
@@ -1004,7 +1004,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     /**
      * Returns a new <code>PropertyExportContext</code>.
      *
-     * @return
+     * @return a new <code>PropertyExportContext</code>
      */
     protected PropertyExportContext getPropertyExportContext() {
         return new PropertyExportCtx();
