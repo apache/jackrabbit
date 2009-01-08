@@ -13,17 +13,20 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%@ page isErrorPage="true" %><%
+--%><%@ page isErrorPage="true"
+             import="org.apache.jackrabbit.util.Text,
+                     java.io.StringWriter,
+                     java.io.PrintWriter"%><%
 request.setAttribute("title", "Repository Error");
 %><jsp:include page="../header.jsp"/>
 <p>
   The content repository operation failed with the following
   <%= exception.getClass().getSimpleName() %> error:
 </p>
-<blockquote><%= exception.getMessage() %></blockquote>
+<blockquote><%= Text.encodeIllegalXMLCharacters(exception.getMessage()) %></blockquote>
 <p>
   See the
-  <a href="<%= request.getContextPath() %>/troubleshooting.jsp">troubleshooting page</a>
+  <a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/troubleshooting.jsp">troubleshooting page</a>
   for ideas on how to resolve this issue.
 </p>
 
@@ -31,5 +34,9 @@ request.setAttribute("title", "Repository Error");
 <p>
   Below is the full exception stack trace associated with this error:
 </p>
-<pre><% exception.printStackTrace(new java.io.PrintWriter(out)); %></pre>
+<%
+StringWriter buffer = new StringWriter();
+exception.printStackTrace(new PrintWriter(buffer));
+%>
+<pre><%= Text.encodeIllegalXMLCharacters(buffer.toString()) %></pre>
 <jsp:include page="../footer.jsp"/>

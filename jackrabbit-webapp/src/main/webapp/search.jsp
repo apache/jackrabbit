@@ -15,6 +15,7 @@
   limitations under the License.
 --%><%@ page import="javax.jcr.Repository,
                    org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
+                   org.apache.jackrabbit.util.Text,
                    javax.jcr.Session,
                    javax.jcr.SimpleCredentials,
                    java.util.Calendar,
@@ -40,7 +41,7 @@
         rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
         jcrSession = rep.login(new SimpleCredentials("anonymous", "".toCharArray()));
     } catch (Throwable e) {
-        %>Error while accessing the repository: <font color="red"><%= e.getMessage() %></font><br><%
+        %>Error while accessing the repository: <font color="red"><%= Text.encodeIllegalXMLCharacters(e.getMessage()) %></font><br><%
         %>Check the configuration or use the <a href="admin/">easy setup</a> wizard.<%
         return;
     }
@@ -72,9 +73,9 @@
             if (q.startsWith("related:")) {
                 String path = q.substring("related:".length());
                 stmt = "//element(*, nt:file)[rep:similar(jcr:content, '" + path + "/jcr:content')]/rep:excerpt(.)";
-                queryTerms = "similar to <b>" + path + "</b>";
+                queryTerms = "similar to <b>" + Text.encodeIllegalXMLCharacters(path) + "</b>";
             } else {
-                queryTerms = "for <b>" + q + "</b>";
+                queryTerms = "for <b>" + Text.encodeIllegalXMLCharacters(q) + "</b>";
                 q = q.replaceAll("'", "''");
                 stmt = "//element(*, nt:file)[jcr:contains(jcr:content, '" + q + "')]/rep:excerpt(.)";
             }
@@ -131,30 +132,41 @@ request.setAttribute("title", "Search workspace " + wspName);
 
 <form name="gs" method="GET">
   <p>
-    <input type="text" name="q" size="41" maxlength="2048" value="<%= q %>" title="Search">
+    <input type="text" name="q" size="41" maxlength="2048" value="<%= Text.encodeIllegalXMLCharacters(q) %>" title="Search">
     <input type=submit value="Search"><br><br>
   </p>
 </form>
 <% if (rows != null && rows.getSize() == 0) { %>
-  <%
-      if (suggestedQuery != null) {
-        %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
-      }
-  %>
-  <p/>Your search - <b><%= q %></b> - did not match any documents.
+<%     if (suggestedQuery != null) { %>
+<p><font class="p" color="#cc0000">Did you mean:</font>
+  <a href="search.jsp?q=<%= Text.encodeIllegalXMLCharacters(suggestedQuery) %>" class="p">
+    <b><i><%= Text.encodeIllegalXMLCharacters(suggestedQuery) %></i></b>
+  </a><br>
+</p>
+<%     } %>
+  <p/>Your search - <b><%= Text.encodeIllegalXMLCharacters(q) %></b> - did not match any documents.
   <br/><br/>Suggestions:
-  <ul><li>Make sure all words are spelled correctly.</li><li>Try different keywords.</li><li>Try more general keywords.</li><li>Try fewer keywords.</li></ul>
+  <ul>
+    <li>Make sure all words are spelled correctly.</li>
+    <li>Try different keywords.</li>
+    <li>Try more general keywords.</li>
+    <li>Try fewer keywords.</li>
+  </ul>
   <%
     } else if (rows != null) {
   %>
   <table border=0 cellpadding=0 cellspacing=0 width=100% class="t bt">
-    <tr><td><font size=-1>Results <b><%= from + 1 %></b> - <b><%= to %></b> of about <b><%= totalResults %></b> <%= queryTerms %>. (<b><%= executedIn %></b> seconds)&nbsp;</font></td></tr>
+    <tr>
+      <td><font size=-1>Results <b><%= from + 1 %></b> - <b><%= to %></b> of about <b><%= totalResults %></b> <%= queryTerms %>. (<b><%= executedIn %></b> seconds)&nbsp;</font></td></tr>
   </table>
-  <%
-      if (suggestedQuery != null) {
-        %><p><font class="p" color="#cc0000">Did you mean: </font><a href="search.jsp?q=<%= suggestedQuery %>" class="p"><b><i><%= suggestedQuery %></i></b></a>&nbsp;&nbsp;<br></p><%
-      }
-  %>
+<% if (suggestedQuery != null) { %>
+  <p>
+    <font class="p" color="#cc0000">Did you mean:</font>
+    <a href="search.jsp?q=<%= Text.encodeIllegalXMLCharacters(suggestedQuery) %>" class="p">
+      <b><i><%= Text.encodeIllegalXMLCharacters(suggestedQuery) %></i></b>
+    </a><br>
+  </p>
+<% } %>
   <div>
     <%
       while (rows.hasNext() && rows.getPosition() < to) {
@@ -169,10 +181,10 @@ request.setAttribute("title", "Search workspace " + wspName);
           DateFormat df = SimpleDateFormat.getDateInstance(SimpleDateFormat.LONG);
           String lastModified = df.format(resource.getProperty("jcr:lastModified").getDate().getTime());
     %>
-    <h6><a href="<%= request.getContextPath() %>/repository/<%= wspName %><%= file.getPath() %>" class=l><%= file.getName() %></a></h6>
+    <h6><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath() + "/repository/" + wspName + file.getPath()) %>" class=l><%= Text.encodeIllegalXMLCharacters(file.getName()) %></a></h6>
       <table border=0 cellpadding=0 cellspacing=0>
         <tr><td><font><%= r.getValue("rep:excerpt(jcr:content)").getString() %>
-          <%= file.getPath() %> - <%= size %> - <%= lastModified %> - <nobr><a href="<%= request.getContextPath() %>/search.jsp?q=related:<%= URLEncoder.encode(file.getPath(), "UTF-8") %>">Similar pages</a></nobr></font></td>
+          <%= Text.encodeIllegalXMLCharacters(file.getPath()) %> - <%= size %> - <%= lastModified %> - <nobr><a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/search.jsp?q=related:<%= Text.encodeIllegalXMLCharacters(URLEncoder.encode(file.getPath(), "UTF-8")) %>">Similar pages</a></nobr></font></td>
         </tr>
       </table>
     <%
@@ -190,7 +202,7 @@ request.setAttribute("title", "Search workspace " + wspName);
         <td><font size=-1>Result&nbsp;Page:&nbsp;
         <%
         if (currentPageIndex != ((Long) indexes.get(0)).longValue()) {
-            %><td nowrap align=right><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex - 1) * 10 %>>Previous</a><%
+            %><td nowrap align=right><a href=search.jsp?q=<%= Text.encodeIllegalXMLCharacters(q) %>&start=<%= (currentPageIndex - 1) * 10 %>>Previous</a><%
         } else {
             %><td nowrap ><font size=-1><%
         }
@@ -199,11 +211,11 @@ request.setAttribute("title", "Search workspace " + wspName);
             if (pageIdx == currentPageIndex) {
                 %><td nowrap><font size=-1><%= pageIdx + 1 %><%
             } else {
-                %><td nowrap><font size=-1><a href=search.jsp?q=<%= q %>&start=<%= pageIdx * 10 %>><%= pageIdx + 1 %></a><%
+                %><td nowrap><font size=-1><a href=search.jsp?q=<%= Text.encodeIllegalXMLCharacters(q) %>&start=<%= pageIdx * 10 %>><%= pageIdx + 1 %></a><%
             }
         }
         if (currentPageIndex < (maxPage - 1)) {
-            %><td nowrap><font size=-1><a href=search.jsp?q=<%= q %>&start=<%= (currentPageIndex + 1) * 10 %>>Next</a><%
+            %><td nowrap><font size=-1><a href=search.jsp?q=<%= Text.encodeIllegalXMLCharacters(q) %>&start=<%= (currentPageIndex + 1) * 10 %>>Next</a><%
         } else {
             %><td nowrap ><%
         }
@@ -217,11 +229,11 @@ request.setAttribute("title", "Search workspace " + wspName);
 
     <br clear=all><br>
     <table>
-      <tr><td><br><form method=GET action=<%= request.getContextPath() %>/search.jsp>
-          <font size=-1><input type=text name=q size=31 maxlength=2048 value="<%= q %>" title="Search"> <input type=submit value="Search">
+      <tr><td><br><form method=GET action=<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/search.jsp>
+          <font size=-1><input type=text name=q size=31 maxlength=2048 value="<%= Text.encodeIllegalXMLCharacters(q) %>" title="Search"> <input type=submit value="Search">
           </font></form>
         <br><font size=-1>
-        <a href="<%= request.getContextPath() %>/swr.jsp?q=<%= q %>&swrnum=<%= rows.getSize() %>">Search&nbsp;within&nbsp;results</a> | <a href="http://issues.apache.org/jira/browse/JCR" target=_blank>Dissatisfied? Help us improve</a></font><br>
+        <a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/swr.jsp?q=<%= Text.encodeIllegalXMLCharacters(q) %>&swrnum=<%= rows.getSize() %>">Search&nbsp;within&nbsp;results</a> | <a href="http://issues.apache.org/jira/browse/JCR" target=_blank>Dissatisfied? Help us improve</a></font><br>
         <br>
       </td></tr>
     </table>

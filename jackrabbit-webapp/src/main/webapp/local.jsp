@@ -13,7 +13,7 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%
+--%><%@page import="org.apache.jackrabbit.util.Text"%><%
 request.setAttribute("title", "Local Repository Access");
 %><jsp:include page="header.jsp"/>
 <p>
@@ -73,7 +73,7 @@ Repository repository = (Repository) context.lookup(...);
 
 ServletContext context = ...; // <em>context of your servlet</em>
 ServletContext jackrabbit =
-    context.getContext("<em><%= request.getContextPath() %></em>");
+    context.getContext("<em><%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %></em>");
 Repository repository = (Repository)
     context.getAttribute(Repository.<b>class</b>.getName()).
 </pre>

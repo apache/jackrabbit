@@ -14,30 +14,37 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --%>
+<%@page import="org.apache.jackrabbit.util.Text"%>
+<%
+String title =
+    Text.encodeIllegalXMLCharacters(request.getAttribute("title").toString());
+String context =
+    Text.encodeIllegalXMLCharacters(request.getContextPath());
+%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
           "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
-    <title><%= request.getAttribute("title") %></title>
+    <title><%= title %></title>
     <link rel="stylesheet"
-          href="<%= request.getContextPath() %>/css/default.css"
+          href="<%= context %>/css/default.css"
           type="text/css"/>
     <link rel="shortcut icon"
-          href="<%= request.getContextPath() %>/images/favicon.ico"
+          href="<%= context %>/images/favicon.ico"
           type="image/vnd.microsoft.icon" />
   </head>
   <body>
     <div id="page">
       <div id="banner">
         <p id="jcr">
-          <a href="<%= request.getContextPath() %>/">
-            <img src="<%= request.getContextPath() %>/images/jlogo.gif"
+          <a href="<%= context %>/">
+            <img src="<%= context %>/images/jlogo.gif"
                  alt="Apache Jackrabbit" height="100" width="336"/>
           </a>
         </p>
         <p id="asf">
           <a href="http://www.apache.org/">
-            <img src="<%= request.getContextPath() %>/images/asf-logo.gif"
+            <img src="<%= context %>/images/asf-logo.gif"
                  alt="Apache Software Foundation" height="100" width="387"/>
           </a>
         </p>
@@ -46,26 +53,26 @@
         <ul>
           <li>Jackrabbit JCR Server
             <ul>
-              <li><a href="<%= request.getContextPath() %>/">Welcome</a></li>
-              <li><a href="<%= request.getContextPath() %>/webdav-simple.jsp">Standard WebDAV</a></li>
-              <li><a href="<%= request.getContextPath() %>/webdav-jcr.jsp">JCR WebDAV</a></li>
-              <li><a href="<%= request.getContextPath() %>/remote.jsp">Remote access</a></li>
-              <li><a href="<%= request.getContextPath() %>/local.jsp">Local access</a></li>
-              <li><a href="<%= request.getContextPath() %>/troubleshooting.jsp">Troubleshooting</a></li>
-              <li><a href="<%= request.getContextPath() %>/about.jsp">About Jackrabbit</a></li>
+              <li><a href="<%= context %>/">Welcome</a></li>
+              <li><a href="<%= context %>/webdav-simple.jsp">Standard WebDAV</a></li>
+              <li><a href="<%= context %>/webdav-jcr.jsp">JCR WebDAV</a></li>
+              <li><a href="<%= context %>/remote.jsp">Remote access</a></li>
+              <li><a href="<%= context %>/local.jsp">Local access</a></li>
+              <li><a href="<%= context %>/troubleshooting.jsp">Troubleshooting</a></li>
+              <li><a href="<%= context %>/about.jsp">About Jackrabbit</a></li>
             </ul>
           </li>
           <li>Default workspace
             <ul>
-              <li><a href="<%= request.getContextPath() %>/repository/default/">Browse</a></li>
-              <li><a href="<%= request.getContextPath() %>/search.jsp">Search</a></li>
-              <li><a href="<%= request.getContextPath() %>/populate.jsp">Populate</a></li>
+              <li><a href="<%= context %>/repository/default/">Browse</a></li>
+              <li><a href="<%= context %>/search.jsp">Search</a></li>
+              <li><a href="<%= context %>/populate.jsp">Populate</a></li>
             </ul>
           </li>
           <li>Apache Jackrabbit
             <ul>
               <li><a href="http://jackrabbit.apache.org/">Apache Jackrabbit</a></li>
-              <li><a href="http://jackrabbit.apache.org/api/1.4/">Jackrabbit API</a></li>
+              <li><a href="http://jackrabbit.apache.org/api/1.5/">Jackrabbit API</a></li>
               <li><a href="http://wiki.apache.org/jackrabbit/FrontPage">Jackrabbit Wiki</a></li>
             </ul>
           </li>
@@ -79,4 +86,4 @@
         </ul>
       </div>
       <div id="content">
-        <h2><%= request.getAttribute("title") %></h2>
+        <h2><%= title %></h2>
