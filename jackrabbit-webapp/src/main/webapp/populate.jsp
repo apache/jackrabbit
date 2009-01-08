@@ -16,6 +16,7 @@
 --%><%@ page import="javax.jcr.Repository,
                  javax.jcr.Session,
                  org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
+                 org.apache.jackrabbit.util.Text,
                  javax.jcr.SimpleCredentials,
                    java.util.Iterator,
                    java.net.URL,
@@ -51,7 +52,7 @@
         jcrSession = rep.login(new SimpleCredentials("user", "".toCharArray()));
         wspName = jcrSession.getWorkspace().getName();
     } catch (Throwable e) {
-        %>Error while accessing the repository: <font color="red"><%= e.getMessage() %></font><br><%
+        %>Error while accessing the repository: <font color="red"><%= Text.encodeIllegalXMLCharacters(e.getMessage()) %></font><br><%
         %>Check the configuration or use the <a href="admin/">easy setup</a> wizard.<%
         return;
     }
@@ -79,10 +80,10 @@
 if (seedWord != null && numDocs > 0 && filetypes.size() > 0) { %>
 <html>
 <head>
-<title>Welcome to Apache Jackrabbit - Populate workspace: <%= wspName %></title>
-<link rel="shortcut icon" href="<%= request.getContextPath() %>/images/favicon.ico" type="image/vnd.microsoft.icon">
+<title>Welcome to Apache Jackrabbit - Populate workspace: <%= Text.encodeIllegalXMLCharacters(wspName) %></title>
+<link rel="shortcut icon" href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/images/favicon.ico" type="image/vnd.microsoft.icon">
 <style type="text/css" media="all">
-      @import url("<%= request.getContextPath() %>/css/default.css");
+      @import url("<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/css/default.css");
 </style>
 <script><!--
 function draw() {
@@ -90,13 +91,13 @@ function draw() {
         document.write('<table cellspacing="0" cellpadding="0" style="border-color:' + this.borderColor + '; border-width:' + this.borderWidth + '; border-style:' + this.borderStyle + '">');
         document.write('<tr><td>');
         document.write('<table border="0" cellspacing="0" cellpadding="0" style="">');
-        document.write('<tr><td style="background-color:' + this.barColor +'"><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barFG" width="0" height="' + this.height + '"/></td>');
-        document.write('<td><img src="<%= request.getContextPath() %>/images/0.gif" id="' + this.id + 'barBG" width="' + this.width + '" height="' + this.height + '"/></td></tr>');
+        document.write('<tr><td style="background-color:' + this.barColor +'"><img src="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/images/0.gif" id="' + this.id + 'barFG" width="0" height="' + this.height + '"/></td>');
+        document.write('<td><img src="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/images/0.gif" id="' + this.id + 'barBG" width="' + this.width + '" height="' + this.height + '"/></td></tr>');
         document.write('</table>');
         document.write('</tr></td>');
         document.write('</table>');
         document.write('<table>');
-        document.write('<tr><td><img src="<%= request.getContextPath() %>/images/0.gif" width="' + this.width + '" height="0"/></td></tr>');
+        document.write('<tr><td><img src="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/images/0.gif" width="' + this.width + '" height="0"/></td></tr>');
         document.write('<tr><td align="center"><span id="' + this.id + 'barValue">0%</span></td></tr>');
         document.write('<tr><td align="center"><span id="' + this.id + 'barInfo">&nbsp;</span></td></tr>');
         document.write('</table>');
@@ -139,7 +140,7 @@ ProgressBar.prototype.borderWidth = "2px";
 </head>
   <body>
   <div style="background: white; border: 1px solid black; padding: 50px; width: 510px; margin: 50px auto;">
-  <h2>Populate workspace: "<%= wspName %>"</h2><br>
+  <h2>Populate workspace: "<%= Text.encodeIllegalXMLCharacters(wspName) %>"</h2><br>
     <p>Overall progress</p>
     <script>var pb = new ProgressBar(<%= numDocs %>, 500, 30);pb.draw();</script>
     
@@ -194,7 +195,7 @@ ProgressBar.prototype.borderWidth = "2px";
                                         InputStream in = con.getInputStream();
                                         try {
                                             synchronized (fOut) {
-                                                fOut.println("<script>dp.inform(0, '" + info + "')</script>");
+                                                fOut.println("<script>dp.inform(0, '" + Text.encodeIllegalXMLCharacters(info) + "')</script>");
                                                 fOut.flush();
                                             }
                                             int length = con.getContentLength();
@@ -266,7 +267,7 @@ request.setAttribute("title", "Populate workspace " + wspName);
 </p>
     <form method="POST">
       <table>
-      <tr><td>Seed word:</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "download" : seedWord %>"/></td></tr>
+      <tr><td>Seed word:</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "download" : Text.encodeIllegalXMLCharacters(seedWord) %>"/></td></tr>
       <tr><td>Number of documents:</td><td><input name="num" type="text" size="30" value="<%= numDocs == 0 ? 100 : numDocs %>"/></td></tr>
       <tr valign="top"><td>Document types:</td><td><input name="filetype" type="checkbox" value="pdf" <%= filetypes.contains("pdf") ? "checked" : "" %>/> Adobe Acrobat PDF<br/><input name="filetype" type="checkbox" value="rtf" <%= filetypes.contains("rtf") ? "checked" : "" %>/> Rich Text Format<br/><input name="filetype" type="checkbox" value="doc" <%= filetypes.contains("doc") ? "checked" : "" %>/> Microsoft Word<br/><input name="filetype" type="checkbox" value="ppt" <%= filetypes.contains("ppt") ? "checked" : "" %>/> Microsoft PowerPoint<br/><input name="filetype" type="checkbox" value="xls" <%= filetypes.contains("xls") ? "checked" : "" %>/> Microsoft Excel<br/></td></tr>
       <tr><td>&nbsp;</td><td><input type="submit" value="Populate!"/></td></tr>
@@ -399,7 +400,7 @@ request.setAttribute("title", "Populate workspace " + wspName);
                         double s = 1000d * (double) read / (double) length;
                         out.println("<script>" + varName + ".inform(" +
                                 Math.min((int) Math.ceil(s), 1000) +
-                                ", '" + fileName + "')</script>");
+                                ", '" + Text.encodeIllegalXMLCharacters(fileName) + "')</script>");
                         out.flush();
                     }
                     nextReport += (16 * 1024);

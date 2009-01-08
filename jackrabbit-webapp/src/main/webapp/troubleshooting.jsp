@@ -13,7 +13,9 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%
+--%><%@page import="org.apache.jackrabbit.util.Text,
+                    java.io.StringWriter,
+                    java.io.PrintWriter"%><%
 request.setAttribute("title", "Troubleshooting");
 %><jsp:include page="header.jsp"/>
 <p>
@@ -29,7 +31,7 @@ request.setAttribute("title", "Troubleshooting");
   </li>
   <li>
     Is the repository up and running? Try browsing the
-    <a href="<%= request.getContextPath() %>/repository/default/">default workspace</a>
+    <a href="<%= Text.encodeIllegalXMLCharacters(request.getContextPath()) %>/repository/default/">default workspace</a>
     to check if you can still see any content in the repository. You will
     see an error message if the repository is not available.
   </li>
@@ -87,7 +89,7 @@ request.setAttribute("title", "Troubleshooting");
 <h2>Environment information</h2>
 <p>
   This instance of the Jackrabbit JCR Server is running in
-  a <em><%= application.getServerInfo() %></em> servlet container
+  a <em><%= Text.encodeIllegalXMLCharacters(application.getServerInfo()) %></em> servlet container
   that supports the Java Servlet API version
   <%= application.getMajorVersion() %>.<%= application.getMinorVersion() %>.
 </p>
@@ -95,5 +97,9 @@ request.setAttribute("title", "Troubleshooting");
   Details of the Java and operating system environment are included in
   the system properties shown below:
 </p>
-<pre><% System.getProperties().list(new java.io.PrintWriter(out)); %></pre>
+<%
+StringWriter buffer = new StringWriter();
+System.getProperties().list(new PrintWriter(buffer));
+%>
+<pre><%= Text.encodeIllegalXMLCharacters(buffer.toString()) %></pre>
 <jsp:include page="footer.jsp"/>
