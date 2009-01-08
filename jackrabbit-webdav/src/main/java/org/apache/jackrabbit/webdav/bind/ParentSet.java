@@ -16,17 +16,9 @@
  */
 package org.apache.jackrabbit.webdav.bind;
 
-import org.apache.jackrabbit.webdav.xml.XmlSerializable;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * <code>ParentSet</code> represents a DAV:parent-set property.
