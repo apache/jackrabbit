@@ -19,7 +19,6 @@ package org.apache.jackrabbit.spi2jcr.spi;
 import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.apache.jackrabbit.spi2jcr.jcr2spi.*;
 
 /** <code>TestAll</code>... */
 public class TestAll extends TestCase {
