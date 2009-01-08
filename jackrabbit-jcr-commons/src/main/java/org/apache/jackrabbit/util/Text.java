@@ -481,28 +481,29 @@ public class Text {
         }
         return buffer.toString();
     }
-    
+
     /** Escapes all illegal XPath search characters of a string.
-    * <p>Example:<br>
-    * A search string like 'test?' will run into a ParseException
-    * documented in http://issues.apache.org/jira/browse/JCR-1248
-    * 
-    * @param string the string to encode
-    * @return the escaped string    
-    */
-   public static String escapeIllegalXpathSearchChars(String s) {
-       StringBuffer sb = new StringBuffer();
-       sb.append(s.substring(0, (s.length() - 1)));
-       char c = s.charAt(s.length() - 1);
-       // NOTE: keep this in sync with _ESCAPED_CHAR below!
-       if (c == '!' || c == '(' || c == ':' || c == '^' 
-           || c == '[' || c == ']' || c == '\"' || c == '{' 
-           || c == '}' || c == '?') {
-           sb.append('\\');
-       }
-       sb.append(c);
-       return sb.toString();
-   }
+     * <p>Example:<br>
+     * A search string like 'test?' will run into a ParseException
+     * documented in http://issues.apache.org/jira/browse/JCR-1248
+     * 
+     * @param string the string to encode
+     * @return the escaped string
+     */
+    public static String escapeIllegalXpathSearchChars(String s) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(s.substring(0, (s.length() - 1)));
+        char c = s.charAt(s.length() - 1);
+        // NOTE: keep this in sync with _ESCAPED_CHAR below!
+        if (c == '!' || c == '(' || c == ':' || c == '^' 
+            || c == '[' || c == ']' || c == '\"' || c == '{' 
+            || c == '}' || c == '?') {
+            sb.append('\\');
+        }
+        sb.append(c);
+        return sb.toString();
+    }
+
     /**
      * Unescapes previously escaped jcr chars.
      * <p/>
