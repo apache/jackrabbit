@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * The <code>JournalException</code> signals an error within a journal operation.
  */
-public class JournalException extends BaseException {
+public class JournalException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified detail

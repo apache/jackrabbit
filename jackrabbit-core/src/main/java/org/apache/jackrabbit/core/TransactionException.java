@@ -16,13 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * TransactionException is thrown when some operation inside the transaction
  * fails.
  */
-public class TransactionException extends BaseException {
+public class TransactionException extends Exception {
 
     /**
      * Creates an instance of this class. Takes a detail message as parameter.
