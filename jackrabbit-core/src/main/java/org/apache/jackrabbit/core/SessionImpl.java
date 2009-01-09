@@ -875,7 +875,7 @@ public class SessionImpl extends AbstractSession
      * Determines if there are pending unsaved changes either on the passed
      * item or on any item in it's subtree.
      *
-     * @param Item start of the subtree to be tested for pending changes.
+     * @param item Item start of the subtree to be tested for pending changes.
      * @return <code>true</code> if there are pending unsaved changes,
      *         <code>false</code> otherwise.
      * @throws RepositoryException if an error occurred
