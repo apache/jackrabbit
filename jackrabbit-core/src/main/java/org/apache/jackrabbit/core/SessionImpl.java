@@ -1507,7 +1507,7 @@ public class SessionImpl extends AbstractSession
             } else if (propertyExists(absPath)) {
                 permissions |= Permission.REMOVE_PROPERTY;
             } else {
-                // item does exist -> check both permissions
+                // item doesn't exist -> check both permissions
                 permissions = Permission.REMOVE_NODE | Permission.REMOVE_PROPERTY;
             }
         }
