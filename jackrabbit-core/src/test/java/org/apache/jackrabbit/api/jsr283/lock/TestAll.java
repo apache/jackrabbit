@@ -30,13 +30,10 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.lock tests");
 
-        /*
-        // TODO uncomment as soon as 283 lock impl is completed.
         suite.addTestSuite(LockManagerTest.class);
         suite.addTestSuite(OpenScopedLockTest.class);
         suite.addTestSuite(SessionScopedLockTest.class);
         suite.addTestSuite(DeepLockTest.class);
-        */
 
         return suite;
     }

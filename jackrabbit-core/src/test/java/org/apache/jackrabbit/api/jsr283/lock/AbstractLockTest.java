@@ -19,25 +19,25 @@ package org.apache.jackrabbit.api.jsr283.lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.List;
-import java.util.Arrays;
 
 /** <code>AbstractLockTest</code>... */
 public abstract class AbstractLockTest extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(AbstractLockTest.class);
 
+    protected LockManager lockMgr;
     protected Node lockedNode;
     protected Node childNode;
     protected Lock lock;
-
-    protected abstract boolean isSessionScoped();
-    protected abstract boolean isDeep();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -47,19 +47,49 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         childNode = lockedNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
-        // TODO: remove cast
-        // TODO: replace by LockManager#lock call
-        lock = (Lock) lockedNode.lock(isDeep(), isSessionScoped());
+        lockMgr = getLockManager(testRootNode.getSession());
+        lock = lockMgr.lock(lockedNode.getPath(), isDeep(), isSessionScoped(), getTimeoutHint(), getLockOwner());
     }
 
     protected void tearDown() throws Exception {
-        // make sure all locks are removed
-        try {
-            lockedNode.unlock();
-        } catch (RepositoryException e) {
-            // ignore
+        // release the lock created during setup
+        if (lockMgr != null && lockedNode != null) {
+            try {
+                lockMgr.unlock(lockedNode.getPath());
+            } catch (RepositoryException e) {
+                // ignore
+            }
         }
         super.tearDown();
+    }
+
+    protected abstract boolean isSessionScoped();
+    protected abstract boolean isDeep();
+
+    protected long getTimeoutHint() throws RepositoryException {
+        String timoutStr = getProperty(RepositoryStub.PROP_LOCK_TIMEOUT);
+        long hint = Long.MAX_VALUE;
+        if (timoutStr != null) {
+            try {
+                hint = Long.parseLong(timoutStr);
+            } catch (NumberFormatException e) {
+                log.warn(e.getMessage());
+            }
+        }
+        return hint;
+    }
+
+    protected String getLockOwner() throws RepositoryException {
+        String ownerStr = getProperty(RepositoryStub.PROP_LOCK_OWNER);
+        if (ownerStr == null) {
+            ownerStr = superuser.getUserID();
+        }
+        return ownerStr;
+    }
+
+    private static LockManager getLockManager(Session session) throws RepositoryException {
+        // TODO: rm cast and adjust call as soon as 283 is released
+        return ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
     }
 
     /**
@@ -69,6 +99,20 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         assertEquals("Lock.isDeep must be consistent with lock call.", isDeep(), lock.isDeep());
     }
 
+    public void testLockHoldingNode() throws RepositoryException {
+        assertTrue("Lock.getNode() must be lockholding node.", lock.getNode().isSame(lockedNode));
+    }
+
+    public void testNodeIsLocked() throws RepositoryException {
+        assertTrue("Node must be locked after lock creation.", lockedNode.isLocked());
+        assertTrue("Node must be locked after lock creation.", lockMgr.isLocked(lockedNode.getPath()));
+    }
+
+    public void testNodeHoldsLocked() throws RepositoryException {
+        assertTrue("Node must hold lock after lock creation.", lockedNode.holdsLock());
+        assertTrue("Node must hold lock after lock creation.", lockMgr.holdsLock(lockedNode.getPath()));
+    }
+    
     /**
      *
      */
@@ -83,11 +127,15 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     public void testIsLockOwningSession() throws RepositoryException {
         assertTrue("Session must be lock owner", lock.isLockOwningSession());
         assertTrue("Session must be lock owner", ((Lock) lockedNode.getLock()).isLockOwningSession());
+        assertTrue("Session must be lock owner", lockMgr.getLock(lockedNode.getPath()).isLockOwningSession());
 
         Session otherSession = helper.getReadOnlySession();
         try {
             Lock lck = (Lock) ((Node) otherSession.getItem(lockedNode.getPath())).getLock();
             assertFalse("Session must not be lock owner", lck.isLockOwningSession());
+
+            Lock lck2 = getLockManager(otherSession).getLock(lockedNode.getPath());
+            assertFalse("Session must not be lock owner", lck2.isLockOwningSession());
         } finally {
             otherSession.logout();
         }
@@ -96,6 +144,10 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         try {
             Lock lck = (Lock) ((Node) otherAdmin.getItem(lockedNode.getPath())).getLock();
             assertFalse("Other Session for the same userID must not be lock owner", lck.isLockOwningSession());
+
+            Lock lck2 = getLockManager(otherAdmin).getLock(lockedNode.getPath());
+            assertFalse("Other Session for the same userID must not be lock owner", lck2.isLockOwningSession());
+
         } finally {
             otherAdmin.logout();
         }
@@ -108,6 +160,104 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         assertTrue("Seconds remaining must be a positive long or 0.", lock.getSecondsRemaining() >= 0);
     }
 
+    public void testUnlockByOtherSession() throws RepositoryException, NotExecutableException {
+        Session otherSession = helper.getReadWriteSession();
+        try {
+            getLockManager(otherSession).unlock(lockedNode.getPath());
+            fail("Another session must not be allowed to unlock.");
+        } catch (LockException e) {
+            // success
+            // make sure the node is still locked and the lock properties are
+            // still present.
+            assertTrue(lockMgr.isLocked(lockedNode.getPath()));
+            assertTrue(lockedNode.hasProperty(jcrlockIsDeep));
+            assertTrue(lockedNode.hasProperty(jcrLockOwner));
+        } finally {
+            otherSession.logout();
+        }
+    }
+
+    public void testIsLockedChild() throws RepositoryException {
+        assertEquals("Child node must be locked according to isDeep flag.", isDeep(), childNode.isLocked());
+        assertEquals("Child node must be locked according to isDeep flag.", isDeep(), lockMgr.isLocked(childNode.getPath()));
+    }
+
+    public void testIsLockedNewChild() throws RepositoryException {
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        assertEquals("New child node must be locked according to isDeep flag.", isDeep(),
+                newChild.isLocked());
+        assertEquals("New child node must be locked according to isDeep flag.", isDeep(),
+                lockMgr.isLocked(newChild.getPath()));
+    }
+
+    public void testHoldsLockChild() throws RepositoryException {
+        assertFalse("Child node below a locked node must never be lock holder",
+                childNode.holdsLock());
+        assertFalse("Child node below a locked node must never be lock holder",
+                lockMgr.holdsLock(childNode.getPath()));
+    }
+
+    public void testHoldsLockNewChild() throws RepositoryException {
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        assertFalse("Child node below a locked node must never be lock holder",
+                newChild.holdsLock());
+        assertFalse("Child node below a locked node must never be lock holder",
+                lockMgr.holdsLock(newChild.getPath()));
+    }
+
+    public void testGetLockOnChild() throws RepositoryException {
+        if (isDeep()) {
+            // get lock must succeed even if child is not lockable.
+            javax.jcr.lock.Lock lock = childNode.getLock();
+            assertNotNull(lock);
+            assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock.getNode()));
+
+            Lock lock2 = lockMgr.getLock(childNode.getPath());
+            assertNotNull(lock2);
+            assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock2.getNode()));
+        } else {
+            try {
+                childNode.getLock();
+                fail("Node.getLock() must throw if node is not locked.");
+            } catch (LockException e) {
+                // success
+            }
+            try {
+                lockMgr.getLock(childNode.getPath());
+                fail("LockManager.getLock(String) must throw if node is not locked.");
+            } catch (LockException e) {
+                // success
+            }
+        }
+    }
+
+    public void testGetLockOnNewChild() throws RepositoryException {
+        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
+        if (isDeep()) {
+            // get lock must succeed even if child is not lockable.
+            javax.jcr.lock.Lock lock = newChild.getLock();
+            assertNotNull(lock);
+            assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock.getNode()));
+
+            Lock lock2 = lockMgr.getLock(newChild.getPath());
+            assertNotNull(lock2);
+            assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock2.getNode()));
+        } else {
+            try {
+                newChild.getLock();
+                fail("Node.getLock() must throw if node is not locked.");
+            } catch (LockException e) {
+                // success
+            }
+            try {
+                lockMgr.getLock(newChild.getPath());
+                fail("LockManager.getLock(String) must throw if node is not locked.");
+            } catch (LockException e) {
+                // success
+            }
+        }
+    }
+
     public void testRemoveMixLockableFromLockedNode() throws RepositoryException {
         try {
             lockedNode.removeMixin(mixLockable);
@@ -118,8 +268,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             String msg = "Lock should have been released.";
             assertFalse(msg, lock.isLive());
             assertFalse(msg, lockedNode.isLocked());
-            List tokens = Arrays.asList(superuser.getLockTokens());
-            assertFalse(msg, tokens.contains(lock.getLockToken()));
+            assertFalse(msg, lockMgr.isLocked(lockedNode.getPath()));
 
             assertFalse(msg, lockedNode.hasProperty(jcrLockOwner));
             assertFalse(msg, lockedNode.hasProperty(jcrlockIsDeep));
@@ -130,8 +279,8 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             String msg = "Lock must still be live.";
             assertTrue(msg, lock.isLive());
             assertTrue(msg, lockedNode.isLocked());
-            List tokens = Arrays.asList(superuser.getLockTokens());
-            assertTrue(tokens.contains(lock.getLockToken()));
+            assertTrue(msg, lockMgr.isLocked(lockedNode.getPath()));
+
             assertTrue(msg, lockedNode.hasProperty(jcrLockOwner));
             assertTrue(msg, lockedNode.hasProperty(jcrlockIsDeep));
         } finally {

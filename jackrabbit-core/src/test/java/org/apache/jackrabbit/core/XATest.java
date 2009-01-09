@@ -90,7 +90,7 @@ public class XATest extends AbstractJCRTest {
     }
 
     /**
-     * @see junit.framework.TestCase#runTest
+     * @see junit.framework.TestCase#runTest()
      *
      * Make sure that tested repository supports transactions
      */
@@ -1057,32 +1057,37 @@ public class XATest extends AbstractJCRTest {
         testRootNode.save();
 
         Lock lock = n.lock(false, true);
+        try {
+            // get user transaction object, start
+            UserTransaction utx = new UserTransactionImpl(superuser);
+            utx.begin();
 
-        // get user transaction object, start
-        UserTransaction utx = new UserTransactionImpl(superuser);
-        utx.begin();
+            // verify that the lock properties are present
+            assertTrue(n.hasProperty(jcrLockOwner));
+            assertTrue(n.hasProperty(jcrlockIsDeep));
 
-        // verify that the lock properties are present
-        assertTrue(n.hasProperty(jcrLockOwner));
-        assertTrue(n.hasProperty(jcrlockIsDeep));
+            // unlock
+            n.unlock();
 
-        // unlock
-        n.unlock();
+            // verify that the lock properties have been removed.
+            assertFalse(n.hasProperty(jcrLockOwner));
+            assertFalse(n.hasProperty(jcrlockIsDeep));
 
-        // verify that the lock properties have been removed.
-        assertFalse(n.hasProperty(jcrLockOwner));
-        assertFalse(n.hasProperty(jcrlockIsDeep));
+            // rollback
+            utx.rollback();
 
-        // rollback
-        utx.rollback();
-
-        // verify lock is live again -> properties must be present
-        assertTrue(n.hasProperty(jcrLockOwner));
-        assertTrue(n.hasProperty(jcrlockIsDeep));
+            // verify lock is live again -> properties must be present
+            assertTrue(n.hasProperty(jcrLockOwner));
+            assertTrue(n.hasProperty(jcrlockIsDeep));
+        } finally {
+            n.unlock();
+        }
     }
 
     /**
      * Test visibility of lock properties by another session.
+     *
+     * @throws Exception
      */
     public void testLockProperties3() throws Exception {
         // add node that is both lockable and referenceable, save
@@ -1106,9 +1111,10 @@ public class XATest extends AbstractJCRTest {
         assertTrue(n2.hasProperty(jcrlockIsDeep));
         Lock lock2 = n2.getLock();
 
-        // rollback
+        // complete transaction
         utx.commit();
 
+        // unlock must now be visible to other session
         n2.refresh(false);
         assertFalse(lock2.isLive());
         assertFalse(n2.isLocked());

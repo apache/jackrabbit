@@ -92,7 +92,14 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
          islocked = true. therefore, the shortcut for NEW nodes that was
          present with NodeImpl.isLocked before cannot be applied any more.
          */
-        return systemLockMgr.isLocked(node);
+        if (node.isNew()) {
+            while (node.isNew()) {
+                node = (NodeImpl) node.getParent();
+            }
+            return systemLockMgr.isLocked(node) && systemLockMgr.getLock(node).isDeep();
+        } else {
+            return systemLockMgr.isLocked(node);
+        }
     }
 
     /**
@@ -102,7 +109,19 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
             UnsupportedRepositoryOperationException, LockException,
             AccessDeniedException, RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
-        return (Lock) systemLockMgr.getLock(node);
+        if (node.isNew()) {
+            while (node.isNew()) {
+                node = (NodeImpl) node.getParent();
+            }
+            Lock l = (Lock) systemLockMgr.getLock(node);
+            if (l.isDeep()) {
+                return l;
+            } else {
+                throw new LockException("Node not locked: " + node);
+            }
+        } else {
+            return (Lock) systemLockMgr.getLock(node);
+        }
     }
 
     /**
@@ -157,6 +176,13 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
         session.getAccessManager().checkPermission(session.getQPath(node.getPath()), Permission.LOCK_MNGMT);
 
         synchronized (systemLockMgr) {
+            // basic checks if unlock can be called on the node.
+            if (!systemLockMgr.holdsLock(node)) {
+                throw new LockException("Node not locked: " + node);
+            }
+            if (!systemLockMgr.isLockHolder(session, node)) {
+                throw new LockException("Node not locked by session: " + node);
+            }
             systemLockMgr.unlock(node);
         }
     }

@@ -79,6 +79,16 @@ public abstract class RepositoryStub {
 
     public static final String PROP_NAMESPACES = "namespaces";
 
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_LOCK_TIMEOUT = "lock.timeout";
+
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_LOCK_OWNER = "lock.owner";
+
     protected final Properties environment;
 
     protected SimpleCredentials superuser;
