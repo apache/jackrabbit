@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * The <code>InvalidConstraintException</code> ...
  */
-public class InvalidConstraintException extends BaseException {
+public class InvalidConstraintException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified detail

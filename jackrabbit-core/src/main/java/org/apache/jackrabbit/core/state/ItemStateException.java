@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * The <code>ItemStateException</code> ...
  */
-public class ItemStateException extends BaseException {
+public class ItemStateException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified detail

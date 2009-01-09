@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * The <code>NodeTypeConflictException</code> ...
  */
-public class InvalidNodeTypeDefException extends BaseException {
+public class InvalidNodeTypeDefException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified detail
