@@ -116,7 +116,7 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
         if (!isLive()) {
             throw new LockException("Lock is not live any more.");
         }
-        if (getLockToken() == null) {
+        if (!isLockOwningSession()) {
             throw new LockException("Session does not hold lock.");
         }
         // make sure the current session has sufficient privileges to refresh

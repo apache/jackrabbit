@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.api.jsr283.lock;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,87 +26,16 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 /** <code>DeepLockTest</code>... */
-public class DeepLockTest extends AbstractJCRTest {
+public class DeepLockTest extends AbstractLockTest {
 
     private static Logger log = LoggerFactory.getLogger(DeepLockTest.class);
 
-    protected Node lockedNode;
-    protected Node childNode;
-    protected Lock lock;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        lockedNode = testRootNode.addNode(nodeName1, testNodeType);
-        lockedNode.addMixin(mixLockable);
-        childNode = lockedNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
-
-        // TODO: remove cast
-        // TODO: replace by LockManager#lock call
-        lock = (Lock) lockedNode.lock(true, true);
+    protected boolean isSessionScoped() {
+        return true;
     }
 
-    protected void tearDown() throws Exception {
-        // make sure all locks are removed
-        try {
-            lockedNode.unlock();
-        } catch (RepositoryException e) {
-            // ignore
-        }
-        super.tearDown();
-    }
-
-    // TODO: replace locking calls by LockManager#...
-
-    public void testNewBelowDeepLock() throws RepositoryException {
-        Node newNode = lockedNode.addNode(nodeName3);
-        assertTrue(newNode.isLocked());
-    }
-
-    public void testLockHoldingNode() throws RepositoryException {
-        assertTrue("Lock.getNode() must be lockholding node.", lock.getNode().isSame(lockedNode));
-    }
-
-    public void testLockIsDeep() throws RepositoryException {
-        assertTrue("Lock.isDeep() if lock has been created deeply.", lock.isDeep());
-    }
-
-    public void testNodeIsLocked() throws RepositoryException {
-        assertTrue("Creating a deep lock must create a lock on the lock-holding node", lockedNode.isLocked());
-        assertTrue("Creating a deep lock must create a lock on the lock-holding node", lockedNode.holdsLock());
-    }
-
-    public void testIsLockedChild() throws RepositoryException {
-        assertTrue("Child node below deep lock must be locked", childNode.isLocked());
-    }
-
-    public void testIsLockedNewChild() throws RepositoryException {
-        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
-        assertTrue("Child node below deep lock must be locked even if it is NEW",
-                newChild.isLocked());
-    }
-
-    public void testNotHoldsLockChild() throws RepositoryException {
-        assertFalse("Child node below deep lock must not be lock holder",
-                childNode.holdsLock());
-    }
-
-    public void testGetLockOnChild() throws RepositoryException {
-        // get lock must succeed even if child is not lockable.
-        javax.jcr.lock.Lock lock = childNode.getLock();
-        assertNotNull(lock);
-        assertTrue("Lock.getNode() must return the lock holding node",
-                lockedNode.isSame(lock.getNode()));
-    }
-
-    public void testGetLockOnNewChild() throws RepositoryException {
-        // get lock must succeed even if child is not lockable.
-        Node newChild = lockedNode.addNode(nodeName3, testNodeType);
-        javax.jcr.lock.Lock lock = newChild.getLock();
-        assertNotNull(lock);
-        assertTrue("Lock.getNode() must return the lock holding node",
-                lockedNode.isSame(lock.getNode()));
+    protected boolean isDeep() {
+        return true;
     }
 
     public void testGetNodeOnLockObtainedFromChild() throws RepositoryException {
@@ -132,21 +60,34 @@ public class DeepLockTest extends AbstractJCRTest {
         } catch (LockException e) {
             // ok
         }
+
+        try {
+            lockMgr.lock(childNode.getPath(), false, false, getTimeoutHint(), getLockOwner());
+            fail("child node is already locked by deep lock on parent.");
+        } catch (LockException e) {
+            // ok
+        }
     }
 
     public void testDeepLockAboveLockedChild() throws RepositoryException, NotExecutableException {
-        try {
-            Node parent = lockedNode.getParent();
-            if (!parent.isNodeType(mixLockable)) {
-                try {
-                    parent.addMixin(mixLockable);
-                    parent.save();
-                } catch (RepositoryException e) {
-                    throw new NotExecutableException();
-                }
+        Node parent = lockedNode.getParent();
+        if (!parent.isNodeType(mixLockable)) {
+            try {
+                parent.addMixin(mixLockable);
+                parent.save();
+            } catch (RepositoryException e) {
+                throw new NotExecutableException();
             }
+        }
 
+        try {
             parent.lock(true, true);
+            fail("Creating a deep lock on a parent of a locked node must fail.");
+        } catch (LockException e) {
+            // expected
+        }
+        try {
+            lockMgr.lock(parent.getPath(), true, true, getTimeoutHint(), getLockOwner());
             fail("Creating a deep lock on a parent of a locked node must fail.");
         } catch (LockException e) {
             // expected
@@ -155,18 +96,24 @@ public class DeepLockTest extends AbstractJCRTest {
 
     public void testShallowLockAboveLockedChild() throws RepositoryException, NotExecutableException {
         Node parent = lockedNode.getParent();
-        try {
-            if (!parent.isNodeType(mixLockable)) {
-                try {
-                    parent.addMixin(mixLockable);
-                    parent.save();
-                } catch (RepositoryException e) {
-                    throw new NotExecutableException();
-                }
+        if (!parent.isNodeType(mixLockable)) {
+            try {
+                parent.addMixin(mixLockable);
+                parent.save();
+            } catch (RepositoryException e) {
+                throw new NotExecutableException();
             }
+        }
 
+        try {
             // creating a shallow lock on the parent must succeed.
             parent.lock(false, true);
+        } finally {
+            parent.unlock();
+        }
+        try {
+            // creating a shallow lock on the parent must succeed.
+            lockMgr.lock(parent.getPath(), false, true, getTimeoutHint(), getLockOwner());
         } finally {
             parent.unlock();
         }
