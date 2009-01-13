@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.0
+Release Notes -- Apache Jackrabbit -- Version 1.5.1
 
 Introduction
 ------------
@@ -7,58 +7,92 @@ Apache Jackrabbit is a fully conforming implementation of the Content
 Repository for Java Technology API (JCR). A content repository is a
 hierarchical content store with support for structured and unstructured
 content, full text search, versioning, transactions, observation, and
-more. Typical applications that use content repositories include content
-management, document management, and records management systems.
-
-Apache Jackrabbit 1.5 is an incremental feature release. While
-remaining compatible with previous releases, Jackrabbit 1.5 introduces
-a number of new features, improvements and fixes to known issues.
-
-The most notable changes in this release are:
-
-  * The standalone Jackrabbit server component. The runnable
-    jackrabbit-standalone jar makes it very easy to start and run
-    Jackrabbit as a standalone server with WebDAV and RMI access.
-
-  * Search performance improvements. The performance of certain kinds
-    of hierarchical XPath queries has improved notably.
-
-  * Simple Google-style query language. The new GQL query syntax
-    makes it very easy to express simple full text queries.
-
-  * Transaction-safe versioning. Mixing transactions and versioning
-    operations has traditionally been troublesome in Jackrabbit.
-    This release contains a number of improvements in this area and
-    has specifically been reviewed against potential deadlock issues.
-
-  * Clustered workspace creation. A new workspace created in one
-    cluster node will now automatically appear also in the other
-    nodes of the cluster.
-
-  * SPI improvements. The SPI layer introduced in Jackrabbit 1.4
-    has seen a lot of improvements and bug fixes, and is shaping
-    up as a solid framework for implementing JCR connectors.
-
-  * Development preview: JSR 283 features. We have implemented
-    a number of new features defined in the public review draft of
-    JCR 2.0, created in JSR 283. These new features are accessible
-    through special "jsr283" interfaces in the Jackrabbit API. Note
-    however that none of these features are ready for production use,
-    and will be replaced with final JCR 2.0 versions in Jackrabbit 2.0.
-
-See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
+more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
+
+Apache Jackrabbit 1.5.1 is a security and bug fix release that fixes
+issues reported against previous releases. This release is fully
+compatible with the earlier 1.5.0 release.
+
+Most notably, this release fixes the following security vulnerability.
+Thanks to the Red Hat Security Response Team for reporting this issue.
+
+  * CVE-2009-0026: Cross site scripting issues in webapp (JCR-1925)
+
+    The search.jsp and swr.jsp pages in the Jackrabbit webapp are
+    vulnerable to script injection. This release fixes the issue
+    by properly escaping all user input.
+
+    This issue affects both the Jackrabbit 1.4 and 1.5.0 releases.
+    If you are unable to upgrade to 1.5.1 at this point, you can
+    work around this issue by disabling the search.jsp and swr.jsp
+    pages in the Jackrabbit webapp.
+
+See below for a full listing of fixes included in this release.
+
+Changes in this release
+-----------------------
+
+All the fixes in this release are listed below per affected component.
+The modified components have had their version numbers upgraded to 1.5.1;
+other components are still at version 1.5.0.
+
+jackrabbit-core
+
+  Bug fixes
+  [JCR-1823] Repository.login throws IllegalStateException
+  [JCR-1838] Garbage collection deletes temporary files in FileDataStore
+  [JCR-1920] Custom LoginModule configurations broken in 1.5.0
+
+jackrabbit-jcr-commons
+
+  Bug fixes
+  [JCR-1926] Text.unescape("%") throws a StringIndexOutOfBoundsException
+
+jackrabbit-jcr-server
+
+  Bug fixes
+  [JCR-1902] Warning while building DAV:parent-set for root-node resource
+
+jackrabbit-jcr-servlet
+
+  Bug fixes
+  [JCR-1910] RMIRemoteBindingServlet fails to initialize if the RMI ...
+
+jackrabbit-standalone
+
+  Bug fixes
+  [JCR-1912] RMI reference not automatically bound by the standalone server
+
+jackrabbit-webapp
+
+  Security fixes
+  [JCR-1925] CVE-2009-0026: Cross site scripting issues in webapp
+
+  Bug fixes
+  [JCR-1920] The 1.5.0 webapp points to 1.4 javadocs
+  [JCR-1930] Extra </div> in populate.jsp
+
+jackrabbit-webdav
+
+  Bug fixes
+  [JCR-1926] Text.unescape("%") throws a StringIndexOutOfBoundsException
+
+You can look up individual issues for more details in the Jackrabbit
+issue tracker at
+
+    https://issues.apache.org/jira/browse/JCR
 
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.0-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.1-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.0-src.jar
-    cd jackrabbit-1.5.0-src
+    jar xf jackrabbit-1.5.1-src.jar
+    cd jackrabbit-1.5.1-src
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
@@ -149,676 +183,3 @@ the on the central Maven repository.
     This component simplifies registration of node types and namespaces
     referenced in OCM mapping descriptors.
 
-Upgrading to Jackrabbit 1.5
----------------------------
-
-Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions and adding some new dependencies.
-No changes to repository contents are needed.
-
-The Lucene dependency was upgraded to 2.3.2. No index file changes are needed.
-Note that Jackrabbit 1.5 only works with Lucene 2.3, not even with 2.2 or 2.4.
-
-The SLF4J dependency was upgraded to 1.5.3 as the default, but Jackrabbit will
-work with any SLF4J 1.x version in your classpath.
-
-The PDFBox dependency was upgraded to 0.7.3, which introduced new dependencies
-to the FontBox 0.1.0 and JempBox 0.2.0 libraries.
-
-The NekoHTML dependency has been upgraded to 1.9.7.
-
-The POI dependency was upgraded to 3.0.2-FINAL, which introduced new
-dependencies to commons-logging and log4j. If you use the Maven dependency
-mechanism then you may want to override these dependencies with something
-like jcl104-over-slf4j to avoid using multiple different logging frameworks.
-
-A new dependency to Commons IO 1.4 has been added. Make sure that Commons IO
-is available in your classpath.
-
-Repository configuration has been extended with options for the new JSR 283
-security. However, no changes to existing configuration files are needed
-unless you want to enable these new features. Note that the new JSR 283
-security feature is a development preview and may change before JCR 2.0.
-
-Note that the configuration file parser will now use strict XML validation
-if you include a <!DOCTYPE> setting in your configuration file. You can
-disable this feature simply by removing the <!DOCTYPE> setting.
-
-Upgrading to Jackrabbit 1.4
----------------------------
-
-Apache Jackrabbit 1.4 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions and adding some new dependencies.
-No changes to repository contents are needed.
-
-Jackrabbit 1.4 introduces the SPI layer described above, and in addition to
-it's earlier dependencies the jackrabbit-core component now also needs the
-jackrabbit-spi and jackrabbit-spi-commons components in the classpath.
-
-A number of classes in jackrabbit-jcr-commons have been deprecated, and you
-should check for the suggested replacements if you use those classes in your
-applications.
-
-The Lucene dependency was upgraded to 2.2.0, and so you need to upgrade
-also the lucene-core jar file in your classpath when upgrading
-jackrabbit-core. No index file changes are needed.
-
-Repository configuration has been extended with a number of options for
-storage, locking and indexing strategies. However, no changes to existing
-configuration files are needed unless you want to enable these new features.
-
-Upgrading to Jackrabbit 1.3
----------------------------
-
-Apache Jackrabbit 1.3 is fully compatible with the previous 1.x releases.
-A previous Apache Jackrabbit 1.x installation can be upgraded by replacing
-the relevant jar files with the new versions. No changes to repository
-contents are needed.
-
-See below for a more detailed description of the structural changes in
-the Apache Jackrabbit 1.2 release.
-
-Upgrading to Jackrabbit 1.2
----------------------------
-
-The most notable effect of the component restructuring in the 1.2 release
-was that the previous jackrabbit-core component has been split in three
-pieces: jackrabbit-api, jackrabbit-jcr-commons, and jackrabbit-core. Thus
-you need to replace the previous jackrabbit-core-1.x.jar file with the
-three new jar archives.
-
-The structure of the WebDAV components have also changed. WebDAV support
-now consists of the webapp component jackrabbit-webapp and the libraries
-jackrabbit-webdav and jackrabbit-jcr-server.
-
-The Apache Lucene dependency used for full text indexing has been upgraded
-to version 2.0 in this release. Lucene 2.0 is able to continue using
-existing index files, but you can also manually recreate the index with
-Lucene 2.0 extensions by removing the "index" directories of a closed
-repository. Jackrabbit will automatically re-index content when the
-repository is next started.
-
-Also the Apache Derby dependency has been upgraded to version 10.2.
-Like Lucene, the new Derby version can keep using existing database files.
-New repositories and workspaces will however be created using extensions
-and improvements introduced in the 10.2 version.
-
-Changes and known issues in this release
-----------------------------------------
-
-All the changes (new features, improvements, bug fixes) and known issues
-in this release are listed below. The listing is organized by Jackrabbit
-component and by issue type. The issue identifier and title is listed for
-each change and known issue.
-
-You can look up individual issues for more details in the Jackrabbit
-issue tracker at
-
-    https://issues.apache.org/jira/browse/JCR
-
-Note that some issues may appear more than once in the list below, as
-they may affect more than one component. Generic issues that affect all
-or most components are listed first under the label "jackrabbit".
-
-jackrabbit (since 1.4)
-
-  Improvements
-  [JCR-871]  Provide Readme's for subprojects jcr-mapping and ...
-  [JCR-1357] Create "quick start" developer bundles for model 1,2,3 deployment
-  [JCR-1437] add framework for performance tests
-  [JCR-1619] Update copyright years in READMEs and NOTICEs
-  [JCR-1649] Separate NOTICEs and LICENSEs for binary and source packages
-  [JCR-1751] Update slf4j
-  [JCR-1756] Include OCM in the main Jackrabbit build when using Java 5
-  [JCR-1863] Create jackrabbit-parent
-  [JCR-1882] Avoid ${project.version} in dependencies
-
-jackrabbit-api (since 1.4)
-
-  Improvements
-  [JCR-1342] Create OSGi Bundle Manifest Headers
-  [JCR-1672] Adding Event interface and isLocal()
-
-jackrabbit-classloader (since 1.4.1)
-
-  No changes
-
-jackrabbit-core  (since 1.4.6)
-
-  New features
-  [JCR-954]  Allow to disable referential integrity checking for workspace
-  [JCR-1171] Contribute Pluggable Permission and User Management to Jackrabbit
-  [JCR-1276] A Property and a Node Can Have the Same Name
-  [JCR-1462] repository.xml: throw an exception on error
-  [JCR-1472] extend security config -> repository-1.5.dtd
-  [JCR-1607] Add a NamespaceHelper in jcr-commons
-  [JCR-1717] Configure occurrence of property value in excerpt
-
-  Improvements
-  [JCR-904]  non mantatory revision property in the Journal configuration
-  [JCR-1005] More Fine grained Permission Flags
-  [JCR-1087] Maintain the cluster revision table
-  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
-  [JCR-1237] Change default value for respectDocumentOrder
-  [JCR-1290] tm-extractors.jar blocks usage of newer poi versions
-  [JCR-1306] Reduce number of different repository.xml present with ...
-  [JCR-1308] Unnecessary null check in EffectiveNodeType....
-  [JCR-1309] Refactor DBMS support for JNDI datasources
-  [JCR-1313] Additional excerpt provider implementation
-  [JCR-1337] Optimize first execution queries for DescendantSelfAxisWeight/...
-  [JCR-1347] Move Jackrabbit Query Parser from core to spi-commons
-  [JCR-1363] Migrate to Lucene 2.3
-  [JCR-1365] Query path constraints like foo//*/bar do not scale
-  [JCR-1369] indexing-rules should allow wildcards for (global) property names
-  [JCR-1371] [PATCH] unnecessary synchronized collections used only in ...
-  [JCR-1377] Reduce memory usage of DocNumberCache
-  [JCR-1378] Remove SessionImpl dependency from QueryObjectModelFactoryImpl
-  [JCR-1388] Jackrabbit does not allow concurrent reads to the data store ...
-  [JCR-1394] FileDataStore Garbage Collector and empty directories
-  [JCR-1395] Use Commons IO 1.4
-  [JCR-1397] Allow query results with unknown size
-  [JCR-1407] [PATCH] Trivial Javadoc fix for RepositoryConfig
-  [JCR-1413] [PATCH] retain exception stack traces
-  [JCR-1420] Add test for Node.restore() may throw InvalidStateException
-  [JCR-1424] [PATCH] simplify conversion of strings to primitives by using ...
-  [JCR-1425] [PATCH] reduce duplicate conversions from OffsetCharSequence ...
-  [JCR-1430] mvn eclipse:eclipse inconsistent
-  [JCR-1445] [PATCH] Use entrySet iterators to avoid map look ups in loops
-  [JCR-1465] Configurable Similarity
-  [JCR-1471] Error when registering nodetype with same propdef as supertype
-  [JCR-1479] [PATCH] don't use the reflective form of {Collection}.toArray
-  [JCR-1485] Introduce daily integration test suite
-  [JCR-1488] Node deleted while query is executed should not affect result ...
-  [JCR-1493] Root exception not logged in ClusterNode for ClusterException
-  [JCR-1510] [PATCH] more verbose exception messages (BatchedItemOperations)
-  [JCR-1520] DatabaseFileSystem's logger references the wrong class
-  [JCR-1531] [PATCH] Add Column and line numbers to repository.xml parse ...
-  [JCR-1538] [patch] add toString for NodeImpl and PropertyImpl
-  [JCR-1570] [PATCH] better exception messages when generating schema
-  [JCR-1575] [PATCH] cleanup unwanted stream closing that isn't used
-  [JCR-1579] Improved XML export handling
-  [JCR-1600] Remove noLockHack in SharedItemStateManager
-  [JCR-1603] Remove getSafeJCRPath methods in HierarchyManagerImpl
-  [JCR-1672] Adding Event interface and isLocal()
-  [JCR-1674] Provide means for exception handling for QueryNodeVisitor ...
-  [JCR-1677] Allow workspace creation over cluster
-  [JCR-1681] DbDataStore: improve error message when init fails
-  [JCR-1686] Catch Throwables while calling TextExtractors
-  [JCR-1696] Add PlainTextExtractor to default configuration of ...
-  [JCR-1699] Do not log warning when coercing value in query is not possible
-  [JCR-1700] Deprecate NamespaceListener and AbstractNamespaceResolver
-  [JCR-1705] Reduce memory usage of transient nodes
-  [JCR-1709] Remove Serializable on ItemState classes
-  [JCR-1710] Promote ChildNodeEntry and ChildNodeEntries to top level classes.
-  [JCR-1715] Prevent excessive Path.Element instances
-  [JCR-1716] Prefer PathFactory.createElement() over createPath()....
-  [JCR-1718] repository-1.5.dtd: change order of main elements
-  [JCR-1729] Node#addNode fails with AccessDeniedException if session ...
-  [JCR-1739] Do not use deletable anymore
-  [JCR-1742] CacheManager resizeAll is slow
-  [JCR-1745] Mark pending nodes in IndexingQueue directly in index
-  [JCR-1765] Config: make all elements in the security configuration optional
-  [JCR-1775] Transaction-safe versioning
-  [JCR-1789] Provide access to cluster records
-  [JCR-1805] Trim whitespace from parameter names in configuration files
-  [JCR-1812] WorkspaceUpdateChannel.updateCommitted logs too much
-  [JCR-1850] Journal: Use buffered input / output streams
-  [JCR-1856] Change value for SearchIndex#DEFAULT_EXTRACTOR_BACK_LOG
-  [JCR-1864] Database Data Store: clean up the code
-
-  Bug fixes
-  [JCR-575]  unicode escapes in files generated by JJTree
-  [JCR-1466] ConfigurationException constructors are package private
-  [JCR-1532] ERROR 40XD0: Container has been closed exception with Derby DB
-  [JCR-1553] ClusterNode not properly shutdown when repository has shutdown
-  [JCR-1563] Data Store: UTFDataFormatException when using large ...
-  [JCR-1572] DbDataStore connection does not always reconnect
-  [JCR-1573] Lucene Query Exception: 'attempt to access a deleted ...
-  [JCR-1580] Typo in PropertyDefinitionTemplate
-  [JCR-1581] ClassCastException when registering new node type
-  [JCR-1582] Parameters 'idleTime' and 'queryClass' cause QueryHandler to fail
-  [JCR-1601] Occasional NullPointerException in ItemManager
-  [JCR-1611] Registering NodeType from templates throws exception about ...
-  [JCR-1622] Session.getUserID returns first principal in the set obtained ...
-  [JCR-1640] Not configuring the adminId, anonymousId, or defaultuserId ...
-  [JCR-1641] DefaultLoginModule/SimpleLoginModule don't support custom ...
-  [JCR-1647] UserManager throws javax.jcr.query.InvalidQueryException on ...
-  [JCR-1694] System properties does not get replaced in a Cluster ...
-  [JCR-1703] Oracle JNDI DataSource support
-  [JCR-1714] QueryImpl result offSet must be considered after security ...
-  [JCR-1729] Node#addNode failes with AccessDeniedException if session ...
-  [JCR-1734] Generated cluster node id should be persisted
-  [JCR-1738] BeanConfig may incorrectly throw ConfigurationException
-  [JCR-1764] Occasional IndexingQueueTest failures
-  [JCR-1803] Node.restore() throws java.lang.ClassCastException
-  [JCR-1813] Invalid journal records during XATransactions
-  [JCR-1817] Core: Misleading method naming with Workspace and Session ...
-  [JCR-1866] Query may throw ArrayIndexOutOfBoundsException
-
-  Known issues
-  [JCR-43]   Restore on nodes creates same-name-sibling of ...
-  [JCR-320]  BinaryValue equals fails for two objects with ...
-  [JCR-392]  Querying element by number does not work
-  [JCR-435]  Node.update() does not work correct for SNS
-  [JCR-449]  inconsistency in internal version items during commits
-  [JCR-517]  Reserved status of namespace jcr not enforced
-  [JCR-522]  XPath parser too tolerant
-  [JCR-537]  Failure to remove a versionable node
-  [JCR-538]  failing Node.checkin() or Node.checkout() might leave ...
-  [JCR-566]  Versioning bug with restore and transactions
-  [JCR-591]  XPath position function does not work
-  [JCR-639]  Allow modification of OPV=IGNORE items even if parent ...
-  [JCR-643]  Own AccessManager + VersionManager : AccessDenied problem
-  [JCR-690]  Nodes' and properties' names with invalid XML ...
-  [JCR-709]  ArrayStoreException is thrown when jcr:deref() is used ...
-  [JCR-777]  Order by clause using child axis does not throw ...
-  [JCR-843]  XPath does not work with sub-axes
-  [JCR-888]  javax.jcr.NamespaceException: : is not a registered namespace uri
-  [JCR-908]  Unable to properly restore a previous version of a node that ...
-  [JCR-932]  Lossy SQL parsing
-  [JCR-935]  ConcurrentModificationException during logout (cont'd)
-  [JCR-936]  Using Oracle bundle PM throws SQL exception (cannot insert NULL)
-  [JCR-983]  fn:upper accepted in too many places
-  [JCR-1002] QueryManager does not throw exception if property name ...
-  [JCR-1117] Bundle cache is not rolled back when the storage of a ...
-  [JCR-1135] boolean value constraints exposed in custom format
-  [JCR-1173] Session scoped lock has no effect on other cluster nodes
-  [JCR-1187] Asking a property twice for it's stream returns the same ...
-  [JCR-1211] QueryManager does not throw exception if jcr:deref is used in ...
-  [JCR-1223] Occasional NPE on node checkin
-  [JCR-1334] Deadlock with XA enabled
-  [JCR-1360] Parsing built-in CND and XML nodetypes does not result in ...
-  [JCR-1367] Exception when closing connection under db2
-  [JCR-1387] Lock token not removed from session when node is removed
-  [JCR-1440] NPE Thrown when two Cluster Nodes are hitting the same ...
-  [JCR-1549] XATest#testXAVersionsThoroughly fails if 2 checks are ...
-  [JCR-1554] StaleItemStateException with distributed transactions
-  [JCR-1558] Namespace not registered yet prevent ...
-  [JCR-1605] RepositoryLock does not work on NFS sometimes
-  [JCR-1613] REMOVE access is not checked when moving a node
-  [JCR-1626] The resource committed at the first server via WebDAV does ...
-  [JCR-1633] When node is created and locked in same transaction, ...
-  [JCR-1634] In XA transaction session.addLockToken() does not have effect
-  [JCR-1637] The GarbageCollector ignores InterruptedException and so ...
-  [JCR-1648] Database reconnect during shutdown
-  [JCR-1660] Consistency check / fix skips system nodes
-  [JCR-1666] After transaction rollback session may become 'corrupt'
-  [JCR-1668] After RepositoryImpl instance has been created and shut ...
-  [JCR-1670] NPE when clustered JR queries version history on a node that ...
-  [JCR-1693] JNDIDatabaseJournal doesn't work with "oracle" schema ...
-  [JCR-1707] Node.setProperty(String, String, PropertyType.UNDEFINED) ...
-  [JCR-1773] shareable nodes: wrong path returned, causes remove() to ...
-  [JCR-1778] BindableRepositoryFactory doesn't handle repository shutdown
-  [JCR-1779] Warnings on unregistered namespaces in indexing configuration
-  [JCR-1806] Item not found exception
-  [JCR-1807] Removing peer nodes throws RepositoryException
-  [JCR-1823] Repository.login throws IllegalStateException
-  [JCR-1838] Garbage collection deletes temporary files in FileDataStore
-  [JCR-1846] Jackrabbit thread contention issue due to fat lock
-  [JCR-1860] Error occurs when restore nt:resource node after delete
-  [JCR-1867] Missing conflict when adding a mixin, whose protected items ...
-  [JCR-1868] Inconsistent state when removing mix:lockable from a locked Node
-  [JCR-1875] Failing Node.unlock() might leave inconsistent transient state
-  [JCR-1879] "Directory was previously created with a different ...
-  [JCR-1880] Same name sibling: Jackrabbit behaves differently when ...
-  [JCR-1883] Moved node disappears
-
-jackrabbit-jca (since 1.4)
-
-  Improvements
-  [JCR-1631] Replace commons-logging dependency with SLF4J
-
-  Bug fixes
-  [JCR-1630] Missing third party notices and license info
-  [JCR-1667] JCARepositoryManager does not close InputStream used to ...
-  [JCR-1682] Session returned does not offers transaction support
-
-  Known issues
-  [JCR-607]  Importing XML at root level using a session from JCA ...
-  [JCR-609]  Empty custom_nodetypes.xml after restart
-  [JCR-769]  Unable to login with two different Credentials to the same ...
-  [JCR-861]  Connector should support LocalTransaction as well as ...
-  [JCR-1035] Jackrabbit JCA - The client can bypass the managed connection ...
-  [JCR-1077] Changelog not persisted during two phase commit in prepare phase
-  [JCR-1334] Deadlock with XA enabled
-  [JCR-1496] Problem to invoke createDataStoreGarbageCollector() in ...
-  [JCR-1597] JCARepositoryHandle.login(...) methods never throw ...
-  [JCR-1665] In JCAConnectionRequestInfo, equals() and hashCode() ...
-  [JCR-1692] jackrabbit exceptions on jboss shutdown
-
-jackrabbit-jcr-benchmark (introduced in 1.5)
-
-  New features
-  [JCR-1437] add framework for performance tests
-
-jackrabbit-jcr-commons (since 1.4.2)
-
-  New features
-  [JCR-1248] Helper Method to escape illegal XPath Search Term
-  [JCR-1350] Add a serializing content handler
-  [JCR-1607] Add a NamespaceHelper in jcr-commons
-  [JCR-1697] Simple Google style query
-
-  Improvements
-  [JCR-1342] Create OSGi Bundle Manifest Headers
-  [JCR-1416] [PATCH] No need to call toString on a String
-  [JCR-1486] Introduce Timer idle time
-  [JCR-1579] Improved XML export handling
-  [JCR-1617] Remove commons-collections and slf4j-api dependencies from ...
-  [JCR-1636] Make shutdown hooks in TransientFileFactory removable
-  [JCR-1653] Better 'invalid format' exception messages for value classes
-  [JCR-1698] Remove unnecessary TestAll classes in jcr-commons
-  [JCR-1793] Namespace handling in AbstractSession should be synchronized
-
-  Bug fixes
-  [JCR-1331] Improper deprecation of Locked class
-  [JCR-1355] XML import should not access external entities
-  [JCR-1396] DateValue.getDate not a copy
-  [JCR-1495] NamespaceAdder.addNamespace throws ClassCastException
-  [JCR-1669] Text.isDescendant returns false if parent is '/'
-  [JCR-1706] Fix unexpected behavior of Text.getName()
-  [JCR-1767] XML serialization in JDK 1.4 broken (mostly for WebDAV)
-  [JCR-1852] session.exportDocumentView() does not work with jaxb 2.1.x ...
-
-  Known issues
-  [JCR-1668] After RepositoryImpl instance has been created and shut ...
-
-jackrabbit-jcr-rmi (since 1.4.1)
-
-  Improvements
-  [JCR-1317] Add a MBean method to programatically create a new Workspace.
-  [JCR-1342] Create OSGi Bundle Manifest Headers
-  [JCR-1343] Replace xerces for serialization by JAXP
-
-  Bug fixes
-  [JCR-1333] jackrabbit-jcr-rmi: Supplied javax.transaction.xa.Xid is ..
-  [JCR-1406] Add the org.apache.jackrabbit.rmi.jackrabbit package to the ...
-  [JCR-1454] NullPointerException may be thrown when trying to enumerate ...
-
-  Known issues
-  [JCR-1643] ClientObservationManager causes null pointer
-
-jackrabbit-jcr-server (since 1.4.1)
-
-  New features
-  [JCR-1607] Add a NamespaceHelper in jcr-commons
-
-  Improvements
-  [JCR-1391] [PATCH] remove minor unneeded code stutter
-
-  Bug fixes
-  [JCR-1364] DirListingExportHandler: Should not implement PropertyHandler
-  [JCR-1504] MS Excel Mime Type missing in MsExcelTextExtractor
-  [JCR-1790] terminology: source uses "protected property" for something ...
-
-  Known issues
-  [JCR-1348] simple-webdav: Dav:auto-version property not handled properly
-  [JCR-1352] illegal format for WebDAV lock tokens
-  [JCR-1616] Spi2Dav / 283 Conflict: Creation of PropertyInfoImpl fails ...
-  [JCR-1768] DeltaV: missing support for DAV:supported-method-set and ...
-  [JCR-1787] XmlHandler export functions don't work in XML repository mode ...
-
-jackrabbit-jcr-servlet (since 1.4)
-
-  No changes
-
-jackrabbit-jcr-tests (since 1.4)
-
-  Improvements
-  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
-
-  Bug fixes
-  [JCR-1335] bad assumptions on QueryResult.getIterator() semantics in ...
-  [JCR-1361] Lock test assumes that changes in one session are immediately ...
-  [JCR-1468] LockTest.testLogout fails to refresh session before checking ...
-  [JCR-1497] Incorrect decodedAttributeValue in AbstractImportXmlTest
-  [JCR-1535] Some tests assume that an implementation of javax.jcr.Item ...
-  [JCR-1689] Multiple tests test for locking instead of versioning
-
-  Known issues
-  [JCR-509]  TCK:NodeTest#testNodeIdentity fails if versioning ...
-  [JCR-714]  TCK: Test root path not escaped when used in XPath queries
-  [JCR-752]  Test cases leak sessions
-  [JCR-759]  handling of namespace registrations in AbstractJCRTest
-  [JCR-1094] TCK assumes that repository does not automatically add mixins ...
-  [JCR-1102] bad test assumptions in SQLJoinTest
-  [JCR-1129] bad test assumptions in versioning tests
-  [JCR-1130] bad test assumptions in TextNodeTest with respect to ...
-  [JCR-1161] Export test cases fail with Java 5 on Mac OS X
-  [JCR-1164] Bad test assumptions in observation tests
-  [JCR-1307] TCK: Attribute values may be normalized in document view exports
-  [JCR-1463] TCK: testRestore assumes too much about OPV=VERSION
-  [JCR-1810] Jcr-Test: SerializationTest logs exception during tearDown.
-
-jackrabbit-jcr2spi (since 1.4)
-
-  New features
-  [JCR-1350] Add a serializing content handler
-
-  Improvements
-  [JCR-1011] JCR2SPI: add configurable cache for Item instances (ItemManager)
-  [JCR-1091] more lenient behavior of Node#addMixin if mixin is already ...
-  [JCR-1327] SPI POM improvements
-  [JCR-1417] [PATCH] remove code stutter
-  [JCR-1547] JCR2SPI: remove dependency to state-package within nodetype ...
-  [JCR-1577] Remove RepositoryService.getRootId()
-  [JCR-1579] Improved XML export handling
-  [JCR-1585] Remove calls to System.out in tests
-  [JCR-1612] Reintroduce NamespaceStorage
-  [JCR-1683] JCR2SPI: Move test execution to SPI2JCR
-  [JCR-1700] Deprecate NamespaceListener and AbstractNamespaceResolver
-  [JCR-1720] Jcr2Spi: configuration entry for size of ItemCache
-  [JCR-1771] jcr2spi: avoid unnecessary roundtrips with NodeEntry....
-  [JCR-1798] JCR2SPI: Avoid individual Item reloading upon Session/Item....
-  [JCR-1809] Jcr2Spi: Avoid extra round trip to the SPI upon Node.getNode ...
-  [JCR-1819] JCR2SPI: Add specific deep loading of Nodes and Properties
-  [JCR-1842] SPI: RepositoryService.obtain should allow to pass null ...
-
-  Bug fixes
-  [JCR-1293] ReorderReferenceableSNSTest failure
-  [JCR-1490] [PATCH] UpdateTest has two typos
-  [JCR-1578] Jcr2Spi: UpdateTest#testUpdateRemovesExtraProperty and ...
-  [JCR-1638] Redundant calls to RepositoryService.getChildInfos
-  [JCR-1658] Executing query throws ...
-  [JCR-1783] JCR2SPI: incomplete changelog when combining move with ...
-  [JCR-1799] JCR2SPI: updating events swallowed (CacheBehaviour.OBSERVATION)
-  [JCR-1800] JCR2SPI: lockmgr isn't aware about external locks ...
-  [JCR-1811] Jcr2Spi: ExportSysViewTest#testExportSysView_handler_session_...
-  [JCR-1821] jcr2spi: Item.isSame may return wrong result if any ancestor ...
-  [JCR-1843] jcr2spi: wrong status change upon conflicting removal (CacheB...
-  [JCR-1857] jcr2spi: NPE with SessionImporter#checkIncludesMixReferenceab...
-  [JCR-1862] jcr2spi: transient removal of mandatory item throws Constrain...
-  [JCR-1857] jcr2spi: NPE with SessionImporter#checkIncludesMix...
-  [JCR-1862] jcr2spi: transient removal of mandatory item throws ...
-
-  Known issues
-  [JCR-1868] Inconsistent state when removing mix:lockable from a locked Node
-  [JCR-1886] jcr2spi: Unprocessed ItemInfos call to RepositoryService#...
-
-jackrabbit-parent (introduced in 1.5)
-
-  Improvements
-  [JCR-1863] Create jackrabbit-parent
-
-jackrabbit-spi (since 1.4)
-
-  New features
-  [JCR-1405] SPI: Introduce NodeInfo.getChildInfos()
-  [JCR-1629] SPI: Testsuite for the SPI Interfaces
-
-  Improvements
-  [JCR-1327] SPI POM improvements
-  [JCR-1368] improve documentation of SPI Batch addProperty
-  [JCR-1403] SPI: Describe equality requirements of ItemIds
-  [JCR-1500] removing properties through SPI: two ways to do it
-  [JCR-1513] RepositoryService.checkin should return information about ...
-  [JCR-1539] SPI: Get rid of unused method ItemInfo.getParentId()
-  [JCR-1543] Improve reliability of canAddMixin
-  [JCR-1550] Remove ItemInfo.getName() since it is redundant
-  [JCR-1576] Remove RepositoryService exists()
-  [JCR-1577] Remove RepositoryService.getRootId()
-  [JCR-1842] SPI: RepositoryService.obtain should allow to pass null ...
-
-  Bug fixes
-  [JCR-1158] jcr2spi spi2dav getProperties returns only cached properties
-  [JCR-1434] SPI: Description of Path.isDescendantOf(Path)
-  [JCR-1514] SPI: Javadoc Issue with QNodeTypeDefinition#getPropertyDefs ...
-  [JCR-1851] SPI: Helper does not properly retrieve org.apache.jackrabbit....
-
-jackrabbit-spi-commons (since 1.4)
-
-  New features
-  [JCR-1662] Add pattern matching for paths
-
-  Improvements
-  [JCR-1327] SPI POM improvements
-  [JCR-1344] Unsynchronized NameFactoryImpl initialization
-  [JCR-1347] Move Jackrabbit Query Parser from core to spi-commons
-  [JCR-1430] mvn eclipse:eclipse inconsistent
-  [JCR-1494] [PATCH] XPathQueryBuilder reports misleading column numbers ...
-  [JCR-1654] Incorrect slf4j-log4j12 dependency scope in spi-commons
-  [JCR-1663] REFERENCE properties produce duplicate strings in memory
-  [JCR-1674] Provide means for exception handling for QueryNodeVisitor ...
-  [JCR-1675] Provide names for constants in QueryConstants
-  [JCR-1700] Deprecate NamespaceListener and AbstractNamespaceResolver
-  [JCR-1715] Prevent excessive Path.Element instances
-
-  Bug fixes
-  [JCR-575]  Unicode escapes in files generated by JJTree
-  [JCR-1280] Path.equals does not work for other Path implementations
-  [JCR-1409] PathFactoryImpl creates illegal Path objects
-  [JCR-1495] NamespaceAdder.addNamespace throws ClassCastException
-  [JCR-1653] NodeIdImpl is not really serializable
-  [JCR-1688] Query parser builds invalid parse tree
-  [JCR-1750] Creating QValue from stream: stream not closed
-
-jackrabbit-spi2jcr (since 1.4)
-
-  Improvements
-  [JCR-1327] SPI POM improvements
-  [JCR-1683] JCR2SPI: Move test execution to SPI2JCR
-  [JCR-1700] Deprecate NamespaceListener and AbstractNamespaceResolver
-  [JCR-1842] SPI: RepositoryService.obtain should allow to pass null ...
-
-  Known issues:
-  [JCR-1802] SPI2JCR: Missing SPI events due to exception (warning in logfile)
-
-jackrabbit-standalone (introduced in 1.5)
-
-  Improvements
-  [JCR-1357] Create "quick start" developer bundles for model 1,2,3 deployment
-
-jackrabbit-text-extractors (since 1.4)
-
-  New features
-  [JCR-1523] [PATCH] png, apng, mng text extractor
-  [JCR-1561] New MsOutlook Message Extractor
-
-  Improvements
-  [JCR-1533] Update POI dependency to 3.0.2-FINAL
-  [JCR-1534] Use POIExtractor wherever possible
-  [JCR-1567] Upgrade to PDFBox 0.7.3
-  [JCR-1655] Upgrade nekohtml dependency
-  [JCR-1661] Extend mimetype list of text extractors
-  [JCR-1691] Includes new (old) mimetypes that OpenOfficeTextExtractor can ..
-
-  Bug fixes
-  [JCR-1504] MS Excel Mime Type missing in MsExcelTextExtractor
-  [JCR-1530] MsPowerPointTextExtractor does not extract from PPTs with € sign
-  [JCR-1646] NPE in OpenOfficeTextExtractor
-  [JCR-1727] HTMLTextExtractor modifying UTF-8 encoded String
-  [JCR-1881] RTF text extractor fails on Java 1.4 in some environments
-
-jackrabbit-webapp (since 1.4)
-
-  Improvements
-  [JCR-1631] Replace commons-logging dependency with SLF4J
-
-  Bug fixes
-  [JCR-1364] DirListingExportHandler: Should not implement PropertyHandler
-  [JCR-1545] webapp: troubleshooting.jsp fails
-  [JCR-1596] search.jsp doesn't handle utf-8 parameters correctly
-  [JCR-1598] Problematic exception handling in Jackrabbit WebApp
-  [JCR-1630] Missing third party notices and license info
-  [JCR-1737] JSP page compilation errors when depoyed using oc4j
-
-  Known issues
-  [JCR-1301] Trouble undeploying jackrabbit-webapp from Tomcat
-  [JCR-1457] Restart of RMI-component fails (because it's not released ...
-  [JCR-1763] Possible NPE in installer
-
-jackrabbit-webdav (since 1.4)
-
-  New features
-  [JCR-1733] WebDAV BIND support
-
-  Improvements
-  [JCR-1310] Webdav: Drop xerces dependency
-  [JCR-1615] WebDAV: drop dependency on commons-collections
-  [JCR-1769] RFC4918 feature: PROPFIND/include
-  [JCR-1795] advertise support for RFC4918 (WebDAV) compliance class 3
-
-  Bug fixes
-  [JCR-1439] MOVE method returns error 412 Precondition Failed
-  [JCR-1571] DavMethodBase#getResponseException fails if the body is not ...
-  [JCR-1623] Typo in the DeltaVConstants class in constant ...
-  [JCR-1744] PROPFIND response to a request for a property taht does not ...
-  [JCR-1782] Destination header not containing URI scheme causes NPE
-  [JCR-1790] terminology: source uses "protected property" for something ...
-
-  Known issues
-  [JCR-406]  If header evaluation compliance problems
-  [JCR-1785] If header checking lacks etag checks
-  [JCR-1796] DAV compliance class for observation should use a URI instead ...
-
-jackrabbit-ocm (since 1.4)
-
-  New features
-  [JCR-1467] Hide ugly repository init code for OCM
-  [JCR-1645] Add support for Map of referenced beans
-  [JCR-1721] make collection element names configurable
-  [JCR-1761] OCM:Add the ability to specify name of a Collection Element ...
-
-  Improvements
-  [JCR-876]  ManageableCollectionUtil should not throw "unsupported" ...
-  [JCR-966]  [OCM] Add unit tests with BundleDbPersistenceManager
-  [JCR-1316] ID Field Descriptor is not inherited as is the case with UUID ...
-  [JCR-1404] javadoc writing and generation with mvn
-  [JCR-1505] Improve handling of inherited mixins
-  [JCR-1624] Proxies improvement
-  [JCR-1740] Make ObjectIterator implement RangeIterator interface
-  [JCR-1752] Allow users to disable validation
-  [JCR-1754] The jackrabbit-ocm DTD 1.5 is missing and has to be publish
-  [JCR-1758] Improvement to UndefinedTypeConverterImpl to map super types ...
-  [JCR-1759] Simplify the usage of OCM annotations
-  [JCR-1762] Improvement to MultiValueCollectionConverterImpl to Map ...
-  [JCR-1844] Convenience method to Or multiple values with a single filter
-  [JCR-1853] Modified QueryImpl to enable external query builders to read ...
-  [JCR-1859] BeanLazyLoader is not Serializable
-
-  Bug fixes
-  [JCR-1286] FilterImpl.getStringValue() does not use custom converter ...
-  [JCR-1303] Missing derby dependency
-  [JCR-1325] Problems mapping custom collections
-  [JCR-1336] Bug in duplicate mapping check
-  [JCR-1339] ManageableCollectionUtil doesn't support Maps
-  [JCR-1381] Path is not indexed when inserting a new node with SNS
-  [JCR-1385] UUID field not populated when saving a new node
-  [JCR-1398] [PATCH] ClassDescriptor.hasIdField uses faulty logic
-  [JCR-1448] nt:versionedChild problem
-  [JCR-1524] [PATCH] tests use 12 for month which is invalid
-  [JCR-1537] ClassDescriptor.hasIdField() fails if id is declared in upper ...
-  [JCR-1548] Several bugs in last SVN commit
-  [JCR-1757] OCM: translate-project goal not found
-  [JCR-1776] Some unit tests are not well configured
-  [JCR-1784] OCM:The UUID of the collection elements changes on update.
-
-  Known issues
-  [JCR-1858] ClassDescriptor ReflectionUtils ClassLoader Defect
-  [JCR-1889] Incorrect support for java interfaces in typed collection fields
-
-jackrabbit-ocm-nodemanagement (since 1.4)
-
-  No changes
