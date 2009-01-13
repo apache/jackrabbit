@@ -34,7 +34,7 @@
   </parent>
   <artifactId>jackrabbit-jcr-servlet</artifactId>
   <name>Jackrabbit JCR Servlets</name>
-  <version>1.5.1-SNAPSHOT</version>
+  <version>1.5.1</version>
   <description>
     Servlets and related classes for easy use of JCR content repositories
     in web applications.
@@ -53,7 +53,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.1-SNAPSHOT</version>
+      <version>1.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
@@ -64,7 +64,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
       <optional>true</optional>
     </dependency>
   </dependencies>

@@ -35,6 +35,7 @@
   </parent>
 
   <artifactId>jackrabbit</artifactId>
+  <version>1.5.1</version>
   <name>Apache Jackrabbit</name>
   <packaging>pom</packaging>
 
