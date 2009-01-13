@@ -43,6 +43,13 @@ class SharedFieldCache {
     public static class StringIndex {
 
         /**
+         * Some heuristic factor that determines whether the array is sparse. Note that if less then
+         * 1% is set, we already count the array as sparse. This is because it will become memory consuming
+         * quickly by keeping the (sparse) arrays 
+         */
+        private static final int SPARSE_FACTOR = 100;
+
+        /**
          * All the term values, in natural order.
          */
         public final String[] lookup;
@@ -50,14 +57,64 @@ class SharedFieldCache {
         /**
          * Terms indexed by document id.
          */
-        public final String[] terms;
+        private final String[] terms;
+
+        /**
+         * Terms map indexed by document id.
+         */
+        public final Map termsMap;
+
+        /**
+         * Boolean indicating whether the hashMap impl has to be used
+         */
+        public final boolean sparse;
 
         /**
          * Creates one of these objects
          */
-        public StringIndex(String[] terms, String[] lookup) {
-            this.terms = terms;
+        public StringIndex(String[] terms, String[] lookup, int setValues) {
+            if (isSparse(terms, setValues)) {
+                this.sparse = true;
+                this.terms = null;
+                if (setValues == 0) {
+                    this.termsMap = null;
+                } else {
+                    this.termsMap = getTermsMap(terms, setValues);
+                }
+            } else {
+                this.sparse = false;
+                this.terms = terms;
+                this.termsMap = null;
+            }
             this.lookup = lookup;
+        }
+
+        public String getTerm(int i) {
+            if (sparse) {
+                return termsMap == null ? null : (String) termsMap.get(new Integer(i));
+            } else {
+                return terms[i];
+            }
+        }
+
+        private Map getTermsMap(String[] terms, int setValues) {
+            Map map = new HashMap(setValues);
+            for (int i = 0; i < terms.length && setValues > 0; i++) {
+                if (terms[i] != null) {
+                    map.put(new Integer(i), terms[i]);
+                    setValues--;
+                }
+            }
+            return map;
+        }
+
+        private boolean isSparse(String[] terms, int setValues) {
+            // some really simple test to test whether the array is sparse. Currently, when less then 1% is set, the array is already sparse 
+            // for this typical cache to avoid memory issues
+            if (setValues * SPARSE_FACTOR < terms.length) {
+                return true;
+            }
+            return false;
         }
     }
 
@@ -114,6 +171,7 @@ class SharedFieldCache {
             if (includeLookup) {
                 mterms = new ArrayList();
             }
+            int setValues = 0;
             if (retArray.length > 0) {
                 TermDocs termDocs = reader.termDocs();
                 TermEnum termEnum = reader.terms(new Term(field, prefix));
@@ -141,6 +199,7 @@ class SharedFieldCache {
 
                         termDocs.seek(termEnum);
                         while (termDocs.next()) {
+                            setValues++;
                             retArray[termDocs.doc()] = term.text().substring(prefix.length());
                         }
                     } while (termEnum.next());
@@ -153,7 +212,7 @@ class SharedFieldCache {
             if (includeLookup) {
                 lookup = (String[]) mterms.toArray(new String[mterms.size()]);
             }
-            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, lookup);
+            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, lookup, setValues);
             store(reader, field, prefix, comparator, value);
             return value;
         }
