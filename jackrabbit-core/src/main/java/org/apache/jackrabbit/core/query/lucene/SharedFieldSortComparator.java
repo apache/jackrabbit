@@ -117,8 +117,8 @@ public class SharedFieldSortComparator extends SortComparator {
                 int idx1 = readerIndex(i.doc);
                 int idx2 = readerIndex(j.doc);
 
-                String iTerm = indexes[idx1].terms[i.doc - starts[idx1]];
-                String jTerm = indexes[idx2].terms[j.doc - starts[idx2]];
+                String iTerm = indexes[idx1].getTerm(i.doc - starts[idx1]);
+                String jTerm = indexes[idx2].getTerm(j.doc - starts[idx2]);
 
                 if (iTerm == jTerm) {
                     return 0;
@@ -141,8 +141,8 @@ public class SharedFieldSortComparator extends SortComparator {
              */
             public Comparable sortValue(final ScoreDoc i) {
                 if (createComparatorValues) {
-                    StringIndex index = indexes[readerIndex(i.doc)];
-                    return index.terms[i.doc];
+                    int idx = readerIndex(i.doc);
+                    return indexes[idx].getTerm(i.doc - starts[idx]);
                 } else {
                     // return dummy value
                     return "";
