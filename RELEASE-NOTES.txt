@@ -43,6 +43,7 @@ jackrabbit-core
   [JCR-1823] Repository.login throws IllegalStateException
   [JCR-1838] Garbage collection deletes temporary files in FileDataStore
   [JCR-1920] Custom LoginModule configurations broken in 1.5.0
+  [JCR-1931] SharedFieldCache$StringIndex memory leak causing OOM's
 
 jackrabbit-jcr-commons
 
