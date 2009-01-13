@@ -33,6 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-webdav</artifactId>
+  <version>1.5.1</version>
   <name>Jackrabbit WebDAV Library</name>
   <description>WebDAV library used by the Jackrabbit WebDAV support</description>
 
