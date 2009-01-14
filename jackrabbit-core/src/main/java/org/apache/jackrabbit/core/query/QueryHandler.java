@@ -126,4 +126,10 @@ public interface QueryHandler {
                                           ItemManager itemMgr,
                                           QueryObjectModelTree qomTree)
             throws InvalidQueryException;
+    
+    /**
+     * @return the name of the query class to use.
+     */
+    String getQueryClass();
+    
 }
