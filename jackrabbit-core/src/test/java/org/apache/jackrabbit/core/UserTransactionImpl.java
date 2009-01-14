@@ -29,6 +29,7 @@ import javax.transaction.RollbackException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.XASession;
+import org.apache.jackrabbit.core.state.TimeBomb;
 
 /**
  * Internal {@link javax.transaction.UserTransaction} implementation.
@@ -55,6 +56,8 @@ public class UserTransactionImpl implements UserTransaction {
      */
     private int status = Status.STATUS_NO_TRANSACTION;
 
+    private boolean distributedThreadAccess = false;
+    
     /**
      * Create a new instance of this class. Takes a session as parameter.
      * @param session session. If session is not of type
@@ -62,8 +65,19 @@ public class UserTransactionImpl implements UserTransaction {
      * is thrown
      */
     public UserTransactionImpl(Session session) {
+        this(session, false);
+    }
+
+    /**
+     * Create a new instance of this class. Takes a session as parameter.
+     * @param session session. If session is not of type
+     * {@link XASession}, an <code>IllegalArgumentException</code>
+     * is thrown
+     */
+    public UserTransactionImpl(Session session, boolean distributedThreadAccess) {
         if (session instanceof XASession) {
             xares = ((XASession) session).getXAResource();
+            this.distributedThreadAccess = distributedThreadAccess; 
         } else {
             throw new IllegalArgumentException("Session not of type XASession");
         }
@@ -108,7 +122,34 @@ public class UserTransactionImpl implements UserTransaction {
             status = Status.STATUS_PREPARED;
 
             status = Status.STATUS_COMMITTING;
-            xares.commit(xid, false);
+            if (distributedThreadAccess) {
+                try {
+                    final Thread t = Thread.currentThread();
+                    final TimeBomb tb = new TimeBomb(100) {
+                        public void explode() {
+                            t.interrupt();
+                        }
+                    };
+                    tb.arm();
+                    Thread distributedThread = new Thread() {
+                        public void run() {
+                            try {
+                                xares.commit(xid, false);
+                                tb.disarm();                
+                            } catch (Exception e) {
+                                throw new RuntimeException(e.getMessage());
+                            }
+                        }
+                    };
+                    distributedThread.start();
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    throw new SystemException("commit from different thread but same XID must not block");
+                }
+            } else {
+                xares.commit(xid, false);
+            }
+            
             status = Status.STATUS_COMMITTED;
 
         } catch (XAException e) {
@@ -175,7 +216,16 @@ public class UserTransactionImpl implements UserTransaction {
     /**
      * @see javax.transaction.UserTransaction#setTransactionTimeout
      */
-    public void setTransactionTimeout(int seconds) throws SystemException {}
+    public void setTransactionTimeout(int seconds) throws SystemException {
+        try {
+            xares.setTransactionTimeout(seconds);
+        } catch (XAException e) {
+            SystemException se = new SystemException(
+                    "Unable to set the TransactionTiomeout: XA_ERR=" + e.errorCode);
+            se.initCause(e.getCause());
+            throw se;
+        }
+    }
 
 
     /**

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
@@ -59,6 +60,8 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+import javax.transaction.xa.Xid;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -89,10 +92,44 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     private final PathMap lockMap = new PathMap();
 
-    /**
-     * Lock to path map.
-     */
-    private final ReentrantLock lockMapLock = new ReentrantLock();
+    private final ReentrantLock lockMapLock = new ReentrantLock(){
+        
+        private Xid activeXid;
+        
+        public void acquire() throws InterruptedException {
+            if (Thread.interrupted()) throw new InterruptedException();
+            Thread caller = Thread.currentThread();
+            synchronized(this) {
+                boolean allow = TransactionContext.isCurrentXid(activeXid, caller == owner_);
+                if (allow) {
+                    ++holds_;
+                } else {
+                    try {  
+                        while (owner_ != null) 
+                            wait(); 
+                        owner_ = caller;
+                        activeXid = (Xid) TransactionContext.getCurrentXid();
+                        holds_ = 1;
+                    } catch (InterruptedException ex) {
+                        notify();
+                        throw ex;
+                    }
+                }
+            }
+        }
+        
+        public synchronized void release()  {
+            boolean allow = TransactionContext.isCurrentXid(activeXid, Thread.currentThread() == owner_);
+            if (!allow)
+                throw new Error("Illegal Lock usage"); 
+
+            if (--holds_ == 0) {
+                owner_ = null;
+                activeXid = null;
+                notify(); 
+            }
+        }       
+    };
 
     /**
      * System session

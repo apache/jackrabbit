@@ -1468,4 +1468,37 @@ public class XATest extends AbstractJCRTest {
         // assert: version label known in other session
         nOther.getVersionHistory().getVersionByLabel(versionLabel);
     }
+    
+    /**
+     * Tests two different Threads for prepare and commit in a Transaction
+     */
+    public void testDistributedThreadAccess() throws Exception {
+        // get user transaction object
+        UserTransaction utx = new UserTransactionImpl(superuser, true);
+        //utx.setTransactionTimeout(50);
+        // start transaction
+        utx.begin();
+
+        // add node and save
+        Node n = testRootNode.addNode(nodeName1, testNodeType);
+        n.addMixin(mixReferenceable);
+        testRootNode.save();
+
+        // assertion: node exists in this session
+        try {
+            superuser.getNodeByUUID(n.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("New node not visible after save()");
+        }
+
+        // commit
+        utx.commit();
+
+        // assertion: node exists in this session
+        try {
+            superuser.getNodeByUUID(n.getUUID());
+        } catch (ItemNotFoundException e) {
+            fail("Committed node not visible in this session");
+        }
+    }
 }

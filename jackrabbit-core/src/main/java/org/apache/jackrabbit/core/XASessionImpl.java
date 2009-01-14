@@ -265,7 +265,7 @@ public class XASessionImpl extends SessionImpl
      * @return transaction context
      */
     private TransactionContext createTransaction(Xid xid) {
-        TransactionContext tx = new TransactionContext(txResources, getTransactionTimeout());
+        TransactionContext tx = new TransactionContext(xid, txResources, getTransactionTimeout());
         txGlobal.put(xid, tx);
         return tx;
     }
