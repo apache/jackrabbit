@@ -49,8 +49,7 @@ import javax.naming.Referenceable;
  * <p/>
  * An instance of this class is normally always also initialized.
  * The uninitialized state is only used briefly during the static
- * {@link #create(String, String) create} method and during
- * serialization and JNDI "referenciation".
+ * construction, deserialization, and JNDI "referenciation".
  * <p/>
  * A JVM shutdown hook is used to make sure that the initialized
  * repository is properly closed when the JVM shuts down. The
@@ -86,7 +85,7 @@ public class BindableRepository extends AbstractRepository
     /**
      * The delegate repository instance. Created by {@link #init() init}.
      */
-    private transient JackrabbitRepository delegatee;
+    private transient JackrabbitRepository repository;
 
     /**
      * Thread that is registered as shutdown hook after {@link #init} has been
@@ -95,11 +94,11 @@ public class BindableRepository extends AbstractRepository
     private transient Thread hook;
 
     /**
-     * Creates a BindableRepository instance with the given configuration
-     * information, but does not create the underlying repository instance.
+     * Creates a BindableRepository instance with the configuration
+     * information in the given JNDI reference.
      *
-     * @param configFilePath repository configuration file path
-     * @param repHomeDir     repository home directory path
+     * @param reference JNDI reference
+     * @throws RepositoryException if the repository can not be started
      */
     public BindableRepository(Reference reference) throws RepositoryException {
         this.reference = reference;
@@ -113,8 +112,8 @@ public class BindableRepository extends AbstractRepository
      *
      * @throws RepositoryException if the repository cannot be created
      */
-    protected void init() throws RepositoryException {
-        delegatee = getRepository(reference);
+    private void init() throws RepositoryException {
+        repository = createRepository();
         hook = new Thread() {
             public void run() {
                 shutdown();
@@ -124,20 +123,38 @@ public class BindableRepository extends AbstractRepository
     }
 
     /**
-     * Creates a repository instance based on the given reference. Can be
-     * overridden by subclasses to return different repositories. The default
-     * implementation returns a {@link RepositoryImpl} instance.
+     * Creates a repository instance based on the contained JNDI reference.
+     * Can be overridden by subclasses to return different repositories.
+     * A subclass can access the JNDI reference through the
+     * {@link #getReference()} method. The default implementation
+     * returns a {@link RepositoryImpl} instance.
      *
-     * @param reference repository reference
      * @return repository instance
      * @throws RepositoryException if the repository could not be created
      */
+    protected JackrabbitRepository createRepository()
+            throws RepositoryException {
+        return getRepository(reference);
+    }
+
+    // JCR-1644: Required for compatibility with subclasses that used to
+    // override this older signature of the createRepository method.
     protected JackrabbitRepository getRepository(Reference reference)
             throws RepositoryException {
         RepositoryConfig config = RepositoryConfig.create(
                 reference.get(CONFIGFILEPATH_ADDRTYPE).getContent().toString(),
                 reference.get(REPHOMEDIR_ADDRTYPE).getContent().toString());
         return RepositoryImpl.create(config);
+    }
+
+    /**
+     * Returns the underlying repository instance. Can be used by subclasses
+     * to access the repository instance.
+     *
+     * @return repository instance
+     */
+    protected JackrabbitRepository getRepository() {
+        return repository;
     }
 
     //-----------------------------------------------------------< Repository >
@@ -148,7 +165,7 @@ public class BindableRepository extends AbstractRepository
      */
     public Session login(Credentials credentials, String workspaceName)
             throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return delegatee.login(credentials, workspaceName);
+        return repository.login(credentials, workspaceName);
     }
 
     /**
@@ -156,7 +173,7 @@ public class BindableRepository extends AbstractRepository
      * {@inheritDoc}
      */
     public String getDescriptor(String key) {
-        return delegatee.getDescriptor(key);
+        return repository.getDescriptor(key);
     }
 
     /**
@@ -164,7 +181,7 @@ public class BindableRepository extends AbstractRepository
      * {@inheritDoc}
      */
     public String[] getDescriptorKeys() {
-        return delegatee.getDescriptorKeys();
+        return repository.getDescriptorKeys();
     }
 
     //--------------------------------------------------------< Referenceable >
@@ -212,7 +229,7 @@ public class BindableRepository extends AbstractRepository
      * Delegated to the underlying repository instance.
      */
     public void shutdown() {
-        delegatee.shutdown();
+        repository.shutdown();
         try {
             Runtime.getRuntime().removeShutdownHook(hook);
         } catch (IllegalStateException e) {
