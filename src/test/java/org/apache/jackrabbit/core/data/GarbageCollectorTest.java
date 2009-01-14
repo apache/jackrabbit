@@ -22,11 +22,11 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import EDU.oswego.cs.dl.util.concurrent.SynchronousChannel;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -41,6 +41,61 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(GarbageCollectorTest.class);    
     
+    public void testConcurrentGC() throws Exception {
+        Node root = testRootNode;
+        Session session = root.getSession();
+        RepositoryImpl rep = (RepositoryImpl) session.getRepository();
+        if (rep.getDataStore() == null) {
+            LOG.info("testConcurrentGC skipped. Data store is not used.");
+            return;
+        }
+        final SynchronousChannel sync = new SynchronousChannel();
+        final Node node = root.addNode("slowBlob");
+        new Thread() {
+            public void run() {
+                try {
+                    node.setProperty("slowBlob", new InputStream() {
+                        int pos = 0;
+                        public int read() throws IOException {
+                            pos++;
+                            if (pos < 10000) {
+                                return pos % 80 == 0 ? '\n' : '.';
+                            } else if (pos == 10000) {
+                                try {
+                                    sync.put("x");
+                                    // deleted
+                                    sync.take();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                                return 'x';
+                            }
+                            return -1;
+                        }
+                    });
+                    node.getSession().save();
+                    sync.put("saved");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+        assertEquals("x", sync.take());
+        GarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        gc.scan();
+        gc.stopScan();
+        gc.deleteUnused();
+        sync.put("deleted");
+        assertEquals("saved", sync.take());
+        InputStream in = node.getProperty("slowBlob").getStream();
+        for (int pos = 1; pos < 10000; pos++) {
+            int expected = pos % 80 == 0 ? '\n' : '.';
+            assertEquals(expected, in.read());
+        }
+        assertEquals('x', in.read());
+        in.close();
+    }
+
     public void testGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();

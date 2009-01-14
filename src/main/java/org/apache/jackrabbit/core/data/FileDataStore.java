@@ -162,6 +162,8 @@ public class FileDataStore implements DataStore {
         File temporary = null;
         try {
             temporary = newTemporaryFile();
+            DataIdentifier tempId = new DataIdentifier(temporary.getName());
+            usesIdentifier(tempId);
             // Copy the stream to the temporary file and calculate the
             // stream length and the message digest of the stream
             long length = 0;
@@ -212,7 +214,9 @@ public class FileDataStore implements DataStore {
                     throw new IOException(DIGEST + " collision: " + file);
                 }
             }
-
+            // this will also make sure that
+            // tempId is not garbage collected until here
+            inUse.remove(tempId);
             return new FileDataRecord(identifier, file);
         } catch (NoSuchAlgorithmException e) {
             throw new DataStoreException(DIGEST + " not available", e);
@@ -276,8 +280,9 @@ public class FileDataStore implements DataStore {
         int count = 0;
         if (file.isFile() && file.exists() && file.canWrite()) {
             synchronized (this) {
+                String fileName = file.getName();
                 if (file.lastModified() < min) {
-                    DataIdentifier id = new DataIdentifier(file.getName());
+                    DataIdentifier id = new DataIdentifier(fileName);
                     if (!inUse.containsKey(id)) {
                         file.delete();
                         count++;
