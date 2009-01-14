@@ -91,16 +91,6 @@ public class SearchManager implements SynchronousEventListener {
     private static final String PARAM_QUERY_IMPL = "queryClass";
 
     /**
-     * Name of the parameter that specifies the idle time for a query handler.
-     */
-    private static final String PARAM_IDLE_TIME = "idleTime";
-
-    /**
-     * Name of the default query implementation class.
-     */
-    private static final String DEFAULT_QUERY_IMPL_CLASS = QueryImpl.class.getName();
-
-    /**
      * The search configuration.
      */
     private final SearchConfig config;
@@ -156,12 +146,6 @@ public class SearchManager implements SynchronousEventListener {
      * Path that will be excluded from indexing.
      */
     private Path excludePath;
-
-    /**
-     * Fully qualified name of the query implementation class.
-     * This class must extend {@link org.apache.jackrabbit.core.query.AbstractQueryImpl}!
-     */
-    private final String queryImplClassName;
 
     /**
      * Creates a new <code>SearchManager</code>.
@@ -220,14 +204,6 @@ public class SearchManager implements SynchronousEventListener {
         }
         // at this point the 'fn' prefix shouldn't be assigned anymore
         safeRegisterNamespace(NS_FN_PREFIX, NS_FN_URI);
-
-        Properties params = config.getParameters();
-        queryImplClassName = params.getProperty(PARAM_QUERY_IMPL, DEFAULT_QUERY_IMPL_CLASS);
-        if (params.containsKey(PARAM_IDLE_TIME)) {
-            String msg = "Parameter 'idleTime' is not supported anymore. "
-                + "Please use 'maxIdleTime' in the repository configuration.";
-            log.warn(msg);
-        }
 
         if (excludedNodeId != null) {
             HierarchyManagerImpl hmgr =
@@ -524,6 +500,7 @@ public class SearchManager implements SynchronousEventListener {
      */
     protected AbstractQueryImpl createQueryInstance() throws RepositoryException {
         try {
+            String queryImplClassName = handler.getQueryClass();
             Object obj = Class.forName(queryImplClassName).newInstance();
             if (obj instanceof AbstractQueryImpl) {
                 return (AbstractQueryImpl) obj;
@@ -532,7 +509,7 @@ public class SearchManager implements SynchronousEventListener {
                         + " is not of type " + AbstractQueryImpl.class.getName());
             }
         } catch (Throwable t) {
-            throw new RepositoryException("Unable to create query: " + t.toString());
+            throw new RepositoryException("Unable to create query: " + t.toString(), t);
         }
     }
 

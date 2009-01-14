@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -26,6 +28,11 @@ import java.io.IOException;
  * Implements default behaviour for some methods of {@link QueryHandler}.
  */
 public abstract class AbstractQueryHandler implements QueryHandler {
+
+    /**
+     * Logger instance for this class
+     */
+    private static final Logger log = LoggerFactory.getLogger(AbstractQueryHandler.class);
 
     /**
      * The context for this query handler.
@@ -40,7 +47,7 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     /**
      * The name of a class that extends {@link AbstractQueryImpl}.
      */
-    private String queryClass;
+    private String queryClass = QueryImpl.class.getName();
 
     /**
      * The max idle time for this query handler until it is stopped. This
@@ -143,17 +150,23 @@ public abstract class AbstractQueryHandler implements QueryHandler {
 
     /**
      * Sets the query handler idle time.
-     *
+     * @deprecated
+     * This parameter is not supported any more.
+     * Please use 'maxIdleTime' in the repository configuration.
+     * 
      * @param idleTime the query handler idle time.
      */
     public void setIdleTime(String idleTime) {
+        log.warn("Parameter 'idleTime' is not supported anymore. "
+                + "Please use 'maxIdleTime' in the repository configuration.");
         this.idleTime = idleTime;
     }
 
     /**
-     * @return the query handler idle tim.
+     * @return the query handler idle time.
      */
     public String getIdleTime() {
         return idleTime;
     }
+        
 }
