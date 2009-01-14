@@ -560,14 +560,14 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Performs a sanity check on this repository instance.
      *
-     * @throws IllegalStateException if this repository has been rendered
-     *                               invalid for some reason (e.g. if it has
-     *                               been shut down)
+     * @throws RepositoryException if this repository has been rendered
+     *             invalid for some reason (e.g. if it has been shut down)
      */
-    protected void sanityCheck() throws IllegalStateException {
+    protected void sanityCheck() throws RepositoryException {
         // check repository status
         if (disposed) {
-            throw new IllegalStateException("repository instance has been shut down");
+            throw new RepositoryException(
+                    "This repository instance has been shut down.");
         }
     }
 
@@ -664,30 +664,18 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     protected NamespaceRegistryImpl getNamespaceRegistry() {
-        // check sanity of this instance
-        sanityCheck();
-
         return nsReg;
     }
 
     protected NodeTypeRegistry getNodeTypeRegistry() {
-        // check sanity of this instance
-        sanityCheck();
-
         return ntReg;
     }
 
     protected VersionManager getVersionManager() {
-        // check sanity of this instance
-        sanityCheck();
-
         return vMgr;
     }
 
     protected NodeId getRootNodeId() {
-        // check sanity of this instance
-        sanityCheck();
-
         return rootNodeId;
     }
 
@@ -710,12 +698,11 @@ public class RepositoryImpl extends AbstractRepository
      *                      is to be returned. This must not be <code>null</code>.
      * @return The {@link WorkspaceInfo} for the named workspace. This will
      *         never be <code>null</code>.
-     * @throws IllegalStateException    If this repository has already been
-     *                                  shut down.
      * @throws NoSuchWorkspaceException If the named workspace does not exist.
+     * @throws RepositoryException If this repository has been shut down.
      */
     protected WorkspaceInfo getWorkspaceInfo(String workspaceName)
-            throws IllegalStateException, NoSuchWorkspaceException {
+            throws NoSuchWorkspaceException, RepositoryException {
         // check sanity of this instance
         sanityCheck();
 
@@ -795,7 +782,7 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     ObservationDispatcher getObservationDispatcher(String workspaceName)
-            throws NoSuchWorkspaceException {
+            throws NoSuchWorkspaceException, RepositoryException {
         // check sanity of this instance
         sanityCheck();
 
