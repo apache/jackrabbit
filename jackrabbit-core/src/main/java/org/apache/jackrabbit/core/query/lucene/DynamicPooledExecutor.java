@@ -50,7 +50,6 @@ public class DynamicPooledExecutor {
     public DynamicPooledExecutor() {
         executor = new PooledExecutor();
         executor.setKeepAliveTime(500);
-        executor.waitWhenBlocked();
         adjustPoolSize();
     }
 
