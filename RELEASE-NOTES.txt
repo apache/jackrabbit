@@ -13,12 +13,26 @@ changes in this release.
 See the Apache Jackrabbit website at http://jackrabbit.apache.org/ for
 more information.
 
+Changes in this release
+-----------------------
+
+All the changes in this release are listed below. The issue identifier and
+title is listed for each change and known issue. You can look up individual
+issues for more details in the Jackrabbit issue tracker at
+http://issues.apache.org/jira/browse/JCR
+
+  Bug fixes
+  [JCR-1823] Repository.login throws IllegalStateException
+  [JCR-1838] Garbage collection deletes temporary files in FileDataStore
+  [JCR-1846] Jackrabbit thread contention issue due to fat lock
+  [JCR-1935] Incomplete JCR-1664 fix in BindableRepository
+
 Release Contents
 ----------------
 
-Unlike previous Jackrabbit releases that contained a full set of components,
-this patch release only contains the jackrabbit-core component. The component
-is distributed both as a source archive and a pre-compiled binary.
+Like the previous jackrabbit-core 1.4.x releases this patch release only
+contains the jackrabbit-core component. The component is distributed both
+as a source archive and a pre-compiled binary.
 
     * Source archive (jackrabbit-core-1.4.7-src.jar)
 
@@ -41,14 +55,4 @@ Each release file is accompanied by SHA1 and MD5 checksums and a PGP
 signature. The public key used for the signatures can be found
 in the KEYS file.
 
-Changes and known issues in this release
-----------------------------------------
-
-All the changes in this release are listed below. The issue identifier and
-title is listed for each change and known issue. You can look up individual
-issues for more details in the Jackrabbit issue tracker at
-http://issues.apache.org/jira/browse/JCR
-
-  Bug fixes
-  
 
