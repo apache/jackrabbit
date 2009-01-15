@@ -33,7 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-commons</artifactId>
-  <version>1.5.1</version>
+  <version>1.5.2</version>
   <name>Jackrabbit JCR Commons</name>
   <description>General purpose classes for use with the JCR API</description>
   <packaging>bundle</packaging>
