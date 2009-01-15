@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.1
+Release Notes -- Apache Jackrabbit -- Version 1.5.2
 
 Introduction
 ------------
@@ -10,7 +10,7 @@ content, full text search, versioning, transactions, observation, and
 more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
-Apache Jackrabbit 1.5.1 is a security and bug fix release that fixes
+Apache Jackrabbit 1.5.2 is a security and bug fix release that fixes
 issues reported against previous releases. This release is fully
 compatible with the earlier 1.5.0 release.
 
@@ -24,7 +24,7 @@ Thanks to the Red Hat Security Response Team for reporting this issue.
     by properly escaping all user input.
 
     This issue affects both the Jackrabbit 1.4 and 1.5.0 releases.
-    If you are unable to upgrade to 1.5.1 at this point, you can
+    If you are unable to upgrade to 1.5.2 at this point, you can
     work around this issue by disabling the search.jsp and swr.jsp
     pages in the Jackrabbit webapp.
 
@@ -34,14 +34,21 @@ Changes in this release
 -----------------------
 
 All the fixes in this release are listed below per affected component.
-The modified components have had their version numbers upgraded to 1.5.1;
-other components are still at version 1.5.0.
+The modified components have had their version numbers upgraded to 1.5.2;
+other components are still at version 1.5.0. Jackrabbit version 1.5.1
+was cancelled due to incorrect license headers in the source code.
+
+jackrabbit
+
+  Bug fixes
+  [JCR-1936] Incorrect license headers in multiple components
 
 jackrabbit-core
 
   Bug fixes
   [JCR-1823] Repository.login throws IllegalStateException
   [JCR-1838] Garbage collection deletes temporary files in FileDataStore
+  [JCR-1846] Jackrabbit thread contention issue due to fat lock
   [JCR-1920] Custom LoginModule configurations broken in 1.5.0
   [JCR-1931] SharedFieldCache$StringIndex memory leak causing OOM's
 
@@ -80,20 +87,18 @@ jackrabbit-webdav
   [JCR-1926] Text.unescape("%") throws a StringIndexOutOfBoundsException
 
 You can look up individual issues for more details in the Jackrabbit
-issue tracker at
-
-    https://issues.apache.org/jira/browse/JCR
+issue tracker at https://issues.apache.org/jira/browse/JCR.
 
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.1-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.2-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.1-src.jar
-    cd jackrabbit-1.5.1-src
+    jar xf jackrabbit-1.5.2-src.jar
+    cd jackrabbit-1.5.2-src
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
