@@ -1,11 +1,19 @@
 /*
-* Copyright © BioImagene Inc. 2005-2008 All right reserved.
-
-* The copyright to the computer program(s) herein is the property of Bioimagene Inc.
-* The program(s) may be used and/or copied only with the written permission
-* of Bioimagene or in accordance with the terms and conditions stipulated in the
-* agreement/contract under which the program(s) have been supplied.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.jackrabbit.ocm.manager.enumconverter;
 
 import java.io.InvalidClassException;
