@@ -68,8 +68,11 @@ import org.apache.jackrabbit.ocm.testmodel.interfaces.AnotherInterface;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.CmsObject;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Content;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Document;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.EntityA;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.EntityB;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Folder;
 import org.apache.jackrabbit.ocm.testmodel.interfaces.Interface;
+import org.apache.jackrabbit.ocm.testmodel.interfaces.MyInterface;
 import org.apache.jackrabbit.ocm.testmodel.version.Author;
 import org.apache.jackrabbit.ocm.testmodel.version.PressRelease;
 
@@ -174,6 +177,10 @@ public abstract class AnnotationTestBase extends AbstractTestBase
 		classes.add(SimpleInterface.class);
 		classes.add(Person.class);
 		classes.add(Odyssey.class);
+		
+		classes.add(EntityA.class); 
+		classes.add(EntityB.class); 
+		classes.add(MyInterface.class);
 		
 		Mapper mapper = new AnnotationMapperImpl(classes);
 		ocm = new ObjectContentManagerImpl(session, mapper);

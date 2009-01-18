@@ -291,13 +291,13 @@ public class AnnotationDescriptorReader implements DescriptorReader
 			// If only one type argument, the object is certainly a collection
 			if (paramType.length == 1)
 			{
-				collectionDescriptor.setElementClassName(paramType[0].toString().replace("class ", ""));
+				collectionDescriptor.setElementClassName(paramType[0].toString().replace("class ", "").replace("interface ", ""));
 
 			}
 			// either, it is certainly a map
 			else
 			{
-				collectionDescriptor.setElementClassName(paramType[1].toString().replace("class ", ""));
+				collectionDescriptor.setElementClassName(paramType[1].toString().replace("class ", "").replace("interface ", ""));
 			}
 
 		}
