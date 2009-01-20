@@ -28,6 +28,7 @@ import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
@@ -461,6 +462,47 @@ public abstract class AbstractJCRTest extends JUnitTest {
 
         // finally try global property
         return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + propName);
+    }
+
+    /**
+     * Returns the value of the configuration property with specified
+     * <code>name</code>. If the property does not exist <code>defaultValue</code> is
+     * returned.
+     * <p/>
+     * Configuration properties are defined in the file:
+     * <code>repositoryStubImpl.properties</code>.
+     *
+     * @param name the name of the property to retrieve.
+     * @param defaultValue the default value if the property does not exist.
+     * @return the value of the property or <code>defaultValue</code> if non existent.
+     * @throws RepositoryException if the configuration file cannot be found.
+     */
+    public String getProperty(String name, String defaultValue) throws RepositoryException {
+        String val = getProperty(name);
+        if (val == null) {
+            val = defaultValue;
+        }
+        return val;
+    }
+
+    /**
+     * Create a JCR value based on the configuration.
+     *
+     * @param s
+     * @param valueProp Name of the config property that contains the property value.
+     * @param typeProp Name of the config property that contains the property type.
+     * If the config parameter is missing, {@link PropertyType#STRING} is used
+     * to create the JCR value.
+     * @param defaultValue Default value to be used if the config does not define
+     * the value property.
+     * @return JCR value to be used for a test.
+     * @throws RepositoryException
+     */
+    public Value getJcrValue(Session s, String valueProp, String typeProp, String defaultValue) throws RepositoryException {
+        ValueFactory vf = s.getValueFactory();
+        String val = getProperty(valueProp, defaultValue);
+        int type = PropertyType.valueFromName(getProperty(typeProp, PropertyType.TYPENAME_STRING));
+        return vf.createValue(val, type);
     }
 
     /**
