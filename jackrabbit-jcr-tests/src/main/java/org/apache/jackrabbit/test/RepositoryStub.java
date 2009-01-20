@@ -75,6 +75,26 @@ public abstract class RepositoryStub {
 
     public static final String PROP_PROP_NAME2 = "propertyname2";
 
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_PROP_VALUE1 = "propertyvalue1";
+
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_PROP_VALUE2 = "propertyvalue2";
+
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_PROP_TYPE1 = "propertytype1";
+
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_PROP_TYPE2 = "propertytype2";
+
     public static final String PROP_WORKSPACE_NAME = "workspacename";
 
     public static final String PROP_NAMESPACES = "namespaces";
@@ -88,6 +108,12 @@ public abstract class RepositoryStub {
      * @since JCR 2.0
      */
     public static final String PROP_LOCK_OWNER = "lock.owner";
+
+    /**
+     * @since JCR 2.0
+     */
+    public static final String PROP_HOLD_NAME = "holdname";
+
 
     protected final Properties environment;
 
