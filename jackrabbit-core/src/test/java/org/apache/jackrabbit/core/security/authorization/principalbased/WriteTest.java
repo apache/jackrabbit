@@ -18,17 +18,20 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Session;
+import javax.jcr.Node;
 import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
@@ -92,5 +95,20 @@ public class WriteTest extends AbstractWriteTest {
         }
     }
 
+
+    public void testAutocreatedProperties() throws RepositoryException, NotExecutableException {
+        givePrivileges(path, testUser.getPrincipal(), privilegesFromName(PrivilegeRegistry.REP_WRITE), getRestrictions(superuser, path));
+
+        // testuser is not allowed to READ the protected property jcr:created.
+        Map restr = getRestrictions(superuser, path);
+        restr.put(ACLTemplate.P_GLOB, GlobPattern.create("/afolder/jcr:created"));
+        withdrawPrivileges(path, testUser.getPrincipal(), privilegesFromName(Privilege.JCR_READ), restr);
+
+        // still: adding a nt:folder node should be possible
+        Node n = getTestSession().getNode(path);
+        Node folder = n.addNode("afolder", "nt:folder");
+
+        assertFalse(folder.hasProperty("jcr:created"));
+    }
     // TODO: add specific tests with other restrictions
 }
