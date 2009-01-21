@@ -40,7 +40,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
-import java.util.Map;
 
 /**
  * <code>AbstractEvaluationTest</code>...
@@ -86,40 +85,11 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
     protected void tearDown() throws Exception {
         // make sure all ac info is removed
-        clearACInfo();
         if (testGroup != null && testUser != null) {
             testGroup.removeMember(testUser);
             testGroup.remove();
         }
         super.tearDown();
-    }
-
-    protected abstract void clearACInfo();
-
-    protected JackrabbitAccessControlList givePrivileges(String nPath, Privilege[] privileges,
-                                                         Map restrictions) throws NotExecutableException, RepositoryException {
-        return givePrivileges(nPath, testUser.getPrincipal(), privileges, restrictions);
-    }
-
-    protected JackrabbitAccessControlList givePrivileges(String nPath, Principal principal,
-                                                         Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
-        JackrabbitAccessControlList tmpl = getPolicy(acMgr, nPath, principal);
-        tmpl.addEntry(principal, privileges, true, restrictions);
-        acMgr.setPolicy(tmpl.getPath(), tmpl);
-        superuser.save();
-        return tmpl;
-    }
-
-    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
-        return withdrawPrivileges(nPath, testUser.getPrincipal(), privileges, restrictions);
-    }
-
-    protected JackrabbitAccessControlList withdrawPrivileges(String nPath, Principal principal, Privilege[] privileges, Map restrictions) throws NotExecutableException, RepositoryException {
-        JackrabbitAccessControlList tmpl = getPolicy(acMgr, nPath, principal);
-        tmpl.addEntry(principal, privileges, false, restrictions);
-        acMgr.setPolicy(tmpl.getPath(), tmpl);
-        superuser.save();
-        return tmpl;
     }
 
     protected User getTestUser() {
