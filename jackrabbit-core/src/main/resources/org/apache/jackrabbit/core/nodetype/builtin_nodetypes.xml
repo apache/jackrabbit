@@ -429,7 +429,7 @@ commented out by default.
             <supertype>nt:base</supertype>
         </supertypes>
         <propertyDefinition name="rep:principalName" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="false" />
-        <propertyDefinition name="rep:privileges" requiredType="String" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="true" />
+        <propertyDefinition name="rep:privileges" requiredType="Name" autoCreated="false" mandatory="true" onParentVersion="COPY" protected="true" multiple="true" />
         <propertyDefinition name="rep:nodePath" requiredType="Path" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />
         <propertyDefinition name="rep:glob" requiredType="String" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />
         <propertyDefinition name="*" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="COPY" protected="true" multiple="false" />

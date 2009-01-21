@@ -43,6 +43,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
 import java.security.Principal;
 
 /**
@@ -183,7 +184,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             Privilege[] privs = ace.getPrivileges();
             Value[] vs = new Value[privs.length];
             for (int j = 0; j < privs.length; j++) {
-                vs[j] = vf.createValue(privs[j].getName());
+                vs[j] = vf.createValue(privs[j].getName(), PropertyType.NAME);
             }
             setSecurityProperty(aceNode, P_PRIVILEGES, vs);
 
