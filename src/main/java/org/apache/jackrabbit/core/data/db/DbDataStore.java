@@ -282,7 +282,6 @@ public class DbDataStore implements DataStore {
         ConnectionRecoveryManager conn = getConnection();
         String id = null, tempId = null;
         try {
-            conn.setAutoReconnect(false);
             long now;            
             for (int i = 0; i < ConnectionRecoveryManager.TRIALS; i++) {
                 try {
@@ -323,6 +322,7 @@ public class DbDataStore implements DataStore {
             } else {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }
+            // UPDATE DATASTORE SET DATA=? WHERE ID=?
             conn.executeStmt(updateDataSQL, new Object[]{wrapper, tempId});
             now = System.currentTimeMillis();
             long length = in.getPosition();
@@ -356,7 +356,6 @@ public class DbDataStore implements DataStore {
             }
             usesIdentifier(identifier);
             DbDataRecord record = new DbDataRecord(this, identifier, length, now);
-            conn.setAutoReconnect(true);
             return record;
         } catch (Exception e) {
             throw convert("Can not insert new record", e);
