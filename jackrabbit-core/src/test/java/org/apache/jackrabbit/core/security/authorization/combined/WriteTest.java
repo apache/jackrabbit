@@ -31,11 +31,8 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * <code>EvaluationTest</code>...
@@ -44,29 +41,11 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
     private static Logger log = LoggerFactory.getLogger(WriteTest.class);
 
-    private List toClear = new ArrayList();
-
     protected void setUp() throws Exception {
         super.setUp();
 
         // simple test to check if proper provider is present:
         getPrincipalBasedPolicy(acMgr, path, getTestUser().getPrincipal());
-    }
-
-    protected void clearACInfo() {
-        for (Iterator it = toClear.iterator(); it.hasNext();) {
-            String path = it.next().toString();
-            try {
-                AccessControlPolicy[] policies = acMgr.getPolicies(path);
-                for (int i = 0; i < policies.length; i++) {
-                    acMgr.removePolicy(path, policies[i]);
-                    superuser.save();
-                }
-            } catch (RepositoryException e) {
-                // log error and ignore
-                log.error(e.getMessage());
-            }
-        }
     }
 
     private JackrabbitAccessControlList getPrincipalBasedPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
@@ -75,7 +54,6 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
             for (int i = 0; i < tmpls.length; i++) {
                 if (tmpls[i] instanceof JackrabbitAccessControlList) {
                     JackrabbitAccessControlList acl = (JackrabbitAccessControlList) tmpls[i];
-                    toClear.add(acl.getPath());
                     return acl;
                 }
             }
@@ -95,8 +73,6 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
             tmpl.addEntry(principal, privileges, true, restrictions);
             acMgr.setPolicy(tmpl.getPath(), tmpl);
             superuser.save();
-            // remember for teardown
-            toClear.add(tmpl.getPath());
             return tmpl;
         }
     }
@@ -113,8 +89,6 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
             tmpl.addEntry(principal, privileges, false, restrictions);
             acMgr.setPolicy(tmpl.getPath(), tmpl);
             superuser.save();
-            // remember for teardown
-            toClear.add(tmpl.getPath());
             return tmpl;
         }
     }

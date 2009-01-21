@@ -50,11 +50,6 @@ public class WriteTest extends AbstractWriteTest {
         }
     }
 
-    protected void clearACInfo() {
-        // nop since ac information is stored with nodes that get removed
-        // during the general tear-down.
-    }
-
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         AccessControlPolicyIterator it = acM.getApplicablePolicies(path);
         while (it.hasNext()) {
