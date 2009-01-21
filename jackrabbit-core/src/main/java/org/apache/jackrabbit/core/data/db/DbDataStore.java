@@ -291,6 +291,7 @@ public class DbDataStore implements DataStore {
                     PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{tempId});
                     rs = prep.getResultSet();
                     if (rs.next()) {
+                        conn.closeSilently(rs);
                         // re-try in the very, very unlikely event that the row already exists
                         continue;
                     }
@@ -298,6 +299,8 @@ public class DbDataStore implements DataStore {
                     break;
                 } catch (Exception e) {
                     throw convert("Can not insert new record", e);
+                } finally {
+                    conn.closeSilently(rs);
                 }
             }
             if (id == null) {
@@ -653,11 +656,12 @@ public class DbDataStore implements DataStore {
      */    
     public InputStream getInputStream(DataIdentifier identifier) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
+        ResultSet rs = null;
         try {
             String id = identifier.toString();
             // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
             PreparedStatement prep = conn.executeStmt(selectDataSQL, new Object[]{id});
-            ResultSet rs = prep.getResultSet();
+            rs = prep.getResultSet();
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
@@ -670,6 +674,9 @@ public class DbDataStore implements DataStore {
         } catch (Exception e) {
             throw convert("Can not read identifier " + identifier, e);
         } finally {
+            if (copyWhenReading) {
+                conn.closeSilently(rs);
+            }
             putBack(conn);
         }
     }
