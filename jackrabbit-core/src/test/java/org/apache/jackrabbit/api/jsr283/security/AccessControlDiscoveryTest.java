@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.api.jsr283.security;
 
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -135,6 +136,40 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         assertTrue("Write privilege must be an aggregate privilege.", w.isAggregate());
         String expected = getJCRName(Privilege.JCR_WRITE, superuser);
         assertEquals("The name of the write privilege must be " + expected, expected, w.getName());
+    }
+
+    /**
+     * Tests if the privilege name is treated as JCR Name and consequently
+     * reflects changes made to the namespace prefix.
+     * 
+     * @throws RepositoryException
+     */
+    public void testPrivilegeName() throws RepositoryException {
+        Privilege allPriv = acMgr.privilegeFromName(Privilege.JCR_ALL);
+        try {
+            String remappedPrefix = "_jcr";
+            superuser.setNamespacePrefix(remappedPrefix, Name.NS_JCR_URI);
+
+            List l = new ArrayList();
+            l.add(acMgr.privilegeFromName(Privilege.JCR_ALL));
+            l.add(acMgr.privilegeFromName(remappedPrefix + ":all"));
+
+            for (Iterator it = l.iterator(); it.hasNext();) {
+                Privilege p = (Privilege) it.next();
+
+                assertEquals("The privilege name must reflect the modified namespace prefix.",remappedPrefix + ":all", p.getName());
+                assertEquals("jcr:all privileges must be equal.",allPriv, p);
+            }
+
+            try {
+                acMgr.privilegeFromName("jcr:all");
+                fail("Modified namespace prefix: 'jcr:all' privilege must not exist.");
+            } catch (RepositoryException e) {
+                // success
+            }
+        } finally {
+            superuser.setNamespacePrefix(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+        }
     }
 
     /**

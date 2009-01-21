@@ -188,7 +188,7 @@
 
 [rep:ACE]
   - rep:principalName (string) protected mandatory
-  - rep:privileges (string) protected mandatory multiple
+  - rep:privileges (name) protected mandatory multiple
   - rep:nodePath (path) protected
   - rep:glob (string) protected
   - * (undefined) protected
