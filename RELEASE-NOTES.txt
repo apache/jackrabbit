@@ -22,10 +22,10 @@ issues for more details in the Jackrabbit issue tracker at
 http://issues.apache.org/jira/browse/JCR
 
   Bug fixes
-  [JCR-1918] DbDataStore keeps ResultSets open
   [JCR-1572] DbDataStore connection does not always reconnect
-  [JCR-1866] Query may throw ArrayIndexOutOfBoundsException
   [JCR-1841] Workspace.xml can't be loaded if it has a BOM
+  [JCR-1866] Query may throw ArrayIndexOutOfBoundsException
+  [JCR-1918] DbDataStore keeps ResultSets open
 
 Release Contents
 ----------------
