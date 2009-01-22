@@ -268,7 +268,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * </ul>
      *
      * @param session to the workspace to set-up inital ACL to
-     * @throws RepositoryException
+     * @param editor for the specified session.
+     * @throws RepositoryException If an error occurs.
      */
     private static void initRootACL(SessionImpl session, AccessControlEditor editor) throws RepositoryException {
         try {
