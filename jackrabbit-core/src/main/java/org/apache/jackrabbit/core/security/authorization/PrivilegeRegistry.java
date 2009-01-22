@@ -42,7 +42,7 @@ public final class PrivilegeRegistry {
 
     /**
      * Jackrabbit specific write privilege that combines {@link Privilege#JCR_WRITE}
-     * and {@link Privilege#NODE_TYPE_MNGMT}.
+     * and {@link Privilege#JCR_NODE_TYPE_MANAGEMENT}.
      */
     public static final String REP_WRITE = "{" + Name.NS_REP_URI + "}write";
 
@@ -231,10 +231,10 @@ public final class PrivilegeRegistry {
     public static int calculatePermissions(int privs, int parentPrivs, boolean isAllow, boolean protectsPolicy) {
         int perm = Permission.NONE;
         if (protectsPolicy) {
-            if ((parentPrivs & PrivilegeRegistry.READ_AC) == PrivilegeRegistry.READ_AC) {
+            if ((parentPrivs & READ_AC) == READ_AC) {
                 perm |= Permission.READ;
             }
-            if ((parentPrivs & PrivilegeRegistry.MODIFY_AC) == PrivilegeRegistry.MODIFY_AC) {
+            if ((parentPrivs & MODIFY_AC) == MODIFY_AC) {
                 perm |= Permission.ADD_NODE;
                 perm |= Permission.SET_PROPERTY;
                 perm |= Permission.REMOVE_NODE;
