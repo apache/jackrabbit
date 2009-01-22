@@ -1310,7 +1310,7 @@ public abstract class ItemImpl implements Item {
      * Since Jackrabbit 1.4 it is safe to use this method regardless
      * of item state.
      *
-     * @see http://issues.apache.org/jira/browse/JCR-911
+     * @see <a href="http://issues.apache.org/jira/browse/JCR-911">Issue JCR-911</a>
      * @return current session
      */
     public Session getSession() {
