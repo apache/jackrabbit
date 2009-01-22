@@ -157,13 +157,17 @@ public interface LockManager {
      * Invoked by a session to inform that a lock token has been added.
      * @param session session that has a added lock token
      * @param lt added lock token
+     * @throws LockException
+     * @throws RepositoryException
      */
-    void lockTokenAdded(SessionImpl session, String lt);
+    void lockTokenAdded(SessionImpl session, String lt) throws LockException, RepositoryException;
 
     /**
      * Invoked by a session to inform that a lock token has been removed.
      * @param session session that has a removed lock token
      * @param lt removed lock token
+     * @throws LockException
+     * @throws RepositoryException
      */
-    void lockTokenRemoved(SessionImpl session, String lt);
+    void lockTokenRemoved(SessionImpl session, String lt) throws LockException, RepositoryException;
 }

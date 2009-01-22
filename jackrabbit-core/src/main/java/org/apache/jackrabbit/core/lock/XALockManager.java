@@ -203,7 +203,7 @@ public class XALockManager implements LockManager, InternalXAResource {
     /**
      * {@inheritDoc}
      */
-    public void lockTokenAdded(SessionImpl session, String lt) {
+    public void lockTokenAdded(SessionImpl session, String lt) throws RepositoryException {
         if (isInXA()) {
             xaEnv.addLockToken(lt);
         } else {
@@ -214,7 +214,7 @@ public class XALockManager implements LockManager, InternalXAResource {
     /**
      * {@inheritDoc}
      */
-    public void lockTokenRemoved(SessionImpl session, String lt) {
+    public void lockTokenRemoved(SessionImpl session, String lt) throws RepositoryException {
         if (isInXA()) {
             xaEnv.removeLockToken(lt);
         } else {

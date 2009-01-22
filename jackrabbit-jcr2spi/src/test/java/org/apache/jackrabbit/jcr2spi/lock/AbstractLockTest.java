@@ -316,27 +316,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         }
     }
 
-    /**
-     * Test if the lock token has been automatically added to the set of lock
-     * tokens present with the Session that created the new Lock.
-     *
-     * @throws RepositoryException
-     */
-    public void testLockTokenPresentWithSession() throws RepositoryException {
-        String token = lock.getLockToken();
-        String[] allTokens = lockedNode.getSession().getLockTokens();
-        for (int i = 0; i < allTokens.length; i++) {
-            if (allTokens[i].equals(token)) {
-                // lock token is present with the session that applied the lock
-                // OK
-                return;
-            }
-        }
-
-        // lock token not present within tokens returned by Session.getLockTokens.
-        fail("Upon successful call to Node.lock, the lock token must automatically be added to the set of tokens held by the Session.");
-    }
-
     public void testRemoveLockedNode() throws RepositoryException {
         Node n = (Node) otherSession.getItem(lockedNode.getPath());
 
@@ -356,8 +335,10 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             String msg = "Lock should have been released.";
             assertFalse(msg, lock.isLive());
             assertFalse(msg, lockedNode.isLocked());
-            List tokens = Arrays.asList(superuser.getLockTokens());
-            assertFalse(msg, tokens.contains(lock.getLockToken()));
+            if (!isSessionScoped()) {
+                List tokens = Arrays.asList(superuser.getLockTokens());
+                assertFalse(msg, tokens.contains(lock.getLockToken()));
+            }
 
             assertFalse(msg, lockedNode.hasProperty(jcrLockOwner));
             assertFalse(msg, lockedNode.hasProperty(jcrlockIsDeep));
@@ -368,8 +349,10 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             String msg = "Lock must still be live.";
             assertTrue(msg, lock.isLive());
             assertTrue(msg, lockedNode.isLocked());
-            List tokens = Arrays.asList(superuser.getLockTokens());
-            assertTrue(tokens.contains(lock.getLockToken()));
+            if (!isSessionScoped()) {
+                List tokens = Arrays.asList(superuser.getLockTokens());
+                assertTrue(tokens.contains(lock.getLockToken()));
+            }
             assertTrue(msg, lockedNode.hasProperty(jcrLockOwner));
             assertTrue(msg, lockedNode.hasProperty(jcrlockIsDeep));
         } finally {

@@ -84,7 +84,7 @@ public abstract class AbstractLockInfo {
         this.sessionScoped = sessionScoped;
         this.deep = deep;
         this.lockOwner = lockOwner;
-        // TODO: TOBEFIXED for 2.0 respect and deal timeout hint.
+        // TODO: TOBEFIXED for 2.0 respect and deal with timeout hint.
     }
 
     /**

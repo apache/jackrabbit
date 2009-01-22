@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.WorkspaceImpl;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Repository;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
@@ -41,6 +42,11 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        // check for lock support
+        if (Boolean.FALSE.toString().equals(superuser.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED))) {
+            throw new NotExecutableException();
+        }
 
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         lockedNode.addMixin(mixLockable);

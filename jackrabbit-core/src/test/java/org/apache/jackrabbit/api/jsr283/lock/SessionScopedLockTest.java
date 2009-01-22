@@ -37,7 +37,6 @@ public class SessionScopedLockTest extends AbstractLockTest {
      * always return <code>null</code> for session scoped locks.
      */
     /*
-    TODO: uncomment as soon as 283 lock token handing is in effect
     public void testGetLockToken() {
         assertNull("A session scoped lock may never expose the token.", lock.getLockToken());
     }
