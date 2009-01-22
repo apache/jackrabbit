@@ -526,9 +526,9 @@ public abstract class AbstractLoginModule implements LoginModule {
                 Credentials creds = callback.getCredentials();
                 if (null != creds) {
                     if (creds instanceof SimpleCredentials) {
-                       credentials = (SimpleCredentials) creds;
+                       credentials = creds;
                     } else if (creds instanceof GuestCredentials) {
-                       credentials = (GuestCredentials) creds;
+                       credentials = creds;
                     }
                     sharedState.put(KEY_CREDENTIALS, credentials);
                 }
