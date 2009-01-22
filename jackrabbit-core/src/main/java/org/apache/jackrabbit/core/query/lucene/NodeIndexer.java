@@ -348,9 +348,9 @@ public class NodeIndexer {
             case PropertyType.NAME:
                 // jcr:primaryType and jcr:mixinTypes are required for correct
                 // node type resolution in queries
-                if (isIndexed(name)
-                        || name.equals(NameConstants.JCR_PRIMARYTYPE)
-                        || name.equals(NameConstants.JCR_MIXINTYPES)) {
+                if (name.equals(NameConstants.JCR_PRIMARYTYPE)
+                        || name.equals(NameConstants.JCR_MIXINTYPES)
+                        || isIndexed(name)) {
                     addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
