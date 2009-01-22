@@ -21,7 +21,6 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.config.AccessManagerConfig;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.SecurityConfig;
@@ -366,7 +365,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                 if (!(p instanceof Group)) {
                     Authorizable authorz = systemUserManager.getAuthorizable(p);
                     if (authorz != null && !authorz.isGroup()) {
-                        uid = ((User) authorz).getID();
+                        uid = authorz.getID();
                         break;
                     }
                 }
