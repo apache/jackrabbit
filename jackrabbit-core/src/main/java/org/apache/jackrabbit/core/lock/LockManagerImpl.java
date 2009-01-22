@@ -274,6 +274,11 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         }
     }
 
+    static SessionLockManager getSessionLockManager(SessionImpl session) throws RepositoryException {
+        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
+        return (SessionLockManager) wsp.get283LockManager();
+    }
+
     /**
      * Internal <code>lock</code> implementation that takes the same parameters
      * as the public method.
@@ -330,11 +335,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             info.setLockHolder(session);
             info.setLive(true);
             session.addListener(info);
-            // TODO: TOBEFIXED for 2.0
-            // TODO  only tokens of open-scoped locks must be added to the session.
-            // if (!info.isSessionScoped()) {
-                session.addLockToken(info.lockToken.toString(), false);
-            //}
+            if (!info.isSessionScoped()) {
+                getSessionLockManager(session).lockTokenAdded(info.lockToken.toString());
+            }
             lockMap.put(path, info);
 
             if (!info.sessionScoped) {
@@ -357,7 +360,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @throws LockException       if the node can not be unlocked
      * @throws RepositoryException if another error occurs
      */
-    void internalUnlock(NodeImpl node)
+    boolean internalUnlock(NodeImpl node)
             throws LockException, RepositoryException {
 
         ClusterOperation operation = null;
@@ -384,8 +387,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 throw new LockException("Node not locked by session: " + node);
             }
 
-            session.removeLockToken(info.getLockToken(session), false);
-
+            getSessionLockManager(session).lockTokenRemoved(info.getLockToken(session));
+            
             element.set(null);
             info.setLive(false);
 
@@ -393,6 +396,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 save();
                 successful = true;
             }
+            return true;
         } finally {
             release();
 
@@ -526,9 +530,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * events, content modifications should not be made from within code
      * sections that hold monitors. (see #JCR-194)
      */
-    public void unlock(NodeImpl node)
-            throws LockException, RepositoryException {
-
+    public void unlock(NodeImpl node) throws LockException, RepositoryException {
         removeLockProperties(node);
         internalUnlock(node);
     }
@@ -629,7 +631,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * {@inheritDoc}
      */
-    public void lockTokenAdded(SessionImpl session, String lt) {
+    public void lockTokenAdded(SessionImpl session, String lt) throws LockException, RepositoryException {
         try {
             LockToken lockToken = LockToken.parse(lt);
 
@@ -645,23 +647,25 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                             session.addListener((LockInfo) info);
                         }
                     } else {
-                        log.warn("Adding lock token has no effect: "
-                                + "lock already held by other session.");
+                        String msg = "Cannot add lock token: lock already held by other session.";
+                        log.warn(msg);
+                        throw new LockException(msg);
                     }
                 }
             }
+            // inform SessionLockManager
+            getSessionLockManager(session).lockTokenAdded(lt);
         } catch (IllegalArgumentException e) {
-            log.warn("Bad lock token: " + e.getMessage());
-        } catch (RepositoryException e) {
-            log.warn("Unable to set lock holder: " + e.getMessage());
-            log.debug("Root cause: ", e);
+            String msg = "Bad lock token: " + e.getMessage();
+            log.warn(msg);
+            throw new LockException(msg);
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public void lockTokenRemoved(SessionImpl session, String lt) {
+    public void lockTokenRemoved(SessionImpl session, String lt) throws LockException, RepositoryException {
         try {
             LockToken lockToken = LockToken.parse(lt);
 
@@ -674,16 +678,18 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                     if (session == info.getLockHolder()) {
                         info.setLockHolder(null);
                     } else {
-                        log.warn("Removing lock token has no effect: "
-                                + "lock held by other session.");
+                        String msg = "Cannot remove lock token: lock held by other session.";
+                        log.warn(msg);
+                        throw new LockException(msg);
                     }
                 }
             }
+            // inform SessionLockManager
+            getSessionLockManager(session).lockTokenRemoved(lt);
         } catch (IllegalArgumentException e) {
-            log.warn("Bad lock token: " + e.getMessage());
-        } catch (RepositoryException e) {
-            log.warn("Unable to reset lock holder: " + e.getMessage());
-            log.debug("Root cause: ", e);
+            String msg = "Bad lock token: " + e.getMessage();
+            log.warn(msg);
+            throw new LockException(msg);
         }
     }
 

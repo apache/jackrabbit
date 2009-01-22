@@ -150,7 +150,7 @@ class XAEnvironment {
         info.setLockHolder(session);
         info.setLive(true);
 
-        session.addLockToken(info.lockToken.toString(), false);
+        LockManagerImpl.getSessionLockManager(session).lockTokenAdded(info.lockToken.toString());
         lockedNodesMap.put(id, info);
         operations.add(info);
 

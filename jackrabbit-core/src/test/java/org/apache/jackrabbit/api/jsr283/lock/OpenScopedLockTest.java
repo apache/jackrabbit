@@ -37,5 +37,5 @@ public class OpenScopedLockTest extends AbstractLockTest {
      */
     public void testGetLockToken() {
         assertNotNull("A open scoped lock must expose the token to the lock holder.", lock.getLockToken());
-    }
+    } 
 }

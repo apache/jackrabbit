@@ -40,7 +40,7 @@ import java.util.Set;
  * is associated with a single <code>Session</code> and its
  * <code>Workspace</code>.
  *
- * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
+ * @see javax.jcr.Workspace#getLockManager()
  */
 public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock.LockManager {
 
@@ -70,16 +70,22 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
      * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#addLockToken(String)
      */
     public void addLockToken(String lockToken) throws LockException, RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("Not yet implemented");
+        if (!lockTokens.contains(lockToken)) {
+            systemLockMgr.lockTokenAdded(session, lockToken);
+        } else {
+            log.debug("Lock token already present with session -> no effect.");
+        }
     }
 
     /**
      * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#removeLockToken(String)
      */
     public void removeLockToken(String lockToken) throws LockException, RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("Not yet implemented");
+        if (lockTokens.contains(lockToken)) {
+            systemLockMgr.lockTokenRemoved(session, lockToken);
+        } else {
+            throw new LockException("Lock token " + lockToken + " not present with session.");
+        }
     }
 
     /**
@@ -188,6 +194,28 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     //--------------------------------------------------------------------------
+    /**
+     *
+     * @param lockToken
+     * @return
+     */
+    boolean lockTokenAdded(String lockToken) {
+        synchronized (lockTokens) {
+            return lockTokens.add(lockToken);
+        }
+    }
+
+    /**
+     * 
+     * @param lockToken
+     * @return
+     */
+    boolean lockTokenRemoved(String lockToken) {
+        synchronized (lockTokens) {
+            return lockTokens.remove(lockToken);
+        }
+    }
+
     /**
      * Checks if the given node is lockable, i.e. has 'mix:lockable'.
      *

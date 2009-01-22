@@ -208,11 +208,6 @@ public class SessionImpl extends AbstractSession
     protected final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
-     * Lock tokens
-     */
-    protected final Set lockTokens = new HashSet();
-
-    /**
      * value factory
      */
     protected ValueFactory valueFactory;
@@ -1260,23 +1255,10 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void addLockToken(String lt) {
-        addLockToken(lt, true);
-    }
-
-    /**
-     * Internal implementation of {@link #addLockToken(String)}. Additionally
-     * takes a parameter indicating whether the lock manager needs to be
-     * informed.
-     */
-    public void addLockToken(String lt, boolean notify) {
-        synchronized (lockTokens) {
-            if (lockTokens.add(lt) && notify) {
-                try {
-                    getLockManager().lockTokenAdded(this, lt);
-                } catch (RepositoryException e) {
-                    log.error("Lock manager not available.", e);
-                }
-            }
+        try {
+            wsp.get283LockManager().addLockToken(lt);
+        } catch (RepositoryException e) {
+            log.debug("Error while adding lock token.");
         }
     }
 
@@ -1284,10 +1266,11 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public String[] getLockTokens() {
-        synchronized (lockTokens) {
-            String[] result = new String[lockTokens.size()];
-            lockTokens.toArray(result);
-            return result;
+        try {
+            return wsp.get283LockManager().getLockTokens();
+        } catch (RepositoryException e) {
+            log.debug("Error while accessing lock tokens.");
+            return new String[0];
         }
     }
 
@@ -1295,23 +1278,10 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void removeLockToken(String lt) {
-        removeLockToken(lt, true);
-    }
-
-    /**
-     * Internal implementation of {@link #removeLockToken(String)}. Additionally
-     * takes a parameter indicating whether the lock manager needs to be
-     * informed.
-     */
-    public void removeLockToken(String lt, boolean notify) {
-        synchronized (lockTokens) {
-            if (lockTokens.remove(lt) && notify) {
-                try {
-                    getLockManager().lockTokenRemoved(this, lt);
-                } catch (RepositoryException e) {
-                    log.error("Lock manager not available.", e);
-                }
-            }
+        try {
+            wsp.get283LockManager().removeLockToken(lt);
+        } catch (RepositoryException e) {
+            log.debug("Error while removing lock token.");
         }
     }
 
