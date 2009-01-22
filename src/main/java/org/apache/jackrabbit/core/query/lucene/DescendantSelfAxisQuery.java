@@ -296,7 +296,7 @@ class DescendantSelfAxisQuery extends Query {
                     return next();
                 }
             } else {
-                return true;
+                return false;
             }
         }
 
