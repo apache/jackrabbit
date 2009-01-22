@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit Core -- Version 1.4.7
+Release Notes -- Apache Jackrabbit Core -- Version 1.4.8
 
 Introduction
 ------------
 
-This is the 1.4.7 patch release of the jackrabbit-core component of
+This is the 1.4.8 patch release of the jackrabbit-core component of
 Apache Jackrabbit, a fully conforming implementation of the Content
 Repository for Java Technology API (JCR).
 
@@ -22,10 +22,10 @@ issues for more details in the Jackrabbit issue tracker at
 http://issues.apache.org/jira/browse/JCR
 
   Bug fixes
-  [JCR-1823] Repository.login throws IllegalStateException
-  [JCR-1838] Garbage collection deletes temporary files in FileDataStore
-  [JCR-1846] Jackrabbit thread contention issue due to fat lock
-  [JCR-1935] Incomplete JCR-1664 fix in BindableRepository
+  [JCR-1918] DbDataStore keeps ResultSets open
+  [JCR-1572] DbDataStore connection does not always reconnect
+  [JCR-1866] Query may throw ArrayIndexOutOfBoundsException
+  [JCR-1841] Workspace.xml can't be loaded if it has a BOM
 
 Release Contents
 ----------------
@@ -34,18 +34,18 @@ Like the previous jackrabbit-core 1.4.x releases this patch release only
 contains the jackrabbit-core component. The component is distributed both
 as a source archive and a pre-compiled binary.
 
-    * Source archive (jackrabbit-core-1.4.7-src.jar)
+    * Source archive (jackrabbit-core-1.4.8-src.jar)
 
         The source archive contains the full source code of this release
-        in a "jackrabbit-core-1.4.7" directory. Use the following commands
+        in a "jackrabbit-core-1.4.8" directory. Use the following commands
         (or the equivalent in your environment) to build the component
         with Maven 2 and Java 1.4 or higher:
 
-          $ jar xf jackrabbit-core-1.4.7-src.jar
-          $ cd jackrabbit-core-1.4.7
+          $ jar xf jackrabbit-core-1.4.8-src.jar
+          $ cd jackrabbit-core-1.4.8
           $ mvn install
 
-    * Pre-compiled binary (jackrabbit-core-1.4.7.jar)
+    * Pre-compiled binary (jackrabbit-core-1.4.8.jar)
 
         Core of the Apache Jackrabbit content repository implementation.
 

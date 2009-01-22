@@ -32,7 +32,7 @@
     <version>1.4</version>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
-  <version>1.4.7</version>
+  <version>1.4.8</version>
   <name>Jackrabbit Core</name>
   <description>Jackrabbit content repository implementation</description>
 
