@@ -881,7 +881,7 @@ public class RepositoryImpl extends AbstractRepository
      * workspace, and thus this feature is only available to customized
      * implementations that subclass RepositoryImpl.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-954
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-954">Issue JCR-954</a>
      * @param workspace name of the workspace
      * @param enabled <code>true</code> to enable integrity checking (default),
      *                <code>false</code> to disable it
