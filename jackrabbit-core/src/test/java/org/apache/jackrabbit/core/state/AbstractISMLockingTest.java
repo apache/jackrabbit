@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.state;
 import junit.framework.TestCase;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
+import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -27,11 +29,13 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <code>AbstractISMLockingTest</code> contains test cases for the ISMLocking
- * requirements.
+ * <code>AbstractISMLockingTest</code> contains test cases for the ISMLocking requirements.
  */
 public abstract class AbstractISMLockingTest extends TestCase {
 
+    /**
+     * The {@link ISMLocking} instance under test.
+     */
     protected ISMLocking locking;
 
     /**
@@ -71,190 +75,175 @@ public abstract class AbstractISMLockingTest extends TestCase {
     }
 
     /**
-     * Checks the following requirement:
-     * <p/>
-     * <i>While a read lock is held for a given item with id <code>I</code> an
-     * implementation must ensure that no write lock is issued for a change log
-     * that contains a reference to an item with id <code>I</code>. </i>
+     * @return an {@link ISMLocking} instance which is exercised by the tests
+     */
+    public abstract ISMLocking createISMLocking();
+
+    /**
+     * Checks the following requirement: <p/> <i>While a read lock is held for a given item with id
+     * <code>I</code> an implementation must ensure that no write lock is issued for a change log that
+     * contains a reference to an item with id <code>I</code>. </i>
+     * 
+     * @throws InterruptedException on interruption; this will err the test
      */
     public void testReadBlocksWrite() throws InterruptedException {
-        ISMLocking.ReadLock rLock = locking.acquireReadLock(state.getId());
-        try {
-            for (Iterator it = logs.iterator(); it.hasNext(); ) {
-                final ChangeLog log = (ChangeLog) it.next();
-                Thread t = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            checkBlocking(log);
-                        } catch (InterruptedException e) {
-                            fail(e.toString());
-                        }
-                    }
-                });
-                t.start();
-                t.join();
-            }
-        } finally {
-            rLock.release();
+        ReadLock rLock = locking.acquireReadLock(state.getId());
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
+            verifyBlocked(startWriterThread(locking, changeLog));
         }
+        rLock.release();
     }
 
     /**
-     * Checks the following requirement:
-     * <p/>
-     * <i>While a write lock is held for a given change log <code>C</code> an
-     * implementation must ensure that no read lock is issued for an item that
-     * is contained in <code>C</code>, unless the current thread is the owner of
-     * the write lock!</i>
+     * Checks the following requirement: <p/> <i>While a write lock is held for a given change log
+     * <code>C</code> an implementation must ensure that no read lock is issued for an item that is contained
+     * in <code>C</code>, unless the current thread is the owner of the write lock!</i> <p/> The "unless"
+     * clause is tested by {@link #testWriteBlocksRead_notIfSameThread()} test.
+     * 
+     * @throws InterruptedException on interruption; this will err the test
      */
     public void testWriteBlocksRead() throws InterruptedException {
-        for (Iterator it = logs.iterator(); it.hasNext(); ) {
-            ISMLocking.WriteLock wLock
-                    = locking.acquireWriteLock((ChangeLog) it.next());
-            try {
-                checkNonBlocking(state.getId());
-                Thread t = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            checkBlocking(state.getId());
-                        } catch (InterruptedException e) {
-                            fail(e.toString());
-                        }
-                    }
-                });
-                t.start();
-                t.join();
-            } finally {
-                wLock.release();
-            }
-        }
-    }
-
-    /**
-     * Checks the following requirement:
-     * <p/>
-     * While a write lock is held for a given change log <code>C</code> an
-     * implementation must ensure that no write lock is issued for a change log
-     * <code>C'</code> that intersects with <code>C</code>. That is both change
-     * logs contain a reference to the same item. Please note that an
-     * implementation is free to block requests entirely for additional write
-     * lock while a write lock is active. It is not a requirement to support
-     * concurrent write locks.
-     */
-    public void testIntersectingWrites() throws InterruptedException {
-        ChangeLog cl = new ChangeLog();
-        cl.added(state);
-        ISMLocking.WriteLock wLock = locking.acquireWriteLock(cl);
-        try {
-            for (Iterator it = logs.iterator(); it.hasNext(); ) {
-                final ChangeLog log = (ChangeLog) it.next();
-                Thread t = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            checkBlocking(log);
-                        } catch (InterruptedException e) {
-                            fail(e.toString());
-                        }
-                    }
-                });
-                t.start();
-                t.join();
-            }
-        } finally {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
+            WriteLock wLock = locking.acquireWriteLock(changeLog);
+            verifyBlocked(startReaderThread(locking, state.getId()));
             wLock.release();
         }
     }
 
+    public void testWriteBlocksRead_notIfSameThread() throws InterruptedException {
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            final ChangeLog changeLog = (ChangeLog) it.next();
+            Thread t = new Thread(new Runnable() {
+
+                public void run() {
+                    try {
+                        WriteLock wLock = locking.acquireWriteLock(changeLog);
+                        locking.acquireReadLock(state.getId()).release();
+                        wLock.release();
+                    } catch (InterruptedException e) {
+                    }
+                }
+            });
+            t.start();
+            verifyNotBlocked(t);
+        }
+    }
+
+    /**
+     * Checks the following requirement: <p/> While a write lock is held for a given change log <code>C</code>
+     * an implementation must ensure that no write lock is issued for a change log <code>C'</code> that intersects
+     * with <code>C</code>. That is both change logs contain a reference to the same item. Please note that an
+     * implementation is free to block requests entirely for additional write lock while a write lock is
+     * active. It is not a requirement to support concurrent write locks.
+     * 
+     * @throws InterruptedException on interruption; this will err the test
+     */
+    public void testIntersectingWrites() throws InterruptedException {
+        ChangeLog cl = new ChangeLog();
+        cl.added(state);
+        WriteLock wLock = locking.acquireWriteLock(cl);
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
+            verifyBlocked(startWriterThread(locking, changeLog));
+        }
+        wLock.release();
+    }
+
     /**
      * Checks if a downgraded write lock allows other threads to read again.
+     * 
+     * @throws InterruptedException on interruption; this will err the test
      */
     public void testDowngrade() throws InterruptedException {
-        for (Iterator it = logs.iterator(); it.hasNext(); ) {
-            ISMLocking.ReadLock rLock = locking.acquireWriteLock(
-                    (ChangeLog) it.next()).downgrade();
-            try {
-                Thread t = new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            checkNonBlocking(state.getId());
-                        } catch (InterruptedException e) {
-                            fail(e.toString());
-                        }
-                    }
-                });
-                t.start();
-                t.join();
-            } finally {
-                rLock.release();
-            }
+        for (Iterator it = logs.iterator(); it.hasNext();) {
+            ChangeLog changeLog = (ChangeLog) it.next();
+            WriteLock wLock = locking.acquireWriteLock(changeLog);
+            verifyBlocked(startReaderThread(locking, state.getId()));
+            ReadLock rLock = wLock.downgrade();
+            verifyNotBlocked(startReaderThread(locking, state.getId()));
+            rLock.release();
         }
     }
 
-    //------------------------------< utilities >-------------------------------
+    // ------------------------------< utilities >-------------------------------
 
-    protected void checkBlocking(ChangeLog log)
-            throws InterruptedException {
-        final Thread t = Thread.currentThread();
-        TimeBomb tb = new TimeBomb(100) {
-            public void explode() {
-                t.interrupt();
+    /**
+     * Creates and starts a thread that acquires and releases the write lock of the given
+     * <code>ISMLocking</code> for the given changelog. The thread's interrupted status is set if it was
+     * interrupted during the acquire-release sequence and could therefore not finish it.
+     * 
+     * @param lock the <code>ISMLocking</code> to use
+     * @param changeLog the <code>ChangeLog</code> to use
+     * @return a thread that has been started
+     */
+    protected final Thread startWriterThread(final ISMLocking lock, final ChangeLog changeLog) {
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+                try {
+                    lock.acquireWriteLock(changeLog).release();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        };
-        tb.arm();
-        try {
-            locking.acquireWriteLock(log).release();
-        } catch (InterruptedException e) {
-            // success
-            return;
-        }
-        tb.disarm();
-        // make sure interrupted status is cleared
-        // bomb may blow off right before we disarm it
-        Thread.interrupted();
-        fail("acquireWriteLock must block");
+        });
+        t.start();
+        return t;
     }
 
-    protected void checkBlocking(ItemId id)
-            throws InterruptedException {
-        final Thread t = Thread.currentThread();
-        TimeBomb tb = new TimeBomb(100) {
-            public void explode() {
-                t.interrupt();
+    /**
+     * Creates and starts an thread that acquires and releases the read lock of the given
+     * <code>ISMLocking</code> for the given id. The thread's interrupted status is set if it was interrupted
+     * during the acquire-release sequence and could therefore not finish it.
+     * 
+     * @param lock the <code>ISMLocking</code> to use
+     * @param id the id to use
+     * @return a thread that has been started
+     */
+    protected final Thread startReaderThread(final ISMLocking lock, final ItemId id) {
+        Thread t = new Thread(new Runnable() {
+
+            public void run() {
+                try {
+                    lock.acquireReadLock(id).release();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        };
-        tb.arm();
-        try {
-            locking.acquireReadLock(id).release();
-        } catch (InterruptedException e) {
-            // success
-            return;
-        }
-        tb.disarm();
-        // make sure interrupted status is cleared
-        // bomb may blow off right before we disarm it
-        Thread.interrupted();
-        fail("acquireReadLock must block");
+        });
+        t.start();
+        return t;
     }
 
-    protected void checkNonBlocking(ItemId id)
-            throws InterruptedException {
-        final Thread t = Thread.currentThread();
-        TimeBomb tb = new TimeBomb(100) {
-            public void explode() {
-                t.interrupt();
-            }
-        };
-        tb.arm();
-        try {
-            locking.acquireReadLock(id).release();
-        } catch (InterruptedException e) {
-            fail("acquireReadLock must not block");
-        }
-        tb.disarm();
-        // make sure interrupted status is cleared
-        // bomb may blow off right before we disarm it
-        Thread.interrupted();
+    /**
+     * Verifies that the given thread is blocked. Then it interrupts the thread and waits a certain amount of
+     * time for it to complete. (If it doesn't complete within that time then the test that calls this method
+     * fails).
+     * 
+     * @param other a started thread
+     * @throws InterruptedException on interruption
+     */
+    protected final void verifyBlocked(final Thread other) throws InterruptedException {
+        Thread.sleep(100);
+        assertTrue(other.isAlive());
+        other.interrupt();
+        other.join(100);
+        assertFalse(other.isAlive());
     }
 
-    public abstract ISMLocking createISMLocking();
+    /**
+     * Verifies that the given thread is not blocked and runs to completion within a certain amount of time
+     * and without interruption. (If it doesn't complete within that time without interruption then the test
+     * that calls this method fails).
+     * 
+     * @param other a started thread
+     * @throws InterruptedException on interruption
+     */
+    protected final void verifyNotBlocked(final Thread other) throws InterruptedException {
+        other.join(1000);
+        assertFalse(other.isInterrupted());
+        assertFalse(other.isAlive());
+    }
 }
