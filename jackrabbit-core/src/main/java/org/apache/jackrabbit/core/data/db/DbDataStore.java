@@ -304,16 +304,20 @@ public class DbDataStore implements DataStore {
                     now = System.currentTimeMillis();
                     id = UUID.randomUUID().toString();
                     tempId = TEMP_PREFIX + id;
+                    // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
                     PreparedStatement prep = conn.executeStmt(selectMetaSQL, new Object[]{tempId});
                     rs = prep.getResultSet();
                     if (rs.next()) {
                         // re-try in the very, very unlikely event that the row already exists
                         continue;
                     }
+                    // INSERT INTO DATASTORE VALUES(?, 0, ?, NULL)
                     conn.executeStmt(insertTempSQL, new Object[]{tempId, new Long(now)});
                     break;
                 } catch (Exception e) {
                     throw convert("Can not insert new record", e);
+                } finally {
+                    DatabaseHelper.closeSilently(rs);
                 }
             }
             if (id == null) {
@@ -567,6 +571,8 @@ public class DbDataStore implements DataStore {
             boolean exists = rs.next();
             rs.close();
             if (!exists) {
+                // CREATE TABLE DATASTORE(ID VARCHAR(255) PRIMARY KEY, 
+                // LENGTH BIGINT, LAST_MODIFIED BIGINT, DATA BLOB)
                 conn.executeStmt(createTableSQL, null);
             }
             putBack(conn);
