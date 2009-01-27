@@ -60,6 +60,10 @@ public class BLOBInDataStore extends BLOBFileValue {
     public void discard() {
         // do nothing
     }
+    
+    public DataIdentifier getDataIdentifier() {
+        return identifier;
+    }
 
     /**
      * {@inheritDoc}
@@ -113,6 +117,10 @@ public class BLOBInDataStore extends BLOBFileValue {
     static BLOBInDataStore getInstance(DataStore store, String s) {
         String id = s.substring(PREFIX.length());
         DataIdentifier identifier = new DataIdentifier(id);
+        return new BLOBInDataStore(store, identifier);
+    }
+    
+    static BLOBInDataStore getInstance(DataStore store, DataIdentifier identifier) {
         return new BLOBInDataStore(store, identifier);
     }
 

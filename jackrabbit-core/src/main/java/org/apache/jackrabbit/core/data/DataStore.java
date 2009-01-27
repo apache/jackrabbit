@@ -35,6 +35,15 @@ import javax.jcr.RepositoryException;
 public interface DataStore {
 
     /**
+     * Check if a record for the given identifier exists, and return it if yes.
+     * If no record exists, this method returns null.
+     * 
+     * @param identifier data identifier
+     * @return the record if found, and null if not
+     */
+    DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException;
+
+    /**
      * Returns the identified data record. The given identifier should be
      * the identifier of a previously saved data record. Since records are
      * never removed, there should never be cases where the identified record

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.value;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -26,7 +27,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.BinaryValue;
 import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.value.DateValue;
 import org.apache.jackrabbit.value.DoubleValue;
@@ -121,19 +121,37 @@ public class InternalValue {
         }
         switch (value.getType()) {
             case PropertyType.BINARY:
+                InternalValue result;
                 if (USE_DATA_STORE) {
-                    return new InternalValue(getBLOBFileValue(store, value.getStream(), true));
-                }
-                if (value instanceof BLOBFileValue) {
-                    return new InternalValue((BLOBFileValue) value);
+                    BLOBFileValue blob = null;
+                    if (value instanceof BinaryValueImpl) {
+                        BinaryValueImpl bin = (BinaryValueImpl) value;
+                        DataIdentifier identifier = bin.getDataIdentifier();
+                        if (identifier != null) {
+                            // access the record to ensure it is not garbage collected
+                            if (store.getRecordIfStored(identifier) != null) {
+                                // it exists - so we don't need to stream it again
+                                // but we need to create a new object because the original
+                                // one might be in a different data store (repository)
+                                blob = BLOBInDataStore.getInstance(store, identifier);
+                            }
+                        }
+                    }
+                    if (blob == null) {
+                        blob = getBLOBFileValue(store, value.getStream(), true);
+                    }
+                    result = new InternalValue(blob);
+                } else if (value instanceof BLOBFileValue) {
+                    result = new InternalValue((BLOBFileValue) value);
                 } else {
                     InputStream stream = value.getStream();
                     try {
-                        return createTemporary(stream);
+                        result = createTemporary(stream);
                     } finally {
                         IOUtils.closeQuietly(stream);
                     }
                 }
+                return result;
             case PropertyType.BOOLEAN:
                 return create(value.getBoolean());
             case PropertyType.DATE:
@@ -361,7 +379,7 @@ public class InternalValue {
             throws RepositoryException {
         switch (type) {
             case PropertyType.BINARY:
-                return new BinaryValue(((BLOBFileValue) val).getStream());
+                return new BinaryValueImpl((BLOBFileValue) val);
             case PropertyType.BOOLEAN:
                 return new BooleanValue(((Boolean) val));
             case PropertyType.DATE:

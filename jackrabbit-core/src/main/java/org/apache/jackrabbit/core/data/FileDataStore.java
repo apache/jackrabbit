@@ -122,7 +122,26 @@ public class FileDataStore implements DataStore {
         directory = new File(path);
         directory.mkdirs();
     }
-
+    
+    /**
+     * {@inheritDoc}
+     */
+    public DataRecord getRecordIfStored(DataIdentifier identifier) {
+        File file = getFile(identifier);
+        synchronized (this) {
+            if (!file.exists()) {
+                return null;
+            }
+            if (minModifiedDate != 0 && file.canWrite()) {
+                if (file.lastModified() < minModifiedDate) {
+                    file.setLastModified(System.currentTimeMillis());
+                }
+            }
+            usesIdentifier(identifier);
+            return new FileDataRecord(identifier, file);
+        }
+    }
+    
     /**
      * Returns the record with the given identifier. Note that this method
      * performs no sanity checks on the given identifier. It is up to the
@@ -132,17 +151,12 @@ public class FileDataStore implements DataStore {
      * @param identifier data identifier
      * @return identified data record
      */
-    public DataRecord getRecord(DataIdentifier identifier) {
-        File file = getFile(identifier);
-        synchronized (this) {
-            if (minModifiedDate != 0 && file.exists() && file.canWrite()) {
-                if (file.lastModified() < minModifiedDate) {
-                    file.setLastModified(System.currentTimeMillis());
-                }
-            }
-            usesIdentifier(identifier);
+    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
+        DataRecord record = getRecordIfStored(identifier);
+        if (record == null) {
+            throw new DataStoreException("Record not found: " + identifier);
         }
-        return new FileDataRecord(identifier, file);
+        return record;
     }
 
     private void usesIdentifier(DataIdentifier identifier) {

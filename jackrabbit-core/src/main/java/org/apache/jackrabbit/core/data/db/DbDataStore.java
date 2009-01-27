@@ -488,7 +488,7 @@ public class DbDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
+    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
         usesIdentifier(identifier);
         ResultSet rs = null;
@@ -510,6 +510,17 @@ public class DbDataStore implements DataStore {
             DatabaseHelper.closeSilently(rs);
             putBack(conn);
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
+        DataRecord record = getRecordIfStored(identifier);
+        if (record == null) {
+            throw new DataStoreException("Record not found: " + identifier);
+        }
+        return record;
     }
     
     /**
