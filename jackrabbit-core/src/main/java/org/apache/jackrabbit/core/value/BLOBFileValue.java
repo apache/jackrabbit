@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.DataIdentifier;
 
 /**
  * Represents binary data which is backed by a resource or byte[].
@@ -118,5 +119,14 @@ public abstract class BLOBFileValue {
      * @return true if the value is small
      */
     public abstract boolean isSmall();
+    
+    /**
+     * Get the data identifier if one is available.
+     * 
+     * @return the data identifier or null
+     */
+    public DataIdentifier getDataIdentifier() {
+        return null;
+    }
 
 }

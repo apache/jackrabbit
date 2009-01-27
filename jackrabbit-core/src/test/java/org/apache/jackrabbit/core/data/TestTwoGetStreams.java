@@ -20,8 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
+import org.apache.jackrabbit.api.JackrabbitValue;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +38,63 @@ public class TestTwoGetStreams extends AbstractJCRTest {
     private static Logger log = LoggerFactory.getLogger(TestTwoGetStreams.class);
 
     private static final int STREAM_LENGTH = 1 * 1024 * 1024;
+    
+    private boolean isDataStoreEnabled() throws RepositoryException {
+        Session session = helper.getSuperuserSession();
+        RepositoryImpl rep = (RepositoryImpl) session.getRepository();        
+        return rep.getDataStore() != null;
+    }
+    
+    /**
+     * Test the JackrabbitValue.getContentIdentity feature.
+     */
+    public void testContentIdentity() throws Exception {
+        if (!isDataStoreEnabled()) {
+            log.info("testContentIdentity skipped. Data store is not used.");
+            return;
+        }
+        
+        Session session = helper.getSuperuserSession();
+        
+        Node root = session.getRootNode();
+        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
+        root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
+        session.save();
 
+        Value v1 = root.getProperty("p1").getValue();
+        Value v2 = root.getProperty("p2").getValue();
+        if (v1 instanceof JackrabbitValue && v2 instanceof JackrabbitValue) {
+            JackrabbitValue j1 = (JackrabbitValue) v1;
+            JackrabbitValue j2 = (JackrabbitValue) v2;
+            String id1 = j1.getContentIdentity();
+            String id2 = j2.getContentIdentity();
+            assertNotNull(id1);
+            assertEquals(id1, id2);
+        }
+        
+        // copying a value should not stream the content
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 100; i++) {
+            Value v = root.getProperty("p1").getValue();
+            root.setProperty("p3", v);
+        }
+        session.save();
+        time = System.currentTimeMillis() - time;
+        // streaming the value again and again takes about 4.3 seconds
+        // on my computer; copying the data identifier takes about 16 ms
+        assertTrue(time < 500);
+
+    }
+    
     /**
      * Test reading from two concurrently opened streams.
      */
     public void testTwoGetStreams() throws Exception {
+        if (!isDataStoreEnabled()) {
+            log.info("testContentIdentity skipped. Data store is not used.");
+            return;
+        }
+        
         Session session = helper.getSuperuserSession();
         Node root = session.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
@@ -65,6 +121,11 @@ public class TestTwoGetStreams extends AbstractJCRTest {
      * Tests reading concurrently from two different streams.
      */
     public void testTwoStreamsConcurrently() throws Exception {
+        if (!isDataStoreEnabled()) {
+            log.info("testContentIdentity skipped. Data store is not used.");
+            return;
+        }
+        
         Session session = helper.getSuperuserSession();
         Node root = session.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
@@ -91,6 +152,11 @@ public class TestTwoGetStreams extends AbstractJCRTest {
      * same property.
      */
     public void testTwoStreamsFromSamePropertyConcurrently() throws Exception {
+        if (!isDataStoreEnabled()) {
+            log.info("testContentIdentity skipped. Data store is not used.");
+            return;
+        }
+        
         Session session = helper.getSuperuserSession();
         Node root = session.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
