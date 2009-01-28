@@ -23,6 +23,8 @@ import org.apache.jackrabbit.name.NameFormat;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Test cases for the Text utility class.
@@ -153,6 +155,33 @@ public class TextTest extends TestCase {
         assertInvalidUnescape("%%%"); // not a number
     }
 
+    public void testGetJSONString() {
+        Map m = new HashMap();
+        m.put("abc", "\"abc\"");
+        m.put("a \"b\" c", "\"a \\\"b\\\" c\"");
+        m.put("a\tb\rc\nd\fe\b", "\"a\\tb\\rc\\nd\\fe\\b\"");
+        m.put("\\abc", "\"\\\\abc\"");
+        m.put("abc", "\"abc\"");
+
+        // non-printable ascii other than those treated (\t,\r,\n)
+        m.put(String.valueOf((char) 7), "\"\\u0007\"");
+        m.put(String.valueOf((char) 30), "\"\\u001e\"");
+
+        // chinese
+        m.put("\u4e00a\u4e8cb\u4e09c", "\"\u4e00a\u4e8cb\u4e09c\"");
+        /* arabic */
+        m.put("\u062c\u062f\u064a\u062f", "\"\u062c\u062f\u064a\u062f\"");
+        /* Сaзb?c */
+        m.put("\u00d1a\u00e7b\u0416c", "\"\u00d1a\u00e7b\u0416c\"");
+        // вишь
+        m.put("вишь", "\"\u00e2\u00e8\u00f8\u00fc\"");
+
+        for (Iterator it = m.keySet().iterator(); it.hasNext();) {
+            String key = it.next().toString();
+            assertEquals(m.get(key).toString(), Text.getJSONString(key));
+        }
+    }
+    
     private void assertInvalidUnescape(String string) {
         try {
             Text.unescape(string);
