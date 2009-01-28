@@ -23,7 +23,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SecurityItemModifier;
+import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -54,7 +54,7 @@ import java.util.Map;
 /**
  * UserManagerImpl
  */
-public class UserManagerImpl extends SecurityItemModifier implements UserManager, UserConstants {
+public class UserManagerImpl extends ProtectedItemModifier implements UserManager, UserConstants {
 
     private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
 
@@ -71,7 +71,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     private final Map idPathMap = new LRUMap(1000);
 
     public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
-        super(false);
+        super();
         this.session = session;
         this.adminId = adminId;
 
@@ -216,11 +216,11 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             parent = createParentNode(parentPath);
 
             Name nodeName = session.getQName(Text.escapeIllegalJcrChars(userID));
-            NodeImpl userNode = addSecurityNode(parent, nodeName, NT_REP_USER);
+            NodeImpl userNode = addNode(parent, nodeName, NT_REP_USER);
 
-            setSecurityProperty(userNode, P_USERID, getValue(userID));
-            setSecurityProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)));
-            setSecurityProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
+            setProperty(userNode, P_USERID, getValue(userID), true);
+            setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
+            setProperty(userNode, P_PRINCIPAL_NAME, getValue(principal.getName()), true);
             parent.save();
 
             log.debug("User created: " + userID + "; " + userNode.getPath());
@@ -271,8 +271,8 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
             parent = createParentNode(parentPath);
             Name groupID = getGroupId(principal.getName());
 
-            NodeImpl groupNode = addSecurityNode(parent, groupID, NT_REP_GROUP);
-            setSecurityProperty(groupNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
+            NodeImpl groupNode = addNode(parent, groupID, NT_REP_GROUP);
+            setProperty(groupNode, P_PRINCIPAL_NAME, getValue(principal.getName()));
             parent.save();
 
             log.debug("Group created: " + groupID + "; " + groupNode.getPath());
@@ -303,17 +303,17 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
     }
 
     void setProtectedProperty(NodeImpl node, Name propName, Value value) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
-        setSecurityProperty(node, propName, value);
+        setProperty(node, propName, value);
         node.save();
     }
 
     void setProtectedProperty(NodeImpl node, Name propName, Value[] values) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
-        setSecurityProperty(node, propName, values);
+        setProperty(node, propName, values);
         node.save();
     }
 
     void removeProtectedItem(ItemImpl item, Node parent) throws RepositoryException, AccessDeniedException, VersionException {
-        removeSecurityItem(item);
+        removeItem(item);
         parent.save();
     }
 
@@ -491,7 +491,7 @@ public class UserManagerImpl extends SecurityItemModifier implements UserManager
                 } else {
                     ntName = NT_REP_AUTHORIZABLE_FOLDER;
                 }
-                NodeImpl added = addSecurityNode(parent, nName, ntName);
+                NodeImpl added = addNode(parent, nName, ntName);
                 parent.save();
                 parent = added;
             } else {

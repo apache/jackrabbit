@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
@@ -42,21 +43,27 @@ import javax.jcr.AccessDeniedException;
  * item operations but forcing the usage of the security API. The latter asserts
  * that implementation specific constraints are not violated.
  */
-public abstract class SecurityItemModifier {
+public abstract class ProtectedItemModifier {
 
-    private final boolean checkAcPermission;
+    private static final int DEFAULT_PERM_CHECK = -1;
+    private final int permission;
 
-    protected SecurityItemModifier(boolean checkAcPermission) {
-        Class cl = getClass();
-        if (!(cl.equals(UserManagerImpl.class) ||
-              cl.equals(ACLEditor.class) ||
-              cl.equals(org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class))) {
-            throw new IllegalArgumentException("Only UserManagerImpl and ACLEditor may extend from the SecurityItemModifier");
-        }
-        this.checkAcPermission = checkAcPermission;
+    protected ProtectedItemModifier() {
+        this(DEFAULT_PERM_CHECK);
     }
 
-    protected NodeImpl addSecurityNode(NodeImpl parentImpl, Name name, Name ntName) throws RepositoryException {
+    protected ProtectedItemModifier(int permission) {
+        Class cl = getClass();
+        if (!(cl.equals(UserManagerImpl.class) ||
+              cl.equals(RetentionManagerImpl.class) ||
+              cl.equals(ACLEditor.class) ||
+              cl.equals(org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class))) {
+            throw new IllegalArgumentException("Only UserManagerImpl, RetentionManagerImpl and ACLEditor may extend from the ProtectedItemModifier");
+        }
+        this.permission = permission;
+    }
+
+    protected NodeImpl addNode(NodeImpl parentImpl, Name name, Name ntName) throws RepositoryException {
         checkPermission(parentImpl, name, getPermission(true, false));
         // validation: make sure Node is not locked or checked-in.
         parentImpl.checkSetProperty();
@@ -85,8 +92,12 @@ public abstract class SecurityItemModifier {
         return parentImpl.createChildNode(name, def, nodeType, null);
     }
 
-    protected Property setSecurityProperty(NodeImpl parentImpl, Name name, Value value) throws RepositoryException {
-        if (!parentImpl.isNew()) {
+    protected Property setProperty(NodeImpl parentImpl, Name name, Value value) throws RepositoryException {
+        return setProperty(parentImpl, name, value, false);
+    }
+
+    protected Property setProperty(NodeImpl parentImpl, Name name, Value value, boolean ignorePermissions) throws RepositoryException {
+        if (!ignorePermissions) {
             checkPermission(parentImpl, name, getPermission(false, false));
         }
         // validation: make sure Node is not locked or checked-in.
@@ -95,7 +106,7 @@ public abstract class SecurityItemModifier {
         return parentImpl.internalSetProperty(name, intVs);
     }
 
-    protected Property setSecurityProperty(NodeImpl parentImpl, Name name, Value[] values) throws RepositoryException {
+    protected Property setProperty(NodeImpl parentImpl, Name name, Value[] values) throws RepositoryException {
         checkPermission(parentImpl, name, getPermission(false, false));
         // validation: make sure Node is not locked or checked-in.
         parentImpl.checkSetProperty();
@@ -106,7 +117,7 @@ public abstract class SecurityItemModifier {
         return parentImpl.internalSetProperty(name, intVs);
     }
 
-    protected void removeSecurityItem(ItemImpl itemImpl) throws RepositoryException {
+    protected void removeItem(ItemImpl itemImpl) throws RepositoryException {
         NodeImpl n;
         if (itemImpl.isNode()) {
             n = (NodeImpl) itemImpl;
@@ -120,30 +131,36 @@ public abstract class SecurityItemModifier {
     }
 
     private void checkPermission(ItemImpl item, int perm) throws RepositoryException {
-        SessionImpl sImpl = (SessionImpl) item.getSession();
-        AccessManager acMgr = sImpl.getAccessManager();
+        if (perm > Permission.NONE) {
+            SessionImpl sImpl = (SessionImpl) item.getSession();
+            AccessManager acMgr = sImpl.getAccessManager();
 
-        Path path = sImpl.getHierarchyManager().getPath(item.getId());
-        acMgr.checkPermission(path, perm);
+            Path path = item.getPrimaryPath();
+            acMgr.checkPermission(path, perm);
+        }
     }
 
     private void checkPermission(NodeImpl node, Name childName, int perm) throws RepositoryException {
-        SessionImpl sImpl = (SessionImpl) node.getSession();
-        AccessManager acMgr = sImpl.getAccessManager();
+        if (perm > Permission.NONE) {
+            SessionImpl sImpl = (SessionImpl) node.getSession();
+            AccessManager acMgr = sImpl.getAccessManager();
 
-        boolean isGranted = acMgr.isGranted(node.getPrimaryPath(), childName, perm);
-        if (!isGranted) {
-            throw new AccessDeniedException("Permission denied.");
+            boolean isGranted = acMgr.isGranted(node.getPrimaryPath(), childName, perm);
+            if (!isGranted) {
+                throw new AccessDeniedException("Permission denied.");
+            }
         }
     }
 
     private int getPermission(boolean isNode, boolean isRemove) {
-        if (checkAcPermission) {
-            return Permission.MODIFY_AC;
-        } else if (isNode) {
-            return (isRemove) ? Permission.REMOVE_NODE : Permission.ADD_NODE;
+        if (permission < Permission.NONE) {
+            if (isNode) {
+                return (isRemove) ? Permission.REMOVE_NODE : Permission.ADD_NODE;
+            } else {
+                return (isRemove) ? Permission.REMOVE_PROPERTY : Permission.SET_PROPERTY;
+            }
         } else {
-            return (isRemove) ? Permission.REMOVE_PROPERTY : Permission.SET_PROPERTY;
+            return permission;
         }
     }
 }

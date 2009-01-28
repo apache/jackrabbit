@@ -16,9 +16,11 @@
  */
 package org.apache.jackrabbit.api.jsr283.retention;
 
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -30,22 +32,38 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 public abstract class AbstractRetentionTest extends AbstractJCRTest {
 
     protected RetentionManager retentionMgr;
+    protected String testNodePath;
 
     protected void setUp() throws Exception {
         super.setUp();
 
+        // TODO: uncomment again.
+        // checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
+
         retentionMgr = getRetentionManager(superuser);
+        testNodePath = testRootNode.getPath();
+    }
+
+    protected String getHoldName() throws RepositoryException, NotExecutableException {
+        String holdName = getProperty(RepositoryStub.PROP_HOLD_NAME);
+        if (holdName == null) {
+            throw new NotExecutableException();
+        }
+        return holdName;
+    }
+
+    protected RetentionPolicy getApplicableRetentionPolicy() throws NotExecutableException, RepositoryException {
+        return getApplicableRetentionPolicy("retentionPolicyName");
+    }
+
+    protected RetentionPolicy getApplicableRetentionPolicy(String jcrName) throws NotExecutableException, RepositoryException {
+        // TODO: move to repositoryStub/helper and adjust accordingly
+        return new RetentionPolicyImpl(jcrName, (SessionImpl)superuser);
     }
 
     protected static RetentionManager getRetentionManager(Session s) throws RepositoryException, NotExecutableException {
-        // TODO: fix (Replace by Session) test as soon as jackrabbit implements 283
-        if (!(s instanceof SessionImpl)) {
-            throw new NotExecutableException();
-        }
-        // TODO: uncomment again.
-        // checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
         try {
-            return ((SessionImpl) s).getRetentionManager();
+            return getJsr283Session(s).getRetentionManager();
         } catch (UnsupportedRepositoryOperationException e) {
             throw new NotExecutableException();
         }
@@ -53,6 +71,15 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
 
     protected static void checkSupportedOption(Session s, String option) throws NotExecutableException {
         if (Boolean.FALSE.toString().equals(s.getRepository().getDescriptor(option))) {
+            throw new NotExecutableException();
+        }
+    }
+
+    protected static org.apache.jackrabbit.api.jsr283.Session getJsr283Session(Session s) throws NotExecutableException {
+        // TODO: get rid of method once jsr 283 is released
+        if (s instanceof org.apache.jackrabbit.api.jsr283.Session) {
+            return (org.apache.jackrabbit.api.jsr283.Session) s;
+        } else {
             throw new NotExecutableException();
         }
     }

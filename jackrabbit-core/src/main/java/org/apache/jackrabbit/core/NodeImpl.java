@@ -45,7 +45,6 @@ import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -722,15 +721,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new PathNotFoundException(relPath);
         }
 
-        // make sure that parent node is checked-out
-        if (!parentNode.internalIsCheckedOut()) {
-            String msg = this + ": cannot add a child to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        parentNode.checkLock();
+        // make sure that parent node is checked-out and not locked
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        session.getValidator().checkModify(parentNode, options, Permission.NONE);
 
         // delegate the creation of the child node to the parent node
         return parentNode.internalAddChildNode(nodeName, nodeType, id);
@@ -794,13 +787,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             }
         }
 
-        // check protected flag of parent (i.e. this) node
-        final NodeDefinition definition = data.getNodeDefinition();
-        if (definition.isProtected()) {
-            String msg = this + ": cannot add a child to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
+        // check protected flag of parent (i.e. this) node and retention/hold
+        int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD |
+                ItemValidator.CHECK_RETENTION;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         // now do create the child node
         return createChildNode(nodeName, def, nodeType, id);
@@ -1007,33 +997,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = this + ": cannot add a mixin node type to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        final NodeDefinition definition = data.getNodeDefinition();
-        if (definition.isProtected()) {
-            String msg = this + ": cannot add a mixin node type to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        checkLock();
-        // check permissions
-        Path p = getPrimaryPath();
-        AccessManager acMgr = session.getAccessManager();
-        acMgr.checkPermission(p, Permission.NODE_TYPE_MNGMT);
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
         // in addition.
         if (NameConstants.MIX_VERSIONABLE.equals(mixinName)) {
-            acMgr.checkPermission(p, Permission.VERSION_MNGMT);
+            permissions |= Permission.VERSION_MNGMT;
         }
+        session.getValidator().checkModify(this, options, permissions);
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
@@ -1129,27 +1102,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg =
-                this + ": cannot remove a mixin node type from a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        NodeDefinition definition = data.getNodeDefinition();
-        if (definition.isProtected()) {
-            String msg =
-                this + ": cannot remove a mixin node type from a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        checkLock();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.NODE_TYPE_MNGMT);
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int permissions = Permission.NODE_TYPE_MNGMT;
+        session.getValidator().checkModify(this, options, permissions);
 
         // check if mixin is assigned
         final NodeState state = data.getNodeState();
@@ -1325,15 +1281,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      */
     protected void checkSetProperty()
             throws VersionException, LockException, RepositoryException {
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = this + ": cannot set property of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // make sure this node is checked-out and is not locked
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        session.getValidator().checkModify(this, options, Permission.NONE);
     }
 
     /**
@@ -1590,15 +1540,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = this + ": cannot add node to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // make sure this node is checked-out and not locked by another session.
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         NodeTypeImpl nt = null;
         if (nodeTypeName != null) {
@@ -1827,25 +1771,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     this + " has no child node with name " + name);
         }
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg =
-                this + ": cannot change child node ordering of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        final NodeDefinition definition = data.getNodeDefinition();
-        if (definition.isProtected()) {
-            String msg =
-                this + ": cannot change child node ordering of a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        checkLock();
+        // make sure this node is checked-out and neither protected nor locked
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         ArrayList list = new ArrayList(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
@@ -2011,16 +1940,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
 
         // (1) make sure that parent node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = this + ": cannot add a child to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
         // (2) check lock status
-        checkLock();
+        // (3) check protected flag of parent (i.e. this) node
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_CONSTRAINTS;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
-        // (3) check for name collisions
+        // (4) check for name collisions
         NodeDefinitionImpl def;
         try {
             def = getApplicableChildNodeDefinition(name, null);
@@ -2042,14 +1967,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             if (!((NodeImpl) itemMgr.getItem(newId)).getDefinition().allowsSameNameSiblings()) {
                 throw new ItemExistsException(itemMgr.safeGetJCRPath(nodePath));
             }
-        }
-
-        // (4) check protected flag of parent (i.e. this) node
-        final NodeDefinition definition = data.getNodeDefinition();
-        if (definition.isProtected()) {
-            String msg = this + ": cannot add a child to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
         }
 
         // (5) do clone operation
@@ -2851,49 +2768,23 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // check checked-out status
-        if (!internalIsCheckedOut()) {
+        Name ntName = session.getQName(mixinName);
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeTypeImpl mixin = ntMgr.getNodeType(ntName);
+        if (!mixin.isMixin()) {
             return false;
         }
-
-        // check protected flag
-        if (data.getNodeDefinition().isProtected()) {
-            return false;
-        }
-
-        // check lock status
-        try {
-            checkLock();
-        } catch (LockException le) {
-            return false;
-        }
-
-        Name ntName;
-        try {
-            ntName = session.getQName(mixinName);
-        } catch (NameException e) {
-            throw new RepositoryException(
-                    "invalid mixin type name: " + mixinName, e);
-        }
-
-        // check permissions
-        Path p = getPrimaryPath();
-        AccessManager acMgr = session.getAccessManager();
-        if (!acMgr.isGranted(p, Permission.NODE_TYPE_MNGMT)) {
-            return false;
-        }
+        
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
         // in addition.
         if (NameConstants.MIX_VERSIONABLE.equals(ntName)) {
-            if (!acMgr.isGranted(p, Permission.VERSION_MNGMT)) {
-                return false;
-            }
+            permissions |= Permission.VERSION_MNGMT;
         }
-
-        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        NodeTypeImpl mixin = ntMgr.getNodeType(ntName);
-        if (!mixin.isMixin()) {
+        if (!session.getValidator().canModify(this, options, permissions)) {
             return false;
         }
 
@@ -3339,17 +3230,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             return getBaseVersion();
         }
 
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg = "Unable to checkin node. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-        // check lock status
-        checkLock();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+        // check lock status, holds and permissions
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
         Version v = session.getVersionManager().checkin(this);
         boolean success = false;
@@ -3392,10 +3275,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             return;
         }
 
-        // check lock status
-        checkLock();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
         boolean hasPendingChanges = hasPendingChanges();
         Property[] props = new Property[2];
@@ -3487,8 +3368,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // checks
         sanityCheck();
-        checkSessionHasPending();
-        checkLock();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         Version v = getVersionHistory().getVersion(versionName);
         DateVersionSelector gvs = new DateVersionSelector(v.getCreated());
@@ -3506,9 +3387,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // do checks
         sanityCheck();
-        checkSessionHasPending();
         checkVersionable();
-        checkLock();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         // check if 'own' version
         if (!version.getContainingHistory().isSame(getVersionHistory())) {
@@ -3529,8 +3410,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // do checks
         sanityCheck();
-        checkSessionHasPending();
-        checkLock();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         // if node exists, do a 'normal' restore
         if (hasNode(relPath)) {
@@ -3578,8 +3459,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // do checks
         sanityCheck();
-        checkSessionHasPending();
-        checkLock();
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         Version v = getVersionHistory().getVersionByLabel(versionLabel);
         if (v == null) {
@@ -3639,24 +3520,6 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
-    }
-
-    /**
-     * Checks if this nodes session has pending changes.
-     *
-     * @throws InvalidItemStateException if this nodes session has pending changes
-     * @throws RepositoryException
-     */
-    private void checkSessionHasPending()
-            throws InvalidItemStateException, RepositoryException {
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to perform operation. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
-
     }
 
     /**
@@ -3834,28 +3697,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // check for pending changes
-        if (hasPendingChanges()) {
-            String msg =
-                "Unable to finish merge. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-
         // check versionable
         checkVersionable();
 
-        // check lock
-        checkLock();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
-
-        // check if checked out
-        if (!internalIsCheckedOut()) {
-            String msg = "Unable to finish merge. Node is checked-in: " + this;
-            log.error(msg);
-            throw new VersionException(msg);
-        }
+        // check lock, permissions and checkout-status
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
         // check if version is in mergeFailed list
         Set failed = internalGetMergeFailed();
@@ -4089,9 +3936,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // do checks
         sanityCheck();
-        checkSessionHasPending();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
+        session.getValidator().checkModify(this, ItemValidator.CHECK_PENDING_CHANGES, Permission.VERSION_MNGMT);
 
         // if same workspace, ignore
         if (srcWorkspaceName.equals(session.getWorkspace().getName())) {
@@ -4151,8 +3996,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             return;
         }
 
-        // check lock status
-        checkLock();
+        // check lock and hold status
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NONE);
 
         // update the properties
         PropertyIterator iter = getProperties();
@@ -4616,6 +4462,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      *
      * @throws LockException       if this node is locked by somebody else
      * @throws RepositoryException if some other error occurs
+     * @deprecated
      */
     protected void checkLock() throws LockException, RepositoryException {
         if (isNew()) {
@@ -4687,19 +4534,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        // make sure this node is checked-out
-        if (!internalIsCheckedOut()) {
-            String msg = this + ": cannot set primary type of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag
-        if (data.getDefinition().isProtected()) {
-            String msg = this + ": cannot set primary type of a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
+        // make sure this node is checked-out, neither protected nor locked and
+        // the editing session has sufficient permission to change the primary type.
+        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        session.getValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
 
         final NodeState state = data.getNodeState();
         if (state.getParentId() == null) {
@@ -4708,20 +4547,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new RepositoryException(msg);
         }
 
-        // check lock status
-        checkLock();
-        // check permission
-        session.getAccessManager().checkPermission(getPrimaryPath(), Permission.NODE_TYPE_MNGMT);
-
-        Name ntName;
-        try {
-            ntName = session.getQName(nodeTypeName);
-        } catch (NameException e) {
-            throw new RepositoryException(
-                    "invalid node type name: " + nodeTypeName, e);
-        }
-
+        Name ntName = session.getQName(nodeTypeName);
         if (ntName.equals(state.getNodeTypeName())) {
+            log.debug("Node already has " + nodeTypeName + " as primary node type.");
             return;
         }
 

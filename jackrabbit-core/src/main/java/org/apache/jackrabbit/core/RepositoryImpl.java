@@ -67,6 +67,8 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.RegistryNamespaceResolver;
@@ -940,6 +942,21 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     /**
+     * Returns the {@link org.apache.jackrabbit.core.retention.RetentionRegistry} for the workspace with name
+     * <code>workspaceName</code>
+     *
+     * @param workspaceName workspace name
+     * @return <code>RetentionEvaluator</code> for the workspace
+     * @throws NoSuchWorkspaceException if such a workspace does not exist
+     * @throws RepositoryException      if some other error occurs
+     */
+    RetentionRegistry getRetentionRegistry(String workspaceName) throws NoSuchWorkspaceException, RepositoryException {
+        // check sanity of this instance
+        sanityCheck();
+        return getWorkspaceInfo(workspaceName).getRetentionRegistry();
+    }
+
+    /**
      * Returns the {@link SystemSession} for the workspace with name
      * <code>workspaceName</code>
      *
@@ -1573,6 +1590,12 @@ public class RepositoryImpl extends AbstractRepository
         private LockManagerImpl lockMgr;
 
         /**
+         * internal manager for evaluation of effective retention policies
+         * and holds
+         */
+        private RetentionRegistryImpl retentionReg;
+
+        /**
          * flag indicating whether this instance has been initialized.
          */
         private boolean initialized;
@@ -1794,6 +1817,24 @@ public class RepositoryImpl extends AbstractRepository
                     }
                 }
                 return lockMgr;
+            }
+        }
+
+        /**
+         * Return manager used for evaluating effect retention and holds.
+         *
+         * @return
+         * @throws RepositoryException
+         */
+        protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
+            if (!isInitialized()) {
+                throw new IllegalStateException("workspace '" + getName() + "' not initialized");
+            }
+            synchronized (this) {
+                if (retentionReg == null) {
+                    retentionReg = new RetentionRegistryImpl(getSystemSession(), fs);
+                }
+                return retentionReg;
             }
         }
 
@@ -2043,12 +2084,17 @@ public class RepositoryImpl extends AbstractRepository
                 lockMgr = null;
             }
 
+            // close retention registry
+            if (retentionReg != null) {
+                retentionReg.close();
+                retentionReg = null;
+            }
+
             // close workspace file system
             try {
                 fs.close();
             } catch (FileSystemException fse) {
-                log.error("error while closing file system of workspace "
-                        + config.getName(), fse);
+                log.error("error while closing file system of workspace " + config.getName(), fse);
             }
             fs = null;
         }

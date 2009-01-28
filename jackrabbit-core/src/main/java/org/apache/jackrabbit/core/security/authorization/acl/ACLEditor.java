@@ -22,13 +22,14 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SecurityItemModifier;
+import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -49,7 +50,7 @@ import java.security.Principal;
 /**
  * <code>ACLEditor</code>...
  */
-public class ACLEditor extends SecurityItemModifier implements AccessControlEditor, AccessControlConstants {
+public class ACLEditor extends ProtectedItemModifier implements AccessControlEditor, AccessControlConstants {
 
     /**
      * the default logger
@@ -67,7 +68,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     private final AccessControlUtils utils;
 
     ACLEditor(Session editingSession, AccessControlUtils utils) {
-        super(true);
+        super(Permission.MODIFY_AC);
         if (editingSession instanceof SessionImpl) {
             session = ((SessionImpl) editingSession);
             // TODO: review and find better solution
@@ -147,7 +148,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
            access and removed the explicitely
          */
         if (aclNode != null) {
-            removeSecurityItem(aclNode);
+            removeItem(aclNode);
         }
         // now (re) create it
         aclNode = createAclNode(nodePath);
@@ -161,16 +162,16 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             ValueFactory vf = session.getValueFactory();
 
             // create the ACE node
-            NodeImpl aceNode = addSecurityNode(aclNode, nodeName, ntName);
+            NodeImpl aceNode = addNode(aclNode, nodeName, ntName);
 
             // write the rep:principalName property
             String principalName = ace.getPrincipal().getName();
-            setSecurityProperty(aceNode, P_PRINCIPAL_NAME, vf.createValue(principalName));
+            setProperty(aceNode, P_PRINCIPAL_NAME, vf.createValue(principalName));
 
             // ... and the rep:privileges property
             Privilege[] pvlgs = ace.getPrivileges();
             Value[] names = getPrivilegeNames(pvlgs, vf);
-            setSecurityProperty(aceNode, P_PRIVILEGES, names);
+            setProperty(aceNode, P_PRIVILEGES, names);
         }
     }
 
@@ -183,7 +184,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
 
         NodeImpl aclNode = getAclNode(nodePath);
         if (aclNode != null) {
-            removeSecurityItem(aclNode);
+            removeItem(aclNode);
         } else {
             throw new AccessControlException("No policy to remove at " + nodePath);
         }
@@ -265,7 +266,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         if (!protectedNode.isNodeType(NT_REP_ACCESS_CONTROLLABLE)) {
             protectedNode.addMixin(NT_REP_ACCESS_CONTROLLABLE);
         }
-        return addSecurityNode(protectedNode, N_POLICY, NT_REP_ACL);
+        return addNode(protectedNode, N_POLICY, NT_REP_ACL);
     }
 
     /**

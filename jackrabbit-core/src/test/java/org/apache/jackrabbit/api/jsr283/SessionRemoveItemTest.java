@@ -20,11 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
+import javax.jcr.Value;
 import javax.jcr.version.VersionException;
 import javax.jcr.lock.LockException;
 
@@ -129,7 +131,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
     public void testRemoveLockedChildItem() throws RepositoryException, NotExecutableException {
         // add a child property and a child node to test deep lock effect.
         javax.jcr.Node childN = removeNode.addNode(nodeName2);
-        Property childP = removeNode.setProperty(propertyName2, "propvalue2");
+        Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE2, RepositoryStub.PROP_PROP_TYPE2, "propvalue2");        
+        Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();
 
         if (!removeNode.isNodeType(mixLockable)) {
@@ -172,7 +175,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
     public void testRemoveCheckedInItem() throws RepositoryException, NotExecutableException {
         // add a child property and a child node to test deep lock effect.
         javax.jcr.Node childN = removeNode.addNode(nodeName2);
-        Property childP = removeNode.setProperty(propertyName2, "propvalue2");
+        Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE2, RepositoryStub.PROP_PROP_TYPE2, "propvalue2");
+        Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();
 
         if (!removeNode.isNodeType(mixVersionable)) {

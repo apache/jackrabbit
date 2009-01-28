@@ -49,6 +49,7 @@ import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -228,6 +229,12 @@ public class SessionImpl extends AbstractSession
     private RetentionManager retentionManager;
 
     /**
+     * Internal helper class for common validation checks (lock status, checkout
+     * status, protection etc. etc.)
+     */
+    private ItemValidator validator;
+
+    /**
      * Protected constructor.
      *
      * @param rep
@@ -372,6 +379,17 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
+     * @return ItemValidator instance for this session.
+     * @throws RepositoryException If an error occurs.
+     */
+    public synchronized ItemValidator getValidator() throws RepositoryException {
+        if (validator == null) {
+            validator = new ItemValidator(rep.getNodeTypeRegistry(), getHierarchyManager(), this);
+        }
+        return validator;
+    }
+
+    /**
      * Returns the <code>Subject</code> associated with this session.
      *
      * @return the <code>Subject</code> associated with this session
@@ -460,6 +478,18 @@ public class SessionImpl extends AbstractSession
      */
     public VersionManager getVersionManager() {
         return versionMgr;
+    }
+
+
+    /**
+     * Returns the internal retention manager used for evaluation of effective
+     * retention policies and holds.
+     * 
+     * @return internal retention manager
+     * @throws RepositoryException
+     */
+    protected RetentionRegistry getRetentionRegistry() throws RepositoryException {
+        return wsp.getRetentionRegistry();
     }
 
     /**
@@ -867,28 +897,6 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Determines if there are pending unsaved changes either on the passed
-     * item or on any item in it's subtree.
-     *
-     * @param item Item start of the subtree to be tested for pending changes.
-     * @return <code>true</code> if there are pending unsaved changes,
-     *         <code>false</code> otherwise.
-     * @throws RepositoryException if an error occurred
-     */
-    public boolean hasPendingChanges(Item item) throws RepositoryException {
-        if (!(item instanceof ItemImpl) || ((ItemImpl) item).session != this) {
-            throw new IllegalArgumentException();
-        }
-        sanityCheck();
-        ItemImpl itemImpl = (ItemImpl) item;
-        if (itemImpl.isTransient()) {
-            return true;
-        } else {
-            return item.isNode() && ((NodeImpl) item).hasPendingChanges();
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     public void move(String srcAbsPath, String destAbsPath)
@@ -961,20 +969,7 @@ public class SessionImpl extends AbstractSession
             throw new RepositoryException(msg);
         }
 
-        // verify that both source and destination parent nodes are checked-out
-        if (!srcParentNode.internalIsCheckedOut()) {
-            String msg = srcAbsPath + ": cannot move a child of a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-        if (!destParentNode.internalIsCheckedOut()) {
-            String msg = destAbsPath + ": cannot move a target to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
         // check for name collisions
-
         NodeImpl existing = null;
         try {
             existing = getItemManager().getNode(destPath);
@@ -991,8 +986,15 @@ public class SessionImpl extends AbstractSession
             // no name collision, fall through
         }
 
-        // check constraints
+        // verify for both source and destination parent nodes that
+        // - they are checked-out
+        // - are not protected neither by node type constraints nor by retention/hold
+        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        getValidator().checkRemove(srcParentNode, options, Permission.NONE);
+        getValidator().checkModify(destParentNode, options, Permission.NONE);
 
+        // check constraints
         // get applicable definition of target node at new location
         NodeTypeImpl nt = (NodeTypeImpl) targetNode.getPrimaryNodeType();
         NodeDefinitionImpl newTargetDef;
@@ -1011,22 +1013,6 @@ public class SessionImpl extends AbstractSession
             throw new ItemExistsException(
                     "Same name siblings not allowed: " + existing);
         }
-
-        // check protected flag of old & new parent
-        if (destParentNode.getDefinition().isProtected()) {
-            String msg = destAbsPath + ": cannot add a child node to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-        if (srcParentNode.getDefinition().isProtected()) {
-            String msg = srcAbsPath + ": cannot remove a child node from a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        srcParentNode.checkLock();
-        destParentNode.checkLock();
 
         NodeId targetId = targetNode.getNodeId();
         int index = srcName.getIndex();
@@ -1098,22 +1084,11 @@ public class SessionImpl extends AbstractSession
             throw new PathNotFoundException(parentAbsPath);
         }
 
-        // verify that parent node is checked-out
-        if (!parent.internalIsCheckedOut()) {
-            String msg = parentAbsPath + ": cannot add a child to a checked-in node";
-            log.debug(msg);
-            throw new VersionException(msg);
-        }
-
-        // check protected flag of parent node
-        if (parent.getDefinition().isProtected()) {
-            String msg = parentAbsPath + ": cannot add a child to a protected node";
-            log.debug(msg);
-            throw new ConstraintViolationException(msg);
-        }
-
-        // check lock status
-        parent.checkLock();
+        // verify that parent node is checked-out, not locked and not protected
+        // by either node type constraints nor by some retention or hold.
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        getValidator().checkModify(parent, options, Permission.NONE);
 
         SessionImporter importer = new SessionImporter(parent, this, uuidBehavior);
         return new ImportHandler(importer, this);
@@ -1522,9 +1497,14 @@ public class SessionImpl extends AbstractSession
      * @see org.apache.jackrabbit.api.jsr283.Session#getRetentionManager()
      * @since JCR 2.0
      */
-    public synchronized RetentionManager getRetentionManager()
+    public RetentionManager getRetentionManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        // check sanity of this session
+        sanityCheck();
         if (retentionManager == null) {
+            // make sure the internal retention manager exists.
+            getRetentionRegistry();
+            // create the api level retention manager.
             retentionManager = new RetentionManagerImpl(this);
         }
         return retentionManager;

@@ -520,4 +520,11 @@ commented out by default.
             </requiredPrimaryTypes>
         </childNodeDefinition>
     </nodeType>
+
+    <!-- retention management -->
+    <nodeType name="rep:RetentionManageable" isMixin="true" hasOrderableChildNodes="false" primaryItemName="">
+        <propertyDefinition name="rep:hold" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="true" />
+        <propertyDefinition name="rep:retentionPolicy" requiredType="undefined" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" multiple="false" />        
+    </nodeType>
+    
 </nodeTypes>

@@ -146,7 +146,7 @@ public class WorkspaceImporter implements Importer {
             // create new with new uuid:
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
-            // has already been checked on ancestor)
+            // and retention/hold has already been checked on ancestor)
             itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
                     BatchedItemOperations.CHECK_ACCESS
@@ -192,14 +192,16 @@ public class WorkspaceImporter implements Importer {
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
                     | BatchedItemOperations.CHECK_VERSIONING
-                    | BatchedItemOperations.CHECK_CONSTRAINTS);
+                    | BatchedItemOperations.CHECK_CONSTRAINTS
+                    | BatchedItemOperations.CHECK_HOLD
+                    | BatchedItemOperations.CHECK_RETENTION);
             // do remove conflicting (recursive)
             itemOps.removeNodeState(conflicting);
 
             // create new with given uuid:
             // check if new node can be added (check access rights &
             // node type constraints only, assume locking & versioning status
-            // has already been checked on ancestor)
+            // and retention/hold has already been checked on ancestor)
             itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
                     BatchedItemOperations.CHECK_ACCESS
@@ -231,7 +233,9 @@ public class WorkspaceImporter implements Importer {
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
                     | BatchedItemOperations.CHECK_VERSIONING
-                    | BatchedItemOperations.CHECK_CONSTRAINTS);
+                    | BatchedItemOperations.CHECK_CONSTRAINTS
+                    | BatchedItemOperations.CHECK_HOLD
+                    | BatchedItemOperations.CHECK_RETENTION);
 
             // 'replace' is actually a 'remove existing/add new' operation;
             // this unfortunately changes the order of the parent's
@@ -244,13 +248,16 @@ public class WorkspaceImporter implements Importer {
             itemOps.removeNodeState(conflicting);
             // create new with given uuid at same location as conflicting:
             // check if new node can be added at other location
-            // (access rights, node type constraints, locking & versioning status)
+            // (access rights, node type constraints, locking & versioning
+            // status and retention/hold)
             itemOps.checkAddNode(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(),
                     BatchedItemOperations.CHECK_ACCESS
                     | BatchedItemOperations.CHECK_LOCK
                     | BatchedItemOperations.CHECK_VERSIONING
-                    | BatchedItemOperations.CHECK_CONSTRAINTS);
+                    | BatchedItemOperations.CHECK_CONSTRAINTS
+                    | BatchedItemOperations.CHECK_HOLD
+                    | BatchedItemOperations.CHECK_RETENTION);
             // do create new node
             node = itemOps.createNodeState(parent, nodeInfo.getName(),
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
@@ -463,7 +470,7 @@ public class WorkspaceImporter implements Importer {
 
                     // check if new node can be added (check access rights &
                     // node type constraints only, assume locking & versioning status
-                    // has already been checked on ancestor)
+                    // and retention/hold has already been checked on ancestor)
                     itemOps.checkAddNode(parent, nodeName, ntName,
                             BatchedItemOperations.CHECK_ACCESS
                             | BatchedItemOperations.CHECK_CONSTRAINTS);
@@ -496,7 +503,7 @@ public class WorkspaceImporter implements Importer {
 
                         // check if new node can be added (check access rights &
                         // node type constraints only, assume locking & versioning status
-                        // has already been checked on ancestor)
+                        // and retention/hold has already been checked on ancestor)
                         itemOps.checkAddNode(parent, nodeName, ntName,
                                 BatchedItemOperations.CHECK_ACCESS
                                 | BatchedItemOperations.CHECK_CONSTRAINTS);
