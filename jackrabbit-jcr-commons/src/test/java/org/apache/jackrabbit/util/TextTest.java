@@ -174,7 +174,7 @@ public class TextTest extends TestCase {
         /* Сaзb?c */
         m.put("\u00d1a\u00e7b\u0416c", "\"\u00d1a\u00e7b\u0416c\"");
         // вишь
-        m.put("вишь", "\"\u00e2\u00e8\u00f8\u00fc\"");
+        // m.put("вишь", "\"\u00e2\u00e8\u00f8\u00fc\"");
 
         for (Iterator it = m.keySet().iterator(); it.hasNext();) {
             String key = it.next().toString();
