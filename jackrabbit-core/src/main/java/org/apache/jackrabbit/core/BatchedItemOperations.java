@@ -81,45 +81,11 @@ public class BatchedItemOperations extends ItemValidator {
     protected static final int CLONE_REMOVE_EXISTING = 2;
 
     /**
-     * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveNode}</code> methods:<p/>
-     * check access rights
-     */
-    public static final int CHECK_ACCESS = 1;
-    /**
-     * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveNode}</code> methods:<p/>
-     * check lock status
-     */
-    public static final int CHECK_LOCK = 2;
-    /**
-     * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveNode}</code> methods:<p/>
-     * check checked-out status
-     */
-    public static final int CHECK_VERSIONING = 4;
-    /**
-     * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveNode}</code> methods:<p/>
-     * check constraints defined in node type
-     */
-    public static final int CHECK_CONSTRAINTS = 16;
-    /**
-     * option for <code>{@link #checkRemoveNode}</code> method:<p/>
-     * check that target node is not being referenced
-     */
-    public static final int CHECK_REFERENCES = 8;
-
-    /**
      * wrapped item state manager
      */
     protected final UpdatableItemStateManager stateMgr;
     /**
-     * lock manager used for checking locking status
-     */
-    protected final LockManager lockMgr;
-    /**
-     * current session used for checking access rights and locking status
+     * current session used for checking access rights
      */
     protected final SessionImpl session;
 
@@ -131,15 +97,15 @@ public class BatchedItemOperations extends ItemValidator {
      * @param lockMgr    lock manager
      * @param session    current session
      * @param hierMgr    hierarchy manager
+     * @throws RepositoryException
      */
     public BatchedItemOperations(UpdatableItemStateManager stateMgr,
                                  NodeTypeRegistry ntReg,
                                  LockManager lockMgr,
                                  SessionImpl session,
-                                 HierarchyManager hierMgr) {
-        super(ntReg, hierMgr, session);
+                                 HierarchyManager hierMgr) throws RepositoryException {
+        super(ntReg, hierMgr, session, lockMgr, session.getAccessManager(), session.getRetentionRegistry());
         this.stateMgr = stateMgr;
-        this.lockMgr = lockMgr;
         this.session = session;
     }
 
@@ -301,7 +267,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check access rights, lock status, node type constraints, etc.
         checkAddNode(destParentState, destName,
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. verify that source has mixin mix:shareable
         if (!isShareable(srcState)) {
@@ -435,7 +401,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         checkAddNode(destParentState, destName.getName(),
                 srcState.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
         // check read access right on source node using source access manager
         try {
             if (!srcAccessMgr.isGranted(srcPath, Permission.READ)) {
@@ -580,10 +546,11 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check if target state can be removed from old/added to new parent
 
         checkRemoveNode(target, srcParent.getNodeId(),
-                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS |
+                        CHECK_HOLD | CHECK_RETENTION);
         checkAddNode(destParent, destName.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
-                | CHECK_VERSIONING | CHECK_CONSTRAINTS);
+                | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do move operation (modify and store affected states)
         boolean renameOnly = srcParent.getNodeId().equals(destParent.getNodeId());
@@ -670,7 +637,7 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check if target state can be removed from parent
         checkRemoveNode(target, parentId,
                 CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING
-                | CHECK_CONSTRAINTS | CHECK_REFERENCES);
+                | CHECK_CONSTRAINTS | CHECK_REFERENCES | CHECK_HOLD | CHECK_RETENTION);
 
         // 3. do remove operation
         removeNodeState(target);
@@ -697,7 +664,8 @@ public class BatchedItemOperations extends ItemValidator {
      *                     parent node is checked-out</li>
      *                     <li><code>{@link #CHECK_CONSTRAINTS}</code>:
      *                     make sure no node type constraints would be violated</li>
-     *                     <li><code>{@link #CHECK_REFERENCES}</code></li>
+     *                     <li><code>{@link #CHECK_HOLD}</code>: check for effective holds preventing the add operation</li>
+     *                     <li><code>{@link #CHECK_RETENTION}</code>: check for effective retention policy preventing the add operation</code></li>
      *                     </ul>
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
@@ -732,7 +700,6 @@ public class BatchedItemOperations extends ItemValidator {
         // 3. access rights
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
-            AccessManager accessMgr = session.getAccessManager();
             // make sure current session is granted read access on parent node
             if (!accessMgr.isGranted(parentPath, Permission.READ)) {
                 throw new ItemNotFoundException(safeGetJCRPath(parentState.getNodeId()));
@@ -796,6 +763,17 @@ public class BatchedItemOperations extends ItemValidator {
                 }
             }
         }
+
+        if ((options & CHECK_HOLD) == CHECK_HOLD) {
+            if (retentionReg.hasEffectiveHold(parentPath, false)) {
+                throw new RepositoryException("Unable to add node. Parent is affected by a hold.");
+            }
+        }
+        if ((options & CHECK_RETENTION) == CHECK_RETENTION) {
+            if (retentionReg.hasEffectiveRetention(parentPath, false)) {
+                throw new RepositoryException("Unable to add node. Parent is affected by a retention.");
+            }
+        }
     }
 
     /**
@@ -816,6 +794,8 @@ public class BatchedItemOperations extends ItemValidator {
      *                    make sure no node type constraints would be violated</li>
      *                    <li><code>{@link #CHECK_REFERENCES}</code>:
      *                    make sure no references exist on target node</li>
+     *                    <li><code>{@link #CHECK_HOLD}</code>: check for effective holds preventing the add operation</li>
+     *                    <li><code>{@link #CHECK_RETENTION}</code: check for effective retention policy preventing the add operation</code></li>
      *                    </ul>
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
@@ -852,6 +832,8 @@ public class BatchedItemOperations extends ItemValidator {
      *                    make sure no node type constraints would be violated</li>
      *                    <li><code>{@link #CHECK_REFERENCES}</code>:
      *                    make sure no references exist on target node</li>
+     *                    <li><code>{@link #CHECK_HOLD}</code>: check for effective holds preventing the add operation</li>
+     *                    <li><code>{@link #CHECK_RETENTION}</code>: check for effective retention policy preventing the add operation</code></li>
      *                    </ul>
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
@@ -892,7 +874,6 @@ public class BatchedItemOperations extends ItemValidator {
         // 3. access rights
 
         if ((options & CHECK_ACCESS) == CHECK_ACCESS) {
-            AccessManager accessMgr = session.getAccessManager();
             try {
                 // make sure current session is granted read access on parent node
                 if (!accessMgr.isGranted(targetPath, Permission.READ)) {
@@ -952,6 +933,17 @@ public class BatchedItemOperations extends ItemValidator {
                 }
             }
         }
+
+        if ((options & CHECK_HOLD) == CHECK_HOLD) {
+            if (retentionReg.hasEffectiveHold(targetPath, true)) {
+                throw new RepositoryException("Unable to perform removal. Node is affected by a hold.");
+            }
+        }
+        if ((options & CHECK_RETENTION) == CHECK_RETENTION) {
+            if (retentionReg.hasEffectiveRetention(targetPath, true)) {
+                throw new RepositoryException("Unable to perform removal. Node is affected by a retention.");
+            }
+        }
     }
 
     /**
@@ -963,6 +955,7 @@ public class BatchedItemOperations extends ItemValidator {
      * <li>the node must not be locked by another session</li>
      * <li>the node must not be checked-in</li>
      * <li>the node must not be protected</li>
+     * <li>the node must not be affected by a hold or a retention policy</li>
      * </ul>
      *
      * @param nodePath path of node to check
@@ -988,7 +981,6 @@ public class BatchedItemOperations extends ItemValidator {
         NodeState node = getNodeState(nodePath);
 
         // access rights
-        AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(node.getNodeId()));
@@ -1007,6 +999,13 @@ public class BatchedItemOperations extends ItemValidator {
 
         // versioning status
         verifyCheckedOut(nodePath);
+
+        if (retentionReg.hasEffectiveHold(nodePath, false)) {
+            throw new RepositoryException("Unable to write. Node is affected by a hold.");
+        }
+        if (retentionReg.hasEffectiveRetention(nodePath, false)) {
+            throw new RepositoryException("Unable to write. Node is affected by a retention.");
+        }
     }
 
     /**
@@ -1027,7 +1026,6 @@ public class BatchedItemOperations extends ItemValidator {
     public void verifyCanRead(Path nodePath)
             throws PathNotFoundException, RepositoryException {
         // access rights
-        AccessManager accessMgr = session.getAccessManager();
         // make sure current session is granted read access on node
         if (!accessMgr.isGranted(nodePath, Permission.READ)) {
             throw new PathNotFoundException(safeGetJCRPath(nodePath));
@@ -1599,13 +1597,17 @@ public class BatchedItemOperations extends ItemValidator {
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
                     // check if child node can be removed
-                    // (access rights, locking & versioning status);
+                    // (access rights, locking & versioning status as well
+                    //  as retention and hold);
                     // referential integrity (references) is checked
                     // on commit
                     checkRemoveNode(nodeState, targetState.getNodeId(),
                             CHECK_ACCESS
                             | CHECK_LOCK
-                            | CHECK_VERSIONING);
+                            | CHECK_VERSIONING
+                            | CHECK_HOLD
+                            | CHECK_RETENTION
+                    );
                     // remove child node
                     recursiveRemoveNodeState(nodeState);
                 } catch (ItemStateException ise) {
@@ -1728,12 +1730,14 @@ public class BatchedItemOperations extends ItemValidator {
 
                         // check if existing can be removed
                         // (access rights, locking & versioning status,
-                        // node type constraints)
+                        // node type constraints and retention/hold)
                         checkRemoveNode(existingState,
                                 CHECK_ACCESS
                                 | CHECK_LOCK
                                 | CHECK_VERSIONING
-                                | CHECK_CONSTRAINTS);
+                                | CHECK_CONSTRAINTS
+                                | CHECK_HOLD
+                                | CHECK_RETENTION);
                         // do remove existing
                         removeNodeState(existingState);
                     }

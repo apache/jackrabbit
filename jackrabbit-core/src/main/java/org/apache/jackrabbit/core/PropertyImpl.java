@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -236,36 +237,22 @@ public class PropertyImpl extends ItemImpl implements Property {
             RepositoryException {
         NodeImpl parent = (NodeImpl) getParent();
         PropertyDefinition definition = data.getPropertyDefinition();
-
-        // verify that parent node is checked-out
-        if (!parent.internalIsCheckedOut()) {
-            throw new VersionException(
-                    "Cannot set a property of a checked-in node: " + this);
-        }
-
-        // check protected flag
-        if (definition.isProtected()) {
-            throw new ConstraintViolationException(
-                    "Cannot set the value of a protected property: " + this);
-        }
-
         // check multi-value flag
-        if (multipleValues) {
-            if (!definition.isMultiple()) {
-                throw new ValueFormatException(
-                        "Single-valued property can not be set to"
-                        + " an array of values: " + this);
-            }
-        } else {
-            if (definition.isMultiple()) {
-                throw new ValueFormatException(
-                        "Multivalued property can not be set to a single"
-                        + " value (an array of lenght one is OK): " + this);
-            }
+        if (multipleValues != definition.isMultiple()) {
+            String msg = (multipleValues) ?
+                    "Single-valued property can not be set to an array of values:" :
+                    "Multivalued property can not be set to a single value (an array of lenght one is OK): ";
+            throw new ValueFormatException(msg + this);
         }
 
-        // check lock status
-        parent.checkLock();
+        // check protected flag and for retention/hold      
+        int options = ItemValidator.CHECK_CONSTRAINTS;
+        session.getValidator().checkModify(this, options, Permission.NONE);
+        
+        // make sure the parent is checked-out and neither locked nor under retention
+        options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
+                ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        session.getValidator().checkModify(parent, options, Permission.NONE);
     }
 
     /**

@@ -23,11 +23,12 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SecurityItemModifier;
+import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -49,7 +50,7 @@ import java.security.Principal;
 /**
  * <code>CombinedEditor</code>...
  */
-public class ACLEditor extends SecurityItemModifier implements AccessControlEditor, AccessControlConstants {
+public class ACLEditor extends ProtectedItemModifier implements AccessControlEditor, AccessControlConstants {
 
     private static Logger log = LoggerFactory.getLogger(ACLEditor.class);
     /**
@@ -64,7 +65,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
     private final String acRootPath;
 
     ACLEditor(SessionImpl session, Path acRootPath) throws RepositoryException {
-        super(true);
+        super(Permission.MODIFY_AC);
         this.session = session;
         this.acRootPath = session.getJCRPath(acRootPath);
     }
@@ -162,10 +163,10 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
         NodeImpl aclNode;
         if (acNode.hasNode(N_POLICY)) {
             aclNode = acNode.getNode(N_POLICY);
-            removeSecurityItem(aclNode);
+            removeItem(aclNode);
         }
         /* now (re) create it */
-        aclNode = addSecurityNode(acNode, N_POLICY, NT_REP_ACL);
+        aclNode = addNode(acNode, N_POLICY, NT_REP_ACL);
 
         /* add all entries defined on the template */
         AccessControlEntry[] aces = acl.getAccessControlEntries();
@@ -175,25 +176,25 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             // create the ACE node
             Name nodeName = getUniqueNodeName(aclNode, "entry");
             Name ntName = (ace.isAllow()) ? NT_REP_GRANT_ACE : NT_REP_DENY_ACE;
-            NodeImpl aceNode = addSecurityNode(aclNode, nodeName, ntName);
+            NodeImpl aceNode = addNode(aclNode, nodeName, ntName);
 
             ValueFactory vf = session.getValueFactory();
             // write the rep:principalName property
-            setSecurityProperty(aceNode, P_PRINCIPAL_NAME, vf.createValue(ace.getPrincipal().getName()));
+            setProperty(aceNode, P_PRINCIPAL_NAME, vf.createValue(ace.getPrincipal().getName()));
             // ... and the rep:privileges property
             Privilege[] privs = ace.getPrivileges();
             Value[] vs = new Value[privs.length];
             for (int j = 0; j < privs.length; j++) {
                 vs[j] = vf.createValue(privs[j].getName(), PropertyType.NAME);
             }
-            setSecurityProperty(aceNode, P_PRIVILEGES, vs);
+            setProperty(aceNode, P_PRIVILEGES, vs);
 
             // store the restrictions:
             String[] restrNames = ace.getRestrictionNames();
             for (int rnIndex = 0; rnIndex < restrNames.length; rnIndex++) {
                 Name pName = session.getQName(restrNames[rnIndex]);
                 Value value = ace.getRestriction(restrNames[rnIndex]);
-                setSecurityProperty(aceNode, pName, value);
+                setProperty(aceNode, pName, value);
             }
         }
     }
@@ -210,7 +211,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
             // build the template in order to have a return value
             AccessControlPolicy tmpl = createTemplate(acNode);
             if (tmpl.equals(policy)) {
-                removeSecurityItem(acNode.getNode(N_POLICY));
+                removeItem(acNode.getNode(N_POLICY));
                 return;
             }
         }
@@ -248,7 +249,7 @@ public class ACLEditor extends SecurityItemModifier implements AccessControlEdit
                     throw new RepositoryException("Internal error: Unexpected nodetype " + node.getPrimaryNodeType().getName() + " below /rep:accessControl");
                 }
             } else {
-                node = addSecurityNode(node, nName, NT_REP_ACCESS_CONTROL);
+                node = addNode(node, nName, NT_REP_ACCESS_CONTROL);
             }
         }
         return node;

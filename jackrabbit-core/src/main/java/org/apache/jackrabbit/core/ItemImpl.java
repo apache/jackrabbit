@@ -53,7 +53,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
@@ -814,32 +813,16 @@ public abstract class ItemImpl implements Item {
         }
 
         NodeImpl parentNode = (NodeImpl) getParent();
-
         if (!noChecks) {
-            // check if protected
-            ItemDefinition definition;
-            if (isNode()) {
-                definition = ((Node) this).getDefinition();
-            } else {
-                definition = ((Property) this).getDefinition();
-            }
-            if (definition.isProtected()) {
-                throw new ConstraintViolationException(
-                        "Cannot remove a protected item: " + this);
-            }
+            // check if protected and not under retention/hold
+            int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD |
+                    ItemValidator.CHECK_RETENTION;
+            session.getValidator().checkRemove(this, options, Permission.NONE);
 
-            // verify that parent node is checked-out and not protected
-            if (!parentNode.internalIsCheckedOut()) {
-                throw new VersionException(
-                        "Cannot remove a child of a checked-in node: " + this);
-            }
-            if (parentNode.getDefinition().isProtected()) {
-                throw new ConstraintViolationException(
-                        "Cannot remove a child of a protected node: " + this);
-            }
-
-            // check lock status
-            parentNode.checkLock();
+            // parent node: make sure it is checked-out and not protected nor locked.
+            options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
+                    ItemValidator.CHECK_CONSTRAINTS;
+            session.getValidator().checkModify(parentNode, options, Permission.NONE);
         }
 
         // delegate the removal of the child item to the parent node

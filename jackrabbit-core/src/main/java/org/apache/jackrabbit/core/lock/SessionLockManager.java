@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.lock;
 import org.apache.jackrabbit.api.jsr283.lock.Lock;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
@@ -150,14 +151,10 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     public Lock lock(String absPath, boolean isDeep, boolean isSessionScoped,
                      long timeoutHint, String ownerInfo) throws RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
-
-        if (session.hasPendingChanges(node)) {
-            String msg = "Unable to lock node. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
+        
+        int options = ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
+        session.getValidator().checkModify(node, options, Permission.LOCK_MNGMT);
         checkLockable(node);
-        session.getAccessManager().checkPermission(session.getQPath(node.getPath()), Permission.LOCK_MNGMT);
 
         synchronized (systemLockMgr) {
             return (Lock) systemLockMgr.lock(node, isDeep, isSessionScoped, timeoutHint, ownerInfo);
@@ -173,13 +170,9 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
             RepositoryException {
 
         NodeImpl node = (NodeImpl) session.getNode(absPath);
-        if (session.hasPendingChanges(node)) {
-            String msg = "Unable to unlock node. Node has pending changes: " + this;
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
+        int options = ItemValidator.CHECK_HOLD | ItemValidator.CHECK_PENDING_CHANGES_ON_NODE;
+        session.getValidator().checkModify(node, options, Permission.LOCK_MNGMT);
         checkLockable(node);
-        session.getAccessManager().checkPermission(session.getQPath(node.getPath()), Permission.LOCK_MNGMT);
 
         synchronized (systemLockMgr) {
             // basic checks if unlock can be called on the node.

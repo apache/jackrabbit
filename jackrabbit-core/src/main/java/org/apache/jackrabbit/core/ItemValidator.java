@@ -24,6 +24,10 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.Name;
@@ -34,7 +38,13 @@ import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.ItemDefinition;
 
 /**
  * Utility class for validating an item against constraints
@@ -42,6 +52,50 @@ import javax.jcr.nodetype.ConstraintViolationException;
  */
 public class ItemValidator {
 
+    /**
+     * check access permissions
+     */
+    public static final int CHECK_ACCESS = 1;
+
+    /**
+     * option to check lock status
+     */
+    public static final int CHECK_LOCK = 2;
+    /**
+     * option to check checked-out status
+     */
+    public static final int CHECK_VERSIONING = 4;
+
+    /**
+     * check for referential integrity upon removal
+     */
+    public static final int CHECK_REFERENCES = 8;
+
+    /**
+     * option to check if the item is protected by it's nt definition
+     */
+    public static final int CHECK_CONSTRAINTS = 16;
+
+    /**
+     * option to check for pending changes on the session
+     */
+    public static final int CHECK_PENDING_CHANGES = 32;
+
+    /**
+     * option to check for pending changes on the specified node
+     */
+    public static final int CHECK_PENDING_CHANGES_ON_NODE = 64;
+
+    /**
+     * option to check for effective holds
+     */
+    public static final int CHECK_HOLD = 128;
+
+    /**
+     * option to check for effective retention policies
+     */
+    public static final int CHECK_RETENTION = 256;
+    
     /**
      * Logger instance for this class
      */
@@ -66,18 +120,49 @@ public class ItemValidator {
     protected final PathResolver resolver;
 
     /**
+     *
+     */
+    protected final LockManager lockMgr;
+
+    protected final AccessManager accessMgr;
+
+    protected final RetentionRegistry retentionReg;
+
+    /**
      * Creates a new <code>ItemValidator</code> instance.
      *
      * @param ntReg      node type registry
      * @param hierMgr    hierarchy manager
-     * @param resolver   path resolver
+     * @param session    session
      */
     public ItemValidator(NodeTypeRegistry ntReg,
                          HierarchyManager hierMgr,
-                         PathResolver resolver) {
+                         SessionImpl session) throws RepositoryException {
+        this(ntReg, hierMgr, session, session.getLockManager(), session.getAccessManager(), session.getRetentionRegistry());
+    }
+
+    /**
+     * Creates a new <code>ItemValidator</code> instance.
+     *
+     * @param ntReg      node type registry
+     * @param hierMgr    hierarchy manager
+     * @param resolver   resolver
+     * @param lockMgr    lockMgr
+     * @param accessMgr  accessMgr
+     * @param retentionReg
+     */
+    public ItemValidator(NodeTypeRegistry ntReg,
+                         HierarchyManager hierMgr,
+                         PathResolver resolver,
+                         LockManager lockMgr,
+                         AccessManager accessMgr,
+                         RetentionRegistry retentionReg) {
         this.ntReg = ntReg;
         this.hierMgr = hierMgr;
         this.resolver = resolver;
+        this.lockMgr = lockMgr;
+        this.accessMgr = accessMgr;
+        this.retentionReg = retentionReg;
     }
 
     /**
@@ -178,6 +263,161 @@ public class ItemValidator {
         EffectiveNodeType.checkSetPropertyValueConstraints(def, values);
     }
 
+    public void checkModify(ItemImpl item, int options, int permissions) throws RepositoryException {
+        checkCondition(item, options, permissions, false);
+    }
+
+    public void checkRemove(ItemImpl item, int options, int permissions) throws RepositoryException {
+        checkCondition(item, options, permissions, true);
+    }
+
+    private void checkCondition(ItemImpl item, int options, int permissions, boolean isRemoval) throws RepositoryException {
+        if ((options & CHECK_PENDING_CHANGES) == CHECK_PENDING_CHANGES) {
+            if (item.getSession().hasPendingChanges()) {
+                String msg = "Unable to perform operation. Session has pending changes.";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
+            }
+        }
+        if ((options & CHECK_PENDING_CHANGES_ON_NODE) == CHECK_PENDING_CHANGES_ON_NODE) {
+            if (item.isNode() && ((NodeImpl) item).hasPendingChanges()) {
+                String msg = "Unable to perform operation. Session has pending changes.";
+                log.debug(msg);
+                throw new InvalidItemStateException(msg);
+            }
+        }
+        if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
+            if (isProtected(item)) {
+                String msg = "Unable to perform operation. Node is protected.";
+                log.debug(msg);
+                throw new ConstraintViolationException(msg);
+            }
+        }
+        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+            NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
+            if (!node.internalIsCheckedOut()) {
+                String msg = "Unable to perform operation. Node is checked-in.";
+                log.debug(msg);
+                throw new VersionException(msg);
+            }
+        }
+        if ((options & CHECK_LOCK) == CHECK_LOCK) {
+            checkLock(item);
+        }
+
+        if (permissions > Permission.NONE) {
+            Path path = item.getPrimaryPath();
+            accessMgr.checkPermission(path, permissions);
+        }
+        if ((options & CHECK_HOLD) == CHECK_HOLD) {
+            if (hasHold(item, isRemoval)) {
+                throw new RepositoryException("Unable to perform operation. Node is affected by a hold.");
+            }
+        }
+        if ((options & CHECK_RETENTION) == CHECK_RETENTION) {
+            if (hasRetention(item, isRemoval)) {
+                throw new RepositoryException("Unable to perform operation. Node is affected by a retention.");
+            }
+        }
+    }
+
+    public boolean canModify(ItemImpl item, int options, int permissions) throws RepositoryException {
+        return hasCondition(item, options, permissions, false);
+    }
+
+    private boolean hasCondition(ItemImpl item, int options, int permissions, boolean isRemoval) throws RepositoryException {
+        if ((options & CHECK_PENDING_CHANGES) == CHECK_PENDING_CHANGES) {
+            if (item.getSession().hasPendingChanges()) {
+                return false;
+            }
+        }
+        if ((options & CHECK_PENDING_CHANGES_ON_NODE) == CHECK_PENDING_CHANGES_ON_NODE) {
+            if (item.isNode() && ((NodeImpl) item).hasPendingChanges()) {
+                return false;
+            }
+        }
+        if ((options & CHECK_CONSTRAINTS) == CHECK_CONSTRAINTS) {
+            if (isProtected(item)) {
+                return false;
+            }
+        }
+        if ((options & CHECK_VERSIONING) == CHECK_VERSIONING) {
+            NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
+            if (!node.internalIsCheckedOut()) {
+                return false;
+            }
+        }
+        if ((options & CHECK_LOCK) == CHECK_LOCK) {
+            try {
+                checkLock(item);
+            } catch (LockException e) {
+                return false;
+            }
+        }
+        if (permissions > Permission.NONE) {
+            Path path = item.getPrimaryPath();
+            if (!accessMgr.isGranted(item.getPrimaryPath(), permissions)) {
+                return false;
+            }
+        }
+        if ((options & CHECK_HOLD) == CHECK_HOLD) {
+            if (hasHold(item, isRemoval)) {
+                return false;
+            }
+        }
+        if ((options & CHECK_RETENTION) == CHECK_RETENTION) {
+            if (hasRetention(item, isRemoval)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void checkLock(ItemImpl item) throws LockException, RepositoryException {
+        if (item.isNew()) {
+            // a new item needs no check
+            return;
+        }
+        NodeImpl node = (item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent();
+        lockMgr.checkLock(node);
+    }
+
+    private boolean isProtected(ItemImpl item) throws RepositoryException {
+        ItemDefinition def;
+        if (item.isNode()) {
+            def = ((Node) item).getDefinition();
+        } else {
+            def = ((Property) item).getDefinition();
+        }
+        return def.isProtected();
+    }
+
+    private boolean hasHold(ItemImpl item, boolean isRemoval) throws RepositoryException {
+        if (item.isNew()) {
+            return false;
+        }
+        Path path = item.getPrimaryPath();
+        if (!item.isNode()) {
+            path = path.getAncestor(1);
+        }
+        boolean checkParent = (item.isNode() && isRemoval);
+        return retentionReg.hasEffectiveHold(path, checkParent);
+    }
+
+    private boolean hasRetention(ItemImpl item, boolean isRemoval) throws RepositoryException {
+        if (item.isNew()) {
+            return false;
+        }
+        Path path = item.getPrimaryPath();
+        if (!item.isNode()) {
+            path = path.getAncestor(1);
+        }
+        boolean checkParent = (item.isNode() && isRemoval);
+        return retentionReg.hasEffectiveRetention(path, checkParent);
+    }
+
+
+    
     //-------------------------------------------------< misc. helper methods >
     /**
      * Helper method that builds the effective (i.e. merged and resolved)

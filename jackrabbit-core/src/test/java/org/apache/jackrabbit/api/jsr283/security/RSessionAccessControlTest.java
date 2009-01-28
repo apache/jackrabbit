@@ -19,12 +19,14 @@ package org.apache.jackrabbit.api.jsr283.security;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Value;
 
 /** <code>RSessionAccessControlTest</code>... */
 public class RSessionAccessControlTest extends AbstractJCRTest {
@@ -39,7 +41,8 @@ public class RSessionAccessControlTest extends AbstractJCRTest {
         super.setUp();
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         testNodePath = n.getPath();
-        Property p = n.setProperty(propertyName1, "value");
+        Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE1, RepositoryStub.PROP_PROP_TYPE1, "test");
+        Property p = n.setProperty(propertyName1, v);
         testPropertyPath = p.getPath();
         testRootNode.save();
 

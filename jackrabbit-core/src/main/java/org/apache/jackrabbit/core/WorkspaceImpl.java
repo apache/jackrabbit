@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.commons.AbstractWorkspace;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
@@ -119,7 +120,17 @@ public class WorkspaceImpl extends AbstractWorkspace
      */
     protected LockManager lockMgr;
 
+    /**
+     * The API LockManager for this workspace, used to create and release
+     * locks and determine the lock status.
+     */
     private org.apache.jackrabbit.api.jsr283.lock.LockManager jcr283LockManager;
+
+    /**
+     * The internal manager used to evaluate effective retention policies and
+     * holds.
+     */
+    private RetentionRegistry retentionRegistry;
 
     /**
      * Protected constructor.
@@ -520,6 +531,22 @@ public class WorkspaceImpl extends AbstractWorkspace
         return lockMgr;
     }
 
+    /**
+     * Return the internal effective retention/hold manager for this workspace.
+     * If not already done, creates a new instance.
+     *
+     * @return effective retention/hold manager for this workspace
+     * @throws RepositoryException if an error occurs
+     */
+    synchronized RetentionRegistry getRetentionRegistry() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+        if (retentionRegistry == null) {
+            retentionRegistry = rep.getRetentionRegistry(wspConfig.getName());
+        }
+        return retentionRegistry;
+    }
+
     //------------------------------------------------------------< Workspace >
     /**
      * {@inheritDoc}
@@ -864,7 +891,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             log.debug(msg);
             throw new InvalidItemStateException(msg);
         }
-
+        // TODO: add checks for lock/hold...
         boolean success = false;
         try {
             // now restore all versions that have a node in the ws

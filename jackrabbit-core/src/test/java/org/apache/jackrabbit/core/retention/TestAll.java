@@ -14,31 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.retention;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for the Core module.
+ * Test suite that includes all testcases for package org.apache.jackrabbit.core.retention.
  */
 public class TestAll extends TestCase {
 
     /**
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package, except the multi-threading related ones.
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Core tests");
+        TestSuite suite = new TestSuite("org.apache.jackrabbit.core.retention tests");
 
-        suite.addTestSuite(CachingHierarchyManagerTest.class);
-        suite.addTestSuite(ShareableNodeTest.class);
-        suite.addTestSuite(TransientRepositoryTest.class);
-        suite.addTestSuite(XATest.class);
-        suite.addTestSuite(RestoreAndCheckoutTest.class);
-        suite.addTestSuite(NodeImplTest.class);
-        suite.addTestSuite(RetentionRegistryImplTest.class);
+        suite.addTestSuite(HoldTest.class);
+        suite.addTestSuite(RetentionPolicyTest.class);
 
         return suite;
     }
