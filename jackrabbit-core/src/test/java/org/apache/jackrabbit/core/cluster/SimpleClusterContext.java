@@ -49,7 +49,7 @@ public class SimpleClusterContext implements ClusterContext {
      * Create a new instance of this class.
      *
      * @param cc cluster config
-     * @param repHome repository home
+     * @param repositoryHome repository home
      */
     public SimpleClusterContext(ClusterConfig cc, File repositoryHome) {
         this.cc = cc;
