@@ -228,7 +228,6 @@ public class JsonParserTest extends TestCase {
             }
             public void value(String value) {
                 assertEquals("abc\u2345ab\u00EB\u0633c", value);
-                assertEquals("abc\u2345abë\u0633c", value);
             }
             public void value(long value) {
                 fail();
@@ -254,7 +253,6 @@ public class JsonParserTest extends TestCase {
             }
             public void value(String value) {
                 assertEquals("\u00EB", value);
-                assertEquals("ë", value);
             }
             public void value(long value) {
                 fail();
