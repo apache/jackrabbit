@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.data.db;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.ResultSet;
 
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
@@ -28,19 +28,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class represents an input stream backed by a database. It allows the
- * stream to be used by keeping the database objects open until the stream is
- * closed. When the stream is finished or closed, then the database objects are
- * freed.
+ * This class represents an input stream backed by a database. The database
+ * objects are only acquired when reading from the stream, and stay open until
+ * the stream is closed, fully read, or garbage collected.
  */
-public class DbInputStream extends InputStream {
+public class DbInputStream extends AutoCloseInputStream {
 
     private static Logger log = LoggerFactory.getLogger(DbInputStream.class);
 
     protected DbDataStore store;
     protected DataIdentifier identifier;
     protected boolean endOfStream;
-    protected InputStream in;
     
     protected ConnectionRecoveryManager conn;
     protected ResultSet rs;
@@ -54,6 +52,7 @@ public class DbInputStream extends InputStream {
      * @param identifier the data identifier
      */
     protected DbInputStream(DbDataStore store, DataIdentifier identifier) {
+        super(null);
         this.store = store;
         this.identifier = identifier;
     }

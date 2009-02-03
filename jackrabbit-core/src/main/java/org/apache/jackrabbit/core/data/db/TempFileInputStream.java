@@ -26,14 +26,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.AutoCloseInputStream;
 
 /**
- * An input stream from a temp file that self-destructs when fully read or closed.
+ * An input stream from a temporary file. The file is deleted when the stream is
+ * closed, fully read, or garbage collected.
  */
-public class TempFileInputStream extends InputStream {
+public class TempFileInputStream extends AutoCloseInputStream {
 
     private final File file;
-    private final InputStream in;
     private boolean closed;
 
     /**
@@ -59,8 +60,8 @@ public class TempFileInputStream extends InputStream {
      * @param file the temporary file
      */
     public TempFileInputStream(File file) throws FileNotFoundException {
+        super(new BufferedInputStream(new FileInputStream(file)));
         this.file = file;
-        in = new BufferedInputStream(new FileInputStream(file));
     }
 
     private int closeIfEOF(int read) throws IOException {
