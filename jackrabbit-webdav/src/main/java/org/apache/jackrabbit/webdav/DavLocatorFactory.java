@@ -30,7 +30,7 @@ public interface DavLocatorFactory {
      * the 'prefix'. Please note, that in contrast to
      * {@link DavLocatorFactory#createResourceLocator(String, String, String)} the
      * href is expected to be URL encoded.
-     * @return
+     * @return a new resource locator.
      */
     public DavResourceLocator createResourceLocator(String prefix, String href);
 
@@ -44,16 +44,19 @@ public interface DavLocatorFactory {
      * @param workspacePath the first segment of the URIs path indicating the
      * workspace. The implementation may allow a empty String if workspaces
      * are not supported.
-     * @param resourcePath the URL decoded resource path
-     * @return
+     * @param resourcePath the URL decoded resource path.
+     * @return a new resource locator.
      */
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String resourcePath);
 
     /**
      *
-     * @param prefix
-     * @param workspacePath
-     * @param path
+     * @param prefix String consisting of  [scheme:][//authority][path] where
+     * path defines the path to the {@link DavResourceLocator#isRootLocation root location}.
+     * @param workspacePath the first segment of the URIs path indicating the
+     * workspace. The implementation may allow a empty String if workspaces
+     * are not supported.
+     * @param path the URL decoded path.
      * @param isResourcePath If true this method returns the same as
      * {@link DavLocatorFactory#createResourceLocator(String, String, String)},
      * otherwise the given path is treated as internal repository path.
@@ -62,7 +65,7 @@ public interface DavLocatorFactory {
      * to incompatibility with the URI definition (or vice versa). Note that
      * {@link DavResourceLocator#getRepositoryPath()} should in this case implement
      * the reverse operation.
-     * @return
+     * @return a new resource locator.
      * @see DavResourceLocator#getRepositoryPath()
      */
     public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String path, boolean isResourcePath);
