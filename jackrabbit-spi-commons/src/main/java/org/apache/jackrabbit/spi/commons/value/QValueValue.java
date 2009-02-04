@@ -36,6 +36,15 @@ import org.apache.jackrabbit.spi.QValue;
  */
 public final class QValueValue implements Value {
 
+    private static final short STATE_UNDEFINED = 0;
+
+    private static final short STATE_VALUE_CONSUMED = 1;
+
+    private static final short STATE_STREAM_CONSUMED = 2;
+
+    // the state of this value instance
+    private short state = STATE_UNDEFINED;
+
     // wrapped QValue
     private final QValue qvalue;
 
@@ -66,10 +75,9 @@ public final class QValueValue implements Value {
         return qvalue;
     }
 
-    //----------------------------------------------------------------< Value >
-
+    //--------------------------------------------------------------< Value >---
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getBoolean()
      */
     public boolean getBoolean() throws RepositoryException {
         setValueConsumed();
@@ -81,7 +89,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getDate()
      */
     public Calendar getDate() throws RepositoryException {
         setValueConsumed();
@@ -89,7 +97,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getDouble()
      */
     public double getDouble() throws RepositoryException {
         setValueConsumed();
@@ -97,7 +105,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getLong()
      */
     public long getLong() throws RepositoryException {
         setValueConsumed();
@@ -105,7 +113,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getStream()
      */
     public InputStream getStream() throws IllegalStateException, RepositoryException {
         setStreamConsumed();
@@ -128,7 +136,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getString()
      */
     public String getString() throws RepositoryException {
         setValueConsumed();
@@ -144,33 +152,33 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.Value#getType() 
      */
     public int getType() {
         return qvalue.getType();
     }
 
-    public boolean equals(Object p_obj) {
-        if (p_obj instanceof QValueValue) {
-            return qvalue.equals(((QValueValue)p_obj).qvalue);
+    //-------------------------------------------------------------< Object >---
+    /**
+     * @see Object#equals(Object)
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof QValueValue) {
+            return qvalue.equals(((QValueValue) obj).qvalue);
         }
         else {
             return false;
         }
     }
 
+    /**
+     * @see Object#hashCode() 
+     */
     public int hashCode() {
         return qvalue.hashCode();
     }
 
-    private static final short STATE_UNDEFINED = 0;
-
-    private static final short STATE_VALUE_CONSUMED = 1;
-
-    private static final short STATE_STREAM_CONSUMED = 2;
-
-    private short state = STATE_UNDEFINED;
-
+    //--------------------------------------------------------------------------
     /**
      * Checks if the non-stream value of this instance has already been
      * consumed (if any getter methods except <code>{@link #getStream()}</code> and
