@@ -367,7 +367,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * is returned.
      *
      * @return repository
-     * @see RepositoryAccessServlet#getRepository(ServletContext)
      */
     public abstract Repository getRepository();
 
