@@ -236,7 +236,6 @@ public class InternalValue {
      * Create an internal value that is backed by a temporary file.
      *
      * @param value the stream
-     * @param store the data store
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
@@ -272,7 +271,6 @@ public class InternalValue {
 
     /**
      * @param value
-     * @param temp
      * @return
      * @throws IOException
      */
