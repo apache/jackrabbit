@@ -384,7 +384,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @throws IOException
      */
     protected void doGet(WebdavRequest request, WebdavResponse response,
-                         DavResource resource) throws IOException {
+                         DavResource resource) throws IOException, DavException {
         spoolResource(request, response, resource, true);
     }
 
