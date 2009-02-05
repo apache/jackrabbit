@@ -37,18 +37,17 @@ class BatchReadConfig {
 
     private static Logger log = LoggerFactory.getLogger(BatchReadConfig.class);
 
+    private static final String NAME_DEFAULT = "default";
     public static final int DEPTH_DEFAULT = 0;
     public static final int DEPTH_INFINITE = -1;
 
-    private int defaultDepth = DEPTH_INFINITE;
+    private int defaultDepth = DEPTH_DEFAULT;
     private final Map depthMap = new HashMap();
 
     /**
      * Create an empty batch-read config.
      */
-    public BatchReadConfig() {
-
-    }
+    BatchReadConfig() {}
 
     /**
      * Load the batch read configuration.
@@ -62,16 +61,29 @@ class BatchReadConfig {
         add(props);
     }
 
+    /**
+     * Add the configuration entries present in the given properties.
+     *
+     * @param props
+     */
     public void add(Properties props) {
         for (Enumeration en = props.propertyNames(); en.hasMoreElements();) {
             String name = en.nextElement().toString();
-            String depth = props.getProperty(name);
+            String depthStr = props.getProperty(name);
             try {
-                Integer intg = new Integer(depth);
-                depthMap.put(name, intg);
+                int depth = Integer.parseInt(depthStr);
+                if (depth < DEPTH_INFINITE) {
+                    log.warn("invalid depth " + depthStr + " -> ignoring.");
+                    continue;
+                }
+                if (NAME_DEFAULT.equals(name)) {
+                    setDefaultDepth(depth);
+                } else {
+                    setDepth(name, depth);
+                }
             } catch (NumberFormatException e) {
                 // invalid entry in the properties file -> ignore
-                log.warn("Invalid depth value for name " + name + ". " + depth + " cannot be parsed into an integer.");
+                log.warn("Invalid depth value for name " + name + ". " + depthStr + " cannot be parsed into an integer.");
             }
         }
     }
@@ -92,14 +104,13 @@ class BatchReadConfig {
         if (depthMap.containsKey(ntName)) {
             return ((Integer) (depthMap.get(ntName))).intValue();
         } else {
-            return DEPTH_DEFAULT;
+            return defaultDepth;
         }
     }
 
     /**
-     * Return the depth for the given node or the
-     * {@link #DEPTH_DEFAULT default value} if the config does not provide
-     * an specific entry for the given node..
+     * Return the depth for the given node or the default depth if the config
+     * does not provide an specific entry for the given node.
      *
      * @param node The node for with depth information should be retrieved.
      * @return {@link #DEPTH_INFINITE -1} If all child infos should be return or
@@ -107,7 +118,7 @@ class BatchReadConfig {
      * subtree should be returned.
      */
     public int getDepth(Node node) {
-        int depth = DEPTH_DEFAULT;
+        int depth = defaultDepth;
         try {
             String ntName = node.getPrimaryNodeType().getName();
             if (depthMap.containsKey(ntName)) {
