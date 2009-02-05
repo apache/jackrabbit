@@ -356,7 +356,7 @@ public class ItemValidator {
         }
         if (permissions > Permission.NONE) {
             Path path = item.getPrimaryPath();
-            if (!accessMgr.isGranted(item.getPrimaryPath(), permissions)) {
+            if (!accessMgr.isGranted(path, permissions)) {
                 return false;
             }
         }
