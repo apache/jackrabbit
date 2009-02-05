@@ -17,7 +17,7 @@
  * limitations under the License.
  */
  -->
-<nodeTypes xmlns:test="test-namespace"
+<nodeTypes xmlns:test="http://www.apache.org/jackrabbit/test"
            xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
   <nodeType name="test:emptyNodeType"
@@ -39,8 +39,13 @@
                  requiredType="undefined" autoCreated="false" mandatory="false"
                  onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="test:autoCreatedItem"
-                 requiredType="undefined" autoCreated="true" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+                 requiredType="String" autoCreated="true" mandatory="false"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <defaultValues>
+        <defaultValue>"defvalue"</defaultValue>
+      </defaultValues>
+    </propertyDefinition>
+
     <propertyDefinition name="test:mandatoryItem"
                  requiredType="undefined" autoCreated="false" mandatory="true"
                  onParentVersion="IGNORE" protected="false" multiple="false"/>
@@ -144,7 +149,7 @@
                  requiredType="Reference" autoCreated="false" mandatory="false"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
-        <valueConstraint>test:testType</valueConstraint>
+        <valueConstraint>nt:base</valueConstraint>
       </valueConstraints>
     </propertyDefinition>
     <propertyDefinition name="test:stringProperty"
@@ -174,7 +179,7 @@
                   autoCreated="false" mandatory="false"
                   onParentVersion="IGNORE" protected="false"/>
     <childNodeDefinition name="test:defaultTypeNode"
-                  defaultPrimaryType="test:testType" sameNameSiblings="false"
+                  defaultPrimaryType="nt:base" sameNameSiblings="false"
                   autoCreated="false" mandatory="false"
                   onParentVersion="IGNORE" protected="false"/>
     <childNodeDefinition name="test:requiredTypeNode"
@@ -182,8 +187,8 @@
                   autoCreated="false" mandatory="false"
                   onParentVersion="IGNORE" protected="false">
       <requiredPrimaryTypes>
-        <requiredPrimaryType>test:baseType</requiredPrimaryType>
-        <requiredPrimaryType>test:testType</requiredPrimaryType>
+        <requiredPrimaryType>nt:base</requiredPrimaryType>
+        <requiredPrimaryType>nt:unstructured</requiredPrimaryType>
       </requiredPrimaryTypes>
     </childNodeDefinition>
   </nodeType>
