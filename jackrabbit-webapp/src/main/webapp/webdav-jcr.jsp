@@ -1,8 +1,5 @@
 <%@ page import="org.apache.jackrabbit.j2ee.JCRWebdavServerServlet,
-                 org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
-                 org.apache.jackrabbit.j2ee.SimpleWebdavServlet,
-                 java.net.URI,
-                 javax.jcr.Repository"
+                 java.net.URI"
 %><%--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -19,7 +16,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --%><%@page import="org.apache.jackrabbit.util.Text"%><%
-request.setAttribute("title", "JCR WebDAV Server");
+request.setAttribute("title", "JCR Remoting Server");
 
 URI uri = new URI(request.getRequestURL().toString());
 String href =
@@ -30,20 +27,25 @@ href = Text.encodeIllegalXMLCharacters(href);
 String shref = href + "/default/jcr:root";
 %><jsp:include page="header.jsp"/>
 <p>
-  The JCR WebDAV server provides an item-based WebDAV view to the
+  The JCR Remoting Server provides an item-based WebDAV view to the
   JCR repository, mapping the functionality provided by JSR 170 to the
   WebDAV protocol in order to allow remote content repository access
   via WebDAV.
 </p>
 <p>
   See the draft document
-  <a href="http://www.day.com/jsr170/server/JCR_Webdav_Protocol.zip">JCR_Webdav_Protocol.zip</a>
+  <a href="http://jackrabbit.apache.org/JCR_Webdav_Protocol.doc">JCR_Webdav_Protocol.zip</a>
   for more details regarding this remoting protocol.
+</p>
+<p>
+  Batch read and write as well as the missing functionality (cross workspace
+  copy and clone) has been addressed with a <a href="webdav-remoting.jsp">extension</a>
+  to the remoting server.
 </p>
 
 <h3>Access the content repository</h3>
 <p>
-  Use the following URLs to access the content repository in your WebDAV client:
+  Use the following URLs to access the content repository in your remoting client:
 </p>
 <dl>
 <dt><a href="<%= href %>"><%= href %></a></dt>
@@ -67,9 +69,11 @@ String shref = href + "/default/jcr:root";
   <li><a href="http://www.ietf.org/rfc/rfc3648.txt">RFC 3648</a> (Ordering)</li>
   <li><a href="http://greenbytes.de/tech/webdav/draft-reschke-webdav-search-latest.html">Internet Draft WebDAV Search</a></li>
 </ul>
+
+<h3>JCR Remoting Client</h3>
 <p>
   For the client counterpart of this WebDAV servlet please take a look at the
-  <a href="https://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2dav">spi2dav</a>
+  <a href="http://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2dav">spi2dav</a>
   project in the Apache Jackrabbit sandbox.
 </p>
 
