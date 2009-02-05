@@ -50,7 +50,133 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 
-/** <code>JcrRemotingServlet</code>... */
+/**
+ * <code>JcrRemotingServlet</code> is an extended version of the
+ * {@link org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet JCR Remoting Servlet}
+ * that provides improved
+ * <ul>
+ * <li><a href="#bread">Batch read</a></li>
+ * <li><a href="#bwrite">Batch write</a></li>
+ * </ul>
+ * functionality and supports cross workspace copy and cloning.
+ * </p>
+ * 
+ * <h3><a name="bread">Batch Read</a></h3>
+ *
+ * Upon RepositoryService.getItemInfos a JSON object is composed containing
+ * the information for the requested node and its child items up to a
+ * specified or configuration determined depth.
+ * <p/>
+ * Batch read is triggered by adding a '.json' extension to the resource href.
+ * Optionally the client may explicitely specify the desired batch read depth
+ * by appending '.depth.json' extension. If no json extension is present the
+ * GET request is processed by the base servlet.
+ * <p/>
+ * The JSON writer applies the following rules:
+ * 
+ * <pre>
+ * - Each Node has its properties included as JSON key/value pairs.
+ *
+ * - Child nodes are equally treated as long a maximal depths is not reached.
+ * 
+ * - Nodes without any child nodes get a special JSON member named
+ *   ::NodeIteratorSize, whose value is zero.
+ *
+ * - If the maximal depth is reached only name, index and unique id of the
+ *   direct child are included (incomplete node info). In order to obtain
+ *   the complete information another GET with .json extension will be sent
+ *   by the client.
+ * </pre>
+ * 
+ * Same name sibling nodes and properties whose type cannot be unambiguously be
+ * extracted from the JSON on the client side need some special handling:
+ * 
+ * <pre>
+ * - Node with index > 1, get a JSON key consisting of
+ *   Node.getName() + "[" + Node.getIndex() + "]" 
+ *
+ * - Binary Property
+ *   JSON value = length of the JCR value.
+ *   The JCR value must be retrieved separately.
+ *
+ * - Name, Path, Reference and Date Property
+ *   The JSON member representing the Property (name, value) is preceeded by a
+ *   special member consisting of
+ *   JSON key = ":" + Property.getName()
+ *   JSON value = PropertyType.nameFromValue(Property.getType())
+ *
+ * - Multi valued properties with Property.getValues().length == 0 will be
+ *   treated as special property types above (extra property indicating the
+ *   type of the property).
+ *
+ * - Double Property
+ *   JSON value must not have any trailing ".0" removed.
+ * </pre>
+ *
+ * <h3><a name="bwrite">Batch Write</a></h3>
+ *
+ * The complete SPI Batch is sent to the server in a single request, currently a
+ * POST request containing a custom ":diff" parameter.
+ * <br>
+ * <i>NOTE</i> that this is targeted to be replaced by a PATCH request.
+ *
+ * <h4>Diff format</h4>
+ *
+ * The diff parameter currently consists of a JSON object with the following
+ * special requirements:
+ *
+ * <pre>
+ *   diff       ::= "{" members "}"
+ *   members    ::= pair | pairs
+ *   pair       ::= key " : " value
+ *   pairs      ::= pair line-end pair | pair line-end pairs
+ *   line-end   ::= "\r\n" | "\n" | "\r"
+ *   key        ::= diffchar path
+ *   diffchar   ::= "+" | "^" | "-" | ">"
+ *   path       ::= abspath | relpath
+ *   abspath    ::= * absolute path to an item *
+ *   relpath    ::= * relpath from item at request URI to an item *
+ *   value      ::= value+ | value- | value^ | value>
+ *   value+     ::= * a JSON object *
+ *   value-     ::= ""
+ *   value^     ::= * any JSON value except JSON object *
+ *   value>     ::= path | path "#before" | path "#after" | "#first" | "#last"
+ * </pre>
+ *
+ * In other words:
+ * <ul>
+ * <li>diff is a JSON object consisting of key-value pairs</li>
+ * <li>key must start with a diffchar followed by a rel. or abs. item path</li>
+ * <li>diffchar being any of "+", "^", "-" or ">" representing the transient
+ * item modifications as follows
+ * <pre>
+ *   "+" addNode
+ *   "^" setProperty / setValue / removeProperty
+ *   "-" remove Item
+ *   ">" move / reorder Nodes
+ * </pre>
+ * </li>
+ * <li>key must be separated from the value by a ":" surrounded by whitespace.</li>
+ * <li>two pairs must be separated by a line end</li>
+ * <li>the format of the value depends on the diffchar</li>
+ * <li>for moving around node the value must consist of a abs. or rel. path.
+ * in contrast reordering of existing nodes is achieved by appending a trailing
+ * order position hint (#first, #last, #before or #after)</li>
+ * </ul>
+ *
+ * <i>NOTE</i> the following special handling of JCR properties of type
+ * Binary, Name, Path, Date and Reference:
+ * <ul>
+ * <li>the JSON value must be missing</li>
+ * <li>the POST request is expected to contain extra multipart(s) or request
+ * parameter(s) for the property value(s)</li>
+ * <li>the content type of the extra parts/params must reflect the property
+ * type:"jcr-value/" + PropertyType.nameFromValue(Property.getType).toLowerCase()</li>
+ * </ul>
+ * 
+ * @see <a href="http://www.json.org/">www.json.org</a> for the definition of
+ * JSON object and JSON value.
+ */
 public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
     private static Logger log = LoggerFactory.getLogger(JcrRemotingServlet.class);
@@ -86,9 +212,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         brConfig = new BatchReadConfig();
         String brConfigParam = getServletConfig().getInitParameter(INIT_PARAM_BATCHREAD_CONFIG);
         if (brConfigParam == null) {
+            // TODO: define default values.
             log.debug("batchread-config missing -> initialize defaults.");
             brConfig.setDepth("nt:file", BatchReadConfig.DEPTH_INFINITE);
-            brConfig.setDepth("nt:folder", 1);
             brConfig.setDefaultDepth(5);
         } else {
             try {
@@ -97,15 +223,15 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                     brConfig.load(in);
                 }
             } catch (IOException e) {
-                log.debug("Unable to build resource filter provider.");
+                log.debug("Unable to build BatchReadConfig from " + brConfigParam + ".");
             }
         }
 
         // setup home directory
         String paramHome = getServletConfig().getInitParameter(INIT_PARAM_HOME);
         if (paramHome == null) {
-            log.debug("missing init-param " + INIT_PARAM_HOME + ". using default: jr_home");
-            paramHome = "jr_home";
+            log.debug("missing init-param " + INIT_PARAM_HOME + ". using default: 'jackrabbit'");
+            paramHome = "jackrabbit";
         }
         File home;
         try {
@@ -117,12 +243,12 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
         String tmp = getServletConfig().getInitParameter(INIT_PARAM_TMP_DIRECTORY);
         if (tmp == null) {
-            log.warn("No " + INIT_PARAM_TMP_DIRECTORY + " specified. using 'tmp'");
+            log.debug("No " + INIT_PARAM_TMP_DIRECTORY + " specified. using 'tmp'");
             tmp = "tmp";
         }
         File tmpDirectory = new File(home, tmp);
         tmpDirectory.mkdirs();
-        log.info("  temp-directory = " + tmpDirectory.getPath());
+        log.debug("  temp-directory = " + tmpDirectory.getPath());
         getServletContext().setAttribute(ATTR_TMP_DIRECTORY, tmpDirectory);
 
         // force usage of custom locator factory.
