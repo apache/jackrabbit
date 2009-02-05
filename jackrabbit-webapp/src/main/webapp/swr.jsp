@@ -18,8 +18,7 @@
                  org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
                  org.apache.jackrabbit.util.Text,
                  javax.jcr.SimpleCredentials,
-                   java.util.Calendar,
-                   java.text.NumberFormat"
+                 java.text.NumberFormat"
 %><%@ page contentType="text/html;charset=UTF-8" %><%
     Repository rep;
     Session jcrSession;
@@ -48,7 +47,7 @@
         %><jsp:include page="header.jsp"/>
     <form name=f action="search.jsp">
       <table border=0 cellpadding=0 cellspacing=0 width=100%>
-        <tr><table border=0 width=100%><tr><td><br>There were about <b><%= numResults %></b> results for <b><%= Text.encodeIllegalXMLCharacters(q) %></b>.<br>
+        <tr><td><table border=0 width=100%><tr><td><br>There were about <b><%= numResults %></b> results for <b><%= Text.encodeIllegalXMLCharacters(q) %></b>.<br>
         Use the search box below to search within these results.<br><br></td></tr></table>
         </td></tr>
         <tr><td valign=middle>
