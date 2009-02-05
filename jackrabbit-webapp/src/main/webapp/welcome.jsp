@@ -1,7 +1,4 @@
-<%@ page import="org.apache.jackrabbit.j2ee.JCRWebdavServerServlet,
-                 org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
-                 org.apache.jackrabbit.j2ee.SimpleWebdavServlet,
-                 java.net.URI,
+<%@ page import="org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
                  javax.jcr.Repository"
 %><%--
   Licensed to the Apache Software Foundation (ASF) under one or more
@@ -35,12 +32,18 @@ request.setAttribute("title", "Apache Jackrabbit JCR Server");
   through WebDAV and other means.
 </p>
 <p>
-  The following two WebDAV views are provided for accessing the
+  The following WebDAV view is provided for accessing the
   content in the JCR content repository.
 </p>
 <ul>
   <li><a href="webdav-simple.jsp">Standard WebDAV</a></li>
-  <li><a href="webdav-jcr.jsp">JCR WebDAV</a></li>
+</ul>
+<p>
+  In addition the JCR Server project provides means for JCR remoting over HTTP:
+</p>
+<ul>
+  <li><a href="webdav-jcr.jsp">JCR remoting over WebDAV</a></li>
+  <li><a href="webdav-remoting.jsp">JCR remoting over WebDAV (including Batch Read/Write)</a></li>
 </ul>
 <p>
   Clients can also access the repository using the JCR API. Both local
