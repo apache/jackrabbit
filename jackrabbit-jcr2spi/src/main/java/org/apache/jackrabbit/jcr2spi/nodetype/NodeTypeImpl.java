@@ -45,7 +45,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 
 /**
- * A <code>NodeTypeImpl</code> ...
+ * <code>NodeTypeImpl</code> ...
  */
 public class NodeTypeImpl implements NodeType {
 
@@ -66,7 +66,7 @@ public class NodeTypeImpl implements NodeType {
      * @param ent        the effective (i.e. merged and resolved) node type representation
      * @param ntd        the definition of this node type
      * @param ntMgr      the node type manager associated with this node type
-     * @param mgrProvider
+     * @param mgrProvider the manager provider
      */
     NodeTypeImpl(EffectiveNodeType ent, QNodeTypeDefinition ntd,
                  NodeTypeManagerImpl ntMgr, ManagerProvider mgrProvider) {
@@ -89,11 +89,14 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * ValueFactory used to convert JCR values to qualified ones in order to
-     * determine whether a property specified by name and value(s) would be allowed.
+     * ValueFactory used to convert JCR values from one type to another in order
+     * to determine whether a property specified by name and value(s) would be
+     * allowed.
      *
      * @see NodeType#canSetProperty(String, Value)
      * @see NodeType#canSetProperty(String, Value[])
+     * @return ValueFactory used to convert JCR values.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private ValueFactory valueFactory() throws RepositoryException {
         return mgrProvider.getJcrValueFactory();
@@ -102,6 +105,9 @@ public class NodeTypeImpl implements NodeType {
     /**
      * ValueFactory used to convert JCR values to qualified ones in order to
      * determine value constraints within the NodeType interface.
+     *
+     * @return ValueFactory used to convert JCR values to qualified ones.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private QValueFactory qValueFactory() throws RepositoryException {
         return mgrProvider.getQValueFactory();
@@ -124,15 +130,27 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * Checks if this node type's name equals the given name or if this nodetype
-     * is directly or indirectly derived from the specified node type.
+     * Test if this nodetype equals or is directly or indirectly derived from
+     * the node type with the specified <code>nodeTypeName</code>, without
+     * checking of a node type of that name really exists.
      *
-     * @param nodeTypeName
-     * @return true if this node type is equal or directly or indirectly derived
-     * from the specified node type, otherwise false.
+     * @param nodeTypeName A node type name.
+     * @return true if this node type represents the type with the given
+     * <code>nodeTypeName</code> or if it is directly or indirectly derived
+     * from it; otherwise <code>false</code>. If no node type exists with the
+     * specified name this method will also return <code>false</code>.
      */
     public boolean isNodeType(Name nodeTypeName) {
-        return getName().equals(nodeTypeName) ||  ent.includesNodeType(nodeTypeName);
+        return ent.includesNodeType(nodeTypeName);
+    }
+
+    /**
+     * Returns the 'internal', i.e. the fully qualified name.
+     *
+     * @return the qualified name
+     */
+    private Name getQName() {
+        return ntd.getName();
     }
 
     /**
@@ -145,27 +163,18 @@ public class NodeTypeImpl implements NodeType {
      *
      * @param def    The definiton of the property
      * @param values An array of <code>QValue</code> objects.
-     * @throws ConstraintViolationException
-     * @throws RepositoryException
+     * @throws ConstraintViolationException If a constraint is violated.
+     * @throws RepositoryException If another error occurs.
      */
     private static void checkSetPropertyValueConstraints(QPropertyDefinition def,
                                                         QValue[] values)
             throws ConstraintViolationException, RepositoryException {
         ValueConstraint.checkValueConstraints(def, values);
     }
-
-    /**
-     * Returns the 'internal', i.e. the fully qualified name.
-     *
-     * @return the qualified name
-     */
-    private Name getQName() {
-        return ntd.getName();
-    }
-
+    
     //-----------------------------------------------------------< NodeType >---
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getName()
      */
     public String getName() {
         try {
@@ -178,7 +187,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getPrimaryItemName()
      */
     public String getPrimaryItemName() {
         try {
@@ -196,14 +205,14 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#isMixin()
      */
     public boolean isMixin() {
         return ntd.isMixin();
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#isNodeType(String)
      */
     public boolean isNodeType(String nodeTypeName) {
         Name ntName;
@@ -220,14 +229,14 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
      */
     public boolean hasOrderableChildNodes() {
         return ntd.hasOrderableChildNodes();
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getSupertypes()
      */
     public NodeType[] getSupertypes() {
         Name[] ntNames = ent.getInheritedNodeTypes();
@@ -245,7 +254,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getChildNodeDefinitions()
      */
     public NodeDefinition[] getChildNodeDefinitions() {
         QNodeDefinition[] cnda = ent.getAllQNodeDefinitions();
@@ -257,7 +266,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getPropertyDefinitions()
      */
     public PropertyDefinition[] getPropertyDefinitions() {
         QPropertyDefinition[] pda = ent.getAllQPropertyDefinitions();
@@ -269,7 +278,19 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getDeclaredPropertyDefinitions()
+     */
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
+        }
+        return propDefs;
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
      */
     public NodeType[] getDeclaredSupertypes() {
         Name[] ntNames = ntd.getSupertypes();
@@ -287,7 +308,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefinitions()
      */
     public NodeDefinition[] getDeclaredChildNodeDefinitions() {
         QNodeDefinition[] cnda = ntd.getChildNodeDefs();
@@ -299,7 +320,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#canSetProperty(String, Value)
      */
     public boolean canSetProperty(String propertyName, Value value) {
         if (value == null) {
@@ -344,7 +365,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#canSetProperty(String, Value[])
      */
     public boolean canSetProperty(String propertyName, Value[] values) {
         if (values == null) {
@@ -416,7 +437,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#canAddChildNode(String)
      */
     public boolean canAddChildNode(String childNodeName) {
         try {
@@ -431,7 +452,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#canAddChildNode(String, String) 
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
@@ -447,7 +468,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * {@inheritDoc}
+     * @see javax.jcr.nodetype.NodeType#canRemoveItem(String) 
      */
     public boolean canRemoveItem(String itemName) {
         try {
@@ -459,17 +480,5 @@ public class NodeTypeImpl implements NodeType {
             // fall through
         }
         return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
     }
 }
