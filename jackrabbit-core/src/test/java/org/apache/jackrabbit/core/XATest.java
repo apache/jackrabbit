@@ -1468,7 +1468,7 @@ public class XATest extends AbstractJCRTest {
         // assert: version label known in other session
         nOther.getVersionHistory().getVersionByLabel(versionLabel);
     }
-    
+
     /**
      * Tests two different Threads for prepare and commit in a Transaction
      */
@@ -1500,5 +1500,105 @@ public class XATest extends AbstractJCRTest {
         } catch (ItemNotFoundException e) {
             fail("Committed node not visible in this session");
         }
+    }
+
+    /**
+     * Test setting the same property multiple times. Exposes an issue where
+     * the same property instance got reused in subsequent transactions
+     * (see JCR-1554).
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testSetProperty() throws Exception {
+        final String testNodePath = testPath + "/" + Math.random();
+
+        Session session = helper.getSuperuserSession();
+
+        // Add node
+        doTransactional(new Operation() {
+            public void invoke(Session session) throws Exception {
+                session.getRootNode().addNode(testNodePath);
+                session.save();
+            }
+        }, session);
+
+        for (int i = 1; i <= 3; i++) {
+            // Set property "name" to value "value"
+            doTransactional(new Operation() {
+                public void invoke(Session session) throws Exception {
+                    Node n = (Node) session.getItem("/" + testNodePath);
+                    n.setProperty("name", "value");
+                    session.save();
+                }
+            }, session);
+        }
+    }
+
+    /**
+     * Test deleting a subnode after creation. Exposes an issue where
+     * the same node instance got reused in subsequent transactions
+     * (see JCR-1554).
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testDeleteNode() throws Exception {
+        final String testNodePath = testPath + "/" + Math.random();
+
+        Session session = helper.getSuperuserSession();
+
+        for (int i = 1; i <= 3; i++) {
+            // Add parent node
+            doTransactional(new Operation() {
+                public void invoke(Session session) throws Exception {
+                    session.getRootNode().addNode(testNodePath);
+                    session.save();
+                }
+            }, session);
+
+            // Add child node
+            doTransactional(new Operation() {
+                public void invoke(Session session) throws Exception {
+                    session.getRootNode().addNode(testNodePath + "/subnode");
+                    session.save();
+                }
+            }, session);
+
+            // Remove parent node
+            doTransactional(new Operation() {
+                public void invoke(Session session) throws Exception {
+                    session.getRootNode().getNode(testNodePath).remove();
+                    session.save();
+                }
+            }, session);
+        }
+    }
+
+    /**
+     * Operation to invoke on a session scope.
+     */
+    interface Operation {
+
+        /**
+         * Invoke the operation.
+         * @param session session to use inside operation
+         * @throws Exception if an error occurs
+         */
+        void invoke(Session session) throws Exception;
+    }
+
+    /**
+     * Wrap a session-scoped operation with a transaction.
+     *
+     * @param op operation to invoke
+     * @param session session to use for the transaction
+     * @throws Exception if an error occurs
+     */
+    private void doTransactional(Operation op, Session session) throws Exception {
+        UserTransaction utx = new UserTransactionImpl(session);
+        utx.begin();
+
+        op.invoke(session);
+
+        utx.commit();
     }
 }
