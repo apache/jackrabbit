@@ -55,6 +55,10 @@
     <jetty.version>6.1.14</jetty.version>
   </properties>
 
+  <prerequisites>
+    <maven>2.0.9</maven>
+  </prerequisites>
+
   <build>
     <plugins>
       <!-- Use Java 1.4 everywhere -->
