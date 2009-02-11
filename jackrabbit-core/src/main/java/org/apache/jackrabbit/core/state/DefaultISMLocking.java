@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import javax.transaction.xa.Xid;
+
 import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.TransactionContext;
+
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
@@ -48,6 +52,7 @@ public class DefaultISMLocking implements ISMLocking {
         return new WriteLock() {
 
             {
+                rwLock.setActiveXid(TransactionContext.getCurrentXid());
                 rwLock.writeLock().acquire();
             }
 
@@ -55,6 +60,7 @@ public class DefaultISMLocking implements ISMLocking {
              * {@inheritDoc}
              */
             public void release() {
+                rwLock.setActiveXid(null);
                 rwLock.writeLock().release();
             }
 
@@ -88,13 +94,23 @@ public class DefaultISMLocking implements ISMLocking {
 
     private static final class RWLock extends ReentrantWriterPreferenceReadWriteLock {
 
+        private Xid activeXid;
+
         /**
          * Allow reader when there is no active writer, or current thread owns
          * the write lock (reentrant).
          */
         protected boolean allowReader() {
-            return activeWriter_ == null
-                    || activeWriter_ == Thread.currentThread();
+            return TransactionContext.isCurrentXid(activeXid, (activeWriter_ == null || activeWriter_ == Thread.currentThread()));
         }
+
+        /**
+         * Sets the active Xid
+         * @param id
+         */
+        synchronized void setActiveXid(Xid xid) {
+            activeXid = xid;
+        }
+        
     }
 }
