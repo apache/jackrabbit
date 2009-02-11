@@ -13,36 +13,30 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
---%><%@ page import="javax.jcr.Repository,
-                 javax.jcr.Session,
-                 org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
-                 org.apache.jackrabbit.util.Text,
-                 javax.jcr.SimpleCredentials,
-                   java.util.Iterator,
-                   java.net.URL,
-                   java.net.URLEncoder,
-                   java.net.MalformedURLException,
-                   java.io.UnsupportedEncodingException,
-                   java.io.InputStream,
-                   javax.swing.text.html.HTML,
-                   javax.swing.text.html.HTMLEditorKit,
-                   javax.swing.text.html.HTMLDocument,
-                   java.util.ArrayList,
-                   java.util.List,
-                   javax.swing.text.AttributeSet,
-                   javax.jcr.Node,
-                   java.util.Arrays,
-                   java.util.Collections,
-                   java.util.Map,
-                   java.util.HashMap,
-                   java.io.BufferedInputStream,
-                   java.util.Calendar,
-                   java.net.URLConnection,
-                   java.io.IOException,
-                   javax.jcr.RepositoryException,
-                   java.io.InputStreamReader,
-                   java.net.URLDecoder,
-                   java.io.FilterInputStream"
+--%><%@ page import="java.io.FilterInputStream,
+                     java.io.IOException,
+                     java.io.InputStream,
+                     java.io.InputStreamReader,
+                     java.net.URL,
+                     java.net.URLConnection,
+                     java.net.URLDecoder,
+                     java.net.URLEncoder,
+                     java.util.ArrayList,
+                     java.util.Arrays,
+                     java.util.Calendar,
+                     java.util.Collections,
+                     java.util.Iterator,
+                     java.util.List,
+                     javax.jcr.Node,
+                     javax.jcr.Repository,
+                     javax.jcr.Session,
+                     javax.jcr.SimpleCredentials,
+                     javax.swing.text.AttributeSet,
+                     javax.swing.text.html.HTML,
+                     javax.swing.text.html.HTMLDocument,
+                     javax.swing.text.html.HTMLEditorKit,
+                     org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
+                     org.apache.jackrabbit.util.Text"
  %><%@ page contentType="text/html;charset=UTF-8" %><%
     Repository rep;
     Session jcrSession;
@@ -72,9 +66,9 @@
         }
         String[] types = request.getParameterValues("filetype");
         if (types != null) {
-            for (int i = 0; i < types.length; i++) {
-                filetypes.add(types[i]);
-            }
+            filetypes.addAll(Arrays.asList(types));
+        } else {
+            filetypes = DEFAULT_TYPES;
         }
 
 if (seedWord != null && numDocs > 0 && filetypes.size() > 0) { %>
@@ -153,7 +147,7 @@ ProgressBar.prototype.borderWidth = "2px";
                 String type = (String) filetypes.get(typeIdx);
                 int offset = 0;
                 while (n < numDocs * (typeIdx + 1) / filetypes.size()) {
-                    final URL[] urls = new Search(type, seedWord, offset).getURLs(out);
+                    final URL[] urls = new Search(type, seedWord, offset).getURLs();
                     if (urls.length == 0) {
                         break;
                     }
@@ -191,7 +185,6 @@ ProgressBar.prototype.borderWidth = "2px";
                                     try {
                                         String info = fileName + " (" + host + ")";
                                         URLConnection con = currentURL.openConnection();
-                                        con.setReadTimeout(10000); // 10 seconds
                                         InputStream in = con.getInputStream();
                                         try {
                                             synchronized (fOut) {
@@ -267,7 +260,7 @@ request.setAttribute("title", "Populate workspace " + wspName);
 </p>
     <form method="POST">
       <table>
-      <tr><td>Seed word:</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "download" : Text.encodeIllegalXMLCharacters(seedWord) %>"/></td></tr>
+      <tr><td>Seed word (optional):</td><td><input name="seed" type="text" size="30" value="<%= seedWord == null ? "" : Text.encodeIllegalXMLCharacters(seedWord) %>"/></td></tr>
       <tr><td>Number of documents:</td><td><input name="num" type="text" size="30" value="<%= numDocs == 0 ? 100 : numDocs %>"/></td></tr>
       <tr valign="top"><td>Document types:</td><td><input name="filetype" type="checkbox" value="pdf" <%= filetypes.contains("pdf") ? "checked" : "" %>/> Adobe Acrobat PDF<br/><input name="filetype" type="checkbox" value="rtf" <%= filetypes.contains("rtf") ? "checked" : "" %>/> Rich Text Format<br/><input name="filetype" type="checkbox" value="doc" <%= filetypes.contains("doc") ? "checked" : "" %>/> Microsoft Word<br/><input name="filetype" type="checkbox" value="ppt" <%= filetypes.contains("ppt") ? "checked" : "" %>/> Microsoft PowerPoint<br/><input name="filetype" type="checkbox" value="xls" <%= filetypes.contains("xls") ? "checked" : "" %>/> Microsoft Excel<br/></td></tr>
       <tr><td>&nbsp;</td><td><input type="submit" value="Populate!"/></td></tr>
@@ -281,21 +274,9 @@ request.setAttribute("title", "Populate workspace " + wspName);
         }
     }
 %><%!
-    public Iterator getDocuments(String mimeType, String searchTerm) {
-        return new Iterator() {
-            public boolean hasNext() {
-                return false;
-            }
 
-            public Object next() {
-                return null;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
+    public static final List DEFAULT_TYPES = Arrays.asList(
+            new String[]{"pdf", "rtf", "doc", "ppt", "xls"});
 
     public static class Search {
 
@@ -311,41 +292,37 @@ request.setAttribute("title", "Populate workspace " + wspName);
             this.start = start;
         }
 
-        public URL[] getURLs(JspWriter out) throws Exception {
+        public URL[] getURLs() throws Exception {
+            List urls = new ArrayList();
+            String query = term + " filetype:" + filetype;
+            URL google = new URL("http://www.google.com/search?q=" +
+                    URLEncoder.encode(query, "UTF-8") + "&start=" + start);
+            URLConnection con = google.openConnection();
+            con.setRequestProperty("User-Agent", "");
+            InputStream in = con.getInputStream();
             try {
-                List urls = new ArrayList();
-                String query = term + " filetype:" + filetype;
-                URL google = new URL("http://www.google.com/search?q=" +
-                        URLEncoder.encode(query, "UTF-8") + "&start=" + start);
-                URLConnection con = google.openConnection();
-                con.setRequestProperty("User-Agent", "");
-                InputStream in = con.getInputStream();
-                try {
-                    HTMLEditorKit kit = new HTMLEditorKit();
-                    HTMLDocument doc = new HTMLDocument();
-                    doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-                    kit.read(new InputStreamReader(in, "UTF-8"), doc, 0);
-                    HTMLDocument.Iterator it = doc.getIterator(HTML.Tag.A);
-                    while (it.isValid()) {
-                        AttributeSet attr = it.getAttributes();
-                        if (attr != null) {
-                            String href = (String) attr.getAttribute(HTML.Attribute.HREF);
-                            if (href != null && href.endsWith("." + filetype)) {
-                                URL url = new URL(new URL("http", "www.google.com", "dummy"), href);
-                                if (url.getHost().indexOf("google") == -1) {
-                                    urls.add(url);
-                                }
+                HTMLEditorKit kit = new HTMLEditorKit();
+                HTMLDocument doc = new HTMLDocument();
+                doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
+                kit.read(new InputStreamReader(in, "UTF-8"), doc, 0);
+                HTMLDocument.Iterator it = doc.getIterator(HTML.Tag.A);
+                while (it.isValid()) {
+                    AttributeSet attr = it.getAttributes();
+                    if (attr != null) {
+                        String href = (String) attr.getAttribute(HTML.Attribute.HREF);
+                        if (href != null && href.endsWith("." + filetype)) {
+                            URL url = new URL(new URL("http", "www.google.com", "dummy"), href);
+                            if (url.getHost().indexOf("google") == -1) {
+                                urls.add(url);
                             }
                         }
-                        it.next();
                     }
-                } finally {
-                    in.close();
+                    it.next();
                 }
-                return (URL[]) urls.toArray(new URL[urls.size()]);
-            } catch (Exception e) {
-                throw e;
+            } finally {
+                in.close();
             }
+            return (URL[]) urls.toArray(new URL[urls.size()]);
         }
     }
 
