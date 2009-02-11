@@ -68,9 +68,37 @@
     <servlet>
         <servlet-name>JCRWebdavServer</servlet-name>
         <description>
-            The webdav servlet that connects HTTP request to the repository.
+            The servlet used to remote JCR calls over HTTP.
         </description>
-        <servlet-class>org.apache.jackrabbit.j2ee.JCRWebdavServerServlet</servlet-class>
+        <servlet-class>org.apache.jackrabbit.j2ee.JcrRemotingServlet</servlet-class>
+        <init-param>
+            <param-name>missing-auth-mapping</param-name>
+            <param-value></param-value>
+            <description>
+                Defines how a missing authorization header should be handled.
+                1) If this init-param is missing, a 401 response is generated.
+                This is suiteable for clients (eg. webdav clients) for which
+                sending a proper authorization header is not possible if the
+                server never sent a 401.
+                2) If this init-param is present with an empty value,
+                null-credentials are returned, thus forcing an null login
+                on the repository.
+                3) If this init-param has a 'user:password' value, the respective
+                simple credentials are generated.
+            </description>
+        </init-param>
+        <!--
+            Optional parameter to define the value of the 'WWW-Authenticate' header
+        -->
+        <!--
+        <init-param>
+            <param-name>authenticate-header</param-name>
+            <param-value>Basic realm="Jackrabbit Webdav Server"</param-value>
+            <description>
+                Defines the value of the 'WWW-Authenticate' header.
+            </description>
+        </init-param>
+        -->
         <init-param>
             <param-name>resource-path-prefix</param-name>
             <param-value>/server</param-value>
@@ -78,6 +106,26 @@
                 defines the prefix for spooling resources out of the repository.
             </description>
         </init-param>
+        <!--
+            Init parameters specific for JcrRemotingServlet
+        -->
+        <!--
+        <init-param>
+            <param-name>home</param-name>
+            <param-value></param-value>
+            <description>JcrRemotingServlet: Optional home directory for JcrRemotingServlet temporary files (default: "jackrabbit")</description>
+        </init-param>
+        <init-param>
+            <param-name>temp-directory</param-name>
+            <param-value></param-value>
+            <description>JcrRemotingServlet: Optional temporary directory name (under home, default: "tmp")</description>
+        </init-param>
+        <init-param>
+            <param-name>batchread-config</param-name>
+            <param-value>/WEB-INF/batchread.properties</param-value>
+            <description>JcrRemotingServlet: Optional mapping from node type names to default depth.</description>
+        </init-param>
+        -->
         <load-on-startup>5</load-on-startup>
     </servlet>
 
