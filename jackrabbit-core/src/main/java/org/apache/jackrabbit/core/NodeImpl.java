@@ -476,7 +476,12 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
 
         // create Property instance wrapping new property state
-        PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
+        // NOTE: since the property is not yet connected to its parent, avoid
+        // calling ItemManager#getItem(ItemId) which may include a permission
+        // check (with subsequent usage of the hierarachy-mgr -> error).
+        // just let the mgr create the new property that is known to exist and
+        // which has not been accessed before.
+        PropertyImpl prop = (PropertyImpl) itemMgr.createItemInstance(propState);
 
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
