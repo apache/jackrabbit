@@ -27,6 +27,8 @@ import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.commons.collections.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.PropertyType;
@@ -44,6 +46,11 @@ import java.util.Collections;
  * is itself committed.
  */
 public class XAItemStateManager extends LocalItemStateManager implements InternalXAResource {
+
+    /**
+     * The logger instance.
+     */
+    private static Logger log = LoggerFactory.getLogger(XAItemStateManager.class);
 
     /**
      * Default change log attribute name.
@@ -560,5 +567,31 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             refs.removeReference(sourceId);
             references.modified(refs);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Check whether the shared state modified is contained in our transactional
+     * log: in that case, update its state as well, as it might get reused
+     * in a subsequent transaction (see JCR-1554).
+     */
+    public void stateModified(ItemState modified) {
+        ChangeLog changeLog = (ChangeLog) commitLogs.get(Thread.currentThread());
+        if (changeLog != null) {
+            ItemState local;
+            if (modified.getContainer() != this) {
+                // shared state was modified
+                try {
+                    local = changeLog.get(modified.getId());
+                    if (local != null && local.isConnected()) {
+                        local.pull();
+                    }
+                } catch (NoSuchItemStateException e) {
+                    log.warn("Modified state marked for deletion: " + modified.getId());
+                }
+            }
+        }
+        super.stateModified(modified);
     }
 }
