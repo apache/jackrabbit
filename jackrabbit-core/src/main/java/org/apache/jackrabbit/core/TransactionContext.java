@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.util.Timer;
 
 import javax.transaction.xa.XAException;
+import javax.transaction.xa.Xid;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +50,11 @@ public class TransactionContext extends Timer.Task {
     private static final int STATUS_ROLLED_BACK = 6;
 
     /**
+     * The per thread associated Xid
+     */
+    private static ThreadLocal CURRENT_XID = new ThreadLocal();
+
+    /**
      * Create a global timer for all transaction contexts.
      */
     private static final Timer TIMER = new Timer(true);
@@ -61,6 +69,11 @@ public class TransactionContext extends Timer.Task {
      */
     private final int timeout;
 
+    /**
+    * The Xid
+    */
+   private final Xid xid;
+   
     /**
      * Transaction attributes.
      */
@@ -78,10 +91,12 @@ public class TransactionContext extends Timer.Task {
 
     /**
      * Create a new instance of this class.
+     * @param xid associated xid
      * @param resources transactional resources
      * @param timeout timeout, in seconds
      */
-    public TransactionContext(InternalXAResource[] resources, int timeout) {
+    public TransactionContext(Xid xid, InternalXAResource[] resources, int timeout) {
+        this.xid = xid;
         this.resources = resources;
         this.timeout = timeout;
     }
@@ -129,6 +144,7 @@ public class TransactionContext extends Timer.Task {
      * @throws XAException if an error occurs
      */
     public synchronized void prepare() throws XAException {
+        bindCurrentXid();
         status = STATUS_PREPARING;
         beforeOperation();
 
@@ -172,6 +188,7 @@ public class TransactionContext extends Timer.Task {
         if (status == STATUS_ROLLED_BACK) {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
+        bindCurrentXid();
         status = STATUS_COMMITTING;
         beforeOperation();
 
@@ -197,6 +214,7 @@ public class TransactionContext extends Timer.Task {
 
         // cancel the rollback task
         cancel();
+        cleanCurrentXid();
 
         if (txe != null) {
             XAException e = new XAException(XAException.XA_RBOTHER);
@@ -214,6 +232,7 @@ public class TransactionContext extends Timer.Task {
         if (status == STATUS_ROLLED_BACK) {
             throw new XAException(XAException.XA_RBTIMEOUT);
         }
+        bindCurrentXid();
         status = STATUS_ROLLING_BACK;
         beforeOperation();
 
@@ -232,6 +251,7 @@ public class TransactionContext extends Timer.Task {
 
         // cancel the rollback task
         cancel();
+        cleanCurrentXid();
 
         if (errors != 0) {
             throw new XAException(XAException.XA_RBOTHER);
@@ -294,5 +314,44 @@ public class TransactionContext extends Timer.Task {
      */
     public void setSuspended(boolean suspended) {
         this.suspended = suspended;
+    }
+    
+    /**
+     * Helper Method to bind the {@link Xid} associated with this {@link TransactionContext}
+     * to the {@link #CURRENT_XID} ThreadLocal
+     * @param methodName
+     */
+    private void bindCurrentXid() {
+        CURRENT_XID.set(xid);
+    }
+
+    /**
+     * Helper Method to clean the {@link Xid} associated with this {@link TransactionContext}
+     * from the {@link #CURRENT_XID} ThreadLocal
+     * @param methodName
+     */
+    private void cleanCurrentXid() {
+        CURRENT_XID.set(null);
+    }
+    
+    /**
+     * Returns the {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
+     * @return current Xid or null
+     */
+    public static Xid getCurrentXid() {
+        return (Xid) CURRENT_XID.get();
+    }
+    
+    /**
+     * Helper Method to check if the given {@link Xid} has the same globalTransactionId
+     * as the current {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
+     * @param xid Xid to check
+     * @param fallback if either the given {@link Xid} or the current {@link Xid} is null we can not check if they 
+     *        are same, the fallback value will be returned
+     * @return true if the same otherwise false
+     */
+    public static boolean isCurrentXid(Xid xid, boolean fallback) {
+        Xid currentXid = (Xid) CURRENT_XID.get();
+        return fallback ? true : (currentXid == null || xid == null) ? fallback : Arrays.equals(xid.getGlobalTransactionId(), currentXid.getGlobalTransactionId());  
     }
 }
