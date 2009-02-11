@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.2
+Release Notes -- Apache Jackrabbit -- Version 1.5.3
 
 Introduction
 ------------
@@ -10,23 +10,9 @@ content, full text search, versioning, transactions, observation, and
 more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
-Apache Jackrabbit 1.5.2 is a security and bug fix release that fixes
-issues reported against previous releases. This release is fully
-compatible with the earlier 1.5.0 release.
-
-Most notably, this release fixes the following security vulnerability.
-Thanks to the Red Hat Security Response Team for reporting this issue.
-
-  * CVE-2009-0026: Cross site scripting issues in webapp (JCR-1925)
-
-    The search.jsp and swr.jsp pages in the Jackrabbit webapp are
-    vulnerable to script injection. This release fixes the issue
-    by properly escaping all user input.
-
-    This issue affects both the Jackrabbit 1.4 and 1.5.0 releases.
-    If you are unable to upgrade to 1.5.2 at this point, you can
-    work around this issue by disabling the search.jsp and swr.jsp
-    pages in the Jackrabbit webapp.
+Apache Jackrabbit 1.5.3 is a bug fix release that fixes issues reported
+against previous releases. This release is fully compatible with the
+earlier 1.5.x releases.
 
 See below for a full listing of fixes included in this release.
 
@@ -38,53 +24,13 @@ The modified components have had their version numbers upgraded to 1.5.2;
 other components are still at version 1.5.0. Jackrabbit version 1.5.1
 was cancelled due to incorrect license headers in the source code.
 
-jackrabbit
-
-  Bug fixes
-  [JCR-1936] Incorrect license headers in multiple components
-
 jackrabbit-core
 
   Bug fixes
-  [JCR-1823] Repository.login throws IllegalStateException
-  [JCR-1838] Garbage collection deletes temporary files in FileDataStore
-  [JCR-1846] Jackrabbit thread contention issue due to fat lock
-  [JCR-1920] Custom LoginModule configurations broken in 1.5.0
-  [JCR-1931] SharedFieldCache$StringIndex memory leak causing OOM's
-
-jackrabbit-jcr-commons
-
-  Bug fixes
-  [JCR-1926] Text.unescape("%") throws a StringIndexOutOfBoundsException
-
-jackrabbit-jcr-server
-
-  Bug fixes
-  [JCR-1902] Warning while building DAV:parent-set for root-node resource
-
-jackrabbit-jcr-servlet
-
-  Bug fixes
-  [JCR-1910] RMIRemoteBindingServlet fails to initialize if the RMI ...
-
-jackrabbit-standalone
-
-  Bug fixes
-  [JCR-1912] RMI reference not automatically bound by the standalone server
 
 jackrabbit-webapp
 
-  Security fixes
-  [JCR-1925] CVE-2009-0026: Cross site scripting issues in webapp
-
   Bug fixes
-  [JCR-1920] The 1.5.0 webapp points to 1.4 javadocs
-  [JCR-1930] Extra </div> in populate.jsp
-
-jackrabbit-webdav
-
-  Bug fixes
-  [JCR-1926] Text.unescape("%") throws a StringIndexOutOfBoundsException
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
@@ -92,13 +38,13 @@ issue tracker at https://issues.apache.org/jira/browse/JCR.
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.2-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.3-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.2-src.jar
-    cd jackrabbit-1.5.2-src
+    jar xf jackrabbit-1.5.3-src.jar
+    cd jackrabbit-1.5.3-src
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
