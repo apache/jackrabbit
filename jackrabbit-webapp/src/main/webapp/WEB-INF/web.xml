@@ -263,7 +263,7 @@
     <servlet>
         <servlet-name>JCRWebdavServer</servlet-name>
         <description>
-            The webdav servlet that connects HTTP request to the repository.
+            The servlet used to remote JCR calls over HTTP.
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.JcrRemotingServlet</servlet-class>
         <init-param>

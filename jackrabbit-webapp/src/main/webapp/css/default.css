@@ -16,7 +16,7 @@
  */
 
 body        { font-family: Verdana, Helvetica, Arial, sans-serif;
-              font-size: small;
+              font-size: small; color: #000000;
               background-color: #e0e0e0;
               margin: 1em 100px 1em 100px;
               padding: 0; }
@@ -75,6 +75,9 @@ pre         { background: #E0E0E0;
               overflow: auto; }
 
 td          { font-size: small; }
+
+pre.code    { font-family: monospace; font-size: small;
+              padding: 25px; }
 
 /* FOOTER */
 
