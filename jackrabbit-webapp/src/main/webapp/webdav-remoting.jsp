@@ -18,7 +18,7 @@
 --%><%@page import="org.apache.jackrabbit.util.Text"%>
 <%@ page import="org.apache.jackrabbit.j2ee.JcrRemotingServlet" %>
 <%
-request.setAttribute("title", "JCR Remoting Server (incl. Batch Read/Write)");
+request.setAttribute("title", "JCR Remoting Server with Batch Read/Write");
 
 URI uri = new URI(request.getRequestURL().toString());
 String href =
@@ -61,7 +61,8 @@ String shref = href + "/default/jcr:root";
 Composes a JSON object for a node (and its child items) up to a explicitely
 specified or configuration determined depth.
 <br>
-See <a href ="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-server/src/main/java/org/apache/jackrabbit/server/remoting/davex/JcrRemotingServlet.java">JavaDoc</a> for details.
+See <a href ="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-server/src/main/java/org/apache/jackrabbit/server/remoting/davex/JcrRemotingServlet.java">JavaDoc</a> for details
+or try the <a href="remoting/index.jsp">Examples</a>.
 </p>
 
 <h3>Batch Write</h3>
@@ -70,7 +71,8 @@ In contrast to the default JCR remoting this extended version allows to send
 a block of modifications (SPI Batch) within a single POST request containing a
 custom ":diff" parameter.
 <br>
-See the <a href ="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-server/src/main/java/org/apache/jackrabbit/server/remoting/davex/JcrRemotingServlet.java">JavaDoc</a> for details.
+See the <a href ="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-jcr-server/src/main/java/org/apache/jackrabbit/server/remoting/davex/JcrRemotingServlet.java">JavaDoc</a> for details
+or try the <a href="remoting/index.jsp">Examples</a>.
 </p>
 
 <h3>JCR Remoting Client</h3>
