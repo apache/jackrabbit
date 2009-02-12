@@ -75,17 +75,22 @@ import java.util.Iterator;
  * The JSON writer applies the following rules:
  * 
  * <pre>
+ * - Nodes are represented as JSON objects.
+ *
  * - Each Node has its properties included as JSON key/value pairs.
  *
- * - Child nodes are equally treated as long a maximal depths is not reached.
+ * - Single valued Properties are simple key/value pairs.
+ *
+ * - Multi valued Properties are represented as JSON array.
+ *
+ * - Each Node has its child nodes included as long a maximal depths is not reached.
  * 
  * - Nodes without any child nodes get a special JSON member named
  *   ::NodeIteratorSize, whose value is zero.
  *
  * - If the maximal depth is reached only name, index and unique id of the
  *   direct child are included (incomplete node info). In order to obtain
- *   the complete information another GET with .json extension will be sent
- *   by the client.
+ *   the complete information the client sends another GET with .json extension.
  * </pre>
  * 
  * Same name sibling nodes and properties whose type cannot be unambiguously be
