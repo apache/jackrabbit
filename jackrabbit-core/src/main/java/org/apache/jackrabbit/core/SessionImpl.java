@@ -1471,10 +1471,10 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#checkCapability(String, Object, Map)
+     * @see org.apache.jackrabbit.api.jsr283.Session#hasCapability(String, Object, Map)
      * @since JCR 2.0
      */
-    public boolean checkCapability(String methodType, Object target, Map arguments)
+    public boolean hasCapability(String methodType, Object target, Map arguments)
             throws RepositoryException {
         //TODO
         throw new UnsupportedRepositoryOperationException("Not yet implemented");
