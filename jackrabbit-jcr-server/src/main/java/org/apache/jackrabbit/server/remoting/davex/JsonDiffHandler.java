@@ -71,9 +71,7 @@ class JsonDiffHandler implements DiffHandler {
 
     //--------------------------------------------------------< DiffHandler >---
     /**
-     *
-     * @param targetPath
-     * @param diffValue
+     * @see DiffHandler#addNode(String, String)
      */
     public void addNode(String targetPath, String diffValue) throws DiffException {
         if (diffValue == null || !(diffValue.startsWith("{") && diffValue.endsWith("}"))) {
@@ -92,6 +90,9 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
+    /**
+     * @see DiffHandler#setProperty(String, String) 
+     */
     public void setProperty(String targetPath, String diffValue) throws DiffException {
         try {
             String itemPath = getItemPath(targetPath);
@@ -147,8 +148,11 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
+    /**
+     * @see DiffHandler#remove(String, String) 
+     */
     public void remove(String targetPath, String diffValue) throws DiffException {
-        if (!(diffValue == null || diffValue.length() == 0)) {
+        if (!(diffValue == null || diffValue.trim().length() == 0)) {
             throw new DiffException("'remove' may not have a diffValue.");
         }
         try {
@@ -159,6 +163,9 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
+    /**
+     * @see DiffHandler#move(String, String) 
+     */
     public void move(String targetPath, String diffValue) throws DiffException {
         if (diffValue == null || diffValue.length() == 0) {
             throw new DiffException("Invalid 'move' value '" + diffValue + "'");
