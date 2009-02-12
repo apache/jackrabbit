@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public interface Session extends javax.jcr.Session {
 
-        /**
+    /**
      * A constant representing the <code>read</code> action string, used to
      * determine if this <code>Session</code> has permission to retrieve an
      * item (and read the value, in the case of a property).
@@ -262,49 +262,57 @@ public interface Session extends javax.jcr.Session {
 
     /**
      * Checks whether an operation can be performed given as much context as can be determined
-     * by the repsoitory, including:
+     * by the repository, including:
      * <ul>
      * <li>
-     * Target object (reflecting the current selection in the application) and its current state
-     * (locks etc.).
+     * Permissions granted to the current user, including access control privileges.
      * </li>
      * <li>
-     * Current user (the current session).
-     * </li>
-     * <li>
-     * Access control rules (permissions granted to the current user).
+     * Current state of the target object (reflecting locks, checkin/checkout status, retention and hold status etc.).
      * </li>
      * <li>
      * Repository capabilities.
      * </li>
      * <li>
-     * Schema information (rules embodied in the node type structure or more
-     * repository specific rules).
+     * Node type-enforced restrictions.
+     * </li>
+     * <li>
+     * Repository configuration-specific restrictions.
      * </li>
      * </ul>
-     *
      * The implementation of this method is best effort: returning <code>false</code> guarantees
      * that the operation cannot be performed, but returning <code>true</code> does not guarantee
      * the opposite. The repository implementation should use this to give priority to
      * performance over completeness. An exception should be thrown only for important
      * failures such as loss of connectivity to the back-end.
+     * <p>
+     * The implementation of this method is best effort: returning false guarantees that the operation cannot be
+     * performed, but returning true does not guarantee the opposite.
+     * <p>
+     * The <code>methodName</code> parameter identifies the method in question by its name
+     * as defined in the Javadoc.
+     * <p>
+     * The <code>target</code> parameter identifies the object on which the specified method is called.
+     * <p>
+     * The <code>arguments</code> parameter contains a <code>Map</code> object consisting of
+     * name/value pairs where the name is a String holding the parameter name of
+     * the method as defined in the Javadoc and the value is an Object holding
+     * the value to be passed. In cases where the value is a Java primitive type
+     * it must be converted to its corresponding Java object form before being passed.
+     * <p>
+     * For example, given a <code>Session</code> <code>S</code> and <code>Node</code>
+     * <code>N</code> then
+     * <p>
+     * <code>
+     * Map p = new HashMap();
+     * p.put("relPath", "foo");
+     * boolean b = S.hasCapability("addNode", N, p);
+     * </code>
+     * <p>
+     * will result in b == false if a child node called foo cannot be added to the node
+     * <code>N</code> within the session <code>S</code>.
      *
-     * The <code>methodType</code> parameter identifies the operation using the method event
-     * constants defined for {@link javax.jcr.observation.Event#getMethod}.
-     *
-     * The <code>target</code> parameter identifies the object on which the specified method is
-     * called. For example, for method <code>Node.addNode</code>, <code>target</code> would identify
-     * the <code>Node</code> object. The <code>target</code> is an optional parameter, but must be
-     * supplied if the specified method is defined on javax.jcr.Item or any of its subtypes.
-     * To not supply a <code>target</code>, a <code>null</code> is passed as the second parameter.
-     *
-     * The <code>arguments</code> parameter contains method arguments as defined for
-     * {@link javax.jcr.observation.Event#getMethodInfo}. The <code>arguments</code> parameter is
-     * optional, and even when specified, not all arguments to the corresponding operation need to
-     * be specified. In such a case, the repository should check whether there exists a
-     * set of arguments for which the operation could succeed. To not supply <code>arguments</code>,
-     * either a <code>null</code> or an empty <code>Map</code> is passed as the third parameter.
-     * @param methodType the operation.
+     * @param methodName the nakme of the method.
      * @param target the target object of the operation.
      * @param arguments the arguments of the operation.
      * @return boolean <code>false</code> if the operation cannot be performed,
@@ -313,7 +321,7 @@ public interface Session extends javax.jcr.Session {
      * @throws RepositoryException if an error occurs
      * @since JCR 2.0
      */
-    public boolean checkCapability(String methodType, Object target, Map arguments) throws RepositoryException;
+    public boolean hasCapability(String methodName, Object target, Map arguments) throws RepositoryException;
 
     /**
      * Returns the access control manager for this <code>Session</code>.
@@ -347,5 +355,5 @@ public interface Session extends javax.jcr.Session {
      * @since JCR 2.0
      */
     public RetentionManager getRetentionManager()
-            throws UnsupportedRepositoryOperationException, RepositoryException;    
+            throws UnsupportedRepositoryOperationException, RepositoryException;
 }
