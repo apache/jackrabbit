@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
+import java.util.LinkedList;
 
 /** <code>JsonDiffHandler</code>... */
 class JsonDiffHandler implements DiffHandler {
@@ -228,14 +229,19 @@ class JsonDiffHandler implements DiffHandler {
      * @throws RepositoryException
      */
     String getItemPath(String diffPath) throws RepositoryException {
-        if (diffPath.startsWith("/")) {
-            // diff path is already an absolute path
-            return diffPath;
-        } else {
+        StringBuffer itemPath;
+        if (!diffPath.startsWith("/")) {
             // diff path is relative to the item path retrieved from the
             // request URI -> calculate item path.
-            return requestItemPath + diffPath;
+            itemPath = new StringBuffer(requestItemPath);
+            if (!requestItemPath.endsWith("/")) {
+                itemPath.append('/');
+            }
+            itemPath.append(diffPath);
+        } else {
+            itemPath = new StringBuffer(diffPath);
         }
+        return normalize(itemPath.toString());
     }
 
     private void addNode(String parentPath, String nodeName, String diffValue)
@@ -254,6 +260,30 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
+    private static String normalize(String path) {
+        if (path.indexOf('.') == -1) {
+            return path;
+        }
+        String[]  elems = Text.explode(path, '/', false);
+        LinkedList queue = new LinkedList();
+        String last = "..";
+        for (int i = 0; i < elems.length; i++) {
+            String segm = elems[i];
+            if ("..".equals(segm) && !"..".equals(last)) {
+                queue.removeLast();
+                if (queue.isEmpty()) {
+                    last = "..";
+                } else {
+                    last = queue.getLast().toString();
+                }
+            } else if (!".".equals(segm)) {
+                last = segm;
+                queue.add(last);
+            }
+        }
+        return "/" + Text.implode((String[]) queue.toArray(new String[queue.size()]), "/");
+    }
+    
     private static Node importNode(Node parent, String nodeName, String ntName,
                                    String uuid) throws RepositoryException {
 

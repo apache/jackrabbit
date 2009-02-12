@@ -122,11 +122,11 @@ import java.util.Iterator;
  *
  * <h4>Diff format</h4>
  *
- * The diff parameter currently consists of a JSON object with the following
- * special requirements:
+ * The diff parameter currently consists of JSON-like key-value pairs with the
+ * following special requirements:
  *
  * <pre>
- *   diff       ::= "{" members "}"
+ *   diff       ::= members
  *   members    ::= pair | pairs
  *   pair       ::= key " : " value
  *   pairs      ::= pair line-end pair | pair line-end pairs
@@ -145,7 +145,7 @@ import java.util.Iterator;
  *
  * In other words:
  * <ul>
- * <li>diff is a JSON object consisting of key-value pairs</li>
+ * <li>diff consists of one or more key-value pair(s)</li>
  * <li>key must start with a diffchar followed by a rel. or abs. item path</li>
  * <li>diffchar being any of "+", "^", "-" or ">" representing the transient
  * item modifications as follows
