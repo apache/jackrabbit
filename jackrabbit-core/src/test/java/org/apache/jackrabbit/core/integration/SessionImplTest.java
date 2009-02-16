@@ -21,6 +21,7 @@ import java.security.AccessControlException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
@@ -48,4 +49,25 @@ public class SessionImplTest extends AbstractJCRTest {
             session.logout();
         }
     }
+
+    /**
+     * JCR-1932: Session.getAttributes( ) call always returns an empty array
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1932">JCR-1932</a>
+     */
+    public void testSessionAttributes() throws RepositoryException {
+        SimpleCredentials credentials =
+            new SimpleCredentials("admin", "admin".toCharArray());
+        credentials.setAttribute("test", "attribute");
+        Session session = helper.getRepository().login(credentials);
+        try {
+            String[] names = session.getAttributeNames();
+            assertEquals(1, names.length);
+            assertEquals("test", names[0]);
+            assertEquals("attribute", session.getAttribute("test"));
+        } finally {
+            session.logout();
+        }
+    }
+
 }

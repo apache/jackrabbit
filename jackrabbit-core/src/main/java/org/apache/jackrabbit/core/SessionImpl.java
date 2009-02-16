@@ -493,6 +493,23 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
+     * Sets the named attribute. If the value is <code>null</code>, then
+     * the named attribute is removed.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1932">JCR-1932</a>
+     * @param name attribute name
+     * @param value attribute value
+     * @since Apache Jackrabbit 1.6
+     */
+    protected void setAttribute(String name, Object value) {
+        if (value != null) {
+            attributes.put(name, value);
+        } else {
+            attributes.remove(name);
+        }
+    }
+
+    /**
      * Retrieves the referenceable node with the given <code>UUID</code>.
      *
      * @param uuid uuid of the node to be retrieved
