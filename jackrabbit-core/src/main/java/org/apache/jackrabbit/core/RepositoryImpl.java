@@ -83,6 +83,7 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
@@ -1409,9 +1410,17 @@ public class RepositoryImpl extends AbstractRepository
             // not preauthenticated -> try login with credentials
             AuthContext authCtx = getSecurityManager().getAuthContext(credentials, new Subject());
             authCtx.login();
-            // create session
-            return createSession(authCtx, workspaceName);
 
+            // create session, and add SimpleCredentials attributes (JCR-1932)
+            SessionImpl session = createSession(authCtx, workspaceName);
+            if (credentials instanceof SimpleCredentials) {
+                SimpleCredentials sc = (SimpleCredentials) credentials;
+                String[] names = sc.getAttributeNames();
+                for (int i = 0; i < names.length; i++) {
+                    session.setAttribute(names[i], sc.getAttribute(names[i]));
+                }
+            }
+            return session;
         } catch (SecurityException se) {
             throw new LoginException("Unable to access authentication information", se);
         } catch (javax.security.auth.login.LoginException le) {
