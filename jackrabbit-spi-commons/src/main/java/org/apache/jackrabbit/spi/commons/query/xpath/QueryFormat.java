@@ -445,9 +445,21 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         try {
             for (int i = 0; i < specs.length; i++) {
                 sb.append(comma);
-                Name prop = encode(specs[i].getProperty());
-                sb.append(" @");
-                sb.append(resolver.getJCRName(prop));
+                Path propPath = specs[i].getPropertyPath();
+                Path.Element[] elements = propPath.getElements();
+                sb.append(" ");
+                String slash = "";
+                for (int j = 0; j < elements.length; j++) {
+                    sb.append(slash);
+                    slash = "/";
+                    Path.Element element = elements[j];
+                    Name name = encode(element.getName());
+                    if (j == elements.length - 1) {
+                        // last
+                        sb.append("@");
+                    }
+                    sb.append(resolver.getJCRName(name));
+                }
                 if (!specs[i].isAscending()) {
                     sb.append(" descending");
                 }

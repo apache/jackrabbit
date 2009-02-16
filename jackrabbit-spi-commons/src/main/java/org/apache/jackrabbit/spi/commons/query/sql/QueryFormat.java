@@ -484,7 +484,12 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 String comma = "";
                 for (int i = 0; i < specs.length; i++) {
                     sb.append(comma).append(" ");
-                    appendName(specs[i].getProperty(), resolver, sb);
+                    Path propPath = specs[i].getPropertyPath();
+                    if (propPath.getLength() > 1) {
+                        exceptions.add(new InvalidQueryException("SQL does not support relative paths in order by clause"));
+                        return sb;
+                    }
+                    appendName(propPath.getNameElement().getName(), resolver, sb);
                     if (!specs[i].isAscending()) {
                         sb.append(" DESC");
                     }

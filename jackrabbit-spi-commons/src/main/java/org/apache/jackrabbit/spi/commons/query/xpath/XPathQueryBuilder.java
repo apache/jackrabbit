@@ -563,17 +563,32 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * @param node a relation query node.
      */
     private void applyRelativePath(RelationQueryNode node) {
-        if (tmpRelPath != null) {
-            try {
-                Path relPath = tmpRelPath.getPath();
-                for (int i = 0; i < relPath.getLength(); i++) {
-                    node.addPathElement(relPath.getElements()[i]);
-                }
-            } catch (MalformedPathException e) {
-                // should never happen
+        Path relPath = getRelativePath();
+        if (relPath != null) {
+            for (int i = 0; i < relPath.getLength(); i++) {
+                node.addPathElement(relPath.getElements()[i]);
             }
+        }
+    }
+
+    /**
+     * Returns {@link #tmpRelPath} or <code>null</code> if there is none set.
+     * When this method returns {@link #tmpRelPath} will have been set
+     * <code>null</code>.
+     *
+     * @return {@link #tmpRelPath}.
+     */
+    private Path getRelativePath() {
+        try {
+            if (tmpRelPath != null) {
+                return tmpRelPath.getPath();
+            }
+        } catch (MalformedPathException e) {
+            // should never happen
+        } finally {
             tmpRelPath = null;
         }
+        return null;
     }
 
     /**
@@ -1099,8 +1114,14 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 // cut off left parenthesis at end
                 propName = propName.substring(0, propName.length() - 1);
             }
+            PathBuilder builder = new PathBuilder();
             Name name = decode(resolver.getQName(propName));
-            spec = new OrderQueryNode.OrderSpec(name, true);
+            Path relPath = getRelativePath();
+            if (relPath != null) {
+                builder.addAll(relPath.getElements());
+            }
+            builder.addLast(name);
+            spec = new OrderQueryNode.OrderSpec(builder.getPath(), true);
             queryNode.addOrderSpec(spec);
         } catch (NameException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));

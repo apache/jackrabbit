@@ -210,16 +210,7 @@ public class QueryTreeDump implements QueryNodeVisitor {
         if (relPath == null) {
             buffer.append(relPath);
         } else {
-            Path.Element[] elements = relPath.getElements();
-            String slash = "";
-            for (int i = 0; i < elements.length; i++) {
-                buffer.append(slash);
-                slash = "/";
-                if (i == elements.length - 1) {
-                    buffer.append("@");
-                }
-                buffer.append(elements[i]);
-            }
+            appendPath(relPath, buffer);
         }
         buffer.append(" Type=").append(QueryConstants.TYPE_NAMES.getName(node.getValueType()));
         if (node.getValueType() == QueryConstants.TYPE_DATE) {
@@ -249,7 +240,8 @@ public class QueryTreeDump implements QueryNodeVisitor {
         OrderQueryNode.OrderSpec[] specs = node.getOrderSpecs();
         for (int i = 0; i < specs.length; i++) {
             buffer.append(PADDING, 0, indent);
-            buffer.append("  ").append(specs[i].getProperty());
+            buffer.append("  ");
+            appendPath(specs[i].getPropertyPath(), buffer);
             buffer.append(" asc=").append(specs[i].isAscending());
             buffer.append("\n");
         }
@@ -300,5 +292,22 @@ public class QueryTreeDump implements QueryNodeVisitor {
             node[i].accept(this, buffer);
         }
         indent -= 2;
+    }
+
+    /**
+     * Appends the relative path to the <code>buffer</code> using '/' as the
+     * delimiter for path elements.
+     *
+     * @param relPath a relative path.
+     * @param buffer the buffer where to append the path.
+     */
+    private static void appendPath(Path relPath, StringBuffer buffer) {
+        Path.Element[] elements = relPath.getElements();
+        String slash = "";
+        for (int i = 0; i < elements.length; i++) {
+            buffer.append(slash);
+            slash = "/";
+            buffer.append(elements[i]);
+        }
     }
 }
