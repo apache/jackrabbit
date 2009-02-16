@@ -313,9 +313,7 @@ public class SharedItemStateManager
      */
     public NodeReferences getNodeReferences(NodeReferencesId id)
             throws NoSuchItemStateException, ItemStateException {
-
         ISMLocking.ReadLock readLock = acquireReadLock(id.getTargetId());
-
         try {
             // check persistence manager
             try {
@@ -323,16 +321,17 @@ public class SharedItemStateManager
             } catch (NoSuchItemStateException e) {
                 // ignore
             }
-            // check virtual providers
-            for (int i = 0; i < virtualProviders.length; i++) {
-                try {
-                    return virtualProviders[i].getNodeReferences(id);
-                } catch (NoSuchItemStateException e) {
-                    // ignore
-                }
-            }
         } finally {
             readLock.release();
+        }
+
+        // check virtual providers
+        for (int i = 0; i < virtualProviders.length; i++) {
+            try {
+                return virtualProviders[i].getNodeReferences(id);
+            } catch (NoSuchItemStateException e) {
+                // ignore
+            }
         }
 
         // throw
@@ -343,14 +342,12 @@ public class SharedItemStateManager
      * {@inheritDoc}
      */
     public boolean hasNodeReferences(NodeReferencesId id) {
-
         ISMLocking.ReadLock readLock;
         try {
             readLock = acquireReadLock(id.getTargetId());
         } catch (ItemStateException e) {
             return false;
         }
-
         try {
             // check persistence manager
             try {
@@ -360,15 +357,17 @@ public class SharedItemStateManager
             } catch (ItemStateException e) {
                 // ignore
             }
-            // check virtual providers
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].hasNodeReferences(id)) {
-                    return true;
-                }
-            }
         } finally {
             readLock.release();
         }
+
+        // check virtual providers
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasNodeReferences(id)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
