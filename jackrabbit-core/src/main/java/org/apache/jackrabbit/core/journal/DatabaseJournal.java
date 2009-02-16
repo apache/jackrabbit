@@ -303,6 +303,9 @@ public class DatabaseJournal extends AbstractJournal {
             connection = getConnection();
             setAutoCommit(connection, true);
             checkSchema();
+            // Make sure that the LOCAL_REVISIONS table exists (see JCR-1087)
+            checkLocalRevisionSchema();
+
             buildSQLStatements();
             prepareStatements();
             initInstanceRevisionAndJanitor();
@@ -357,9 +360,6 @@ public class DatabaseJournal extends AbstractJournal {
      */
     protected void initInstanceRevisionAndJanitor() throws Exception {
         databaseRevision = new DatabaseRevision();
-
-        // Make sure that the LOCAL_REVISIONS table exists (checkSchema has already been called) (see JCR-1087)
-        checkLocalRevisionSchema();
 
         // Get the local file revision from disk (upgrade; see JCR-1087)
         long localFileRevision = 0L;
