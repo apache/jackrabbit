@@ -243,29 +243,30 @@ public class SharedItemStateManager
      */
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
+        // check the virtual root ids (needed for overlay)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
+        }
 
         ISMLocking.ReadLock readLock = acquireReadLock(id);
-
         try {
-            // check the virtual root ids (needed for overlay)
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].isVirtualRoot(id)) {
-                    return virtualProviders[i].getItemState(id);
-                }
-            }
             // check internal first
             if (hasNonVirtualItemState(id)) {
                 return getNonVirtualItemState(id);
             }
-            // check if there is a virtual state for the specified item
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].hasItemState(id)) {
-                    return virtualProviders[i].getItemState(id);
-                }
-            }
         } finally {
             readLock.release();
         }
+
+        // check if there is a virtual state for the specified item
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return virtualProviders[i].getItemState(id);
+            }
+        }
+
         throw new NoSuchItemStateException(id.toString());
     }
 
@@ -273,6 +274,12 @@ public class SharedItemStateManager
      * {@inheritDoc}
      */
     public boolean hasItemState(ItemId id) {
+        // check the virtual root ids (needed for overlay)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].isVirtualRoot(id)) {
+                return true;
+            }
+        }
 
         ISMLocking.ReadLock readLock;
         try {
@@ -286,25 +293,21 @@ public class SharedItemStateManager
                 return true;
             }
 
-            // check the virtual root ids (needed for overlay)
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].isVirtualRoot(id)) {
-                    return true;
-                }
-            }
             // check if this manager has the item state
             if (hasNonVirtualItemState(id)) {
                 return true;
             }
-            // otherwise check virtual ones
-            for (int i = 0; i < virtualProviders.length; i++) {
-                if (virtualProviders[i].hasItemState(id)) {
-                    return true;
-                }
-            }
         } finally {
             readLock.release();
         }
+
+        // otherwise check virtual ones
+        for (int i = 0; i < virtualProviders.length; i++) {
+            if (virtualProviders[i].hasItemState(id)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
