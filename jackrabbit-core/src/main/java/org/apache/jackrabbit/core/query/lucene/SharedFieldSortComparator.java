@@ -20,12 +20,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.jackrabbit.core.query.lucene.SharedFieldCache.StringIndex;
+import javax.jcr.PropertyType;
+
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortComparator;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.document.Document;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene
@@ -41,146 +55,69 @@ import org.apache.lucene.search.SortField;
 public class SharedFieldSortComparator extends SortComparator {
 
     /**
-     * A <code>SharedFieldSortComparator</code> that is based on
-     * {@link FieldNames#PROPERTIES}.
-     */
-    static final SortComparator PROPERTIES = new SharedFieldSortComparator(FieldNames.PROPERTIES);
-
-    /**
      * The name of the shared field in the lucene index.
      */
     private final String field;
 
     /**
-     * If <code>true</code> <code>ScoreDocComparator</code> will returns term
-     * values when {@link org.apache.lucene.search.ScoreDocComparator#sortValue(org.apache.lucene.search.ScoreDoc)}
-     * is called, otherwise only a dummy value is returned.
+     * The item state manager.
      */
-    private final boolean createComparatorValues;
+    private final ItemStateManager ism;
+
+    /**
+     * The hierarchy manager on top of {@link #ism}.
+     */
+    private final HierarchyManager hmgr;
+
+    /**
+     * The index internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
 
     /**
      * Creates a new <code>SharedFieldSortComparator</code> for a given shared
      * field.
      *
      * @param fieldname the shared field.
+     * @param ism       the item state manager of this workspace.
+     * @param hmgr      the hierarchy manager of this workspace.
+     * @param nsMappings the index internal namespace mappings.
      */
-    public SharedFieldSortComparator(String fieldname) {
-        this(fieldname, false);
-    }
-
-    /**
-     * Creates a new <code>SharedFieldSortComparator</code> for a given shared
-     * field.
-     *
-     * @param fieldname              the shared field.
-     * @param createComparatorValues if <code>true</code> creates values
-     * for the <code>ScoreDocComparator</code>s.
-     * @see #createComparatorValues
-     */
-    public SharedFieldSortComparator(String fieldname, boolean createComparatorValues) {
+    public SharedFieldSortComparator(String fieldname,
+                                     ItemStateManager ism,
+                                     HierarchyManager hmgr,
+                                     NamespaceMappings nsMappings) {
         this.field = fieldname;
-        this.createComparatorValues = createComparatorValues;
+        this.ism = ism;
+        this.hmgr = hmgr;
+        this.nsMappings = nsMappings;
     }
 
     /**
      * Creates a new <code>ScoreDocComparator</code> for an embedded
      * <code>propertyName</code> and a <code>reader</code>.
+     *
      * @param reader the index reader.
-     * @param propertyName the name of the property to sort.
+     * @param relPath the relative path to the property to sort on as returned
+     *          by {@link Path#getString()}.
      * @return a <code>ScoreDocComparator</code> for the
-     * @throws IOException
-     * @throws IOException
+     * @throws IOException if an error occurs while reading from the index.
      */
-    public ScoreDocComparator newComparator(final IndexReader reader, final String propertyName) throws IOException {
-
-        final List readers = new ArrayList();
-        getIndexReaders(readers, reader);
-
-        final SharedFieldCache.StringIndex[] indexes = new SharedFieldCache.StringIndex[readers.size()];
-
-        int maxDoc = 0;
-        final int[] starts = new int[readers.size() + 1];
-
-        for (int i = 0; i < readers.size(); i++) {
-            IndexReader r = (IndexReader) readers.get(i);
-            starts[i] = maxDoc;
-            maxDoc += r.maxDoc();
-            indexes[i] = SharedFieldCache.INSTANCE.getStringIndex(r, field,
-                    FieldNames.createNamedValue(propertyName, ""),
-                    SharedFieldSortComparator.this, createComparatorValues);
+    public ScoreDocComparator newComparator(IndexReader reader,
+                                            String relPath)
+            throws IOException {
+        PathFactory factory = PathFactoryImpl.getInstance();
+        Path p = factory.create(relPath);
+        if (p.getLength() == 1) {
+            try {
+                return new SimpleScoreDocComparator(reader,
+                        nsMappings.translatePropertyName(p.getNameElement().getName()));
+            } catch (IllegalNameException e) {
+                throw Util.createIOException(e);
+            }
+        } else {
+            return new RelPathScoreDocComparator(reader, p);
         }
-        starts[readers.size()] = maxDoc;
-
-        return new ScoreDocComparator() {
-
-            public final int compare(final ScoreDoc i, final ScoreDoc j) {
-                int idx1 = readerIndex(i.doc);
-                int idx2 = readerIndex(j.doc);
-
-                String iTerm = indexes[idx1].getTerm(i.doc - starts[idx1]);
-                String jTerm = indexes[idx2].getTerm(j.doc - starts[idx2]);
-
-                if (iTerm == jTerm) {
-                    return 0;
-                } else if (iTerm == null) {
-                    return -1;
-                } else if (jTerm == null) {
-                    return 1;
-                } else {
-                    return iTerm.compareTo(jTerm);
-                }
-            }
-
-            /**
-             * Returns an empty if no lookup table is available otherwise the
-             * index term for the score doc <code>i</code>.
-             *
-             * @param i
-             *            the score doc.
-             * @return the sort value if available.
-             */
-            public Comparable sortValue(final ScoreDoc i) {
-                if (createComparatorValues) {
-                    int idx = readerIndex(i.doc);
-                    return indexes[idx].getTerm(i.doc - starts[idx]);
-                } else {
-                    // return dummy value
-                    return "";
-                }
-            }
-
-            public int sortType() {
-                return SortField.CUSTOM;
-            }
-
-            /**
-             * Returns the reader index for document <code>n</code>.
-             *
-             * @param n document number.
-             * @return the reader index.
-             */
-            private int readerIndex(int n) {
-                int lo = 0;
-                int hi = readers.size() - 1;
-
-                while (hi >= lo) {
-                    int mid = (lo + hi) >> 1;
-                    int midValue = starts[mid];
-                    if (n < midValue) {
-                        hi = mid - 1;
-                    } else if (n > midValue) {
-                        lo = mid + 1;
-                    } else {
-                        while (mid + 1 < readers.size() && starts[mid + 1] == midValue) {
-                            mid++;
-                        }
-                        return mid;
-                    }
-                }
-                return hi;
-            }
-
-        };
     }
 
     /**
@@ -198,7 +135,7 @@ public class SharedFieldSortComparator extends SortComparator {
      * @param readers the list of index readers.
      * @param reader  the reader to check.
      */
-    private void getIndexReaders(List readers, IndexReader reader) {
+    private static void getIndexReaders(List readers, IndexReader reader) {
         if (reader instanceof MultiIndexReader) {
             IndexReader[] r = ((MultiIndexReader) reader).getIndexReaders();
             for (int i = 0; i < r.length; i++) {
@@ -206,6 +143,244 @@ public class SharedFieldSortComparator extends SortComparator {
             }
         } else {
             readers.add(reader);
+        }
+    }
+
+    /**
+     * Abstract base class of {@link ScoreDocComparator} implementations.
+     */
+    abstract class AbstractScoreDocComparator implements ScoreDocComparator {
+
+        /**
+         * The index readers.
+         */
+        protected final List readers = new ArrayList();
+
+        /**
+         * The document number starts for the {@link #readers}.
+         */
+        protected final int[] starts;
+
+        public AbstractScoreDocComparator(IndexReader reader)
+                throws IOException {
+            getIndexReaders(readers, reader);
+
+            int maxDoc = 0;
+            this.starts = new int[readers.size() + 1];
+
+            for (int i = 0; i < readers.size(); i++) {
+                IndexReader r = (IndexReader) readers.get(i);
+                starts[i] = maxDoc;
+                maxDoc += r.maxDoc();
+            }
+            starts[readers.size()] = maxDoc;
+        }
+
+        /**
+         * Compares sort values of <code>i</code> and <code>j</code>. If the
+         * sort values have differing types, then the sort order is defined on
+         * the type itself by calling <code>compareTo()</code> on the respective
+         * type class names.
+         *
+         * @param i first score doc.
+         * @param j second score doc.
+         * @return a negative integer if <code>i</code> should come before
+         *         <code>j</code><br> a positive integer if <code>i</code>
+         *         should come after <code>j</code><br> <code>0</code> if they
+         *         are equal
+         */
+        public int compare(ScoreDoc i, ScoreDoc j) {
+            Comparable iTerm = sortValue(i);
+            Comparable jTerm = sortValue(j);
+
+            if (iTerm == jTerm) {
+                return 0;
+            } else if (iTerm == null) {
+                return -1;
+            } else if (jTerm == null) {
+                return 1;
+            } else if (iTerm.getClass() == jTerm.getClass()) {
+                return iTerm.compareTo(jTerm);
+            } else {
+                // differing types -> compare class names
+                String iName = iTerm.getClass().getName();
+                String jName = jTerm.getClass().getName();
+                return iName.compareTo(jName);
+            }
+        }
+
+        public int sortType() {
+            return SortField.CUSTOM;
+        }
+
+        /**
+         * Returns the reader index for document <code>n</code>.
+         *
+         * @param n document number.
+         * @return the reader index.
+         */
+        protected int readerIndex(int n) {
+            int lo = 0;
+            int hi = readers.size() - 1;
+
+            while (hi >= lo) {
+                int mid = (lo + hi) >> 1;
+                int midValue = starts[mid];
+                if (n < midValue) {
+                    hi = mid - 1;
+                } else if (n > midValue) {
+                    lo = mid + 1;
+                } else {
+                    while (mid + 1 < readers.size() && starts[mid + 1] == midValue) {
+                        mid++;
+                    }
+                    return mid;
+                }
+            }
+            return hi;
+        }
+    }
+
+    /**
+     * A score doc comparator that works for order by clauses with properties
+     * directly on the result nodes.
+     */
+    private final class SimpleScoreDocComparator extends AbstractScoreDocComparator {
+
+        /**
+         * The term look ups of the index segments.
+         */
+        protected final SharedFieldCache.StringIndex[] indexes;
+
+        public SimpleScoreDocComparator(IndexReader reader,
+                                        String propertyName)
+                throws IOException {
+            super(reader);
+            this.indexes = new SharedFieldCache.StringIndex[readers.size()];
+
+            for (int i = 0; i < readers.size(); i++) {
+                IndexReader r = (IndexReader) readers.get(i);
+                indexes[i] = SharedFieldCache.INSTANCE.getStringIndex(r, field,
+                        FieldNames.createNamedValue(propertyName, ""),
+                        SharedFieldSortComparator.this);
+            }
+        }
+
+        /**
+         * Returns the index term for the score doc <code>i</code>.
+         *
+         * @param i the score doc.
+         * @return the sort value if available.
+         */
+        public Comparable sortValue(ScoreDoc i) {
+            int idx = readerIndex(i.doc);
+            return indexes[idx].getTerm(i.doc - starts[idx]);
+        }
+    }
+
+    /**
+     * A score doc comparator that works with order by clauses that use a
+     * relative path to a property to sort on.
+     */
+    private final class RelPathScoreDocComparator extends AbstractScoreDocComparator {
+
+        private final Path relPath;
+
+        public RelPathScoreDocComparator(IndexReader reader,
+                                         Path relPath)
+                throws IOException {
+            super(reader);
+            this.relPath = relPath;
+        }
+
+        /**
+         * Returns the sort value for the given {@link ScoreDoc}. The value is
+         * retrieved from the item state manager.
+         *
+         * @param i the score doc.
+         * @return the sort value for the score doc.
+         */
+        public Comparable sortValue(ScoreDoc i) {
+            try {
+                int idx = readerIndex(i.doc);
+                IndexReader reader = (IndexReader) readers.get(idx);
+                Document doc = reader.document(i.doc - starts[idx], FieldSelectors.UUID);
+                String uuid = doc.get(FieldNames.UUID);
+                Path path = hmgr.getPath(new NodeId(UUID.fromString(uuid)));
+                PathBuilder builder = new PathBuilder(path);
+                builder.addAll(relPath.getElements());
+                PropertyId id = hmgr.resolvePropertyPath(builder.getPath());
+                if (id == null) {
+                    return null;
+                }
+                PropertyState state = (PropertyState) ism.getItemState(id);
+                if (state == null) {
+                    return null;
+                }
+                InternalValue[] values = state.getValues();
+                if (values.length > 0) {
+                    return getComparable(values[0]);
+                }
+                return null;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        /**
+         * Returns a comparable for the <code>value</code>.
+         *
+         * @param value an internal value.
+         * @return a comparable for the given <code>value</code>.
+         */
+        private Comparable getComparable(InternalValue value) {
+            switch (value.getType()) {
+                case PropertyType.BINARY:
+                    return null;
+                case PropertyType.BOOLEAN:
+                    return ComparableBoolean.valueOf(value.getBoolean());
+                case PropertyType.DATE:
+                    return new Long(value.getDate().getTimeInMillis());
+                case PropertyType.DOUBLE:
+                    return new Double(value.getDouble());
+                case PropertyType.LONG:
+                    return new Long(value.getLong());
+                case PropertyType.NAME:
+                    return value.getQName().toString();
+                case PropertyType.PATH:
+                    return value.getPath().toString();
+                case PropertyType.REFERENCE:
+                case PropertyType.STRING:
+                    return value.getString();
+                default:
+                    return null;
+            }
+        }
+    }
+
+    /**
+     * Represents a boolean that implement {@link Comparable}. This class can
+     * be removed when we move to Java 5.
+     */
+    private static final class ComparableBoolean implements Comparable {
+
+        private static final ComparableBoolean TRUE = new ComparableBoolean(true);
+
+        private static final ComparableBoolean FALSE = new ComparableBoolean(false);
+
+        private final boolean value;
+
+        private ComparableBoolean(boolean value) {
+            this.value = value;
+        }
+
+        public int compareTo(Object o) {
+            ComparableBoolean b = (ComparableBoolean) o;
+            return (b.value == value ? 0 : (value ? 1 : -1));
+        }
+
+        static ComparableBoolean valueOf(boolean value) {
+            return value ? TRUE : FALSE;
         }
     }
 }

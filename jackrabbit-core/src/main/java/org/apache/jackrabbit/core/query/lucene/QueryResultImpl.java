@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,9 +89,9 @@ public class QueryResultImpl implements QueryResult {
     protected final Name[] selectProps;
 
     /**
-     * The names of properties to use for ordering the result set.
+     * The relative paths of properties to use for ordering the result set.
      */
-    protected final Name[] orderProps;
+    protected final Path[] orderProps;
 
     /**
      * The order specifier for each of the order properties.
@@ -153,7 +154,7 @@ public class QueryResultImpl implements QueryResult {
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
      *                        is available.
      * @param selectProps     the select properties of the query.
-     * @param orderProps      the names of the order properties.
+     * @param orderProps      the relative paths of the order properties.
      * @param orderSpecs      the order specs, one for each order property
      *                        name.
      * @param documentOrder   if <code>true</code> the result is returned in
@@ -169,7 +170,7 @@ public class QueryResultImpl implements QueryResult {
                            Query query,
                            SpellSuggestion spellSuggestion,
                            Name[] selectProps,
-                           Name[] orderProps,
+                           Path[] orderProps,
                            boolean[] orderSpecs,
                            boolean documentOrder,
                            long offset,

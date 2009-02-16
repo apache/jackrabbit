@@ -18,18 +18,22 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
 
 /**
@@ -81,7 +85,7 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         Name[] names = new Name[selectors.length];
         for (int i = 0; i < names.length; i++) {
             names[i] = selectors[i].getSelectorQName();
-        };
+        }
         return names;
     }
 
@@ -110,10 +114,17 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         }
         OrderingImpl[] orderings = qomTree.getOrderings();
         // TODO: there are many kinds of DynamicOperand that can be ordered by
-        Name[] orderProps = new Name[orderings.length];
+        Path[] orderProps = new Path[orderings.length];
         boolean[] orderSpecs = new boolean[orderings.length];
         for (int i = 0; i < orderings.length; i++) {
             orderSpecs[i] = orderings[i].getOrder() == QueryObjectModelConstants.ORDER_ASCENDING;
+            if (orderings[i].getOperand() instanceof PropertyValue) {
+                PropertyValue pv = (PropertyValue) orderings[i].getOperand();
+                orderProps[i] = PathFactoryImpl.getInstance().create(pv.getPropertyName());
+            } else {
+                throw new UnsupportedRepositoryOperationException("order by with" +
+                        orderings[i].getOperand() + " not yet implemented");
+            }
         }
         return new QueryResultImpl(index, itemMgr,
                 session, session.getAccessManager(),
