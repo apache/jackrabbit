@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @see https://issues.apache.org/jira/browse/JCR-912
  * @see https://issues.apache.org/jira/browse/JCR-933
  */
-public class RepositoryLock {
+public class RepositoryLock implements RepositoryLockMechanism {
 
     /**
      * Name of the lock file within a directory.
@@ -57,12 +57,12 @@ public class RepositoryLock {
     /**
      * The locked directory.
      */
-    private final File directory;
+    private File directory;
 
     /**
      * The lock file within the given directory.
      */
-    private final File file;
+    private File file;
 
     /**
      * The random access file.
@@ -75,25 +75,42 @@ public class RepositoryLock {
      *
      * @see https://issues.apache.org/jira/browse/JCR-933
      */
-    private final String identifier;
+    private String identifier;
 
     /**
-     * The file lock. Used to ensure exlusive lockin across process boundaries.
+     * The file lock. Used to ensure exclusive locking across process boundaries.
      *
      * @see https://issues.apache.org/jira/browse/JCR-233
      */
     private FileLock lock;
 
+    public RepositoryLock() {
+        // used by the factory
+    }
+    
     /**
-     * Creates a lock instance for the given directory path. An instantiated
-     * lock still needs to be explicitly acquired using the {@link #acquire()}
-     * method.
-     *
+     * Create a new RepositoryLock object and initialize it.
+     * @deprecated 
+     * This constructor is deprecated; use the default constructor
+     * and {@link #init(String)} instead.
+     * 
      * @param path directory path
      * @throws RepositoryException if the canonical path of the directory
      *                             can not be determined
      */
     public RepositoryLock(String path) throws RepositoryException {
+        init(path);
+    }
+    
+    /**
+     * Initialize the instance for the given directory path. The lock still needs to be 
+     * explicitly acquired using the {@link #acquire()} method.
+     *
+     * @param path directory path
+     * @throws RepositoryException if the canonical path of the directory
+     *                             can not be determined
+     */
+    public void init(String path) throws RepositoryException {
         try {
             directory = new File(path).getCanonicalFile();
             file = new File(directory, LOCK);

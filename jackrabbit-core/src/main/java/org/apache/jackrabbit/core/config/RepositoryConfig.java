@@ -23,6 +23,8 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
+import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
+import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -224,10 +226,14 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
     private final ClusterConfig cc;
 
     /**
-     * The optional data store factory, returns <code>null</code> if
-     * the data store is not configured.
+     * The data store factory.
      */
     private final DataStoreFactory dsf;
+    
+    /**
+     * The repository lock mechanism factory.
+     */
+    private final RepositoryLockMechanismFactory rlf;
 
     /**
      * Creates a repository configuration object.
@@ -252,6 +258,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
             String defaultWorkspace, int workspaceMaxIdleTime,
             Element template, VersioningConfig vc, SearchConfig sc,
             ClusterConfig cc, DataStoreFactory dsf,
+            RepositoryLockMechanismFactory rlf,
             RepositoryConfigurationParser parser) {
         workspaces = new HashMap();
         this.home = home;
@@ -266,6 +273,7 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
         this.sc = sc;
         this.cc = cc;
         this.dsf = dsf;
+        this.rlf = rlf;
         this.parser = parser;
     }
 
@@ -543,13 +551,10 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
                 Transformer transformer = factory.newTransformer();
                 transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-                if (configContent == null)
-                {
+                if (configContent == null) {
                     transformer.transform(
                             new DOMSource(template), new StreamResult(configWriter));
-                }
-                else
-                {
+                } else {
                     StringWriter writer = new StringWriter();
                     transformer.transform(
                             new DOMSource(template), new StreamResult(writer));
@@ -790,6 +795,18 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
      */
     public DataStore getDataStore() throws RepositoryException {
         return dsf.getDataStore();
+    }
+
+    /**
+     * Creates and returns the configured repository lock mechanism. This method
+     * returns the default repository lock mechanism if no other mechanism is
+     * configured.
+     * 
+     * @return the repository lock mechanism (never <code>null</code>)
+     * @throws RepositoryException if the repository lock mechanism can not be created
+     */
+    public RepositoryLockMechanism getRepositoryLockMechanism() throws RepositoryException {
+        return rlf.getRepositoryLockMechanism();
     }
 
 }
