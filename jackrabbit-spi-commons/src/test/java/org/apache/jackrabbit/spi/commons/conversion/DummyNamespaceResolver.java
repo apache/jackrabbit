@@ -25,7 +25,7 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
  * maps each valid XML prefix string to the same string as the namespace URI
  * and vice versa.
  */
-class DummyNamespaceResolver implements NamespaceResolver {
+public class DummyNamespaceResolver implements NamespaceResolver {
 
     /**
      * Returns the given prefix.

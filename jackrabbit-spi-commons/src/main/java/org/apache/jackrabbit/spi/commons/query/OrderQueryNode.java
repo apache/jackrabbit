@@ -22,6 +22,9 @@ import java.util.List;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 
 /**
  * Implements a query node that defines the order of nodes according to the
@@ -59,8 +62,20 @@ public class OrderQueryNode extends QueryNode {
      * @param property  the name of the property.
      * @param ascending if <code>true</code> values of this properties are
      *                  ordered ascending; descending if <code>false</code>.
+     * @deprecated use {@link #addOrderSpec(Path , boolean)} instead.
      */
     public void addOrderSpec(Name property, boolean ascending) {
+        addOrderSpec(createPath(property), ascending);
+    }
+
+    /**
+     * Adds an order specification to this query node.
+     *
+     * @param property  the relative path of the property.
+     * @param ascending if <code>true</code> values of this properties are
+     *                  ordered ascending; descending if <code>false</code>.
+     */
+    public void addOrderSpec(Path property, boolean ascending) {
         specs.add(new OrderSpec(property, ascending));
     }
 
@@ -124,9 +139,9 @@ public class OrderQueryNode extends QueryNode {
     public static final class OrderSpec {
 
         /**
-         * The name of the property
+         * The relative path to of the property
          */
-        private final Name property;
+        private final Path property;
 
         /**
          * If <code>true</code> this property is orderd ascending
@@ -139,8 +154,20 @@ public class OrderQueryNode extends QueryNode {
          * @param property  the name of the property.
          * @param ascending if <code>true</code> the property is ordered
          *                  ascending, otherwise descending.
+         * @deprecated use {@link OrderSpec#OrderSpec(Path, boolean)} instead.
          */
         public OrderSpec(Name property, boolean ascending) {
+            this(createPath(property), ascending);
+        }
+
+        /**
+         * Creates a new <code>OrderSpec</code> for <code>property</code>.
+         *
+         * @param property  the relative path of the property.
+         * @param ascending if <code>true</code> the property is ordered
+         *                  ascending, otherwise descending.
+         */
+        public OrderSpec(Path property, boolean ascending) {
             this.property = property;
             this.ascending = ascending;
         }
@@ -149,8 +176,18 @@ public class OrderQueryNode extends QueryNode {
          * Returns the name of the property.
          *
          * @return the name of the property.
+         * @deprecated use {@link #getPropertyPath()} instead.
          */
         public Name getProperty() {
+            return property.getNameElement().getName();
+        }
+
+        /**
+         * Returns the relative path of the property.
+         *
+         * @return the relative path of the property.
+         */
+        public Path getPropertyPath() {
             return property;
         }
 
@@ -199,4 +236,22 @@ public class OrderQueryNode extends QueryNode {
         return false;
     }
 
+    //--------------------------------< internal >------------------------------
+
+    /**
+     * Creates a path with a single element out of the given <code>name</code>.
+     *
+     * @param name the name to create the path from.
+     * @return a path with a single element.
+     */
+    private static Path createPath(Name name) {
+        try {
+            PathBuilder builder = new PathBuilder();
+            builder.addLast(name);
+            return builder.getPath();
+        } catch (MalformedPathException e) {
+            // never happens, we just added an element
+            throw new InternalError();
+        }
+    }
 }
