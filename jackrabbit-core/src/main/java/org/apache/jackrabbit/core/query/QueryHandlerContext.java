@@ -21,6 +21,8 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
 /**
@@ -39,6 +41,11 @@ public class QueryHandlerContext {
      * The persistent <code>ItemStateManager</code>
      */
     private final ItemStateManager stateMgr;
+
+    /**
+     * The hierarchy manager on top of {@link #stateMgr}.
+     */
+    private final HierarchyManager hmgr;
 
     /**
      * The underlying persistence manager.
@@ -103,6 +110,7 @@ public class QueryHandlerContext {
                                NodeId excludedNodeId) {
         this.fs = fs;
         this.stateMgr = stateMgr;
+        this.hmgr = new HierarchyManagerImpl(rootId, stateMgr);
         this.pm = pm;
         this.rootId = rootId;
         this.ntRegistry = ntRegistry;
@@ -122,6 +130,16 @@ public class QueryHandlerContext {
      */
     public ItemStateManager getItemStateManager() {
         return stateMgr;
+    }
+
+    /**
+     * Returns the hierarchy manager on top of the item state manager of this
+     * query handler context.
+     *
+     * @return the hierarchy manager.
+     */
+    public HierarchyManager getHierarchyManager() {
+        return hmgr;
     }
 
     /**

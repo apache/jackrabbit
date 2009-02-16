@@ -35,7 +35,6 @@ import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.extractor.DefaultTextExtractor;
 import org.apache.jackrabbit.extractor.TextExtractor;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
@@ -55,6 +54,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
@@ -66,7 +66,6 @@ import org.xml.sax.SAXException;
 import org.w3c.dom.Element;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
 import javax.jcr.query.InvalidQueryException;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -211,11 +210,6 @@ public class SearchIndex extends AbstractQueryHandler {
      * The namespace mappings used internally.
      */
     private NamespaceMappings nsMappings;
-
-    /**
-     * The name and path resolver used internally.
-     */
-    private NamePathResolver npResolver;
 
     /**
      * The location of the search index.
@@ -427,6 +421,11 @@ public class SearchIndex extends AbstractQueryHandler {
     private int termInfosIndexDivisor = DEFAULT_TERM_INFOS_INDEX_DIVISOR;
 
     /**
+     * The sort comparator source for indexed properties.
+     */
+    private SortComparatorSource scs;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -479,8 +478,10 @@ public class SearchIndex extends AbstractQueryHandler {
                         context.getNamespaceRegistry());
             }
         }
-        npResolver = NamePathResolverImpl.create(nsMappings);
 
+        scs = new SharedFieldSortComparator(
+                FieldNames.PROPERTIES, context.getItemStateManager(),
+                context.getHierarchyManager(), nsMappings);
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
 
@@ -728,7 +729,7 @@ public class SearchIndex extends AbstractQueryHandler {
     public MultiColumnQueryHits executeQuery(SessionImpl session,
                                   AbstractQueryImpl queryImpl,
                                   Query query,
-                                  Name[] orderProps,
+                                  Path[] orderProps,
                                   boolean[] orderSpecs) throws IOException {
         checkOpen();
 
@@ -913,24 +914,19 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param orderSpecs the order specs for the properties.
      * @return an array of sort fields
      */
-    protected SortField[] createSortFields(Name[] orderProps,
+    protected SortField[] createSortFields(Path[] orderProps,
                                            boolean[] orderSpecs) {
         List sortFields = new ArrayList();
         for (int i = 0; i < orderProps.length; i++) {
-            String prop = null;
-            if (NameConstants.JCR_SCORE.equals(orderProps[i])) {
+            if (orderProps[i].getLength() == 1
+                    && NameConstants.JCR_SCORE.equals(orderProps[i].getNameElement().getName())) {
                 // order on jcr:score does not use the natural order as
                 // implemented in lucene. score ascending in lucene means that
                 // higher scores are first. JCR specs that lower score values
                 // are first.
                 sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
             } else {
-                try {
-                    prop = npResolver.getJCRName(orderProps[i]);
-                } catch (NamespaceException e) {
-                    // will never happen
-                }
-                sortFields.add(new SortField(prop, SharedFieldSortComparator.PROPERTIES, !orderSpecs[i]));
+                sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
             }
         }
         return (SortField[]) sortFields.toArray(new SortField[sortFields.size()]);

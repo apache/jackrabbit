@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Implements a variant of the lucene class <code>org.apache.lucene.search.FieldCacheImpl</code>.
@@ -50,11 +48,6 @@ class SharedFieldCache {
         private static final int SPARSE_FACTOR = 100;
 
         /**
-         * All the term values, in natural order.
-         */
-        public final String[] lookup;
-
-        /**
          * Terms indexed by document id.
          */
         private final String[] terms;
@@ -72,7 +65,7 @@ class SharedFieldCache {
         /**
          * Creates one of these objects
          */
-        public StringIndex(String[] terms, String[] lookup, int setValues) {
+        public StringIndex(String[] terms, int setValues) {
             if (isSparse(terms, setValues)) {
                 this.sparse = true;
                 this.terms = null;
@@ -86,7 +79,6 @@ class SharedFieldCache {
                 this.terms = terms;
                 this.termsMap = null;
             }
-            this.lookup = lookup;
         }
 
         public String getTerm(int i) {
@@ -147,7 +139,6 @@ class SharedFieldCache {
      * @param field      name of the shared field.
      * @param prefix     the property name, will be used as term prefix.
      * @param comparator the sort comparator instance.
-     * @param includeLookup if <code>true</code> provides term lookup in StringIndex.
      * @return a StringIndex that contains the field values and order
      *         information.
      * @throws IOException if an error occurs while reading from the index.
@@ -155,8 +146,7 @@ class SharedFieldCache {
     public SharedFieldCache.StringIndex getStringIndex(IndexReader reader,
                                                  String field,
                                                  String prefix,
-                                                 SortComparator comparator,
-                                                 boolean includeLookup)
+                                                 SortComparator comparator)
             throws IOException {
 
         if (reader instanceof ReadOnlyIndexReader) {
@@ -167,21 +157,12 @@ class SharedFieldCache {
         SharedFieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
         if (ret == null) {
             final String[] retArray = new String[reader.maxDoc()];
-            List mterms = null;
-            if (includeLookup) {
-                mterms = new ArrayList();
-            }
             int setValues = 0;
             if (retArray.length > 0) {
                 TermDocs termDocs = reader.termDocs();
                 TermEnum termEnum = reader.terms(new Term(field, prefix));
-                // documents without a term will have a term number = 0
-                // thus will be at the top, this needs to be in sync with
-                // the implementation of FieldDocSortedHitQueue
-                if (includeLookup) {
-                    mterms.add(null); // for documents with term number 0
-                }
 
+                char[] tmp = new char[16];
                 try {
                     if (termEnum.term() == null) {
                         throw new RuntimeException("no terms in field " + field);
@@ -192,15 +173,20 @@ class SharedFieldCache {
                             break;
                         }
 
-                        // store term text
-                        if (includeLookup) {
-                            mterms.add(term.text().substring(prefix.length()));
+                        // make sure term is compacted
+                        String text = term.text();
+                        int len = text.length() - prefix.length();
+                        if (tmp.length < len) {
+                            // grow tmp
+                            tmp = new char[len];
                         }
+                        text.getChars(prefix.length(), text.length(), tmp, 0);
+                        String value = new String(tmp, 0, len);
 
                         termDocs.seek(termEnum);
                         while (termDocs.next()) {
                             setValues++;
-                            retArray[termDocs.doc()] = term.text().substring(prefix.length());
+                            retArray[termDocs.doc()] = value;
                         }
                     } while (termEnum.next());
                 } finally {
@@ -208,11 +194,7 @@ class SharedFieldCache {
                     termEnum.close();
                 }
             }
-            String[] lookup = null;
-            if (includeLookup) {
-                lookup = (String[]) mterms.toArray(new String[mterms.size()]);
-            }
-            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, lookup, setValues);
+            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, setValues);
             store(reader, field, prefix, comparator, value);
             return value;
         }

@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
@@ -120,10 +121,10 @@ public class QueryImpl extends AbstractQueryImpl {
         } else {
             orderSpecs = new OrderQueryNode.OrderSpec[0];
         }
-        Name[] orderProperties = new Name[orderSpecs.length];
+        Path[] orderProperties = new Path[orderSpecs.length];
         boolean[] ascSpecs = new boolean[orderSpecs.length];
         for (int i = 0; i < orderSpecs.length; i++) {
-            orderProperties[i] = orderSpecs[i].getProperty();
+            orderProperties[i] = orderSpecs[i].getPropertyPath();
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
