@@ -62,7 +62,7 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.util.RepositoryLock;
+import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
@@ -206,9 +206,9 @@ public class RepositoryImpl extends AbstractRepository
     private boolean disposed = false;
 
     /**
-     * the lock that guards instantiation of multiple repositories.
+     * The repository lock mechanism ensures that a repository is only instantiated once.
      */
-    private RepositoryLock repLock;
+    private RepositoryLockMechanism repLock;
 
     /**
      * Clustered node used, <code>null</code> if clustering is not configured.
@@ -255,7 +255,8 @@ public class RepositoryImpl extends AbstractRepository
             this.repConfig = repConfig;
 
             // Acquire a lock on the repository home
-            repLock = new RepositoryLock(repConfig.getHomeDir());
+            repLock = repConfig.getRepositoryLockMechanism();
+            repLock.init(repConfig.getHomeDir());
             repLock.acquire();
 
             // setup file systems
@@ -1200,7 +1201,13 @@ public class RepositoryImpl extends AbstractRepository
         notifyAll();
 
         // finally release repository lock
-        repLock.release();
+        if (repLock != null) {
+            try {
+                repLock.release();
+            } catch (RepositoryException e) {
+                log.error("failed to release the repository lock", e);
+            }            
+        }
 
         log.info("Repository has been shutdown");
     }

@@ -24,6 +24,9 @@ import org.apache.jackrabbit.core.fs.FileSystemFactory;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ISMLockingFactory;
+import org.apache.jackrabbit.core.util.RepositoryLock;
+import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
+import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -100,6 +103,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /** Name of the data store configuration element. */
     public static final String DATA_STORE_ELEMENT = "DataStore";
+
+    /** Name of the repository lock mechanism configuration element. */
+    public static final String REPOSITORY_LOCK_MECHANISM_ELEMENT = 
+        "RepositoryLockMechanism";
 
     /** Name of the persistence manager configuration element. */
     public static final String PERSISTENCE_MANAGER_ELEMENT =
@@ -256,10 +263,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Optional data store factory
         DataStoreFactory dsf = getDataStoreFactory(root, home);
+        
+        RepositoryLockMechanismFactory rlf = getRepositoryLockMechanismFactory(root);
 
         return new RepositoryConfig(home, securityConfig, fsf,
                 workspaceDirectory, workspaceConfigDirectory, defaultWorkspace,
-                maxIdleTime, template, vc, sc, cc, dsf, this);
+                maxIdleTime, template, vc, sc, cc, dsf, rlf, this);
     }
 
     /**
@@ -526,7 +535,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         Element element = getElement(parent, WSP_SECURITY_ELEMENT, false);
         if (element != null) {
             Element provFact = getElement(element, AC_PROVIDER_ELEMENT, false);
-            if (provFact !=null ) {
+            if (provFact != null) {
                 factConf = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
                 factConf.setValidate(false); // JCR-1920
             }
@@ -696,8 +705,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <code>DataStore</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
      *
-     * @param parent cluster element
-     * @return journal configuration, or <code>null</code>
+     * @param parent configuration element
+     * @param directory the repository directory
+     * @return data store factory
      * @throws ConfigurationException if the configuration is broken
      */
     protected DataStoreFactory getDataStoreFactory(
@@ -718,6 +728,46 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     }
                 }
                 return null;
+            }
+        };
+    }
+
+    /**
+     * Parses repository lock mechanism configuration. Repository lock mechanism
+     * configuration uses the following format:
+     * <pre>
+     *   &lt;RepositoryLockMechanism class=&quot;...&quot; &gt;
+     *     &lt;param name=&quot;...&quot; value=&quot;...&quot;&gt;
+     *     ...
+     *   &lt;/RepositoryLockMechanism&gt;
+     * </pre>
+     * <p/>
+     * <code>RepositoryLockMechanism</code> is a
+     * {@link #parseBeanConfig(Element,String) bean configuration} element.
+     * 
+     * @param root the root configuration element
+     * @return repository lock mechanism factory
+     * @throws ConfigurationException if the configuration is broken
+     */    
+    protected RepositoryLockMechanismFactory getRepositoryLockMechanismFactory(final Element root) {
+        return new RepositoryLockMechanismFactory() {
+            public RepositoryLockMechanism getRepositoryLockMechanism() throws RepositoryException {
+                RepositoryLockMechanism lock = null;
+                NodeList children = root.getChildNodes();
+                for (int i = 0; i < children.getLength(); i++) {
+                    Node child = children.item(i);
+                    if (child.getNodeType() == Node.ELEMENT_NODE
+                            && REPOSITORY_LOCK_MECHANISM_ELEMENT.equals(child.getNodeName())) {
+                        BeanConfig bc =
+                            parseBeanConfig(root, REPOSITORY_LOCK_MECHANISM_ELEMENT);
+                        lock = (RepositoryLockMechanism) bc.newInstance();
+                        break;
+                    }
+                }
+                if (lock == null) {
+                    lock = new RepositoryLock();
+                }
+                return lock;
             }
         };
     }
