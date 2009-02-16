@@ -1214,7 +1214,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new RepositoryException("Failed to clean up child items defined by removed mixin " + session.getJCRName(mixinName));
         } finally {
             if (!success) {
-                // TODO revert changes made to the jcr:mixinTypes property
+                // TODO JCR-1914: revert changes made to jcr:mixinTypes
             }
         }
     }
