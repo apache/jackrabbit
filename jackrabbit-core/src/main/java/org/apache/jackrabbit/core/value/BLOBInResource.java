@@ -65,8 +65,10 @@ public class BLOBInResource extends BLOBFileValue {
             }
             length = fsResource.length();
         } catch (FileSystemException fse) {
-            throw new IOException(fsResource.getPath()
+            IOException e2 = new IOException(fsResource.getPath()
                     + ": Error while creating value: " + fse.toString());
+            e2.initCause(fse);
+            throw e2;
         }
         this.fsResource = fsResource;
     }
