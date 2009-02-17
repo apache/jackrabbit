@@ -266,7 +266,7 @@ public abstract class AbstractBundlePersistenceManager implements
             }
             return nsIndex;
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to create nsIndex." + e);
+            throw new IllegalStateException("Unable to create nsIndex.", e);
         }
     }
 
@@ -282,7 +282,7 @@ public abstract class AbstractBundlePersistenceManager implements
             }
             return nameIndex;
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to create nsIndex." + e);
+            throw new IllegalStateException("Unable to create nsIndex.", e);
         }
     }
 
