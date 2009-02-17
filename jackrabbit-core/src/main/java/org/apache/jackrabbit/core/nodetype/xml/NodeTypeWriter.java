@@ -65,7 +65,9 @@ public final class NodeTypeWriter {
             }
             writer.write(xml);
         } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
+            IOException e2 = new IOException(e.getMessage());
+            e2.initCause(e);
+            throw e2;
         } catch (NamespaceException e) {
             throw new RepositoryException(
                     "Invalid namespace reference in a node type definition", e);
