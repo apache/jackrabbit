@@ -201,7 +201,7 @@ public class ConfigurationParser {
         try {
             return Text.replaceVariables(variables, value, false);
         } catch (IllegalArgumentException e) {
-            throw new ConfigurationException(e.getMessage());
+            throw new ConfigurationException(e.getMessage(), e);
         }
     }
 
