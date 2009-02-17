@@ -252,7 +252,9 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
                     nodeTypeDefs.addAll(reader.getNodeTypeDefs());
                 } catch (ParseException e) {
-                    throw new IOException(e.getMessage());
+                    IOException e2 = new IOException(e.getMessage());
+                    e2.initCause(e);
+                    throw e2;
                 }
             } else {
                 throw new UnsupportedRepositoryOperationException(
@@ -692,7 +694,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
             return new NodeTypeIteratorAdapter(result);
         } catch (InvalidNodeTypeDefException e) {
-            throw new InvalidNodeTypeDefinitionException(e.getMessage());
+            throw new InvalidNodeTypeDefinitionException(e.getMessage(), e);
         }
     }
 
