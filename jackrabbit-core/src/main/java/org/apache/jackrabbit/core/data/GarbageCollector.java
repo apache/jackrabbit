@@ -147,6 +147,9 @@ public class GarbageCollector {
      */
     public void scan() throws RepositoryException,
             IllegalStateException, IOException, ItemStateException {
+        if (store == null) {
+            throw new RepositoryException("No DataStore configured.");
+        }
         long now = System.currentTimeMillis();
         if (startScanTimestamp == 0) {
             startScanTimestamp = now;
