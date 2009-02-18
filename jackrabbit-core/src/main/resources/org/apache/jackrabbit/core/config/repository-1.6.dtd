@@ -53,7 +53,7 @@
         settings on the /jcr:system tree.
 
 -->
-<!ELEMENT Repository (Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex)*> 
+<!ELEMENT Repository (Cluster|FileSystem|DataStore|Security|Workspaces|Workspace|Versioning|SearchIndex|RepositoryLockMechanism)*> 
 
 <!--
     a virtual file system
@@ -211,14 +211,14 @@
 <!ATTLIST ISMLocking class CDATA #REQUIRED>
 
 <!--
-    the RepsitoryLockMechanism element configures the mechanism
+    the RepositoryLockMechanism element configures the mechanism
     that is used to ensure only one process writes to the 
     backend (file system or database) at any time; the class
     attribute specifies the FQN of the class implementing the
-    RepsitoryLockMechanism interface.
+    RepositoryLockMechanism interface.
 -->
-<!ELEMENT RepsitoryLockMechanism (param*)>
-<!ATTLIST RepsitoryLockMechanism class CDATA #REQUIRED>
+<!ELEMENT RepositoryLockMechanism (param*)>
+<!ATTLIST RepositoryLockMechanism class CDATA #REQUIRED>
 
 <!--
     the DataStore element configures the data store

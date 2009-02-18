@@ -15,8 +15,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
   -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.5.dtd">
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN"
+                            "http://jackrabbit.apache.org/dtd/repository-1.6.dtd">
 <!-- Example Repository Configuration File -->
 <Repository>
     <!--
@@ -26,6 +26,16 @@
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
         <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
+
+    <!--
+        data store configuration
+	<DataStore class="org.apache.jackrabbit.core.data.FileDataStore"/>
+    -->
+    
+    <!--
+        repository lock mechanism configuration
+    <RepositoryLockMechanism class="org.apache.jackrabbit.core.util.CooperativeFileLock"/>
+    -->
 
     <!--
         security configuration
