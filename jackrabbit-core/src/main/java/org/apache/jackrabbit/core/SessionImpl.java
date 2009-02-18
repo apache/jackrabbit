@@ -38,7 +38,6 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
@@ -419,7 +418,7 @@ public class SessionImpl extends AbstractSession
         if (workspaceName == null) {
             workspaceName = rep.getConfig().getDefaultWorkspaceName();
         }
-        if (loginContext!=null) {
+        if (loginContext != null) {
             return rep.createSession(loginContext, workspaceName);
         } else {
             return rep.createSession(getSubject(), workspaceName);
@@ -667,10 +666,9 @@ public class SessionImpl extends AbstractSession
     /**
      * Create a data store garbage collector for this repository.
      *
-     * @throws ItemStateException
      * @throws RepositoryException
      */
-    public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException, ItemStateException {
+    public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
         ArrayList pmList = new ArrayList();
         VersionManagerImpl vm = (VersionManagerImpl) rep.getVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
