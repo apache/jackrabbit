@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedOutputStream;
 
 /**
  * Default temporary record used for appending to some journal.
@@ -328,7 +329,7 @@ public class AppendRecord extends AbstractRecord {
                 String msg = "Unable to open output stream on: " + file.getPath();
                 throw new JournalException(msg, e);
             }
-            dataOut = new DataOutputStream(fileOut);
+            dataOut = new DataOutputStream(new BufferedOutputStream(fileOut));
 
             try {
                 dataOut.write(byteOut.toByteArray());
