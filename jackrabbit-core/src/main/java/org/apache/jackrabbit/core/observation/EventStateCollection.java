@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.observation.ObservationManager;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -109,16 +111,26 @@ public final class EventStateCollection {
      * @param session    the session that created these events.
      * @param pathPrefix the path to prefix the event paths or <code>null</code>
      *                   if no prefix should be used.
-     * @param userData   the user data attached to this event state collection.
      */
     public EventStateCollection(EventDispatcher dispatcher,
                                 SessionImpl session,
-                                Path pathPrefix,
-                                String userData) {
+                                Path pathPrefix) {
         this.dispatcher = dispatcher;
         this.session = session;
         this.pathPrefix = pathPrefix;
-        this.userData = userData;
+        if (session != null) {
+            try {
+                ObservationManager manager =
+                    session.getWorkspace().getObservationManager();
+                this.userData = ((ObservationManagerImpl) manager).getUserData();
+            } catch (RepositoryException e) {
+                // should never happen because this
+                // implementation supports observation
+                this.userData = null;
+            }
+        } else {
+            this.userData = null;
+        }
     }
 
     /**

@@ -2151,7 +2151,8 @@ public class RepositoryImpl extends AbstractRepository
                                    String userData) throws RepositoryException {
             try {
                 EventStateCollection esc = new EventStateCollection(
-                        getObservationDispatcher(), null, null, userData);
+                        getObservationDispatcher(), null, null);
+                esc.setUserData(userData);
                 esc.addAll(events);
                 esc.setTimestamp(timestamp);
 

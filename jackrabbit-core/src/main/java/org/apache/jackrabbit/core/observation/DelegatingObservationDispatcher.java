@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.jcr.RepositoryException;
-
 /**
  * This Class implements an observation dispatcher, that delegates events to
  * a set of underlying dispatchers.
@@ -73,16 +71,9 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param pathPrefix event path prefix
      * @return new <code>EventStateCollection</code> instance
      */
-    public EventStateCollection createEventStateCollection(SessionImpl session,
-                                                           Path pathPrefix) {
-        String userData = null;
-        try {
-            userData = ((ObservationManagerImpl) session.getWorkspace().getObservationManager()).getUserData();
-        } catch (RepositoryException e) {
-            // should never happen because this
-            // implementation supports observation
-        }
-        return new EventStateCollection(this, session, pathPrefix, userData);
+    public EventStateCollection createEventStateCollection(
+            SessionImpl session, Path pathPrefix) {
+        return new EventStateCollection(this, session, pathPrefix);
     }
 
     //------------------------------------------------------< EventDispatcher >
@@ -128,8 +119,8 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
         }
         for (int i = 0; i < disp.length; i++) {
             EventStateCollection events =
-                    new EventStateCollection(disp[i], session,
-                            pathPrefix, userData);
+                    new EventStateCollection(disp[i], session, pathPrefix);
+            events.setUserData(userData);
             try {
                 events.addAll(eventList);
                 events.prepare();
