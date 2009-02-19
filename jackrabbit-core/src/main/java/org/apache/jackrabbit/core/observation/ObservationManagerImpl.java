@@ -229,6 +229,8 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * which is attached to this <code>ObservationManager</code> instance.
      */
     public EventStateCollection createEventStateCollection() {
-        return new EventStateCollection(dispatcher, session, null, userData);
+        EventStateCollection esc = new EventStateCollection(dispatcher, session, null);
+        esc.setUserData(userData);
+        return esc;
     }
 }
