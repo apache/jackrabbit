@@ -40,7 +40,7 @@ public class TestPrincipal implements Principal {
     }
 
     public int hashCode() {
-        return name.hashCode();
+        return name == null ? 0 : name.hashCode();
     }
 
     public boolean equals(Object obj) {
@@ -48,7 +48,8 @@ public class TestPrincipal implements Principal {
             return true;
         }
         if (obj instanceof Principal) {
-            return name.equals(((Principal)obj).getName());
+            String otherName = ((Principal)obj).getName();
+            return (name == null) ? otherName == null : name.equals(otherName);
         }
         return false;
     }

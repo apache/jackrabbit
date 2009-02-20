@@ -67,6 +67,16 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
         assertEquals(p.getName(), user.getPrincipal().getName());
     }
 
+    public void testCreateUserWithPath2() throws RepositoryException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+        User user = userMgr.createUser(uid, buildPassword(uid, true), p, "any/path");
+        createdUsers.add(user);
+
+        assertNotNull(user.getID());
+        assertEquals(p.getName(), user.getPrincipal().getName());
+    }
+
     public void testCreateUserWithDifferentPrincipalName() throws RepositoryException {
         Principal p = getTestPrincipal();
         String uid = getTestPrincipal().getName();
@@ -114,7 +124,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
             User user = userMgr.createUser("", "anyPW");
             createdUsers.add(user);
 
-            fail("A User cannot be built with 'null' userID");
+            fail("A User cannot be built with \"\" userID");
         } catch (Exception e) {
             // ok
         }
@@ -122,7 +132,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
             User user = userMgr.createUser("", "anyPW", getTestPrincipal(), null);
             createdUsers.add(user);
 
-            fail("A User cannot be built with 'null' userID");
+            fail("A User cannot be built with \"\" userID");
         } catch (Exception e) {
             // ok
         }
@@ -154,6 +164,29 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
             createdUsers.add(user);
 
             fail("A User cannot be built with 'null' Principal");
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    public void testCreateUserWithEmptyPrincipal() throws RepositoryException {
+        try {
+            Principal p = getTestPrincipal("");
+            String uid = p.getName();
+            User user = userMgr.createUser(uid, buildPassword(uid, true), p, "/a/b/c");
+            createdUsers.add(user);
+
+            fail("A User cannot be built with ''-named Principal");
+        } catch (Exception e) {
+            // ok
+        }
+        try {
+            Principal p = getTestPrincipal(null);
+            String uid = p.getName();
+            User user = userMgr.createUser(uid, buildPassword(uid, true), p, "/a/b/c");
+            createdUsers.add(user);
+
+            fail("A User cannot be built with ''-named Principal");
         } catch (Exception e) {
             // ok
         }

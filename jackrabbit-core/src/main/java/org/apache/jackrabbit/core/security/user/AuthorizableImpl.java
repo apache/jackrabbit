@@ -26,6 +26,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
@@ -39,6 +40,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,8 +166,10 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     public Iterator getPropertyNames() throws RepositoryException {
         List l = new ArrayList();
         for (PropertyIterator it = node.getProperties(); it.hasNext();) {
-            String propName = it.nextProperty().getName();
-            l.add(propName);
+            Property prop = it.nextProperty();
+            if (isAuthorizableProperty(prop)) {
+                l.add(prop.getName());
+            }
         }
         return l.iterator();
     }
@@ -174,7 +178,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @see #getProperty(String)
      */
     public boolean hasProperty(String name) throws RepositoryException {
-        return node.hasProperty(name);
+        return node.hasProperty(name) && isAuthorizableProperty(node.getProperty(name));
     }
 
     /**
@@ -184,10 +188,12 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     public Value[] getProperty(String name) throws RepositoryException {
         if (hasProperty(name)) {
             Property prop = node.getProperty(name);
-            if (prop.getDefinition().isMultiple()) {
-                return prop.getValues();
-            } else {
-                return new Value[] {prop.getValue()};
+            if (isAuthorizableProperty(prop)) {
+                if (prop.getDefinition().isMultiple()) {
+                    return prop.getValues();
+                } else {
+                    return new Value[] {prop.getValue()};
+                }
             }
         }
         return null;
@@ -359,6 +365,26 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     }
 
     /**
+     * Returns true if the given property of the authorizable node is one of the
+     * non-protected properties defined by the rep:authorizable.
+     *
+     * @param prop
+     * @return <code>true</code> if the given property is defined
+     * by the rep:authorizable node type or one of it's sub-node types;
+     * <code>false</code> otherwise.
+     * @throws RepositoryException
+     */
+    private static boolean isAuthorizableProperty(Property prop) throws RepositoryException {
+        PropertyDefinition def = prop.getDefinition();
+        if (def.isProtected()) {
+            return false;
+        } else  {
+            NodeTypeImpl declaringNt = (NodeTypeImpl) prop.getDefinition().getDeclaringNodeType();
+            return declaringNt.isNodeType(UserConstants.NT_REP_AUTHORIZABLE);
+        }
+    }
+
+    /**
      * Test if the JCR property to be modified/removed is one of the
      * following that has a special meaning and must be altered using this
      * user API:
@@ -381,14 +407,14 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      */
     private boolean isProtectedProperty(String propertyName) throws RepositoryException {
         Name pName = getSession().getQName(propertyName);
-         if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
-                 || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
-                 || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName)) {
-             return true;
-         } else {
-             return false;
-         }
-     }
+        if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
+                || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
+                || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     /**
      * Throws ConstraintViolationException if {@link #isProtectedProperty(String)}
@@ -399,8 +425,8 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      */
     private void checkProtectedProperty(String propertyName) throws RepositoryException {
         if (isProtectedProperty(propertyName)) {
-             throw new ConstraintViolationException("Attempt to modify protected property " + propertyName + " of an Authorizable.");
-         }
+            throw new ConstraintViolationException("Attempt to modify protected property " + propertyName + " of an Authorizable.");
+        }
     }
 
     private List getRefereeValues() throws RepositoryException {

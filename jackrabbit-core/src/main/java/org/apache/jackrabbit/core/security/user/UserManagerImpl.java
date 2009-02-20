@@ -200,8 +200,14 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
     public User createUser(String userID, String password,
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
-        if (userID == null || password == null || principal == null) {
-            throw new IllegalArgumentException("Not possible to create user with null parameters");
+        if (userID == null || userID.length() == 0) {
+            throw new IllegalArgumentException("Cannot create user: UserID can neither be null nor empty String.");
+        }
+        if (password == null) {
+            throw new IllegalArgumentException("Cannot create user: null password.");
+        }
+        if (!isValidPrincipal(principal)) {
+            throw new IllegalArgumentException("Cannot create user: Principal may not be null and must have a valid name.");            
         }
         if (getAuthorizable(userID) != null) {
             throw new AuthorizableExistsException("User for '" + userID + "' already exists");
@@ -258,8 +264,8 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
      * @throws RepositoryException
      */
     public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
-        if (principal == null) {
-            throw new IllegalArgumentException("Principal might not be null.");
+        if (!isValidPrincipal(principal)) {
+            throw new IllegalArgumentException("Cannot create Group: Principal may not be null and must have a valid name.");
         }
         if (hasAuthorizableOrReferee(principal)) {
             throw new AuthorizableExistsException("Authorizable for '" + principal.getName() + "' already exists: ");
@@ -436,7 +442,7 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
      */
     private String getCurrentUserPath() {
         // fallback: default user-path
-        String currentUserPath = USERS_PATH;;
+        String currentUserPath = USERS_PATH;
         String userId = session.getUserID();
 
         if (idPathMap.containsKey(userId)) {
@@ -455,6 +461,10 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
         return currentUserPath;
     }
 
+    private static boolean isValidPrincipal(Principal principal) {
+        return principal != null && principal.getName() != null && principal.getName().length() > 0;
+    }
+    
     private static String getParentPath(String hint, String root) {
         StringBuffer b = new StringBuffer();
         if (hint == null || !hint.startsWith(root)) {

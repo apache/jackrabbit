@@ -75,6 +75,16 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
     }
 
     /**
+     * Checks if the effective node type includes the given <code>nodeTypeName</code>.
+     *
+     * @param nodeTypeName
+     * @return true if the effective node type includes the given <code>nodeTypeName</code>.
+     */
+    public boolean isNodeType(Name nodeTypeName) {
+        return ent.includesNodeType(nodeTypeName);
+    }
+
+    /**
      * Checks if this node type is directly or indirectly derived from the
      * specified node type.
      *
@@ -349,7 +359,7 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
             log.warn("invalid node type name: " + nodeTypeName, e);
             return false;
         }
-        return (getQName().equals(ntName) || isDerivedFrom(ntName));
+        return isNodeType(ntName);
     }
 
     /**

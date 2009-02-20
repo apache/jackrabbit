@@ -22,6 +22,7 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.value.StringValue;
@@ -31,7 +32,9 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.PropertyIterator;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -58,6 +61,7 @@ public class AuthorizableImplTest extends AbstractUserTest {
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_REFEREES));
 
+            protectedUserProps.add(resolver.getJCRName(UserConstants.P_GROUPS));
             protectedGroupProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
             protectedGroupProps.add(resolver.getJCRName(UserConstants.P_REFEREES));
         } else {
@@ -196,6 +200,44 @@ public class AuthorizableImplTest extends AbstractUserTest {
             fail("Attempt to remove protected property rep:principalName should fail.");
         } catch (ConstraintViolationException e) {
             // ok.
+        }
+    }
+
+    public void testUserGetProperties() throws RepositoryException, NotExecutableException {
+        AuthorizableImpl user = (AuthorizableImpl) getTestUser(superuser);
+        NodeImpl n = user.getNode();
+
+        for (PropertyIterator it = n.getProperties(); it.hasNext();) {
+            PropertyImpl p = (PropertyImpl) it.nextProperty();
+            NodeType declaringNt = p.getDefinition().getDeclaringNodeType();
+            if (!declaringNt.isNodeType("rep:Authorizable") ||
+                    protectedUserProps.contains(p.getName())) {
+                assertFalse(user.hasProperty(p.getName()));
+                assertNull(user.getProperty(p.getName()));
+            } else {
+                // authorizable defined property
+                assertTrue(user.hasProperty(p.getName()));
+                assertNotNull(user.getProperty(p.getName()));
+            }
+        }
+    }
+
+    public void testGroupGetProperties() throws RepositoryException, NotExecutableException {
+        AuthorizableImpl group = (AuthorizableImpl) getTestGroup(superuser);
+        NodeImpl n = group.getNode();
+
+        for (PropertyIterator it = n.getProperties(); it.hasNext();) {
+            PropertyImpl p = (PropertyImpl) it.nextProperty();
+            NodeType declaringNt = p.getDefinition().getDeclaringNodeType();
+            if (!declaringNt.isNodeType("rep:Authorizable") ||
+                    protectedGroupProps.contains(p.getName())) {
+                assertFalse(group.hasProperty(p.getName()));
+                assertNull(group.getProperty(p.getName()));
+            } else {
+                // authorizable defined property
+                assertTrue(group.hasProperty(p.getName()));
+                assertNotNull(group.getProperty(p.getName()));
+            }
         }
     }
 }

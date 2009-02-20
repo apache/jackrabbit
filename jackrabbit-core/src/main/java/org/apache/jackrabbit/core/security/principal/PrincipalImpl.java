@@ -39,8 +39,8 @@ public class PrincipalImpl implements JackrabbitPrincipal, Serializable {
      * @param name the name of this principal
      */
     public PrincipalImpl(String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name can not be null");
+        if (name == null || name.length() == 0) {
+            throw new IllegalArgumentException("Principal name can neither be null nor empty String.");
         }
         this.name = name;
     }
