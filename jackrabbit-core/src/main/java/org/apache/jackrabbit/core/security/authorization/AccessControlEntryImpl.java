@@ -184,7 +184,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     public Value getRestriction(String restrictionName) {
         if (restrictions.containsKey(restrictionName)) {
-            return (Value) ValueHelper.copy((Value) restrictions.get(restrictionName), VALUE_FACTORY);
+            return ValueHelper.copy((Value) restrictions.get(restrictionName), VALUE_FACTORY);
         } else {
             return null;
         }
