@@ -70,7 +70,11 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
 
     protected Principal getTestPrincipal() throws RepositoryException {
         String pn = "any_principal" + UUID.randomUUID();
-        Principal p = new TestPrincipal(pn);
+        return getTestPrincipal(pn);
+    }
+
+    protected Principal getTestPrincipal(String name) throws RepositoryException {
+        Principal p = new TestPrincipal(name);
         return p;
     }
 
