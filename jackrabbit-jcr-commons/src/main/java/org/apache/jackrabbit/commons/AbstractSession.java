@@ -34,18 +34,13 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
 
 import org.apache.jackrabbit.commons.xml.DocumentViewExporter;
 import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.commons.xml.SystemViewExporter;
+import org.apache.jackrabbit.commons.xml.ToXmlContentHandler;
+import org.apache.jackrabbit.commons.xml.XmlnsContentHandler;
 import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -279,7 +274,8 @@ public abstract class AbstractSession implements Session {
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            ContentHandler handler = getExportContentHandler(out);
+            ContentHandler handler =
+                new XmlnsContentHandler(new ToXmlContentHandler(out));
             exportDocumentView(absPath, handler, skipBinary, noRecurse);
         } catch (SAXException e) {
             Exception exception = e.getException();
@@ -311,7 +307,8 @@ public abstract class AbstractSession implements Session {
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            ContentHandler handler = getExportContentHandler(out);
+            ContentHandler handler =
+                new XmlnsContentHandler(new ToXmlContentHandler(out));
             exportSystemView(absPath, handler, skipBinary, noRecurse);
         } catch (SAXException e) {
             Exception exception = e.getException();
@@ -462,37 +459,6 @@ public abstract class AbstractSession implements Session {
         } else {
             throw new PathNotFoundException(
                     "XML export is not defined for properties: " + path);
-        }
-    }
-
-    /**
-     * Creates a {@link ContentHandler} instance that serializes the
-     * received SAX events to the given output stream.
-     *
-     * @param stream output stream to which the SAX events are serialized
-     * @return SAX content handler
-     * @throws RepositoryException if an error occurs
-     */
-    private ContentHandler getExportContentHandler(OutputStream stream)
-            throws RepositoryException {
-        try {
-            SAXTransformerFactory stf = (SAXTransformerFactory)
-                SAXTransformerFactory.newInstance();
-            TransformerHandler handler = stf.newTransformerHandler();
-
-            Transformer transformer = handler.getTransformer();
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            transformer.setOutputProperty(OutputKeys.INDENT, "no");
-
-            handler.setResult(new StreamResult(stream));
-            return handler;
-        } catch (TransformerFactoryConfigurationError e) {
-            throw new RepositoryException(
-                    "SAX transformer implementation not available", e);
-        } catch (TransformerException e) {
-            throw new RepositoryException(
-                    "Error creating an XML export content handler", e);
         }
     }
 
