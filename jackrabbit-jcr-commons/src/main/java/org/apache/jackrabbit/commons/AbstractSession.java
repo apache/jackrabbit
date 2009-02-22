@@ -38,6 +38,7 @@ import javax.jcr.Workspace;
 import org.apache.jackrabbit.commons.xml.DocumentViewExporter;
 import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.commons.xml.SystemViewExporter;
 import org.apache.jackrabbit.commons.xml.ToXmlContentHandler;
 import org.apache.jackrabbit.util.XMLChar;
@@ -272,6 +273,9 @@ public abstract class AbstractSession implements Session {
             String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
+        // JCR-1952: The XmlReader in the TCK fails if a TransformerFactory
+        // has not been loaded (don't ask me!). This forces the loading:
+        Class c = SerializingContentHandler.class;
         try {
             ContentHandler handler = new ToXmlContentHandler(out);
             exportDocumentView(absPath, handler, skipBinary, noRecurse);
@@ -304,6 +308,9 @@ public abstract class AbstractSession implements Session {
             String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
+        // JCR-1952: The XmlReader in the TCK fails if a TransformerFactory
+        // has not been loaded (don't ask me!). This forces the loading:
+        Class c = SerializingContentHandler.class;
         try {
             ContentHandler handler = new ToXmlContentHandler(out);
             exportSystemView(absPath, handler, skipBinary, noRecurse);
