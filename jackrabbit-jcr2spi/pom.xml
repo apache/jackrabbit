@@ -34,7 +34,6 @@
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
   <name>Jackrabbit JCR to SPI</name>
-  <version>1.5.3-SNAPSHOT</version>
 
   <scm>
     <connection>
@@ -87,7 +86,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.3-SNAPSHOT</version>
+      <version>1.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
