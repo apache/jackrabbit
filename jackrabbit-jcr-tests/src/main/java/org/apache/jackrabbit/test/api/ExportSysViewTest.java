@@ -19,13 +19,15 @@ package org.apache.jackrabbit.test.api;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 import org.xml.sax.InputSource;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedOutputStream;
@@ -157,15 +159,18 @@ public class ExportSysViewTest extends AbstractJCRTest {
         // the absolut path to the node which was exported
         String nodePath;
         Node node;
-        XMLReader parser;
+        SAXParser parser;
         SysViewContentHandler handler;
 
         public SysViewParser(String nodePath, Session session, boolean skipBinary, boolean noRecurse)
                 throws SAXException, RepositoryException {
             this.nodePath = nodePath;
             this.handler = new SysViewContentHandler(nodePath, session, skipBinary, noRecurse);
-            parser = XMLReaderFactory.createXMLReader();
-            parser.setContentHandler(this.handler);
+            try {
+                parser = SAXParserFactory.newInstance().newSAXParser();
+            } catch (ParserConfigurationException e) {
+                throw new SAXException(e);
+            }
         }
 
         public void parse(File file) throws IOException, SAXException {
@@ -176,7 +181,7 @@ public class ExportSysViewTest extends AbstractJCRTest {
                 fail("Input file not opened: " + e);
             }
             InputSource source = new InputSource(in);
-            parser.parse(source);
+            parser.parse(source, handler);
         }
     }
 }
