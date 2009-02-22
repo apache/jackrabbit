@@ -20,9 +20,8 @@ Changes in this release
 -----------------------
 
 All the fixes in this release are listed below per affected component.
-The modified components have had their version numbers upgraded to 1.5.2;
-other components are still at version 1.5.0. Jackrabbit version 1.5.1
-was cancelled due to incorrect license headers in the source code.
+The modified components have had their version numbers upgraded to 1.5.3;
+other components are still at their previous 1.5.x versions.
 
 jackrabbit-core
 
@@ -34,6 +33,23 @@ jackrabbit-webapp
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
+
+Contributors
+------------
+
+The following people have contributed to this release by submitting bug
+reports or by participating in the issue resolution process.
+
+    Alexander T            Grégory Joseph        Przemo Pakulski
+    Angela Schreiber       Jacco van Weert       Robert Sauer
+    Christian Schröder     Jukka Zitting         Stefan Guggisberg
+    Christophe Lombart     Julian Reschke        Stephane Landelle
+    Claus Köll             Lóránt Pintér         Sven Rieckhoff
+    Dominique Pfister      Marcel Reutegger      Thomas Mueller
+    Fabrizio Giustina      Martin Schreiber      Yoav Landman
+    Francois Masurel       Philipp Salzgeber
+
+Thank you to everyone involved!
 
 Release Contents
 ----------------
