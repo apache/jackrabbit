@@ -34,7 +34,7 @@
   </parent>
   <artifactId>jackrabbit-standalone</artifactId>
   <name>Jackrabbit Standalone</name>
-  <version>1.5.3-SNAPSHOT</version>
+  <version>1.5.3</version>
   <description>Runnable jar packaging of Apache Jackrabbit</description>
 
   <build>
@@ -84,13 +84,13 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>1.5.3-SNAPSHOT</version>
+      <version>1.5.3</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>1.5.3-SNAPSHOT</version>
+      <version>1.5.3</version>
       <type>jar</type>
     </dependency>
     <dependency>
