@@ -40,7 +40,6 @@ import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
 import org.apache.jackrabbit.commons.xml.SystemViewExporter;
 import org.apache.jackrabbit.commons.xml.ToXmlContentHandler;
-import org.apache.jackrabbit.commons.xml.XmlnsContentHandler;
 import org.apache.jackrabbit.util.XMLChar;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -274,8 +273,7 @@ public abstract class AbstractSession implements Session {
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            ContentHandler handler =
-                new XmlnsContentHandler(new ToXmlContentHandler(out));
+            ContentHandler handler = new ToXmlContentHandler(out);
             exportDocumentView(absPath, handler, skipBinary, noRecurse);
         } catch (SAXException e) {
             Exception exception = e.getException();
@@ -307,8 +305,7 @@ public abstract class AbstractSession implements Session {
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
         try {
-            ContentHandler handler =
-                new XmlnsContentHandler(new ToXmlContentHandler(out));
+            ContentHandler handler = new ToXmlContentHandler(out);
             exportSystemView(absPath, handler, skipBinary, noRecurse);
         } catch (SAXException e) {
             Exception exception = e.getException();
