@@ -39,7 +39,6 @@ import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-import org.xml.sax.helpers.NamespaceSupport;
 
 /**
  * Abstract base class for document and system view exporters. This class
@@ -429,9 +428,6 @@ public abstract class Exporter {
             String namespace = (String) entry.getKey();
             String prefix = (String) entry.getValue();
             handler.startPrefixMapping(prefix, namespace);
-            attributes.addAttribute(
-                    NamespaceSupport.XMLNS, prefix, "xmlns:" + prefix,
-                    "CDATA", namespace);
         }
 
         // Emit the start element event, and clear things for the next element
