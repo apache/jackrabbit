@@ -33,7 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-ocm</artifactId>
-  <version>1.5.3-SNAPSHOT</version>
+  <version>1.5.3</version>
   <name>Jackrabbit Object Content Mapping</name>
   <description>
     This Jackrabbit subproject is an object/JCR persistence and

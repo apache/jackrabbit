@@ -34,7 +34,7 @@
   </parent>
   <artifactId>jackrabbit-core</artifactId>
   <name>Jackrabbit Core</name>
-  <version>1.5.3-SNAPSHOT</version>
+  <version>1.5.3</version>
   <description>Jackrabbit content repository implementation</description>
 
   <build>
@@ -182,7 +182,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.3-SNAPSHOT</version>
+      <version>1.5.3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
