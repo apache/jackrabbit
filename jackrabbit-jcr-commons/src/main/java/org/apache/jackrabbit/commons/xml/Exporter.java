@@ -428,6 +428,9 @@ public abstract class Exporter {
             String namespace = (String) entry.getKey();
             String prefix = (String) entry.getValue();
             handler.startPrefixMapping(prefix, namespace);
+            attributes.addAttribute(
+                    "http://www.w3.org/2000/xmlns/", prefix, "xmlns:" + prefix,
+                    "CDATA", namespace);
         }
 
         // Emit the start element event, and clear things for the next element
