@@ -273,9 +273,6 @@ public abstract class AbstractSession implements Session {
             String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
-        // JCR-1952: The XmlReader in the TCK fails if a TransformerFactory
-        // has not been loaded (don't ask me!). This forces the loading:
-        Class c = SerializingContentHandler.class;
         try {
             ContentHandler handler = new ToXmlContentHandler(out);
             exportDocumentView(absPath, handler, skipBinary, noRecurse);
@@ -308,9 +305,6 @@ public abstract class AbstractSession implements Session {
             String absPath, OutputStream out,
             boolean skipBinary, boolean noRecurse)
             throws IOException, RepositoryException {
-        // JCR-1952: The XmlReader in the TCK fails if a TransformerFactory
-        // has not been loaded (don't ask me!). This forces the loading:
-        Class c = SerializingContentHandler.class;
         try {
             ContentHandler handler = new ToXmlContentHandler(out);
             exportSystemView(absPath, handler, skipBinary, noRecurse);
