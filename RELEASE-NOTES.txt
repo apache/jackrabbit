@@ -23,13 +23,30 @@ All the fixes in this release are listed below per affected component.
 The modified components have had their version numbers upgraded to 1.5.3;
 other components are still at their previous 1.5.x versions.
 
+jackrabbit-jcr-commons
+
+  Bug fixes
+  [JCR-1952] DOMException: NAMESPACE_ERR thrown when exporting document view
+
 jackrabbit-core
 
   Bug fixes
+  [JCR-1334] Deadlock due different Thread access while prepare and commit ...
+  [JCR-1554] StaleItemStateException with distributed transactions
+  [JCR-1923] Startup fails if clustered jackrabbit is upgrade from 1.4.4 to 1.5
+  [JCR-1941] AccessManager asks for property (jcr:created) permissions ...
+  [JCR-1956] Database Data Store: close result sets
+  [JCR-1979] Deadlock on concurrent read & transactional write operations
 
 jackrabbit-webapp
 
   Bug fixes
+  [JCR-1970] populate.jsp uses Java 1.5 method
+
+jackrabbit-ocm
+
+  Bug fixes
+  [JCR-1889] Incorrect support for java interfaces in typed collection fields
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
