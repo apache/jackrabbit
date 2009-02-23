@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.util;
 
-import java.io.UnsupportedEncodingException;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -393,34 +393,35 @@ public class Text {
      * @param escape the escape character
      * @return the decoded string
      * @throws NullPointerException           if <code>string</code> is <code>null</code>.
-     * @throws ArrayIndexOutOfBoundsException if not enough character follow an
-     *                                        escape character
      * @throws IllegalArgumentException       if the 2 characters following the escape
-     *                                        character do not represent a hex-number.
+     *                                        character do not represent a hex-number
+     *                                        or if not enough characters follow an
+     *                                        escape character
      */
-    public static String unescape(String string, char escape) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(string.length());
-        for (int i = 0; i < string.length(); i++) {
-            char c = string.charAt(i);
-            if (c != escape) {
-                out.write(c);
-            } else if (i + 2 < string.length()) {
-                try {
-                    out.write(Integer.parseInt(string.substring(i + 1, i + 3), 16));
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException(
-                            "Escape sequence is not hexadecimal: " + string);
-                }
-                i += 2;
-            } else {
-                throw new IllegalArgumentException(
-                        "Escape sequence is too short: " + string);
-            }
-        }
-
+    public static String unescape(String string, char escape)  {
         try {
+            byte[] utf8 = string.getBytes("utf-8");
+
+            // Check whether escape occurs at invalid position
+            if ((utf8.length >= 1 && utf8[utf8.length - 1] == escape) ||
+                (utf8.length >= 2 && utf8[utf8.length - 2] == escape)) {
+                throw new IllegalArgumentException("Premature end of escape sequence at end of input");
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream(utf8.length);
+            for (int k = 0; k < utf8.length; k++) {
+                byte b = utf8[k];
+                if (b == escape) {
+                    out.write((decodeDigit(utf8[++k]) << 4) + decodeDigit(utf8[++k]));
+                }
+                else {
+                    out.write(b);
+                }
+            }
+
             return new String(out.toByteArray(), "utf-8");
-        } catch (UnsupportedEncodingException e) {
+        }
+        catch (UnsupportedEncodingException e) {
             throw new InternalError(e.toString());
         }
     }
@@ -486,7 +487,7 @@ public class Text {
      * <p>Example:<br>
      * A search string like 'test?' will run into a ParseException
      * documented in http://issues.apache.org/jira/browse/JCR-1248
-     * 
+     *
      * @param s the string to encode
      * @return the escaped string
      */
@@ -495,8 +496,8 @@ public class Text {
         sb.append(s.substring(0, (s.length() - 1)));
         char c = s.charAt(s.length() - 1);
         // NOTE: keep this in sync with _ESCAPED_CHAR below!
-        if (c == '!' || c == '(' || c == ':' || c == '^' 
-            || c == '[' || c == ']' || c == '\"' || c == '{' 
+        if (c == '!' || c == '(' || c == ':' || c == '^'
+            || c == '[' || c == ']' || c == '\"' || c == '{'
             || c == '}' || c == '?') {
             sb.append('\\');
         }
@@ -556,7 +557,7 @@ public class Text {
      */
     public static String getName(String path, char delim) {
         return path == null
-                ? null 
+                ? null
                 : path.substring(path.lastIndexOf(delim) + 1);
     }
 
@@ -763,4 +764,20 @@ public class Text {
 
         return result.toString();
     }
+
+    private static byte decodeDigit(byte b) {
+        if (b >= 0x30 && b <= 0x39) {
+            return (byte) (b - 0x30);
+        }
+        else if (b >= 0x41 && b <= 0x46) {
+            return (byte) (b - 0x37);
+        }
+        else if (b >= 0x61 && b <= 0x66) {
+            return (byte) (b - 0x57);
+        }
+        else {
+            throw new IllegalArgumentException("Escape sequence is not hexadecimal: " + (char)b);
+        }
+    }
+
 }
