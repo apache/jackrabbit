@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +34,8 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * The class <code>NamespaceMappings</code> implements a {@link
- * org.apache.jackrabbit.core.NamespaceResolver} that holds a namespace
+ * The class <code>NamespaceMappings</code> implements a
+ * {@link NamespaceResolver} that holds a namespace
  * mapping that is used internally in the search index. Storing paths with the
  * full uri of a namespace would require too much space in the search index.
  * <p/>
@@ -46,8 +43,7 @@ import java.util.Properties;
  * prefix is created on the fly and associated with the namespace. Known
  * namespace mappings are stored in a properties file.
  */
-public class FileBasedNamespaceMappings
-        implements NamespaceResolver, NamespaceMappings {
+public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
 
     /**
      * Default logger instance for this class
@@ -58,11 +54,6 @@ public class FileBasedNamespaceMappings
      * Location of the file that persists the uri / prefix mappings
      */
     private final File storage;
-
-    /**
-     * The name resolver used to translate the qualified name to JCR name
-     */
-    private final NameResolver nameResolver;
 
     /**
      * Map of uris indexed by prefixes
@@ -90,7 +81,6 @@ public class FileBasedNamespaceMappings
     public FileBasedNamespaceMappings(File file) throws IOException {
         storage = file;
         load();
-        nameResolver = NamePathResolverImpl.create(this);
     }
 
     /**
@@ -136,26 +126,6 @@ public class FileBasedNamespaceMappings
             }
         }
         return prefix;
-    }
-
-    //----------------------------< NamespaceMappings >-------------------------
-
-    /**
-     * Translates a property name from a session local namespace mapping
-     * into a search index private namespace mapping.
-     *
-     * @param qName     the property name to translate
-     * @return the translated property name
-     */
-    public String translatePropertyName(Name qName)
-            throws IllegalNameException {
-        try {
-            return nameResolver.getJCRName(qName);
-        } catch (NamespaceException e) {
-            // should never happen actually, because we create yet unknown
-            // uri mappings on the fly.
-            throw new IllegalNameException("Internal error.", e);
-        }
     }
 
     //-----------------------< internal >---------------------------------------

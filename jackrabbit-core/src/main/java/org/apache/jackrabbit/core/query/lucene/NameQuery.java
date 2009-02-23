@@ -87,7 +87,7 @@ public class NameQuery extends Query {
             // use LABEL field
             try {
                 return new TermQuery(new Term(FieldNames.LABEL,
-                        nsMappings.translatePropertyName(nodeName)));
+                        nsMappings.translateName(nodeName)));
             } catch (IllegalNameException e) {
                 throw Util.createIOException(e);
             }

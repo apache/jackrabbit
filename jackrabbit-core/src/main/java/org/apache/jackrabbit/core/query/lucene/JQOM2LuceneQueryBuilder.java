@@ -690,7 +690,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
                     Name n = session.getQName(nt.getName());
-                    String ntName = nsMappings.translatePropertyName(n);
+                    String ntName = nsMappings.translateName(n);
                     Term t;
                     if (nt.isMixin()) {
                         // search on jcr:mixinTypes
@@ -740,7 +740,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                 return LongField.longToString(value.getLong());
             case PropertyType.NAME:
                 Name n = session.getQName(value.getString());
-                return nsMappings.translatePropertyName(n);
+                return nsMappings.translateName(n);
             case PropertyType.PATH:
                 Path p = session.getQPath(value.getString());
                 return npResolver.getJCRPath(p);

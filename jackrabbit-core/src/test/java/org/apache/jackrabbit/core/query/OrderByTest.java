@@ -145,31 +145,6 @@ public class OrderByTest extends AbstractQueryTest {
         checkChildAxis(new Value[]{getValue(2.0), getValue(1)});
     }
 
-    public void disabled_testPerformance() throws RepositoryException {
-        createNodes(testRootNode, 10, 4, 0, new NodeCreationCallback() {
-            public void nodeCreated(Node node, int count) throws
-                    RepositoryException {
-                node.addNode("child").setProperty("property", "value" + count);
-                // save once in a while
-                if (count % 1000 == 0) {
-                    superuser.save();
-                    System.out.println("added " + count + " nodes so far.");
-                }
-            }
-        });
-        superuser.save();
-
-        String xpath = testPath + "//*[child/@property] order by child/@property";
-        for (int i = 0; i < 3; i++) {
-            long time = System.currentTimeMillis();
-            Query query = qm.createQuery(xpath, Query.XPATH);
-            ((QueryImpl) query).setLimit(20);
-            query.execute().getNodes().getSize();
-            time = System.currentTimeMillis() - time;
-            System.out.println("executed query in " + time + " ms.");
-        }
-    }
-
     //------------------------------< helper >----------------------------------
 
     private Value getValue(String value) throws RepositoryException {
@@ -208,27 +183,55 @@ public class OrderByTest extends AbstractQueryTest {
      * @throws RepositoryException if an error occurs.
      */
     private void checkChildAxis(Value[] values) throws RepositoryException {
+        // child/prop is part of the test indexing configuration,
+        // this will use SimpleScoreDocComparator internally
+        checkChildAxis(values, "child", "prop");
+        cleanUpTestRoot(superuser);
+        // c/p is not in the indexing configuration,
+        // this will use RelPathScoreDocComparator internally
+        checkChildAxis(values, "c", "p");
+    }
+
+    /**
+     * Checks if order by with a relative path works on the the passed values.
+     * The values are expected to be in ascending order.
+     *
+     * @param values   the values in ascending order.
+     * @param child    the name of the child node.
+     * @param property the name of the property.
+     * @throws RepositoryException if an error occurs.
+     */
+    private void checkChildAxis(Value[] values, String child, String property)
+            throws RepositoryException {
+        List vals = new ArrayList();
+        // add initial value null -> property not set
+        // inexistent property is always less than any property value set
+        vals.add(null);
+        vals.addAll(Arrays.asList(values));
+
         List expected = new ArrayList();
-        for (int i = 0; i < values.length; i++) {
+        for (int i = 0; i < vals.size(); i++) {
             Node n = testRootNode.addNode("node" + i);
             expected.add(n.getPath());
-            n.addNode("child").setProperty("prop", values[i]);
+            Node c = n.addNode(child);
+            if (vals.get(i) != null) {
+                c.setProperty(property, (Value) vals.get(i));
+            }
         }
         testRootNode.save();
 
-        String xpath = testPath + "/* order by child/@prop";
+        String xpath = testPath + "/* order by " + child + "/@" + property;
         assertEquals(expected, collectPaths(executeQuery(xpath)));
 
         // descending
         Collections.reverse(expected);
-        xpath = testPath + "/* order by child/@prop descending";
+        xpath += " descending";
         assertEquals(expected, collectPaths(executeQuery(xpath)));
 
-        // reverse order in content
-        Collections.reverse(Arrays.asList(values));
-        for (int i = 0; i < values.length; i++) {
-            Node child = testRootNode.getNode("node" + i).getNode("child");
-            child.setProperty("prop", values[i]);
+        Collections.reverse(vals);
+        for (int i = 0; i < vals.size(); i++) {
+            Node c = testRootNode.getNode("node" + i).getNode(child);
+            c.setProperty(property, (Value) vals.get(i));
         }
         testRootNode.save();
 
@@ -243,25 +246,5 @@ public class OrderByTest extends AbstractQueryTest {
             paths.add(it.nextNode().getPath());
         }
         return paths;
-    }
-
-    private int createNodes(Node n, int nodesPerLevel, int levels,
-                            int count, NodeCreationCallback callback)
-            throws RepositoryException {
-        levels--;
-        for (int i = 0; i < nodesPerLevel; i++) {
-            Node child = n.addNode("node" + i);
-            count++;
-            callback.nodeCreated(child, count);
-            if (levels > 0) {
-                count = createNodes(child, nodesPerLevel, levels, count, callback);
-            }
-        }
-        return count;
-    }
-
-    private static interface NodeCreationCallback {
-
-        public void nodeCreated(Node node, int count) throws RepositoryException;
     }
 }

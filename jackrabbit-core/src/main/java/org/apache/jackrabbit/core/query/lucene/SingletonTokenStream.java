@@ -46,6 +46,15 @@ public final class SingletonTokenStream extends TokenStream {
     }
 
     /**
+     * Creates a new SingleTokenStream with the given token.
+     *
+     * @param t the token.
+     */
+    public SingletonTokenStream(Token t) {
+        this.t = t;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public Token next() {

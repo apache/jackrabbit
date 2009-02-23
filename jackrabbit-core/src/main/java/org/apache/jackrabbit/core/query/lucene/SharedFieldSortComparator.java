@@ -44,13 +44,6 @@ import org.apache.jackrabbit.uuid.UUID;
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene
  * field that contains values for multiple properties.
- * <p/>
- * <b>Important:</b> The ScoreDocComparator returned by {@link #newComparator}
- * does not implement the contract for {@link ScoreDocComparator#sortValue(ScoreDoc)}
- * properly. The method will always return an empty String to save memory consumption
- * on large property ranges. Those values are only of relevance when queries
- * are executed with a <code>MultiSearcher</code>, which is currently not the
- * case in Jackrabbit.
  */
 public class SharedFieldSortComparator extends SortComparator {
 
@@ -108,15 +101,20 @@ public class SharedFieldSortComparator extends SortComparator {
             throws IOException {
         PathFactory factory = PathFactoryImpl.getInstance();
         Path p = factory.create(relPath);
-        if (p.getLength() == 1) {
-            try {
-                return new SimpleScoreDocComparator(reader,
-                        nsMappings.translatePropertyName(p.getNameElement().getName()));
-            } catch (IllegalNameException e) {
-                throw Util.createIOException(e);
+        try {
+            ScoreDocComparator simple = new SimpleScoreDocComparator(
+                    reader, nsMappings.translatePath(p));
+            if (p.getLength() == 1) {
+                return simple;
+            } else {
+                return new CompoundScoreDocComparator(reader,
+                        new ScoreDocComparator[]{
+                                simple,
+                                new RelPathScoreDocComparator(reader, p)
+                        });
             }
-        } else {
-            return new RelPathScoreDocComparator(reader, p);
+        } catch (IllegalNameException e) {
+            throw Util.createIOException(e);
         }
     }
 
@@ -250,17 +248,17 @@ public class SharedFieldSortComparator extends SortComparator {
         /**
          * The term look ups of the index segments.
          */
-        protected final SharedFieldCache.StringIndex[] indexes;
+        protected final SharedFieldCache.ValueIndex[] indexes;
 
         public SimpleScoreDocComparator(IndexReader reader,
                                         String propertyName)
                 throws IOException {
             super(reader);
-            this.indexes = new SharedFieldCache.StringIndex[readers.size()];
+            this.indexes = new SharedFieldCache.ValueIndex[readers.size()];
 
             for (int i = 0; i < readers.size(); i++) {
                 IndexReader r = (IndexReader) readers.get(i);
-                indexes[i] = SharedFieldCache.INSTANCE.getStringIndex(r, field,
+                indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(r, field,
                         FieldNames.createNamedValue(propertyName, ""),
                         SharedFieldSortComparator.this);
             }
@@ -274,7 +272,7 @@ public class SharedFieldSortComparator extends SortComparator {
          */
         public Comparable sortValue(ScoreDoc i) {
             int idx = readerIndex(i.doc);
-            return indexes[idx].getTerm(i.doc - starts[idx]);
+            return indexes[idx].getValue(i.doc - starts[idx]);
         }
     }
 
@@ -359,28 +357,34 @@ public class SharedFieldSortComparator extends SortComparator {
     }
 
     /**
-     * Represents a boolean that implement {@link Comparable}. This class can
-     * be removed when we move to Java 5.
+     * Implements a compound score doc comparator that delegates to several
+     * other comparators. The comparators are asked for a sort value in the
+     * sequence they are passed to the constructor. The first non-null value
+     * will be returned by {@link #sortValue(ScoreDoc)}.
      */
-    private static final class ComparableBoolean implements Comparable {
+    private final class CompoundScoreDocComparator
+            extends AbstractScoreDocComparator {
 
-        private static final ComparableBoolean TRUE = new ComparableBoolean(true);
+        private final ScoreDocComparator[] comparators;
 
-        private static final ComparableBoolean FALSE = new ComparableBoolean(false);
-
-        private final boolean value;
-
-        private ComparableBoolean(boolean value) {
-            this.value = value;
+        public CompoundScoreDocComparator(IndexReader reader,
+                                          ScoreDocComparator[] comparators)
+                throws IOException {
+            super(reader);
+            this.comparators = comparators;
         }
 
-        public int compareTo(Object o) {
-            ComparableBoolean b = (ComparableBoolean) o;
-            return (b.value == value ? 0 : (value ? 1 : -1));
-        }
-
-        static ComparableBoolean valueOf(boolean value) {
-            return value ? TRUE : FALSE;
+        /**
+         * {@inheritDoc}
+         */
+        public Comparable sortValue(ScoreDoc i) {
+            for (int j = 0; j < comparators.length; j++) {
+                Comparable c = comparators[j].sortValue(i);
+                if (c != null) {
+                    return c;
+                }
+            }
+            return null;
         }
     }
 }

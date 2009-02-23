@@ -164,7 +164,7 @@ public class NameRangeQuery extends Query {
             if (lowerName == null) {
                 text = nsMappings.getPrefix(upperName.getNamespaceURI()) + ":";
             } else {
-                text = nsMappings.translatePropertyName(lowerName);
+                text = nsMappings.translateName(lowerName);
             }
             return new Term(FieldNames.LABEL, text);
         } catch (RepositoryException e) {
@@ -182,7 +182,7 @@ public class NameRangeQuery extends Query {
             if (upperName == null) {
                 text = nsMappings.getPrefix(lowerName.getNamespaceURI()) + ":\uFFFF";
             } else {
-                text = nsMappings.translatePropertyName(upperName);
+                text = nsMappings.translateName(upperName);
             }
             return new Term(FieldNames.LABEL, text);
         } catch (RepositoryException e) {

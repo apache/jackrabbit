@@ -330,7 +330,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 NodeType[] superTypes = nt.getSupertypes();
                 if (Arrays.asList(superTypes).contains(base)) {
                     Name n = session.getQName(nt.getName());
-                    String ntName = nsMappings.translatePropertyName(n);
+                    String ntName = nsMappings.translateName(n);
                     Term t;
                     if (nt.isMixin()) {
                         // search on jcr:mixinTypes
@@ -954,7 +954,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // try to translate name
                     try {
                         Name n = session.getQName(literal);
-                        values.add(nsMappings.translatePropertyName(n));
+                        values.add(nsMappings.translateName(n));
                         log.debug("Coerced " + literal + " into NAME.");
                     } catch (NameException e) {
                         log.debug("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
@@ -1028,7 +1028,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // might be a name
                 try {
                     Name n = session.getQName(literal);
-                    values.add(nsMappings.translatePropertyName(n));
+                    values.add(nsMappings.translateName(n));
                     log.debug("Coerced " + literal + " into NAME.");
                 } catch (Exception e) {
                     // not a name
