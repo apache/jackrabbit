@@ -18,12 +18,18 @@ package org.apache.jackrabbit.core.query;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.query.Query;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 
 /**
  * <code>IndexingAggregateTest</code> checks if the nt:file nt:resource
@@ -88,5 +94,97 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         testRootNode.save();
 
         executeSQLQuery(sqlCat, new Node[]{file});
+    }
+
+    public void testContentLastModified() throws RepositoryException {
+        List expected = new ArrayList();
+        long time = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            expected.add(addFile(testRootNode, "file" + i, time));
+            time += 1000;
+        }
+        testRootNode.save();
+
+        String stmt = testPath + "/* order by jcr:content/@jcr:lastModified";
+        Query q = qm.createQuery(stmt, Query.XPATH);
+        checkResultSequence(q.execute().getRows(), (Node[]) expected.toArray(new Node[expected.size()]));
+
+        // descending
+        stmt = testPath + "/* order by jcr:content/@jcr:lastModified descending";
+        q = qm.createQuery(stmt, Query.XPATH);
+        Collections.reverse(expected);
+        checkResultSequence(q.execute().getRows(), (Node[]) expected.toArray(new Node[expected.size()]));
+
+        // reverse order in content
+        for (Iterator it = expected.iterator(); it.hasNext(); ) {
+            Node file = (Node) it.next();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(time);
+            file.getNode("jcr:content").setProperty("jcr:lastModified", cal);
+            time -= 1000;
+        }
+        testRootNode.save();
+
+        stmt = testPath + "/* order by jcr:content/@jcr:lastModified descending";
+        q = qm.createQuery(stmt, Query.XPATH);
+        checkResultSequence(q.execute().getRows(), (Node[]) expected.toArray(new Node[expected.size()]));
+    }
+
+    public void disabled_testPerformance() throws RepositoryException {
+        createNodes(testRootNode, 10, 4, 0, new NodeCreationCallback() {
+            public void nodeCreated(Node node, int count) throws
+                    RepositoryException {
+                node.addNode("child").setProperty("property", "value" + count);
+                // save once in a while
+                if (count % 1000 == 0) {
+                    session.save();
+                    System.out.println("added " + count + " nodes so far.");
+                }
+            }
+        });
+        session.save();
+
+        String xpath = testPath + "//*[child/@property] order by child/@property";
+        for (int i = 0; i < 3; i++) {
+            long time = System.currentTimeMillis();
+            Query query = qm.createQuery(xpath, Query.XPATH);
+            ((QueryImpl) query).setLimit(20);
+            query.execute().getNodes().getSize();
+            time = System.currentTimeMillis() - time;
+            System.out.println("executed query in " + time + " ms.");
+        }
+    }
+
+    private static Node addFile(Node folder, String name, long lastModified)
+            throws RepositoryException {
+        Node file = folder.addNode(name, "nt:file");
+        Node resource = file.addNode("jcr:content", "nt:resource");
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(lastModified);
+        resource.setProperty("jcr:lastModified", cal);
+        resource.setProperty("jcr:encoding", "UTF-8");
+        resource.setProperty("jcr:mimeType", "text/plain");
+        resource.setProperty("jcr:data", new ByteArrayInputStream("test".getBytes()));
+        return file;
+    }
+
+    private int createNodes(Node n, int nodesPerLevel, int levels,
+                            int count, NodeCreationCallback callback)
+            throws RepositoryException {
+        levels--;
+        for (int i = 0; i < nodesPerLevel; i++) {
+            Node child = n.addNode("node" + i);
+            count++;
+            callback.nodeCreated(child, count);
+            if (levels > 0) {
+                count = createNodes(child, nodesPerLevel, levels, count, callback);
+            }
+        }
+        return count;
+    }
+
+    private static interface NodeCreationCallback {
+
+        public void nodeCreated(Node node, int count) throws RepositoryException;
     }
 }

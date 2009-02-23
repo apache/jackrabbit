@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * The class <code>NamespaceMappings</code> holds a namespace mapping that is
@@ -28,12 +29,21 @@ import org.apache.jackrabbit.spi.Name;
 public interface NamespaceMappings extends NamespaceResolver {
 
     /**
-     * Translates a property name from a session local namespace mapping into a
-     * search index private namespace mapping.
+     * Translates a name from a session local namespace mapping into a search
+     * index private namespace mapping.
      *
-     * @param qName     the property name to translate
-     * @return the translated JCR property name
+     * @param name the name to translate
+     * @return the translated JCR name
+     * @throws IllegalNameException if the name cannot be translated.
      */
-    String translatePropertyName(Name qName) throws IllegalNameException;
+    String translateName(Name name) throws IllegalNameException;
 
+    /**
+     * Translates a path into a search index private namespace mapping.
+     *
+     * @param path the path to translate
+     * @return the translated path.
+     * @throws IllegalNameException if the name cannot be translated.
+     */
+    String translatePath(Path path) throws IllegalNameException;
 }

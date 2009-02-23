@@ -16,11 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceException;
 
@@ -28,18 +24,12 @@ import javax.jcr.NamespaceException;
  * <code>NSRegistryBasedNamespaceMappings</code> implements a namespace mapping
  * based on the stable index prefix provided by the namespace registry.
  */
-public class NSRegistryBasedNamespaceMappings
-        implements NamespaceResolver, NamespaceMappings {
+public class NSRegistryBasedNamespaceMappings extends AbstractNamespaceMappings {
 
     /**
      * The namespace registry.
      */
     private final NamespaceRegistryImpl nsReg;
-
-        /**
-     * The name resolver used to translate the qualified name to JCR name
-     */
-    private final NameResolver nameResolver;
 
     /**
      * Creates a new <code>NSRegistryBasedNamespaceMappings</code>.
@@ -48,7 +38,6 @@ public class NSRegistryBasedNamespaceMappings
      */
     NSRegistryBasedNamespaceMappings(NamespaceRegistryImpl nsReg) {
         this.nsReg = nsReg;
-        this.nameResolver = NamePathResolverImpl.create(this);
     }
 
     //-------------------------------< NamespaceResolver >----------------------
@@ -75,22 +64,6 @@ public class NSRegistryBasedNamespaceMappings
         } catch (IllegalArgumentException e) {
             throw new NamespaceException(
                     "Unknown namespace URI: " + uri, e);
-        }
-    }
-
-    //-------------------------------< NamespaceMappings >----------------------
-
-    /**
-     * {@inheritDoc}
-     */
-    public String translatePropertyName(Name qName)
-            throws IllegalNameException {
-        try {
-            return nameResolver.getJCRName(qName);
-        } catch (NamespaceException e) {
-            // should never happen actually, there is always a stable index
-            // prefix for a known namespace uri
-            throw new IllegalNameException("Internal error.", e);
         }
     }
 }

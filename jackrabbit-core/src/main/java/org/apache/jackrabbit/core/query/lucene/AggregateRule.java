@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
 
 import javax.jcr.RepositoryException;
 
@@ -54,5 +55,18 @@ public interface AggregateRule {
      * @throws ItemStateException if an error occurs.
      */
     NodeState[] getAggregatedNodeStates(NodeState nodeState)
+            throws ItemStateException;
+
+    /**
+     * Returns the property states that are part of the indexing aggregate of
+     * the <code>nodeState</code>.
+     *
+     * @param nodeState a node state
+     * @return the property states that are part of the indexing aggregate of
+     *         <code>nodeState</code>. Returns <code>null</code> if this
+     *         aggregate does not apply to <code>nodeState</code>.
+     * @throws ItemStateException if an error occurs.
+     */
+    public PropertyState[] getAggregatedPropertyStates(NodeState nodeState)
             throws ItemStateException;
 }

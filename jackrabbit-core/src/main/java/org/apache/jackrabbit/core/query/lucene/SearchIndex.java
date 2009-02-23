@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -33,6 +34,8 @@ import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.extractor.DefaultTextExtractor;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.spi.Name;
@@ -46,6 +49,7 @@ import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Token;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
@@ -163,6 +167,11 @@ public class SearchIndex extends AbstractQueryHandler {
     public static final int DEFAULT_TERM_INFOS_INDEX_DIVISOR = 1;
 
     /**
+     * The path factory.
+     */
+    protected static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+
+    /**
      * The path of the root node.
      */
     private static final Path ROOT_PATH;
@@ -173,10 +182,9 @@ public class SearchIndex extends AbstractQueryHandler {
     private static final Path JCR_SYSTEM_PATH;
 
     static {
-        PathFactory factory = PathFactoryImpl.getInstance();
-        ROOT_PATH = factory.create(NameConstants.ROOT);
+        ROOT_PATH = PATH_FACTORY.create(NameConstants.ROOT);
         try {
-            JCR_SYSTEM_PATH = factory.create(ROOT_PATH, NameConstants.JCR_SYSTEM, false);
+            JCR_SYSTEM_PATH = PATH_FACTORY.create(ROOT_PATH, NameConstants.JCR_SYSTEM, false);
         } catch (RepositoryException e) {
             // should never happen, path is always valid
             throw new InternalError(e.getMessage());
@@ -1168,29 +1176,69 @@ public class SearchIndex extends AbstractQueryHandler {
                 return;
             }
             try {
+                ItemStateManager ism = getContext().getItemStateManager();
                 for (int i = 0; i < aggregateRules.length; i++) {
+                    boolean ruleMatched = false;
+                    // node includes
                     NodeState[] aggregates = aggregateRules[i].getAggregatedNodeStates(state);
-                    if (aggregates == null) {
-                        continue;
-                    }
-                    for (int j = 0; j < aggregates.length; j++) {
-                        Document aDoc = createDocument(aggregates[j],
-                                getNamespaceMappings(),
-                                index.getIndexFormatVersion());
-                        // transfer fields to doc if there are any
-                        Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
-                        if (fulltextFields != null) {
-                            for (int k = 0; k < fulltextFields.length; k++) {
-                                doc.add(fulltextFields[k]);
+                    if (aggregates != null) {
+                        ruleMatched = true;
+                        for (int j = 0; j < aggregates.length; j++) {
+                            Document aDoc = createDocument(aggregates[j],
+                                    getNamespaceMappings(),
+                                    index.getIndexFormatVersion());
+                            // transfer fields to doc if there are any
+                            Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
+                            if (fulltextFields != null) {
+                                for (int k = 0; k < fulltextFields.length; k++) {
+                                    doc.add(fulltextFields[k]);
+                                }
+                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                        aggregates[j].getNodeId().getUUID().toString(),
+                                        Field.Store.NO,
+                                        Field.Index.NO_NORMS));
                             }
-                            doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
-                                    aggregates[j].getNodeId().getUUID().toString(),
-                                    Field.Store.NO,
-                                    Field.Index.NO_NORMS));
                         }
                     }
+                    // property includes
+                    PropertyState[] propStates = aggregateRules[i].getAggregatedPropertyStates(state);
+                    if (propStates != null) {
+                        ruleMatched = true;
+                        for (int j = 0; j < propStates.length; j++) {
+                            PropertyState propState = propStates[j];
+                            String namePrefix = FieldNames.createNamedValue(
+                                    getNamespaceMappings().translateName(propState.getName()), "");
+                            NodeState parent = (NodeState) ism.getItemState(propState.getParentId());
+                            Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
+                            // find the right fields to transfer
+                            Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
+                            for (int k = 0; k < fields.length; k++) {
+                                Fieldable field = fields[k];
+                                // assume properties fields use SingleTokenStream
+                                Token t = field.tokenStreamValue().next();
+                                String value = new String(t.termBuffer(), 0, t.termLength());
+                                if (value.startsWith(namePrefix)) {
+                                    // extract value
+                                    value = value.substring(namePrefix.length());
+                                    // create new named value
+                                    Path p = getRelativePath(state, propState);
+                                    String path = getNamespaceMappings().translatePath(p);
+                                    value = FieldNames.createNamedValue(path, value);
+                                    t.setTermText(value);
+                                    doc.add(new Field(field.name(), new SingletonTokenStream(t)));
+                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                            parent.getNodeId().getUUID().toString(),
+                                            Field.Store.NO,
+                                            Field.Index.NO_NORMS));
+                                }
+                            }
+                        }
+                    }
+
                     // only use first aggregate definition that matches
-                    break;
+                    if (ruleMatched) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
@@ -1198,6 +1246,38 @@ public class SearchIndex extends AbstractQueryHandler {
                         + " node with UUID: " + state.getNodeId().getUUID(), e);
             }
         }
+    }
+
+    /**
+     * Returns the relative path from <code>nodeState</code> to
+     * <code>propState</code>.
+     *
+     * @param nodeState a node state.
+     * @param propState a property state.
+     * @return the relative path.
+     * @throws RepositoryException if an error occurs while resolving paths.
+     * @throws ItemStateException  if an error occurs while reading item
+     *                             states.
+     */
+    protected Path getRelativePath(NodeState nodeState, PropertyState propState)
+            throws RepositoryException, ItemStateException {
+        HierarchyManager hmgr = getContext().getHierarchyManager();
+        Path nodePath = hmgr.getPath(nodeState.getId());
+        Path propPath = hmgr.getPath(propState.getId());
+        Path p = nodePath.computeRelativePath(propPath);
+        // make sure it does not contain indexes
+        boolean clean = true;
+        Path.Element[] elements = p.getElements();
+        for (int i = 0; i < elements.length; i++) {
+            if (elements[i].getIndex() != 0) {
+                elements[i] = PATH_FACTORY.createElement(elements[i].getName());
+                clean = false;
+            }
+        }
+        if (!clean) {
+            p = PATH_FACTORY.create(elements);
+        }
+        return p;
     }
 
     /**

@@ -79,6 +79,18 @@ public class IndexFormatVersion {
     }
 
     /**
+     * Returns <code>true</code> if this version is at least as high as the
+     * given <code>version</code>.
+     *
+     * @param version the other version to compare.
+     * @return <code>true</code> if this version is at least as high as the
+     *         provided; <code>false</code> otherwise.
+     */
+    public boolean isAtLeast(IndexFormatVersion version) {
+        return this.version >= version.getVersion();
+    }
+
+    /**
      * @return a string representation of this index format version.
      */
     public String toString() {

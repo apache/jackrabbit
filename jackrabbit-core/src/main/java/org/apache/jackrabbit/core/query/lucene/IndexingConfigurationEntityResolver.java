@@ -45,6 +45,9 @@ public class IndexingConfigurationEntityResolver implements EntityResolver {
         systemIds.put(
                 "http://jackrabbit.apache.org/dtd/indexing-configuration-1.1.dtd",
                 "indexing-configuration-1.1.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/indexing-configuration-1.2.dtd",
+                "indexing-configuration-1.2.dtd");
         SYSTEM_IDS = Collections.unmodifiableMap(systemIds);
     }
 

@@ -162,7 +162,7 @@ public class IndexingConfigurationImpl implements IndexingConfiguration {
                                     if (propertyNode.getNodeName().equals("property")) {
                                         // get property name
                                         Name propName = resolver.getQName(getTextContent(propertyNode));
-                                        String fieldName = nsMappings.translatePropertyName(propName);
+                                        String fieldName = nsMappings.translateName(propName);
                                         // set analyzer for the fulltext property fieldname
                                         int idx = fieldName.indexOf(':');
                                         fieldName = fieldName.substring(0, idx + 1)

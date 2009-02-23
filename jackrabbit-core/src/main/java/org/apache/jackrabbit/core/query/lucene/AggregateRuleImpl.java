@@ -27,8 +27,10 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.util.Text;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -36,6 +38,8 @@ import org.w3c.dom.CharacterData;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.PathNotFoundException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -60,9 +64,14 @@ class AggregateRuleImpl implements AggregateRule {
     private final Name nodeTypeName;
 
     /**
-     * The rules that define this indexing aggregate.
+     * The node includes of this indexing aggregate.
      */
-    private final Rule[] rules;
+    private final NodeInclude[] nodeIncludes;
+
+    /**
+     * The property includes of this indexing aggregate.
+     */
+    private final PropertyInclude[] propertyIncludes;
 
     /**
      * The item state manager to retrieve additional item states.
@@ -91,11 +100,12 @@ class AggregateRuleImpl implements AggregateRule {
     AggregateRuleImpl(Node config,
                       NameResolver resolver,
                       ItemStateManager ism,
-                      HierarchyManager hmgr)
-            throws MalformedPathException, IllegalNameException, NamespaceException {
+                      HierarchyManager hmgr) throws MalformedPathException,
+            IllegalNameException, NamespaceException, PathNotFoundException {
         this.resolver = resolver;
         this.nodeTypeName = getNodeTypeName(config);
-        this.rules = getRules(config);
+        this.nodeIncludes = getNodeIncludes(config);
+        this.propertyIncludes = getPropertyIncludes(config);
         this.ism = ism;
         this.hmgr = hmgr;
     }
@@ -104,7 +114,7 @@ class AggregateRuleImpl implements AggregateRule {
      * Returns root node state for the indexing aggregate where
      * <code>nodeState</code> belongs to.
      *
-     * @param nodeState
+     * @param nodeState the node state.
      * @return the root node state of the indexing aggregate or
      *         <code>null</code> if <code>nodeState</code> does not belong to an
      *         indexing aggregate.
@@ -113,8 +123,16 @@ class AggregateRuleImpl implements AggregateRule {
      */
     public NodeState getAggregateRoot(NodeState nodeState)
             throws ItemStateException, RepositoryException {
-        for (int i = 0; i < rules.length; i++) {
-            NodeState aggregateRoot = rules[i].matches(nodeState);
+        for (int i = 0; i < nodeIncludes.length; i++) {
+            NodeState aggregateRoot = nodeIncludes[i].matches(nodeState);
+            if (aggregateRoot != null
+                    && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
+                return aggregateRoot;
+            }
+        }
+        // check property includes
+        for (int i = 0; i < propertyIncludes.length; i++) {
+            NodeState aggregateRoot = propertyIncludes[i].matches(nodeState);
             if (aggregateRoot != null
                     && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
                 return aggregateRoot;
@@ -137,11 +155,30 @@ class AggregateRuleImpl implements AggregateRule {
             throws ItemStateException {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
             List nodeStates = new ArrayList();
-            for (int i = 0; i < rules.length; i++) {
-                nodeStates.addAll(Arrays.asList(rules[i].resolve(nodeState)));
+            for (int i = 0; i < nodeIncludes.length; i++) {
+                nodeStates.addAll(Arrays.asList(nodeIncludes[i].resolve(nodeState)));
             }
             if (nodeStates.size() > 0) {
                 return (NodeState[]) nodeStates.toArray(new NodeState[nodeStates.size()]);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public PropertyState[] getAggregatedPropertyStates(NodeState nodeState)
+            throws ItemStateException {
+        if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
+            List propStates = new ArrayList();
+            for (int i = 0; i < propertyIncludes.length; i++) {
+                propStates.addAll(Arrays.asList(
+                        propertyIncludes[i].resolvePropertyStates(nodeState)));
+            }
+            if (propStates.size() > 0) {
+                return (PropertyState[]) propStates.toArray(
+                        new PropertyState[propStates.size()]);
             }
         }
         return null;
@@ -166,10 +203,10 @@ class AggregateRuleImpl implements AggregateRule {
     }
 
     /**
-     * Creates rules defined in the <code>config</code>.
+     * Creates node includes defined in the <code>config</code>.
      *
      * @param config the indexing aggregate configuration.
-     * @return the rules defined in the <code>config</code>.
+     * @return the node includes defined in the <code>config</code>.
      * @throws MalformedPathException if a path in the configuration is
      *                                malformed.
      * @throws IllegalNameException   if the node type name contains illegal
@@ -177,9 +214,9 @@ class AggregateRuleImpl implements AggregateRule {
      * @throws NamespaceException if the node type contains an unknown
      *                                prefix.
      */
-    private Rule[] getRules(Node config)
+    private NodeInclude[] getNodeIncludes(Node config)
             throws MalformedPathException, IllegalNameException, NamespaceException {
-        List rules = new ArrayList();
+        List includes = new ArrayList();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node n = childNodes.item(i);
@@ -198,10 +235,44 @@ class AggregateRuleImpl implements AggregateRule {
                         builder.addLast(resolver.getQName(elements[j]));
                     }
                 }
-                rules.add(new Rule(builder.getPath(), ntName));
+                includes.add(new NodeInclude(builder.getPath(), ntName));
             }
         }
-        return (Rule[]) rules.toArray(new Rule[rules.size()]);
+        return (NodeInclude[]) includes.toArray(new NodeInclude[includes.size()]);
+    }
+
+    /**
+     * Creates property includes defined in the <code>config</code>.
+     *
+     * @param config the indexing aggregate configuration.
+     * @return the property includes defined in the <code>config</code>.
+     * @throws MalformedPathException if a path in the configuration is
+     *                                malformed.
+     * @throws IllegalNameException   if the node type name contains illegal
+     *                                characters.
+     * @throws NamespaceException if the node type contains an unknown
+     *                                prefix.
+     */
+    private PropertyInclude[] getPropertyIncludes(Node config) throws
+            MalformedPathException, IllegalNameException, NamespaceException,
+            PathNotFoundException {
+        List includes = new ArrayList();
+        NodeList childNodes = config.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node n = childNodes.item(i);
+            if (n.getNodeName().equals("include-property")) {
+                String[] elements = Text.explode(getTextContent(n), '/');
+                PathBuilder builder = new PathBuilder();
+                for (int j = 0; j < elements.length; j++) {
+                    if (elements[j].equals("*")) {
+                        throw new IllegalNameException("* not supported in include-property");
+                    }
+                    builder.addLast(resolver.getQName(elements[j]));
+                }
+                includes.add(new PropertyInclude(builder.getPath()));
+            }
+        }
+        return (PropertyInclude[]) includes.toArray(new PropertyInclude[includes.size()]);
     }
 
     //---------------------------< internal >-----------------------------------
@@ -222,17 +293,17 @@ class AggregateRuleImpl implements AggregateRule {
         return content.toString();
     }
 
-    private final class Rule {
+    private abstract class AbstractInclude {
 
         /**
          * Optional node type name.
          */
-        private final Name nodeTypeName;
+        protected final Name nodeTypeName;
 
         /**
          * A relative path pattern.
          */
-        private final Path pattern;
+        protected final Path pattern;
 
         /**
          * Creates a new rule with a relative path pattern and an optional node
@@ -242,7 +313,7 @@ class AggregateRuleImpl implements AggregateRule {
          *                     types are allowed.
          * @param pattern      a relative path pattern.
          */
-        private Rule(Path pattern, Name nodeTypeName) {
+        AbstractInclude(Path pattern, Name nodeTypeName) {
             this.nodeTypeName = nodeTypeName;
             this.pattern = pattern;
         }
@@ -255,6 +326,9 @@ class AggregateRuleImpl implements AggregateRule {
          * @return the root node state of the indexing aggregate or
          *         <code>null</code> if <code>nodeState</code> does not belong
          *         to an indexing aggregate defined by this rule.
+         * @throws ItemStateException if an error occurs while accessing node
+         *                            states.
+         * @throws RepositoryException if another error occurs.
          */
         NodeState matches(NodeState nodeState)
                 throws ItemStateException, RepositoryException {
@@ -290,20 +364,6 @@ class AggregateRuleImpl implements AggregateRule {
             return null;
         }
 
-        /**
-         * Resolves the <code>nodeState</code> using this rule.
-         *
-         * @param nodeState the root node of the enclosing indexing aggregate.
-         * @return the descendant node states as defined by this rule.
-         * @throws ItemStateException if an error occurs while resolving the
-         *                            node states.
-         */
-        NodeState[] resolve(NodeState nodeState) throws ItemStateException {
-            List nodeStates = new ArrayList();
-            resolve(nodeState, nodeStates, 0);
-            return (NodeState[]) nodeStates.toArray(new NodeState[nodeStates.size()]);
-        }
-
         //-----------------------------< internal >-----------------------------
 
         /**
@@ -316,7 +376,7 @@ class AggregateRuleImpl implements AggregateRule {
          * @throws ItemStateException if an error occurs while accessing node
          *                            states.
          */
-        private void resolve(NodeState nodeState, List collector, int offset)
+        protected void resolve(NodeState nodeState, List collector, int offset)
                 throws ItemStateException {
             Name currentName = pattern.getElements()[offset].getName();
             List cne;
@@ -345,6 +405,70 @@ class AggregateRuleImpl implements AggregateRule {
                     resolve((NodeState) ism.getItemState(id), collector, offset);
                 }
             }
+        }
+    }
+
+    private final class NodeInclude extends AbstractInclude {
+
+        /**
+         * Creates a new node include with a relative path pattern and an
+         * optional node type name.
+         *
+         * @param nodeTypeName node type name or <code>null</code> if all node
+         *                     types are allowed.
+         * @param pattern      a relative path pattern.
+         */
+        NodeInclude(Path pattern, Name nodeTypeName) {
+            super(pattern, nodeTypeName);
+        }
+
+        /**
+         * Resolves the <code>nodeState</code> using this rule.
+         *
+         * @param nodeState the root node of the enclosing indexing aggregate.
+         * @return the descendant node states as defined by this rule.
+         * @throws ItemStateException if an error occurs while resolving the
+         *                            node states.
+         */
+        NodeState[] resolve(NodeState nodeState) throws ItemStateException {
+            List nodeStates = new ArrayList();
+            resolve(nodeState, nodeStates, 0);
+            return (NodeState[]) nodeStates.toArray(new NodeState[nodeStates.size()]);
+        }
+    }
+
+    private final class PropertyInclude extends AbstractInclude {
+
+        private final Name propertyName;
+
+        PropertyInclude(Path pattern)
+                throws PathNotFoundException {
+            super(pattern.getAncestor(1), null);
+            this.propertyName = pattern.getNameElement().getName();
+        }
+
+        /**
+         * Resolves the <code>nodeState</code> using this rule.
+         *
+         * @param nodeState the root node of the enclosing indexing aggregate.
+         * @return the descendant property states as defined by this rule.
+         * @throws ItemStateException if an error occurs while resolving the
+         *                            property states.
+         */
+        PropertyState[] resolvePropertyStates(NodeState nodeState)
+                throws ItemStateException {
+            List nodeStates = new ArrayList();
+            resolve(nodeState, nodeStates, 0);
+            List propStates = new ArrayList();
+            for (Iterator it = nodeStates.iterator(); it.hasNext(); ) {
+                NodeState state = (NodeState) it.next();
+                if (state.hasPropertyName(propertyName)) {
+                    PropertyId propId = new PropertyId(state.getNodeId(), propertyName);
+                    propStates.add(ism.getItemState(propId));
+                }
+            }
+            return (PropertyState[]) propStates.toArray(
+                    new PropertyState[propStates.size()]);
         }
     }
 }

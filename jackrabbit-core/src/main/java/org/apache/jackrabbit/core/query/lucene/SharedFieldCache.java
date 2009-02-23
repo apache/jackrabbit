@@ -18,14 +18,17 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermPositions;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.SortComparator;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+
+import javax.jcr.PropertyType;
 
 /**
  * Implements a variant of the lucene class <code>org.apache.lucene.search.FieldCacheImpl</code>.
@@ -38,7 +41,7 @@ class SharedFieldCache {
     /**
      * Expert: Stores term text values and document ordering data.
      */
-    public static class StringIndex {
+    public static class ValueIndex {
 
         /**
          * Some heuristic factor that determines whether the array is sparse. Note that if less then
@@ -48,62 +51,62 @@ class SharedFieldCache {
         private static final int SPARSE_FACTOR = 100;
 
         /**
-         * Terms indexed by document id.
+         * Values indexed by document id.
          */
-        private final String[] terms;
+        private final Comparable[] values;
 
         /**
-         * Terms map indexed by document id.
+         * Values (Comparable) map indexed by document id.
          */
-        public final Map termsMap;
+        public final Map valuesMap;
 
         /**
-         * Boolean indicating whether the hashMap impl has to be used
+         * Boolean indicating whether the {@link #valuesMap} impl has to be used
          */
         public final boolean sparse;
 
         /**
          * Creates one of these objects
          */
-        public StringIndex(String[] terms, int setValues) {
-            if (isSparse(terms, setValues)) {
+        public ValueIndex(Comparable[] values, int setValues) {
+            if (isSparse(values, setValues)) {
                 this.sparse = true;
-                this.terms = null;
+                this.values = null;
                 if (setValues == 0) {
-                    this.termsMap = null;
+                    this.valuesMap = null;
                 } else {
-                    this.termsMap = getTermsMap(terms, setValues);
+                    this.valuesMap = getValuesMap(values, setValues);
                 }
             } else {
                 this.sparse = false;
-                this.terms = terms;
-                this.termsMap = null;
+                this.values = values;
+                this.valuesMap = null;
             }
         }
 
-        public String getTerm(int i) {
+        public Comparable getValue(int i) {
             if (sparse) {
-                return termsMap == null ? null : (String) termsMap.get(new Integer(i));
+                return valuesMap == null ? null : (Comparable) valuesMap.get(new Integer(i));
             } else {
-                return terms[i];
+                return values[i];
             }
         }
 
-        private Map getTermsMap(String[] terms, int setValues) {
+        private Map getValuesMap(Comparable[] values, int setValues) {
             Map map = new HashMap(setValues);
-            for (int i = 0; i < terms.length && setValues > 0; i++) {
-                if (terms[i] != null) {
-                    map.put(new Integer(i), terms[i]);
+            for (int i = 0; i < values.length && setValues > 0; i++) {
+                if (values[i] != null) {
+                    map.put(new Integer(i), values[i]);
                     setValues--;
                 }
             }
             return map;
         }
 
-        private boolean isSparse(String[] terms, int setValues) {
+        private boolean isSparse(Comparable[] values, int setValues) {
             // some really simple test to test whether the array is sparse. Currently, when less then 1% is set, the array is already sparse 
             // for this typical cache to avoid memory issues
-            if (setValues * SPARSE_FACTOR < terms.length) {
+            if (setValues * SPARSE_FACTOR < values.length) {
                 return true;
             }
             return false;
@@ -127,26 +130,24 @@ class SharedFieldCache {
     }
 
     /**
-     * Creates a <code>StringIndex</code> for a <code>field</code> and a term
+     * Creates a <code>ValueIndex</code> for a <code>field</code> and a term
      * <code>prefix</code>. The term prefix acts as the property name for the
      * shared <code>field</code>.
      * <p/>
      * This method is an adapted version of: <code>FieldCacheImpl.getStringIndex()</code>
-     * The returned string index will <b>not</b> have a term lookup array!
-     * See {@link SharedFieldSortComparator} for more info.
      *
      * @param reader     the <code>IndexReader</code>.
      * @param field      name of the shared field.
      * @param prefix     the property name, will be used as term prefix.
      * @param comparator the sort comparator instance.
-     * @return a StringIndex that contains the field values and order
+     * @return a ValueIndex that contains the field values and order
      *         information.
      * @throws IOException if an error occurs while reading from the index.
      */
-    public SharedFieldCache.StringIndex getStringIndex(IndexReader reader,
-                                                 String field,
-                                                 String prefix,
-                                                 SortComparator comparator)
+    public ValueIndex getValueIndex(IndexReader reader,
+                                    String field,
+                                    String prefix,
+                                    SortComparator comparator)
             throws IOException {
 
         if (reader instanceof ReadOnlyIndexReader) {
@@ -154,12 +155,22 @@ class SharedFieldCache {
         }
 
         field = field.intern();
-        SharedFieldCache.StringIndex ret = lookup(reader, field, prefix, comparator);
+        ValueIndex ret = lookup(reader, field, prefix, comparator);
         if (ret == null) {
-            final String[] retArray = new String[reader.maxDoc()];
+            Comparable[] retArray = new Comparable[reader.maxDoc()];
             int setValues = 0;
             if (retArray.length > 0) {
-                TermDocs termDocs = reader.termDocs();
+                IndexFormatVersion version = IndexFormatVersion.getVersion(reader);
+                boolean hasPayloads = version.isAtLeast(IndexFormatVersion.V3);
+                TermDocs termDocs;
+                byte[] payload = null;
+                int type;
+                if (hasPayloads) {
+                    termDocs = reader.termPositions();
+                    payload = new byte[1];
+                } else {
+                    termDocs = reader.termDocs();
+                }
                 TermEnum termEnum = reader.terms(new Term(field, prefix));
 
                 char[] tmp = new char[16];
@@ -185,8 +196,17 @@ class SharedFieldCache {
 
                         termDocs.seek(termEnum);
                         while (termDocs.next()) {
+                            type = PropertyType.UNDEFINED;
+                            if (hasPayloads) {
+                                TermPositions termPos = (TermPositions) termDocs;
+                                termPos.nextPosition();
+                                if (termPos.isPayloadAvailable()) {
+                                    payload = termPos.getPayload(payload, 0);
+                                    type = PropertyMetaData.fromByteArray(payload).getPropertyType();
+                                }
+                            }
                             setValues++;
-                            retArray[termDocs.doc()] = value;
+                            retArray[termDocs.doc()] = getValue(value, type);
                         }
                     } while (termEnum.next());
                 } finally {
@@ -194,7 +214,7 @@ class SharedFieldCache {
                     termEnum.close();
                 }
             }
-            SharedFieldCache.StringIndex value = new SharedFieldCache.StringIndex(retArray, setValues);
+            ValueIndex value = new ValueIndex(retArray, setValues);
             store(reader, field, prefix, comparator, value);
             return value;
         }
@@ -202,9 +222,9 @@ class SharedFieldCache {
     }
 
     /**
-     * See if a <code>StringIndex</code> object is in the cache.
+     * See if a <code>ValueIndex</code> object is in the cache.
      */
-    SharedFieldCache.StringIndex lookup(IndexReader reader, String field,
+    ValueIndex lookup(IndexReader reader, String field,
                                   String prefix, SortComparator comparer) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
@@ -212,15 +232,15 @@ class SharedFieldCache {
             if (readerCache == null) {
                 return null;
             }
-            return (SharedFieldCache.StringIndex) readerCache.get(key);
+            return (ValueIndex) readerCache.get(key);
         }
     }
 
     /**
-     * Put a <code>StringIndex</code> <code>value</code> to cache.
+     * Put a <code>ValueIndex</code> <code>value</code> to cache.
      */
     Object store(IndexReader reader, String field, String prefix,
-                 SortComparator comparer, SharedFieldCache.StringIndex value) {
+                 SortComparator comparer, ValueIndex value) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
             HashMap readerCache = (HashMap) cache.get(reader);
@@ -229,6 +249,29 @@ class SharedFieldCache {
                 cache.put(reader, readerCache);
             }
             return readerCache.put(key, value);
+        }
+    }
+
+    /**
+     * Returns a comparable for the given <code>value</code> that is read from
+     * the index.
+     *
+     * @param value the value as read from the index.
+     * @param type the property type.
+     * @return a comparable for the <code>value</code>.
+     */
+    private Comparable getValue(String value, int type) {
+        switch (type) {
+            case PropertyType.BOOLEAN:
+                return ComparableBoolean.valueOf(Boolean.valueOf(value).booleanValue());
+            case PropertyType.DATE:
+                return new Long(DateField.stringToTime(value));
+            case PropertyType.LONG:
+                return new Long(LongField.stringToLong(value));
+            case PropertyType.DOUBLE:
+                return new Double(DoubleField.stringToDouble(value));
+            default:
+                return value;
         }
     }
 
@@ -243,7 +286,7 @@ class SharedFieldCache {
         private final SortComparator comparator;
 
         /**
-         * Creates <code>Key</code> for StringIndex lookup.
+         * Creates <code>Key</code> for ValueIndex lookup.
          */
         Key(String field, String prefix, SortComparator comparator) {
             this.field = field.intern();
