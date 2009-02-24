@@ -40,3 +40,54 @@ This component contains two WebDAV based JCR server implementations:
            
       Further reading:
       - http://www.day.com/jsr170/server/JCR_Webdav_Protocol.zip
+
+Things to do
+============
+
+-------------------------------------------------------------------
+TODO 'jcr' server implementation
+-------------------------------------------------------------------
+
+general 
+
+- undo incomplete changes in case of exception
+- multistatus fuer lock, copy, move, delete wherever required.
+- DAV:supported-live-property-set
+- timeout: remove expired locks/subscriptions
+- improve definition methods/compliance-class
+- OPTIONS to *-request-uri (according to RFC 2616)
+
+
+lock
+
+- implement session-scoped locks. this includes:
+  > uncommenting supported-locks entry
+  > build caching mechanism for session in case of session-scoped locks.
+  > retrieval of cached sessions (currently not possible from IfHeader).
+  > open issue in JCR: scope of lock cannot be retrieved.
+
+- JCR lock-token currently not checked for compliance with RFC2518. If the
+  token is modified accordingly, setting the lock-token to the subsequent
+  session (currently in the WebdavRequestImpl) must be aware of that change....
+
+- transaction locks
+  - lock returned upon lock-discovery 
+  - remove after timeout (>> releasing cached sessions)
+  - define reasonable timeout or make timeout configurable
+  - createLock must respect existing locks in the subtree, for lock is always deep.
+  - repository transactions ('global') are only possible with jackrabbit, where
+  the session represents the XAResource itself.
+  since j2ee explicitely requires any usertransaction to be completed
+  upon the end of the servletes service method.
+  general review necessary....
+  
+ 
+observation
+
+- make sure all expired subscriptions are removed.
+- subscription: reasonable default/max timeout make it configurable...
+
+versioning
+
+- Additional VERSION-CONTROL Semantics with workspace not implemented.
+- BaseLine/Activity not respected yet (see jsr283)
