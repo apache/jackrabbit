@@ -49,7 +49,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.rat</groupId>
+        <groupId>org.codehaus.mojo</groupId>
         <artifactId>rat-maven-plugin</artifactId>
         <configuration>
           <excludes>

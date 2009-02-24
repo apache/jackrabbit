@@ -112,7 +112,7 @@ loading Java classes from content repositories that implement the Content Reposi
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.rat</groupId>
+        <groupId>org.codehaus.mojo</groupId>
         <artifactId>rat-maven-plugin</artifactId>
         <configuration>
           <excludes>
