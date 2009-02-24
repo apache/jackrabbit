@@ -127,6 +127,18 @@
           <configLocation>checkstyle.xml</configLocation>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/main/javadoc/**/*.uxf</exclude>
+            <exclude>src/test/repository/**</exclude>
+            <exclude>src/test/resources/**/*.txt</exclude>
+            <exclude>src/test/resources/**/*.cnd</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
     <resources>
       <resource>
