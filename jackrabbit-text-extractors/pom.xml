@@ -46,6 +46,20 @@
     <url>http://svn.apache.org/viewvc/jackrabbit/trunk/jackrabbit-text-extractors</url>
   </scm>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/*.rtf</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.poi</groupId>

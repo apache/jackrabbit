@@ -135,6 +135,19 @@
           <downloadSources>true</downloadSources>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <version>0.6-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
     <pluginManagement>

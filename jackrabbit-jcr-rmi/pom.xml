@@ -94,6 +94,15 @@
           </systemProperties>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/main/javadoc/**/*.uxf</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

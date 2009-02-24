@@ -75,6 +75,16 @@
           </systemProperties>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/test/resources/jaas.config</exclude>
+            <exclude>src/test/resources/testdata.xml</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   

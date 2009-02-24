@@ -161,6 +161,15 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>rat-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>src/main/webapp/WEB-INF/log4j.dtd</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
