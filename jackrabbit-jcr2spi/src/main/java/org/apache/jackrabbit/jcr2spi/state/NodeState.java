@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import java.util.Arrays;
+import java.util.List;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
@@ -30,11 +36,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -122,31 +123,30 @@ public class NodeState extends ItemState {
     /**
      * @see ItemState#merge(ItemState, boolean)
      */
-    public boolean merge(ItemState another, boolean keepChanges) {
-        if (another == null || another == this) {
-            return false;
-        }
-        if (!another.isNode()) {
-            throw new IllegalArgumentException("Attempt to merge node state with property state.");
-        }
+    public MergeResult merge(ItemState another, boolean keepChanges) {
         boolean modified = false;
-        synchronized (another) {
-            NodeState nState = (NodeState) another;
-
-            if (nState.definition != null && !nState.definition.equals(definition)) {
-                definition = nState.definition;
-                modified = true;
+        if (another != null && another != this) {
+            if (!another.isNode()) {
+                throw new IllegalArgumentException("Attempt to merge node state with property state.");
             }
+            synchronized (another) {
+                NodeState nState = (NodeState) another;
 
-            // since 'mixinTypeNames' are modified upon save only, no special
-            // merging is required here. just reset the mixinTypeNames.
-            List mixN = Arrays.asList(nState.mixinTypeNames);
-            if (mixN.size() != mixinTypeNames.length || !mixN.containsAll(Arrays.asList(mixinTypeNames))) {
-                setMixinTypeNames(nState.mixinTypeNames);
-                modified = true;
+                if (nState.definition != null && !nState.definition.equals(definition)) {
+                    definition = nState.definition;
+                    modified = true;
+                }
+
+                // since 'mixinTypeNames' are modified upon save only, no special
+                // merging is required here. just reset the mixinTypeNames.
+                List mixN = Arrays.asList(nState.mixinTypeNames);
+                if (mixN.size() != mixinTypeNames.length || !mixN.containsAll(Arrays.asList(mixinTypeNames))) {
+                    setMixinTypeNames(nState.mixinTypeNames);
+                    modified = true;
+                }
             }
         }
-        return modified;
+        return new SimpleMergeResult(modified);
     }
 
     /**
@@ -254,7 +254,7 @@ public class NodeState extends ItemState {
      * TODO: clarify usage
      * In case the status of the given node state is not {@link Status#EXISTING}
      * the transiently added mixin types are taken into account as well.
-     * 
+     *
      * @return
      */
     public synchronized Name[] getAllNodeTypeNames() {
