@@ -16,6 +16,14 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
@@ -25,13 +33,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.WeakIdentityCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 
 /**
  * <code>ItemState</code> represents the state of an <code>Item</code>.
@@ -51,7 +52,7 @@ public abstract class ItemState {
     /**
      * The hierarchy entry this state belongs to.
      */
-    private HierarchyEntry hierarchyEntry;
+    private final HierarchyEntry hierarchyEntry;
 
     /**
      * Listeners (weak references)
@@ -264,9 +265,9 @@ public abstract class ItemState {
      *
      * @param another
      * @param keepChanges
-     * @return true if this state has been modified
+     * @return a MergeResult instance which represent the result of the merge operation
      */
-    public abstract boolean merge(ItemState another, boolean keepChanges);
+    public abstract MergeResult merge(ItemState another, boolean keepChanges);
 
     /**
      * Revert all transient modifications made to this ItemState.
@@ -333,4 +334,40 @@ public abstract class ItemState {
                 throw new InvalidItemStateException(msg);
         }
     }
+
+    // -----------------------------------------------------< MergeResult >---
+
+    /**
+     * A MergeResult represents the result of a {@link ItemState#merge(ItemState, boolean)}
+     * operation.
+     */
+    public interface MergeResult {
+
+        /**
+         * @return  true iff the target state of {@link ItemState#merge(ItemState, boolean)}
+         * was modified.
+         */
+        public boolean modified();
+    }
+
+    /**
+     * A SimpleMergeResult is just a holder for a modification status.
+     * The {@link #modified()} method just returns the modification status passed
+     * to the constructor.
+     */
+    protected class SimpleMergeResult implements MergeResult {
+        private final boolean modified;
+
+        /**
+         * @param modified  modification status
+         */
+        public SimpleMergeResult(boolean modified) {
+            this.modified = modified;
+        }
+
+        public boolean modified() {
+            return modified;
+        }
+    }
+
 }

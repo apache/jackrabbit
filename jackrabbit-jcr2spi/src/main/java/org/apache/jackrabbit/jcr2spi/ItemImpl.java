@@ -16,6 +16,25 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import java.util.Collections;
+import java.util.Map;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
+
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
@@ -33,24 +52,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Item;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
-import java.util.Collections;
-import java.util.Map;
-
 /**
  * <code>ItemImpl</code>...
  */
@@ -58,7 +59,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemImpl.class);
 
-    private ItemState state;
+    private final ItemState state;
 
     /**
      * The session that created this item.
@@ -263,7 +264,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
                 session.getCacheBehaviour() != CacheBehaviour.OBSERVATION) {
                 // merge current transient modifications with latest changes
                 // from the 'server'.
-                // Note, that with Observation-CacheBehaviour no manuel refresh
+                // Note, that with Observation-CacheBehaviour no manual refresh
                 // is required. changes get pushed automatically.
                 state.getHierarchyEntry().invalidate(true);
             }
@@ -276,7 +277,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             }
 
             /*
-            Reset all transient modifications from this item and its decendants.
+            Reset all transient modifications from this item and its descendants.
             */
             session.getSessionItemStateManager().undo(state);
 
