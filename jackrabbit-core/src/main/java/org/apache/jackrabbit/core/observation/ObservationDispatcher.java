@@ -83,7 +83,7 @@ public final class ObservationDispatcher extends EventDispatcher
 
     /**
      * Creates a new <code>ObservationDispatcher</code> instance
-     * and starts the notification thread deamon.
+     * and starts the notification thread daemon.
      */
     public ObservationDispatcher() {
         notificationThread = new Thread(this, "ObservationManager");

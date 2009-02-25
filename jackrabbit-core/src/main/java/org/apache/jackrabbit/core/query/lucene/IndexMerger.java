@@ -34,7 +34,7 @@ import EDU.oswego.cs.dl.util.concurrent.Sync;
 import EDU.oswego.cs.dl.util.concurrent.Mutex;
 
 /**
- * Merges indexes in a separate deamon thread.
+ * Merges indexes in a separate daemon thread.
  */
 class IndexMerger extends Thread implements IndexListener {
 
@@ -234,13 +234,13 @@ class IndexMerger extends Thread implements IndexListener {
         try {
             // give the merger thread some time to quit,
             // it is possible that the merger is busy working on a large index.
-            // if that is the case we will just ignore it and the deamon will
+            // if that is the case we will just ignore it and the daemon will
             // die without being able to finish the merge.
             // at this point it is not possible anymore to replace indexes
             // on the MultiIndex because we hold the indexReplacement Sync.
             this.join(500);
             if (isAlive()) {
-                log.info("Unable to stop IndexMerger. Deamon is busy.");
+                log.info("Unable to stop IndexMerger. Daemon is busy.");
             } else {
                 log.debug("IndexMerger thread stopped");
             }
