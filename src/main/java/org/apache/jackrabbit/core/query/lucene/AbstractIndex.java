@@ -232,10 +232,12 @@ abstract class AbstractIndex {
      * read-only, that is, any attempt to delete a document from the index
      * will throw an <code>UnsupportedOperationException</code>.
      *
+     * @param initCache if the caches in the index reader should be initialized
+     *          before the index reader is returned.
      * @return a read-only index reader.
      * @throws IOException if an error occurs while obtaining the index reader.
      */
-    synchronized ReadOnlyIndexReader getReadOnlyIndexReader()
+    synchronized ReadOnlyIndexReader getReadOnlyIndexReader(boolean initCache)
             throws IOException {
         // get current modifiable index reader
         CommittableIndexReader modifiableReader = getIndexReader();
@@ -271,12 +273,27 @@ abstract class AbstractIndex {
         }
         if (sharedReader == null) {
             // create new shared reader
-            CachingIndexReader cr = new CachingIndexReader(IndexReader.open(getDirectory()), cache);
+            CachingIndexReader cr = new CachingIndexReader(
+                    IndexReader.open(getDirectory()), cache, initCache);
             sharedReader = new SharedIndexReader(cr);
         }
         readOnlyReader = new ReadOnlyIndexReader(sharedReader, deleted, modCount);
         readOnlyReader.incrementRefCount();
         return readOnlyReader;
+    }
+
+    /**
+     * Returns a read-only index reader, that can be used concurrently with
+     * other threads writing to this index. The returned index reader is
+     * read-only, that is, any attempt to delete a document from the index
+     * will throw an <code>UnsupportedOperationException</code>.
+     *
+     * @return a read-only index reader.
+     * @throws IOException if an error occurs while obtaining the index reader.
+     */
+    protected ReadOnlyIndexReader getReadOnlyIndexReader()
+            throws IOException {
+        return getReadOnlyIndexReader(false);
     }
 
     /**
