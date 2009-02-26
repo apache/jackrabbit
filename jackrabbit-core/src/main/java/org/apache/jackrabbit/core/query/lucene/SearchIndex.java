@@ -434,6 +434,12 @@ public class SearchIndex extends AbstractQueryHandler {
     private SortComparatorSource scs;
 
     /**
+     * Flag that indicates whether the hierarchy cache should be initialized
+     * immediately on startup.
+     */
+    private boolean initializeHierarchyCache = true;
+
+    /**
      * Indicates if this <code>SearchIndex</code> is closed and cannot be used
      * anymore.
      */
@@ -2058,6 +2064,25 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setTermInfosIndexDivisor(int termInfosIndexDivisor) {
         this.termInfosIndexDivisor = termInfosIndexDivisor;
+    }
+
+    /**
+     * @return <code>true</code> if the hierarchy cache should be initialized
+     *         immediately on startup.
+     */
+    public boolean isInitializeHierarchyCache() {
+        return initializeHierarchyCache;
+    }
+
+    /**
+     * Whether the hierarchy cache should be initialized immediately on
+     * startup.
+     *
+     * @param initializeHierarchyCache <code>true</code> if the cache should be
+     *                                 initialized immediately.
+     */
+    public void setInitializeHierarchyCache(boolean initializeHierarchyCache) {
+        this.initializeHierarchyCache = initializeHierarchyCache;
     }
 
     //----------------------------< internal >----------------------------------
