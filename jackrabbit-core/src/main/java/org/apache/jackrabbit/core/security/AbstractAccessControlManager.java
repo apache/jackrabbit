@@ -23,6 +23,7 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,11 +122,13 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
 
     //-------------------------------------< JackrabbitAccessControlManager >---
     /**
-     * {@inheritDoc}
+     * @see JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal) 
      */
-    public AccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
-        log.debug("Implementation does not provide applicable policies -> returning empty array.");        
-        return new AccessControlPolicy[0];
+    public JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        
+        log.debug("Implementation does not provide applicable policies -> returning empty array.");
+        return new JackrabbitAccessControlPolicy[0];
     }
 
     //--------------------------------------------------------------------------

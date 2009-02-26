@@ -19,8 +19,12 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * <code>ACLTemplateTest</code>...
@@ -36,5 +40,22 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     protected JackrabbitAccessControlList createEmptyTemplate(String testPath)
             throws RepositoryException {
         return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser);
+    }
+
+    public void testGetRestrictionNames() throws RepositoryException {
+        List names = Arrays.asList(createEmptyTemplate(getTestPath()).getRestrictionNames());
+
+        assertEquals(2, names.size());
+        NameResolver resolver = (NameResolver) superuser;
+        assertTrue(names.contains(resolver.getJCRName(ACLTemplate.P_NODE_PATH)));
+        assertTrue(names.contains(resolver.getJCRName(ACLTemplate.P_GLOB)));
+    }
+
+    public void testGetRestrictionTypes() throws RepositoryException {
+        JackrabbitAccessControlList acl = createEmptyTemplate(getTestPath());
+
+        NameResolver resolver = (NameResolver) superuser;
+        assertEquals(PropertyType.PATH, acl.getRestrictionType(resolver.getJCRName(ACLTemplate.P_NODE_PATH)));
+        assertEquals(PropertyType.STRING, acl.getRestrictionType(resolver.getJCRName(ACLTemplate.P_GLOB)));
     }
 }

@@ -53,10 +53,6 @@ public interface AccessControlConstants {
 
     //----------------------------------------------------< node type names >---
     /**
-     * rep:AccessControl nodetype
-     */
-    Name NT_REP_ACCESS_CONTROL = NF.create(Name.NS_REP_URI, "AccessControl");
-    /**
      * rep:AccessControllable nodetype
      */
     Name NT_REP_ACCESS_CONTROLLABLE = NF.create(Name.NS_REP_URI, "AccessControllable");
@@ -77,4 +73,15 @@ public interface AccessControlConstants {
      */
     Name NT_REP_DENY_ACE = NF.create(Name.NS_REP_URI, "DenyACE");
 
+    //----------------------------------< node types for principal based ac >---
+    /**
+     * rep:AccessControl nodetype
+     */
+    Name NT_REP_ACCESS_CONTROL = NF.create(Name.NS_REP_URI, "AccessControl");
+
+    /**
+     * rep:PrincipalAccessControl nodetype
+     */
+    Name NT_REP_PRINCIPAL_ACCESS_CONTROL = NF.create(Name.NS_REP_URI, "PrincipalAccessControl");
+    
 }

@@ -305,7 +305,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         } catch (RepositoryException e) {
             log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
             session.getRootNode().refresh(false);
-            throw e;
         }
     }
 

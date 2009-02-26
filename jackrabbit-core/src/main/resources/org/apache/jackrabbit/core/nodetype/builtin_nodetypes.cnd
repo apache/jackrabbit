@@ -197,9 +197,21 @@
 
 [rep:DenyACE] > rep:ACE
 
-[rep:AccessControl] > nt:base, rep:AccessControllable
+// -----------------------------------------------------------------------------
+// Principal based AC
+// -----------------------------------------------------------------------------
+
+[rep:AccessControl] > nt:base
   + * (rep:AccessControl) protected ignore
-  
+  + * (rep:PrincipalAccessControl) protected ignore
+
+[rep:PrincipalAccessControl] > rep:AccessControl
+  + rep:policy (rep:Policy) protected ignore
+
+// -----------------------------------------------------------------------------
+// User Management 
+// -----------------------------------------------------------------------------
+
 [rep:Authorizable] > nt:base, mix:referenceable abstract
   + * (rep:Authorizable) = rep:Authorizable protected version
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected version

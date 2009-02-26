@@ -74,7 +74,9 @@ public interface AccessControlProvider {
      * Returns the effective policies for the node at the given absPath.
      *
      * @param absPath an absolute path.
-     * @return The effective policies that apply at <code>absPath</code>.
+     * @return The effective policies that apply at <code>absPath</code> or
+     * an empty array if the implementation cannot determine the effective
+     * policy at the given path.
      * @throws ItemNotFoundException If no Node with the specified
      * <code>absPath</code> exists.
      * @throws RepositoryException If another error occurs.
@@ -87,8 +89,8 @@ public interface AccessControlProvider {
      * or <code>null</code> if the implementation does not support editing
      * of access control policies.
      *
-     * @param session
-     * @return the ACL editor or <code>null</code>
+     * @param session The editing session.
+     * @return the ACL editor or <code>null</code>.
      * @throws RepositoryException If an error occurs.
      */
     AccessControlEditor getEditor(Session session) throws RepositoryException;

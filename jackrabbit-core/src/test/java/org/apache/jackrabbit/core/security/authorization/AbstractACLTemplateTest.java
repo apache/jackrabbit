@@ -73,7 +73,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     }
 
     public void testGetPath() throws RepositoryException {
-        JackrabbitAccessControlList pt = (JackrabbitAccessControlList) createEmptyTemplate(getTestPath());
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         assertEquals(getTestPath(), pt.getPath());
     }
 
@@ -84,7 +84,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         } else {
             throw new NotExecutableException();
         }
-        JackrabbitAccessControlList pt = (JackrabbitAccessControlList) createEmptyTemplate(getTestPath());
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         try {
             pt.addAccessControlEntry(unknownPrincipal, privilegesFromName(Privilege.JCR_READ));
             fail("Adding an ACE with an unknown principal should fail");
@@ -94,7 +94,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     }
 
     public void testAddInvalidEntry2() throws RepositoryException {
-        JackrabbitAccessControlList pt = (JackrabbitAccessControlList) createEmptyTemplate(getTestPath());
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         try {
             pt.addAccessControlEntry(testPrincipal, new Privilege[0]);
             fail("Adding an ACE with invalid privileges should fail");
@@ -104,7 +104,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     }
 
     public void testRemoveInvalidEntry() throws RepositoryException {
-        JackrabbitAccessControlList pt = (JackrabbitAccessControlList) createEmptyTemplate(getTestPath());
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         try {
             pt.removeAccessControlEntry(new JackrabbitAccessControlEntry() {
                 public boolean isAllow() {
@@ -138,7 +138,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
     }
 
     public void testRemoveInvalidEntry2() throws RepositoryException {
-        JackrabbitAccessControlList pt = (JackrabbitAccessControlList) createEmptyTemplate(getTestPath());
+        JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         try {
             pt.removeAccessControlEntry(new JackrabbitAccessControlEntry() {
                 public boolean isAllow() {

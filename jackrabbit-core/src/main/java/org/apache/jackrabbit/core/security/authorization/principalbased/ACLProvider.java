@@ -163,7 +163,6 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             } catch (RepositoryException e) {
                 log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
                 session.getRootNode().refresh(false);
-                throw e;
             }
         }
     }
@@ -173,6 +172,15 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath)
             throws ItemNotFoundException, RepositoryException {
+        /* 
+           TODO review
+           since the per-node effect of the policies is defined by the
+           rep:nodePath restriction, returning the principal-based
+           policy at 'absPath' probably doesn't reveal what the caller expects.
+           Maybe it would be better not to return an empty array as
+           {@link AccessControlManager#getEffectivePolicies(String)
+           is defined to express a best-effor estimate only.
+        */
         AccessControlPolicy[] tmpls = editor.getPolicies(session.getJCRPath(absPath));
         AccessControlPolicy[] effectives = new AccessControlPolicy[tmpls.length];
         for (int i = 0; i < tmpls.length; i++) {

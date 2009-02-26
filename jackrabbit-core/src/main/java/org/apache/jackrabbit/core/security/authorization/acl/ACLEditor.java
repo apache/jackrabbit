@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -112,26 +113,31 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
 
-        AccessControlPolicy acl;
-        NodeImpl aclNode = getAclNode(nodePath);
+        AccessControlPolicy acl = null;
+        NodeImpl controlledNode = getNode(nodePath);
+        NodeImpl aclNode = getAclNode(controlledNode);
         if (aclNode == null) {
-            // create an empty acl
-            acl = new ACLTemplate(nodePath, session.getPrincipalManager(), privilegeRegistry);
+            // create an empty acl unless the node is protected or cannot have
+            // rep:AccessControllable mixin set (e.g. due to a lock)
+            String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
+            if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
+                acl = new ACLTemplate(nodePath, session.getPrincipalManager(), privilegeRegistry);
+            }
         } else {
             acl = getACL(aclNode);
         }
-        return new AccessControlPolicy[] {acl};
+        return (acl != null) ? new AccessControlPolicy[] {acl} : new AccessControlPolicy[0];
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(Principal)
      */
-    public AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException {
+    public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException {
         if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
             throw new AccessControlException("Unknown principal.");
         }
         // TODO: impl. missing
-        return new AccessControlPolicy[0];
+        return new JackrabbitAccessControlPolicy[0];
     }
 
     /**
@@ -237,8 +243,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     /**
-     * Returns the rep:Policy node below the Node identified by the given
-     * id or <code>null</code> if the node is not mix:AccessControllable
+     * Returns the rep:Policy node below the Node identified at the given
+     * path or <code>null</code> if the node is not mix:AccessControllable
      * or if no policy node exists.
      *
      * @param nodePath
@@ -247,10 +253,22 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException
      */
     private NodeImpl getAclNode(String nodePath) throws PathNotFoundException, RepositoryException {
+        NodeImpl controlledNode = getNode(nodePath);
+        return getAclNode(controlledNode);
+    }
+
+    /**
+     * Returns the rep:Policy node below the given Node or <code>null</code>
+     * if the node is not mix:AccessControllable or if no policy node exists.
+     *
+     * @param controlledNode
+     * @return node or <code>null</code>
+     * @throws RepositoryException
+     */
+    private NodeImpl getAclNode(NodeImpl controlledNode) throws RepositoryException {
         NodeImpl aclNode = null;
-        NodeImpl protectedNode = getNode(nodePath);
-        if (ACLProvider.isAccessControlled(protectedNode)) {
-            aclNode = protectedNode.getNode(N_POLICY);
+        if (ACLProvider.isAccessControlled(controlledNode)) {
+            aclNode = controlledNode.getNode(N_POLICY);
         }
         return aclNode;
     }

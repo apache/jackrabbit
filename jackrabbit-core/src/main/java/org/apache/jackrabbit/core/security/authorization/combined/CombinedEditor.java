@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.authorization.combined;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ class CombinedEditor implements AccessControlEditor {
     /**
      * @see AccessControlEditor#editAccessControlPolicies(Principal)
      */
-    public AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
+    public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
         List templates = new ArrayList();
         for (int i = 0; i < editors.length; i++) {
             try {
@@ -86,7 +87,7 @@ class CombinedEditor implements AccessControlEditor {
                 // ignore.
             }
         }
-        return (AccessControlPolicy[]) templates.toArray(new AccessControlPolicy[templates.size()]);
+        return (JackrabbitAccessControlPolicy[]) templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
     }
 
     /**

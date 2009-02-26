@@ -201,7 +201,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
             };
             createEntry(null, privs, true);
             fail("Principal must not be null");
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             // success
         }
     }

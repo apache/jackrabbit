@@ -30,8 +30,6 @@ import javax.jcr.Session;
 import javax.jcr.Node;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.version.Version;
 import java.security.Principal;
 import java.util.Map;
 

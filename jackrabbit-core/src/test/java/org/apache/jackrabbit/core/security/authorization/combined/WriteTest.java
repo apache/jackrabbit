@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
@@ -96,7 +97,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
     private Map getPrincipalBasedRestrictions(String path) throws RepositoryException, NotExecutableException {
         if (superuser instanceof SessionImpl) {
             Map restr = new HashMap();
-            restr.put("rep:nodePath", path);
+            restr.put("rep:nodePath", superuser.getValueFactory().createValue(path, PropertyType.PATH));
             return restr;
         } else {
             throw new NotExecutableException();

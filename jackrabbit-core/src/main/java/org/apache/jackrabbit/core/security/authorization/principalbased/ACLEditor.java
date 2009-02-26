@@ -21,7 +21,6 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -29,6 +28,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -114,22 +114,25 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             NodeImpl acNode = getAcNode(nodePath);
             if (acNode == null) {
                 // check validity and create the ac node
-                getPrincipal(nodePath);
+                Principal p = getPrincipal(nodePath);
+                if (p == null) {
+                    throw new AccessControlException("Access control modification not allowed at " + nodePath);
+                }
                 acNode = createAcNode(nodePath);
             }
             return new AccessControlPolicy[] {createTemplate(acNode)};
-        } else {
-            // nodePath not below rep:accesscontrol -> not editable
-            return new AccessControlPolicy[0];
         }
+
+        // nodePath not below rep:accesscontrol -> not editable
+        return new AccessControlPolicy[0];
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(Principal)
      */
-    public AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
+    public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
         if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Unknown principal.");
+            throw new AccessControlException("Cannot edit access control: " + principal.getName() +" isn't a known principal.");
         }
         String nPath = getPathToAcNode(principal);
         NodeImpl acNode;
@@ -138,7 +141,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         } else {
             acNode = (NodeImpl) session.getNode(nPath);
         }
-        return new AccessControlPolicy[] {createTemplate(acNode)};
+        return new JackrabbitAccessControlPolicy[] {createTemplate(acNode)};
     }
 
     /**
@@ -242,14 +245,16 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         NodeImpl node = (NodeImpl) session.getRootNode();
         for (int i = 0; i < segms.length; i++) {
             Name nName = session.getQName(segms[i]);
+            Name ntName = (i < segms.length-1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
             if (node.hasNode(nName)) {
-                node = node.getNode(nName);
-                if (!node.isNodeType(NT_REP_ACCESS_CONTROL)) {
+                NodeImpl n = node.getNode(nName);
+                if (!n.isNodeType(ntName)) {
                     // should never get here.
-                    throw new RepositoryException("Internal error: Unexpected nodetype " + node.getPrimaryNodeType().getName() + " below /rep:accessControl");
+                    throw new RepositoryException("Error while creating access control node: Expected nodetype " + session.getJCRName(ntName) + " below /rep:accessControl, was " + node.getPrimaryNodeType().getName() + " instead");
                 }
+                node = n;
             } else {
-                node = addNode(node, nName, NT_REP_ACCESS_CONTROL);
+                node = addNode(node, nName, ntName);
             }
         }
         return node;
@@ -310,12 +315,17 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     private Principal getPrincipal(String pathToACNode) throws RepositoryException {
-        String name = Text.unescapeIllegalJcrChars(Text.getName(pathToACNode));
+        String name = getPrincipalName(pathToACNode);
         PrincipalManager pMgr = session.getPrincipalManager();
-        if (!pMgr.hasPrincipal(name)) {
-            throw new AccessControlException("Unknown principal.");
+        if (pMgr.hasPrincipal(name)) {
+            return pMgr.getPrincipal(name);
+        } else {
+            return null;
         }
-        return pMgr.getPrincipal(name);
+    }
+
+    private static String getPrincipalName(String pathToACNode) {
+        return Text.unescapeIllegalJcrChars(Text.getName(pathToACNode));
     }
 
     /**
@@ -325,7 +335,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException
      */
     private static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
-        return node != null && node.isNodeType(NT_REP_ACCESS_CONTROL) && node.hasNode(N_POLICY);
+        return node != null && node.isNodeType(NT_REP_PRINCIPAL_ACCESS_CONTROL) && node.hasNode(N_POLICY);
     }
 
     /**
@@ -334,22 +344,17 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @return
      * @throws RepositoryException
      */
-    private static AccessControlPolicy createTemplate(NodeImpl acNode) throws RepositoryException {
-        if (!acNode.isNodeType(NT_REP_ACCESS_CONTROL)) {
-            throw new RepositoryException("Expected node of type rep:AccessControl.");
+    private JackrabbitAccessControlPolicy createTemplate(NodeImpl acNode) throws RepositoryException {
+        if (!acNode.isNodeType(NT_REP_PRINCIPAL_ACCESS_CONTROL)) {
+            String msg = "Unable to edit Access Control at "+ acNode.getPath()+ ". Expected node of type rep:PrinicipalAccessControl, was " + acNode.getPrimaryNodeType().getName();
+            log.debug(msg);
+            throw new AccessControlException(msg);
         }
 
-        Principal principal = null;
-        String principalName = Text.unescapeIllegalJcrChars(acNode.getName());
-        PrincipalManager pMgr = ((SessionImpl) acNode.getSession()).getPrincipalManager();
-        if (pMgr.hasPrincipal(principalName)) {
-            try {
-                principal = pMgr.getPrincipal(principalName);
-            } catch (NoSuchPrincipalException e) {
-                // should not get here. 
-            }
-        }
+        Principal principal = getPrincipal(acNode.getPath());
         if (principal == null) {
+            // use fall back in order to be able to get/remove the policy
+            String principalName = getPrincipalName(acNode.getPath());
             log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
             principal = new PrincipalImpl(principalName);
         }

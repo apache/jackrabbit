@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -33,17 +33,18 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
     /**
      * Returns the editable policies for the specified <code>principal</code>.
      *
+     * @param principal
      * @return array of policies for the specified <code>principal</code>. Note
      * that the policy object returned must reveal the path of the node where
-     * they can be applied later on.
+     * they can be applied later on using {@link AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy)}.
      * @throws AccessDeniedException if the session lacks
      * <code>MODIFY_ACCESS_CONTROL</code> privilege.
      * @throws AccessControlException if the specified principal does not exist
-     * or if same other access control related exception occurs.
-     * @throws UnsupportedRepositoryOperationException if editing the policy
-     * is not supported.
+     * or if another access control related exception occurs.
+     * @throws UnsupportedRepositoryOperationException if editing access control
+     * policies is not supported.
      * @throws RepositoryException if another error occurs.
+     * @see org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy#getPath()
      */
-    AccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
-
+    JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 }

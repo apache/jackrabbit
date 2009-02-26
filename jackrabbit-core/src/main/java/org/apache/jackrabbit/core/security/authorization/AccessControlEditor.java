@@ -87,7 +87,7 @@ public interface AccessControlEditor {
      * if same other access control related exception occurs.
      * @throws RepositoryException if another error occurs.
      */
-    AccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException;
+    JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws AccessDeniedException, AccessControlException, RepositoryException;
 
     /**
      * Stores the policy template to the respective node.
