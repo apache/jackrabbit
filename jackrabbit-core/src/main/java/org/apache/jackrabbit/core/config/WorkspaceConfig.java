@@ -79,7 +79,8 @@ public class WorkspaceConfig implements FileSystemFactory, ISMLockingFactory {
      *
      * @param home home directory
      * @param name workspace name
-     * @param fsc file system factory
+     * @param clustered
+     * @param fsf file system factory
      * @param pmc persistence manager configuration
      * @param sc search index configuration
      * @param ismLockingFactory the item state manager locking factory
