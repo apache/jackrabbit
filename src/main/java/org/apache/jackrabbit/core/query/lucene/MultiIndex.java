@@ -298,8 +298,9 @@ public class MultiIndex {
         // init volatile index
         resetVolatileIndex();
 
-        // set index format version
-        IndexReader reader = getIndexReader();
+        // set index format version and at the same time
+        // initialize hierarchy cache if requested.
+        IndexReader reader = getIndexReader(handler.isInitializeHierarchyCache());
         try {
             version = IndexFormatVersion.getVersion(reader);
         } finally {
@@ -691,6 +692,21 @@ public class MultiIndex {
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
     public CachingMultiIndexReader getIndexReader() throws IOException {
+        return getIndexReader(false);
+    }
+
+    /**
+     * Returns an read-only <code>IndexReader</code> that spans alls indexes of this
+     * <code>MultiIndex</code>.
+     *
+     * @param initCache when set <code>true</code> the hierarchy cache is
+     *                  completely initialized before this call returns.
+     *                  Otherwise the cache is initialized in a background
+     *                  thread.
+     * @return an <code>IndexReader</code>.
+     * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
+     */
+    public CachingMultiIndexReader getIndexReader(boolean initCache) throws IOException {
         synchronized (updateMonitor) {
             if (multiReader != null) {
                 multiReader.incrementRefCount();
@@ -712,7 +728,7 @@ public class MultiIndex {
                 for (int i = 0; i < indexes.size(); i++) {
                     PersistentIndex pIdx = (PersistentIndex) indexes.get(i);
                     if (indexNames.contains(pIdx.getName())) {
-                        readerList.add(pIdx.getReadOnlyIndexReader());
+                        readerList.add(pIdx.getReadOnlyIndexReader(initCache));
                     }
                 }
                 readerList.add(volatileIndex.getReadOnlyIndexReader());
