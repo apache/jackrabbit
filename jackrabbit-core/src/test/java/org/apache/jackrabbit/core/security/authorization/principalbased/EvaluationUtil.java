@@ -26,6 +26,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +53,7 @@ class EvaluationUtil {
     static  Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         if (s instanceof SessionImpl) {
             Map restr = new HashMap();
-            restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), path);
+            restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), s.getValueFactory().createValue(path, PropertyType.PATH));
             return restr;
         } else {
             throw new NotExecutableException();

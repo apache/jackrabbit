@@ -318,8 +318,7 @@ public class TransactionContext extends Timer.Task {
     
     /**
      * Helper Method to bind the {@link Xid} associated with this {@link TransactionContext}
-     * to the {@link #CURRENT_XID} ThreadLocal
-     * @param methodName
+     * to the {@link #CURRENT_XID} ThreadLocal.
      */
     private void bindCurrentXid() {
         CURRENT_XID.set(xid);
@@ -327,8 +326,7 @@ public class TransactionContext extends Timer.Task {
 
     /**
      * Helper Method to clean the {@link Xid} associated with this {@link TransactionContext}
-     * from the {@link #CURRENT_XID} ThreadLocal
-     * @param methodName
+     * from the {@link #CURRENT_XID} ThreadLocal.
      */
     private void cleanCurrentXid() {
         CURRENT_XID.set(null);

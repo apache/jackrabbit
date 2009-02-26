@@ -31,14 +31,26 @@ import java.util.Map;
  * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
  * written back} and {@link javax.jcr.Session#save() saved}.
  */
-public interface JackrabbitAccessControlList extends AccessControlList {
+public interface JackrabbitAccessControlList extends JackrabbitAccessControlPolicy, AccessControlList {
 
     /**
-     * Returns the path of the node this policy has been created for.
-     *  
-     * @return the path of the node this policy has been created for.
+     * Returns the names of the supported restrictions or an empty array
+     * if no restrictions are respected.
+     *
+     * @return the names of the supported restrictions or an empty array.
+     * @see #addEntry(Principal, Privilege[], boolean, Map)
      */
-    String getPath();
+    String[] getRestrictionNames();
+
+    /**
+     * Return the expected {@link javax.jcr.PropertyType property type} of the
+     * restriction with the specified <code>restrictionName</code>.
+     *
+     * @param restrictionName Any of the restriction names retrieved from
+     * {@link #getRestrictionNames()}.
+     * @return expected {@link javax.jcr.PropertyType property type}.
+     */
+    int getRestrictionType(String restrictionName);
 
     /**
      * Returns <code>true</code> if this policy does not yet define any

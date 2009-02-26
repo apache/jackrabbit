@@ -22,7 +22,9 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.BooleanValue;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -43,23 +45,34 @@ public class EntryTest extends AbstractEntryTest {
     private Map restrictions;
     private ACLTemplate acl;
 
+    private String nodePath;
+    private String glob;
+
     protected void setUp() throws Exception {
         super.setUp();
 
+        if (superuser instanceof NameResolver) {
+            NameResolver resolver = (NameResolver) superuser;
+            nodePath = resolver.getJCRName(ACLTemplate.P_NODE_PATH);
+            glob = resolver.getJCRName(ACLTemplate.P_GLOB);
+        } else {
+            throw new NotExecutableException();
+        }
+
         restrictions = new HashMap(2);
-        restrictions.put("rep:nodePath", superuser.getValueFactory().createValue("/a/b/c/d", PropertyType.PATH));
-        restrictions.put("rep:glob",  superuser.getValueFactory().createValue("*"));
+        restrictions.put(nodePath, superuser.getValueFactory().createValue("/a/b/c/d", PropertyType.PATH));
+        restrictions.put(glob,  superuser.getValueFactory().createValue("*"));
         acl = new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser);
     }
 
     protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws RepositoryException {
-        return acl.new Entry(principal, privileges, isAllow, restrictions);
+        return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
     }
 
     private JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map restrictions)
             throws RepositoryException {
-        return acl.new Entry(principal, privileges, isAllow, restrictions);
+        return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
     }
 
     public void testNodePathMustNotBeNull() throws RepositoryException, NotExecutableException {
@@ -75,39 +88,68 @@ public class EntryTest extends AbstractEntryTest {
     public void testGetNodePath() throws RepositoryException, NotExecutableException {
         Privilege[] privs = privilegesFromName(Privilege.JCR_ALL);
         JackrabbitAccessControlEntry pe = createEntry(testPrincipal, privs, true);
-        assertEquals(restrictions.get("rep:nodePath"), pe.getRestriction("rep:nodePath"));
+
+        assertEquals(restrictions.get(nodePath), pe.getRestriction(nodePath));
+        assertEquals(PropertyType.PATH, pe.getRestriction(nodePath).getType());
     }
 
     public void testGetGlob() throws RepositoryException, NotExecutableException {
         Privilege[] privs = privilegesFromName(Privilege.JCR_ALL);
 
         JackrabbitAccessControlEntry pe = createEntry(testPrincipal, privs, true);
-        assertEquals(restrictions.get("rep:glob"), pe.getRestriction("rep:glob"));
+
+        assertEquals(restrictions.get(glob), pe.getRestriction(glob));
+        assertEquals(PropertyType.STRING, pe.getRestriction(glob).getType());
 
         Map restr = new HashMap();
-        restr.put("rep:nodePath",  restrictions.get("rep:nodePath"));
+        restr.put(nodePath,  restrictions.get(nodePath));
         pe = createEntry(testPrincipal, privs, true, restr);
-        assertNull(pe.getRestriction("rep:glob"));
+        assertNull(pe.getRestriction(glob));
 
         restr = new HashMap();
-        restr.put("rep:nodePath",  restrictions.get("rep:nodePath"));
-        restr.put("rep:glob",  new StringValue(""));
+        restr.put(nodePath,  restrictions.get(nodePath));
+        restr.put(glob,  new StringValue(""));
 
         pe = createEntry(testPrincipal, privs, true, restr);
-        assertEquals("", pe.getRestriction("rep:glob").getString());
+        assertEquals("", pe.getRestriction(glob).getString());
+
+        restr = new HashMap();
+        restr.put(nodePath,  restrictions.get(nodePath));
+        restr.put(glob,  new BooleanValue(true));
+        assertEquals(PropertyType.STRING, pe.getRestriction(glob).getType());
+    }
+
+    public void testTypeConversion() throws RepositoryException, NotExecutableException {
+        // ACLTemplate impl tries to convert the property types if the don't
+        // match the required ones.
+        Privilege[] privs = privilegesFromName(Privilege.JCR_ALL);
+
+        Map restr = new HashMap();
+        restr.put(nodePath, new StringValue("/a/b/c/d"));
+        JackrabbitAccessControlEntry pe = createEntry(testPrincipal, privs, true, restr);
+
+        assertEquals("/a/b/c/d", pe.getRestriction(nodePath).getString());
+        assertEquals(PropertyType.PATH, pe.getRestriction(nodePath).getType());
+
+        restr = new HashMap();
+        restr.put(nodePath,  restrictions.get(nodePath));
+        restr.put(glob,  new BooleanValue(true));
+        pe = createEntry(testPrincipal, privs, true, restr);
+
+        assertEquals(true, pe.getRestriction(glob).getBoolean());
+        assertEquals(PropertyType.STRING, pe.getRestriction(glob).getType());
     }
 
     public void testMatches() throws RepositoryException {
         Privilege[] privs = new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)};
         ACLTemplate.Entry ace = (ACLTemplate.Entry) createEntry(testPrincipal, privs, true);
 
-        // TODO: review again
-        String nodePath = ((Value) restrictions.get("rep:nodePath")).getString();
+        String nPath = ((Value) restrictions.get(nodePath)).getString();
         List toMatch = new ArrayList();
-        toMatch.add(nodePath + "/any");
-        toMatch.add(nodePath + "/anyother");
-        toMatch.add(nodePath + "/f/g/h");
-        toMatch.add(nodePath);
+        toMatch.add(nPath + "/any");
+        toMatch.add(nPath + "/anyother");
+        toMatch.add(nPath + "/f/g/h");
+        toMatch.add(nPath);
         for (Iterator it = toMatch.iterator(); it.hasNext();) {
             String str = it.next().toString();
             assertTrue("Restrictions should match " + str, ace.matches(str));

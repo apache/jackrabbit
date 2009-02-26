@@ -450,11 +450,26 @@ commented out by default.
     <nodeType name="rep:AccessControl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
         <supertypes>
             <supertype>nt:base</supertype>
-            <supertype>rep:AccessControllable</supertype>
         </supertypes>
         <childNodeDefinition name="*" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
             <requiredPrimaryTypes>
                 <requiredPrimaryType>rep:AccessControl</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="*" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:PrincipalAccessControl</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <nodeType name="rep:PrincipalAccessControl" isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+        <supertypes>
+            <supertype>rep:AccessControl</supertype>
+        </supertypes>
+        <childNodeDefinition name="rep:policy" autoCreated="false" mandatory="false" onParentVersion="IGNORE" protected="true" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>rep:Policy</requiredPrimaryType>
             </requiredPrimaryTypes>
         </childNodeDefinition>
     </nodeType>

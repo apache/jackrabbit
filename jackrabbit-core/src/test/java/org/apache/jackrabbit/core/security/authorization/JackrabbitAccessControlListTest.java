@@ -28,6 +28,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,6 +77,18 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             return it.nextPrincipal();
         } else {
             throw new NotExecutableException();
+        }
+    }
+
+    public void testGetRestrictionNames() {
+        assertNotNull(templ.getRestrictionNames());
+    }
+
+    public void testGetRestrictionType() {
+        String[] names = templ.getRestrictionNames();
+        for (int i = 0; i < names.length; i++) {
+            int type = templ.getRestrictionType(names[i]);
+            assertTrue(type > PropertyType.UNDEFINED);
         }
     }
 

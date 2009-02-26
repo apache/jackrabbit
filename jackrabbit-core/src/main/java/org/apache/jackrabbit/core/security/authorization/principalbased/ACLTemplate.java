@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
-import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -43,11 +42,11 @@ import javax.jcr.ValueFactory;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Implementation of the {@link JackrabbitAccessControlList} interface that
@@ -124,7 +123,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
                         restrictions.put(prop.getName(), prop.getValue());
                     }
                     // finally add the entry
-                    Entry entry = new Entry(principal, privileges, isAllow, restrictions);
+                    AccessControlEntry entry = createEntry(principal, privileges, isAllow, restrictions);
                     entries.add(entry);
                 } else {
                     log.warn("ACE must be of nodetype rep:ACE -> ignored child-node " + aceNode.getPath());
@@ -133,12 +132,60 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         } // else: no-node at all or no acl-node present.
     }
 
+    AccessControlEntry createEntry(Principal princ, Privilege[] privileges, boolean allow, Map restrictions) throws RepositoryException {
+        if (!principal.equals(princ)) {
+            throw new AccessControlException("Invalid principal. Expected: " + principal);
+        }
+        if (!allow && principal instanceof Group) {
+            throw new AccessControlException("For group principals permissions can only be added but not denied.");
+        }
+
+        Set rNames = restrictions.keySet();
+        if (!rNames.contains(jcrNodePathName)) {
+            throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
+        }
+
+        // make sure the nodePath restriction is of type PATH
+        Value v = (Value) restrictions.get(jcrNodePathName);
+        if (v.getType() != PropertyType.PATH) {
+            v = V_FACTORY.createValue(v.getString(), PropertyType.PATH);
+            restrictions.put(jcrNodePathName, v);
+        }
+        // ... and glob is of type STRING.
+        v = (Value) restrictions.get(jcrGlobName);
+        if (v != null && v.getType() != PropertyType.STRING) {
+            v = V_FACTORY.createValue(v.getString(), PropertyType.STRING);
+            restrictions.put(jcrGlobName, v);
+        }
+        return new Entry(princ, privileges, allow, restrictions);
+    }
+
     //-----------------------------------------------------< JackrabbitAccessControlList >---
     /**
      * @see JackrabbitAccessControlList#getPath()
      */
     public String getPath() {
         return path;
+    }
+
+    /**
+     * @see JackrabbitAccessControlList#getRestrictionNames()
+     */
+    public String[] getRestrictionNames() {
+        return new String[] {jcrNodePathName, jcrGlobName};
+    }
+
+    /**
+     * @see JackrabbitAccessControlList#getRestrictionType(String)
+     */
+    public int getRestrictionType(String restrictionName) {
+        if (jcrNodePathName.equals(restrictionName)) {
+            return PropertyType.PATH;
+        } else if (jcrGlobName.equals(restrictionName)) {
+            return PropertyType.STRING;
+        } else {
+            return PropertyType.UNDEFINED;
+        }
     }
 
     /**
@@ -181,7 +228,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
             restrictions = Collections.singletonMap(jcrNodePathName,
                     V_FACTORY.createValue(getPath(), PropertyType.PATH));
         }
-        Entry entry = new Entry(principal, privileges, isAllow, restrictions);
+        AccessControlEntry entry = createEntry(principal, privileges, isAllow, restrictions);
         if (entries.contains(entry)) {
             log.debug("Entry is already contained in policy -> no modification.");
             return false;
@@ -198,7 +245,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
      */
     public AccessControlEntry[] getAccessControlEntries()
             throws RepositoryException {
-        return (Entry[]) entries.toArray(new Entry[entries.size()]);
+        return (AccessControlEntry[]) entries.toArray(new AccessControlEntry[entries.size()]);
     }
 
     /**
@@ -271,12 +318,12 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
          */
         private final GlobPattern pattern;
 
-        Entry(Principal principal, Privilege[] privileges, boolean allow, Map restrictions)
+        private Entry(Principal principal, Privilege[] privileges, boolean allow, Map restrictions)
                 throws AccessControlException, RepositoryException {
             super(principal, privileges, allow, restrictions);
-            checkValidEntry();
 
             // TODO: review again
+            Value np = getRestriction(jcrNodePathName);
             nodePath = getRestriction(jcrNodePathName).getString();
             Value glob = getRestriction(jcrGlobName);
             if (glob != null) {
@@ -285,20 +332,6 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
                 pattern = GlobPattern.create(b.toString());
             } else {
                 pattern = GlobPattern.create(nodePath);
-            }
-        }
-
-        private void checkValidEntry() throws AccessControlException, NamespaceException {
-            if (!principal.equals(getPrincipal())) {
-                throw new AccessControlException("Invalid principal. Expected: " + principal);
-            }
-            if (!isAllow() && getPrincipal() instanceof Group) {
-                throw new AccessControlException("For group principals permissions can only be added but not denied.");
-            }
-
-            String[] rNames = getRestrictionNames();
-            if (!Arrays.asList(rNames).contains(jcrNodePathName)) {
-                throw new AccessControlException("Missing mandatory restriction: " + jcrNodePathName);
             }
         }
 

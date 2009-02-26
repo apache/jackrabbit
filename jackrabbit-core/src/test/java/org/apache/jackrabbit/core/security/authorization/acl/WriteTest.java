@@ -23,12 +23,14 @@ import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Node;
 import java.util.Collections;
 import java.util.Map;
 import java.security.Principal;
@@ -169,5 +171,17 @@ public class WriteTest extends AbstractWriteTest {
         String policyPath = childNPath + "/rep:policy";
         assertFalse(getTestSession().hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
+    }
+
+    public void testApplicablePolicies() throws RepositoryException {
+        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(childNPath);
+        assertTrue(it.hasNext());
+
+        // the same should be true, if the rep:AccessControllable mixin has
+        // been manually added
+        Node n = (Node) superuser.getItem(childNPath);
+        n.addMixin(((SessionImpl) superuser).getJCRName(AccessControlConstants.NT_REP_ACCESS_CONTROLLABLE));
+        it = acMgr.getApplicablePolicies(childNPath);
+        assertTrue(it.hasNext());
     }
 }

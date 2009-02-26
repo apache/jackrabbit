@@ -33,7 +33,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -64,13 +63,7 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     protected Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
-        if (s instanceof SessionImpl) {
-            Map restr = new HashMap();
-            restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), path);
-            return restr;
-        } else {
-            throw new NotExecutableException();
-        }
+        return EvaluationUtil.getRestrictions(s, path);
     }
 
 
@@ -79,7 +72,7 @@ public class WriteTest extends AbstractWriteTest {
 
         // testuser is not allowed to READ the protected property jcr:created.
         Map restr = getRestrictions(superuser, path);
-        restr.put(ACLTemplate.P_GLOB, GlobPattern.create("/afolder/jcr:created"));
+        restr.put(((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB), superuser.getValueFactory().createValue("/afolder/jcr:created"));
         withdrawPrivileges(path, testUser.getPrincipal(), privilegesFromName(Privilege.JCR_READ), restr);
 
         // still: adding a nt:folder node should be possible
