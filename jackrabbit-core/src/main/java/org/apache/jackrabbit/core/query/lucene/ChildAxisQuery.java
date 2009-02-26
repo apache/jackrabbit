@@ -20,12 +20,12 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.query.LocationStepQueryNode;
 import org.apache.jackrabbit.core.query.lucene.hits.AdaptingHits;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
-import org.apache.jackrabbit.core.query.lucene.hits.HitsIntersection;
 import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -36,20 +36,35 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.Weight;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Implements a lucene <code>Query</code> which returns the child nodes of the
  * nodes selected by another <code>Query</code>.
  */
 class ChildAxisQuery extends Query {
+
+    /**
+     * The logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(ChildAxisQuery.class);
+
+    /**
+     * Threshold when children calculation is switched to
+     * {@link HierarchyResolvingChildrenCalculator}.
+     */
+    private static int CONTEXT_SIZE_THRESHOLD = 10;
 
     /**
      * The item state manager containing persistent item states.
@@ -65,13 +80,18 @@ class ChildAxisQuery extends Query {
      * The nameTest to apply on the child axis, or <code>null</code> if all
      * child nodes should be selected.
      */
-    private final String nameTest;
+    private final Name nameTest;
 
     /**
      * The context position for the selected child node, or
      * {@link LocationStepQueryNode#NONE} if no position is specified.
      */
     private final int position;
+
+    /**
+     * The internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
 
     /**
      * The scorer of the context query
@@ -91,9 +111,13 @@ class ChildAxisQuery extends Query {
      * @param context the context for this query.
      * @param nameTest a name test or <code>null</code> if any child node is
      * selected.
+     * @param nsMappings the internal namespace mappings.
      */
-    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest) {
-        this(itemMgr, context, nameTest, LocationStepQueryNode.NONE);
+    ChildAxisQuery(ItemStateManager itemMgr,
+                   Query context,
+                   Name nameTest,
+                   NamespaceMappings nsMappings) {
+        this(itemMgr, context, nameTest, LocationStepQueryNode.NONE, nsMappings);
     }
 
     /**
@@ -107,12 +131,48 @@ class ChildAxisQuery extends Query {
      * @param position the context position of the child node to select. If
      * <code>position</code> is {@link LocationStepQueryNode#NONE}, the context
      * position of the child node is not checked.
+     * @param nsMapping the internal namespace mappings.
      */
-    ChildAxisQuery(ItemStateManager itemMgr, Query context, String nameTest, int position) {
+    ChildAxisQuery(ItemStateManager itemMgr,
+                   Query context,
+                   Name nameTest,
+                   int position,
+                   NamespaceMappings nsMapping) {
         this.itemMgr = itemMgr;
         this.contextQuery = context;
         this.nameTest = nameTest;
         this.position = position;
+        this.nsMappings = nsMapping;
+    }
+
+    /**
+     * @return the context query of this child axis query.
+     */
+    Query getContextQuery() {
+        return contextQuery;
+    }
+
+    /**
+     * @return <code>true</code> if this child axis query matches any child
+     *         node; <code>false</code> otherwise.
+     */
+    boolean matchesAnyChildNode() {
+        return nameTest == null && position == LocationStepQueryNode.NONE;
+    }
+
+    /**
+     * @return the name test or <code>null</code> if none was specified.
+     */
+    Name getNameTest() {
+        return nameTest;
+    }
+
+    /**
+     * @return the position check or {@link LocationStepQueryNode#NONE} is none
+     *         was specified.
+     */
+    int getPosition() {
+        return position;
     }
 
     /**
@@ -140,18 +200,26 @@ class ChildAxisQuery extends Query {
         if (cQuery == contextQuery) {
             return this;
         } else {
-            return new ChildAxisQuery(itemMgr, cQuery, nameTest, position);
+            return new ChildAxisQuery(itemMgr, cQuery, nameTest,
+                    position, nsMappings);
         }
     }
 
     /**
-     * Always returns 'ChildAxisQuery'.
-     *
-     * @param field the name of a field.
-     * @return 'ChildAxisQuery'.
+     * {@inheritDoc}
      */
     public String toString(String field) {
-        return "ChildAxisQuery";
+        StringBuffer sb = new StringBuffer();
+        sb.append("ChildAxisQuery(");
+        sb.append(contextQuery);
+        sb.append(", ");
+        sb.append(nameTest);
+        if (position != LocationStepQueryNode.NONE) {
+            sb.append(", ");
+            sb.append(position);
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     //-------------------< ChildAxisWeight >------------------------------------
@@ -215,9 +283,10 @@ class ChildAxisQuery extends Query {
         public Scorer scorer(IndexReader reader) throws IOException {
             contextScorer = contextQuery.weight(searcher).scorer(reader);
             if (nameTest != null) {
-                nameTestScorer = new TermQuery(new Term(FieldNames.LABEL, nameTest)).weight(searcher).scorer(reader);
+                nameTestScorer = new NameQuery(nameTest, nsMappings).weight(searcher).scorer(reader);
             }
-            return new ChildAxisScorer(searcher.getSimilarity(), reader);
+            return new ChildAxisScorer(searcher.getSimilarity(),
+                    reader, (HierarchyResolver) reader);
         }
 
         /**
@@ -241,6 +310,11 @@ class ChildAxisQuery extends Query {
         private final IndexReader reader;
 
         /**
+         * The <code>HierarchyResolver</code> of the index.
+         */
+        private final HierarchyResolver hResolver;
+
+        /**
          * The next document id to return
          */
         private int nextDoc = -1;
@@ -255,10 +329,14 @@ class ChildAxisQuery extends Query {
          *
          * @param similarity the <code>Similarity</code> instance to use.
          * @param reader     for index access.
+         * @param hResolver  the hierarchy resolver of <code>reader</code>.
          */
-        protected ChildAxisScorer(Similarity similarity, IndexReader reader) {
+        protected ChildAxisScorer(Similarity similarity,
+                                  IndexReader reader,
+                                  HierarchyResolver hResolver) {
             super(similarity);
             this.reader = reader;
+            this.hResolver = hResolver;
         }
 
         /**
@@ -269,7 +347,7 @@ class ChildAxisQuery extends Query {
             do {
                 nextDoc = hits.next();
             } while (nextDoc > -1 && !indexIsValid(nextDoc));
-            
+
             return nextDoc > -1;
         }
 
@@ -293,9 +371,10 @@ class ChildAxisQuery extends Query {
         public boolean skipTo(int target) throws IOException {
             calculateChildren();
             nextDoc = hits.skipTo(target);
-            while (nextDoc > -1 && !indexIsValid(nextDoc))
+            while (nextDoc > -1 && !indexIsValid(nextDoc)) {
                 next();
-            return nextDoc > -1;            
+            }
+            return nextDoc > -1;
         }
 
         /**
@@ -310,50 +389,49 @@ class ChildAxisQuery extends Query {
 
         private void calculateChildren() throws IOException {
             if (hits == null) {
-                
-                // collect all context nodes
-                List uuids = new ArrayList();
-                final Hits contextHits = new AdaptingHits();
-                contextScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        contextHits.set(doc);
-                    }
-                });
 
-                // read the uuids of the context nodes
-                int i = contextHits.next();
-                while (i > -1) {
-                    String uuid = reader.document(i).get(FieldNames.UUID);
-                    uuids.add(uuid);
-                    i = contextHits.next();
-                }
-                
-                // collect all children of the context nodes
-                Hits childrenHits = new AdaptingHits();
-
-                TermDocs docs = reader.termDocs();
-                try {
-                    for (Iterator it = uuids.iterator(); it.hasNext();) {
-                        docs.seek(new Term(FieldNames.PARENT, (String) it.next()));
-                        while (docs.next()) {
-                            childrenHits.set(docs.doc());
+                final ChildrenCalculator[] calc = new ChildrenCalculator[1];
+                if (nameTestScorer == null) {
+                    // always use simple in that case
+                    calc[0] = new SimpleChildrenCalculator(reader, hResolver);
+                    contextScorer.score(new HitCollector() {
+                        public void collect(int doc, float score) {
+                            calc[0].collectContextHit(doc);
                         }
-                    }
-                } finally {
-                    docs.close();
-                }
-                
-                if (nameTestScorer != null) {
-                    hits = new HitsIntersection(childrenHits, new ScorerHits(nameTestScorer));
+                    });
                 } else {
-                    hits = childrenHits;
+                    // start simple but switch once threshold is reached
+                    calc[0] = new SimpleChildrenCalculator(reader, hResolver);
+                    contextScorer.score(new HitCollector() {
+
+                        private List docIds = new ArrayList();
+
+                        public void collect(int doc, float score) {
+                            calc[0].collectContextHit(doc);
+                            if (docIds != null) {
+                                docIds.add(new Integer(doc));
+                                if (docIds.size() > CONTEXT_SIZE_THRESHOLD) {
+                                    // switch
+                                    calc[0] = new HierarchyResolvingChildrenCalculator(
+                                            reader, hResolver);
+                                    for (Iterator it = docIds.iterator(); it.hasNext(); ) {
+                                        calc[0].collectContextHit(((Integer) it.next()).intValue());
+                                    }
+                                    // indicate that we switched
+                                    docIds = null;
+                                }
+                            }
+                        }
+                    });
                 }
+
+                hits = calc[0].getHits();
             }
         }
 
         private boolean indexIsValid(int i) throws IOException {
             if (position != LocationStepQueryNode.NONE) {
-                Document node = reader.document(i);
+                Document node = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId parentId = NodeId.valueOf(node.get(FieldNames.PARENT));
                 NodeId id = NodeId.valueOf(node.get(FieldNames.UUID));
                 try {
@@ -416,6 +494,174 @@ class ChildAxisQuery extends Query {
                 }
             }
             return true;
+        }
+    }
+
+    /**
+     * Base class to calculate the children for a context query.
+     */
+    private abstract class ChildrenCalculator {
+
+        /**
+         * The current index reader.
+         */
+        protected final IndexReader reader;
+
+        /**
+         * The current hierarchy resolver.
+         */
+        protected final HierarchyResolver hResolver;
+
+        /**
+         * Creates a new children calculator with the given index reader and
+         * hierarchy resolver.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public ChildrenCalculator(IndexReader reader,
+                                  HierarchyResolver hResolver) {
+            this.reader = reader;
+            this.hResolver = hResolver;
+        }
+
+        /**
+         * Collects a context hit.
+         *
+         * @param doc the lucene document number of the context hit.
+         */
+        protected abstract void collectContextHit(int doc);
+
+        /**
+         * @return the hits that contains the children.
+         * @throws IOException if an error occurs while reading from the index.
+         */
+        public abstract Hits getHits() throws IOException;
+    }
+
+    /**
+     * An implementation of a children calculator using the item state manager.
+     */
+    private final class SimpleChildrenCalculator extends ChildrenCalculator {
+
+        /**
+         * The context hits.
+         */
+        private final Hits contextHits = new AdaptingHits();
+
+        /**
+         * Creates a new simple children calculator.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public SimpleChildrenCalculator(IndexReader reader,
+                                        HierarchyResolver hResolver) {
+            super(reader, hResolver);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        protected void collectContextHit(int doc) {
+            contextHits.set(doc);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Hits getHits() throws IOException {
+            // read the uuids of the context nodes
+            Map uuids = new HashMap();
+            for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
+                String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
+                uuids.put(new Integer(i), uuid);
+            }
+
+            // get child node entries for each hit
+            Hits childrenHits = new AdaptingHits();
+            for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
+                String uuid = (String) it.next();
+                NodeId id = new NodeId(UUID.fromString(uuid));
+                try {
+                    long time = System.currentTimeMillis();
+                    NodeState state = (NodeState) itemMgr.getItemState(id);
+                    time = System.currentTimeMillis() - time;
+                    log.debug("got NodeState with id {} in {} ms.", id, new Long(time));
+                    Iterator entries;
+                    if (nameTest != null) {
+                        entries = state.getChildNodeEntries(nameTest).iterator();
+                    } else {
+                        // get all children
+                        entries = state.getChildNodeEntries().iterator();
+                    }
+                    while (entries.hasNext()) {
+                        NodeId childId = ((NodeState.ChildNodeEntry) entries.next()).getId();
+                        Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
+                        TermDocs docs = reader.termDocs(uuidTerm);
+                        try {
+                            if (docs.next()) {
+                                childrenHits.set(docs.doc());
+                            }
+                        } finally {
+                            docs.close();
+                        }
+                    }
+                } catch (ItemStateException e) {
+                    // does not exist anymore -> ignore
+                }
+            }
+            return childrenHits;
+        }
+    }
+
+    /**
+     * An implementation of a children calculator that uses the hierarchy
+     * resolver. This implementation requires that
+     * {@link ChildAxisQuery#nameTestScorer} is non null.
+     */
+    private final class HierarchyResolvingChildrenCalculator
+            extends ChildrenCalculator {
+
+        /**
+         * The document numbers of the context hits.
+         */
+        private final Set docIds = new HashSet();
+
+        /**
+         * Creates a new hierarchy resolving children calculator.
+         *
+         * @param reader the current index reader.
+         * @param hResolver the current hierarchy resolver.
+         */
+        public HierarchyResolvingChildrenCalculator(IndexReader reader,
+                                                    HierarchyResolver hResolver) {
+            super(reader, hResolver);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        protected void collectContextHit(int doc) {
+            docIds.add(new Integer(doc));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Hits getHits() throws IOException {
+            long time = System.currentTimeMillis();
+            Hits childrenHits = new AdaptingHits();
+            Hits nameHits = new ScorerHits(nameTestScorer);
+            for (int h = nameHits.next(); h > -1; h = nameHits.next()) {
+                if (docIds.contains(new Integer(hResolver.getParent(h)))) {
+                    childrenHits.set(h);
+                }
+            }
+            time = System.currentTimeMillis() - time;
+
+            log.debug("Filtered hits in {} ms.", new Long(time));
+            return childrenHits;
         }
     }
 }

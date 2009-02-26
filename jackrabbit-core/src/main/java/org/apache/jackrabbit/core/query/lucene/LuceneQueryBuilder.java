@@ -59,6 +59,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -525,15 +526,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
 
-        TermQuery nameTest = null;
+        NameQuery nameTest = null;
         if (node.getNameTest() != null) {
-            try {
-                String internalName = resolver.getJCRName(node.getNameTest());
-                nameTest = new TermQuery(new Term(FieldNames.LABEL, internalName));
-            } catch (NamespaceException e) {
-                // should never happen
-                exceptions.add(e);
-            }
+            nameTest = new NameQuery(node.getNameTest(), nsMappings);
         }
 
         if (node.getIncludeDescendants()) {
@@ -555,17 +550,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                 } else {
                     // todo this will traverse the whole index, optimize!
-                    Query subQuery = null;
-                    try {
-                        subQuery = createMatchAllQuery(resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE));
-                    } catch (NamespaceException e) {
-                        // will never happen, prefixes are created when unknown
-                    }
+                    Query subQuery = new MatchAllDocsQuery();
                     // only use descendant axis if path is not //*
                     PathQueryNode pathNode = (PathQueryNode) node.getParent();
                     if (pathNode.getPathSteps()[0] != node) {
                         context = new DescendantSelfAxisQuery(context, subQuery);
-                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                        andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex(), nsMappings), Occur.MUST);
                     } else {
                         andQuery.add(subQuery, Occur.MUST);
                     }
@@ -574,10 +564,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } else {
             // name test
             if (nameTest != null) {
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getTerm().text(), node.getIndex()), Occur.MUST);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, nameTest.getName(), node.getIndex(), nsMappings), Occur.MUST);
             } else {
                 // select child nodes
-                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex()), Occur.MUST);
+                andQuery.add(new ChildAxisQuery(sharedItemMgr, context, null, node.getIndex(), nsMappings), Occur.MUST);
             }
         }
 
