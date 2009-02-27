@@ -361,8 +361,14 @@ public class OracleFileSystem extends DbFileSystem {
 
             return new FilterOutputStream(new FileOutputStream(tmpFile)) {
 
+                public void write(byte[] bytes, int off, int len) throws IOException {
+                    out.write(bytes, off, len);
+                }
+
                 public void close() throws IOException {
-                    super.close();
+                    out.flush();
+                    ((FileOutputStream) out).getFD().sync();
+                    out.close();
 
                     InputStream in = null;
                     Blob blob = null;
