@@ -148,6 +148,10 @@ public class MemoryFileSystem implements FileSystem {
         final MemoryFile file = new MemoryFile();
         entries.put(filePath, file);
         return new FilterOutputStream(new ByteArrayOutputStream()) {
+            public void write(byte[] bytes, int off, int len) throws IOException {
+                out.write(bytes, off, len);
+            }
+
             public void close() throws IOException {
                 out.close();
                 file.setData(((ByteArrayOutputStream) out).toByteArray());
