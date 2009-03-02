@@ -524,6 +524,26 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     public synchronized void store(ChangeLog changeLog)
             throws ItemStateException {
+        boolean success = false;
+        try {
+            storeInternal(changeLog);
+            success = true;
+        } finally {
+            if (!success) {
+                bundles.clear();
+                missing.clear();
+            }
+        }
+    }
+
+    /**
+     * Stores the given changelog and updates the bundle cache.
+     * 
+     * @param changeLog the changelog to store
+     * @throws ItemStateException on failure
+     */
+    private void storeInternal(ChangeLog changeLog)
+            throws ItemStateException {
         // delete bundles
         HashSet deleted = new HashSet();
         Iterator iter = changeLog.deletedStates();
