@@ -56,9 +56,16 @@ public class XASessionImpl extends SessionImpl
     private static final Map txGlobal = Collections.synchronizedMap(new HashMap());
 
     /**
-     * Default transaction timeout, in seconds.
+     * System property specifying the default Transaction Timeout
      */
-    private static final int DEFAULT_TX_TIMEOUT = 5;
+    public static final String SYSTEM_PROPERTY_DEFAULT_TRANSACTION_TIMEOUT = "org.apache.jackrabbit.core.defaultTransactionTimeout";
+
+    /**
+     * Default transaction timeout, in seconds.
+     * Either it is specified by the System Property {@link XASessionImpl#SYSTEM_PROPERTY_DEFAULT_TRANSACTION_TIMEOUT} or
+     * it is per default 5 seconds if it is not set by the TransactionManager at runtime
+     */
+    private static final int DEFAULT_TX_TIMEOUT = Integer.parseInt(System.getProperty(SYSTEM_PROPERTY_DEFAULT_TRANSACTION_TIMEOUT, "5"));
 
     /**
      * Currently associated transaction
