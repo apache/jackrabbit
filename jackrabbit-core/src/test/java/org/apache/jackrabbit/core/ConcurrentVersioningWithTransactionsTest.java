@@ -46,6 +46,27 @@ public class ConcurrentVersioningWithTransactionsTest extends AbstractConcurrenc
      */
     private static final int NUM_OPERATIONS = 100;
 
+    /**
+     * Creates the named test node. The node is created within a transaction
+     * to avoid mixing transactional and non-transactional writes within a
+     * concurrent test run.
+     */
+    private static synchronized Node createParentNode(Node test, String name)
+            throws RepositoryException {
+        try {
+            UserTransaction utx = new UserTransactionImpl(test.getSession());
+            utx.begin();
+            Node parent = test.addNode(name);
+            test.save();
+            utx.commit();
+            return parent;
+        } catch (RepositoryException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RepositoryException("Failed to add node: " + name, e);
+        }
+    }
+
     public void testConcurrentAddVersionableInTransaction()
             throws RepositoryException {
         runTask(new Task() {
@@ -53,11 +74,7 @@ public class ConcurrentVersioningWithTransactionsTest extends AbstractConcurrenc
                     throws RepositoryException {
                 // add versionable nodes
                 final String threadName = Thread.currentThread().getName();
-                Node parent;
-                synchronized (ConcurrentVersioningWithTransactionsTest.class) {
-                    parent = test.addNode(threadName);
-                    test.save();
-                }
+                Node parent = createParentNode(test, threadName);
                 for (int i = 0; i < NUM_OPERATIONS / CONCURRENCY; i++) {
                     try {
                         final UserTransaction utx = new UserTransactionImpl(test.getSession());
