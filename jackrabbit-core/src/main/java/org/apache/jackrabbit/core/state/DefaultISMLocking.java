@@ -52,8 +52,8 @@ public class DefaultISMLocking implements ISMLocking {
         return new WriteLock() {
 
             {
-                rwLock.setActiveXid(TransactionContext.getCurrentXid());
                 rwLock.writeLock().acquire();
+                rwLock.setActiveXid(TransactionContext.getCurrentXid());
             }
 
             /**
