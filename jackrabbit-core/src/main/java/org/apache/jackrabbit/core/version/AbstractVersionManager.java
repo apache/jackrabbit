@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
+import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -66,17 +67,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * the lock on this version manager
      */
-    private final ReadWriteLock rwLock =
-            new ReentrantWriterPreferenceReadWriteLock() {
-                /**
-                 * Allow reader when there is no active writer, or current
-                 * thread owns the write lock (reentrant).
-                 */
-                protected boolean allowReader() {
-                    return activeWriter_ == null
-                        || activeWriter_ == Thread.currentThread();
-                }
-            };
+    private final DefaultISMLocking rwLock = new DefaultISMLocking();
 
     public AbstractVersionManager(NodeTypeRegistry ntReg) {
         this.ntReg = ntReg;
@@ -108,13 +99,12 @@ abstract class AbstractVersionManager implements VersionManager {
     //-------------------------------------------------------< implementation >
 
     /**
-     * aquires the write lock on this version manager.
+     * Acquires the write lock on this version manager.
      */
-    protected void acquireWriteLock() {
+    protected WriteLock acquireWriteLock() {
         while (true) {
             try {
-                rwLock.writeLock().acquire();
-                return;
+                return rwLock.acquireWriteLock(null);
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -122,31 +112,16 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
-     * releases the write lock on this version manager.
+     * acquires the read lock on this version manager.
      */
-    protected void releaseWriteLock() {
-        rwLock.writeLock().release();
-    }
-
-    /**
-     * aquires the read lock on this version manager.
-     */
-    protected void acquireReadLock() {
+    protected ReadLock acquireReadLock() {
         while (true) {
             try {
-                rwLock.readLock().acquire();
-                return;
+                return rwLock.acquireReadLock(null);
             } catch (InterruptedException e) {
                 // ignore
             }
         }
-    }
-
-    /**
-     * releases the read lock on this version manager.
-     */
-    protected void releaseReadLock() {
-        rwLock.readLock().release();
     }
 
     /**
@@ -158,6 +133,12 @@ abstract class AbstractVersionManager implements VersionManager {
          * Flag for successful completion of the write operation.
          */
         private boolean success = false;
+
+        private final WriteLock lock;
+
+        public WriteOperation(WriteLock lock) {
+            this.lock = lock;
+        }
 
         /**
          * Saves the pending operations in the {@link LocalItemStateManager}.
@@ -182,7 +163,7 @@ abstract class AbstractVersionManager implements VersionManager {
                     stateMgr.cancel();
                 }
             } finally {
-                releaseWriteLock();
+                lock.release();
             }
         }
     }
@@ -211,16 +192,16 @@ abstract class AbstractVersionManager implements VersionManager {
      */
     private WriteOperation startWriteOperation() throws RepositoryException {
         boolean success = false;
-        acquireWriteLock();
+        WriteLock lock = acquireWriteLock();
         try {
             stateMgr.edit();
             success = true;
-            return new WriteOperation();
+            return new WriteOperation(lock);
         } catch (IllegalStateException e) {
             throw new RepositoryException("Unable to start edit operation.", e);
         } finally {
             if (!success) {
-                releaseWriteLock();
+                lock.release();
             }
         }
     }
@@ -232,7 +213,7 @@ abstract class AbstractVersionManager implements VersionManager {
             throws RepositoryException {
         VersionHistoryInfo info = null;
 
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             String uuid = node.getNodeId().getUUID().toString();
             Name name = getName(uuid);
@@ -246,7 +227,7 @@ abstract class AbstractVersionManager implements VersionManager {
                         history.getState().getChildNodeEntry(root, 1).getId());
             }
         } finally {
-            releaseReadLock();
+            lock.release();
         }
 
         if (info == null) {

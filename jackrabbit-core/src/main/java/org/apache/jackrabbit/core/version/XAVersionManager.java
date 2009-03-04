@@ -46,6 +46,8 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
+import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
+import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -89,6 +91,11 @@ public class XAVersionManager extends AbstractVersionManager
      * flag that indicates if the version manager was locked during prepare
      */
     private boolean vmgrLocked = false;
+
+    /**
+     * The global write lock on the version manager.
+     */
+    private WriteLock vmgrLock;
 
     /**
      * Creates a new instance of this class.
@@ -515,8 +522,7 @@ public class XAVersionManager extends AbstractVersionManager
 
     /**
      * Returns an {@link InternalXAResource} that acquires a write lock on the
-     * version manager in {@link InternalXAResource#prepare(TransactionContext)}
-     * if there are any version related items involved in this transaction.
+     * version manager in {@link InternalXAResource#prepare(TransactionContext)}.
      *
      * @return an internal XA resource.
      */
@@ -529,11 +535,8 @@ public class XAVersionManager extends AbstractVersionManager
             }
 
             public void prepare(TransactionContext tx) {
-                Map vItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
-                if (!vItems.isEmpty()) {
-                    vMgr.acquireWriteLock();
-                    vmgrLocked = true;
-                }
+                vmgrLock = vMgr.acquireWriteLock();
+                vmgrLocked = true;
             }
 
             public void commit(TransactionContext tx) {
@@ -578,7 +581,7 @@ public class XAVersionManager extends AbstractVersionManager
 
             private void internalReleaseWriteLock() {
                 if (vmgrLocked) {
-                    vMgr.releaseWriteLock();
+                    vmgrLock.release();
                     vmgrLocked = false;
                 }
             }
@@ -602,7 +605,7 @@ public class XAVersionManager extends AbstractVersionManager
      */
     private InternalVersionHistoryImpl makeLocalCopy(InternalVersionHistoryImpl history)
             throws RepositoryException {
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             NodeState state = (NodeState) stateMgr.getItemState(history.getId());
             NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
@@ -610,7 +613,7 @@ public class XAVersionManager extends AbstractVersionManager
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to make local copy", e);
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
 

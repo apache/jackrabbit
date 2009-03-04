@@ -101,7 +101,16 @@ public class RandomOperationTest extends AbstractConcurrencyTest {
         runTasks(new Task[]{task1, task2}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }
 
-    public void testContentAndVersionOperationsXAMixed() throws RepositoryException {
+    /**
+     * Test disabled since it violates the "Don't mix concurrent transactional
+     * and non-transactional writes to a single workspace" guideline formed
+     * during the concurrency review.
+     *
+     * @see <a href="http://jackrabbit.apache.org/concurrency-control.html">Concurrency control</a>
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2000">JCR-2000</a>
+     */
+    public void disabledTestContentAndVersionOperationsXAMixed()
+            throws RepositoryException {
         ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         ContentOperationsTask task2 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, SAVE_INTERVAL, end);
         task2.setUseXA(true);
@@ -111,7 +120,16 @@ public class RandomOperationTest extends AbstractConcurrencyTest {
         runTasks(new Task[]{task1, task2, task3, task4}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }
 
-    public void testContentAndVersionOperationsXAMixedShortSaveInterval() throws RepositoryException {
+    /**
+     * Test disabled since it violates the "Don't mix concurrent transactional
+     * and non-transactional writes to a single workspace" guideline formed
+     * during the concurrency review.
+     *
+     * @see <a href="http://jackrabbit.apache.org/concurrency-control.html">Concurrency control</a>
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2000">JCR-2000</a>
+     */
+    public void disabledTestContentAndVersionOperationsXAMixedShortSaveInterval()
+            throws RepositoryException {
         ContentOperationsTask task1 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
         ContentOperationsTask task2 = new ContentOperationsTask(NUM_LEVELS, NODES_PER_LEVEL, 1, end);
         task2.setUseXA(true);
@@ -120,4 +138,5 @@ public class RandomOperationTest extends AbstractConcurrencyTest {
         task4.setUseXA(true);
         runTasks(new Task[]{task1, task2, task3, task4}, NUM_THREADS, end + MAX_WAIT_SECONDS * 1000);
     }
+
 }
