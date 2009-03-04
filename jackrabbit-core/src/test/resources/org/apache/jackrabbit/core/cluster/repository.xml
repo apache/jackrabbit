@@ -15,8 +15,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.5.dtd">
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN"
+                            "http://jackrabbit.apache.org/dtd/repository-1.6.dtd">
 <!-- Example Repository Configuration File
      Used by
      - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
