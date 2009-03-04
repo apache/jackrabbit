@@ -42,6 +42,7 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
+import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Path;
@@ -233,11 +234,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * {@inheritDoc}
      */
     public boolean hasItem(NodeId id) {
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             return stateMgr.hasItemState(id);
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
 
@@ -250,7 +251,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
         if (id.equals(getHistoryRootId())) {
             return null;
         }
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             synchronized (versionItems) {
                 InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
@@ -265,7 +266,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                 return item;
             }
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
     
@@ -350,7 +351,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      * @param items items updated
      */
     public void itemsUpdated(Collection items) {
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             synchronized (versionItems) {
                 Iterator iter = items.iterator();
@@ -371,7 +372,7 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
                 }
             }
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
 
@@ -390,11 +391,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     protected void itemDiscarded(InternalVersionItem item) {
         // evict removed item from cache
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             versionItems.remove(item.getId());
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
 
@@ -473,11 +474,11 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
      */
     public void stateDestroyed(ItemState destroyed) {
         // evict removed item from cache
-        acquireReadLock();
+        ReadLock lock = acquireReadLock();
         try {
             versionItems.remove(destroyed.getId());
         } finally {
-            releaseReadLock();
+            lock.release();
         }
     }
 
