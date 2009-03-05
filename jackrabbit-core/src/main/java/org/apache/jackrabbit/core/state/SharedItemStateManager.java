@@ -1327,7 +1327,7 @@ public class SharedItemStateManager
      * Checks if this item state manager has the given item state without
      * considering the virtual item state managers.
      */
-    private boolean hasNonVirtualItemState(ItemId id) {
+    protected boolean hasNonVirtualItemState(ItemId id) {
         if (cache.isCached(id)) {
             return true;
         }
