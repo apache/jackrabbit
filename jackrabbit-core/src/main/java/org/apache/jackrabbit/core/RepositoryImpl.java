@@ -686,10 +686,11 @@ public class RepositoryImpl extends AbstractRepository
             throws RepositoryException {
         if (systemSearchMgr == null) {
             if (repConfig.getSearchConfig() != null) {
-                SystemSession defSysSession = getSystemSession(wspName);
                 systemSearchMgr = new SearchManager(repConfig.getSearchConfig(),
-                        nsReg, ntReg, defSysSession.getItemStateManager(),
+                        nsReg, ntReg, getWorkspaceInfo(wspName).itemStateMgr,
                         vMgr.getPersistenceManager(), SYSTEM_ROOT_NODE_ID, null, null);
+
+                SystemSession defSysSession = getSystemSession(wspName);
                 ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
                 obsMgr.addEventListener(systemSearchMgr, Event.NODE_ADDED
                         | Event.NODE_REMOVED | Event.PROPERTY_ADDED
