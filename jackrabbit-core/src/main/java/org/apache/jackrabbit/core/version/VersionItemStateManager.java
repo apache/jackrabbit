@@ -28,7 +28,9 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,30 @@ public class VersionItemStateManager extends SharedItemStateManager {
         this.pMgr = persistMgr;
     }
 
+    public NodeReferences getNodeReferences(NodeReferencesId id)
+            throws NoSuchItemStateException, ItemStateException {
+        // check persistence manager
+        try {
+            return pMgr.load(id);
+        } catch (NoSuchItemStateException e) {
+            // ignore
+        }
+        // throw
+        throw new NoSuchItemStateException(id.toString());
+    }
+
+    public boolean hasNodeReferences(NodeReferencesId id) {
+        // check persistence manager
+        try {
+            if (pMgr.exists(id)) {
+                return true;
+            }
+        } catch (ItemStateException e) {
+            // ignore
+        }
+        return false;
+    }
+
     /**
      * Sets the
      * @param references
@@ -76,7 +102,7 @@ public class VersionItemStateManager extends SharedItemStateManager {
                 Iterator iter = source.getReferences().iterator();
                 while (iter.hasNext()) {
                     PropertyId id = (PropertyId) iter.next();
-                    if (!hasItemState(id.getParentId())) {
+                    if (!hasNonVirtualItemState(id.getParentId())) {
                         target.addReference(id);
                     }
                 }
@@ -103,7 +129,7 @@ public class VersionItemStateManager extends SharedItemStateManager {
             NodeId id = refs.getTargetId();
             // no need to check existence of target if there are no references
             if (refs.hasReferences()) {
-                if (!changes.has(id) && !hasItemState(id)) {
+                if (!changes.has(id) && !hasNonVirtualItemState(id)) {
                     // remove references
                     iter.remove();
                 }
