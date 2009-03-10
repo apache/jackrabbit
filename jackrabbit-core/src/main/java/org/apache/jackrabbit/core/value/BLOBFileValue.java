@@ -58,7 +58,6 @@ public abstract class BLOBFileValue {
      * If this <code>BLOBFileValue</code> is backed by a persistent resource
      * calling this method will have no effect.
      *
-     * @see #delete()
      * @see #delete(boolean)
      */
     public abstract void discard();

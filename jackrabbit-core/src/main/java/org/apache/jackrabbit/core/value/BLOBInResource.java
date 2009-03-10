@@ -54,7 +54,7 @@ public class BLOBInResource extends BLOBFileValue {
     /**
      * Creates a new instance from a stream.
      *
-     * @param in the input stream
+     * @param fsResource the file system resource
      * @throws IOException
      */
     private BLOBInResource(FileSystemResource fsResource) throws IOException {
