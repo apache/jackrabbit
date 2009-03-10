@@ -99,36 +99,52 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
-     *
+     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isDeep()}.
      */
     public void testIsDeep() {
         assertEquals("Lock.isDeep must be consistent with lock call.", isDeep(), lock.isDeep());
     }
 
+    /**
+     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getNode()}.
+     *
+     * @throws RepositoryException If an execption occurs.
+     */
     public void testLockHoldingNode() throws RepositoryException {
         assertTrue("Lock.getNode() must be lockholding node.", lock.getNode().isSame(lockedNode));
     }
 
+    /**
+     * Test {@link LockManager#isLocked(String)} and {@link javax.jcr.Node#isLocked()}.
+     *
+     * @throws RepositoryException If an execption occurs.
+     */
     public void testNodeIsLocked() throws RepositoryException {
         assertTrue("Node must be locked after lock creation.", lockedNode.isLocked());
         assertTrue("Node must be locked after lock creation.", lockMgr.isLocked(lockedNode.getPath()));
     }
 
+    /**
+     * Test {@link LockManager#holdsLock(String)} and {@link javax.jcr.Node#holdsLock()}. 
+     *
+     * @throws RepositoryException If an execption occurs.
+     */
     public void testNodeHoldsLocked() throws RepositoryException {
         assertTrue("Node must hold lock after lock creation.", lockedNode.holdsLock());
         assertTrue("Node must hold lock after lock creation.", lockMgr.holdsLock(lockedNode.getPath()));
     }
     
     /**
-     *
+     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isSessionScoped()}
      */
     public void testIsSessionScoped() {
         assertEquals("Lock.isSessionScoped must be consistent with lock call.", isSessionScoped(), lock.isSessionScoped());
     }
 
     /**
+     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()}
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an execption occurs.
      */
     public void testIsLockOwningSession() throws RepositoryException {
         assertTrue("Session must be lock owner", lock.isLockOwningSession());
@@ -160,12 +176,19 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
-     *
+     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()} 
      */
     public void testGetSecondsRemaining() {
         assertTrue("Seconds remaining must be a positive long or 0.", lock.getSecondsRemaining() >= 0);
     }
 
+    /**
+     * Test {@link LockManager#unlock(String)} for a session that is not
+     * lock owner.
+     * 
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
     public void testUnlockByOtherSession() throws RepositoryException, NotExecutableException {
         Session otherSession = helper.getReadWriteSession();
         try {
