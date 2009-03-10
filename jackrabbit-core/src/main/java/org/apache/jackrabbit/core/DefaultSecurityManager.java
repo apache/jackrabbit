@@ -395,7 +395,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * Returns the access control provider for the specified
      * <code>workspaceName</code>.
      *
-     * @param workspaceName
+     * @param workspaceName Name of the workspace.
      * @return access control provider
      * @throws NoSuchWorkspaceException If no workspace with 'workspaceName' exists.
      * @throws RepositoryException
@@ -420,10 +420,10 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * Make sure the 'administrators' group exists and the user with the
      * configured (or default) adminID is member of this user-group.
      *
-     * @param userManager
-     * @param adminId
-     * @param anonymousId
-     * @throws RepositoryException
+     * @param userManager Manager to create users/groups.
+     * @param adminId UserID of the administrator.
+     * @param anonymousId UserID of the anonymous user.
+     * @throws RepositoryException If an error occurs.
      */
     private static void createSystemUsers(UserManager userManager,
                                           String adminId,
