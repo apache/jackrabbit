@@ -79,6 +79,8 @@ public class AuthContextProvider {
      * @param subject
      * @param session
      * @param principalProviderRegistry
+     * @param adminId
+     * @param anonymousId
      * @return context of for authentication and log-out
      * @throws RepositoryException in case neither an <code>JAASContext</code>
      * nor a <code>LocalContext</code> can be successfully created.

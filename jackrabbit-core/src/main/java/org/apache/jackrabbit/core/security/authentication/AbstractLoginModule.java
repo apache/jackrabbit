@@ -403,19 +403,20 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     *
-     * @param principal
-     * @param credentials
+     * @param principal Principal used to retrieve the <code>Authentication</code>
+     * object.
+     * @param credentials Credentials used for the authentication.
      * @return <code>true</code> if Credentails authenticate,
      *         <code>false</code> if no <code>Authentication</code> can handle
      *         the given <code>Credentials</code>
      * @throws javax.security.auth.login.FailedLoginException
      *          if the authentication failed.
+     * @throws RepositoryException If another error occurs.
      * @see AbstractLoginModule#getAuthentication(java.security.Principal, javax.jcr.Credentials)
      * @see AbstractLoginModule#authenticate(java.security.Principal, javax.jcr.Credentials)
      */
     protected boolean authenticate(Principal principal, Credentials credentials)
-            throws RepositoryException, FailedLoginException {
+            throws FailedLoginException, RepositoryException {
 
         Authentication auth = getAuthentication(principal, credentials);
         if(auth == null) {
@@ -445,22 +446,23 @@ public abstract class AbstractLoginModule implements LoginModule {
      * Current implementation takes {@link User} for the given Principal and
      * delegates the check to {@link Impersonation#allows(javax.security.auth.Subject)} }
      *
-     * @param principal
-     * @param credentials
+     * @param principal Principal to impersonate.
+     * @param credentials Credentials used to create the impersonation subject.
      * @return false, if there is no User to impersonate,
      *         true if impersonation is allowed
-     * @throws RepositoryException
-     * @throws FailedLoginException if credentials don't allow to impersonate to principal
+     * @throws LoginException If credentials don't allow to impersonate to principal.
+     * @throws RepositoryException If another error occurs.
      */
     abstract protected boolean impersonate(Principal principal, Credentials credentials)
             throws RepositoryException, LoginException;
 
     /**
+     * Retrieve the <code>Authentication</code>.
      *
-     * @param principal
-     * @param creds
-     * @return
-     * @throws RepositoryException
+     * @param principal A principal.
+     * @param creds The Credentials used for the login.
+     * @return Authentication object for the given principal / credentials.
+     * @throws RepositoryException If an error occurs.
      */
     abstract protected Authentication getAuthentication(Principal principal, Credentials creds)
             throws RepositoryException;
@@ -600,8 +602,8 @@ public abstract class AbstractLoginModule implements LoginModule {
     /**
      * Indicate if the given Credentials are considered to be anonymous.
      *
-     * @param credentials
-     * @return true if is anonymous
+     * @param credentials The Credentials to be tested.
+     * @return <code>true</code> if is anonymous; <code>false</code> otherwise.
      */
     protected boolean isAnonymous(Credentials credentials) {
         if (credentials instanceof GuestCredentials) {
@@ -619,7 +621,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * This method resolves the Principal for the given Credentials. If no valid
      * Principal can be determined, the LoginModule should be ignored.
      *
-     * @param credentials
+     * @param credentials Credentials used for to login.
      * @return the principal associated with the given credentials or <code>null</code>.
      */
     protected abstract Principal getPrincipal(Credentials credentials);
