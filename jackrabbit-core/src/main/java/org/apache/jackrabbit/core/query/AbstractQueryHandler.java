@@ -69,6 +69,8 @@ public abstract class AbstractQueryHandler implements QueryHandler {
     /**
      * This method must be implemented by concrete sub classes and will be
      * called from {@link #init}.
+     *
+     * @throws IOException If an error occurs.
      */
     protected abstract void doInit() throws IOException;
 
