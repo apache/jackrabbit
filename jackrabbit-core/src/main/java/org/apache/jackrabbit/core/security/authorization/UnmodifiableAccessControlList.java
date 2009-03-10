@@ -39,7 +39,10 @@ public class UnmodifiableAccessControlList implements AccessControlList {
     /**
      * Construct a new <code>UnmodifiableAccessControlList</code>
      *
-     * @param acl
+     * @param acl The AccessControlList to be wrapped in order to prevent
+     * it's modification.
+     * @throws RepositoryException The the entries cannot be retrieved from the
+     * specified <code>AccessControlList</code>.
      */
     public UnmodifiableAccessControlList(AccessControlList acl) throws RepositoryException {
         accessControlEntries = acl.getAccessControlEntries();
@@ -48,7 +51,7 @@ public class UnmodifiableAccessControlList implements AccessControlList {
     /**
      * Construct a new <code>UnmodifiableAccessControlList</code>
      *
-     * @param accessControlEntries
+     * @param accessControlEntries A list of {@link AccessControlEntry access control entries}.
      */
     public UnmodifiableAccessControlList(List accessControlEntries) {
         this.accessControlEntries = (AccessControlEntry[]) accessControlEntries.toArray(new AccessControlEntry[accessControlEntries.size()]);

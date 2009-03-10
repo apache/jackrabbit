@@ -153,7 +153,7 @@ public final class PrivilegeRegistry {
     /**
      * Returns the privilege with the specified <code>privilegeName</code>.
      *
-     * @param privilegeName
+     * @param privilegeName Name of the principal.
      * @return the privilege with the specified <code>privilegeName</code>.
      * @throws AccessControlException If no privilege with the given name exists.
      * @throws RepositoryException If another error occurs.
@@ -175,10 +175,11 @@ public final class PrivilegeRegistry {
      * <code>bits</code>. If <code>bits</code> is {@link #NO_PRIVILEGE 0} or
      * does not match to any registered privilege an empty array will be returned.
      *
-     * @param bits
+     * @param bits Privilege bits as obtained from {@link #getBits(Privilege[])}.
      * @return Array of <code>Privilege</code>s that are presented by the given it
      * or an empty array if <code>bits</code> is lower than {@link #READ} or
      * cannot be resolved to registered <code>Privilege</code>s.
+     * @see #getBits(Privilege[])
      */
     public Privilege[] getPrivileges(int bits) {
         Privilege[] privs;
@@ -195,10 +196,11 @@ public final class PrivilegeRegistry {
     }
 
     /**
-     * @param privileges
-     * @return
+     * @param privileges An array of privileges.
+     * @return The privilege bits.
      * @throws AccessControlException If the specified array is null
      * or if it contains an unregistered privilege.
+     * @see #getPrivileges(int)
      */
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
@@ -224,8 +226,10 @@ public final class PrivilegeRegistry {
      * @param parentPrivs The privileges granted on the parent of the Node. Not
      * relevant for properties since it only is used to determine permissions
      * on a Node (add_child_nodes, remove_child_nodes).
-     * @param isAllow
-     * @param protectsPolicy
+     * @param isAllow <code>true</code> if the privileges are granted; <code>false</code>
+     * otherwise.
+     * @param protectsPolicy If <code>true</code> the affected item itself
+     * defines access control related information.
      * @return the permissions granted evaluating the given privileges.
      */
     public static int calculatePermissions(int privs, int parentPrivs, boolean isAllow, boolean protectsPolicy) {
@@ -299,8 +303,7 @@ public final class PrivilegeRegistry {
     }
     
     /**
-     *
-     * @param bits
+     * @param bits The privilege bits.
      * @return InternalPrivilege that corresponds to the given bits.
      */
     private static InternalPrivilege[] getInteralPrivileges(int bits) {
@@ -386,6 +389,8 @@ public final class PrivilegeRegistry {
 
         /**
          * Create a simple (non-aggregate) internal privilege.
+         * @param name The JCR name of the privilege in the extended form.
+         * @param bits The privilege bits.
          */
         private InternalPrivilege(String name, int bits) {
             if (name == null) {
@@ -402,6 +407,8 @@ public final class PrivilegeRegistry {
 
         /**
          * Create an aggregate internal privilege
+         * @param name The JCR name of the privilege in its extended form.
+         * @param declaredAggregates The declared aggregated privileges.
          */
         private InternalPrivilege(String name, InternalPrivilege[] declaredAggregates) {
             if (name == null) {

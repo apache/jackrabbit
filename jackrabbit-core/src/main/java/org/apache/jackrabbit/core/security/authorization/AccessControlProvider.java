@@ -59,8 +59,9 @@ public interface AccessControlProvider {
      * Allows the {@link AccessControlProviderFactory} to pass a session
      * and configuration parameters to the <code>AccessControlProvider</code>.
      *
-     * @param systemSession
-     * @param configuration
+     * @param systemSession System session.
+     * @param configuration Configuration used to initialize this provider.
+     * @throws RepositoryException If an error occurs.
      */
     void init(Session systemSession, Map configuration) throws RepositoryException;
 
@@ -113,11 +114,12 @@ public interface AccessControlProvider {
      * root node of the workspace this provider has been built for;
      * <code>false</code> otherwise.
      *
-     * @param principals
+     * @param principals Set of principals to be tested for being allowed to
+     * access the root node.
      * @return <code>true</code> if the given set of principals can access the
      * root node of the workspace this provider has been built for;
      * <code>false</code> otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean canAccessRoot(Set principals) throws RepositoryException;
 }

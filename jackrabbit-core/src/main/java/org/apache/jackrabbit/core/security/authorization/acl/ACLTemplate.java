@@ -83,6 +83,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path
+     * @param privilegeRegistry
      * @param principalMgr
      */
     ACLTemplate(String path, PrincipalManager principalMgr, PrivilegeRegistry privilegeRegistry) {
@@ -94,6 +95,10 @@ class ACLTemplate implements JackrabbitAccessControlList {
     /**
      * Create a {@link ACLTemplate} that is used to edit an existing ACL
      * node.
+     *
+     * @param aclNode
+     * @param privilegeRegistry
+     * @throws RepositoryException
      */
     ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
         if (aclNode == null || !aclNode.isNodeType(AccessControlConstants.NT_REP_ACL)) {
@@ -403,7 +408,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
     /**
      * Returns true if the path and the entries are equal; false otherwise.
      *
-     * @param obj
+     * @param obj Object to be tested.
      * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */

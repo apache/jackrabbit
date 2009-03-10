@@ -42,7 +42,8 @@ public interface AccessControlProviderFactory {
     /**
      * Initalize this factory.
      *
-     * @param securitySession
+     * @param securitySession Security Session.
+     * @throws RepositoryException If an error occurs.
      */
     void init(Session securitySession) throws RepositoryException;
 

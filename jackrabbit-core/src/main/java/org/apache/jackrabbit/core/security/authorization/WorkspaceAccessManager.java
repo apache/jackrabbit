@@ -30,7 +30,7 @@ public interface WorkspaceAccessManager {
     /**
      * Initialize this <code>WorkspaceAccessManager</code>.
      *
-     * @param securitySession
+     * @param securitySession The security session.
      * @throws RepositoryException if an error occurs.
      */
     void init(Session securitySession) throws RepositoryException;
@@ -46,10 +46,12 @@ public interface WorkspaceAccessManager {
      * Returns <code>true</code> if access to the workspace with the given name
      * is granted to the to any of the specified principals.
      *
-     * @param principals
-     * @param workspaceName
+     * @param principals A set of principals to be tested for being allowed to
+     * access workspace identified by <code>workspaceName</code>.
+     * @param workspaceName Name of the workspace to be tested.
      * @return true if the given set of principals is allowed to access the
-     * workspace with the specified name. 
+     * workspace with the specified name.
+     * @throws RepositoryException If an error occurs. 
      */
     boolean grants(Set principals, String workspaceName) throws RepositoryException;
 }

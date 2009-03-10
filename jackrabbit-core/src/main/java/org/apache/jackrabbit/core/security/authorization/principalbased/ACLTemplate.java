@@ -285,7 +285,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     /**
      * Returns true if the path and the entries are equal; false otherwise.
      *
-     * @param obj
+     * @param obj Object to test.
      * @return true if the path and the entries are equal; false otherwise.
      * @see Object#equals(Object)
      */

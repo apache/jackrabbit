@@ -17,13 +17,6 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
-
-import javax.jcr.RepositoryException;
-import java.security.Principal;
-import java.util.Map;
 
 /**
  * <code>JackrabbitAccessControlPolicy</code> is an extension of the
