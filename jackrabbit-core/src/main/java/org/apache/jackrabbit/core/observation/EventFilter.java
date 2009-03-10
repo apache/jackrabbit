@@ -89,7 +89,7 @@ public class EventFilter {
      * @param path       only allow {@link javax.jcr.Item} with
      *                   <code>path</code>.
      * @param isDeep     if <code>true</code> also allow events for {@link
-     *                   Item}s below <code>absPath</code>.
+     *                   javax.jcr.Item}s below <code>absPath</code>.
      * @param ids        only allow events for {@link javax.jcr.Node}s with
      *                   specified NodeIDs. If <code>null</code> is passed no
      *                   restriction regarding NodeIds is applied.
