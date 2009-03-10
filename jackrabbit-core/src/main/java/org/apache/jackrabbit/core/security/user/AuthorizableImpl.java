@@ -61,7 +61,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     /**
      * @param node    the Authorizable is persisted to.
      * @param userManager UserManager that created this Authorizable.
-     * @throws RepositoryException
+     * @throws IllegalArgumentException if the given node isn't of node type
+     * {@link #NT_REP_AUTHORIZABLE}.
+     * @throws RepositoryException If an error occurs.
      */
     protected AuthorizableImpl(NodeImpl node, UserManagerImpl userManager)
             throws RepositoryException {
@@ -203,8 +205,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * Sets the Value for the given name. If a value existed, it is replaced,
      * if not it is created.
      *
-     * @param name
-     * @param value
+     * @param name The property name.
+     * @param value The property value.
+     * @throws RepositoryException If the specified name defines a property
+     * that needs to be modified by this user API or setting the corresponding
+     * JCR property fails.
      * @see Authorizable#setProperty(String, Value)
      */
     public synchronized void setProperty(String name, Value value) throws RepositoryException {
@@ -223,8 +228,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * Sets the Value[] for the given name. If a value existed, it is replaced,
      * if not it is created.
      *
-     * @param name
-     * @param values
+     * @param name The property name.
+     * @param values The property values.
+     * @throws RepositoryException If the specified name defines a property
+     * that needs to be modified by this user API or setting the corresponding
+     * JCR property fails.
      * @see Authorizable#setProperty(String, Value[])
      */
     public synchronized void setProperty(String name, Value[] values) throws RepositoryException {
@@ -280,7 +288,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     /**
      * @return node The underlying <code>Node</code> object.
      */
-    NodeImpl getNode() throws RepositoryException {
+    NodeImpl getNode() {
         return node;
     }
 
@@ -368,11 +376,11 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * Returns true if the given property of the authorizable node is one of the
      * non-protected properties defined by the rep:authorizable.
      *
-     * @param prop
+     * @param prop Property to be tested.
      * @return <code>true</code> if the given property is defined
      * by the rep:authorizable node type or one of it's sub-node types;
      * <code>false</code> otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If the property definition cannot be retrieved.
      */
     private static boolean isAuthorizableProperty(Property prop) throws RepositoryException {
         PropertyDefinition def = prop.getDefinition();
@@ -401,29 +409,28 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * method is a simple utility in order to save the extra effort to modify
      * the props just to find out later that they are in fact protected.
      *
-     * @param propertyName
-     * @return
-     * @throws RepositoryException
+     * @param propertyName Name of the property.
+     * @return true if the property with the given name represents a protected
+     * user/group property that needs to be changed through the API.
+     * @throws RepositoryException If the specified name is not valid.
      */
     private boolean isProtectedProperty(String propertyName) throws RepositoryException {
         Name pName = getSession().getQName(propertyName);
-        if (P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
+        return P_PRINCIPAL_NAME.equals(pName) || P_USERID.equals(pName)
                 || P_REFEREES.equals(pName) || P_GROUPS.equals(pName)
-                || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName)) {
-            return true;
-        } else {
-            return false;
-        }
+                || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName);
     }
 
     /**
      * Throws ConstraintViolationException if {@link #isProtectedProperty(String)}
      * returns <code>true</code>.
      *
-     * @param propertyName
-     * @throws RepositoryException
+     * @param propertyName Name of the property.
+     * @throws ConstraintViolationException If the property is protected according
+     * to {@link #isProtectedProperty(String)}.
+     * @throws RepositoryException If another error occurs.
      */
-    private void checkProtectedProperty(String propertyName) throws RepositoryException {
+    private void checkProtectedProperty(String propertyName) throws ConstraintViolationException, RepositoryException {
         if (isProtectedProperty(propertyName)) {
             throw new ConstraintViolationException("Attempt to modify protected property " + propertyName + " of an Authorizable.");
         }
@@ -462,7 +469,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
          * Method revealing the path to the Node that represents the
          * Authorizable this principal is created for.
          *
-         * @return
+         * @return The path of the underlying node.
          * @see ItemBasedPrincipal#getPath()
          */
         public String getPath() throws RepositoryException {

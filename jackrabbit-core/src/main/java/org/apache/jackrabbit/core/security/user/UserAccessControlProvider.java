@@ -494,7 +494,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
          * Event listener is only interested in changes of group-membership
          * that effect the permission-evaluation.
          *
-         * @param events
+         * @see javax.jcr.observation.EventListener#onEvent(EventIterator)
          */
         public void onEvent(EventIterator events) {
             while (events.hasNext()) {
