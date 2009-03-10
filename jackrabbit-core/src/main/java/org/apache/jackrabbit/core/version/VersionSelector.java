@@ -42,10 +42,10 @@ import javax.jcr.version.VersionHistory;
  *
  * @see DateVersionSelector
  * @see LabelVersionSelector
- * @see NodeImpl#restore(String, boolean)
- * @see NodeImpl#restore(Version, boolean)
- * @see NodeImpl#restore(Version, String, boolean)
- * @see NodeImpl#restoreByLabel(String, boolean)
+ * @see org.apache.jackrabbit.core.NodeImpl#restore(String, boolean)
+ * @see org.apache.jackrabbit.core.NodeImpl#restore(Version, boolean)
+ * @see org.apache.jackrabbit.core.NodeImpl#restore(Version, String, boolean)
+ * @see org.apache.jackrabbit.core.NodeImpl#restoreByLabel(String, boolean)
  *
  */
 public interface VersionSelector {

@@ -243,7 +243,8 @@ abstract class AbstractVersionManager implements VersionManager {
      * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
      * to a node.
      *
-     * @param node
+     * @param session
+     * @param node NodeState
      * @return identifier of the new version history node
      * @throws RepositoryException
      * @see #getVersionHistory(Session, NodeState)
@@ -487,11 +488,13 @@ abstract class AbstractVersionManager implements VersionManager {
 
     /**
      * Set version label on the specified version.
+     * 
      * @param history version history
      * @param version version name
      * @param label version label
      * @param move <code>true</code> to move from existing version;
-     *             <code>false</code> otherwise
+     *             <code>false</code> otherwise.
+     * @return The internal version.
      * @throws RepositoryException if an error occurs
      */
     protected InternalVersion setVersionLabel(InternalVersionHistoryImpl history,

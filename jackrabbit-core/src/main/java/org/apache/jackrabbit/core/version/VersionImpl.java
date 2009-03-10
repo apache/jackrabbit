@@ -47,10 +47,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * Create a new instance of this class.
      * @param itemMgr item manager
      * @param session session
-     * @param id node id
-     * @param state node state
-     * @param definition node definition
-     * @param listeners life cycle listeners
+     * @param data node data
      */
     public VersionImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
         super(itemMgr, session, data);
