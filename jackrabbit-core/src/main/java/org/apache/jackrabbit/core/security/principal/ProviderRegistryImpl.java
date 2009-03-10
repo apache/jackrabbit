@@ -44,7 +44,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
      * default principal provider.
      * NOTE that the provider must be initialized by the caller.
      *
-     * @param defaultPrincipalProvider
+     * @param defaultPrincipalProvider The default principal provider.
      */
     public ProviderRegistryImpl(PrincipalProvider defaultPrincipalProvider) {
         this.defaultPrincipalProvider = defaultPrincipalProvider;
@@ -102,9 +102,11 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
      * {@link LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS} key.<br>
      * The class gets set the properties of the given map, via a Bean mechanism
      *
-     * @param config
+     * @param config Configuration properties.
      * @return the new provider instance or <code>null</code> if the
      * configuration does not contain the required entry.
+     * @throws RepositoryException If an error occurs while creating the
+     * principal provider.
      */
     private PrincipalProvider createProvider(Properties config)
             throws RepositoryException {

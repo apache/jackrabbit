@@ -68,6 +68,8 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
 
     /**
      * Add an entry to the principal cache.
+     *
+     * @param principal to be cached.
      */
     protected synchronized void addToCache(Principal principal) {
         cache.put(principal.getName(), principal);
@@ -78,7 +80,7 @@ public abstract class AbstractPrincipalProvider implements PrincipalProvider {
      * Implementations should return a {@link Principal} from their source,
      * if it contains one for the given name or <code>null</code>.
      *
-     * @param principalName
+     * @param principalName Name of the principal to be returned.
      * @return Principal or null, if non provided for the given name
      * @see #getPrincipal(String)
      */

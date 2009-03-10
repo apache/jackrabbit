@@ -303,6 +303,9 @@ public class PrincipalManagerImpl implements PrincipalManager {
             next = seekNext();
         }
 
+        /**
+         * @see org.apache.jackrabbit.core.security.principal.AbstractPrincipalIterator#seekNext()
+         */
         protected final Principal seekNext() {
             while (!entries.isEmpty()) {
                 // first test if current-itr has more elements
