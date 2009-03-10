@@ -30,7 +30,7 @@ public interface RepositoryLockMechanism {
      * Initialize the instance for the given directory path. The lock still needs to be 
      * explicitly acquired using the {@link #acquire()} method.
      *
-     * @param path directory path
+     * @param homeDir directory path
      * @throws RepositoryException if the canonical path of the directory
      *                             can not be determined
      */

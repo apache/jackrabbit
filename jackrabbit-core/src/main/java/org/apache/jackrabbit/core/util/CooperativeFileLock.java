@@ -58,7 +58,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
     /**
      * Create a new file locking object using the given file name.
      * 
-     * @param fileName the name of the properties file
+     * @param path basic path to append {@link #FILE_NAME} to.
      */
     public void init(String path) {
         this.fileName = path + File.separatorChar + FILE_NAME;
