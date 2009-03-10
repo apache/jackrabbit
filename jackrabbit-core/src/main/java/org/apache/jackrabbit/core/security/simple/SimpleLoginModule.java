@@ -39,11 +39,17 @@ public class SimpleLoginModule extends AbstractLoginModule {
 
     private static Logger log = LoggerFactory.getLogger(SimpleLoginModule.class);
 
+    /**
+     * @see AbstractLoginModule#doInit(javax.security.auth.callback.CallbackHandler, javax.jcr.Session, java.util.Map)
+     */
     protected void doInit(CallbackHandler callbackHandler, Session session, Map options) throws LoginException {
         // nothing to do
         log.debug("init: SimpleLoginModule. Done.");
     }
 
+    /**
+     * @see AbstractLoginModule#impersonate(java.security.Principal, javax.jcr.Credentials)
+     */
     protected boolean impersonate(Principal principal, Credentials credentials) throws RepositoryException, LoginException {
         if (principal instanceof Group) {
             return false;
@@ -52,6 +58,9 @@ public class SimpleLoginModule extends AbstractLoginModule {
         return impersSubject != null;
     }
 
+    /**
+     * @see AbstractLoginModule#getAuthentication(java.security.Principal, javax.jcr.Credentials)
+     */
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
         if (principal instanceof Group) {
             return null;
@@ -72,7 +81,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
      * resolved by  {@link #getUserID(Credentials)}, assuming that
      * User-ID and the corresponding principal name are always identical.
      *
-     * @param credentials
+     * @param credentials Credentials for which the principal should be resolved.
      * @return principal or <code>null</code> if the principal provider does
      * not contain a user-principal with the given userID/principal name.
      *
