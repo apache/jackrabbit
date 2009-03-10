@@ -76,7 +76,8 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * Creates a new DefaultPrincipalProvider reading the principals from the
      * storage below the given security root node.
      *
-     * @param securitySession for Repository Access
+     * @param securitySession for repository access.
+     * @param userManager Used to retrieve the principals.
      * @throws RepositoryException if an error accessing the repository occurs.
      */
     public DefaultPrincipalProvider(Session securitySession,
@@ -162,7 +163,13 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
 
     /**
      * @see PrincipalProvider#getPrincipals(int)
-     * @param searchType
+     * @param searchType Any of the following search types:
+     * <ul>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_NOT_GROUP}</li>
+     * <li>{@link PrincipalManager#SEARCH_TYPE_ALL}</li>
+     * </ul>
+     * @see PrincipalProvider#getPrincipals(int)
      */
     public PrincipalIterator getPrincipals(int searchType) {
         return findPrincipals(null, searchType);
@@ -264,7 +271,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      * Recursively collect all Group-principals the specified principal is
      * member of.
      *
-     * @param princ
+     * @param princ Principal for which the group membership will be collected.
      * @return all Group principals the specified <code>princ</code> is member of
      * including inherited membership.
      */
@@ -291,7 +298,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     }
 
     /**
-     * @param simpleFilter
+     * @param simpleFilter Principal name or fragment.
      * @return An iterator over the main principals of the authorizables found
      * by the user manager.
      */
@@ -308,7 +315,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     }
 
     /**
-     * @param simpleFilter
+     * @param simpleFilter Principal name or fragment.
      * @return An iterator over the main principals of the authorizables found
      * by the user manager.
      */
@@ -346,6 +353,9 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             next = seekNext();
         }
 
+        /**
+         * @see org.apache.jackrabbit.core.security.principal.AbstractPrincipalIterator#seekNext()
+         */
         protected Principal seekNext() {
             while (authorizableItr.hasNext()) {
                 try {

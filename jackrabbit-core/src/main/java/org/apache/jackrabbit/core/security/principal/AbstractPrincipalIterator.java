@@ -45,6 +45,10 @@ abstract class AbstractPrincipalIterator implements PrincipalIterator {
     /**
      * Subclasses must call {#link seekNext()} upon object construction and
      * assign the value to the 'next' field.
+     *
+     * @return The principal to be return upon the subsequent {@link #next()}
+     * or {@link #nextPrincipal()} call or <code>null</code> if no next principal
+     * exists.
      */
     abstract Principal seekNext();
 

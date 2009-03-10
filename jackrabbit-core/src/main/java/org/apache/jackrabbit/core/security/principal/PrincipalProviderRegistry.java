@@ -49,7 +49,7 @@ public interface PrincipalProviderRegistry {
     PrincipalProvider getDefault();
 
     /**
-     * @param className
+     * @param className Name of the principal provider class.
      * @return PrincipalProvider or <code>null</code> if no provider with
      * the given class name was registered.
      */
