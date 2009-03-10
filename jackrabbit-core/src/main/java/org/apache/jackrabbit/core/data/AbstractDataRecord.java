@@ -42,7 +42,7 @@ public abstract class AbstractDataRecord implements DataRecord {
     /**
      * Returns the data identifier.
      *
-     * @param data identifier
+     * @return data identifier
      */
     public DataIdentifier getIdentifier() {
         return identifier;
