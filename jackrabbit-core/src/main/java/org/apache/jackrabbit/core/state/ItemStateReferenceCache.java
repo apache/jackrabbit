@@ -30,7 +30,7 @@ import java.io.PrintStream;
  * cache; it holds weak references to <code>ItemState</code> instances. This
  * <code>ItemStateCache</code> implementation directly represents the
  * contents of the primary cache, i.e. {@link #isCached(ItemId)},
- * {@link #retrieve(ItemId)}}, {@link #size()} etc. only refer to the contents
+ * {@link #retrieve(ItemId)}}, {@link #isEmpty()} etc. only refer to the contents
  * of the primary cache.</li>
  * <li>an <code>ItemStateCache</code> implementing a custom eviction policy and
  * serving as the secondary (or auxiliary) cache; entries that are automatically

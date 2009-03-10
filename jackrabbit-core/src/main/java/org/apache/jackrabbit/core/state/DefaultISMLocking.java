@@ -106,7 +106,7 @@ public class DefaultISMLocking implements ISMLocking {
 
         /**
          * Sets the active Xid
-         * @param id
+         * @param xid
          */
         synchronized void setActiveXid(Xid xid) {
             activeXid = xid;
