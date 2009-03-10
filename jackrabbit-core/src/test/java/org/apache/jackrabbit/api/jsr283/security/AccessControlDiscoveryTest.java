@@ -128,8 +128,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testWritePrivilege() throws RepositoryException, NotExecutableException {
         Privilege w = acMgr.privilegeFromName(Privilege.JCR_WRITE);
@@ -142,7 +142,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
      * Tests if the privilege name is treated as JCR Name and consequently
      * reflects changes made to the namespace prefix.
      * 
-     * @throws RepositoryException
+     *  @throws RepositoryException If an error occurs.
      */
     public void testPrivilegeName() throws RepositoryException {
         Privilege allPriv = acMgr.privilegeFromName(Privilege.JCR_ALL);
@@ -174,7 +174,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void testGetPrivileges() throws RepositoryException {
         acMgr.getPrivileges(testRootNode.getPath());
@@ -182,7 +182,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void testGetPrivilegesOnNonExistingNode() throws RepositoryException {
         String path = getPathToNonExistingNode();
@@ -196,8 +196,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testGetPrivilegesOnProperty() throws RepositoryException, NotExecutableException {
         String path = getPathToProperty();
@@ -211,7 +211,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void testHasPrivileges() throws RepositoryException {
         Privilege[] privs = acMgr.getPrivileges(testRootNode.getPath());
@@ -220,7 +220,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void testHasIndividualPrivileges() throws RepositoryException {
         Privilege[] privs = acMgr.getPrivileges(testRootNode.getPath());
@@ -233,8 +233,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testNotHasPrivileges() throws RepositoryException, NotExecutableException {
         Privilege[] privs = acMgr.getPrivileges(testRootNode.getPath());
@@ -261,7 +261,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void testHasPrivilegesOnNotExistingNode() throws RepositoryException {
         String path = getPathToNonExistingNode();
@@ -275,8 +275,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testHasPrivilegesOnProperty() throws RepositoryException, NotExecutableException {
         String path = getPathToProperty();
@@ -290,8 +290,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     /**
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testHasPrivilegesEmptyArray() throws RepositoryException, NotExecutableException {
         assertTrue(acMgr.hasPrivileges(testRootNode.getPath(), new Privilege[0]));
@@ -299,7 +299,12 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
     //--------------------------------------------------------------------------
     /**
-     * Retrieve the 'real' jcr name from a given privilege name constant.
+     * Retrieve the prefixed jcr name from a given privilege name constant.
+     *
+     * @param privilegeNameConstant
+     * @param session
+     * @return
+     * @throws RepositoryException If an error occurs.
      */
     private static String getJCRName(String privilegeNameConstant, Session session) throws RepositoryException {
         int pos = privilegeNameConstant.indexOf('}');
