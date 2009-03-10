@@ -21,9 +21,11 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.Session;
 
 /**
  * Basic implementation of the <code>RetentionPolicy</code> interface.
@@ -35,9 +37,26 @@ public class RetentionPolicyImpl implements RetentionPolicy {
     private final NameResolver resolver;
 
     private int hashCode = 0;
-    
-    public RetentionPolicyImpl(String jcrName, NameResolver resolver) throws IllegalNameException, NamespaceException {
-        this(resolver.getQName(jcrName), null, resolver);
+
+    /**
+     * Creates a new <code>RetentionPolicy</code> that can be applied to a
+     * <code>Node</code> using {@link org.apache.jackrabbit.api.jsr283.retention.RetentionManager#setRetentionPolicy(String, org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy)}.
+     *
+     * @param jcrName The name of the policy. It must be a valid JCR name.
+     * @param session The editing <code>Session</code> from which the retention
+     * manager will be obtained.
+     * @return a new <code>RetentionPolicy</code>
+     * @throws RepositoryException If the jcr name isn't valid or if same other
+     * error occurs.
+     */
+    public static RetentionPolicy createRetentionPolicy(String jcrName, Session session) throws RepositoryException {
+        NameResolver resolver;
+        if (session instanceof NameResolver) {
+            resolver = (NameResolver) session;
+        } else {
+            resolver = new DefaultNamePathResolver(session);
+        }
+        return new RetentionPolicyImpl(jcrName, null, resolver);
     }
 
     RetentionPolicyImpl(String jcrName, NodeId nodeId, NameResolver resolver) throws IllegalNameException, NamespaceException {
@@ -53,7 +72,7 @@ public class RetentionPolicyImpl implements RetentionPolicy {
     NodeId getNodeId() {
         return nodeId;
     }
-    
+
     //----------------------------------------------------< RetentionPolicy >---
     /**
      * @see org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy#getName()

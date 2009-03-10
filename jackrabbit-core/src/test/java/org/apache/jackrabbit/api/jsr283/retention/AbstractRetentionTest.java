@@ -58,7 +58,7 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
 
     protected RetentionPolicy getApplicableRetentionPolicy(String jcrName) throws NotExecutableException, RepositoryException {
         // TODO: move to repositoryStub/helper and adjust accordingly
-        return new RetentionPolicyImpl(jcrName, (SessionImpl)superuser);
+        return RetentionPolicyImpl.createRetentionPolicy(jcrName, superuser);
     }
 
     protected static RetentionManager getRetentionManager(Session s) throws RepositoryException, NotExecutableException {
