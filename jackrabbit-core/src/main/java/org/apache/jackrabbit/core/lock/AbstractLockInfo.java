@@ -124,7 +124,10 @@ public abstract class AbstractLockInfo {
     /**
      * Return the lock token as seen by the session passed as parameter. If
      * this session is currently holding the lock, it will get the lock token
-     * itself, otherwise a <code>null</code> string
+     * itself, otherwise a <code>null</code> string.
+     *
+     * @param session The session asking for the lock token.
+     * @return lock token.
      */
     public String getLockToken(Session session) {
         if (session.equals(lockHolder)) {
@@ -144,6 +147,8 @@ public abstract class AbstractLockInfo {
 
     /**
      * Return a flag indicating whether the lock information may still change.
+     *
+     * @return <code>true</code> if the lock is still alive.
      */
     public boolean mayChange() {
         return live;

@@ -48,12 +48,12 @@ public interface LockManager {
      * Lock a node. Checks whether the node is not locked and then
      * returns a lock object for this node.
      *
-     * @param node
+     * @param node Node to create the lock for.
      * @param isDeep whether the lock applies to this node only
      * @param isSessionScoped whether the lock is session scoped
-     * @param timoutHint
-     * @param ownerInfo
-     * @return
+     * @param timoutHint Desired lock timeout in seconds.
+     * @param ownerInfo Optional string acting as information about the owner.
+     * @return the lock.
      * @throws LockException if this node already is locked, or some descendant
      *         node is locked and <code>isDeep</code> is <code>true</code>
      * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
@@ -155,6 +155,7 @@ public interface LockManager {
 
     /**
      * Invoked by a session to inform that a lock token has been added.
+     * 
      * @param session session that has a added lock token
      * @param lt added lock token
      * @throws LockException
@@ -164,6 +165,7 @@ public interface LockManager {
 
     /**
      * Invoked by a session to inform that a lock token has been removed.
+     *
      * @param session session that has a removed lock token
      * @param lt removed lock token
      * @throws LockException
