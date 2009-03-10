@@ -48,7 +48,7 @@ class SimpleCredentialsAuthentication implements Authentication {
      * Create an Authentication for this User
      *
      * @param user to create the Authentication for
-     * @throws javax.jcr.RepositoryException
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     SimpleCredentialsAuthentication(User user) throws RepositoryException {
         Credentials creds = user.getCredentials();
@@ -89,7 +89,7 @@ class SimpleCredentialsAuthentication implements Authentication {
      * If both, UserID and Password of the credentials are equal, the authentication
      * succeded and <code>true</code> is returned;
      *
-     * @param credentials
+     * @param credentials Credentials to be used for the authentication.
      * @return true if the given Credentials' UserID/Password pair match any
      * of the credentials attached to the user this SimpleCredentialsAuthentication has
      * been built for.

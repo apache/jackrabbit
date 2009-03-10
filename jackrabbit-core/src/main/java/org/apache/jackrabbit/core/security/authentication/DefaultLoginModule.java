@@ -76,7 +76,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
      * If the the userID cannot be resolved to a User or if obtaining the
      * principal fail, <code>null</code> is returned.
      *
-     * @param credentials
+     * @param credentials Credentions to retrieve the principal for.
      * @return a user principal or <code>null</code>.
      * @see AbstractLoginModule#getPrincipal(Credentials)
      */
@@ -115,8 +115,8 @@ public class DefaultLoginModule extends AbstractLoginModule {
      * Current implementation takes {@link User} for the given Principal and
      * delegates the check to {@link Impersonation#allows(javax.security.auth.Subject)}
      *
-     * @param principal
-     * @param credentials
+     * @param principal Principal to impersonate.
+     * @param credentials Credentials used to create the impersonation subject.
      * @return false, if there is no User to impersonate,
      *         true if impersonation is allowed
      * @throws javax.jcr.RepositoryException

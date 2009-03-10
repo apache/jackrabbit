@@ -52,7 +52,7 @@ public interface Authentication {
      * @param credentials to verify
      * @return <code>true</code> if <code>Credentials</code> identify the
      * <code>User</code>.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean authenticate(Credentials credentials) throws RepositoryException;
 
