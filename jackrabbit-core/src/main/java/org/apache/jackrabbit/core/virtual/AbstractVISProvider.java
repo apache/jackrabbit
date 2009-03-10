@@ -94,7 +94,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * Creates the root node state.
      *
-     * @return
+     * @return The virtual root node state.
      * @throws RepositoryException
      */
     protected abstract VirtualNodeState createRootNodeState() throws RepositoryException;
@@ -174,6 +174,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * Returns the root state
      *
      * @return the root state
+     * @throws ItemStateException If the root node state does not exist and its
+     * creation fails.
      */
     public synchronized NodeState getRootState() throws ItemStateException {
         try {
@@ -327,6 +329,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * adds the node state to the cache
      *
      * @param state
+     * @return The same state.
      */
     protected NodeState cache(NodeState state) {
         if (state != null) {
@@ -349,6 +352,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      * invalidates the item
      *
      * @param id
+     * @param recursive
      */
     public void invalidateItem(ItemId id, boolean recursive) {
         VirtualNodeState state = id.equals(rootNodeId) ? root : (VirtualNodeState) nodes.get(id);
@@ -371,7 +375,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * retrieves the property definition for the given contraints
      *
-     * @param propertyName
+     * @param parent The parent node state.
+     * @param propertyName The name of the property.
      * @param type
      * @param multiValued
      * @return
@@ -386,6 +391,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * Retrieves the node definition for the given contraints.
      *
+     * @param parent The parent state.
      * @param nodeName
      * @param nodeTypeName
      * @return
