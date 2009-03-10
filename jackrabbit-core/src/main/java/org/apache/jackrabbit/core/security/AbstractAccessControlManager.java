@@ -43,7 +43,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Always returns all registered <code>Privilege</code>s.
      *
-     * @param absPath
+     * @param absPath Path to an existing node.
      * @return Always returns all registered <code>Privilege</code>s.
      * @see AccessControlManager#getSupportedPrivileges(String)
      */
@@ -68,7 +68,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Returns <code>null</code>.
      *
-     * @param absPath
+     * @param absPath Path to an existing node.
      * @return always returns <code>null</code>.
      * @see AccessControlManager#getApplicablePolicies(String)
      */
@@ -83,7 +83,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Returns an empty iterator.
      *
-     * @param absPath
+     * @param absPath Path to an existing node.
      * @return always returns an empty iterator.
      * @see AccessControlManager#getApplicablePolicies(String)
      */
@@ -142,19 +142,19 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     /**
      * Check if the specified privileges are granted at <code>absPath</code>.
      *
-     * @param absPath
-     * @param permission
+     * @param absPath Path to an existing node.
+     * @param permission Permissions to be checked.
      * @throws AccessDeniedException if the session does not have the
      * specified privileges.
      * @throws PathNotFoundException if no node exists at <code>absPath</code>
      * of if the session does not have the permission to READ it.
-     * @throws RepositoryException
+     * @throws RepositoryException If another error occurs.
      */
     protected abstract void checkPermission(String absPath, int permission) throws AccessDeniedException, PathNotFoundException, RepositoryException;
 
     /**
      * @return the privilege registry
-     * @throws RepositoryException
+     * @throws RepositoryException If another error occurs.
      */
     protected abstract PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException;
 
@@ -162,7 +162,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
      * Build a qualified path from the specified <code>absPath</code> and test
      * if it is really absolute and points to an existing node.
      *
-     * @param absPath
+     * @param absPath Path to an existing node.
      * @throws PathNotFoundException if no node at <code>absPath</code> exists
      * or the session does not have privilege to retrieve the node.
      * @throws RepositoryException If the given <code>absPath</code> is not

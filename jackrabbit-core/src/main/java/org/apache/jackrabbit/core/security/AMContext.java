@@ -72,6 +72,7 @@ public class AMContext {
      *
      * @param physicalHomeDir the physical home directory
      * @param fs              the virtual jackrabbit filesystem
+     * @param session         the session.
      * @param subject         subject whose access rights should be reflected
      * @param hierMgr         hierarchy manager
      * @param resolver        name and path resolver

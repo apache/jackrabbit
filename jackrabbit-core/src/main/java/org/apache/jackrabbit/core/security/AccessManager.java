@@ -67,9 +67,9 @@ public interface AccessManager {
      * be thrown if the subject of the given <code>context</code> is not
      * granted access to the specified workspace.
      *
-     * @param context access manager context
-     * @param acProvider
-     * @param wspAccessMgr
+     * @param context access manager context.
+     * @param acProvider The access control provider.
+     * @param wspAccessMgr The workspace access manager.
      * @throws AccessDeniedException if the subject is not granted access
      *                               to the specified workspace.
      * @throws Exception             if another error occurs
@@ -106,10 +106,10 @@ public interface AccessManager {
             throws AccessDeniedException, ItemNotFoundException, RepositoryException;
 
     /**
-     *      * Determines whether the specified <code>permissions</code> are granted
+     * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).
      *
-     * @param absPath
+     * @param absPath Path to an item.
      * @param permissions A combination of one or more of the
      * {@link org.apache.jackrabbit.core.security.authorization.Permission}
      * constants encoded as a bitmask value.
@@ -173,7 +173,7 @@ public interface AccessManager {
     /**
      * Determines whether the item at the specified absolute path can be read.
      *
-     * @param itemPath
+     * @param itemPath Path to the item to be tested.s
      * @return <code>true</code> if the item can be read; otherwise <code>false</code>.
      * @throws RepositoryException if an error occurs.
      */
