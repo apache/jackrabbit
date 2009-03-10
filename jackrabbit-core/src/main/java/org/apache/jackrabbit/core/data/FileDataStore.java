@@ -113,7 +113,7 @@ public class FileDataStore implements DataStore {
      * If the path is not set, &lt;repository home&gt;/repository/datastore is used.
      * This directory is automatically created if it does not yet exist.
      *
-     * @param config the repository configuration
+     * @param homeDir
      */
     public void init(String homeDir) {
         if (path == null) {
@@ -367,7 +367,7 @@ public class FileDataStore implements DataStore {
     /**
      * Set the name of the directory where this data store keeps the files.
      *
-     * @param path the full path name
+     * @param directoryName the path name
      */
     public void setPath(String directoryName) {
         this.path = directoryName;

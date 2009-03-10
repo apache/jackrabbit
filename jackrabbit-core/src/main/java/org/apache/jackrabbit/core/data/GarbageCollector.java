@@ -108,7 +108,7 @@ public class GarbageCollector {
      * The main scan loop sleeps this many milliseconds after
      * scanning a node. The default is 0, meaning the scan should run at full speed.
      *
-     * @param sleepBetweenNodes the number of milliseconds to sleep
+     * @param millis the number of milliseconds to sleep
      */
     public void setSleepBetweenNodes(int millis) {
         this.sleepBetweenNodes = millis;
