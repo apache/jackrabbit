@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.query.AbstractQueryImpl;
 import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
-import org.apache.jackrabbit.core.query.QueryImpl;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
@@ -52,7 +51,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -227,7 +225,7 @@ public class SearchManager implements SynchronousEventListener {
      * @throws NamespaceException if an illegal attempt is made to register
      *                            a mapping
      * @throws RepositoryException if an unexpected error occurs
-     * @see #registerNamespace(String, String)
+     * @see javax.jcr.NamespaceRegistry#registerNamespace(String, String)
      */
     private void safeRegisterNamespace(String prefixHint, String uri)
             throws NamespaceException, RepositoryException {

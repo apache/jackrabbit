@@ -594,7 +594,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     /**
      * Return a flag indicating whether a certain path is cached.
      *
-     * @param id item id
+     * @param path item path
      * @return <code>true</code> if the item is already cached;
      *         <code>false</code> otherwise
      */

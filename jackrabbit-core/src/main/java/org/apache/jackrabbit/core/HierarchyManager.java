@@ -173,8 +173,8 @@ public interface HierarchyManager {
      * ...<code>k-1</code>.</li>
      * </ul>
      *
-     * @param nodeId node id
-     * @param itemId item id
+     * @param ancestor node id
+     * @param descendant item id
      * @return <code>true</code> if the node denoted by <code>ancestor</code>
      *         is a share ancestor of the item denoted by <code>descendant</code>,
      *         <code>false</code> otherwise
@@ -191,8 +191,8 @@ public interface HierarchyManager {
      * denote the same item, <code>0</code> is returned. If <code>ancestor</code>
      * does not denote an share-ancestor <code>-1</code> is returned.
      *
-     * @param ancestor ancestor id
-     * @param descendant descendant id
+     * @param ancestorId ancestor id
+     * @param descendantId descendant id
      * @return the relative depth; <code>-1</code> if <code>ancestor</code> does
      *         not denote a share-ancestor of the item denoted by <code>descendant</code>
      *         (or itself).
