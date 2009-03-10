@@ -503,7 +503,7 @@ public class RangeQuery extends Query implements Transformable {
          * @param other  the other String.
          * @param offset start comparing the two strings at <code>offset</code>.
          * @return see {@link String#compareTo(Object)}. But also respects {@link
-         *         #transform}.
+         *         RangeQuery#transform}.
          */
         private int termCompare(String text, String other, int offset) {
             OffsetCharSequence seq1 = new OffsetCharSequence(offset, text, transform);
