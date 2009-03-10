@@ -84,7 +84,7 @@ public class FileJournalTest extends JUnitTest {
      * is created nonetheless, with a revision file in the repository home.
      *
      * @throws Exception
-     * @see http://issues.apache.org/jira/browse/JCR-904
+     * @see <a href="http://issues.apache.org/jira/browse/JCR-904">JCR-904</a>
      */
     public void testRevisionIsOptional() throws Exception {
         Properties params = new Properties();

@@ -874,8 +874,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
      * grants the corresponding user the permission to add nodes below the
      * target node but not 'at' the target node.
      *
-     * @throws RepositoryException
-     * @throws NotExecutableException
+     * @throws RepositoryException If an error occurs.
+     * @throws NotExecutableException If the test cannot be executed.
      */
     public void testAddChildNodePrivilege() throws RepositoryException, NotExecutableException {
         /*

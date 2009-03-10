@@ -147,6 +147,8 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
     /**
      * If tests are run in a 1.5 JVM or higher the stack of the given threads
      * are dumped to the logger with level ERROR.
+     *
+     * @param threads An array of threads.
      */
     protected static void dumpStacks(Thread[] threads) {
         try {

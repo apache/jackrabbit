@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.util.Text;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
