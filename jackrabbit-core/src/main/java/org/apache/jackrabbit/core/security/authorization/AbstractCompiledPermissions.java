@@ -35,8 +35,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
 
     /**
      *
-     * @param absPath
+     * @param absPath Absolute path to return the result for.
      * @return the <code>Result</code> for the give <code>absPath</code>.
+     * @throws RepositoryException if an error occurs.
      */
     public Result getResult(Path absPath) throws RepositoryException {
         Result result;
@@ -52,9 +53,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
 
     /**
      *
-     * @param absPath
-     * @return
-     * @throws RepositoryException
+     * @param absPath Absolute path to build the result for.
+     * @return Result for the specified <code>absPath</code>.
+     * @throws RepositoryException If an error occurs.
      */
     protected abstract Result buildResult(Path absPath) throws RepositoryException;
 

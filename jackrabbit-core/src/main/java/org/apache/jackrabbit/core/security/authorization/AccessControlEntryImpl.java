@@ -74,8 +74,9 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * Construct an access control entry for the given principal and privileges.
      *
-     * @param principal
-     * @param privileges
+     * @param principal Principal for this access control entry.
+     * @param privileges Privileges for this access control entry.
+     * @throws AccessControlException if either principal or privileges are invalid.
      */
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges)
             throws AccessControlException {
@@ -85,10 +86,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * Construct an access control entry for the given principal and privileges.
      *
-     * @param principal
-     * @param privileges
-     * @param isAllow
-     * @param restrictions
+     * @param principal Principal for this access control entry.
+     * @param privileges Privileges for this access control entry.
+     * @param isAllow <code>true</code> if this ACE grants the specified
+     * privileges to the specified principal; <code>false</code> otherwise.
+     * @param restrictions A map of restriction name (String) to restriction
+     * (Value). See {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionNames()}
+     * and {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionType(String)}. 
+     * @throws AccessControlException if either principal or privileges are invalid.
      */
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges,
                                      boolean isAllow, Map restrictions)

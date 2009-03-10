@@ -81,7 +81,11 @@ public interface AccessControlEditor {
     /**
      * Returns an array of editable policies for the given <code>principal</code>.
      *
+     * @param principal Principal for which the editable policies should be
+     * returned.
      * @return an array of editable policies for the given <code>principal</code>.
+     * @throws AccessDeniedException If the editing session is not allowed to
+     * edit policies.
      * @throws AccessControlException if the specified principal does not exist,
      * if this implementation cannot provide policies for individual principals or
      * if same other access control related exception occurs.

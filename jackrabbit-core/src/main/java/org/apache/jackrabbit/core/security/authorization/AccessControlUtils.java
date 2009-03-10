@@ -31,9 +31,10 @@ public interface AccessControlUtils {
      * Test if the specified path points to an item that defines AC
      * information.
      *
-     * @param absPath
+     * @param absPath Path to an item.
      * @return true if the item at the specified <code>absPath</code> contains
      * access control information.
+     * @throws RepositoryException If an error occurs.
      */
     boolean isAcItem(Path absPath) throws RepositoryException;
 
@@ -41,10 +42,11 @@ public interface AccessControlUtils {
      * Test if the specified path points to an item that defines AC
      * information and consequently should be considered protected.
      *
-     * @param item
+     * @param item An item.
      * @return true if the item at the specified <code>item</code> defines
      * access control related information is should therefore be considered
      * protected.
+     * @throws RepositoryException If an error occurs.
      */
     boolean isAcItem(ItemImpl item) throws RepositoryException;
 
@@ -52,7 +54,7 @@ public interface AccessControlUtils {
      * Test if the specified set of principals contains an admin or system
      * principal.
      *
-     * @param principals
+     * @param principals A set of principals.
      * @return true if the specified set of principals contains an
      * <code>AdminPrincipal</code> or a <code>SystemPrincipal</code>.
      */
@@ -63,7 +65,7 @@ public interface AccessControlUtils {
      * only. False otherwise (or if it cannot be determined from the principal
      * set only).
      *
-     * @param principals
+     * @param principals A set of principals.
      * @return true if the specified set of principals will only be granted
      * read permission on all items.
      */

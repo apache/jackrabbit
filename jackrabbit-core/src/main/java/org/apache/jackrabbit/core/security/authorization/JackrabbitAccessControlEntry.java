@@ -44,7 +44,8 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
      * Return the value of the restriction with the specified name or
      * <code>null</code> if no such restriction exists.
      *
-     * @param restrictionName
+     * @param restrictionName The of the restriction as obtained through
+     * {@link #getRestrictionNames()}.
      * @return value of the restriction with the specified name or
      * <code>null</code> if no such restriction exists
      */
