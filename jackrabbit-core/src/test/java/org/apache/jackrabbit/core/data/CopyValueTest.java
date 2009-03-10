@@ -27,8 +27,8 @@ import javax.jcr.Session;
 
 /**
  * Tests copying binary values from one node to another.
- * See also {@link https://issues.apache.org/jira/browse/JCR-1351}
- * and {@link https://issues.apache.org/jira/browse/JCR-1346}
+ * See also <a href="https://issues.apache.org/jira/browse/JCR-1351">JCR-1351</a>
+ * and <a href="https://issues.apache.org/jira/browse/JCR-1346">JCR-1346</a>
  */
 public class CopyValueTest extends AbstractJCRTest {
 
