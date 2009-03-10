@@ -46,7 +46,7 @@ public class NodeImplTest extends AbstractJCRTest {
     /**
      * Test case for JCR-1389.
      * 
-     * @see https://issues.apache.org/jira/browse/JCR-1389
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1389">JCR-1389</a>
      */
     public void testSetEmptyMultiValueProperty() throws RepositoryException {
         Property property =
@@ -60,7 +60,7 @@ public class NodeImplTest extends AbstractJCRTest {
     /**
      * Test case for JCR-1227.
      * 
-     * @see https://issues.apache.org/jira/browse/JCR-1227
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1227">JCR-1227</a>
      */
     public void testRestoreEmptyMultiValueProperty() throws Exception {
         node.addMixin("mix:versionable");

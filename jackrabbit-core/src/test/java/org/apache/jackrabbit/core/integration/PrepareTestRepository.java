@@ -71,8 +71,8 @@ public class PrepareTestRepository extends AbstractJCRTest {
     }
 
     /**
-     * Creates a test node at {@link #TEST_DATA_PATH} with a boolean,
-     * double, long, calendar and a path property.
+     * Creates a boolean, double, long, calendar and a path property at the
+     * given node.
      */
     private void addPropertyTestData(Node node) throws RepositoryException {
         node.setProperty("boolean", true);

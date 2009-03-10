@@ -22,8 +22,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.Lock;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * <code>ExtendedLockingTest</code>...
