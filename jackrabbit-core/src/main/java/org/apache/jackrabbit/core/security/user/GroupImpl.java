@@ -162,8 +162,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
     //--------------------------------------------------------------------------
     /**
      *
-     * @return
-     * @throws RepositoryException
+     * @param includeIndirect If <code>true</code> all members of this group
+     * will be return; otherwise only the declared members.
+     * @return A collection of members of this group.
+     * @throws RepositoryException If an error occurs while collecting the members.
      */
     private Collection getMembers(boolean includeIndirect) throws RepositoryException {
         // TODO: replace by weak-refs
@@ -191,9 +193,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * membership this method simply checks if the potential new member is
      * a group that would in turn have <code>this</code> as a member.
      *
-     * @param newMember
+     * @param newMember The new member to be tested for cyclic membership.
      * @return true if the 'newMember' is a group and 'this' is an declared or
      * inherited member of it.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private boolean isCyclicMembership(Authorizable newMember) throws RepositoryException {
         boolean cyclic = false;
@@ -323,8 +326,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
          * implement the writeObject method to assert initalization of all members
          * before serialization.
          *
-         * @param stream
-         * @throws IOException
+         * @param stream The object output stream.
+         * @throws IOException If an error occurs.
          */
         private void writeObject(ObjectOutputStream stream) throws IOException {
             getMembers();

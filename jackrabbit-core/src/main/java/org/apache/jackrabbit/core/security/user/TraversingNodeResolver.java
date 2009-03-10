@@ -50,9 +50,11 @@ class TraversingNodeResolver extends NodeResolver {
      * Additonally to the NodeType-Argument the resolvers searched is narrowed
      * by indicating a Path to an {@link javax.jcr.Item} as start for the search
      *
-     * @param session      to use for repository access
+     * @param session to use for repository access
+     * @param resolver The NamePathResolver used to convert {@link org.apache.jackrabbit.spi.Name}
+     * and {@link org.apache.jackrabbit.spi.Path} to JCR names/path.
      */
-    TraversingNodeResolver(Session session, NamePathResolver resolver) throws RepositoryException {
+    TraversingNodeResolver(Session session, NamePathResolver resolver) {
         super(session, resolver);
     }
 

@@ -43,10 +43,11 @@ abstract class NodeResolver {
     /**
      * Create a new <code>NodeResolver</code>.
      *
-     * @param session;
-     * @throws RepositoryException if instanciation fails
+     * @param session to use for repository access
+     * @param resolver The NamePathResolver used to convert {@link org.apache.jackrabbit.spi.Name}
+     * and {@link org.apache.jackrabbit.spi.Path} to JCR names/path.
      */
-    NodeResolver(Session session, NamePathResolver resolver) throws RepositoryException {
+    NodeResolver(Session session, NamePathResolver resolver) {
         this.session = session;
         this.resolver = resolver;
     }
@@ -55,10 +56,10 @@ abstract class NodeResolver {
      * Get the first node that matches <code>ntName</code> and whose name
      * exactly matches the given <code>nodeName</code>.
      *
-     * @param nodeName
-     * @param ntName
+     * @param nodeName Name of the node to find.
+     * @param ntName Node type name of the node to find.
      * @return A matching node or <code>null</code>.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public abstract Node findNode(Name nodeName, Name ntName) throws RepositoryException;
 
@@ -67,12 +68,13 @@ abstract class NodeResolver {
      * property whose value exactly matches the given value. Same as
      * {@link #findNodes(Set,String,Name,boolean,long)} but returning a single node or <code>null</code>.
      *
-     * @param propertyName
-     * @param value
-     * @param ntName
-     * @return The first node that has a property with the given propertyName that
-     * exactly matches the given value or <code>null</code>.
-     * @throws RepositoryException
+     * @param propertyName Name of the property to find.
+     * @param value Value of the property to find.
+     * @param ntName Name of the parent node's node type.
+     * @return The first node that matches the specified node type name and has
+     * a property with the given propertyName that exactly matches the given
+     * value or <code>null</code>.
+     * @throws RepositoryException If an error occurs.
      */
     public abstract Node findNode(Name propertyName, String value, Name ntName) throws RepositoryException;
 
@@ -82,11 +84,12 @@ abstract class NodeResolver {
      * Same as {@link #findNodes(Set,String,Name,boolean,long)}; where
      * the maxSize parameters is set to {@link Long#MAX_VALUE)}.
      *
-     * @param propertyName property to be searched
-     * @param value        value to be matched
-     * @param ntName
-     * @param exact        if <code>true</code> value has to match exactly
+     * @param propertyName Name of the property to be searched.
+     * @param value Value to be matched.
+     * @param ntName  Name of the parent node's node type.
+     * @param exact If <code>true</code> value has to match exactly.
      * @return matching nodes (or an empty iterator if no match was found).
+     * @throws RepositoryException If an error occurs.
      */
     public NodeIterator findNodes(Name propertyName, String value, Name ntName, boolean exact)
             throws RepositoryException {
@@ -98,29 +101,38 @@ abstract class NodeResolver {
      * The queried value has to be a string fragment of one of the Properties
      * contained in the given set. And the node have to be of a requested nodetype
      *
-     * @param propertyNames
-     * @param value
+     * @param propertyNames Names of the property to be searched.
+     * @param value The value to find.
      * @param ntName NodeType the hits have to have
      * @param exact  if <code>true</code> match must be exact
      * @param maxSize maximal number of results to search for.
-     * @return
-     * @throws RepositoryException
+     * @return matching nodes (or an empty iterator if no match was found).
+     * @throws RepositoryException If an error occurs.
      */
-    public abstract NodeIterator findNodes(Set propertyNames, String value, Name ntName,
-                                           boolean exact, long maxSize)
+    public abstract NodeIterator findNodes(Set propertyNames, String value,
+                                           Name ntName, boolean exact, long maxSize)
             throws RepositoryException;
 
     /**
-     * @return Session this instance has been constructed with
+     * @return Session this instance has been constructed with.
      */
     Session getSession() {
         return session;
     }
 
+    /**
+     * @return The <code>NamePathResolver</code>.
+     */
     NamePathResolver getNamePathResolver() {
         return resolver;
     }
 
+    /**
+     * @param ntName Any of the following node type names:
+     * {@link UserConstants#NT_REP_USER}, {@link UserConstants#NT_REP_GROUP} or
+     * {@link UserConstants#NT_REP_AUTHORIZABLE}.
+     * @return The path of search root for the specified node type name.
+     */
     String getSearchRoot(Name ntName) {
         String searchRoot;
         if (UserConstants.NT_REP_USER.equals(ntName)) {
