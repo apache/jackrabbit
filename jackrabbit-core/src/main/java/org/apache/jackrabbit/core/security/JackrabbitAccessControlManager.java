@@ -33,7 +33,7 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
     /**
      * Returns the editable policies for the specified <code>principal</code>.
      *
-     * @param principal
+     * @param principal A principal known to the editing session.
      * @return array of policies for the specified <code>principal</code>. Note
      * that the policy object returned must reveal the path of the node where
      * they can be applied later on using {@link AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy)}.

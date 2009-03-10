@@ -429,6 +429,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
+     * @param subject The subject associated with the session.
      * @return if created with system-privileges
      */
     private static boolean isSystemOrAdmin(Subject subject) {
