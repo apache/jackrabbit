@@ -36,7 +36,7 @@ public class DbDataRecord extends AbstractDataRecord {
      * 
      * @param identifier data identifier
      * @param length the length
-     * @param file file that contains the binary stream
+     * @param lastModified
      */
     public DbDataRecord(DbDataStore store, DataIdentifier identifier, long length, long lastModified) {
         super(identifier);
