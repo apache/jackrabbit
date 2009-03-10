@@ -75,7 +75,8 @@ public class BLOBInTempFile extends BLOBFileValue {
     /**
      * Creates a new instance from file.
      *
-     * @param in the input stream
+     * @param file
+     * @param temp
      */
     private BLOBInTempFile(File file, boolean temp) {
         this.file = file;
@@ -87,6 +88,7 @@ public class BLOBInTempFile extends BLOBFileValue {
      * Creates a new instance from a stream.
      *
      * @param in the stream
+     * @param temp
      */
     static BLOBInTempFile getInstance(InputStream in, boolean temp) throws RepositoryException {
         return new BLOBInTempFile(in, temp);
