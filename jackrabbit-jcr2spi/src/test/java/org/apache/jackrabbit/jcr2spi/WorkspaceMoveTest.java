@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -28,8 +26,6 @@ import javax.jcr.ItemExistsException;
  * <code>WorkspaceMoveTest</code>...
  */
 public class WorkspaceMoveTest extends MoveTest {
-
-    private static Logger log = LoggerFactory.getLogger(WorkspaceMoveTest.class);
 
     protected void setUp() throws Exception {
         super.setUp();
