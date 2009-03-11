@@ -41,11 +41,11 @@ public class SimpleLockManager implements LockManager {
      * @see LockManager#hasLock(String, org.apache.jackrabbit.webdav.DavResource)
      */
     public boolean hasLock(String lockToken, DavResource resource) {
-	ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
-	if (lock != null && lock.getToken().equals(lockToken)) {
-	    return true;
-	}
-	return false;
+        ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
+        if (lock != null && lock.getToken().equals(lockToken)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -58,9 +58,9 @@ public class SimpleLockManager implements LockManager {
      * @return lock that applies to the given resource or <code>null</code>.
      */
     public synchronized ActiveLock getLock(Type type, Scope scope, DavResource resource) {
-	if (!(Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope))) {
-	    return null;
-	}
+        if (!(Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope))) {
+            return null;
+        }
         return getLock(resource.getResourcePath());
     }
 
@@ -71,7 +71,7 @@ public class SimpleLockManager implements LockManager {
      * @return
      */
     private ActiveLock getLock(String path) {
-	ActiveLock lock = (ActiveLock) locks.get(path);
+        ActiveLock lock = (ActiveLock) locks.get(path);
         if (lock != null) {
             // check if not expired
             if (lock.isExpired()) {
@@ -98,42 +98,42 @@ public class SimpleLockManager implements LockManager {
      */
     public synchronized ActiveLock createLock(LockInfo lockInfo,
                                               DavResource resource)
-	    throws DavException {
-	if (lockInfo == null || resource == null) {
-	    throw new IllegalArgumentException("Neither lockInfo nor resource must be null.");
-	}
+            throws DavException {
+        if (lockInfo == null || resource == null) {
+            throw new IllegalArgumentException("Neither lockInfo nor resource must be null.");
+        }
 
-	String resourcePath = resource.getResourcePath();
-	// test if there is already a lock present on this resource
+        String resourcePath = resource.getResourcePath();
+        // test if there is already a lock present on this resource
         ActiveLock lock = (ActiveLock) locks.get(resourcePath);
         if (lock != null && lock.isExpired()) {
             locks.remove(resourcePath);
             lock = null;
         }
         if (lock != null) {
-	    throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already holds a lock.");
-	}
-	// test if the new lock would conflict with any lock inherited from the
-	// collection or with a lock present on any member resource.
-	Iterator it = locks.keySet().iterator();
-	while (it.hasNext()) {
-	    String key = (String) it.next();
-	    // TODO: is check for lock on internal-member correct?
-	    if (Text.isDescendant(key, resourcePath)) {
-		ActiveLock l = (ActiveLock) locks.get(key);
-		if (l.isDeep() || (key.equals(Text.getRelativeParent(resourcePath, 1)) && !resource.isCollection())) {
-		    throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already inherits a lock by its collection.");
-		}
-	    } else if (Text.isDescendant(resourcePath, key)) {
-		if (lockInfo.isDeep() || isInternalMember(resource, key)) {
-		    throw new DavException(DavServletResponse.SC_CONFLICT, "Resource '" + resource.getResourcePath() + "' cannot be locked due to a lock present on the member resource '" + key + "'.");
-		}
+            throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already holds a lock.");
+        }
+        // test if the new lock would conflict with any lock inherited from the
+        // collection or with a lock present on any member resource.
+        Iterator it = locks.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            // TODO: is check for lock on internal-member correct?
+            if (Text.isDescendant(key, resourcePath)) {
+                ActiveLock l = (ActiveLock) locks.get(key);
+                if (l.isDeep() || (key.equals(Text.getRelativeParent(resourcePath, 1)) && !resource.isCollection())) {
+                    throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already inherits a lock by its collection.");
+                }
+            } else if (Text.isDescendant(resourcePath, key)) {
+                if (lockInfo.isDeep() || isInternalMember(resource, key)) {
+                    throw new DavException(DavServletResponse.SC_CONFLICT, "Resource '" + resource.getResourcePath() + "' cannot be locked due to a lock present on the member resource '" + key + "'.");
+                }
 
-	    }
-	}
-	lock = new DefaultActiveLock(lockInfo);
-	locks.put(resource.getResourcePath(), lock);
-	return lock;
+            }
+        }
+        lock = new DefaultActiveLock(lockInfo);
+        locks.put(resource.getResourcePath(), lock);
+        return lock;
     }
 
     /**
@@ -146,15 +146,15 @@ public class SimpleLockManager implements LockManager {
      * @see DavResource#refreshLock(org.apache.jackrabbit.webdav.lock.LockInfo, String)
      */
     public ActiveLock refreshLock(LockInfo lockInfo, String lockToken, DavResource resource)
-	    throws DavException {
-	ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope(), resource);
-	if (lock == null) {
-	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
-	} else if (!lock.getToken().equals(lockToken)) {
-	    throw new DavException(DavServletResponse.SC_LOCKED);
-	}
+            throws DavException {
+        ActiveLock lock = getLock(lockInfo.getType(), lockInfo.getScope(), resource);
+        if (lock == null) {
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+        } else if (!lock.getToken().equals(lockToken)) {
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
         lock.setTimeout(lockInfo.getTimeout());
-	return lock;
+        return lock;
     }
 
     /**
@@ -164,16 +164,16 @@ public class SimpleLockManager implements LockManager {
      * @param resource that is the lock holder
      */
     public synchronized void releaseLock(String lockToken, DavResource resource)
-	    throws DavException {
-	if (!locks.containsKey(resource.getResourcePath())) {
-	    throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
-	}
-	ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
-	if (lock.getToken().equals(lockToken)) {
-	    locks.remove(resource.getResourcePath());
-	} else {
-	    throw new DavException(DavServletResponse.SC_LOCKED);
-	}
+            throws DavException {
+        if (!locks.containsKey(resource.getResourcePath())) {
+            throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
+        }
+        ActiveLock lock = (ActiveLock) locks.get(resource.getResourcePath());
+        if (lock.getToken().equals(lockToken)) {
+            locks.remove(resource.getResourcePath());
+        } else {
+            throw new DavException(DavServletResponse.SC_LOCKED);
+        }
     }
 
     /**
@@ -186,18 +186,18 @@ public class SimpleLockManager implements LockManager {
      * @return
      */
     private static boolean isInternalMember(DavResource resource, String memberPath) {
-	if (resource.getResourcePath().equals(Text.getRelativeParent(memberPath, 1))) {
-	    // find the member with the given path
-	    DavResourceIterator it = resource.getMembers();
-	    while (it.hasNext()) {
-		DavResource member = it.nextResource();
-		if (member.getResourcePath().equals(memberPath)) {
-		    // return true if that member is not a collection
-		    return !member.isCollection();
-		}
-	    }
-	}
-	return false;
+        if (resource.getResourcePath().equals(Text.getRelativeParent(memberPath, 1))) {
+            // find the member with the given path
+            DavResourceIterator it = resource.getMembers();
+            while (it.hasNext()) {
+                DavResource member = it.nextResource();
+                if (member.getResourcePath().equals(memberPath)) {
+                    // return true if that member is not a collection
+                    return !member.isCollection();
+                }
+            }
+        }
+        return false;
     }
 }
 
