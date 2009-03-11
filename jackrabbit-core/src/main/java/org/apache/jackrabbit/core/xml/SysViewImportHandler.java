@@ -172,9 +172,9 @@ class SysViewImportHandler extends TargetImportHandler {
             }
         } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
-
-            // reset temp fields
             currentPropValue = new BufferedStringValue(resolver);
+            String xsiType = atts.getValue("xsi:type");
+            currentPropValue.setBase64("xs:base64Binary".equals(xsiType));
         } else {
             throw new SAXException(new InvalidSerializedDataException(
                     "Unexpected element in system view xml document: " + name));
@@ -301,6 +301,9 @@ class SysViewImportHandler extends TargetImportHandler {
     }
 
     //--------------------------------------------------------< inner classes >
+    /**
+     * The state of parsing the XML stream.
+     */
     class ImportState {
         /**
          * name of current node
@@ -327,7 +330,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * flag indicating whether startNode() has been called for current node
          */
-        boolean started = false;
+        boolean started;
     }
 
     //-------------------------------------------------------------< private >
