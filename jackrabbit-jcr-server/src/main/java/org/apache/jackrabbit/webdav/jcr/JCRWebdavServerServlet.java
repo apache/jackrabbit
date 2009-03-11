@@ -83,8 +83,8 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     private JCRWebdavServer server;
     private DavResourceFactory resourceFactory;
     private DavLocatorFactory locatorFactory;
-    private TxLockManagerImpl txMgr;
-    private SubscriptionManager subscriptionMgr;
+    protected TxLockManagerImpl txMgr;
+    protected SubscriptionManager subscriptionMgr;
 
     /**
      * Initializes the servlet set reads the following parameter from the
