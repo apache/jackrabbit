@@ -16,12 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -34,11 +30,8 @@ import javax.jcr.NodeIterator;
  */
 public class AccessByRelativePathTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(AccessByRelativePathTest.class);
-
-    private static final PathFactory P_FACTORY = PathFactoryImpl.getInstance();
-    private static String DOT = P_FACTORY.getCurrentElement().getName().getLocalName();
-    private static String DOTDOT = P_FACTORY.getParentElement().getName().getLocalName();
+    private static String DOT = ".";
+    private static String DOTDOT = "..";
 
     /**
      * <code>Node.hasNode(".") </code> applied to the root node must return
@@ -201,8 +194,10 @@ public class AccessByRelativePathTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testGetNodeDotDotSlashName() throws RepositoryException, NotExecutableException {
-        // TODO: NotExecutableException if sns exist for testRootNode
         String otherRelPath = DOTDOT + "/" + testRootNode.getName();
+        if (testRootNode.getIndex() > 1) {
+            otherRelPath = otherRelPath + "[" + testRootNode.getIndex() + "]";
+        }
         assertTrue(testRootNode.isSame(testRootNode.getNode(otherRelPath)));
     }
 
