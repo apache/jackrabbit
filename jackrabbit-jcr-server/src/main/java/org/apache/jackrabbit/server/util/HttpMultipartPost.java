@@ -75,7 +75,7 @@ class HttpMultipartPost {
     private void extractMultipart(HttpServletRequest request, File tmpDir)
             throws IOException {
         if (!ServletFileUpload.isMultipartContent(request)) {
-            log.warn("Request does not contain multipart content -> ignoring.");
+            log.debug("Request does not contain multipart content -> ignoring.");
             return;
         }
 
