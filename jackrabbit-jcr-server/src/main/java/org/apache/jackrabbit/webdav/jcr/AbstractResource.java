@@ -282,7 +282,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
     /**
      * Returns true, if the {@link SupportedLock} property contains an entry
-     * with the given type and scope. By default resources allow for {@link org.apache.jackrabbit.webdav.transaction.TransactionConstants.XML_TRANSACTION
+     * with the given type and scope. By default resources allow for {@link org.apache.jackrabbit.webdav.transaction.TransactionConstants#XML_TRANSACTION
      * transaction} lock only.
      *
      * @param type
