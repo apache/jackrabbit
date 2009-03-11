@@ -141,11 +141,12 @@ public class PropertyState extends ItemState {
             // reset the pInfo to point to the pInfo of another state.
             this.data = ((PropertyState) another).data;
             // if transient changes should be preserved OR if there are not
-            // transient changes, simply return diff to indicate if this state
-            // was internally changed.
+            // transient changes, return the differ and postpone the effort of
+            // calculating the diff (the test if this state got internally changed)).
             if (keepChanges || transientData == null) {
                 return result;
             } else {
+                result.dispose();
                 transientData.discardValues();
                 transientData = null;
                 modified = true;
@@ -365,8 +366,7 @@ public class PropertyState extends ItemState {
         }
 
         private void discardValues() {
-            discarded = true;
-            if (values != null) {
+            if (!discarded && values != null) {
                 for (int i = 0; i < values.length; i++) {
                     if (values[i] != null) {
                         // make sure temporarily allocated data is discarded
@@ -374,6 +374,7 @@ public class PropertyState extends ItemState {
                         values[i].discard();
                     }
                 }
+                discarded = true;
             }
         }
     }
@@ -382,21 +383,28 @@ public class PropertyState extends ItemState {
      * Helper class for delayed determination of property differences.
      */
     private class PropertyDiffer implements MergeResult {
-        private final PropertyData thisData;
-        private final PropertyData thatData;
 
-        PropertyDiffer(PropertyData thisData, PropertyData thatData) {
+        private final PropertyData oldData;
+        private final PropertyData newData;
+
+        PropertyDiffer(PropertyData oldData, PropertyData newData) {
             super();
-            this.thisData = thisData;
-            this.thatData = thatData;
+            this.oldData = oldData;
+            this.newData = newData;
         }
 
         public boolean modified() {
-            if (thisData.discarded || thatData.discarded) {
-                log.warn("Property data has been discarded");
+            if (oldData.discarded || newData.discarded) {
+                // cannot calculate the diff any more -> return true.
+                String msg = " Diff cannot be calculated: " + ((oldData.discarded) ? "Old property data" : "New property data") + " have already been discarded.";
+                log.debug(msg);
                 return true;
             }
-            return diff(thisData, thatData);
+            return diff(oldData, newData);
+        }
+
+        public void dispose() {
+            oldData.discardValues();
         }
     }
 
