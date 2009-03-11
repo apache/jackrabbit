@@ -185,9 +185,9 @@ public class JCRWebdavServer implements DavSessionProvider {
                 Session repSession = getRepositorySession(request);
                 session = new DavSessionImpl(repSession);
                 sessionMap.put(session, new HashSet());
-                log.info("login: User '" + repSession.getUserID() + "' logged in.");
+                log.debug("login: User '" + repSession.getUserID() + "' logged in.");
             } else {
-                log.info("login: Retrieved cached session for user '" + getUserID(session) + "'");
+                log.debug("login: Retrieved cached session for user '" + getUserID(session) + "'");
             }
             addReference(session, request);
             return session;
@@ -219,19 +219,19 @@ public class JCRWebdavServer implements DavSessionProvider {
             HashSet referenceSet = sessionMap.get(session);
             if (referenceSet != null) {
                 if (referenceSet.remove(reference)) {
-                    log.info("Removed reference " + reference + " to session " + session);
+                    log.debug("Removed reference " + reference + " to session " + session);
                     referenceToSessionMap.remove(reference);
                 } else {
                     log.warn("Failed to remove reference " + reference + " to session " + session);
                 }
                 if (referenceSet.isEmpty()) {
-                    log.info("No more references present on webdav session -> clean up.");
+                    log.debug("No more references present on webdav session -> clean up.");
                     sessionMap.remove(session);
                     try {
                         Session repSession = DavSessionImpl.getRepositorySession(session);
                         String usr = getUserID(session) ;
                         sessionProvider.releaseSession(repSession);
-                        log.info("Login: User '" + usr + "' logged out");
+                        log.debug("Login: User '" + usr + "' logged out");
                     } catch (DavException e) {
                         // should not occure, since we original built a DavSessionImpl
                         // that wraps a repository session.
