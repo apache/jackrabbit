@@ -161,7 +161,7 @@ public class SystemViewExporter extends Exporter {
             String string = value.getString();
             for (int i = 0; i < string.length(); i++) {
                 char c = string.charAt(i);
-                if (c >= 0 && c < 32 && c != '\r' && c != '\n' && c != '\t') {
+                if (c >= 0 && c < 32 && c != '\n' && c != '\t') {
                     return true;
                 }
             }
