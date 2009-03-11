@@ -201,7 +201,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
         return resource;
     }
 
-    private Item getItem(JcrDavSession sessionImpl, DavResourceLocator locator)
+    protected Item getItem(JcrDavSession sessionImpl, DavResourceLocator locator)
         throws PathNotFoundException, RepositoryException {
         return sessionImpl.getRepositorySession().getItem(locator.getRepositoryPath());
     }

@@ -25,10 +25,13 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.WebdavResponse;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet;
+import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.server.util.RequestData;
@@ -42,6 +45,7 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -191,6 +195,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
      * relative to this location.
      */
     public static final String INIT_PARAM_HOME = "home";
+
     /**
      * the 'temp-directory' init parameter
      */
@@ -260,6 +265,10 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         super.setLocatorFactory(new DavLocatorFactoryImpl(getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX)));
     }
 
+    public DavResourceFactory getResourceFactory() {
+        return new ResourceFactoryImpl(txMgr, subscriptionMgr);
+    }
+
     protected void doGet(WebdavRequest webdavRequest,
                          WebdavResponse webdavResponse,
                          DavResource davResource) throws IOException, DavException {
@@ -270,9 +279,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 if (item.isNode()) {
                     webdavResponse.setContentType("text/plain;charset=utf-8");
                     webdavResponse.setStatus(DavServletResponse.SC_OK);
-                    
+
                     JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
-                    int depth = ((WrappingLocator) davResource.getLocator()).depth;
+                    int depth = ((WrappingLocator) davResource.getLocator()).getDepth();
                     if (depth < BatchReadConfig.DEPTH_INFINITE) {
                         depth = getDepth((Node) item);
                     }
@@ -343,7 +352,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         DavResourceLocator locator = davResource.getLocator();
         switch (methodCode) {
             case DavMethods.DAV_GET:
-                return davResource.exists() && ((WrappingLocator) locator).isJson;
+                return davResource.exists() && (locator instanceof WrappingLocator)
+                        && ((WrappingLocator) locator).isJsonRequest;
             case DavMethods.DAV_POST:
                 String ct = request.getContentType();
                 return ct.startsWith("multipart/form-data") ||
@@ -529,8 +539,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
     //--------------------------------------------------------------------------
     /**
-     * TODO: TOBEFIXED will not behave properly if resource path (i.e. item name)
-     * TODO            ends with .json extension and/or contains a depth-selector pattern.
+     * Locator factory that specially deals with hrefs having a .json extension.
      */
     private static class DavLocatorFactoryImpl extends org.apache.jackrabbit.webdav.jcr.DavLocatorFactoryImpl {
 
@@ -538,72 +547,73 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             super(s);
         }
 
-        public DavResourceLocator createResourceLocator(String string, String string1) {
-            return new WrappingLocator(super.createResourceLocator(string, string1), isJson(string1), getDepth(string1));
-        }
-
-        public DavResourceLocator createResourceLocator(String string, String string1, String string2) {
-            return super.createResourceLocator(string, string1, string2);
-        }
-
-        public DavResourceLocator createResourceLocator(String string, String string1, String string2, boolean b) {
-            return super.createResourceLocator(string, string1, string2, b);
-        }
-
-        protected String getRepositoryPath(String resourcePath, String wspPath) {
-            if (resourcePath == null) {
-                return null;
+        public DavResourceLocator createResourceLocator(String prefix, String href) {
+            DavResourceLocator loc = super.createResourceLocator(prefix, href);
+            if (endsWithJson(href)) {
+                loc = new WrappingLocator(super.createResourceLocator(prefix, href));
             }
-            String rp = resourcePath;
-            if (isJson(rp)) {
-                rp = resourcePath.substring(0, resourcePath.lastIndexOf('.'));
-                int pos = rp.lastIndexOf(".");
-                if (pos > -1) {
-                    String depthStr = rp.substring(pos + 1);
-                    try {
-                        Integer.parseInt(depthStr);
-                        rp = rp.substring(0, pos);
-                    } catch (NumberFormatException e) {
-                        // ignore return rp
-                    }
-                }
-            }
-            return super.getRepositoryPath(rp, wspPath);
+            return loc;
         }
 
-        private static boolean isJson(String s) {
+        public DavResourceLocator createResourceLocator(String prefix, String workspacePath, String path, boolean isResourcePath) {
+            DavResourceLocator loc = super.createResourceLocator(prefix, workspacePath, path, isResourcePath);
+            if (isResourcePath && endsWithJson(path)) {
+                loc = new WrappingLocator(loc);
+            }
+            return loc;
+        }
+
+        private static boolean endsWithJson(String s) {
             return s.endsWith(".json");
-        }
-
-        private static int getDepth(String s) {
-            int depth = Integer.MIN_VALUE;
-            if (isJson(s)) {
-                String tmp = s.substring(0, s.lastIndexOf('.'));
-                int pos = tmp.lastIndexOf(".");
-                if (pos > -1) {
-                    String depthStr = tmp.substring(pos + 1);
-                    try {
-                        depth = Integer.parseInt(depthStr);
-                    } catch (NumberFormatException e) {
-                        // missing depth
-                    }
-                }
-            }
-            return depth;
         }
     }
 
+    /**
+     * Resource locator that removes trailing .json extensions and depth
+     * selector that do not form part of the repository path.
+     * As the locator and it's factory do not have access to a JCR session
+     * the <code>extraJson</code> flag may be reset later on.
+     *
+     * @see ResourceFactoryImpl#getItem(org.apache.jackrabbit.webdav.jcr.JcrDavSession, org.apache.jackrabbit.webdav.DavResourceLocator)  
+     */
     private static class WrappingLocator implements DavResourceLocator {
 
         private final DavResourceLocator loc;
-        private final boolean isJson;
-        private final int depth;
+        private boolean isJsonRequest = true;
+        private int depth = Integer.MIN_VALUE;
+        private String repositoryPath;
 
-        private WrappingLocator(DavResourceLocator loc, boolean isJson, int depth) {
+        private WrappingLocator(DavResourceLocator loc) {
             this.loc = loc;
-            this.isJson = isJson;
-            this.depth = depth;
         }
+
+        private void extract() {
+            String rp = loc.getRepositoryPath();
+            rp = rp.substring(0, rp.lastIndexOf('.'));
+            int pos = rp.lastIndexOf(".");
+            if (pos > -1) {
+                String depthStr = rp.substring(pos + 1);
+                try {
+                    depth = Integer.parseInt(depthStr);
+                    rp = rp.substring(0, pos);
+                } catch (NumberFormatException e) {
+                    // apparently no depth-info -> ignore
+                }
+            }
+            repositoryPath = rp;
+        }
+
+        private int getDepth() {
+            if (isJsonRequest) {
+                if (repositoryPath == null) {
+                    extract();
+                }
+                return depth;
+            } else {
+                return Integer.MIN_VALUE;
+            }
+        }
+
         public String getPrefix() {
             return loc.getPrefix();
         }
@@ -632,7 +642,47 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             return loc.getFactory();
         }
         public String getRepositoryPath() {
-            return loc.getRepositoryPath();
+            if (isJsonRequest) {
+                if (repositoryPath == null) {
+                    extract();
+                }
+                return repositoryPath;
+            } else {
+                return loc.getRepositoryPath();
+            }
+        }
+    }
+
+    /**
+     * Resource factory used to make sure that the .json extension was properly
+     * interpreted.
+     */
+    private static class ResourceFactoryImpl extends org.apache.jackrabbit.webdav.jcr.DavResourceFactoryImpl {
+
+        /**
+         * Create a new <code>DavResourceFactoryImpl</code>.
+         *
+         * @param txMgr
+         * @param subsMgr
+         */
+        public ResourceFactoryImpl(TxLockManagerImpl txMgr, SubscriptionManager subsMgr) {
+            super(txMgr, subsMgr);
+        }
+
+        protected Item getItem(JcrDavSession sessionImpl, DavResourceLocator locator) throws PathNotFoundException, RepositoryException {
+            if (locator instanceof WrappingLocator && ((WrappingLocator)locator).isJsonRequest) {
+                // check if the .json extension has been correctly interpreted.
+                Session s = sessionImpl.getRepositorySession();
+                if (s.itemExists(((WrappingLocator)locator).loc.getRepositoryPath())) {
+                    // an item exists with the original calculated repo-path
+                    // -> assume that the repository item path ends with .json
+                    // or .depth.json. i.e. .json wasn't an extra extension
+                    // appended to request the json-serialization of the node.
+                    // -> change the flag in the WrappingLocator correspondingly.
+                    ((WrappingLocator) locator).isJsonRequest = false;
+                }
+            }
+            return super.getItem(sessionImpl, locator);
         }
     }
 }
