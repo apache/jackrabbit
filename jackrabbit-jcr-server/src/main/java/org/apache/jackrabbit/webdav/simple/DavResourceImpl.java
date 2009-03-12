@@ -962,7 +962,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     /**
      * Returns the node that is wrapped by this resource.
      *
-     * @return
+     * @return The underlying JCR node instance.
      */
     protected Node getNode() {
         return node;
@@ -995,7 +995,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * Returns a new <code>PropertyImportContext</code>.
      *
      * @param changeList
-     * @return
+     * @return a new <code>PropertyImportContext</code>.
      */
     protected PropertyImportContext getPropertyImportContext(List changeList) {
         return new ProperyImportCtx(changeList);
