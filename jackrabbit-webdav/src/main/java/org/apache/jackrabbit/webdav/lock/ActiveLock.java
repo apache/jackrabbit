@@ -67,7 +67,7 @@ public interface ActiveLock extends XmlSerializable {
      * or -1 if the timeout is not available (or the client is not allowed
      * to retrieve it).
      *
-     * @return
+     * @return numer of milliseconds.
      */
     public long getTimeout();
 
@@ -91,6 +91,22 @@ public interface ActiveLock extends XmlSerializable {
      * @param isDeep
      */
     public void setIsDeep(boolean isDeep);
+
+    /**
+     * Returns the lockroot.
+     *
+     * @return lockroot
+     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4818</a>
+     */
+    public String getLockroot();
+
+    /**
+     * Set the lockroot.
+     *
+     * @param lockroot
+     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4818</a>
+     */
+    public void setLockroot(String lockroot);
 
     /**
      * Return the type of this lock.

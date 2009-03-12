@@ -26,6 +26,22 @@ import org.w3c.dom.Element;
  */
 public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
 
+    private String lockroot;
+    
+    /**
+     * @see ActiveLock#getLockroot()
+     */
+    public String getLockroot() {
+        return lockroot;
+    }
+
+    /**
+     * @see ActiveLock#setLockroot(String)
+     */
+    public void setLockroot(String lockroot) {
+        this.lockroot = lockroot;
+    }
+
     /**
      * Returns the default Xml representation of the 'activelock' element
      * as defined by RFC 2518.
@@ -57,6 +73,12 @@ public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
         if (getToken() != null) {
             Element lToken = DomUtil.addChildElement(activeLock, XML_LOCKTOKEN, NAMESPACE);
             lToken.appendChild(DomUtil.hrefToXml(getToken(), document));
+        }
+
+        // lock root
+        if (getLockroot() != null) {
+            Element lroot = DomUtil.addChildElement(activeLock, XML_LOCKROOT, NAMESPACE);
+            lroot.appendChild(DomUtil.hrefToXml(getLockroot(), document));
         }
         return activeLock;
     }
