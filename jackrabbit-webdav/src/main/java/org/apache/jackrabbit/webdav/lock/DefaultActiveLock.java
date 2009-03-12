@@ -51,7 +51,7 @@ public class DefaultActiveLock extends AbstractActiveLock {
     public DefaultActiveLock(LockInfo lockInfo) {
         if (lockInfo != null) {
             if (!(Type.WRITE.equals(lockInfo.getType()) && Scope.EXCLUSIVE.equals(lockInfo.getScope()))) {
-               throw new IllegalArgumentException("Only 'exclusive write' lock is allowed scope/type pair.");
+                throw new IllegalArgumentException("Only 'exclusive write' lock is allowed scope/type pair.");
             }
             owner = lockInfo.getOwner();
             isDeep = lockInfo.isDeep();
@@ -63,65 +63,65 @@ public class DefaultActiveLock extends AbstractActiveLock {
      * @see ActiveLock#isLockedByToken(String)
      */
     public boolean isLockedByToken(String lockToken) {
-	return (token != null) && token.equals(lockToken);
+        return (token != null) && token.equals(lockToken);
     }
 
     /**
      * @see ActiveLock#isExpired()
      */
     public boolean isExpired() {
-	return System.currentTimeMillis() > expirationTime;
+        return System.currentTimeMillis() > expirationTime;
     }
 
     /**
      * @see ActiveLock#getToken()
      */
     public String getToken() {
-	return token;
+        return token;
     }
 
     /**
      * @see ActiveLock#getOwner()
      */
     public String getOwner() {
-	return owner;
+        return owner;
     }
 
     /**
      * @see ActiveLock#setOwner(String)
      */
     public void setOwner(String owner) {
-	this.owner = owner;
+        this.owner = owner;
     }
 
     /**
      * @see ActiveLock#getTimeout()
      */
     public long getTimeout() {
-	return expirationTime - System.currentTimeMillis();
+        return expirationTime - System.currentTimeMillis();
     }
 
     /**
      * @see ActiveLock#setTimeout(long)
      */
     public void setTimeout(long timeout) {
-	if (timeout > 0) {
-	    expirationTime = System.currentTimeMillis() + timeout;
-	}
+        if (timeout > 0) {
+            expirationTime = System.currentTimeMillis() + timeout;
+        }
     }
 
     /**
      * @see ActiveLock#isDeep()
      */
     public boolean isDeep() {
-	return isDeep;
+        return isDeep;
     }
 
     /**
      * @see ActiveLock#setIsDeep(boolean)
      */
     public void setIsDeep(boolean isDeep) {
-	this.isDeep = isDeep;
+        this.isDeep = isDeep;
     }
 
     /**
