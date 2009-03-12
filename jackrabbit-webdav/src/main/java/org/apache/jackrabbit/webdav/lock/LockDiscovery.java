@@ -207,6 +207,19 @@ public class LockDiscovery extends AbstractDavProperty {
             throw new UnsupportedOperationException("Not implemented");
         }
 
+        public String getLockroot() {
+            Element root = DomUtil.getChildElement(alElement, XML_LOCKROOT, NAMESPACE);
+            if (root != null) {
+                return DomUtil.getChildTextTrim(root, XML_HREF, NAMESPACE);
+            }
+            // no lockroot element
+            return null;
+        }
+
+        public void setLockroot(String lockroot) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+
         public Type getType() {
             return Type.createFromXml(DomUtil.getChildElement(alElement, XML_LOCKTYPE, NAMESPACE));
         }
