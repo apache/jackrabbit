@@ -25,14 +25,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.jcr.Credentials;
-import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
@@ -55,11 +55,6 @@ public class TransientRepository
      */
     private static final Logger logger =
         LoggerFactory.getLogger(TransientRepository.class);
-
-    /**
-     * Buffer size for copying the default repository configuration file.
-     */
-    private static final int BUFFER_SIZE = 4096;
 
     /**
      * Resource path of the default repository configuration file.
@@ -123,7 +118,7 @@ public class TransientRepository
      * repository instance is automatically shut down until a new session
      * is opened.
      */
-    private final Set sessions;
+    private final Map sessions = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * The static repository descriptors. The default {@link RepositoryImpl}
@@ -142,7 +137,6 @@ public class TransientRepository
     public TransientRepository(RepositoryFactory factory) throws IOException {
         this.factory = factory;
         this.repository = null;
-        this.sessions = new HashSet();
         this.descriptors = new Properties();
 
         // FIXME: The current RepositoryImpl class does not allow static
@@ -331,9 +325,9 @@ public class TransientRepository
 
         try {
             logger.debug("Opening a new session");
-            Session session = repository.login(credentials, workspaceName);
-            sessions.add(session);
-            ((SessionImpl) session).addListener(this);
+            SessionImpl session = (SessionImpl) repository.login(credentials, workspaceName);
+            sessions.put(session, session);
+            session.addListener(this);
             logger.info("Session opened");
 
             return session;
@@ -393,7 +387,7 @@ public class TransientRepository
      * @see Session#logout()
      */
     public synchronized void shutdown() {
-        Iterator iterator = new HashSet(sessions).iterator();
+        Iterator iterator = new HashSet(sessions.keySet()).iterator();
         while (iterator.hasNext()) {
             Session session = (Session) iterator.next();
             session.logout();
@@ -410,7 +404,7 @@ public class TransientRepository
      * @see SessionListener#loggedOut(SessionImpl)
      */
     public synchronized void loggedOut(SessionImpl session) {
-        assert sessions.contains(session);
+        assert sessions.containsKey(session);
         sessions.remove(session);
         logger.info("Session closed");
         if (sessions.isEmpty()) {
