@@ -226,6 +226,12 @@ public class SessionImpl extends AbstractSession
      * Retention and Hold Manager
      */
     private RetentionManager retentionManager;
+        
+    /**
+     * The stack trace knows who opened this session. It is logged
+     * if the session is finalized, but Session.logout() was never called.
+     */
+    private Exception openStackTrace = new Exception("Stack Trace");
 
     /**
      * Internal helper class for common validation checks (lock status, checkout
@@ -1541,6 +1547,18 @@ public class SessionImpl extends AbstractSession
         itemMgr.dump(ps);
         ps.println();
         itemStateMgr.dump(ps);
+    }
+    
+    /**
+     * Finalize the session. If the application doesn't close Session.logout(), 
+     * the session is closed automatically; however a warning is written to the log file, 
+     * together with the stack trace of where the session was opened.
+     */
+    public void finalize() {
+        if (alive) {
+            log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);
+            logout();
+        }
     }
 
 }
