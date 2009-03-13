@@ -30,6 +30,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283 tests");
 
+        suite.addTestSuite(WorkspaceTest.class);
         suite.addTestSuite(SessionRemoveItemTest.class);
 
         return suite;

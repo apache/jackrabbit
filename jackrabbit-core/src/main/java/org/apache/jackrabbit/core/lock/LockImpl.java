@@ -78,14 +78,9 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockToken() {
-        // TODO: TOBEFIXED for 2.0
-        // TODO  - token must not be exposed for session-scoped locks (-> adjust tests and derived projects first)
-        // TODO  - openScoped tokens *may* be exposed even if session is not lock holder
-        /*
         if (info.isSessionScoped()) {
             return null;
         }
-        */
         try {
             return info.getLockToken(node.getSession());
         } catch (RepositoryException e) {

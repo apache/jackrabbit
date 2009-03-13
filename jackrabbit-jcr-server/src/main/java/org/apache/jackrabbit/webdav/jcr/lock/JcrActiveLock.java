@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr.lock;
 
-import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.lock.AbstractActiveLock;
@@ -26,7 +25,6 @@ import org.apache.jackrabbit.webdav.lock.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
 
@@ -38,7 +36,6 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
     private static Logger log = LoggerFactory.getLogger(JcrActiveLock.class);
 
     private final Lock lock;
-    private final boolean sessionScoped;
 
     /**
      * Create a new <code>ActiveLock</code> object with type '{@link Type#WRITE write}'
@@ -47,21 +44,10 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * @param lock
      */
     public JcrActiveLock(Lock lock) {
-        this (lock, lock.isSessionScoped());
-    }
-
-    /**
-     * Create a new <code>ActiveLock</code> object with type '{@link Type#WRITE write}'
-     * and scope '{@link Scope#EXCLUSIVE exclusive}'.
-     *
-     * @param lock
-     */
-    public JcrActiveLock(Lock lock, boolean sessionScoped) {
         if (lock == null) {
             throw new IllegalArgumentException("Can not create a ActiveLock with a 'null' argument.");
         }
         this.lock = lock;
-        this.sessionScoped = sessionScoped;
     }
 
     /**
@@ -98,11 +84,30 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * UUID [Extension] ; The UUID production is the string representation of a
      * UUID, as defined in [ISO-11578]. Note that white space (LWS) is not allowed
      * between elements of this production.</cite>").
+     * <p/>
+     * In case of session-scoped JCR 2.0 locks, the token is never exposed even
+     * if the current session is lock holder. In order to cope with DAV specific
+     * requirements and the fulfill the requirement stated above, the node's
+     * identifier is subsequently exposed as DAV-token.
      *
      * @see ActiveLock#getToken()
      */
     public String getToken() {
-        return lock.getLockToken();
+        String token = lock.getLockToken();
+        if (token == null && lock.isSessionScoped()
+                && lock instanceof org.apache.jackrabbit.api.jsr283.lock.Lock
+                && ((org.apache.jackrabbit.api.jsr283.lock.Lock)lock).isLockOwningSession()) {
+            // special handling for session scoped locks that are owned by the
+            // current session but never expose their token with jsr 283.
+            try {
+                token = ((org.apache.jackrabbit.api.jsr283.Node)lock.getNode()).getIdentifier();
+            } catch (RepositoryException e) {
+                // should never get here
+                log.warn("Unexpected error while retrieving node identifier for building a DAV specific lock token.",e.getMessage());
+            }
+        }
+        // default behaviour: just return the token exposed by the lock.
+        return token;
     }
 
     /**
@@ -143,17 +148,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * @see ActiveLock#isDeep()
      */
     public boolean isDeep() {
-        boolean isDeep = true;
-        Node n = lock.getNode();
-        try {
-            // find out about deepness. if node does not hold the lock its deep anyway
-            if (n.holdsLock() && n.hasProperty(JcrConstants.JCR_LOCKISDEEP)) {
-                isDeep = n.getProperty(JcrConstants.JCR_LOCKISDEEP).getBoolean();
-            }
-        } catch (RepositoryException e) {
-            // ignore and keep default depth settings
-        }
-        return isDeep;
+        return lock.isDeep();
     }
 
     /**
@@ -180,6 +175,6 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * @see ActiveLock#getScope()
      */
     public Scope getScope() {
-        return (sessionScoped) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
+        return (lock.isSessionScoped()) ? ItemResourceConstants.EXCLUSIVE_SESSION : Scope.EXCLUSIVE;
     }
 }

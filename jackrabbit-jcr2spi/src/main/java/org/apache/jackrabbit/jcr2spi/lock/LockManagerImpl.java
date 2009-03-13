@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.lock;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.NodeImpl;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
@@ -33,6 +34,7 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +48,18 @@ import javax.jcr.lock.LockException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Date;
 
 /**
  * <code>LockManagerImpl</code>...
  * TODO: TOBEFIXED. Lock objects obtained through this mgr are not informed if another session is or becomes lock-holder and removes the lock again.
  */
-public class LockManagerImpl implements LockManager, SessionListener {
+public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.jsr283.lock.LockManager, SessionListener {
 
     private static Logger log = LoggerFactory.getLogger(LockManagerImpl.class);
+
+    private static final long TIMEOUT_EXPIRED = -1;
+    private static final long TIMEOUT_INFINITE = Long.MAX_VALUE;
 
     /**
      * WorkspaceManager used to apply and release locks as well as to retrieve
@@ -63,6 +69,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
     private final WorkspaceManager wspManager;
     private final ItemManager itemManager;
     private final CacheBehaviour cacheBehaviour;
+    private final PathResolver resolver;
 
     /**
      * Map holding all locks that where created by this <code>Session</code> upon
@@ -74,19 +81,69 @@ public class LockManagerImpl implements LockManager, SessionListener {
     private final Map lockMap;
 
     public LockManagerImpl(WorkspaceManager wspManager, ItemManager itemManager,
-                           CacheBehaviour cacheBehaviour) {
+                           CacheBehaviour cacheBehaviour, PathResolver pathResolver) {
         this.wspManager = wspManager;
         this.itemManager = itemManager;
         this.cacheBehaviour = cacheBehaviour;
+        this.resolver = pathResolver;
         // use hard references in order to make sure, that entries refering
         // to locks created by the current session are not removed.
         lockMap = new HashMap();
     }
 
+    //--------------------------------------------------------< LockManager >---
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLock(String)
+     */
+    public org.apache.jackrabbit.api.jsr283.lock.Lock getLock(String absPath) throws LockException, RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return (org.apache.jackrabbit.api.jsr283.lock.Lock) n.getLock();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#isLocked(String)
+     */
+    public boolean isLocked(String absPath) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return n.isLocked();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#holdsLock(String)
+     */
+    public boolean holdsLock(String absPath) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return n.holdsLock();
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     */
+    public org.apache.jackrabbit.api.jsr283.lock.Lock lock(String absPath, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo) throws RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        return (org.apache.jackrabbit.api.jsr283.lock.Lock) ((NodeImpl) n).lock(isDeep, isSessionScoped, timeoutHint, ownerInfo);
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#unlock(String) 
+     */
+    public void unlock(String absPath) throws LockException, RepositoryException {
+        Node n = itemManager.getNode(resolver.getQPath(absPath));
+        n.unlock();
+    }
+
+    //---------------------< org.apache.jackrabbit.jcr2spi.lock.LockManager >---
     /**
      * @see LockManager#lock(NodeState,boolean,boolean)
      */
     public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped) throws LockException, RepositoryException {
+        return lock(nodeState, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
+
+    /**
+     * @see LockManager#lock(NodeState,boolean,boolean,long,String)
+     */
+    public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) throws RepositoryException {
         // retrieve node first
         Node lhNode;
         // NOTE: Node must be retrieved from the given NodeState and not from
@@ -99,7 +156,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         // execute the operation
-        LockOperation op = LockOperation.create(nodeState, isDeep, isSessionScoped);
+        LockOperation op = LockOperation.create(nodeState, isDeep, isSessionScoped, timeoutHint, ownerHint);
         wspManager.execute(op);
 
         Lock lock = new LockImpl(new LockState(nodeState, op.getLockInfo()), lhNode);
@@ -169,12 +226,13 @@ public class LockManagerImpl implements LockManager, SessionListener {
         }
 
         LockImpl l = getLockImpl(nodeState, true);
-        if (l != null && l.getLockToken() == null) {
+        if (l != null && !l.isLockOwningSession()) {
             // lock is present and token is null -> session is not lock-holder.
             throw new LockException("Node with id '" + nodeState + "' is locked.");
         } // else: state is not locked at all || session is lock-holder
     }
 
+    //--------< LockManager, org.apache.jackrabbit.jcr2spi.lock.LockManager >---
     /**
      * Returns the lock tokens present on the <code>SessionInfo</code> this
      * manager has been created with.
@@ -245,7 +303,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         for (int i = 0; i < lhStates.length; i++) {
             NodeState nState = lhStates[i];
             LockImpl l = (LockImpl) lockMap.get(nState);
-            if (l.isSessionScoped() && l.getLockToken() != null) {
+            if (l.isSessionScoped() && l.isLockOwningSession()) {
                 try {
                     unlock(nState);
                 } catch (RepositoryException e) {
@@ -325,7 +383,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
         } else {
             NodeEntry lockedEntry = wspManager.getHierarchyManager().getNodeEntry(lockNodeId);
             try {
-                lockHoldingState = ((NodeEntry) lockedEntry).getNodeState();
+                lockHoldingState = lockedEntry.getNodeState();
             } catch (RepositoryException e) {
                 log.warn("Cannot build LockState");
                 throw new RepositoryException("Cannot build LockState", e);
@@ -382,7 +440,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 lState = buildLockState(lockHoldingState);
             }
         } else {
-            // need correct information about lock status -> retrieve lockInfo
+            // need precise information about lock status -> retrieve lockInfo
             // from the persistent layer.
             lState = buildLockState(nState);
         }
@@ -393,7 +451,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             // may fail if the session does not have permission to see this node.
             LockImpl lock = getLockFromMap(lState.lockHoldingState);
             if (lock != null) {
-                lock.lockState.lockInfo = lState.lockInfo;
+                lock.lockState.setLockInfo(lState.lockInfo);
             } else {
                 Item lockHoldingNode = itemManager.getItem(lState.lockHoldingState.getHierarchyEntry());
                 lock = new LockImpl(lState, (Node)lockHoldingNode);
@@ -459,10 +517,11 @@ public class LockManagerImpl implements LockManager, SessionListener {
 
         private LockInfo lockInfo;
         private boolean isLive = true;
+        private long expiration = TIMEOUT_INFINITE;
 
         private LockState(NodeState lockHoldingState, LockInfo lockInfo) {
             this.lockHoldingState = lockHoldingState;
-            this.lockInfo = lockInfo;
+            setLockInfo(lockInfo);
         }
 
         private void refresh() throws RepositoryException {
@@ -507,6 +566,52 @@ public class LockManagerImpl implements LockManager, SessionListener {
             }
         }
 
+        private void setLockInfo(LockInfo lockInfo) {
+            this.lockInfo = lockInfo;
+            long seconds = lockInfo.getSecondsRemaining();
+            if (seconds <= TIMEOUT_EXPIRED) {
+                expiration = TIMEOUT_EXPIRED;
+                isLive = false;
+            } else if (seconds < TIMEOUT_INFINITE) {
+                // calculate timeout
+                expiration = new Date().getTime()/1000 + lockInfo.getSecondsRemaining();
+            } else {
+                expiration = TIMEOUT_INFINITE;
+            }
+        }
+
+        /**
+         * @return <code>true</code> if the lock is still alive.
+         */
+        private boolean isLive() {
+            if (isLive) {
+                isLive = getSecondsRemaining() > 0;
+            }
+            return isLive;
+        }
+
+        /**
+         * @return the number of seconds until the lock's timeout is reached,
+         * {@link Long#MAX_VALUE} if timeout is infinite or undefined and
+         * a negative value if timeout has already been reached or the lock
+         * has been otherwise released.
+         */
+        private long getSecondsRemaining() {
+            if (!isLive) {
+                return TIMEOUT_EXPIRED;
+            } else if (expiration == TIMEOUT_INFINITE) {
+                return expiration;
+            } else {
+                long seconds = expiration - new Date().getTime()/1000;
+                if (seconds <= 0) {
+                    isLive = false;
+                    return TIMEOUT_EXPIRED;
+                } else {
+                    return seconds;
+                }
+            }
+        }
+
         /**
          * Release this lock by removing from the lock map and unregistering
          * it from event listening
@@ -524,9 +629,9 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * unlocking, it is released an its status is reset accordingly.
          */
         private void unlocked() {
-            if (isLive) {
-                isLive = false;
+            if (isLive()) {
                 release();
+                isLive = false;
             }
         }
 
@@ -573,7 +678,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see ItemStateLifeCycleListener#statusChanged(ItemState, int)
          */
         public void statusChanged(ItemState state, int previousStatus) {
-            if (!isLive) {
+            if (!isLive()) {
                 // since we only monitor the removal of the lock (by means
                 // of deletion of the jcr:lockIsDeep property, we are not interested
                 // if the lock is not active any more.
@@ -597,7 +702,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
     /**
      * Inner class implementing the {@link Lock} interface.
      */
-    private class LockImpl implements Lock, LockTokenListener {
+    private class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock, LockTokenListener {
 
         private final LockState lockState;
         private final Node node;
@@ -618,7 +723,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
             if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
-            } else if (isHoldBySession()) {
+            } else if (lockState.lockInfo.isLockOwner()) {
                 lockMap.put(lockState.lockHoldingState, this);
                 lockState.startListening();
                 // open-scoped locks: the map entry and the lock information
@@ -658,6 +763,12 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see Lock#getLockToken()
          */
         public String getLockToken() {
+            // shortcut for jsr 283 session scoped locks: they never expose
+            // the lock token to the API users.
+            if (isSessionScoped()) {
+                return null;
+            }
+
             updateLockInfo();
             return getLockInfo().getLockToken();
         }
@@ -667,7 +778,7 @@ public class LockManagerImpl implements LockManager, SessionListener {
          */
         public boolean isLive() throws RepositoryException {
             updateLockInfo();
-            return lockState.isLive;
+            return lockState.isLive();
         }
 
         /**
@@ -685,13 +796,28 @@ public class LockManagerImpl implements LockManager, SessionListener {
                 throw new LockException("Lock is not alive any more.");
             }
 
-            if (getLockToken() == null) {
+            if (!isLockOwningSession()) {
                 // shortcut, since lock is always updated if the session became
                 // lock-holder of a foreign lock.
                 throw new LockException("Session does not hold lock.");
             } else {
                 lockState.refresh();
             }
+        }
+
+        /**
+         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
+         */
+        public long getSecondsRemaining() throws RepositoryException {
+            updateLockInfo();
+            return lockState.getSecondsRemaining();
+        }
+
+        /**
+         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
+         */
+        public boolean isLockOwningSession(){
+            return lockState.lockInfo.isLockOwner();
         }
 
         //----------------------------------------------< LockTokenListener >---
@@ -706,8 +832,10 @@ public class LockManagerImpl implements LockManager, SessionListener {
          * @see LockTokenListener#lockTokenAdded(String)
          */
         public void lockTokenAdded(String lockToken) throws RepositoryException {
-            if (getLockToken() == null) {
-                // could be that this affects this lock and session became
+            if (!isSessionScoped() && !isLockOwningSession()) {
+                // unless this lock is session-scoped (token is never transfered)
+                // and the session isn't the owner yet (token already present),
+                // it could be that this affects this lock and session became
                 // lock holder -> releoad info to assert.
                 lockState.reloadLockInfo();
             }
@@ -721,7 +849,8 @@ public class LockManagerImpl implements LockManager, SessionListener {
          */
         public void lockTokenRemoved(String lockToken) throws RepositoryException {
             // reload lock info, if session gave away its lock-holder status
-            // for this lock.
+            // for this lock. this will never be true for session-scoped locks
+            // that are not exposed (thus cannot be removed).
             if (lockToken.equals(getLockToken())) {
                 lockState.reloadLockInfo();
             }
@@ -748,12 +877,6 @@ public class LockManagerImpl implements LockManager, SessionListener {
                     log.warn("Unable to determine lock status.", e.getMessage());
                 }
             } // else: nothing to do.
-        }
-        /**
-         * @return true if this lock is hold by this session. false otherwise.
-         */
-        private boolean isHoldBySession() {
-            return lockState.lockInfo.getLockToken() != null;
         }
     }
 

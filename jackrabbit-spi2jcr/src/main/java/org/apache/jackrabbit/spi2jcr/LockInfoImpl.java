@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.LockInfo;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
@@ -28,21 +29,49 @@ import javax.jcr.lock.Lock;
 class LockInfoImpl extends org.apache.jackrabbit.spi.commons.LockInfoImpl {
 
     /**
-     * Creates a new lock info for the given locked <code>node</code>.
+     * Creates a new lock info for the given JCR lock object.
      *
-     * @param lock       the lock.
-     * @param idFactory  the id factory.
-     * @param resolver
-     * @throws RepositoryException if an error occurs while reading from
-     *                             <code>node</code> or if <code>node</code> is
-     *                             not locked.
+     * @param lock the lock.
+     * @param idFactory the id factory.
+     * @param resolver the name and path resolver.
+     * @throws RepositoryException if an error occurs while the node from the
+     * given lock or while creating the node id.
      */
-    public LockInfoImpl(Lock lock,
-                        IdFactoryImpl idFactory,
-                        NamePathResolver resolver)
-            throws RepositoryException {
+    private LockInfoImpl(Lock lock, IdFactoryImpl idFactory,
+                         NamePathResolver resolver) throws RepositoryException {
         super(lock.getLockToken(), lock.getLockOwner(),
                 lock.isDeep(), lock.isSessionScoped(),
                 idFactory.createNodeId(lock.getNode(), resolver));
+    }
+
+    /**
+     * Creates a new lock info for the given JCR lock object.
+     * 
+     * @param lock the JCR lock.
+     * @param idFactory the id factory.
+     * @param resolver the name and path resolver.
+     * @throws RepositoryException If an error occurs while creating the info.
+     * @since JCR 2.0
+     */
+    private LockInfoImpl(org.apache.jackrabbit.api.jsr283.lock.Lock lock,
+                         IdFactoryImpl idFactory, NamePathResolver resolver) throws RepositoryException {
+        super(lock.getLockToken(), lock.getLockOwner(), lock.isDeep(), lock.isSessionScoped(), lock.getSecondsRemaining(), lock.isLockOwningSession(), idFactory.createNodeId(lock.getNode(), resolver));
+    }
+
+    /**
+     * Create a new <code>LockInfo</code> from the given parameters.
+     * 
+     * @param lock the JCR lock.
+     * @param idFactory the id factory.
+     * @param resolver the name and path resolver.
+     * @return a new <code>LockInfo</code>
+     * @throws RepositoryException If an error occurs while creating the info.
+     */
+    public static LockInfo createLockInfo(Lock lock, IdFactoryImpl idFactory, NamePathResolver resolver) throws RepositoryException {
+        if (lock instanceof org.apache.jackrabbit.api.jsr283.lock.Lock) {
+            return new LockInfoImpl((org.apache.jackrabbit.api.jsr283.lock.Lock) lock, idFactory, resolver);
+        } else {
+            return new LockInfoImpl(lock, idFactory, resolver);
+        }
     }
 }

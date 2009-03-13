@@ -44,6 +44,24 @@ public interface LockManager {
         throws LockException, RepositoryException;
 
     /**
+     * Lock a node. Checks whether the node is not locked and then
+     * returns a lock object for this node.
+     *
+     * @param nodeState
+     * @param isDeep whether the lock applies to this node only
+     * @param isSessionScoped whether the lock is session scoped
+     * @param timeoutHint optional timeout hint.
+     * @param ownerHint optional String defining the lock owner info to be
+     * displayed.
+     * @return lock object
+     * @throws LockException if this node already is locked, or some descendant
+     *         node is locked and <code>isDeep</code> is <code>true</code>
+     * @see javax.jcr.Node#lock
+     */
+    Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint)
+        throws LockException, RepositoryException;
+
+    /**
      * Removes the lock on a node.
      *
      * @param nodeState
@@ -74,6 +92,7 @@ public interface LockManager {
      * @return <code>true</code> if this node is locked either as a result
      * of a lock held by this node or by a deep lock on a node above this
      * node; otherwise returns <code>false</code>
+     * @throws RepositoryException If an error occurs.
      * @see javax.jcr.Node#isLocked
      */
     boolean isLocked(NodeState nodeState) throws RepositoryException;
@@ -93,7 +112,8 @@ public interface LockManager {
 
     /**
      *
-     * @return
+     * @return The lock tokens associated with the <code>Session</code> this
+     * lock manager has been created for.
      */
     public String[] getLockTokens();
 

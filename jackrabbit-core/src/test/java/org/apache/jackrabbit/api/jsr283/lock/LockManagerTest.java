@@ -72,7 +72,7 @@ public class LockManagerTest extends AbstractJCRTest {
 
    private static LockManager getLockManager(Session session) throws RepositoryException {
         // TODO: rm cast and adjust call as soon as 283 is released
-        return ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        return ((WorkspaceImpl) session.getWorkspace()).getLockManager();
     }
 
     private static boolean containsLockToken(LockManager lMgr, String token) throws RepositoryException {

@@ -1090,10 +1090,14 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#lock(boolean, boolean)
      */
     public Lock lock(boolean isDeep, boolean isSessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
+        return lock(isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
+
+    public Lock lock(boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, InvalidItemStateException, RepositoryException {
         checkIsLockable();
         checkHasPendingChanges();
 
-        return session.getLockManager().lock(getNodeState(), isDeep, isSessionScoped);
+        return session.getLockManager().lock(getNodeState(), isDeep, isSessionScoped, timeoutHint, ownerHint);
     }
 
     /**

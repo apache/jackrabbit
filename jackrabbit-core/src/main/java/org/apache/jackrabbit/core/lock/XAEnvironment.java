@@ -107,7 +107,7 @@ class XAEnvironment {
      */
     public AbstractLockInfo lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+        return lock(node, isDeep, isSessionScoped, AbstractLockInfo.TIMEOUT_INFINITE, null);
     }
 
     /**
@@ -392,7 +392,7 @@ class XAEnvironment {
         public LockInfo(NodeImpl node, LockToken lockToken,
                         boolean sessionScoped, boolean deep, String lockOwner) {
 
-            this(node, lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+            this(node, lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
         }
 
         /**

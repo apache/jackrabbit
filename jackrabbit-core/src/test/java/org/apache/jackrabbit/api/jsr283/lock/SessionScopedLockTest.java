@@ -36,9 +36,7 @@ public class SessionScopedLockTest extends AbstractLockTest {
      * {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getLockToken()} must
      * always return <code>null</code> for session scoped locks.
      */
-    /*
     public void testGetLockToken() {
         assertNull("A session scoped lock may never expose the token.", lock.getLockToken());
     }
-    */
 }

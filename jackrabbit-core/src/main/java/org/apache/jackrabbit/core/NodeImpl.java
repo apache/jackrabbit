@@ -4408,7 +4408,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
@@ -4420,7 +4420,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.getLock(getPath());
     }
 
@@ -4433,7 +4433,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         lockMgr.unlock(getPath());
     }
 
@@ -4443,7 +4443,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.holdsLock(getPath());
     }
 
@@ -4453,7 +4453,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).get283LockManager();
+        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
         return lockMgr.isLocked(getPath());
     }
 

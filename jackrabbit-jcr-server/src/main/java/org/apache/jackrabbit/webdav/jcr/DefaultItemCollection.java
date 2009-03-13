@@ -611,10 +611,10 @@ public class DefaultItemCollection extends AbstractItemResource
             try {
                 boolean sessionScoped = EXCLUSIVE_SESSION.equals(reqLockInfo.getScope());
                 Lock jcrLock = ((Node)item).lock(reqLockInfo.isDeep(), sessionScoped);
-                // add reference to DAVSession for this lock
-                getSession().addReference(jcrLock.getLockToken());
-                return new JcrActiveLock(jcrLock, sessionScoped);
-
+                ActiveLock lock = new JcrActiveLock(jcrLock);
+                 // add reference to DAVSession for this lock
+                getSession().addReference(lock.getToken());
+                return lock;
             } catch (RepositoryException e) {
                 // UnsupportedRepositoryOperationException should not occur...
                 throw new JcrDavException(e);
@@ -653,7 +653,7 @@ public class DefaultItemCollection extends AbstractItemResource
             try {
                 Lock jcrLock = ((Node) item).getLock();
                 jcrLock.refresh();
-                return new JcrActiveLock(jcrLock, EXCLUSIVE_SESSION.equals(lock.getScope()));
+                return new JcrActiveLock(jcrLock);
             } catch (RepositoryException e) {
                 /*
                   NOTE: LockException is only thrown by Lock.refresh()

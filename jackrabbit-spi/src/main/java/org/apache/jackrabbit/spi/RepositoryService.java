@@ -511,6 +511,30 @@ public interface RepositoryService {
     public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException;
 
     /**
+     * Create a lock on the <code>Node</code> identified by the given id.
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param deep
+     * @param sessionScoped
+     * @param timeoutHint long indicating the desired lock timeout in seconds.
+     * The implementation is free to ignore the hint.
+     * @param ownerHint String indicating the desired lockOwner info. The
+     * implementation is free to ignore the hint.
+     * @return The <code>LockInfo</code> associated with the new lock
+     * that has been created.
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If this SPI
+     * implementation does not support locking at all.
+     * @throws javax.jcr.lock.LockException If the Node identified by the given
+     * id cannot be locked due to an existing lock or due to missing mixin type.
+     * @throws javax.jcr.AccessDeniedException
+     * @throws javax.jcr.RepositoryException If another error occurs.
+     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @since JCR 2.0
+     */
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped, long timeoutHint, String ownerHint) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException;
+
+    /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed
      * implicitely with all read and write methods listed here.
      *

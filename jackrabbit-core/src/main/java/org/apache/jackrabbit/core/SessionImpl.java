@@ -1252,7 +1252,7 @@ public class SessionImpl extends AbstractSession
      */
     public void addLockToken(String lt) {
         try {
-            wsp.get283LockManager().addLockToken(lt);
+            wsp.getLockManager().addLockToken(lt);
         } catch (RepositoryException e) {
             log.debug("Error while adding lock token.");
         }
@@ -1263,7 +1263,7 @@ public class SessionImpl extends AbstractSession
      */
     public String[] getLockTokens() {
         try {
-            return wsp.get283LockManager().getLockTokens();
+            return wsp.getLockManager().getLockTokens();
         } catch (RepositoryException e) {
             log.debug("Error while accessing lock tokens.");
             return new String[0];
@@ -1275,7 +1275,7 @@ public class SessionImpl extends AbstractSession
      */
     public void removeLockToken(String lt) {
         try {
-            wsp.get283LockManager().removeLockToken(lt);
+            wsp.getLockManager().removeLockToken(lt);
         } catch (RepositoryException e) {
             log.debug("Error while removing lock token.");
         }
@@ -1286,7 +1286,7 @@ public class SessionImpl extends AbstractSession
      * @return lock manager for this session
      */
     public LockManager getLockManager() throws RepositoryException {
-        return wsp.getLockManager();
+        return wsp.getInternalLockManager();
     }
 
     /**
