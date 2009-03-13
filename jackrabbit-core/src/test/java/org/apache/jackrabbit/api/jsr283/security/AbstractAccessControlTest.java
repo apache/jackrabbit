@@ -50,12 +50,6 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
         }
     }
 
-    protected static void checkSupportedOption(Session s, String option) throws NotExecutableException {
-        if (Boolean.FALSE.toString().equals(s.getRepository().getDescriptor(option))) {
-            throw new NotExecutableException();
-        }
-    }
-
     protected Privilege[] privilegesFromName(String privilegeName) throws RepositoryException, NotExecutableException {
         AccessControlManager acMgr = getAccessControlManager(superuser);
         return new Privilege[] {acMgr.privilegeFromName(privilegeName)};
