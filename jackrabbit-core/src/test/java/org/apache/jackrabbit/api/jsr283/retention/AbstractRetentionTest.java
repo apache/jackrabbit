@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -65,12 +64,6 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
         try {
             return getJsr283Session(s).getRetentionManager();
         } catch (UnsupportedRepositoryOperationException e) {
-            throw new NotExecutableException();
-        }
-    }
-
-    protected static void checkSupportedOption(Session s, String option) throws NotExecutableException {
-        if (Boolean.FALSE.toString().equals(s.getRepository().getDescriptor(option))) {
             throw new NotExecutableException();
         }
     }

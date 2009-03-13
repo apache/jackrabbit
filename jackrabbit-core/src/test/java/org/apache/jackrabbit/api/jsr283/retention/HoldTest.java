@@ -307,7 +307,7 @@ public class HoldTest extends AbstractRetentionTest {
     }
 
     private Node getLockedChildNode() throws NotExecutableException, RepositoryException {
-        checkSupportedOption(superuser, Repository.OPTION_LOCKING_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
         if (!child.isNodeType(mixLockable)) {
             if (child.canAddMixin(mixLockable)) {
@@ -386,7 +386,7 @@ public class HoldTest extends AbstractRetentionTest {
     }
 
     private Node getVersionableChildNode() throws NotExecutableException, RepositoryException {
-        checkSupportedOption(superuser, Repository.OPTION_VERSIONING_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
         if (!child.isNodeType(mixVersionable)) {
             if (child.canAddMixin(mixVersionable)) {
