@@ -125,7 +125,7 @@ public class AddNode extends AbstractOperation {
      * @param nodeName
      * @param nodeTypeName
      * @param uuid
-     * @return
+     * @return a new <code>AddNode</code> operation.
      */
     public static Operation create(NodeState parentState, Name nodeName,
                                    Name nodeTypeName, String uuid) throws RepositoryException {
