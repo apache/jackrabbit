@@ -27,6 +27,15 @@ import javax.jcr.Session;
 public abstract class AbstractLockInfo {
 
     /**
+     * Constant for the undefined or infinite timeout.
+     */
+    static final long TIMEOUT_INFINITE = Long.MAX_VALUE;
+    /**
+     * Constant for the expired timeout.
+     */
+    static final long TIMEOUT_EXPIRED = -1;
+
+    /**
      * Lock token
      */
     protected final LockToken lockToken;
@@ -66,7 +75,7 @@ public abstract class AbstractLockInfo {
      */
     public AbstractLockInfo(LockToken lockToken, boolean sessionScoped, boolean deep,
                     String lockOwner) {
-        this(lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+        this(lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
     }
 
     /**
@@ -172,7 +181,7 @@ public abstract class AbstractLockInfo {
     public long getSecondsRemaining() {
         // TODO: TOBEFIXED for 2.0
         // TODO  - add support for timeout specified by the API user -> LockManager#lock
-        return Long.MAX_VALUE;
+        return isLive() ? TIMEOUT_INFINITE : TIMEOUT_EXPIRED;
     }
 
     /**

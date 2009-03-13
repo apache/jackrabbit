@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
+import org.apache.jackrabbit.api.jsr283.version.VersionManager;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.SessionLockManager;
@@ -73,7 +74,8 @@ import java.util.Iterator;
  * A <code>WorkspaceImpl</code> ...
  */
 public class WorkspaceImpl extends AbstractWorkspace
-        implements JackrabbitWorkspace, EventStateCollectionFactory {
+        implements JackrabbitWorkspace, org.apache.jackrabbit.api.jsr283.Workspace,
+        EventStateCollectionFactory {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
 
@@ -282,18 +284,22 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
      * @see org.apache.jackrabbit.api.jsr283.lock.LockManager
      */
-    // TODO: rename to 'getLockManager'.
-    // TODO  in order not to break compatilibiy with the 1.x releases
-    // TODO  the 283 method has been tmp. renamed since it conflicts with an
-    // TODO  existing public method, exposing the internal lock manager.
-    public org.apache.jackrabbit.api.jsr283.lock.LockManager get283LockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public org.apache.jackrabbit.api.jsr283.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         if (jcr283LockManager == null) {
             jcr283LockManager = new SessionLockManager(session, session.getLockManager());
         }
         return jcr283LockManager;
     }
 
+    /**
+     * @see org.apache.jackrabbit.api.jsr283.Workspace#getVersionManager()
+     */
+    public VersionManager getVersionManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException("not yet implemented");
+    }
+
     //-------------------------------< JackrabbitWorkspace/new JSR 283 method >
+
     /**
      * Creates a new <code>Workspace</code> with the specified
      * <code>name</code>. The new workspace is empty, meaning it contains only
@@ -520,7 +526,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @return lock manager for this workspace
      * @throws RepositoryException if an error occurs
      */
-    public synchronized LockManager getLockManager() throws RepositoryException {
+    public synchronized org.apache.jackrabbit.core.lock.LockManager getInternalLockManager() throws RepositoryException {
 
         // check state of this instance
         sanityCheck();
@@ -744,7 +750,7 @@ public class WorkspaceImpl extends AbstractWorkspace
         boolean succeeded = false;
 
         try {
-            NodeId id = ops.move(srcPath, destPath);
+            ops.move(srcPath, destPath);
             ops.update();
             succeeded = true;
         } finally {

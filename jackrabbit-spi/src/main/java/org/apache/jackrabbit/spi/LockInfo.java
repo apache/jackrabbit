@@ -26,8 +26,8 @@ package org.apache.jackrabbit.spi;
 public interface LockInfo {
 
     /**
-     * Returns the lock token for this lock if it is hold by the requesting
-     * session or <code>null</code> otherwise.
+     * Returns the lock token for this lock or <code>null</code> if the token
+     * should not be exposed to the API user.
      *
      * @return lock token or <code>null</code>
      * @see javax.jcr.lock.Lock#getLockToken()
@@ -35,7 +35,8 @@ public interface LockInfo {
     public String getLockToken();
 
     /**
-     * Returns the user ID of the user who owns this lock.
+     * Returns the user ID of the user who owns this lock or some user defined
+     * information about the lock owner.
      *
      * @return user ID of the user who owns this lock.
      * @see javax.jcr.lock.Lock#getLockOwner()
@@ -57,6 +58,28 @@ public interface LockInfo {
      * @see javax.jcr.lock.Lock#isSessionScoped()
      */
     public boolean isSessionScoped();
+ 
+    /**
+     * Returns the seconds remaining until the lock times out or
+     * ({@link Long#MAX_VALUE} if the timeout is unknown or infinite).
+     *
+     * @return number of seconds until the lock times out.
+     * @see javax.jcr.lock.Lock#getSecondsRemaining()
+     * @since JCR 2.0
+     */
+    public long getSecondsRemaining();
+
+    /**
+     * Returns <code>true</code> if the <code>SessionInfo</code> used to
+     * retrieve this <code>LockInfo</code> is the lock holder and thus enabled
+     * to refresh or release the lock.
+     *
+     * @return <code>true</code> if the <code>SessionInfo</code> used to
+     * retrieve this <code>LockInfo</code> is the lock holder.
+     * @see javax.jcr.lock.Lock#isLockOwningSession()
+     * @since JCR 2.0
+     */
+    public boolean isLockOwner();
 
     /**
      * Returns the <code>NodeId</code> of the lock-holding Node.

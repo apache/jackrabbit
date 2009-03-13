@@ -946,7 +946,7 @@ public class WorkspaceManager
          * @see OperationVisitor#visit(LockOperation)
          */
         public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-            LockInfo lInfo = service.lock(sessionInfo, operation.getNodeId(), operation.isDeep(), operation.isSessionScoped());
+            LockInfo lInfo = service.lock(sessionInfo, operation.getNodeId(), operation.isDeep(), operation.isSessionScoped(), operation.getTimeoutHint(), operation.getOwnerHint());
             operation.setLockInfo(lInfo);
         }
 

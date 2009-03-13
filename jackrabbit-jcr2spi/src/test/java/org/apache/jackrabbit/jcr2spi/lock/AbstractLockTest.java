@@ -229,6 +229,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertTrue("Child node locked after save", childNode.isLocked());
 
         } finally {
+            session.refresh(false);
             childNode.unlock();
         }
     }

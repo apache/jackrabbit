@@ -47,6 +47,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
+import org.apache.jackrabbit.api.jsr283.Workspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -275,8 +276,8 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     }
 
     static SessionLockManager getSessionLockManager(SessionImpl session) throws RepositoryException {
-        WorkspaceImpl wsp = (WorkspaceImpl) session.getWorkspace();
-        return (SessionLockManager) wsp.get283LockManager();
+        Workspace wsp = (Workspace) session.getWorkspace();
+        return (SessionLockManager) wsp.getLockManager();
     }
 
     /**
@@ -463,7 +464,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+        return lock(node, isDeep, isSessionScoped, AbstractLockInfo.TIMEOUT_INFINITE, null);
     }
 
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
@@ -1134,7 +1135,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
          */
         public LockInfo(LockToken lockToken, boolean sessionScoped,
                         boolean deep, String lockOwner) {
-            this(lockToken, sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+            this(lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
         }
 
         /**

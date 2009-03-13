@@ -41,7 +41,7 @@ import java.util.Set;
  * is associated with a single <code>Session</code> and its
  * <code>Workspace</code>.
  *
- * @see javax.jcr.Workspace#getLockManager()
+ * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
  */
 public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock.LockManager {
 
@@ -190,7 +190,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     /**
      *
      * @param lockToken
-     * @return
+     * @return <code>true</code> if the token was successfully added to the set.
      */
     boolean lockTokenAdded(String lockToken) {
         synchronized (lockTokens) {
@@ -201,7 +201,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     /**
      * 
      * @param lockToken
-     * @return
+     * @return <code>true</code> if the token was successfully removed from the set.
      */
     boolean lockTokenRemoved(String lockToken) {
         synchronized (lockTokens) {

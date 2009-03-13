@@ -65,7 +65,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      */
     public Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped)
             throws LockException, RepositoryException {
-        return lock(node, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+        return lock(node, isDeep, isSessionScoped, AbstractLockInfo.TIMEOUT_INFINITE, null);
     }
 
     /**

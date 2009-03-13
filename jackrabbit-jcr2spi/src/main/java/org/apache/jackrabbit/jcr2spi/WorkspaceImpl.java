@@ -493,7 +493,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @return a new <code>LockManager</code> instance.
      */
     protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        LockManager lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour());
+        LockManager lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
         session.addListener((LockManagerImpl) lMgr);
         return lMgr;
     }

@@ -545,7 +545,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         try {
             Lock lock = getNode(nodeId, sInfo).getLock();
-            return new LockInfoImpl(lock, idFactory, sInfo.getNamePathResolver());
+            return LockInfoImpl.createLockInfo(lock, idFactory, sInfo.getNamePathResolver());
         } catch (LockException e) {
             // no lock present on this node.
             return null;
@@ -565,7 +565,28 @@ public class RepositoryServiceImpl implements RepositoryService {
             public Object run() throws RepositoryException {
                 Node n = getNode(nodeId, sInfo);
                 Lock lock = n.lock(deep, sessionScoped);
-                return new LockInfoImpl(lock, idFactory, sInfo.getNamePathResolver());
+                return LockInfoImpl.createLockInfo(lock, idFactory, sInfo.getNamePathResolver());
+            }
+        }, sInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public LockInfo lock(SessionInfo sessionInfo, final NodeId nodeId, final boolean deep, final boolean sessionScoped, final long timeoutHint, final String ownerHint) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        return (LockInfo) executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                Node n = getNode(nodeId, sInfo);
+                Lock lock;
+                // TODO: remove check once jsr283 is released
+                if (sInfo.getSession() instanceof org.apache.jackrabbit.api.jsr283.Session) {
+                    org.apache.jackrabbit.api.jsr283.lock.LockManager lMgr = (((org.apache.jackrabbit.api.jsr283.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
+                    lock = lMgr.lock(n.getPath(), deep, sessionScoped, timeoutHint, ownerHint);
+                } else {
+                    lock = n.lock(deep, sessionScoped);
+                }
+                return LockInfoImpl.createLockInfo(lock, idFactory, sInfo.getNamePathResolver());
             }
         }, sInfo);
     }

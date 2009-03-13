@@ -36,13 +36,18 @@ public class LockOperation extends AbstractOperation {
     private final NodeState nodeState;
     private final boolean isDeep;
     private final boolean isSessionScoped;
+    private final long timeoutHint;
+    private final String ownerHint;
 
     private LockInfo lockInfo = null;
 
-    private LockOperation(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
+    private LockOperation(NodeState nodeState, boolean isDeep, boolean isSessionScoped,
+                          long timeoutHint, String ownerHint) {
         this.nodeState = nodeState;
         this.isDeep = isDeep;
         this.isSessionScoped = isSessionScoped;
+        this.timeoutHint = timeoutHint;
+        this.ownerHint = ownerHint;
 
         // NOTE: affected-states only needed for transient modifications
     }
@@ -81,6 +86,14 @@ public class LockOperation extends AbstractOperation {
         return isSessionScoped;
     }
 
+    public long getTimeoutHint() {
+        return timeoutHint;
+    }
+
+    public String getOwnerHint() {
+        return ownerHint;
+    }
+
     public void setLockInfo(LockInfo lockInfo) {
         if (lockInfo == null) {
             throw new IllegalArgumentException("IdIterator must not be null.");
@@ -105,7 +118,11 @@ public class LockOperation extends AbstractOperation {
      * @return
      */
     public static LockOperation create(NodeState nodeState, boolean isDeep, boolean isSessionScoped) {
-        LockOperation lck = new LockOperation(nodeState, isDeep, isSessionScoped);
+        return create(nodeState, isDeep, isSessionScoped, Long.MAX_VALUE, null);
+    }
+
+    public static LockOperation create(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) {
+        LockOperation lck = new LockOperation(nodeState, isDeep, isSessionScoped, timeoutHint, ownerHint);
         return lck;
     }
 }

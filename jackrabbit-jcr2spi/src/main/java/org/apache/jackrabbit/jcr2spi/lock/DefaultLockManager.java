@@ -36,6 +36,10 @@ public class DefaultLockManager implements LockManager {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
 
+    public Lock lock(NodeState nodeState, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerHint) throws LockException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
+    }
+
     public void unlock(NodeState nodeState) throws LockException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Locking ist not supported by this repository.");
     }
