@@ -673,13 +673,18 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             if (locator instanceof WrappingLocator && ((WrappingLocator)locator).isJsonRequest) {
                 // check if the .json extension has been correctly interpreted.
                 Session s = sessionImpl.getRepositorySession();
-                if (s.itemExists(((WrappingLocator)locator).loc.getRepositoryPath())) {
-                    // an item exists with the original calculated repo-path
-                    // -> assume that the repository item path ends with .json
-                    // or .depth.json. i.e. .json wasn't an extra extension
-                    // appended to request the json-serialization of the node.
-                    // -> change the flag in the WrappingLocator correspondingly.
-                    ((WrappingLocator) locator).isJsonRequest = false;
+                try {
+                    if (s.itemExists(((WrappingLocator)locator).loc.getRepositoryPath())) {
+                        // an item exists with the original calculated repo-path
+                        // -> assume that the repository item path ends with .json
+                        // or .depth.json. i.e. .json wasn't an extra extension
+                        // appended to request the json-serialization of the node.
+                        // -> change the flag in the WrappingLocator correspondingly.
+                        ((WrappingLocator) locator).isJsonRequest = false;
+                    }
+                } catch (RepositoryException e) {
+                    // if the unmodified repository path isn't valid (e.g. /a/b[2].5.json)
+                    // -> ignore.
                 }
             }
             return super.getItem(sessionImpl, locator);
