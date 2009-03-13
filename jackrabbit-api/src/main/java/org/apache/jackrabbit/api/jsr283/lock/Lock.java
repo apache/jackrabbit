@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.api.jsr283.lock;
 
+import javax.jcr.RepositoryException;
+
 /**
  * This interface holds extensions made in JCR 2.0 while work
  * is in progress implementing JCR 2.0.
@@ -28,9 +30,10 @@ public interface Lock extends javax.jcr.lock.Lock {
      * Returns the seconds remaining until this locks times out
      * ({@link Long#MAX_VALUE} if the timeout is unknown or infinite).
      * @return a <code>long</code>
+     * @throws RepositoryException If an error occurs.
      * @since JCR 2.0
      */
-    public long getSecondsRemaining();
+    public long getSecondsRemaining() throws RepositoryException;
 
     /**
      * Returns <code>true</code> if the current session is the owner of this
