@@ -52,7 +52,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         super.setUp();
 
         // TODO: test if options is supported
-        //checkSupportedOption(superuser, Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        //checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
 
         // TODO: retrieve targetPath from configuration
         Node n = testRootNode.addNode(nodeName1, testNodeType);
