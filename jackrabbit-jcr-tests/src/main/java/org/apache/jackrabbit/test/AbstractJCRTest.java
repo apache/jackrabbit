@@ -575,6 +575,20 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
+     * Throws a <code>NotExecutableException</code> if the repository does
+     * not support the feature identified by the given <code>discriptorKey</code>.
+     *
+     * @param descriptorKey the descriptor key.
+     * @throws RepositoryException if an error occurs.
+     * @throws NotExecutableException If the feature is not supported.
+     */
+    protected void checkSupportedOption(String descriptorKey) throws RepositoryException, NotExecutableException {
+        if (Boolean.FALSE.toString().equals(helper.getRepository().getDescriptor(descriptorKey))) {
+            throw new NotExecutableException();
+        }
+    }
+
+    /**
      * Checks that the repository supports multiple workspace, otherwise aborts with
      * {@link NotExecutableException}.
      * @throws NotExecutableException when the repository only supports a single
