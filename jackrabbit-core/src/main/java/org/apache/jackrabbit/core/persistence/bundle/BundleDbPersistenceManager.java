@@ -978,6 +978,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // close blob store
             blobStore.close();
             blobStore = null;
+            super.close();
         } finally {
             initialized = false;
         }
