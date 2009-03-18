@@ -227,6 +227,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             blobStore = null;
             itemFs.close();
             itemFs = null;
+            super.close();
         } finally {
             initialized = false;
         }

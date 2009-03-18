@@ -423,6 +423,17 @@ public abstract class AbstractBundlePersistenceManager implements
                     NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true).getId();
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     *  
+     *  Closes the persistence manager, release acquired resourecs.
+     */
+    public void close() throws Exception {
+        // clear caches
+        bundles.clear();
+        missing.clear();
+    }
 
     /**
      * {@inheritDoc}
