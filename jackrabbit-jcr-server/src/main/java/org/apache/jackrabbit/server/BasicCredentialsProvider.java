@@ -94,8 +94,8 @@ public class BasicCredentialsProvider implements CredentialsProvider {
                     return null;
                 } else {
                     int pos = defaultHeaderValue.indexOf(':');
-                    if (pos<0) {
-                        return new SimpleCredentials(defaultHeaderValue, null);
+                    if (pos < 0) {
+                        return new SimpleCredentials(defaultHeaderValue, new char[0]);
                     } else {
                         return new SimpleCredentials(
                                 defaultHeaderValue.substring(0, pos),
