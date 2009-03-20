@@ -20,8 +20,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.SerialMergeScheduler;
-import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -80,15 +78,6 @@ abstract class AbstractIndex {
     /** Compound file flag */
     private boolean useCompoundFile = true;
 
-    /** minMergeDocs config parameter */
-    private int minMergeDocs = SearchIndex.DEFAULT_MIN_MERGE_DOCS;
-
-    /** maxMergeDocs config parameter */
-    private int maxMergeDocs = SearchIndex.DEFAULT_MAX_MERGE_DOCS;
-
-    /** mergeFactor config parameter */
-    private int mergeFactor = SearchIndex.DEFAULT_MERGE_FACTOR;
-
     /** maxFieldLength config parameter */
     private int maxFieldLength = SearchIndex.DEFAULT_MAX_FIELD_LENGTH;
 
@@ -145,7 +134,8 @@ abstract class AbstractIndex {
         this.isExisting = IndexReader.indexExists(directory);
 
         if (!isExisting) {
-            indexWriter = new IndexWriter(directory, analyzer);
+            indexWriter = new IndexWriter(directory, analyzer,
+                    IndexWriter.MaxFieldLength.LIMITED);
             // immediately close, now that index has been created
             indexWriter.close();
             indexWriter = null;
@@ -302,7 +292,7 @@ abstract class AbstractIndex {
         }
         if (sharedReader == null) {
             // create new shared reader
-            IndexReader reader = IndexReader.open(getDirectory());
+            IndexReader reader = IndexReader.open(getDirectory(), true);
             reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
             CachingIndexReader cr = new CachingIndexReader(
                     reader, cache, initCache);
@@ -339,18 +329,11 @@ abstract class AbstractIndex {
             indexReader = null;
         }
         if (indexWriter == null) {
-            indexWriter = new IndexWriter(getDirectory(), analyzer);
+            indexWriter = new IndexWriter(getDirectory(), analyzer,
+                    new IndexWriter.MaxFieldLength(maxFieldLength));
             indexWriter.setSimilarity(similarity);
-            // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
-            indexWriter.setMaxBufferedDocs(minMergeDocs);
-            indexWriter.setMaxMergeDocs(maxMergeDocs);
-            indexWriter.setMergeFactor(mergeFactor);
-            indexWriter.setMaxFieldLength(maxFieldLength);
             indexWriter.setUseCompoundFile(useCompoundFile);
             indexWriter.setInfoStream(STREAM_LOGGER);
-            indexWriter.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
-            indexWriter.setMergeScheduler(new SerialMergeScheduler());
-            indexWriter.setMergePolicy(new LogDocMergePolicy());
         }
         return indexWriter;
     }
@@ -372,12 +355,12 @@ abstract class AbstractIndex {
      */
     protected synchronized void commit(boolean optimize) throws IOException {
         if (indexReader != null) {
+            log.debug("committing IndexReader.");
             indexReader.flush();
         }
         if (indexWriter != null) {
             log.debug("committing IndexWriter.");
-            indexWriter.close();
-            indexWriter = null;
+            indexWriter.commit();
         }
         // optimize if requested
         if (optimize) {
@@ -484,7 +467,7 @@ abstract class AbstractIndex {
             Document copy = new Document();
             // mark the document that reindexing is required
             copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
-                    Field.Store.NO, Field.Index.NO_NORMS));
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
             Iterator fields = doc.getFields().iterator();
             while (fields.hasNext()) {
                 Fieldable f = (Fieldable) fields.next();
@@ -532,37 +515,6 @@ abstract class AbstractIndex {
     }
 
     /**
-     * The lucene index writer property: minMergeDocs
-     */
-    void setMinMergeDocs(int minMergeDocs) {
-        this.minMergeDocs = minMergeDocs;
-        if (indexWriter != null) {
-            // since lucene 2.0 setMaxBuffereDocs is equivalent to previous minMergeDocs attribute
-            indexWriter.setMaxBufferedDocs(minMergeDocs);
-        }
-    }
-
-    /**
-     * The lucene index writer property: maxMergeDocs
-     */
-    void setMaxMergeDocs(int maxMergeDocs) {
-        this.maxMergeDocs = maxMergeDocs;
-        if (indexWriter != null) {
-            indexWriter.setMaxMergeDocs(maxMergeDocs);
-        }
-    }
-
-    /**
-     * The lucene index writer property: mergeFactor
-     */
-    void setMergeFactor(int mergeFactor) {
-        this.mergeFactor = mergeFactor;
-        if (indexWriter != null) {
-            indexWriter.setMergeFactor(mergeFactor);
-        }
-    }
-
-    /**
      * The lucene index writer property: maxFieldLength
      */
     void setMaxFieldLength(int maxFieldLength) {
@@ -600,9 +552,9 @@ abstract class AbstractIndex {
         if (!f.isIndexed()) {
             return Field.Index.NO;
         } else if (f.isTokenized()) {
-            return Field.Index.TOKENIZED;
+            return Field.Index.ANALYZED;
         } else {
-            return Field.Index.UN_TOKENIZED;
+            return Field.Index.NOT_ANALYZED;
         }
     }
 

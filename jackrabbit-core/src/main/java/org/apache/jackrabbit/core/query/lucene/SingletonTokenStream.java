@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.Payload;
@@ -28,9 +30,14 @@ import org.apache.lucene.index.Payload;
 public final class SingletonTokenStream extends TokenStream {
 
     /**
-     * The single token to return.
+     * The string value of the token.
      */
-    private Token t;
+    private String value;
+
+    /**
+     * The payload of the token.
+     */
+    private final Payload payload;
 
     /**
      * Creates a new SingleTokenStream with the given value and a property
@@ -40,9 +47,8 @@ public final class SingletonTokenStream extends TokenStream {
      * @param type the JCR property type.
      */
     public SingletonTokenStream(String value, int type) {
-        super();
-        t = new Token(value, 0, value.length());
-        t.setPayload(new Payload(new PropertyMetaData(type).toByteArray()));
+        this.value = value;
+        this.payload = new Payload(new PropertyMetaData(type).toByteArray());
     }
 
     /**
@@ -51,17 +57,23 @@ public final class SingletonTokenStream extends TokenStream {
      * @param t the token.
      */
     public SingletonTokenStream(Token t) {
-        this.t = t;
+        this.value = t.term();
+        this.payload = t.getPayload();
     }
 
     /**
      * {@inheritDoc}
      */
-    public Token next() {
-        try {
-            return t;
-        } finally {
-            t = null;
+    public Token next(Token reusableToken) throws IOException {
+        if (value == null) {
+            return null;
         }
+        reusableToken.clear();
+        reusableToken.setTermBuffer(value);
+        reusableToken.setPayload(payload);
+        reusableToken.setStartOffset(0);
+        reusableToken.setEndOffset(value.length());
+        value = null;
+        return reusableToken;
     }
 }

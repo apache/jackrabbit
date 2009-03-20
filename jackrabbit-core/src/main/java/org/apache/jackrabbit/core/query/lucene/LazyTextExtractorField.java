@@ -73,7 +73,7 @@ public class LazyTextExtractorField extends AbstractField {
                                   boolean withOffsets) {
         super(name,
                 store ? Field.Store.YES : Field.Store.NO,
-                Field.Index.TOKENIZED,
+                Field.Index.ANALYZED,
                 withOffsets ? Field.TermVector.WITH_OFFSETS : Field.TermVector.NO);
         this.reader = reader;
     }

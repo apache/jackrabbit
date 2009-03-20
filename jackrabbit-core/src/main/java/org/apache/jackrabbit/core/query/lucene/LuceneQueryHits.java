@@ -16,23 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.core.NodeId;
-
 import java.io.IOException;
 
-/**
- * Wraps the lucene <code>Hits</code> object and adds a close method that allows
- * to release resources after a query has been executed and the results have
- * been read completely.
- */
-public class LuceneQueryHits extends AbstractQueryHits {
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.uuid.UUID;
 
-    /**
-     * The lucene hits we wrap.
-     */
-    private final Hits hits;
+/**
+ * Wraps a lucene query result and adds a close method that allows to release
+ * resources after a query has been executed and the results have been read
+ * completely.
+ */
+public class LuceneQueryHits implements QueryHits {
 
     /**
      * The IndexReader in use by the lucene hits.
@@ -40,60 +38,53 @@ public class LuceneQueryHits extends AbstractQueryHits {
     private final IndexReader reader;
 
     /**
-     * The index of the current hit. Initially invalid.
+     * The scorer for the query.
      */
-    private int hitIndex = -1;
+    private final Scorer scorer;
 
-    /**
-     * Creates a new <code>QueryHits</code> instance wrapping <code>hits</code>.
-     * @param hits the lucene hits.
-     * @param reader the IndexReader in use by <code>hits</code>.
-     */
-    public LuceneQueryHits(Hits hits, IndexReader reader) {
-        this.hits = hits;
+    public LuceneQueryHits(IndexReader reader,
+                           IndexSearcher searcher,
+                           Query query)
+            throws IOException {
         this.reader = reader;
+        this.scorer = query.weight(searcher).scorer(reader);
     }
 
     /**
      * {@inheritDoc}
      */
-    public final int getSize() {
-      return hits.length();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final ScoreNode nextScoreNode() throws IOException {
-        if (++hitIndex >= hits.length()) {
+    public ScoreNode nextScoreNode() throws IOException {
+        if (!scorer.next()) {
             return null;
         }
-        String uuid = reader.document(id(hitIndex), FieldSelectors.UUID).get(FieldNames.UUID);
-        return new ScoreNode(NodeId.valueOf(uuid), hits.score(hitIndex));
+        String uuid = reader.document(scorer.doc()).get(FieldNames.UUID);
+        NodeId id = new NodeId(UUID.fromString(uuid));
+        return new ScoreNode(id, scorer.score());
     }
 
     /**
-     * Skips <code>n</code> hits.
-     *
-     * @param n the number of hits to skip.
-     * @throws IOException if an error occurs while skipping.
+     * {@inheritDoc}
+     */
+    public void close() throws IOException {
+        // make sure scorer frees resources
+        scorer.skipTo(Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return always -1.
+     */
+    public int getSize() {
+        return -1;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public void skip(int n) throws IOException {
-        hitIndex += n;
-    }
-
-    //-------------------------------< internal >-------------------------------
-
-    /**
-     * Returns the document number for the <code>n</code><sup>th</sup> document
-     * in this QueryHits.
-     *
-     * @param n index.
-     * @return the document number for the <code>n</code><sup>th</sup>
-     *         document.
-     * @throws IOException if an error occurs.
-     */
-    private final int id(int n) throws IOException {
-        return hits.id(n);
+        while (n-- > 0) {
+            if (nextScoreNode() == null) {
+                return;
+            }
+        }
     }
 }

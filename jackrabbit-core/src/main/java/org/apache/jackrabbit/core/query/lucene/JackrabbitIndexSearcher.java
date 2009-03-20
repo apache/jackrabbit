@@ -80,7 +80,11 @@ public class JackrabbitIndexSearcher extends IndexSearcher {
             hits = ((JackrabbitQuery) query).execute(this, session, sort);
         }
         if (hits == null) {
-            hits = new LuceneQueryHits(search(query, sort), reader);
+            if (sort == null) {
+                hits = new LuceneQueryHits(reader, this, query);
+            } else {
+                hits = new SortedLuceneQueryHits(reader, this, query, sort);
+            }
         }
         return hits;
     }
