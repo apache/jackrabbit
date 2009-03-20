@@ -302,12 +302,6 @@ class IndexMerger extends Thread implements IndexListener {
                             docCount += readers[i].numDocs();
                         }
                         log.info("merged " + docCount + " documents in " + time + " ms into " + index.getName() + ".");
-
-                        // force initializing of caches
-                        time = System.currentTimeMillis();
-                        index.getReadOnlyIndexReader(true).release();
-                        time = System.currentTimeMillis() - time;
-                        log.debug("reader obtained in {} ms", new Long(time));
                     } finally {
                         for (int i = 0; i < readers.length; i++) {
                             try {

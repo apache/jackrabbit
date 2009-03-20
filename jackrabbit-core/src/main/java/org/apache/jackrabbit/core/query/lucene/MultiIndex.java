@@ -622,6 +622,14 @@ public class MultiIndex {
                         Collection deleted)
             throws IOException {
 
+        if (handler.isInitializeHierarchyCache()) {
+            // force initializing of caches
+            long time = System.currentTimeMillis();
+            index.getReadOnlyIndexReader(true).release();
+            time = System.currentTimeMillis() - time;
+            log.debug("hierarchy cache initialized in {} ms", new Long(time));
+        }
+
         synchronized (this) {
             synchronized (updateMonitor) {
                 updateInProgress = true;
@@ -690,8 +698,6 @@ public class MultiIndex {
      *
      * @param initCache when set <code>true</code> the hierarchy cache is
      *                  completely initialized before this call returns.
-     *                  Otherwise the cache is initialized in a background
-     *                  thread.
      * @return an <code>IndexReader</code>.
      * @throws IOException if an error occurs constructing the <code>IndexReader</code>.
      */
