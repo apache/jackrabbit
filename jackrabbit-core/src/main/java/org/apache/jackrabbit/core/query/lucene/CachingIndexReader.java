@@ -33,10 +33,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.text.NumberFormat;
 
-import EDU.oswego.cs.dl.util.concurrent.Executor;
-import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
-import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
-
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
  * {@link #getParent(int, BitSet)} calls efficiently.
@@ -48,17 +44,6 @@ class CachingIndexReader extends FilterIndexReader {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(CachingIndexReader.class);
-
-    /**
-     * The single thread of this executor initializes the
-     * {@link #parents} when background initialization is requested.
-     */
-    private static final Executor SERIAL_EXECUTOR = new PooledExecutor(
-            new LinkedQueue(), 1) {
-        {
-            setKeepAliveTime(500);
-        }
-    };
 
     /**
      * The current value of the global creation tick counter.
@@ -95,8 +80,7 @@ class CachingIndexReader extends FilterIndexReader {
      * @param cache     a document number cache, or <code>null</code> if not
      *                  available to this reader.
      * @param initCache if the {@link #parents} cache should be initialized
-     *                  when this index reader is constructed. Otherwise
-     *                  initialization happens in a background thread.
+     *                  when this index reader is constructed.
      * @throws IOException if an error occurs while reading from the index.
      */
     CachingIndexReader(IndexReader delegatee,
@@ -109,12 +93,6 @@ class CachingIndexReader extends FilterIndexReader {
         this.cacheInitializer = new CacheInitializer(delegatee);
         if (initCache) {
             cacheInitializer.run();
-        } else {
-            try {
-                SERIAL_EXECUTOR.execute(cacheInitializer);
-            } catch (InterruptedException e) {
-                // ignore
-            }
         }
     }
 
