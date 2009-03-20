@@ -41,6 +41,7 @@ public class ParsingNameResolver implements NameResolver {
     /**
      * Creates a parsing name resolver.
      *
+     * @param nameFactory the name factory.
      * @param resolver namespace resolver
      */
     public ParsingNameResolver(NameFactory nameFactory, NamespaceResolver resolver) {
