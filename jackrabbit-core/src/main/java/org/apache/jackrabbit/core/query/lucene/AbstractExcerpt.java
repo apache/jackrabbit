@@ -233,11 +233,12 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         final SortedMap termMap = new TreeMap();
         Reader r = new StringReader(text);
         TokenStream ts = index.getTextAnalyzer().tokenStream("", r);
-        Token t;
+        Token t = new Token();
         try {
-            while ((t = ts.next()) != null) {
+            while ((t = ts.next(t)) != null) {
+                String termText = t.term();
                 TermVectorOffsetInfo[] info =
-                        (TermVectorOffsetInfo[]) termMap.get(t.termText());
+                        (TermVectorOffsetInfo[]) termMap.get(termText);
                 if (info == null) {
                     info = new TermVectorOffsetInfo[1];
                 } else {
@@ -247,7 +248,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                 }
                 info[info.length - 1] = new TermVectorOffsetInfo(
                         t.startOffset(), t.endOffset());
-                termMap.put(t.termText(), info);
+                termMap.put(termText, info);
             }
         } catch (IOException e) {
             // should never happen, we are reading from a string

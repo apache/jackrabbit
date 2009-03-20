@@ -212,7 +212,7 @@ class CachingIndexReader extends FilterIndexReader {
             } else {
                 doc = new Document();
                 doc.add(new Field(FieldNames.UUID, uuid.toString(),
-                        Field.Store.YES, Field.Index.NO_NORMS));
+                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             }
             return doc;
         } else {

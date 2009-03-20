@@ -79,24 +79,6 @@ class PersistentIndex extends AbstractIndex {
     }
 
     /**
-     * Merges another index into this persistent index. Before <code>index</code>
-     * is merged, {@link AbstractIndex#commit()} is called on that
-     * <code>index</code>.
-     *
-     * @param index the other index to merge.
-     * @throws IOException if an error occurs while merging.
-     */
-    void mergeIndex(AbstractIndex index) throws IOException {
-        // commit changes to directory on other index.
-        index.commit();
-        // merge index
-        getIndexWriter().addIndexes(new Directory[]{
-            index.getDirectory()
-        });
-        invalidateSharedReader();
-    }
-
-    /**
      * Merges the provided indexes into this index. After this completes, the
      * index is optimized.
      * <p/>

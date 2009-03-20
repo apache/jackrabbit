@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.Vector;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.QueryParser;
@@ -106,7 +107,7 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     protected Query getSynonymQuery(String field, String termStr)
             throws ParseException {
-        Vector synonyms = new Vector();
+        List synonyms = new ArrayList();
         synonyms.add(new BooleanClause(getFieldQuery(field, termStr),
                 BooleanClause.Occur.SHOULD));
         if (synonymProvider != null) {

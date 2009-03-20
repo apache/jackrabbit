@@ -1202,7 +1202,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                 doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
                                         aggregates[j].getNodeId().getUUID().toString(),
                                         Field.Store.NO,
-                                        Field.Index.NO_NORMS));
+                                        Field.Index.NOT_ANALYZED_NO_NORMS));
                             }
                         }
                     }
@@ -1218,10 +1218,11 @@ public class SearchIndex extends AbstractQueryHandler {
                             Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
                             // find the right fields to transfer
                             Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
+                            Token t = new Token();
                             for (int k = 0; k < fields.length; k++) {
                                 Fieldable field = fields[k];
                                 // assume properties fields use SingleTokenStream
-                                Token t = field.tokenStreamValue().next();
+                                t = field.tokenStreamValue().next(t);
                                 String value = new String(t.termBuffer(), 0, t.termLength());
                                 if (value.startsWith(namePrefix)) {
                                     // extract value
@@ -1230,12 +1231,12 @@ public class SearchIndex extends AbstractQueryHandler {
                                     Path p = getRelativePath(state, propState);
                                     String path = getNamespaceMappings().translatePath(p);
                                     value = FieldNames.createNamedValue(path, value);
-                                    t.setTermText(value);
+                                    t.setTermBuffer(value);
                                     doc.add(new Field(field.name(), new SingletonTokenStream(t)));
                                     doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
                                             parent.getNodeId().getUUID().toString(),
                                             Field.Store.NO,
-                                            Field.Index.NO_NORMS));
+                                            Field.Index.NOT_ANALYZED_NO_NORMS));
                                 }
                             }
                         }

@@ -101,7 +101,8 @@ public class IndexMigration {
 
         Directory migrationDir = directoryManager.getDirectory(migrationName);
         try {
-            IndexWriter writer = new IndexWriter(migrationDir, new JackrabbitAnalyzer());
+            IndexWriter writer = new IndexWriter(migrationDir, new JackrabbitAnalyzer(),
+                    IndexWriter.MaxFieldLength.UNLIMITED);
             try {
                 IndexReader r = new MigrationIndexReader(
                         IndexReader.open(index.getDirectory()));
@@ -147,7 +148,7 @@ public class IndexMigration {
                     String value = fields[i].stringValue();
                     value = value.replace('\uFFFF', '[');
                     doc.add(new Field(FieldNames.PROPERTIES, value,
-                            Field.Store.YES, Field.Index.NO_NORMS));
+                            Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
                 }
             }
             return doc;

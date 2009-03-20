@@ -185,17 +185,17 @@ public class NodeIndexer {
         // UUID
         doc.add(new Field(
                 FieldNames.UUID, node.getNodeId().getUUID().toString(),
-                Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
         try {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
                 addNodeName(doc, "", "");
             } else {
                 doc.add(new Field(
                         FieldNames.PARENT, node.getParentId().toString(),
-                        Field.Store.YES, Field.Index.NO_NORMS, Field.TermVector.NO));
+                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
                 NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
                 ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
                 if (child == null) {
@@ -276,7 +276,7 @@ public class NodeIndexer {
     private void addMVPName(Document doc, Name name) {
         try {
             String propName = resolver.getJCRName(name);
-            doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.UN_TOKENIZED, Field.TermVector.NO));
+            doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
         } catch (NamespaceException e) {
             // will never happen, prefixes are created dynamically
         }
@@ -377,7 +377,7 @@ public class NodeIndexer {
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NO_NORMS));
+        doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
     }
 
     /**
@@ -485,7 +485,7 @@ public class NodeIndexer {
         } else {
             return new Field(FieldNames.PROPERTIES,
                     FieldNames.createNamedValue(fieldName, internalValue),
-                    Field.Store.NO, Field.Index.NO_NORMS,
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
                     Field.TermVector.NO);
         }
     }
@@ -669,7 +669,7 @@ public class NodeIndexer {
                     + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
             Field f = new Field(fieldName, stringValue,
                     Field.Store.NO,
-                    Field.Index.TOKENIZED,
+                    Field.Index.ANALYZED,
                     Field.TermVector.NO);
             f.setBoost(boost);
             doc.add(f);
@@ -746,10 +746,10 @@ public class NodeIndexer {
                 stored = Field.Store.YES;
             }
             return new Field(FieldNames.FULLTEXT, value, stored,
-                    Field.Index.TOKENIZED, tv);
+                    Field.Index.ANALYZED, tv);
         } else {
             return new Field(FieldNames.FULLTEXT, value,
-                    Field.Store.NO, Field.Index.TOKENIZED, tv);
+                    Field.Store.NO, Field.Index.ANALYZED, tv);
         }
     }
 
@@ -863,7 +863,7 @@ public class NodeIndexer {
         }
         doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
                 FieldNames.createNamedLength(propertyName, length),
-                Field.Store.NO, Field.Index.NO_NORMS));
+                Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
     }
 
     /**
@@ -878,11 +878,11 @@ public class NodeIndexer {
                                String namespaceURI,
                                String localName) throws NamespaceException {
         String name = mappings.getPrefix(namespaceURI) + ":" + localName;
-        doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NO_NORMS));
+        doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
         // as of version 3, also index combination of namespace URI and local name
         if (indexFormatVersion.getVersion() >= IndexFormatVersion.V3.getVersion()) {
-            doc.add(new Field(FieldNames.NAMESPACE_URI, namespaceURI, Field.Store.NO, Field.Index.NO_NORMS));
-            doc.add(new Field(FieldNames.LOCAL_NAME, localName, Field.Store.NO, Field.Index.NO_NORMS));
+            doc.add(new Field(FieldNames.NAMESPACE_URI, namespaceURI, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+            doc.add(new Field(FieldNames.LOCAL_NAME, localName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
         }
     }
 }

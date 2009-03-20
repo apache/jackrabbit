@@ -25,10 +25,9 @@ import org.apache.lucene.search.DefaultSimilarity;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Hits;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -41,7 +40,6 @@ import java.util.Iterator;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.File;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.FileReader;
 import java.io.InputStreamReader;
@@ -86,9 +84,6 @@ import java.util.ArrayList;
  * <h3>Initial Usage</h3>
  *
  * This class has lots of options to try to make it efficient and flexible.
- * See the body of {@link #main main()} below in the source for real code, or
- * if you want pseudo code, the simpliest possible usage is as follows. The bold
- * fragment is specific to this class.
  *
  * <code><pre>
  *
@@ -144,9 +139,6 @@ import java.util.ArrayList;
  *  - optimise: when no termvector support available - used maxNumTermsParsed to limit amount of tokenization
  * </pre>
  *
- * @author David Spencer
- * @author Bruce Ritchie
- * @author Mark Harwood
  */
 public final class MoreLikeThis {
 
@@ -174,7 +166,7 @@ public final class MoreLikeThis {
      * @see #getMinDocFreq
      * @see #setMinDocFreq
      */
-    public static final int DEFALT_MIN_DOC_FREQ = 5;
+    public static final int DEFAULT_MIN_DOC_FREQ = 5;
 
     /**
      * Boost terms in query based on score.
@@ -239,7 +231,7 @@ public final class MoreLikeThis {
     /**
      * Ignore words which do not occur in at least this many docs.
      */
-    private int minDocFreq = DEFALT_MIN_DOC_FREQ;
+    private int minDocFreq = DEFAULT_MIN_DOC_FREQ;
 
     /**
      * Should we apply a boost to the Query based on the scores?
@@ -274,7 +266,7 @@ public final class MoreLikeThis {
     /**
      * For idf() calculations.
      */
-    private Similarity similarity = new DefaultSimilarity();
+    private Similarity similarity;// = new DefaultSimilarity();
 
     /**
      * IndexReader to use
@@ -285,10 +277,24 @@ public final class MoreLikeThis {
      * Constructor requiring an IndexReader.
      */
     public MoreLikeThis(IndexReader ir) {
-        this.ir = ir;
+        this(ir, new DefaultSimilarity());
     }
 
-    /**
+    public MoreLikeThis(IndexReader ir, Similarity sim){
+      this.ir = ir;
+      this.similarity = sim;
+    }
+
+
+  public Similarity getSimilarity() {
+    return similarity;
+  }
+
+  public void setSimilarity(Similarity similarity) {
+    this.similarity = similarity;
+  }
+
+  /**
      * Returns an analyzer that will be used to parse source doc with. The default analyzer
      * is the {@link #DEFAULT_ANALYZER}.
      *
@@ -330,7 +336,7 @@ public final class MoreLikeThis {
 
     /**
      * Returns the frequency at which words will be ignored which do not occur in at least this
-     * many docs. The default frequency is {@link #DEFALT_MIN_DOC_FREQ}.
+     * many docs. The default frequency is {@link #DEFAULT_MIN_DOC_FREQ}.
      *
      * @return the frequency at which words will be ignored which do not occur in at least this
      * many docs.
@@ -595,12 +601,11 @@ public final class MoreLikeThis {
         int numDocs = ir.numDocs();
         FreqQ res = new FreqQ(words.size()); // will order words by score
 
-        Iterator it = words.entrySet().iterator();
+        Iterator it = words.keySet().iterator();
         while (it.hasNext()) { // for every word
-            Map.Entry entry = (Map.Entry) it.next();
-            String word = (String) entry.getKey();
+            String word = (String) it.next();
 
-            int tf = ((Int) entry.getValue()).x; // term freq in the source doc
+            int tf = ((Int) words.get(word)).x; // term freq in the source doc
             if (minTermFreq > 0 && tf < minTermFreq) {
                 continue; // filter out words that don't occur enough times in the source
             }
@@ -645,7 +650,7 @@ public final class MoreLikeThis {
         sb.append("\t" + "maxQueryTerms  : " + maxQueryTerms + "\n");
         sb.append("\t" + "minWordLen     : " + minWordLen + "\n");
         sb.append("\t" + "maxWordLen     : " + maxWordLen + "\n");
-        sb.append("\t" + "fieldNames     : \"");
+        sb.append("\t" + "fieldNames     : ");
         String delim = "";
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
@@ -660,72 +665,11 @@ public final class MoreLikeThis {
     }
 
     /**
-     * Test driver.
-     * Pass in "-i INDEX" and then either "-fn FILE" or "-url URL".
-     */
-    public static void main(String[] a) throws Throwable {
-        String indexName = "localhost_index";
-        String fn = "c:/Program Files/Apache Group/Apache/htdocs/manual/vhosts/index.html.en";
-        URL url = null;
-        for (int i = 0; i < a.length; i++) {
-            if (a[i].equals("-i")) {
-                indexName = a[++i];
-            }
-            else if (a[i].equals("-f")) {
-                fn = a[++i];
-            }
-            else if (a[i].equals("-url")) {
-                url = new URL(a[++i]);
-            }
-        }
-
-        PrintStream o = System.out;
-        IndexReader r = IndexReader.open(indexName);
-        o.println("Open index " + indexName + " which has " + r.numDocs() + " docs");
-
-        MoreLikeThis mlt = new MoreLikeThis(r);
-
-        o.println("Query generation parameters:");
-        o.println(mlt.describeParams());
-        o.println();
-
-        Query query = null;
-        if (url != null) {
-            o.println("Parsing URL: " + url);
-            query = mlt.like(url);
-        }
-        else if (fn != null) {
-            o.println("Parsing file: " + fn);
-            query = mlt.like(new File(fn));
-        }
-
-        o.println("q: " + query);
-        o.println();
-        IndexSearcher searcher = new IndexSearcher(indexName);
-
-        Hits hits = searcher.search(query);
-        int len = hits.length();
-        o.println("found: " + len + " documents matching");
-        o.println();
-        for (int i = 0; i < Math.min(25, len); i++) {
-            Document d = hits.doc(i);
-            String summary = d.get( "summary");
-            o.println("score  : " + hits.score(i));
-            o.println("url    : " + d.get("url"));
-            o.println("\ttitle  : " + d.get("title"));
-            if (summary != null) {
-                o.println("\tsummary: " + d.get("summary"));
-            }
-            o.println();
-        }
-    }
-
-    /**
      * Find words for a more-like-this query former.
      *
      * @param docNum the id of the lucene document from which to find terms
      */
-    private PriorityQueue retrieveTerms(int docNum) throws IOException {
+    public PriorityQueue retrieveTerms(int docNum) throws IOException {
         Map termFreqMap = new HashMap();
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
@@ -786,10 +730,11 @@ public final class MoreLikeThis {
     private void addTermFrequencies(Reader r, Map termFreqMap, String fieldName)
             throws IOException {
         TokenStream ts = analyzer.tokenStream(fieldName, r);
-        org.apache.lucene.analysis.Token token;
         int tokenCount = 0;
-        while ((token = ts.next()) != null) { // for every token
-            String word = token.termText();
+        // for every token
+        final Token reusableToken = new Token();
+        for (Token nextToken = ts.next(reusableToken); nextToken != null; nextToken = ts.next(reusableToken)) {
+            String word = nextToken.term();
             tokenCount++;
             if (tokenCount > maxNumTokensParsed) {
                 break;
@@ -802,8 +747,7 @@ public final class MoreLikeThis {
             Int cnt = (Int) termFreqMap.get(word);
             if (cnt == null) {
                 termFreqMap.put(word, new Int());
-            }
-            else {
+            } else {
                 cnt.x++;
             }
         }
@@ -847,7 +791,7 @@ public final class MoreLikeThis {
      * For an easier method to call see {@link #retrieveInterestingTerms retrieveInterestingTerms()}.
      *
      * @param r the reader that has the content of the document
-     * @return the most intresting words in the document ordered by score, with the highest scoring, or best entry, first
+     * @return the most interesting words in the document ordered by score, with the highest scoring, or best entry, first
      *
      * @see #retrieveInterestingTerms
      */
@@ -861,6 +805,23 @@ public final class MoreLikeThis {
     }
 
     /**
+     * @see #retrieveInterestingTerms(java.io.Reader)
+     */
+    public String[] retrieveInterestingTerms(int docNum) throws IOException {
+        ArrayList al = new ArrayList(maxQueryTerms);
+        PriorityQueue pq = retrieveTerms(docNum);
+        Object cur;
+        int lim = maxQueryTerms; // have to be careful, retrieveTerms returns all words but that's probably not useful to our caller...
+        // we just want to return the top words
+        while (((cur = pq.pop()) != null) && lim-- > 0) {
+            Object[] ar = (Object[]) cur;
+            al.add(ar[0]); // the 1st entry is the interesting word
+        }
+        String[] res = new String[al.size()];
+        return (String[]) al.toArray(res);
+    }
+
+    /**
      * Convenience routine to make it easy to return the most interesting words in a document.
      * More advanced users will call {@link #retrieveTerms(java.io.Reader) retrieveTerms()} directly.
      * @param r the source document
@@ -869,18 +830,18 @@ public final class MoreLikeThis {
      * @see #retrieveTerms(java.io.Reader)
      * @see #setMaxQueryTerms
      */
-    public String[] retrieveInterestingTerms( Reader r) throws IOException {
-        ArrayList al = new ArrayList( maxQueryTerms);
-        PriorityQueue pq = retrieveTerms( r);
-        int lim = maxQueryTerms;
-        // have to be careful, retrieveTerms returns all words
-        // but that's probably not useful to our caller...
+    public String[] retrieveInterestingTerms(Reader r) throws IOException {
+        ArrayList al = new ArrayList(maxQueryTerms);
+        PriorityQueue pq = retrieveTerms(r);
+        Object cur;
+        int lim = maxQueryTerms; // have to be careful, retrieveTerms returns all words but that's probably not useful to our caller...
         // we just want to return the top words
-        for (Object cur = pq.pop(); cur != null && lim-- > 0; cur = pq.pop()) {
+        while (((cur = pq.pop()) != null) && lim-- > 0) {
             Object[] ar = (Object[]) cur;
             al.add(ar[0]); // the 1st entry is the interesting word
         }
-        return (String[]) al.toArray(new String[al.size()]);
+        String[] res = new String[al.size()];
+        return (String[]) al.toArray(res);
     }
 
     /**

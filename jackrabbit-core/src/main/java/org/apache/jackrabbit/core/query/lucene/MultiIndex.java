@@ -264,9 +264,6 @@ public class MultiIndex {
             PersistentIndex index = new PersistentIndex(name,
                     handler.getTextAnalyzer(), handler.getSimilarity(),
                     cache, indexingQueue, directoryManager);
-            index.setMaxMergeDocs(handler.getMaxMergeDocs());
-            index.setMergeFactor(handler.getMergeFactor());
-            index.setMinMergeDocs(handler.getMinMergeDocs());
             index.setMaxFieldLength(handler.getMaxFieldLength());
             index.setUseCompoundFile(handler.getUseCompoundFile());
             index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
@@ -571,9 +568,6 @@ public class MultiIndex {
         PersistentIndex index = new PersistentIndex(indexName,
                 handler.getTextAnalyzer(), handler.getSimilarity(),
                 cache, indexingQueue, directoryManager);
-        index.setMaxMergeDocs(handler.getMaxMergeDocs());
-        index.setMergeFactor(handler.getMergeFactor());
-        index.setMinMergeDocs(handler.getMinMergeDocs());
         index.setMaxFieldLength(handler.getMaxFieldLength());
         index.setUseCompoundFile(handler.getUseCompoundFile());
         index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
