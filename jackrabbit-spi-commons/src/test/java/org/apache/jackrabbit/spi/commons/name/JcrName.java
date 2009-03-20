@@ -39,6 +39,15 @@ public final class JcrName {
         list.add(new JcrName("...", "", "..."));
         list.add(new JcrName(".a.", "", ".a."));
 
+        // expanded names
+        list.add(new JcrName("{}a", "", "a"));
+        list.add(new JcrName("{}name", "", "name"));
+        list.add(new JcrName("{}na me", "", "na me"));
+        list.add(new JcrName("{prefix}name", "prefix", "name"));
+        list.add(new JcrName("{prefix}na me", "prefix", "na me"));        
+        list.add(new JcrName("{}...", "", "..."));
+        list.add(new JcrName("{}.a.", "", ".a."));
+
         // invalid names
         list.add(new JcrName(":name"));
         list.add(new JcrName("."));

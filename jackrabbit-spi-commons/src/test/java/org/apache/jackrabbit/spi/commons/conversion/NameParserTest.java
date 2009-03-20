@@ -172,6 +172,80 @@ public class NameParserTest extends TestCase {
         }
     }
 
+    public void testCheckFormatOfExpandedNames() throws NamespaceException, IllegalNameException {
+        NamespaceResolver resolver = new TestNamespaceResolver();
+
+        List valid = new ArrayList();
+        // valid qualified jcr-names:
+        // String-array consisting of { jcrName , uri , localName }
+        valid.add(new String[] {"abc:{c}", "abc", "{c}"});
+        valid.add(new String[] {"abc:}c", "abc", "}c"});
+        valid.add(new String[] {"abc:c}", "abc", "c}"});
+        valid.add(new String[] {"{ab", "", "{ab"});
+        valid.add(new String[] {"ab}", "", "ab}"});
+        valid.add(new String[] {"a}bc", "", "a}bc"});
+        valid.add(new String[] {"{", "", "{"});
+        valid.add(new String[] {"}", "", "}"});
+        valid.add(new String[] {"abc", "", "abc"});
+        valid.add(new String[] {"abc{abc}", "", "abc{abc}"});
+        valid.add(new String[] {"{{abc}", "", "{{abc}"});
+        valid.add(new String[] {"{abc{abc}", "", "{abc{abc}"});
+        valid.add(new String[] {"abc {", "", "abc {"});
+        valid.add(new String[] {"abc { }", "", "abc { }"});
+        valid.add(new String[] {"{ }abc", "", "{ }abc"});
+        // unknown uri -> but valid non-prefixed jcr-name
+        valid.add(new String[] {"{test}abc", "", "{test}abc"});
+
+        // valid expanded jcr-names:
+        // String-array consisting of { jcrName , uri , localName }
+        valid.add(new String[] {"{http://jackrabbit.apache.org}abc", "http://jackrabbit.apache.org", "abc"});
+        valid.add(new String[] {"{http://jackrabbit.apache.org:80}abc", "http://jackrabbit.apache.org:80", "abc"});
+        valid.add(new String[] {"{http://jackrabbit.apache.org/info}abc", "http://jackrabbit.apache.org/info", "abc"});
+        valid.add(new String[] {"{jcr:jackrabbit}abc", "jcr:jackrabbit", "abc"});
+        valid.add(new String[] {"{/jackrabbit/a/b/c}abc", "/jackrabbit/a/b/c", "abc"});
+        valid.add(new String[] {"{abc}def", "abc", "def"});
+        valid.add(new String[] {"{}abc", "", "abc"});
+
+        for (Iterator it = valid.iterator(); it.hasNext();) {
+            String[] strs = (String[]) it.next();
+            try {
+                NameParser.checkFormat(strs[0]);
+            } catch (Exception e) {
+                fail(e.getMessage() + " -> " + strs[0]);
+            }
+        }
+
+        // invalid jcr-names (neither expanded nor qualified form)
+        List invalid = new ArrayList();
+        // invalid prefix
+        invalid.add("{a:b");
+        invalid.add("}a:b");
+        invalid.add("a{b:c");
+        invalid.add("a}b:c");
+        // invalid local name containing '/'
+        invalid.add("{http://jackrabbit.apache.org}abc/dfg");
+        // invalid local name containing ':'
+        invalid.add("{http://jackrabbit.apache.org}abc:dfg");
+        // invalid local name containing ':' and '/'
+        invalid.add("{{http://jackrabbit.apache.org}abc:dfg}");
+        // invalid local name containing '/'
+        invalid.add("/a/b/c");
+        // known uri but local name missing -> must fail.
+        invalid.add("{abc}");
+        invalid.add("{http://jackrabbit.apache.org}");
+        invalid.add("{}");
+
+        for (Iterator it = invalid.iterator(); it.hasNext();) {
+            String jcrName = (String) it.next();
+            try {
+                NameParser.checkFormat(jcrName);
+                fail("Checking format of '" + jcrName + "' should fail. Not a valid jcr name.");
+            } catch (IllegalNameException e) {
+                //ok
+            }
+        }
+    }
+    
     /**
      * Dummy NamespaceResolver that only knows the empty namespace and
      * namespaces containing either 'jackrabbit' or 'abc'. Used to test
