@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.slf4j.LoggerFactory;
@@ -93,7 +92,7 @@ public class Util {
     public static Query createMatchAllQuery(String name, IndexFormatVersion version) {
         if (version.getVersion() >= IndexFormatVersion.V2.getVersion()) {
             // new index format style
-            return new TermQuery(new Term(FieldNames.PROPERTIES_SET, name));
+            return new JackrabbitTermQuery(new Term(FieldNames.PROPERTIES_SET, name));
         } else {
             return new MatchAllQuery(name);
         }

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -77,16 +76,16 @@ public class NameQuery extends Query {
         if (version.getVersion() >= IndexFormatVersion.V3.getVersion()) {
             // use LOCAL_NAME and NAMESPACE_URI field
             BooleanQuery name = new BooleanQuery();
-            name.add(new TermQuery(new Term(FieldNames.NAMESPACE_URI, nodeName.getNamespaceURI())),
+            name.add(new JackrabbitTermQuery(new Term(FieldNames.NAMESPACE_URI, nodeName.getNamespaceURI())),
                     BooleanClause.Occur.MUST);
-            name.add(new TermQuery(new Term(FieldNames.LOCAL_NAME,
+            name.add(new JackrabbitTermQuery(new Term(FieldNames.LOCAL_NAME,
                     nodeName.getLocalName())),
                     BooleanClause.Occur.MUST);
             return name;
         } else {
             // use LABEL field
             try {
-                return new TermQuery(new Term(FieldNames.LABEL,
+                return new JackrabbitTermQuery(new Term(FieldNames.LABEL,
                         nsMappings.translateName(nodeName)));
             } catch (IllegalNameException e) {
                 throw Util.createIOException(e);
