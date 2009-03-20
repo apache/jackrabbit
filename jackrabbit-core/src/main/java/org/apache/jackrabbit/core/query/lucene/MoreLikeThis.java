@@ -558,7 +558,7 @@ public final class MoreLikeThis {
 
         while (((cur = q.pop()) != null)) {
             Object[] ar = (Object[]) cur;
-            TermQuery tq = new TermQuery(new Term((String) ar[1], (String) ar[0]));
+            TermQuery tq = new JackrabbitTermQuery(new Term((String) ar[1], (String) ar[0]));
 
             if (boost) {
                 if (qterms == 0) {

@@ -184,7 +184,7 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      * marked as deleted.<br/>
      * If <code>term</code> is for a {@link FieldNames#UUID} field and this
      * <code>ReadOnlyIndexReader</code> does not have such a document,
-     * {@link CachingIndexReader#EMPTY} is returned.
+     * {@link EmptyTermDocs#INSTANCE} is returned.
      *
      * @param term the term to enumerate the docs for.
      * @return TermDocs for <code>term</code>.
@@ -193,7 +193,7 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
     public TermDocs termDocs(Term term) throws IOException {
         // do not wrap for empty TermDocs
         TermDocs td = reader.termDocs(term);
-        if (td != CachingIndexReader.EMPTY) {
+        if (td != EmptyTermDocs.INSTANCE) {
             td = new FilteredTermDocs(td);
         }
         return td;

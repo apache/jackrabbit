@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 
@@ -56,7 +55,7 @@ public class LocalNameQuery extends Query {
      */
     public Query rewrite(IndexReader reader) throws IOException {
         if (version.getVersion() >= IndexFormatVersion.V3.getVersion()) {
-            return new TermQuery(new Term(FieldNames.LOCAL_NAME, localName));
+            return new JackrabbitTermQuery(new Term(FieldNames.LOCAL_NAME, localName));
         } else {
             throw new IOException("LocalNameQuery requires IndexFormatVersion V3");
         }

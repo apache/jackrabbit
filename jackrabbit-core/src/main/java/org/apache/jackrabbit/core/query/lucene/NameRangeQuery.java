@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
@@ -97,7 +96,7 @@ public class NameRangeQuery extends Query {
             RangeQuery localNames = new RangeQuery(getLowerLocalNameTerm(),
                     getUpperLocalNameTerm(), inclusive);
             BooleanQuery query = new BooleanQuery();
-            query.add(new TermQuery(new Term(FieldNames.NAMESPACE_URI,
+            query.add(new JackrabbitTermQuery(new Term(FieldNames.NAMESPACE_URI,
                     getNamespaceURI())), BooleanClause.Occur.MUST);
             query.add(localNames, BooleanClause.Occur.MUST);
             return query.rewrite(reader);

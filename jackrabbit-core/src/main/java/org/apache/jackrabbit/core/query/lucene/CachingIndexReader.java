@@ -17,12 +17,16 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.jackrabbit.uuid.UUID;
+import org.apache.commons.collections.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +35,7 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Collections;
 import java.text.NumberFormat;
 
 /**
@@ -73,6 +78,16 @@ class CachingIndexReader extends FilterIndexReader {
     private final DocNumberCache cache;
 
     /**
+     * Maps document number to node UUID.
+     */
+    private final Map docNumber2uuid;
+
+    /**
+     * A cache of TermDocs that are regularly read from the index.
+     */
+    private final TermDocsCache termDocsCache;
+
+    /**
      * Creates a new <code>CachingIndexReader</code> based on
      * <code>delegatee</code>
      *
@@ -94,6 +109,10 @@ class CachingIndexReader extends FilterIndexReader {
         if (initCache) {
             cacheInitializer.run();
         }
+        // limit cache to 1% of maxDoc(), but at least 10.
+        this.docNumber2uuid = Collections.synchronizedMap(new LRUMap(
+                Math.max(10, delegatee.maxDoc() / 100)));
+        this.termDocsCache = new TermDocsCache(delegatee, FieldNames.PROPERTIES);
     }
 
     /**
@@ -171,13 +190,44 @@ class CachingIndexReader extends FilterIndexReader {
     //--------------------< FilterIndexReader overwrites >----------------------
 
     /**
+     * Uses the {@link #docNumber2uuid} cache for document lookups that are only
+     * interested in the {@link FieldSelectors#UUID}.
+     *
+     * @param n the document number.
+     * @param fieldSelector the field selector.
+     * @return the document.
+     * @throws CorruptIndexException if the index is corrupt.
+     * @throws IOException if an error occurs while reading from the index.
+     */
+    public Document document(int n, FieldSelector fieldSelector)
+            throws CorruptIndexException, IOException {
+        if (fieldSelector == FieldSelectors.UUID) {
+            Integer docNum = new Integer(n);
+            Document doc;
+            UUID uuid = (UUID) docNumber2uuid.get(docNum);
+            if (uuid == null) {
+                doc = super.document(n, fieldSelector);
+                uuid = UUID.fromString(doc.get(FieldNames.UUID));
+                docNumber2uuid.put(docNum, uuid);
+            } else {
+                doc = new Document();
+                doc.add(new Field(FieldNames.UUID, uuid.toString(),
+                        Field.Store.YES, Field.Index.NO_NORMS));
+            }
+            return doc;
+        } else {
+            return super.document(n, fieldSelector);
+        }
+    }
+
+    /**
      * If the field of <code>term</code> is {@link FieldNames#UUID} this
      * <code>CachingIndexReader</code> returns a <code>TermDocs</code> instance
      * with a cached document id. If <code>term</code> has any other field
      * the call is delegated to the base <code>IndexReader</code>.<br/>
      * If <code>term</code> is for a {@link FieldNames#UUID} field and this
      * <code>CachingIndexReader</code> does not have such a document,
-     * {@link #EMPTY} is returned.
+     * {@link EmptyTermDocs#INSTANCE} is returned.
      *
      * @param term the term to start the <code>TermDocs</code> enumeration.
      * @return a TermDocs instance.
@@ -210,14 +260,14 @@ class CachingIndexReader extends FilterIndexReader {
                         // and return
                         return new SingleTermDocs(docs.doc());
                     } else {
-                        return EMPTY;
+                        return EmptyTermDocs.INSTANCE;
                     }
                 } finally {
                     docs.close();
                 }
             }
         }
-        return super.termDocs(term);
+        return termDocsCache.termDocs(term);
     }
 
     /**
@@ -454,39 +504,4 @@ class CachingIndexReader extends FilterIndexReader {
             this.uuid = uuid;
         }
     }
-
-    /**
-     * Implements an empty TermDocs.
-     */
-    static final TermDocs EMPTY = new TermDocs() {
-
-        public void seek(Term term) {
-        }
-
-        public void seek(TermEnum termEnum) {
-        }
-
-        public int doc() {
-            return -1;
-        }
-
-        public int freq() {
-            return -1;
-        }
-
-        public boolean next() {
-            return false;
-        }
-
-        public int read(int[] docs, int[] freqs) {
-            return 0;
-        }
-
-        public boolean skipTo(int target) {
-            return false;
-        }
-
-        public void close() {
-        }
-    };
 }

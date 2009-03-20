@@ -385,7 +385,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
 
             switch (operator) {
                 case OPERATOR_EQUAL_TO:
-                    return new TermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength));
+                    return new JackrabbitTermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength));
                 case OPERATOR_GREATER_THAN:
                     Term lower = new Term(FieldNames.PROPERTY_LENGTHS, namedLength);
                     Term upper = new Term(FieldNames.PROPERTY_LENGTHS,
@@ -412,7 +412,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                     Query all = Util.createMatchAllQuery(propName, version);
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
-                    b.add(new TermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength)),
+                    b.add(new JackrabbitTermQuery(new Term(FieldNames.PROPERTY_LENGTHS, namedLength)),
                             BooleanClause.Occur.MUST_NOT);
                     return b;
                 default:
@@ -450,7 +450,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
 
             switch (operator) {
                 case OPERATOR_EQUAL_TO:
-                    return new TermQuery(new Term(FieldNames.LOCAL_NAME, value));
+                    return new JackrabbitTermQuery(new Term(FieldNames.LOCAL_NAME, value));
                 case OPERATOR_GREATER_THAN:
                     return new LocalNameRangeQuery(value, null, false);
                 case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
@@ -469,7 +469,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                     MatchAllDocsQuery all = new MatchAllDocsQuery();
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
-                    b.add(new TermQuery(new Term(FieldNames.LOCAL_NAME, value)),
+                    b.add(new JackrabbitTermQuery(new Term(FieldNames.LOCAL_NAME, value)),
                             BooleanClause.Occur.MUST_NOT);
                     return b;
                 default:
@@ -572,7 +572,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
             String text = FieldNames.createNamedValue(propName, stringValue);
             switch (operator) {
                 case OPERATOR_EQUAL_TO:
-                    return new TermQuery(new Term(FieldNames.PROPERTIES, text));
+                    return new JackrabbitTermQuery(new Term(FieldNames.PROPERTIES, text));
                 case OPERATOR_GREATER_THAN:
                     Term lower = new Term(FieldNames.PROPERTIES, text);
                     Term upper = new Term(FieldNames.PROPERTIES,
@@ -604,7 +604,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
                     Query all = Util.createMatchAllQuery(propName, version);
                     BooleanQuery b = new BooleanQuery();
                     b.add(all, BooleanClause.Occur.SHOULD);
-                    b.add(new TermQuery(new Term(FieldNames.PROPERTIES, text)),
+                    b.add(new JackrabbitTermQuery(new Term(FieldNames.PROPERTIES, text)),
                             BooleanClause.Occur.MUST_NOT);
                     return b;
                 default:
@@ -707,11 +707,11 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
         }
         Query q;
         if (terms.size() == 1) {
-            q = new TermQuery((Term) terms.get(0));
+            q = new JackrabbitTermQuery((Term) terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = terms.iterator(); it.hasNext();) {
-                b.add(new TermQuery((Term) it.next()), BooleanClause.Occur.SHOULD);
+                b.add(new JackrabbitTermQuery((Term) it.next()), BooleanClause.Occur.SHOULD);
             }
             q = b;
         }
@@ -801,7 +801,7 @@ public class JQOM2LuceneQueryBuilder implements QOMTreeVisitor, QueryObjectModel
             }
         } else if (operand instanceof CaseTermQuery) {
             CaseTermQuery ctq = (CaseTermQuery) operand;
-            return transformTermQuery(new TermQuery(ctq.getTerm()), toUpperCase);
+            return transformTermQuery(new JackrabbitTermQuery(ctq.getTerm()), toUpperCase);
         } else if (operand instanceof MatchAllQuery) {
             return operand;
         } else if (operand instanceof BooleanQuery) {

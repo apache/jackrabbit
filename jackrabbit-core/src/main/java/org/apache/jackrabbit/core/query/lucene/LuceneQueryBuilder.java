@@ -69,7 +69,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.ParseException;
@@ -296,7 +295,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (NamespaceException e) {
             // will never happen, prefixes are created when unknown
         }
-        return new TermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value)));
+        return new JackrabbitTermQuery(new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value)));
     }
 
     public Object visit(NodeTypeQueryNode node, Object data) {
@@ -353,11 +352,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             // exception occured
             return new BooleanQuery();
         } else if (terms.size() == 1) {
-            return new TermQuery((Term) terms.get(0));
+            return new JackrabbitTermQuery((Term) terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Iterator it = terms.iterator(); it.hasNext();) {
-                b.add(new TermQuery((Term) it.next()), Occur.SHOULD);
+                b.add(new JackrabbitTermQuery((Term) it.next()), Occur.SHOULD);
             }
             return b;
         }
@@ -430,15 +429,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 Name nameTest = steps[0].getNameTest();
                 if (nameTest == null) {
                     // this is equivalent to the root node
-                    context = new TermQuery(new Term(FieldNames.PARENT, ""));
+                    context = new JackrabbitTermQuery(new Term(FieldNames.PARENT, ""));
                 } else if (nameTest.getLocalName().length() == 0) {
                     // root node
-                    context = new TermQuery(new Term(FieldNames.PARENT, ""));
+                    context = new JackrabbitTermQuery(new Term(FieldNames.PARENT, ""));
                 } else {
                     // then this is a node != the root node
                     // will never match anything!
                     BooleanQuery and = new BooleanQuery();
-                    and.add(new TermQuery(new Term(FieldNames.PARENT, "")), Occur.MUST);
+                    and.add(new JackrabbitTermQuery(new Term(FieldNames.PARENT, "")), Occur.MUST);
                     and.add(new NameQuery(nameTest, indexFormatVersion, nsMappings), Occur.MUST);
                     context = and;
                 }
@@ -448,7 +447,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             } else {
                 // path is 1) relative or 2) descendant-or-self
                 // use root node as context
-                context = new TermQuery(new Term(FieldNames.PARENT, ""));
+                context = new JackrabbitTermQuery(new Term(FieldNames.PARENT, ""));
             }
         } else {
             exceptions.add(new InvalidQueryException("Number of location steps must be > 0"));
@@ -715,7 +714,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
-                            q = new TermQuery(t);
+                            q = new JackrabbitTermQuery(t);
                         }
                         or.add(q, Occur.SHOULD);
                     }
@@ -798,12 +797,12 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
-                            q = new TermQuery(t);
+                            q = new JackrabbitTermQuery(t);
                         }
                         notQuery.add(q, Occur.MUST_NOT);
                     }
                     // and exclude all nodes where 'field' is multi valued
-                    notQuery.add(new TermQuery(new Term(FieldNames.MVP, field)), Occur.MUST_NOT);
+                    notQuery.add(new JackrabbitTermQuery(new Term(FieldNames.MVP, field)), Occur.MUST_NOT);
                     query = notQuery;
                     break;
                 case QueryConstants.OPERATION_NE_GENERAL:    // !=
@@ -818,7 +817,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     for (int i = 0; i < stringValues.length; i++) {
                         // exclude the nodes that have the term and are single valued
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, stringValues[i]));
-                        Query svp = new NotQuery(new TermQuery(new Term(FieldNames.MVP, field)));
+                        Query svp = new NotQuery(new JackrabbitTermQuery(new Term(FieldNames.MVP, field)));
                         BooleanQuery and = new BooleanQuery();
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
@@ -826,7 +825,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
-                            q = new TermQuery(t);
+                            q = new JackrabbitTermQuery(t);
                         }
                         and.add(q, Occur.MUST);
                         and.add(svp, Occur.MUST);
@@ -920,7 +919,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      */
     private Query createSingleValueConstraint(Query q, String propName) {
         // get nodes with multi-values in propName
-        Query mvp = new TermQuery(new Term(FieldNames.MVP, propName));
+        Query mvp = new JackrabbitTermQuery(new Term(FieldNames.MVP, propName));
         // now negate, that gives the nodes that have propName as single
         // values but also all others
         Query svp = new NotQuery(mvp);
