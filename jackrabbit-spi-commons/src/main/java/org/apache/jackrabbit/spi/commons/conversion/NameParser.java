@@ -67,6 +67,7 @@ public class NameParser {
         int nameStart = 0;
         int state = STATE_PREFIX_START;
         boolean trailingSpaces = false;
+        boolean checkFormat = (resolver == null);
 
         for (int i = 0; i < len; i++) {
             char c = jcrName.charAt(i);
@@ -122,7 +123,9 @@ public class NameParser {
                         // make sure the uri is a known namespace uri
                         // TODO: since namespace registration does not validate
                         //       the URI format validation is omitted here
-                        resolver.getPrefix(tmp);
+                        if (!checkFormat) {
+                            resolver.getPrefix(tmp);
+                        }
                         uri = tmp;
                         state = STATE_NAME_START;
                     } catch (NamespaceException e) {
@@ -170,7 +173,7 @@ public class NameParser {
 
         // if namespace is null, this is just a check for format. this can only
         // happen if invoked internally
-        if (resolver == null) {
+        if (checkFormat) {
             return null;
         }
 
