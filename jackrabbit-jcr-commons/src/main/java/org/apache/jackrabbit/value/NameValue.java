@@ -64,7 +64,7 @@ public class NameValue extends BaseValue {
      *
      * @param s           the string to be parsed.
      * @param checkFormat if the format should be checked.
-     * @return a newly constructed <code>NameValue</code> representing the the
+     * @return a newly constructed <code>NameValue</code> representing the
      *         specified value.
      * @throws javax.jcr.ValueFormatException If the format should be checked
      *                                        and the <code>String</code> is not
