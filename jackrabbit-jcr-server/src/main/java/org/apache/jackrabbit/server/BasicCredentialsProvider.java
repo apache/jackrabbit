@@ -50,8 +50,8 @@ public class BasicCredentialsProvider implements CredentialsProvider {
      *
      * Build a {@link Credentials} object for the given authorization header.
      * The creds may be used to login to the repository. If the specified header
-     * string is <code>null</code> or not of the required format the behaviour
-     * depends on the {@link #defaultHeaderValue} field:<br>
+     * string is <code>null</code> the behaviour depends on the
+     * {@link #defaultHeaderValue} field:<br>
      * <ul>
      * <li> if this field is <code>null</code>, a LoginException is thrown.
      *      This is suiteable for clients (eg. webdav clients) for with
@@ -62,11 +62,13 @@ public class BasicCredentialsProvider implements CredentialsProvider {
      * <li> if this field has a 'user:password' value, the respective
      *      simple credentials are generated.
      * </ul>
+     * <p/>
+     * If the request header is present but cannot be parsed a
+     * <code>ServletException</code> is thrown.
      *
      * @param request the servlet request
      * @return credentials or <code>null</code>.
-     * @throws ServletException If an IOException occured while decoding the
-     *         Authorization header.
+     * @throws ServletException If the Authorization header cannot be decoded.
      * @throws LoginException if no suitable auth header and missing-auth-mapping
      *         is not present
      */
