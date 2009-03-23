@@ -39,6 +39,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RestoreAndCheckoutTest.class);
         suite.addTestSuite(NodeImplTest.class);
         suite.addTestSuite(RetentionRegistryImplTest.class);
+        suite.addTestSuite(SessionGarbageCollectedTest.class);
 
         return suite;
     }
