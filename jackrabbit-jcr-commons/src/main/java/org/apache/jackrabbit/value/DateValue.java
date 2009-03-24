@@ -37,10 +37,13 @@ public class DateValue extends BaseValue {
      * Constructs a <code>DateValue</code> object representing a date.
      *
      * @param date the date this <code>DateValue</code> should represent
+     * @throws IllegalArgumentException if the given date cannot be represented
+     * as defined by ISO 8601.
      */
-    public DateValue(Calendar date) {
+    public DateValue(Calendar date) throws IllegalArgumentException {
         super(TYPE);
         this.date = date;
+        ISO8601.getYear(date);
     }
 
     /**

@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -505,8 +506,13 @@ public class NodeIndexer {
     protected void addCalendarValue(Document doc, String fieldName, Object internalValue) {
         Calendar value = (Calendar) internalValue;
         long millis = value.getTimeInMillis();
-        doc.add(createFieldWithoutNorms(fieldName, DateField.timeToString(millis),
-                PropertyType.DATE));
+        try {
+            doc.add(createFieldWithoutNorms(fieldName, DateField.timeToString(millis),
+                    PropertyType.DATE));
+        } catch (IllegalArgumentException e) {
+            log.warn("'{}' is outside of supported date value range.",
+                    new Date(value.getTimeInMillis()));
+        }
     }
 
     /**
