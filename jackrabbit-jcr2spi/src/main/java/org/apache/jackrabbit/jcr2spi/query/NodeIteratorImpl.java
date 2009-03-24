@@ -226,7 +226,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
                     pos++;
                 }
             } catch (Exception e) {
-                log.error("Exception retrieving Node with Id: " + nextId);
+                log.warn("Exception retrieving Node with Id: " + nextId);
                 // try next
                 invalid++;
                 pos++;
