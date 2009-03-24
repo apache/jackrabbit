@@ -14,29 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2davex;
+package org.apache.jackrabbit.test;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite;
 
+/**
+ * Execute all API tests from jackrabbit-jcr-test and jackrabbit-jcr2spi.
+ */
 public class TestAll extends TestCase {
 
     public static Test suite() {
-
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.spi2davex tests");
-
-        // spi tests
-        suite.addTest(org.apache.jackrabbit.spi.TestAll.suite());
-
-        // impl specific spi tests
-        suite.addTestSuite(ConnectionTest.class);
-        suite.addTestSuite(ReadTest.class);
-        suite.addTestSuite(BatchTest.class);
-        suite.addTestSuite(CopyTest.class);
-        suite.addTestSuite(CloneTest.class);
-        suite.addTestSuite(ExtensionTest.class);
-
+        TestSuite suite = new JCRTestSuite();
+        suite.addTest(new Jcr2SpiTestSuite());
         return suite;
+    }
+
+    private static class JCRTestSuite extends TestSuite {
+
+        private JCRTestSuite() {
+            super("JCR API tests");
+            addTest(org.apache.jackrabbit.test.api.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.version.TestAll.suite());
+            addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
+        }
     }
 }

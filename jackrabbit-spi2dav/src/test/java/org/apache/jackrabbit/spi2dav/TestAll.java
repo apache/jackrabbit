@@ -14,28 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi2davex;
+package org.apache.jackrabbit.spi2dav;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+/**
+ * Test suite that includes all testcases for package org.apache.jackrabbit.spi2dav.
+ */
 public class TestAll extends TestCase {
 
+    /**
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     */
     public static Test suite() {
-
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.spi2davex tests");
+        TestSuite suite = new TestSuite("org.apache.jackrabbit.spi2dav tests");
 
         // spi tests
         suite.addTest(org.apache.jackrabbit.spi.TestAll.suite());
-
-        // impl specific spi tests
-        suite.addTestSuite(ConnectionTest.class);
-        suite.addTestSuite(ReadTest.class);
-        suite.addTestSuite(BatchTest.class);
-        suite.addTestSuite(CopyTest.class);
-        suite.addTestSuite(CloneTest.class);
-        suite.addTestSuite(ExtensionTest.class);
 
         return suite;
     }
