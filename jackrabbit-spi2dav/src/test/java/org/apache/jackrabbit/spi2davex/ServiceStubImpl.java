@@ -18,24 +18,20 @@ package org.apache.jackrabbit.spi2davex;
 
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.RepositoryService;
-import org.apache.jackrabbit.spi.RepositoryServiceStub;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
 import java.util.Properties;
 
 /** <code>ServiceStubImpl</code>... */
-public class ServiceStubImpl extends RepositoryServiceStub {
+public class ServiceStubImpl extends org.apache.jackrabbit.spi2dav.ServiceStubImpl {
 
     private static Logger log = LoggerFactory.getLogger(ServiceStubImpl.class);
 
-    public static final String PROP_REPOSITORY_URI = "org.apache.jackrabbit.spi.spi2davex.uri";
-    public static final String PROP_DEFAULT_DEPTH = "org.apache.jackrabbit.spi.spi2davex.defaultDepth";
-    public static final String PROP_WSP_NAME = "org.apache.jackrabbit.spi.spi2davex.workspacename";
+    public static final String PROP_DEFAULT_DEPTH = "org.apache.jackrabbit.spi2davex.defaultDepth";
 
     private RepositoryService service;
     private Credentials adminCredentials;
@@ -50,46 +46,23 @@ public class ServiceStubImpl extends RepositoryServiceStub {
         super(env);
     }
 
-    /**
-     * Workaround for SPI issue JCR-1851
-     * 
-     * @param propName Configuration property name.
-     * @return Configured property value.
-     */
-    public String getProperty(String propName) {
-        String prop = super.getProperty(propName);
-        if (prop == null && propName.equals("workspacename")) {
-            prop = super.getProperty(PROP_WSP_NAME);
-        }
-        return prop;
-    }
-
     public RepositoryService getRepositoryService() throws RepositoryException {
         if (service == null) {
             String uri = getProperty(PROP_REPOSITORY_URI);
             service = new RepositoryServiceImpl(uri, new BatchReadConfig() {
                 public int getDepth(Path path, PathResolver resolver) {
                     String depthStr = getProperty(PROP_DEFAULT_DEPTH);
-                    return Integer.parseInt(depthStr);
+                    if (depthStr != null) {
+                        try {
+                            return Integer.parseInt(depthStr);
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                    }
+                    return 4;
                 }
             });
         }
         return service;
-    }
-
-    public Credentials getAdminCredentials() {
-        if (adminCredentials == null) {
-            adminCredentials = new SimpleCredentials(getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_ADMIN_NAME),
-                    getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_ADMIN_PWD).toCharArray());
-        }
-        return adminCredentials;
-    }
-
-    public Credentials getReadOnlyCredentials() {
-        if (readOnlyCredentials == null) {
-            readOnlyCredentials = new SimpleCredentials(getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_READONLY_NAME),
-                getProperty(RepositoryServiceStub.PROP_PREFIX + "." + RepositoryServiceStub.PROP_READONLY_PWD).toCharArray());
-        }
-        return readOnlyCredentials;
     }
 }
