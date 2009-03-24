@@ -73,8 +73,8 @@ String shref = href + "/default/jcr:root";
 <h3>JCR Remoting Client</h3>
 <p>
   For the client counterpart of this WebDAV servlet please take a look at the
-  <a href="http://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2dav">spi2dav</a>
-  project in the Apache Jackrabbit sandbox.
+  <a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2dav">Jackrabbit SPI2DAV</a>
+  module.
 </p>
 
 <h3>Configuration</h3>
