@@ -74,6 +74,8 @@ public class DateField {
     /**
      * Converts a millisecond time to a string suitable for indexing.
      * Supported date range is: 30 BC - 3189
+     * @throws IllegalArgumentException if the given <code>time</code> is not
+     *                                  within the supported date range.
      */
     public static String timeToString(long time) {
 
@@ -81,13 +83,13 @@ public class DateField {
 
 
         if (time < 0) {
-            throw new RuntimeException("time too early");
+            throw new IllegalArgumentException("time too early");
         }
 
         String s = Long.toString(time, Character.MAX_RADIX);
 
         if (s.length() > DATE_LEN) {
-            throw new RuntimeException("time too late");
+            throw new IllegalArgumentException("time too late");
         }
 
         // Pad with leading zeros
