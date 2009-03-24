@@ -18,28 +18,12 @@ package org.apache.jackrabbit.spi2jcr.jcr2spi;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite;
 
 /** <code>TestAll</code>... */
 public class TestAll extends TestCase {
 
     public static Test suite() {
         return new Jcr2SpiTestSuite();
-    }
-
-    private static class Jcr2SpiTestSuite extends TestSuite {
-
-        private Jcr2SpiTestSuite() {
-            super("JCR2SPI tests");
-
-            // all jcr2spi tests
-            addTest(org.apache.jackrabbit.jcr2spi.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.lock.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.name.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.nodetype.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.query.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.version.TestAll.suite());
-            addTest(org.apache.jackrabbit.jcr2spi.xml.TestAll.suite());
-        }
     }
 }
