@@ -77,9 +77,8 @@ or try the <a href="remoting/index.jsp">Examples</a>.
 
 <h3>JCR Remoting Client</h3>
 <p>
-  For the client counterpart of this WebDAV servlet please take a look at the
-  <a href="http://svn.apache.org/repos/asf/jackrabbit/sandbox/spi/spi2davex">spi2davex</a>
-  project in the Apache Jackrabbit sandbox.
+  For the client counterpart of this WebDAV servlet please take a look at the <a href="http://svn.apache.org/repos/asf/jackrabbit/trunk/jackrabbit-spi2dav/src/main/java/org/apache/jackrabbit/spi2davex">extended SPI2DAV</a>
+  project.
 </p>
 
 <h3>Configuration</h3>
