@@ -124,13 +124,28 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         // call must succeed without exception
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-        Set AccessControlList = new HashSet();
+        Set acps = new HashSet();
 
         while (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
-            if (!AccessControlList.add(policy)) {
+            if (!acps.add(policy)) {
                 fail("The applicable policies present should be unique among the choices. Policy " + policy + " occured multiple times.");
             }
+        }
+    }
+
+    public void testApplicablePoliciesAreDistintFromSetPolicies() throws RepositoryException, NotExecutableException {
+        checkCanReadAc(path);
+        // call must succeed without exception
+        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
+        Set acps = new HashSet();
+        while (it.hasNext()) {
+            acps.add(it.nextAccessControlPolicy());
+        }
+
+        AccessControlPolicy[] policies = acMgr.getPolicies(path);
+        for (int i = 0; i < policies.length; i++) {
+            assertFalse("The applicable policies obtained should not be present among the policies obtained through AccessControlManager.getPolicies.", acps.contains(policies[i]));
         }
     }
 
@@ -155,6 +170,22 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         }
     }
 
+    public void testSetAllPolicies() throws RepositoryException, NotExecutableException {
+        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
+        if (!it.hasNext()) {
+            throw new NotExecutableException();
+        }
+        while (it.hasNext()) {
+            acMgr.setPolicy(path, it.nextAccessControlPolicy());
+        }
+        // all policies have been set -> no additional applicable policies.
+        it = acMgr.getApplicablePolicies(path);
+        assertFalse("After having set all applicable policies AccessControlManager.getApplicablePolicies should return an empty iterator.",
+                it.hasNext());
+        assertEquals("After having set all applicable policies AccessControlManager.getApplicablePolicies should return an empty iterator.",
+                0, it.getSize());
+    }
+
     public void testGetPolicyAfterSet() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanReadAc(path);
         checkCanModifyAc(path);
@@ -174,6 +205,25 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             fail("GetPolicies must at least return the policy that has been set before.");
         } else {
             throw new NotExecutableException();
+        }
+    }
+
+    public void testResetPolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
+        checkCanReadAc(path);
+        checkCanModifyAc(path);
+
+        // make sure that at least a single policy has been set.
+        AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
+        if (it.hasNext()) {
+            AccessControlPolicy policy = it.nextAccessControlPolicy();
+            acMgr.setPolicy(path, policy);
+        }
+
+        // access the policies already present at path and test if updating
+        // (resetting) the policies works as well.
+        AccessControlPolicy[] policies = acMgr.getPolicies(path);
+        for (int i = 0; i < policies.length; i++) {
+            acMgr.setPolicy(path, policies[i]);
         }
     }
 
@@ -231,7 +281,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
 
     public void testNodeIsModifiedAfterSecondSetPolicy() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanModifyAc(path);
-        // make sure an policy has been explicitely set.
+        // make sure a policy has been explicitely set.
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
         if (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();

@@ -118,7 +118,13 @@ public class AccessControlListTest extends AbstractAccessControlTest {
                 return (AccessControlList) acp;
             }
         }
-        throw new NotExecutableException("No applicable AccessControlList at " + path);
+        AccessControlPolicy[] acps = acMgr.getPolicies(path);
+        for (int i = 0; i < acps.length; i++) {
+            if (acps[i] instanceof AccessControlList) {
+                return (AccessControlList) acps[i] ;
+            }
+        }
+        throw new NotExecutableException("No AccessControlList at " + path);
     }
 
     private static List currentPrivileges(AccessControlList acl, Principal principal) throws RepositoryException {
