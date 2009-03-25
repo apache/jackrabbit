@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -343,8 +342,7 @@ public class PropertyImpl extends ItemImpl implements Property {
             // type conversion required
             Value targetValue = ValueHelper.convert(
                     InternalValue.create(name).toJCRValue(session),
-                    reqType,
-                    ValueFactoryImpl.getInstance());
+                    reqType, session.getValueFactory());
             internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
         } else {
             // no type conversion required
@@ -395,8 +393,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
                                 InternalValue.create(name).toJCRValue(session),
-                                reqType,
-                                ValueFactoryImpl.getInstance());
+                                reqType, session.getValueFactory());
                         internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
                     } else {
                         // no type conversion required
@@ -613,8 +610,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != value.getType()) {
             // type conversion required
             Value targetVal = ValueHelper.convert(
-                    value, reqType,
-                    ValueFactoryImpl.getInstance());
+                    value, reqType, session.getValueFactory());
             internalValue = InternalValue.create(targetVal, session, rep.getDataStore());
         } else {
             // no type conversion required
