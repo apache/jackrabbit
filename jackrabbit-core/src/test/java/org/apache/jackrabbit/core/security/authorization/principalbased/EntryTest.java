@@ -62,7 +62,7 @@ public class EntryTest extends AbstractEntryTest {
         restrictions = new HashMap(2);
         restrictions.put(nodePath, superuser.getValueFactory().createValue("/a/b/c/d", PropertyType.PATH));
         restrictions.put(glob,  superuser.getValueFactory().createValue("*"));
-        acl = new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser);
+        acl = new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
     }
 
     protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)

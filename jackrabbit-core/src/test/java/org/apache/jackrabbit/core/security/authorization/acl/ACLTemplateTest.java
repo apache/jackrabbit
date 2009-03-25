@@ -46,7 +46,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         SessionImpl sImpl = (SessionImpl) superuser;
         PrincipalManager princicipalMgr = sImpl.getPrincipalManager();
         PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(sImpl);
-        return new ACLTemplate(path, princicipalMgr, privilegeRegistry);
+        return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory());
     }
 
     public void testMultipleEntryEffect() throws RepositoryException, NotExecutableException {

@@ -20,7 +20,6 @@ import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.value.StringValue;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -36,8 +35,6 @@ import java.util.HashMap;
  * and the {@link JackrabbitAccessControlEntry} interfaces.
  */
 public abstract class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
-
-    private static final ValueFactory VALUE_FACTORY = ValueFactoryImpl.getInstance();
 
     /**
      * Privileges contained in this entry
@@ -67,6 +64,11 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     private final Map restrictions;
 
     /**
+     * Value factory
+     */
+    private final ValueFactory valueFactory;
+
+    /**
      * Hash code being calculated on demand.
      */
     private int hashCode = -1;
@@ -80,7 +82,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges)
             throws AccessControlException {
-        this(principal, privileges, true, null);
+        this(principal, privileges, true, null, null);
     }
 
     /**
@@ -93,10 +95,11 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @param restrictions A map of restriction name (String) to restriction
      * (Value). See {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionNames()}
      * and {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionType(String)}. 
+     * @param valueFactory the value factory.
      * @throws AccessControlException if either principal or privileges are invalid.
      */
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges,
-                                     boolean isAllow, Map restrictions)
+                                     boolean isAllow, Map restrictions, ValueFactory valueFactory)
             throws AccessControlException {
         if (principal == null) {
             throw new IllegalArgumentException();
@@ -111,6 +114,8 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         this.privileges = privileges;
         this.privilegeBits = PrivilegeRegistry.getBits(privileges);
         this.allow = isAllow;
+        this.valueFactory = valueFactory;
+        
         if (restrictions == null) {
             this.restrictions = Collections.EMPTY_MAP;
         } else {
@@ -122,7 +127,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
                 Value value;
                 if (v instanceof Value) {
                     // create copy of the value
-                    value = ValueHelper.copy((Value) v, VALUE_FACTORY);
+                    value = ValueHelper.copy((Value) v, valueFactory);
                 } else {
                     // fallback
                     value = new StringValue(v.toString());
@@ -131,7 +136,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
             }
         }
     }
-
+    
     /**
      * @return the int representation of the privileges defined for this entry.
      */
@@ -189,7 +194,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     public Value getRestriction(String restrictionName) {
         if (restrictions.containsKey(restrictionName)) {
-            return ValueHelper.copy((Value) restrictions.get(restrictionName), VALUE_FACTORY);
+            return ValueHelper.copy((Value) restrictions.get(restrictionName), valueFactory);
         } else {
             return null;
         }

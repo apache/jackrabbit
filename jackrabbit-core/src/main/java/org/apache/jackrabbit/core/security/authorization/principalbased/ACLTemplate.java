@@ -28,7 +28,6 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +58,6 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
     private static Logger log = LoggerFactory.getLogger(ACLTemplate.class);
 
-    private static final ValueFactory V_FACTORY = ValueFactoryImpl.getInstance();
-
     /**
      * rep:nodePath property name (optional if the ACL is stored with the
      * node itself).
@@ -75,23 +72,27 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
     private final Principal principal;
     private final String path;
+    private final ValueFactory valueFactory;
+
     private final List entries = new ArrayList();
 
     private final String jcrNodePathName;
     private final String jcrGlobName;
 
-    ACLTemplate(Principal principal, String path, NamePathResolver resolver) throws RepositoryException {
-        this(principal, path, null, resolver);
+    ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf) throws RepositoryException {
+        this(principal, path, null, resolver, vf);
     }
 
     ACLTemplate(Principal principal, NodeImpl acNode) throws RepositoryException {
-        this(principal, acNode.getPath(), acNode, (SessionImpl) acNode.getSession());
+        this(principal, acNode.getPath(), acNode, (SessionImpl) acNode.getSession(), acNode.getSession().getValueFactory());
     }
 
-    private ACLTemplate(Principal principal, String path, NodeImpl acNode, NamePathResolver resolver)
+    private ACLTemplate(Principal principal, String path, NodeImpl acNode,
+                        NamePathResolver resolver, ValueFactory vf)
             throws RepositoryException {
         this.principal = principal;
         this.path = path;
+        this.valueFactory = vf;
 
         jcrNodePathName = resolver.getJCRName(P_NODE_PATH);
         jcrGlobName = resolver.getJCRName(P_GLOB);
@@ -148,13 +149,13 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         // make sure the nodePath restriction is of type PATH
         Value v = (Value) restrictions.get(jcrNodePathName);
         if (v.getType() != PropertyType.PATH) {
-            v = V_FACTORY.createValue(v.getString(), PropertyType.PATH);
+            v = valueFactory.createValue(v.getString(), PropertyType.PATH);
             restrictions.put(jcrNodePathName, v);
         }
         // ... and glob is of type STRING.
         v = (Value) restrictions.get(jcrGlobName);
         if (v != null && v.getType() != PropertyType.STRING) {
-            v = V_FACTORY.createValue(v.getString(), PropertyType.STRING);
+            v = valueFactory.createValue(v.getString(), PropertyType.STRING);
             restrictions.put(jcrGlobName, v);
         }
         return new Entry(princ, privileges, allow, restrictions);
@@ -226,7 +227,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
             log.debug("Restrictions missing. Using default: rep:nodePath = " + getPath() + "; rep:glob = null.");
             // default restrictions:
             restrictions = Collections.singletonMap(jcrNodePathName,
-                    V_FACTORY.createValue(getPath(), PropertyType.PATH));
+                    valueFactory.createValue(getPath(), PropertyType.PATH));
         }
         AccessControlEntry entry = createEntry(principal, privileges, isAllow, restrictions);
         if (entries.contains(entry)) {
@@ -320,7 +321,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
         private Entry(Principal principal, Privilege[] privileges, boolean allow, Map restrictions)
                 throws AccessControlException, RepositoryException {
-            super(principal, privileges, allow, restrictions);
+            super(principal, privileges, allow, restrictions, valueFactory);
 
             // TODO: review again
             Value np = getRestriction(jcrNodePathName);

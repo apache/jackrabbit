@@ -39,7 +39,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
 
     protected JackrabbitAccessControlList createEmptyTemplate(String testPath)
             throws RepositoryException {
-        return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser);
+        return new ACLTemplate(testPrincipal, testPath, (SessionImpl) superuser, superuser.getValueFactory());
     }
 
     public void testGetRestrictionNames() throws RepositoryException {
