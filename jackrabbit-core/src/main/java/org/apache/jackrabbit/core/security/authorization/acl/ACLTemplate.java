@@ -38,6 +38,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.ValueFactory;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -80,16 +81,23 @@ class ACLTemplate implements JackrabbitAccessControlList {
     private final PrivilegeRegistry privilegeRegistry;
 
     /**
+     * The value factory
+     */
+    private final ValueFactory valueFactory;
+
+    /**
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path
      * @param privilegeRegistry
      * @param principalMgr
      */
-    ACLTemplate(String path, PrincipalManager principalMgr, PrivilegeRegistry privilegeRegistry) {
+    ACLTemplate(String path, PrincipalManager principalMgr, 
+                PrivilegeRegistry privilegeRegistry, ValueFactory valueFactory) {
         this.path = path;
         this.principalMgr = principalMgr;
         this.privilegeRegistry = privilegeRegistry;
+        this.valueFactory = valueFactory;
     }
 
     /**
@@ -107,6 +115,8 @@ class ACLTemplate implements JackrabbitAccessControlList {
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         path = aclNode.getParent().getPath();
         principalMgr = sImpl.getPrincipalManager();
+        valueFactory = sImpl.getValueFactory();
+        
         this.privilegeRegistry = privilegeRegistry;
 
         // load the entries:
@@ -138,7 +148,8 @@ class ACLTemplate implements JackrabbitAccessControlList {
                 Entry ace = new Entry(
                         princ,
                         privs,
-                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
+                        valueFactory);
                 // add the entry
                 internalAdd(ace);
             } catch (RepositoryException e) {
@@ -191,7 +202,8 @@ class ACLTemplate implements JackrabbitAccessControlList {
                 Entry ace = new Entry(
                         princ,
                         privs,
-                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE));
+                        aceNode.isNodeType(AccessControlConstants.NT_REP_GRANT_ACE),
+                        sImpl.getValueFactory());
                 // add it to the proper list (e.g. separated by principals)
                 ((List) princToEntries.get(principalName)).add(ace);
             }
@@ -246,7 +258,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
                     int mergedBits = entries[i].getPrivilegeBits() | entry.getPrivilegeBits();
                     Privilege[] mergedPrivs = privilegeRegistry.getPrivileges(mergedBits);
                     // omit validation check.
-                    entry = new Entry(entry.getPrincipal(), mergedPrivs, entry.isAllow());
+                    entry = new Entry(entry.getPrincipal(), mergedPrivs, entry.isAllow(), valueFactory);
                 } else {
                     complementEntry = entries[i];
                 }
@@ -265,7 +277,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
                     // omit validation check
                     Entry tmpl = new Entry(entry.getPrincipal(),
                             privilegeRegistry.getPrivileges(resultPrivs),
-                            !entry.isAllow());
+                            !entry.isAllow(), valueFactory);
                     l.add(tmpl);
                 } /* else: does not need to be modified.*/
             }
@@ -389,7 +401,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
         }
 
         checkValidEntry(principal, privileges, isAllow);
-        Entry ace = new Entry(principal, privileges, isAllow);
+        Entry ace = new Entry(principal, privileges, isAllow, valueFactory);
         return internalAdd(ace);
     }
 
@@ -430,8 +442,8 @@ class ACLTemplate implements JackrabbitAccessControlList {
      */
     static class Entry extends AccessControlEntryImpl {
 
-        Entry(Principal principal, Privilege[] privileges, boolean allow) throws AccessControlException {
-            super(principal, privileges, allow, Collections.EMPTY_MAP);
+        Entry(Principal principal, Privilege[] privileges, boolean allow, ValueFactory valueFactory) throws AccessControlException {
+            super(principal, privileges, allow, Collections.EMPTY_MAP, valueFactory);
         }
     }
 }

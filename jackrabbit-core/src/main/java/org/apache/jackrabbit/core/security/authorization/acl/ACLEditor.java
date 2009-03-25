@@ -121,7 +121,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             // rep:AccessControllable mixin set (e.g. due to a lock)
             String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
             if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
-                acl = new ACLTemplate(nodePath, session.getPrincipalManager(), privilegeRegistry);
+                acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
+                        privilegeRegistry, session.getValueFactory());
             }
         } else {
             acl = getACL(aclNode);
