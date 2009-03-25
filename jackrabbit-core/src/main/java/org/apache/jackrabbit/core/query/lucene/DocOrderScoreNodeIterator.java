@@ -31,15 +31,15 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Implements a NodeIterator that returns the nodes in document order.
+ * Implements a ScoreNodeIterator that returns the score nodes in document order.
  */
-class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
+class DocOrderScoreNodeIterator implements ScoreNodeIterator {
 
     /** Logger instance for this class */
-    private static final Logger log = LoggerFactory.getLogger(DocOrderNodeIteratorImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(DocOrderScoreNodeIterator.class);
 
     /** A node iterator with ordered nodes */
-    private NodeIteratorImpl orderedNodes;
+    private ScoreNodeIterator orderedNodes;
 
     /** Unordered list of {@link ScoreNode}[]s. */
     private final List scoreNodes;
@@ -53,7 +53,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
     private final int selectorIndex;
 
     /**
-     * Creates a <code>DocOrderNodeIteratorImpl</code> that orders the nodes in
+     * Creates a <code>DocOrderScoreNodeIterator</code> that orders the nodes in
      * <code>scoreNodes</code> in document order.
      *
      * @param itemMgr       the item manager of the session executing the
@@ -63,7 +63,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
      * @param selectorIndex apply document order on the score nodes with this
      *                      selectorIndex.
      */
-    DocOrderNodeIteratorImpl(ItemManager itemMgr,
+    DocOrderScoreNodeIterator(ItemManager itemMgr,
                              List scoreNodes,
                              int selectorIndex) {
         this.itemMgr = itemMgr;
@@ -75,22 +75,15 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
      * {@inheritDoc}
      */
     public Object next() {
-        return nextNodeImpl();
+        return nextScoreNodes();
     }
 
     /**
      * {@inheritDoc}
      */
-    public Node nextNode() {
-        return nextNodeImpl();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeImpl nextNodeImpl() {
+    public ScoreNode[] nextScoreNodes() {
         initOrderedIterator();
-        return orderedNodes.nextNodeImpl();
+        return orderedNodes.nextScoreNodes();
     }
 
     /**
@@ -142,22 +135,6 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
     public boolean hasNext() {
         initOrderedIterator();
         return orderedNodes.hasNext();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public float getScore() {
-        initOrderedIterator();
-        return orderedNodes.getScore();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public ScoreNode[] getScoreNodes() {
-        initOrderedIterator();
-        return orderedNodes.getScoreNodes();
     }
 
     //------------------------< internal >--------------------------------------
@@ -286,7 +263,7 @@ class DocOrderNodeIteratorImpl implements ScoreNodeIterator {
         if (log.isDebugEnabled()) {
             log.debug("" + nodes.length + " node(s) ordered in " + (System.currentTimeMillis() - time) + " ms");
         }
-        orderedNodes = new NodeIteratorImpl(itemMgr, nodes, selectorIndex);
+        orderedNodes = new ScoreNodeIteratorImpl(nodes);
     }
 
     /**
