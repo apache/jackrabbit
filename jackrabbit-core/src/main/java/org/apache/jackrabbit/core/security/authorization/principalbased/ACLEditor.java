@@ -119,11 +119,12 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                     throw new AccessControlException("Access control modification not allowed at " + nodePath);
                 }
                 acNode = createAcNode(nodePath);
-            }
-            return new AccessControlPolicy[] {createTemplate(acNode)};
+                return new AccessControlPolicy[] {createTemplate(acNode)};
+            } // else: acl has already been set before -> use getPolicies instead
         }
 
         // nodePath not below rep:accesscontrol -> not editable
+        // or policy has been set before in which case getPolicies should be used instead.
         return new AccessControlPolicy[0];
     }
 

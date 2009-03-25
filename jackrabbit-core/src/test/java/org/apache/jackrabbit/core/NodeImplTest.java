@@ -47,21 +47,34 @@ public class NodeImplTest extends AbstractJCRTest {
 
     private static void changeReadPermission(Principal principal, Node n, boolean allowRead) throws RepositoryException, NotExecutableException {
         SessionImpl s = (SessionImpl) n.getSession();
+        JackrabbitAccessControlList acl = null;
         AccessControlManager acMgr = s.getAccessControlManager();
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(n.getPath());
         while (it.hasNext()) {
             AccessControlPolicy acp = it.nextAccessControlPolicy();
             if (acp instanceof JackrabbitAccessControlList) {
-                JackrabbitAccessControlList acl = (JackrabbitAccessControlList) acp;
-                acl.addEntry(principal, new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)}, allowRead);
-                acMgr.setPolicy(n.getPath(), acp);
-                s.save();
-                return;
+                acl = (JackrabbitAccessControlList) acp;
+                break;
+            }
+        }
+        if (acl == null) {
+            AccessControlPolicy[] acps = acMgr.getPolicies(n.getPath());
+            for (int i = 0; i < acps.length; i++) {
+                if (acps[i] instanceof JackrabbitAccessControlList) {
+                    acl = (JackrabbitAccessControlList) acps[i];
+                    break;
+                }
             }
         }
 
-        // no JackrabbitAccessControlList found.
-        throw new NotExecutableException();
+        if (acl != null) {
+            acl.addEntry(principal, new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)}, allowRead);
+            acMgr.setPolicy(n.getPath(), acl);
+            s.save();
+        } else {
+            // no JackrabbitAccessControlList found.
+            throw new NotExecutableException();
+        }
     }
 
     private static Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {

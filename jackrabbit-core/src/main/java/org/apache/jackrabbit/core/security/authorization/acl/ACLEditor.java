@@ -124,9 +124,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
                         privilegeRegistry, session.getValueFactory());
             }
-        } else {
-            acl = getACL(aclNode);
-        }
+        } // else: acl already present -> getPolicies must be used.
         return (acl != null) ? new AccessControlPolicy[] {acl} : new AccessControlPolicy[0];
     }
 

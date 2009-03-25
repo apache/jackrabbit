@@ -57,12 +57,15 @@ public interface AccessControlEditor {
 
     /**
      * Retrieves the editable policies for the Node identified by the given
-     * <code>nodePath</code>. If the node does not yet have any policy set an
-     * new (empty) 'template' is created (see also {@link #getPolicies(String)}.<br>
+     * <code>nodePath</code> that are applicable but have not yet have been set.<br>
      * The AccessControlPolicy objects returned are detached from the underlying
      * <code>AccessControlProvider</code> and is only an external
      * representation. Modification will therefore not take effect, until a
      * modified policy is written back to the editor and persisted.
+     * <p/>
+     * See {@link #getPolicies(String)} for the corresponding method that returns
+     * the editable policies that have been set to the node at
+     * <code>nodePath</code> before.
      * <p/>
      * Compared to the policies returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path)},
      * the scope of the policies returned by this methods it limited to the Node

@@ -48,14 +48,13 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         superuser.save();
 
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(n.getPath());
-        if (it.hasNext()) {
+        while (it.hasNext() && templ == null) {
             AccessControlPolicy p = it.nextAccessControlPolicy();
             if (p instanceof JackrabbitAccessControlList) {
                 templ = (JackrabbitAccessControlList) p;
-            } else {
-                throw new NotExecutableException("No JackrabbitAccessControlList to test.");
             }
-        } else {
+        }
+        if (templ == null) {
             throw new NotExecutableException("No JackrabbitAccessControlList to test.");
         }
     }
