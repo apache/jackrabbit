@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
@@ -28,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceException;
-import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
@@ -161,6 +159,8 @@ public class QueryResultImpl implements QueryResult {
      *                        document order.
      * @param limit           the maximum result size
      * @param offset          the offset in the total result set
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             repository.
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
@@ -213,7 +213,7 @@ public class QueryResultImpl implements QueryResult {
      * {@inheritDoc}
      */
     public NodeIterator getNodes() throws RepositoryException {
-        return getNodeIterator();
+        return new NodeIteratorImpl(itemMgr, getScoreNodes(), 0);
     }
 
     /**
@@ -227,8 +227,9 @@ public class QueryResultImpl implements QueryResult {
                 throw new RepositoryException(e);
             }
         }
-        return new RowIteratorImpl(getNodeIterator(), selectProps,
-                queryImpl.getSelectorNames(), itemMgr, session,
+        return new RowIteratorImpl(getScoreNodes(), selectProps,
+                queryImpl.getSelectorNames(), itemMgr,
+                index.getContext().getHierarchyManager(), session,
                 excerptProvider, spellSuggestion);
     }
 
@@ -247,15 +248,15 @@ public class QueryResultImpl implements QueryResult {
     //--------------------------------< internal >------------------------------
 
     /**
-     * Creates a node iterator over the result nodes.
+     * Creates a {@link ScoreNodeIterator} over the query result.
      *
-     * @return a node iterator over the result nodes.
+     * @return a {@link ScoreNodeIterator} over the query result.
      */
-    private ScoreNodeIterator getNodeIterator() {
+    private ScoreNodeIterator getScoreNodes() {
         if (docOrder) {
-            return new DocOrderNodeIteratorImpl(itemMgr, resultNodes, 0);
+            return new DocOrderScoreNodeIterator(itemMgr, resultNodes, 0);
         } else {
-            return new LazyScoreNodeIterator(0);
+            return new LazyScoreNodeIteratorImpl();
         }
     }
 
@@ -383,6 +384,8 @@ public class QueryResultImpl implements QueryResult {
      * number may get smaller if nodes are found in the result set which the
      * current session has no permission to access. This method may return
      * <code>-1</code> if the total size is unknown.
+     *
+     * @return the total number of hits.
      */
     public int getTotalSize() {
         if (numResults == -1) {
@@ -392,60 +395,22 @@ public class QueryResultImpl implements QueryResult {
         }
     }
 
-    private final class LazyScoreNodeIterator implements ScoreNodeIterator {
+    private final class LazyScoreNodeIteratorImpl implements ScoreNodeIterator {
 
         private int position = -1;
 
         private boolean initialized = false;
 
-        private NodeImpl next;
+        private ScoreNode[] next;
 
-        private final int selectorIndex;
-
-        private LazyScoreNodeIterator(int selectorIndex) {
-            this.selectorIndex = selectorIndex;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public float getScore() {
-            initialize();
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return ((ScoreNode[]) resultNodes.get(position))[selectorIndex].getScore();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public ScoreNode[] getScoreNodes() {
-            initialize();
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return (ScoreNode[]) resultNodes.get(position);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public NodeImpl nextNodeImpl() {
+        public ScoreNode[] nextScoreNodes() {
             initialize();
             if (next == null) {
                 throw new NoSuchElementException();
             }
-            NodeImpl n = next;
+            ScoreNode[] sn = next;
             fetchNext();
-            return n;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Node nextNode() {
-            return nextNodeImpl();
+            return sn;
         }
 
         /**
@@ -522,7 +487,7 @@ public class QueryResultImpl implements QueryResult {
          * {@inheritDoc}
          */
         public Object next() {
-            return nextNodeImpl();
+            return nextScoreNodes();
         }
 
         /**
@@ -569,16 +534,7 @@ public class QueryResultImpl implements QueryResult {
                         break;
                     }
                 }
-                ScoreNode[] sn = (ScoreNode[]) resultNodes.get(nextPos);
-                try {
-                    next = (NodeImpl) itemMgr.getItem(sn[selectorIndex].getNodeId());
-                } catch (RepositoryException e) {
-                    log.warn("Exception retrieving Node with UUID: "
-                            + sn[selectorIndex].getNodeId() + ": " + e.toString());
-                    // remove score node and try next
-                    resultNodes.remove(nextPos);
-                    invalid++;
-                }
+                next = (ScoreNode[]) resultNodes.get(nextPos);
             }
             position++;
         }

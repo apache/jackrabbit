@@ -20,12 +20,16 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.util.ISO9075;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -37,7 +41,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
 import javax.jcr.Node;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -61,9 +64,9 @@ class RowIteratorImpl implements RowIterator {
     private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
 
     /**
-     * The value factory.
+     * The QValue factory.
      */
-    private static final ValueFactory VALUE_FACTORY = ValueFactoryImpl.getInstance();
+    private static final QValueFactory QVALUE_FACTORY = QValueFactoryImpl.getInstance();
 
     /**
      * The name of the excerpt function without prefix but with left parenthesis.
@@ -85,12 +88,17 @@ class RowIteratorImpl implements RowIterator {
     /**
      * Iterator over nodes, that constitute the result set.
      */
-    private final ScoreNodeIterator nodes;
+    private final ScoreNodeIterator scoreNodes;
 
     /**
      * Array of select property names
      */
     private final Name[] properties;
+
+    /**
+     * Set of select property <code>Name</code>s.
+     */
+    private Set propertySet;
 
     /**
      * List of valid selector {@link Name}s.
@@ -101,6 +109,11 @@ class RowIteratorImpl implements RowIterator {
      * The item manager of the session that executes the query.
      */
     private final ItemManager itemMgr;
+
+    /**
+     * The hierarchy manager of the workspace.
+     */
+    private final HierarchyManager hmgr;
 
     /**
      * The <code>NamePathResolver</code> of the user <code>Session</code>.
@@ -118,15 +131,21 @@ class RowIteratorImpl implements RowIterator {
     private final SpellSuggestion spellSuggestion;
 
     /**
+     * A value factory for the session that executes the query.
+     */
+    private final ValueFactoryQImpl valueFactory;
+
+    /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
-     * @param nodes           a <code>ScoreNodeIterator</code> that contains the
+     * @param scoreNodes      a <code>ScoreNodeIterator</code> that contains the
      *                        nodes of the query result.
      * @param properties      <code>Name</code> of the select properties.
      * @param selectorNames   the selector names.
      * @param itemMgr         the item manager of the session that executes the
      *                        query.
+     * @param hmgr            the hierarchy manager of the workspace.
      * @param resolver        <code>NamespaceResolver</code> of the user
      *                        <code>Session</code>.
      * @param exProvider      the excerpt provider associated with the query
@@ -134,20 +153,23 @@ class RowIteratorImpl implements RowIterator {
      * @param spellSuggestion the spell suggestion associated with the query
      *                        result or <code>null</code> if none is available.
      */
-    RowIteratorImpl(ScoreNodeIterator nodes,
+    RowIteratorImpl(ScoreNodeIterator scoreNodes,
                     Name[] properties,
                     Name[] selectorNames,
                     ItemManager itemMgr,
+                    HierarchyManager hmgr,
                     NamePathResolver resolver,
                     ExcerptProvider exProvider,
                     SpellSuggestion spellSuggestion) {
-        this.nodes = nodes;
+        this.scoreNodes = scoreNodes;
         this.properties = properties;
         this.selectorNames.addAll(Arrays.asList(selectorNames));
         this.itemMgr = itemMgr;
+        this.hmgr = hmgr;
         this.resolver = resolver;
         this.excerptProvider = exProvider;
         this.spellSuggestion = spellSuggestion;
+        this.valueFactory = new ValueFactoryQImpl(QVALUE_FACTORY, resolver);
     }
 
     /**
@@ -158,8 +180,7 @@ class RowIteratorImpl implements RowIterator {
      *                                <code>Row</code>s.
      */
     public Row nextRow() throws NoSuchElementException {
-        return new RowImpl(nodes.getScore(),
-                nodes.getScoreNodes(), nodes.nextNodeImpl());
+        return new RowImpl(scoreNodes.nextScoreNodes());
     }
 
     /**
@@ -170,7 +191,7 @@ class RowIteratorImpl implements RowIterator {
      *                                <code>Row</code> in this iterator.
      */
     public void skip(long skipNum) throws NoSuchElementException {
-        nodes.skip(skipNum);
+        scoreNodes.skip(skipNum);
     }
 
     /**
@@ -179,7 +200,7 @@ class RowIteratorImpl implements RowIterator {
      * @return the number of <code>Row</code>s in this iterator.
      */
     public long getSize() {
-        return nodes.getSize();
+        return scoreNodes.getSize();
     }
 
     /**
@@ -193,7 +214,7 @@ class RowIteratorImpl implements RowIterator {
      * @return the current position withing this iterator.
      */
     public long getPosition() {
-        return nodes.getPosition();
+        return scoreNodes.getPosition();
     }
 
     /**
@@ -211,7 +232,7 @@ class RowIteratorImpl implements RowIterator {
      * @return <code>true</code> if the iterator has more elements.
      */
     public boolean hasNext() {
-        return nodes.hasNext();
+        return scoreNodes.hasNext();
     }
 
     /**
@@ -240,7 +261,7 @@ class RowIteratorImpl implements RowIterator {
         /**
          * The underlying <code>Node</code> of this result row.
          */
-        private final NodeImpl node;
+        private NodeImpl node;
 
         /**
          * The score nodes associated with this row.
@@ -253,21 +274,13 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /**
-         * Set of select property <code>Name</code>s.
-         */
-        private Set propertySet;
-
-        /**
          * Creates a new <code>RowImpl</code> instance based on <code>node</code>.
          *
-         * @param score the score value for this result row
          * @param sn    the score nodes associated with this row.
-         * @param node  the underlying <code>Node</code> for this <code>Row</code>.
          */
-        RowImpl(float score, ScoreNode[] sn, NodeImpl node) {
-            this.score = score;
+        RowImpl(ScoreNode[] sn) {
             this.sn = sn;
-            this.node = node;
+            this.score = sn[0].getScore();
         }
 
         /**
@@ -283,11 +296,11 @@ class RowIteratorImpl implements RowIterator {
             if (values == null) {
                 Value[] tmp = new Value[properties.length];
                 for (int i = 0; i < properties.length; i++) {
-                    if (node.hasProperty(properties[i])) {
-                        PropertyImpl prop = node.getProperty(properties[i]);
+                    if (getNodeImpl().hasProperty(properties[i])) {
+                        PropertyImpl prop = getNodeImpl().getProperty(properties[i]);
                         if (!prop.getDefinition().isMultiple()) {
                             if (prop.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                                tmp[i] = VALUE_FACTORY.createValue(prop.getString());
+                                tmp[i] = valueFactory.createValue(prop.getString());
                             } else {
                                 tmp[i] = prop.getValue();
                             }
@@ -299,9 +312,9 @@ class RowIteratorImpl implements RowIterator {
                         // property not set or one of the following:
                         // jcr:path / jcr:score / rep:excerpt / rep:spellcheck
                         if (NameConstants.JCR_PATH.equals(properties[i])) {
-                            tmp[i] = VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
+                            tmp[i] = valueFactory.createValue(getNodeImpl().getPath(), PropertyType.PATH);
                         } else if (NameConstants.JCR_SCORE.equals(properties[i])) {
-                            tmp[i] = VALUE_FACTORY.createValue(Math.round(score * 1000f));
+                            tmp[i] = valueFactory.createValue(Math.round(score * 1000f));
                         } else if (isExcerptFunction(properties[i])) {
                             tmp[i] = getExcerpt();
                         } else if (isSpellCheckFunction(properties[i])) {
@@ -348,20 +361,21 @@ class RowIteratorImpl implements RowIterator {
                         throw new ItemNotFoundException(propertyName);
                     }
                 }
-                if (node.hasProperty(prop)) {
-                    Property p = node.getProperty(prop);
+                if (NameConstants.JCR_PATH.equals(prop)) {
+                    QValue p = QVALUE_FACTORY.create(hmgr.getPath(sn[0].getNodeId()));
+                    return valueFactory.createValue(p);
+                } else if (getNodeImpl().hasProperty(prop)) {
+                    Property p = getNodeImpl().getProperty(prop);
                     if (p.getDefinition().getRequiredType() == PropertyType.UNDEFINED) {
-                        return VALUE_FACTORY.createValue(p.getString());
+                        return valueFactory.createValue(p.getString());
                     } else {
                         return p.getValue();
                     }
                 } else {
-                    // either jcr:score, jcr:path, rep:excerpt,
+                    // either jcr:score, rep:excerpt,
                     // rep:spellcheck or not set
-                    if (NameConstants.JCR_PATH.equals(prop)) {
-                        return VALUE_FACTORY.createValue(node.getPath(), PropertyType.PATH);
-                    } else if (NameConstants.JCR_SCORE.equals(prop)) {
-                        return VALUE_FACTORY.createValue(Math.round(score * 1000f));
+                    if (NameConstants.JCR_SCORE.equals(prop)) {
+                        return valueFactory.createValue(Math.round(score * 1000f));
                     } else if (isExcerptFunction(prop)) {
                         return getExcerpt();
                     } else if (isSpellCheckFunction(prop)) {
@@ -395,7 +409,7 @@ class RowIteratorImpl implements RowIterator {
          */
         public Node getNode() throws RepositoryException {
             checkSingleSelector("Use getNode(String) instead.");
-            return node;
+            return getNodeImpl();
         }
 
         /**
@@ -430,7 +444,7 @@ class RowIteratorImpl implements RowIterator {
          */
         public String getPath() throws RepositoryException {
             checkSingleSelector("Use getPath(String) instead.");
-            return node.getPath();
+            return resolver.getJCRPath(hmgr.getPath(sn[0].getNodeId()));
         }
 
         /**
@@ -510,6 +524,20 @@ class RowIteratorImpl implements RowIterator {
         //-----------------------------< internal >-----------------------------
 
         /**
+         * Returns the node corresponding to this row.
+         *
+         * @return the node.
+         * @throws RepositoryException if an error occurs while retrieving the
+         *                             node. e.g. node does not exist anymore.
+         */
+        private NodeImpl getNodeImpl() throws RepositoryException {
+            if (node == null) {
+                node = (NodeImpl) itemMgr.getItem(sn[0].getNodeId());
+            }
+            return node;
+        }
+
+        /**
          * Checks if there is a single selector and otherwise throws a
          * RepositoryException.
          *
@@ -573,7 +601,7 @@ class RowIteratorImpl implements RowIterator {
          *         created or an error occurs.
          */
         private Value getExcerpt() {
-            return createExcerpt(node.getNodeId());
+            return createExcerpt(sn[0].getNodeId());
         }
 
         /**
@@ -597,12 +625,12 @@ class RowIteratorImpl implements RowIterator {
                     idx + EXCERPT_FUNC_LPAR.length(), end).trim();
             String decodedPath = ISO9075.decode(pathStr);
             try {
-                NodeImpl n = (NodeImpl) node.getNode(decodedPath);
+                NodeImpl n = (NodeImpl) getNodeImpl().getNode(decodedPath);
                 return createExcerpt(n.getNodeId());
             } catch (PathNotFoundException e) {
                 // does not exist or references a property
                 try {
-                    Property p = node.getProperty(decodedPath);
+                    Property p = getNode().getProperty(decodedPath);
                     return highlight(p.getValue().getString());
                 } catch (PathNotFoundException e1) {
                     // does not exist
@@ -627,7 +655,7 @@ class RowIteratorImpl implements RowIterator {
                 time = System.currentTimeMillis() - time;
                 log.debug("Created excerpt in {} ms.", new Long(time));
                 if (excerpt != null) {
-                    return VALUE_FACTORY.createValue(excerpt);
+                    return valueFactory.createValue(excerpt);
                 } else {
                     return null;
                 }
@@ -652,7 +680,7 @@ class RowIteratorImpl implements RowIterator {
                 text = hep.highlight(text);
                 time = System.currentTimeMillis() - time;
                 log.debug("Highlighted text in {} ms.", new Long(time));
-                return VALUE_FACTORY.createValue(text);
+                return valueFactory.createValue(text);
             } catch (IOException e) {
                 return null;
             }
@@ -686,7 +714,7 @@ class RowIteratorImpl implements RowIterator {
                 }
             }
             if (v != null) {
-                return VALUE_FACTORY.createValue(v);
+                return valueFactory.createValue(v);
             } else {
                 return null;
             }

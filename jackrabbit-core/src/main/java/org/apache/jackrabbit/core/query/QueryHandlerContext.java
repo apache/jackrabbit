@@ -19,10 +19,11 @@ package org.apache.jackrabbit.core.query;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.HierarchyManagerImpl;
+import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 
 /**
@@ -40,12 +41,12 @@ public class QueryHandlerContext {
     /**
      * The persistent <code>ItemStateManager</code>
      */
-    private final ItemStateManager stateMgr;
+    private final SharedItemStateManager stateMgr;
 
     /**
      * The hierarchy manager on top of {@link #stateMgr}.
      */
-    private final HierarchyManager hmgr;
+    private final CachingHierarchyManager hmgr;
 
     /**
      * The underlying persistence manager.
@@ -101,7 +102,7 @@ public class QueryHandlerContext {
      *                         excluded from indexing.
      */
     public QueryHandlerContext(FileSystem fs,
-                               ItemStateManager stateMgr,
+                               SharedItemStateManager stateMgr,
                                PersistenceManager pm,
                                NodeId rootId,
                                NodeTypeRegistry ntRegistry,
@@ -110,7 +111,8 @@ public class QueryHandlerContext {
                                NodeId excludedNodeId) {
         this.fs = fs;
         this.stateMgr = stateMgr;
-        this.hmgr = new HierarchyManagerImpl(rootId, stateMgr);
+        this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
+        this.stateMgr.addListener(hmgr);
         this.pm = pm;
         this.rootId = rootId;
         this.ntRegistry = ntRegistry;

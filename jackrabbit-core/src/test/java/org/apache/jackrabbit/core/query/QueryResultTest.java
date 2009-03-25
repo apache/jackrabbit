@@ -210,11 +210,11 @@ public class QueryResultTest extends AbstractQueryTest {
         QueryManager qm = superuser.getWorkspace().getQueryManager();
         String stmt = testPath + "/*[@" + propertyName1 + " > 1000]";
         QueryResult result = qm.createQuery(stmt, Query.XPATH).execute();
-        NodeIterator it = result.getNodes();
-        assertEquals("Wrong position", 0, it.getPosition());
+        assertEquals("Wrong position", 0, result.getNodes().getPosition());
+        assertEquals("Wrong position", 0, result.getRows().getPosition());
         stmt += " order by jcr:score()";
         result = qm.createQuery(stmt, Query.XPATH).execute();
-        it = result.getNodes();
-        assertEquals("Wrong position", 0, it.getPosition());
+        assertEquals("Wrong position", 0, result.getNodes().getPosition());
+        assertEquals("Wrong position", 0, result.getRows().getPosition());
     }
 }

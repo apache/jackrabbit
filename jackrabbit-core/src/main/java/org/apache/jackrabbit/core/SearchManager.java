@@ -27,9 +27,9 @@ import org.apache.jackrabbit.core.query.QueryHandler;
 import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateIterator;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
@@ -101,7 +101,7 @@ public class SearchManager implements SynchronousEventListener {
     /**
      * The shared item state manager instance for the workspace.
      */
-    private final ItemStateManager itemMgr;
+    private final SharedItemStateManager itemMgr;
 
     /**
      * The underlying persistence manager.
@@ -164,7 +164,7 @@ public class SearchManager implements SynchronousEventListener {
     public SearchManager(SearchConfig config,
                          final NamespaceRegistryImpl nsReg,
                          NodeTypeRegistry ntReg,
-                         ItemStateManager itemMgr,
+                         SharedItemStateManager itemMgr,
                          PersistenceManager pm,
                          NodeId rootNodeId,
                          SearchManager parentMgr,

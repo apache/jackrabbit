@@ -16,19 +16,27 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import javax.jcr.RangeIterator;
+import java.util.Collection;
+import java.util.Arrays;
+
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 /**
- * A range iterator over {@link ScoreNode}[].
+ * <code>ScoreNodeIteratorImpl</code> implements a {@link ScoreNodeIterator}
+ * over an array of {@link ScoreNode ScoreNode[]}.
  */
-public interface ScoreNodeIterator extends RangeIterator {
+public class ScoreNodeIteratorImpl
+        extends RangeIteratorAdapter
+        implements ScoreNodeIterator {
+
+    public ScoreNodeIteratorImpl(ScoreNode[][] scoreNodes) {
+        super(Arrays.asList(scoreNodes));
+    }
 
     /**
-     * Returns the next score nodes.
-     *
-     * @return the next score nodes.
-     * @throws java.util.NoSuchElementException
-     *          if there are no next score nodes.
+     * {@inheritDoc}
      */
-    ScoreNode[] nextScoreNodes();
+    public ScoreNode[] nextScoreNodes() {
+        return (ScoreNode[]) next();
+    }
 }
