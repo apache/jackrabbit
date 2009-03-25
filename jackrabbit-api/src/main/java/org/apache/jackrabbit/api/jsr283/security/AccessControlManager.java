@@ -225,11 +225,21 @@ public interface AccessControlManager {
 
     /**
      * Binds the <code>policy</code> to the node at <code>absPath</code>.
-     * <p/>
-     * Only policies obtained through <code>getApplicablePolicies(absPath)</code>
-     * can be set. The access control policy does not take effect until a
-     * <code>save</code> is performed.
-     * <p/>
+     * <p>
+     * The behavior of the call <code>acm.setPolicy(absPath, policy)</code>
+     * differs depending on how the <code>policy</code> object was originally acquired.
+     * <p>
+     * If <code>policy</code> was acquired through
+     * {@link #getApplicablePolicies acm.getApplicablePolicies(absPath)}
+     * then that <code>policy</code> object is <i>added</i> to the node at <code>absPath</code>.
+     * <p>
+     * On the other hand, if <code>policy</code> was acquired through
+     * {@link #getPolicies acm.getPolicies(absPath)}
+     * then that <code>policy</code> object (usually after being altered) replaces its former version
+     * on the node at <code>absPath</code>.
+     * <p>
+     * The access control policy does not take effect until a <code>save</code> is performed.
+     * <p>
      * Any implementation-specific (non-JCR) access control settings may be
      * changed in response to a successful call to <code>setPolicy</code>.
      * <p/>

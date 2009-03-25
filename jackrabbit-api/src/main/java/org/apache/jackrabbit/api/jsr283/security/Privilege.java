@@ -139,6 +139,11 @@ public interface Privilege {
      *   <li><code>jcr:write</code></li>
      *   <li><code>jcr:readAccessControl</code></li>
      *   <li><code>jcr:modifyAccessControl</code></li>
+     *   <li><code>jcr:lockManagement</code></li>
+     *   <li><code>jcr:versionManagement</code></li>
+     *   <li><code>jcr:nodeTypeManagement</code></li>
+     *   <li><code>jcr:retentionManagement</code></li>
+     *   <li><code>jcr:lifecycleManagement</code></li>
      * </ul>
      * It should, in addition, include all implementation-defined privileges.
      */
