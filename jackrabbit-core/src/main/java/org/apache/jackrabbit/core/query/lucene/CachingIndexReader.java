@@ -378,7 +378,7 @@ class CachingIndexReader extends FilterIndexReader {
             collectTermDocs(reader, new Term(FieldNames.UUID, ""), new TermDocsCollector() {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
                     UUID uuid = UUID.fromString(term.text());
-                    if (tDocs.next()) {
+                    while (tDocs.next()) {
                         NodeInfo info = new NodeInfo(tDocs.doc(), uuid);
                         docs.put(new Integer(info.docId), info);
                     }
@@ -388,8 +388,8 @@ class CachingIndexReader extends FilterIndexReader {
             // read PARENTs
             collectTermDocs(reader, new Term(FieldNames.PARENT, "0"), new TermDocsCollector() {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
+                    UUID uuid = UUID.fromString(term.text());
                     while (tDocs.next()) {
-                        UUID uuid = UUID.fromString(term.text());
                         Integer docId = new Integer(tDocs.doc());
                         NodeInfo info = (NodeInfo) docs.get(docId);
                         info.parent = uuid;
