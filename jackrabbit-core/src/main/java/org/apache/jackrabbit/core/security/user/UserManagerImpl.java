@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -54,7 +55,7 @@ import java.util.Map;
 /**
  * UserManagerImpl
  */
-public class UserManagerImpl extends ProtectedItemModifier implements UserManager, UserConstants {
+public class UserManagerImpl extends ProtectedItemModifier implements UserManager, UserConstants, SessionListener {
 
     private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
 
@@ -509,6 +510,26 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
             }
         }
         return parent;
+    }
+
+    //----------------------------------------------------< SessionListener >---
+    /**
+     * @see SessionListener#loggingOut(org.apache.jackrabbit.core.SessionImpl)
+     */
+    public void loggingOut(SessionImpl session) {
+        // nothing to do.
+    }
+
+    /**
+     * @see SessionListener#loggedOut(org.apache.jackrabbit.core.SessionImpl) 
+     */
+    public void loggedOut(SessionImpl session) {
+        // clear the map
+        idPathMap.clear();
+        // and logout the session unless it is the loggedout session itself.
+        if (session != this.session) {
+            this.session.logout();
+        }
     }
 
     //--------------------------------------------------------------------------
