@@ -67,23 +67,27 @@ public class AccessManagerTest extends AbstractJCRTest {
 
     public void testCheckPermissionReadOnlySession() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        AccessManager acMgr = getAccessManager(s);
-
-        NodeId id = (NodeId) getItemId(s.getItem(testRootNode.getPath()));
-
-        acMgr.checkPermission(id, AccessManager.READ);
         try {
-            acMgr.checkPermission(id, AccessManager.WRITE);
-            fail();
-        } catch (AccessDeniedException e) {
-            // success
-        }
+            AccessManager acMgr = getAccessManager(s);
 
-        try {
-            acMgr.checkPermission(id, AccessManager.WRITE | AccessManager.REMOVE);
-            fail();
-        } catch (AccessDeniedException e) {
-            // success
+            NodeId id = (NodeId) getItemId(s.getItem(testRootNode.getPath()));
+
+            acMgr.checkPermission(id, AccessManager.READ);
+            try {
+                acMgr.checkPermission(id, AccessManager.WRITE);
+                fail();
+            } catch (AccessDeniedException e) {
+                // success
+            }
+
+            try {
+                acMgr.checkPermission(id, AccessManager.WRITE | AccessManager.REMOVE);
+                fail();
+            } catch (AccessDeniedException e) {
+                // success
+            }
+        } finally {
+            s.logout();
         }
     }
 
@@ -123,71 +127,94 @@ public class AccessManagerTest extends AbstractJCRTest {
 
     public void testIsGranted() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        AccessManager acMgr = getAccessManager(s);
+        try {
+            AccessManager acMgr = getAccessManager(s);
 
-        NodeId id = (NodeId) getItemId(s.getItem(testRootNode.getPath()));
-        assertTrue(acMgr.isGranted(id, AccessManager.READ));
-        assertFalse(acMgr.isGranted(id, AccessManager.WRITE));
-        assertFalse(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+            NodeId id = (NodeId) getItemId(s.getItem(testRootNode.getPath()));
+            assertTrue(acMgr.isGranted(id, AccessManager.READ));
+            assertFalse(acMgr.isGranted(id, AccessManager.WRITE));
+            assertFalse(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+        } finally {
+            s.logout();
+        }
     }
 
     public void testIsGrantedOnProperty() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        AccessManager acMgr = getAccessManager(s);
+        try {
+            AccessManager acMgr = getAccessManager(s);
 
-        PropertyId id = (PropertyId) getItemId(testRootNode.getProperty(jcrPrimaryType));
+            PropertyId id = (PropertyId) getItemId(testRootNode.getProperty(jcrPrimaryType));
 
-        assertTrue(acMgr.isGranted(id, AccessManager.READ));
-        assertFalse(acMgr.isGranted(id, AccessManager.WRITE));
-        assertFalse(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+            assertTrue(acMgr.isGranted(id, AccessManager.READ));
+            assertFalse(acMgr.isGranted(id, AccessManager.WRITE));
+            assertFalse(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+        } finally {
+            s.logout();
+        }
     }
 
     public void testIsGrantedOnNewNode() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadWriteSession();
-        AccessManager acMgr = getAccessManager(s);
+        try {
+            AccessManager acMgr = getAccessManager(s);
 
-        Node newNode = ((Node) s.getItem(testRoot)).addNode(nodeName2, testNodeType);
-        NodeId id = (NodeId) getItemId(newNode);
+            Node newNode = ((Node) s.getItem(testRoot)).addNode(nodeName2, testNodeType);
+            NodeId id = (NodeId) getItemId(newNode);
 
-        assertTrue(acMgr.isGranted(id, AccessManager.READ));
-        assertTrue(acMgr.isGranted(id, AccessManager.WRITE));
-        assertTrue(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+            assertTrue(acMgr.isGranted(id, AccessManager.READ));
+            assertTrue(acMgr.isGranted(id, AccessManager.WRITE));
+            assertTrue(acMgr.isGranted(id, AccessManager.WRITE | AccessManager.REMOVE));
+        } finally {
+            s.logout();
+        }
     }
 
     public void testCanAccess() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        String wspName = s.getWorkspace().getName();
+        try {
+            String wspName = s.getWorkspace().getName();
 
-        assertTrue(getAccessManager(s).canAccess(wspName));
+            assertTrue(getAccessManager(s).canAccess(wspName));
+        } finally {
+            s.logout();
+        }
     }
 
     public void testCanAccessAllAvailable() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        String[] wspNames = s.getWorkspace().getAccessibleWorkspaceNames();
-
-        for (int i = 0; i < wspNames.length; i++) {
-            assertTrue(getAccessManager(s).canAccess(wspNames[i]));
+        try {
+            String[] wspNames = s.getWorkspace().getAccessibleWorkspaceNames();
+            for (int i = 0; i < wspNames.length; i++) {
+                assertTrue(getAccessManager(s).canAccess(wspNames[i]));
+            }
+        } finally {
+            s.logout();
         }
     }
 
     public void testCanAccessDeniedWorkspace() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
+        try {
+            Set allAccessibles = new HashSet(Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames()));
+            Set sWorkspaceNames = new HashSet(Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames()));
 
-        Set allAccessibles = new HashSet(Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames()));
-        Set sWorkspaceNames = new HashSet(Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames()));
+            if (!allAccessibles.removeAll(sWorkspaceNames) || allAccessibles.isEmpty()) {
+                throw new NotExecutableException("No workspace name found that exists but is not accessible for ReadOnly session.");
+            }
 
-        if (!allAccessibles.removeAll(sWorkspaceNames) || allAccessibles.isEmpty()) {
-            throw new NotExecutableException("No workspace name found that exists but is not accessible for ReadOnly session.");
+            String notAccessibleName = allAccessibles.iterator().next().toString();
+            assertFalse(getAccessManager(s).canAccess(notAccessibleName));
+        } finally {
+            s.logout();
         }
-
-        String notAccessibleName = allAccessibles.iterator().next().toString();
-        assertFalse(getAccessManager(s).canAccess(notAccessibleName));
     }
 
 /*
 // TODO: uncomment as soon as SimpleAccessManager is replaced
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
+        try {
         List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
         String testName = "anyWorkspace";
         int i = 0;
@@ -196,6 +223,9 @@ public class AccessManagerTest extends AbstractJCRTest {
             i++;
         }
         assertFalse(getAccessManager(s).canAccess(testName));
+        } finally {
+        s.logout();
+        }
     }
 */
 
@@ -230,17 +260,22 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testIsGrantedReadOnlySession() throws NotExecutableException, RepositoryException {
-        AccessManager acMgr = getAccessManager(helper.getReadOnlySession());
-        Path p = PathFactoryImpl.getInstance().getRootPath();
+        Session s = helper.getReadOnlySession();
+        try {
+            AccessManager acMgr = getAccessManager(s);
+            Path p = PathFactoryImpl.getInstance().getRootPath();
 
-        // existing node-path
-        assertTrue(acMgr.isGranted(p, Permission.READ));
-        // not existing property:
-        assertTrue(acMgr.isGranted(p, NameConstants.JCR_CREATED, Permission.READ));
+            // existing node-path
+            assertTrue(acMgr.isGranted(p, Permission.READ));
+            // not existing property:
+            assertTrue(acMgr.isGranted(p, NameConstants.JCR_CREATED, Permission.READ));
 
-        // existing node-path
-        assertFalse(acMgr.isGranted(p, Permission.ALL));
-        // not existing property:
-        assertFalse(acMgr.isGranted(p, NameConstants.JCR_CREATED, Permission.ALL));
+            // existing node-path
+            assertFalse(acMgr.isGranted(p, Permission.ALL));
+            // not existing property:
+            assertFalse(acMgr.isGranted(p, NameConstants.JCR_CREATED, Permission.ALL));
+        } finally {
+            s.logout();
+        }
     }
 }
