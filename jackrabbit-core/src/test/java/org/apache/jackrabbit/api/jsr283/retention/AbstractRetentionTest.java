@@ -34,10 +34,10 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
     protected String testNodePath;
 
     protected void setUp() throws Exception {
-        super.setUp();
-
         // TODO: uncomment again.
         // checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
+
+        super.setUp();
 
         retentionMgr = getRetentionManager(superuser);
         testNodePath = testRootNode.getPath();
