@@ -24,20 +24,16 @@ import javax.jcr.Session;
 /** <code>NullLoginTest</code>... */
 public class NullLoginTest extends AbstractJCRTest {
 
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     public void testNullLogin() throws RepositoryException {
         Session s = helper.getRepository().login();
         Session s2 = helper.getRepository().login(null, null);
-
-        assertNotNull(s.getUserID());
-        assertEquals(s.getUserID(), s2.getUserID());
-        assertEquals(s.getWorkspace().getName(), s2.getWorkspace().getName());
+        try {
+            assertNotNull(s.getUserID());
+            assertEquals(s.getUserID(), s2.getUserID());
+            assertEquals(s.getWorkspace().getName(), s2.getWorkspace().getName());
+        } finally {
+            s.logout();
+            s2.logout();
+        }
     }
 }
