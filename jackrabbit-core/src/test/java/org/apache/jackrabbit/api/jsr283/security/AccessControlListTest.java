@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -53,36 +52,41 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         //checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
         super.setUp();
 
-        // TODO: retrieve targetPath from configuration
-        Node n = testRootNode.addNode(nodeName1, testNodeType);
-        superuser.save();
-        path = n.getPath();
-
-        privs = acMgr.getSupportedPrivileges(path);
-        if (privs.length == 0) {
-            throw new NotExecutableException("No supported privileges at absPath " + path);
-        }
-
         // TODO: make sure, entries to ADD are not present yet.
         // TODO: retrieve principal name from tck-Configuration
         // TODO: get rid of SessionImpl dependency
-        Session s = superuser;
-        if (s instanceof SessionImpl) {
-            for (Iterator it = ((SessionImpl) s).getSubject().getPrincipals().iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
-                if (!(p instanceof Group)) {
-                    testPrincipal = p;
-                }
-            }
-            if (testPrincipal == null) {
-                throw new NotExecutableException("Test principal missing.");
-            }
-        } else {
-            throw new NotExecutableException("SessionImpl expected");
-        }
+        try {
+            // TODO: retrieve targetPath from configuration
+            Node n = testRootNode.addNode(nodeName1, testNodeType);
+            superuser.save();
+            path = n.getPath();
 
-        // remember existing entries for test-principal -> later restore.
-        privilegesToRestore = currentPrivileges(getList(acMgr, path), testPrincipal);
+            privs = acMgr.getSupportedPrivileges(path);
+
+            if (privs.length == 0) {
+                throw new NotExecutableException("No supported privileges at absPath " + path);
+            }
+
+            if (superuser instanceof SessionImpl) {
+                for (Iterator it = ((SessionImpl) superuser).getSubject().getPrincipals().iterator(); it.hasNext();) {
+                    Principal p = (Principal) it.next();
+                    if (!(p instanceof Group)) {
+                        testPrincipal = p;
+                    }
+                }
+                if (testPrincipal == null) {
+                    throw new NotExecutableException("Test principal missing.");
+                }
+            } else {
+                throw new NotExecutableException("SessionImpl expected");
+            }
+
+            // remember existing entries for test-principal -> later restore.
+            privilegesToRestore = currentPrivileges(getList(acMgr, path), testPrincipal);
+        } catch (Exception e) {
+            superuser.logout();
+            throw e;
+        }
     }
 
     protected void tearDown() throws Exception {
