@@ -42,11 +42,8 @@ public class WriteTest extends AbstractWriteTest {
 
     private static Logger log = LoggerFactory.getLogger(WriteTest.class);
 
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        // simple test to check if proper provider is present:
-        getPolicy(acMgr, path, getTestUser().getPrincipal());
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable((SessionImpl) superuser, acMgr);
     }
 
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {

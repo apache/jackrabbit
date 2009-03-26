@@ -55,6 +55,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             }
         }
         if (templ == null) {
+            superuser.logout();
             throw new NotExecutableException("No JackrabbitAccessControlList to test.");
         }
     }

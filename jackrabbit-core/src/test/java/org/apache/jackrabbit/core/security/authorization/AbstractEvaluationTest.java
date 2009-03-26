@@ -55,13 +55,22 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        UserManager uMgr = getUserManager(superuser);
+        if (!isExecutable()) {
+            superuser.logout();
+            throw new NotExecutableException();
+        }
 
-        // create the testUser
-        String uid = "testUser" + UUID.randomUUID();
-        creds = new SimpleCredentials(uid, uid.toCharArray());
+        try {
+            UserManager uMgr = getUserManager(superuser);
+            // create the testUser
+            String uid = "testUser" + UUID.randomUUID();
+            creds = new SimpleCredentials(uid, uid.toCharArray());
 
-        testUser = uMgr.createUser(uid, uid);
+            testUser = uMgr.createUser(uid, uid);
+        } catch (Exception e) {
+            superuser.logout();
+            throw e;
+        }
     }
 
     protected void tearDown() throws Exception {
@@ -122,7 +131,8 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         return trn;
     }
 
-    
+    protected abstract boolean isExecutable();
+
     protected void checkReadOnly(String path) throws RepositoryException, NotExecutableException {
         Privilege[] privs = getTestACManager().getPrivileges(path);
         assertTrue(privs.length == 1);

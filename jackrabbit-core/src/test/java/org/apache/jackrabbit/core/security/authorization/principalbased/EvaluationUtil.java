@@ -30,14 +30,34 @@ import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * <code>EvaluationTest</code>...
  */
 class EvaluationUtil {
 
-   static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
-                AccessDeniedException, NotExecutableException {
+    static boolean isExecutable(SessionImpl s, AccessControlManager acMgr) {
+        if (acMgr instanceof JackrabbitAccessControlManager) {
+            for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
+                Principal princ = (Principal) it.next();
+                try {
+                    AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acMgr).getApplicablePolicies(princ);
+                    for (int i = 0; i < policies.length; i++) {
+                        if (policies[i] instanceof ACLTemplate) {
+                            return true;
+                        }
+                    }
+                } catch (RepositoryException e) {
+                    // ignore
+                }
+            }
+        }
+        return false;
+    }
+
+    static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
+            AccessDeniedException, NotExecutableException {
         if (acM instanceof JackrabbitAccessControlManager) {
             AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
             for (int i = 0; i < policies.length; i++) {
