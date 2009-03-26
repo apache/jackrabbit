@@ -273,7 +273,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private static void initRootACL(SessionImpl session, AccessControlEditor editor) throws RepositoryException {
         try {
-            log.info("Install initial ACL:...");
+            log.debug("Install initial ACL:...");
             String rootPath = session.getRootNode().getPath();
             AccessControlPolicy[] acls = editor.editAccessControlPolicies(rootPath);
             ACLTemplate acl = (ACLTemplate) acls[0];
@@ -281,7 +281,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             PrincipalManager pMgr = session.getPrincipalManager();
             AccessControlManager acMgr = session.getAccessControlManager();
 
-            log.info("... Privilege.ALL for administrators.");
+            log.debug("... Privilege.ALL for administrators.");
             Principal administrators;
             String pName = SecurityConstants.ADMINISTRATORS_NAME;
             if (pMgr.hasPrincipal(pName)) {
@@ -294,13 +294,12 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             acl.addAccessControlEntry(administrators, privs);
 
             Principal everyone = pMgr.getEveryone();
-            log.info("... Privilege.READ for everyone.");
+            log.debug("... Privilege.READ for everyone.");
             privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
             acl.addAccessControlEntry(everyone, privs);
 
             editor.setPolicy(rootPath, acl);
             session.save();
-            log.info("... done.");
 
         } catch (RepositoryException e) {
             log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
