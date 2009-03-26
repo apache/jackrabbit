@@ -46,7 +46,12 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
         super.setUp();
 
         // simple test to check if proper provider is present:
-        getPrincipalBasedPolicy(acMgr, path, getTestUser().getPrincipal());
+        try {
+            getPrincipalBasedPolicy(acMgr, path, getTestUser().getPrincipal());
+        } catch (Exception e) {
+            superuser.logout();
+            throw e;
+        }
     }
 
     private JackrabbitAccessControlList getPrincipalBasedPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {

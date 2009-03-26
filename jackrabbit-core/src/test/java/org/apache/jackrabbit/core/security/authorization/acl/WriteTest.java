@@ -40,16 +40,8 @@ import java.security.Principal;
  */
 public class WriteTest extends AbstractWriteTest {
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        try {
-            AccessControlPolicy[] rootPolicies = acMgr.getPolicies("/");
-            if (rootPolicies.length == 0 || !(rootPolicies[0] instanceof ACLTemplate)) {
-                throw new NotExecutableException();
-            }
-        } catch (RepositoryException e) {
-            throw new NotExecutableException();
-        }
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable(acMgr);
     }
 
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {

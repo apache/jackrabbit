@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.AbstractVersionManagementTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.api.jsr283.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -42,6 +43,10 @@ public class VersionTest extends AbstractVersionManagementTest {
 
     private static String VERSION_STORAGE_PATH = "/jcr:system/jcr:versionStorage";
 
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable((SessionImpl) superuser, acMgr);
+    }
+    
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acMgr, String path, Principal princ) throws
             RepositoryException, NotExecutableException {
         return EvaluationUtil.getPolicy(acMgr, path, princ);

@@ -915,8 +915,13 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         testUser = null;
 
         // try to retrieve the acl again
-        AccessControlManager acMgr = getAccessControlManager(helper.getSuperuserSession());
-        acMgr.getPolicies(acPath);
+        Session s = helper.getSuperuserSession();
+        try {
+            AccessControlManager acMgr = getAccessControlManager(s);
+            acMgr.getPolicies(acPath);
+        } finally {
+            s.logout();
+        }
     }
 
     private static Node findPolicyNode(Node start) throws RepositoryException {

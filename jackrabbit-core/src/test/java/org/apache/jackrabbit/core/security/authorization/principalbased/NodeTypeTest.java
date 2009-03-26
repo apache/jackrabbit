@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.apache.jackrabbit.core.security.authorization.AbstractNodeTypeManagementTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -30,6 +31,11 @@ import java.util.Map;
  * <code>NodeTypeTest</code>...
  */
 public class NodeTypeTest extends AbstractNodeTypeManagementTest {
+
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable((SessionImpl) superuser, acMgr);
+    }
+    
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acMgr, String path, Principal princ) throws
             RepositoryException, NotExecutableException {
         return EvaluationUtil.getPolicy(acMgr, path, princ);

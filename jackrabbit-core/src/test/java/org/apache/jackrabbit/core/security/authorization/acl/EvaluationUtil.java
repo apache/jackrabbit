@@ -34,6 +34,17 @@ import java.util.Map;
  */
 final class EvaluationUtil {
 
+    static boolean isExecutable(AccessControlManager acMgr) {
+        try {
+            AccessControlPolicy[] rootPolicies = acMgr.getPolicies("/");
+            if (rootPolicies.length > 0 && rootPolicies[0] instanceof ACLTemplate) {
+                return true;
+            }
+        } catch (RepositoryException e) {
+        }
+        return false;
+    }
+
     static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
             AccessDeniedException, NotExecutableException {
         // try applicable (new) acls first

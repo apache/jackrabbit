@@ -30,6 +30,9 @@ import java.util.Map;
  * <code>LockTest</code>...
  */
 public class LockTest extends AbstractLockManagementTest {
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable(acMgr);
+    }
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acMgr, String path, Principal princ) throws
             RepositoryException, NotExecutableException {
         return EvaluationUtil.getPolicy(acMgr, path, princ);
