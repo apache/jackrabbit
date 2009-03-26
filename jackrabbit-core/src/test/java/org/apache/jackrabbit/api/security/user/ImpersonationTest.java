@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.Collections;
@@ -68,17 +69,27 @@ public class ImpersonationTest extends AbstractUserTest {
     }
 
     public void testImpersonateGroup() throws RepositoryException, NotExecutableException {
-        Principal group = getTestGroup(helper.getReadOnlySession()).getPrincipal();
-        Subject subject = createSubject(group);
-        assertFalse("An group principal should not be allowed to impersonate.", impersonation.allows(subject));
+        Session s = helper.getReadOnlySession();
+        try {
+            Principal group = getTestGroup(s).getPrincipal();
+            Subject subject = createSubject(group);
+            assertFalse("An group principal should not be allowed to impersonate.", impersonation.allows(subject));
+        } finally {
+            s.logout();
+        }
     }
 
     public void testGrantImpersonationToGroupPrincipal() throws RepositoryException, NotExecutableException {
-        Principal group = getTestGroup(helper.getReadOnlySession()).getPrincipal();
+        Session s = helper.getReadOnlySession();
         try {
-            assertFalse("Granting impersonation to a Group should not be successful.", impersonation.grantImpersonation(group));
-        }  finally {
-            impersonation.revokeImpersonation(group);
+            Principal group = getTestGroup(s).getPrincipal();
+            try {
+                assertFalse("Granting impersonation to a Group should not be successful.", impersonation.grantImpersonation(group));
+            }  finally {
+                impersonation.revokeImpersonation(group);
+            }
+        } finally {
+            s.logout();
         }
     }
 
