@@ -388,4 +388,52 @@ public class UserManagerImplTest extends AbstractUserTest {
             // ok.
         }
     }
+
+    public void testCleanup() throws RepositoryException, NotExecutableException {
+        Session s = helper.getSuperuserSession();
+        try {
+            UserManager umgr = getUserManager(s);
+            s.logout();
+
+            // after logging out the session, the user manager must have been
+            // released as well and it's underlying session must not be available
+            // any more -> accessing users must fail.
+            try {
+                umgr.getAuthorizable("any userid");
+                fail("After having logged out the original session, the user manager must not be live any more.");
+            } catch (RepositoryException e) {
+                // success
+            }
+        } finally {
+            if (s.isLive()) {
+                s.logout();
+            }
+        }
+    }
+
+    public void testCleanupForAllWorkspaces() throws RepositoryException, NotExecutableException {
+        String[] workspaceNames = superuser.getWorkspace().getAccessibleWorkspaceNames();
+
+        for (int i = 0; i < workspaceNames.length; i++) {
+            Session s = helper.getSuperuserSession(workspaceNames[i]);
+            try {
+                UserManager umgr = getUserManager(s);
+                s.logout();
+
+                // after logging out the session, the user manager must have been
+                // released as well and it's underlying session must not be available
+                // any more -> accessing users must fail.
+                try {
+                    umgr.getAuthorizable("any userid");
+                    fail("After having logged out the original session, the user manager must not be live any more.");
+                } catch (RepositoryException e) {
+                    // success
+                }
+            } finally {
+                if (s.isLive()) {
+                    s.logout();
+                }
+            }
+        }
+    }
 }

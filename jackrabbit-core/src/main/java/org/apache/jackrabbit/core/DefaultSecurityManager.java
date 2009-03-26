@@ -322,8 +322,15 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             String workspaceName = securitySession.getWorkspace().getName();
             try {
                 SessionImpl sImpl = (SessionImpl) session;
-                SessionImpl s = (SessionImpl) sImpl.createSession(workspaceName);
-                return new UserManagerImpl(s, adminId);
+                UserManagerImpl uMgr;
+                if (workspaceName.equals(sImpl.getWorkspace().getName())) {
+                    uMgr = new UserManagerImpl(sImpl, adminId);
+                } else {
+                    SessionImpl s = (SessionImpl) sImpl.createSession(workspaceName);
+                    uMgr = new UserManagerImpl(s, adminId);
+                    sImpl.addListener(uMgr);
+                }
+                return uMgr;
             } catch (NoSuchWorkspaceException e) {
                 throw new AccessControlException("Cannot build UserManager for " + session.getUserID(), e);
             }
