@@ -54,28 +54,31 @@ public class XATest extends AbstractJCRTest {
 
         // clean testroot on second workspace
         Session s2 = helper.getSuperuserSession(workspaceName);
-        Node root = s2.getRootNode();
-        if (root.hasNode(testPath)) {
-            // clean test root
-            Node testRootNode = root.getNode(testPath);
-            for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
-                children.nextNode().remove();
-            }
-        } else {
-            // create nodes to testPath
-            StringTokenizer names = new StringTokenizer(testPath, "/");
-            Node currentNode = root;
-            while (names.hasMoreTokens()) {
-                String name = names.nextToken();
-                if (currentNode.hasNode(name)) {
-                    currentNode = currentNode.getNode(name);
-                } else {
-                    currentNode = currentNode.addNode(name, testNodeType);
+        try {
+            Node root = s2.getRootNode();
+            if (root.hasNode(testPath)) {
+                // clean test root
+                Node testRootNode = root.getNode(testPath);
+                for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
+                    children.nextNode().remove();
+                }
+            } else {
+                // create nodes to testPath
+                StringTokenizer names = new StringTokenizer(testPath, "/");
+                Node currentNode = root;
+                while (names.hasMoreTokens()) {
+                    String name = names.nextToken();
+                    if (currentNode.hasNode(name)) {
+                        currentNode = currentNode.getNode(name);
+                    } else {
+                        currentNode = currentNode.addNode(name, testNodeType);
+                    }
                 }
             }
+            root.save();
+        } finally {
+            s2.logout();
         }
-        root.save();
-
     }
 
     /**
@@ -1513,24 +1516,27 @@ public class XATest extends AbstractJCRTest {
         final String testNodePath = testPath + "/" + Math.random();
 
         Session session = helper.getSuperuserSession();
-
-        // Add node
-        doTransactional(new Operation() {
-            public void invoke(Session session) throws Exception {
-                session.getRootNode().addNode(testNodePath);
-                session.save();
-            }
-        }, session);
-
-        for (int i = 1; i <= 3; i++) {
-            // Set property "name" to value "value"
+        try {
+            // Add node
             doTransactional(new Operation() {
                 public void invoke(Session session) throws Exception {
-                    Node n = (Node) session.getItem("/" + testNodePath);
-                    n.setProperty("name", "value");
+                    session.getRootNode().addNode(testNodePath);
                     session.save();
                 }
             }, session);
+
+            for (int i = 1; i <= 3; i++) {
+                // Set property "name" to value "value"
+                doTransactional(new Operation() {
+                    public void invoke(Session session) throws Exception {
+                        Node n = (Node) session.getItem("/" + testNodePath);
+                        n.setProperty("name", "value");
+                        session.save();
+                    }
+                }, session);
+            }
+        } finally {
+            session.logout();
         }
     }
 
@@ -1545,31 +1551,34 @@ public class XATest extends AbstractJCRTest {
         final String testNodePath = testPath + "/" + Math.random();
 
         Session session = helper.getSuperuserSession();
+        try {
+            for (int i = 1; i <= 3; i++) {
+                // Add parent node
+                doTransactional(new Operation() {
+                    public void invoke(Session session) throws Exception {
+                        session.getRootNode().addNode(testNodePath);
+                        session.save();
+                    }
+                }, session);
 
-        for (int i = 1; i <= 3; i++) {
-            // Add parent node
-            doTransactional(new Operation() {
-                public void invoke(Session session) throws Exception {
-                    session.getRootNode().addNode(testNodePath);
-                    session.save();
-                }
-            }, session);
+                // Add child node
+                doTransactional(new Operation() {
+                    public void invoke(Session session) throws Exception {
+                        session.getRootNode().addNode(testNodePath + "/subnode");
+                        session.save();
+                    }
+                }, session);
 
-            // Add child node
-            doTransactional(new Operation() {
-                public void invoke(Session session) throws Exception {
-                    session.getRootNode().addNode(testNodePath + "/subnode");
-                    session.save();
-                }
-            }, session);
-
-            // Remove parent node
-            doTransactional(new Operation() {
-                public void invoke(Session session) throws Exception {
-                    session.getRootNode().getNode(testNodePath).remove();
-                    session.save();
-                }
-            }, session);
+                // Remove parent node
+                doTransactional(new Operation() {
+                    public void invoke(Session session) throws Exception {
+                        session.getRootNode().getNode(testNodePath).remove();
+                        session.save();
+                    }
+                }, session);
+            }
+        } finally {
+            session.logout();
         }
     }
 

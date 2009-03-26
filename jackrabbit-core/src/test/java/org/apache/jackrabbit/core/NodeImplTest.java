@@ -79,13 +79,16 @@ public class NodeImplTest extends AbstractJCRTest {
 
     private static Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
         SessionImpl s = (SessionImpl) helper.getReadOnlySession();
-        for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
-            Principal p = (Principal) it.next();
-            if (!(p instanceof Group)) {
-                return p;
+        try {
+            for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
+                Principal p = (Principal) it.next();
+                if (!(p instanceof Group)) {
+                    return p;
+                }
             }
+        } finally {
+            s.logout();
         }
-        s.logout();
         throw new NotExecutableException();
     }
 
