@@ -49,10 +49,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     private List privilegesToRestore = new ArrayList();
 
     protected void setUp() throws Exception {
-        super.setUp();
-
         // TODO: test if options is supported
         //checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        super.setUp();
 
         // TODO: retrieve targetPath from configuration
         Node n = testRootNode.addNode(nodeName1, testNodeType);
