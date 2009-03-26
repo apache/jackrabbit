@@ -44,8 +44,13 @@ public class UserTest extends AbstractUserTest {
     }
 
     public void testReadOnlyIsntAdmin() throws NotExecutableException, RepositoryException {
-        User user = getTestUser(helper.getReadOnlySession());
-        assertFalse(user.isAdmin());
+        Session s = helper.getReadOnlySession();
+        try {
+            User user = getTestUser(s);
+            assertFalse(user.isAdmin());
+        } finally {
+            s.logout();
+        }
     }
 
     public void testUserHasCredentials() throws RepositoryException, NotExecutableException {

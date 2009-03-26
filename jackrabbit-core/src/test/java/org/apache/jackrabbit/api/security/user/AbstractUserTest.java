@@ -48,7 +48,12 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        userMgr = getUserManager(superuser);
+        try {
+            userMgr = getUserManager(superuser);
+        } catch (Exception e) {
+            superuser.logout();
+            throw e;
+        }
     }
 
     protected static UserManager getUserManager(Session session) throws RepositoryException, NotExecutableException {
