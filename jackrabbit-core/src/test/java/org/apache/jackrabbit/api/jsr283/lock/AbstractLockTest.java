@@ -45,13 +45,11 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     protected Lock lock;
 
     protected void setUp() throws Exception {
+        // check for lock support before creating the session in the super.setup
+        checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
+        
         super.setUp();
-
-        // check for lock support
-        if (Boolean.FALSE.toString().equals(superuser.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED))) {
-            throw new NotExecutableException();
-        }
-
+        
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         lockedNode.addMixin(mixLockable);
         childNode = lockedNode.addNode(nodeName2, testNodeType);
