@@ -41,6 +41,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         if (!(superuser instanceof JackrabbitSession)) {
+            superuser.logout();
             throw new NotExecutableException();
         }
         principalMgr = ((JackrabbitSession) superuser).getPrincipalManager();
@@ -73,11 +74,16 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     }
 
     public void testReadOnlyIsEveryOne() throws RepositoryException {
-        Principal[] pcpls = getPrincipals(helper.getReadOnlySession());
-        for (int i = 0; i < pcpls.length; i++) {
-            if (!(pcpls[i].equals(everyone))) {
-                assertTrue(everyone.isMember(pcpls[i]));
+        Session s = helper.getReadOnlySession();
+        try {
+            Principal[] pcpls = getPrincipals(s);
+            for (int i = 0; i < pcpls.length; i++) {
+                if (!(pcpls[i].equals(everyone))) {
+                    assertTrue(everyone.isMember(pcpls[i]));
+                }
             }
+        } finally {
+            s.logout();
         }
     }
 
