@@ -116,7 +116,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         editor = new ACLEditor(session, resolver.getQPath(acRoot.getPath()));
         if (!configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS)) {
             try {
-                log.info("Install initial permissions: ...");
+                log.debug("Install initial permissions: ...");
 
                 ValueFactory vf = session.getValueFactory();
                 Map restrictions = new HashMap();
@@ -136,30 +136,29 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 AccessControlPolicy[] acls = editor.editAccessControlPolicies(administrators);
                 ACLTemplate acl = (ACLTemplate) acls[0];
                 if (acl.isEmpty()) {
-                    log.info("... Privilege.ALL for administrators principal.");
+                    log.debug("... Privilege.ALL for administrators principal.");
                     acl.addEntry(administrators,
                             new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)},
                             true, restrictions);
                     editor.setPolicy(acl.getPath(), acl);
                 } else {
-                    log.info("... policy for administrators principal already present.");
+                    log.debug("... policy for administrators principal already present.");
                 }
 
                 Principal everyone = pMgr.getEveryone();
                 acls = editor.editAccessControlPolicies(everyone);
                 acl = (ACLTemplate) acls[0];
                 if (acl.isEmpty()) {
-                    log.info("... Privilege.READ for everyone principal.");
+                    log.debug("... Privilege.READ for everyone principal.");
                     acl.addEntry(everyone,
                             new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)},
                             true, restrictions);
                     editor.setPolicy(acl.getPath(), acl);
                 } else {
-                    log.info("... policy for everyone principal already present.");
+                    log.debug("... policy for everyone principal already present.");
                 }
 
                 session.save();
-                log.info("... done.");
             } catch (RepositoryException e) {
                 log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
                 session.getRootNode().refresh(false);
