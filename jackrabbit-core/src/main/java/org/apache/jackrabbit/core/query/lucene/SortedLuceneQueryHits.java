@@ -23,6 +23,8 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,6 +36,21 @@ import java.util.ArrayList;
  * completely.
  */
 public final class SortedLuceneQueryHits extends AbstractQueryHits {
+
+    /**
+     * The Logger instance for this class.
+     */
+    private static final Logger log = LoggerFactory.getLogger(SortedLuceneQueryHits.class);
+
+    /**
+     * The upper limit for the initial fetch size.
+     */
+    private static final int MAX_FETCH_SIZE = 32 * 1024;
+
+    /**
+     * The lower limit for the initial fetch size.
+     */
+    private static final int MIN_FETCH_SIZE = 32;
 
     /**
      * The IndexReader in use by the lucene hits.
@@ -73,25 +90,30 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     /**
      * Number of hits to retrieve.
      */
-    private int numHits = 50;
+    private int numHits;
 
     /**
      * Creates a new <code>QueryHits</code> instance wrapping <code>hits</code>.
      *
-     * @param reader the IndexReader in use.
-     * @param searcher the index searcher.
-     * @param query the query to execute.
-     * @param sort the sort criteria.
+     * @param reader          the IndexReader in use.
+     * @param searcher        the index searcher.
+     * @param query           the query to execute.
+     * @param sort            the sort criteria.
+     * @param resultFetchHint a hint on how many results should be fetched.
      * @throws IOException if an error occurs while reading from the index.
      */
     public SortedLuceneQueryHits(IndexReader reader,
                                  JackrabbitIndexSearcher searcher,
                                  Query query,
-                                 Sort sort) throws IOException {
+                                 Sort sort,
+                                 long resultFetchHint) throws IOException {
         this.reader = reader;
         this.searcher = searcher;
         this.query = query;
         this.sort = sort;
+        this.numHits = (int) Math.min(
+                Math.max(resultFetchHint, MIN_FETCH_SIZE),
+                MAX_FETCH_SIZE);
         getHits();
     }
 
@@ -110,7 +132,8 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
             // no more score nodes
             return null;
         } else if (hitIndex >= scoreNodes.size()) {
-            // refill
+            // refill at least numHits or twice hitIndex
+            this.numHits = Math.max(this.numHits, hitIndex * 2);
             getHits();
         }
         return (ScoreNode) scoreNodes.get(hitIndex);
@@ -128,20 +151,18 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
 
     //-------------------------------< internal >-------------------------------
 
-    private int getHits() throws IOException {
-        // double hits
-        numHits *= 2;
+    private void getHits() throws IOException {
         TopFieldDocCollector collector = new TopFieldDocCollector(reader, sort, numHits);
         searcher.search(query, collector);
         this.size = collector.getTotalHits();
         ScoreDoc[] docs = collector.topDocs().scoreDocs;
-        int num = 0;
         for (int i = scoreNodes.size(); i < docs.length; i++) {
             String uuid = reader.document(docs[i].doc).get(FieldNames.UUID);
             NodeId id = new NodeId(UUID.fromString(uuid));
             scoreNodes.add(new ScoreNode(id, docs[i].score));
-            num++;
         }
-        return num;
+        log.debug("getHits() {}/{}", new Integer(scoreNodes.size()), new Integer(numHits));
+        // double hits for next round
+        numHits *= 2;
     }
 }

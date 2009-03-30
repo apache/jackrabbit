@@ -250,4 +250,11 @@ public class AbstractQueryTest extends AbstractJCRTest {
             return qm.createQuery(statement, Query.XPATH).execute();
         }
     }
+
+    /**
+     * @return the query handler inside the {@link #qm query manager}.
+     */
+    protected QueryHandler getQueryHandler() {
+        return ((QueryManagerImpl) qm).getQueryHandler();
+    }
 }

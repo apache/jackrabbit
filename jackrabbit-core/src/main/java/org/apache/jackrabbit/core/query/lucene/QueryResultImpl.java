@@ -237,12 +237,13 @@ public class QueryResultImpl implements QueryResult {
      * Executes the query for this result and returns hits. The caller must
      * close the query hits when he is done using it.
      *
+     * @param resultFetchHint a hint on how many results should be fetched.
      * @return hits for this query result.
      * @throws IOException if an error occurs while executing the query.
      */
-    protected MultiColumnQueryHits executeQuery() throws IOException {
+    protected MultiColumnQueryHits executeQuery(long resultFetchHint) throws IOException {
         return index.executeQuery(session, queryImpl,
-                query, orderProps, orderSpecs);
+                query, orderProps, orderSpecs, resultFetchHint);
     }
 
     //--------------------------------< internal >------------------------------
@@ -291,7 +292,7 @@ public class QueryResultImpl implements QueryResult {
         MultiColumnQueryHits result = null;
         try {
             long time = System.currentTimeMillis();
-            result = executeQuery();
+            result = executeQuery(maxResultSize);
             log.debug("query executed in {} ms",
                     new Long(System.currentTimeMillis() - time));
 
