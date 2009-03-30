@@ -41,6 +41,7 @@ public class NodeImplTest extends AbstractJCRTest {
     protected void tearDown() throws Exception {
         node.remove();
         testRootNode.save();
+        super.tearDown();
     }
 
     /**
