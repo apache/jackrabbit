@@ -264,7 +264,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             throws IOException {
         if (sort.getSort().length == 0 && matchesAnyChildNode()) {
             Query context = getContextQuery();
-            return new ChildNodesQueryHits(searcher.evaluate(context, sort), session);
+            return new ChildNodesQueryHits(searcher.evaluate(context), session);
         } else {
             return null;
         }

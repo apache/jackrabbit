@@ -55,25 +55,31 @@ public class JackrabbitIndexSearcher extends IndexSearcher {
     /**
      * Executes the query and returns the hits that match the query.
      *
-     * @param query the query to execute.
-     * @param sort  the sort criteria.
+     * @param query           the query to execute.
+     * @param sort            the sort criteria.
+     * @param resultFetchHint a hint on how many results should be fetched.
      * @return the query hits.
      * @throws IOException if an error occurs while executing the query.
      */
-    public MultiColumnQueryHits execute(Query query, Sort sort) throws IOException {
-        return new QueryHitsAdapter(evaluate(query, sort),
+    public MultiColumnQueryHits execute(Query query,
+                                        Sort sort,
+                                        long resultFetchHint)
+            throws IOException {
+        return new QueryHitsAdapter(evaluate(query, sort, resultFetchHint),
                 QueryImpl.DEFAULT_SELECTOR_NAME);
     }
 
     /**
      * Evaluates the query and returns the hits that match the query.
      *
-     * @param query the query to execute.
-     * @param sort  the sort criteria.
+     * @param query           the query to execute.
+     * @param sort            the sort criteria.
+     * @param resultFetchHint a hint on how many results should be fetched.
      * @return the query hits.
      * @throws IOException if an error occurs while executing the query.
      */
-    public QueryHits evaluate(Query query, Sort sort) throws IOException {
+    public QueryHits evaluate(Query query, Sort sort, long resultFetchHint)
+            throws IOException {
         query = query.rewrite(reader);
         QueryHits hits = null;
         if (query instanceof JackrabbitQuery) {
@@ -83,9 +89,21 @@ public class JackrabbitIndexSearcher extends IndexSearcher {
             if (sort == null) {
                 hits = new LuceneQueryHits(reader, this, query);
             } else {
-                hits = new SortedLuceneQueryHits(reader, this, query, sort);
+                hits = new SortedLuceneQueryHits(
+                        reader, this, query, sort, resultFetchHint);
             }
         }
         return hits;
+    }
+
+    /**
+     * Evaluates the query and returns the hits that match the query.
+     *
+     * @param query           the query to execute.
+     * @return the query hits.
+     * @throws IOException if an error occurs while executing the query.
+     */
+    public QueryHits evaluate(Query query) throws IOException {
+        return evaluate(query, new Sort(), Integer.MAX_VALUE);
     }
 }

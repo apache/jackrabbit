@@ -229,7 +229,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
         if (sort.getSort().length == 0 && subQueryMatchesAll()) {
             // maps path String to NodeId
             Map startingPoints = new TreeMap();
-            QueryHits result = searcher.evaluate(getContextQuery(), sort);
+            QueryHits result = searcher.evaluate(getContextQuery());
             try {
                 // minLevels 0 and 1 are handled with a series of
                 // NodeTraversingQueryHits directly on result. For minLevels >= 2

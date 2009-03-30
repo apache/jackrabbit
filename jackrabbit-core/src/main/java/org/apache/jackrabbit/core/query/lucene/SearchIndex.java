@@ -730,21 +730,25 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * Executes the query on the search index.
-     * @param session the session that executes the query.
-     * @param queryImpl the query impl.
-     * @param query the lucene query.
-     * @param orderProps name of the properties for sort order.
-     * @param orderSpecs the order specs for the sort order properties.
-     * <code>true</code> indicates ascending order, <code>false</code> indicates
-     * descending.
+     *
+     * @param session         the session that executes the query.
+     * @param queryImpl       the query impl.
+     * @param query           the lucene query.
+     * @param orderProps      name of the properties for sort order.
+     * @param orderSpecs      the order specs for the sort order properties.
+     *                        <code>true</code> indicates ascending order,
+     *                        <code>false</code> indicates descending.
+     * @param resultFetchHint a hint on how many results should be fetched.
      * @return the query hits.
      * @throws IOException if an error occurs while searching the index.
      */
     public MultiColumnQueryHits executeQuery(SessionImpl session,
-                                  AbstractQueryImpl queryImpl,
-                                  Query query,
-                                  Path[] orderProps,
-                                  boolean[] orderSpecs) throws IOException {
+                                             AbstractQueryImpl queryImpl,
+                                             Query query,
+                                             Path[] orderProps,
+                                             boolean[] orderSpecs,
+                                             long resultFetchHint)
+            throws IOException {
         checkOpen();
 
         Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
@@ -752,7 +756,8 @@ public class SearchIndex extends AbstractQueryHandler {
         final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
         JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(session, reader);
         searcher.setSimilarity(getSimilarity());
-        return new FilterMultiColumnQueryHits(searcher.execute(query, sort)) {
+        return new FilterMultiColumnQueryHits(
+                searcher.execute(query, sort, resultFetchHint)) {
             public void close() throws IOException {
                 try {
                     super.close();
