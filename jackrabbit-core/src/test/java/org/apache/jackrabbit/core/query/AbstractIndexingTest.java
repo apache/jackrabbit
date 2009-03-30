@@ -38,8 +38,11 @@ public class AbstractIndexingTest extends AbstractQueryTest {
     }
 
     protected void tearDown() throws Exception {
-        cleanUpTestRoot(session);
-        session = null;
+        if (session != null) {
+            cleanUpTestRoot(session);
+            session.logout();
+            session = null;
+        }
         testRootNode = null;
         super.tearDown();
     }

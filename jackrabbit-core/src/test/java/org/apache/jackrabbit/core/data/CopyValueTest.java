@@ -50,28 +50,27 @@ public class CopyValueTest extends AbstractJCRTest {
     }
 
     private void doTestCopy(int length) throws Exception {
-        Session session = helper.getReadWriteSession();
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         if(root.hasNode("testCopy")) {
             root.getNode("testCopy").remove();
-            session.save();
+            superuser.save();
         }
         Node testRoot = root.addNode("testCopy");
         Node n = testRoot.addNode("a");
-        session.save();
+        superuser.save();
         byte[] data = new byte[length + 1];
         n.setProperty("data", new ByteArrayInputStream(data));
-        session.save();
+        superuser.save();
         data = new byte[length];
         n.setProperty("data", new ByteArrayInputStream(data));
         Property p = testRoot.getNode("a").getProperty("data");
         assertEquals(length, p.getLength());
-        session.getWorkspace().copy("/testCopy/a", "/testCopy/b");
+        superuser.getWorkspace().copy("/testCopy/a", "/testCopy/b");
         assertEquals(length, p.getLength());
         p = testRoot.getNode("b").getProperty("data");
         assertEquals(length + 1, p.getLength());
         testRoot.remove();
-        session.save();
+        superuser.save();
     }
 
     /**
@@ -81,11 +80,10 @@ public class CopyValueTest extends AbstractJCRTest {
      */
     public void testRandomOperations() throws Exception {
         Random random = new Random(1);
-        Session session = helper.getReadWriteSession();
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         if(root.hasNode("testRandom")) {
             root.getNode("testRandom").remove();
-            session.save();
+            superuser.save();
         }
         Node testRoot = root.addNode("testRandom");
         int len = 1000;
@@ -115,12 +113,12 @@ public class CopyValueTest extends AbstractJCRTest {
             case 1:
                 opCounts[op]++;
                 log("save");
-                session.save();
+                superuser.save();
                 break;
             case 2:
                 opCounts[op]++;
                 log("refresh");
-                session.refresh(false);
+                superuser.refresh(false);
                 break;
             case 3:
                 if (hasNode1) {
@@ -145,19 +143,19 @@ public class CopyValueTest extends AbstractJCRTest {
                     opCounts[op]++;
                     log(node1 + " copy " + node2);
                     // todo: why is save required?
-                    session.save();
-                    session.getWorkspace().copy("/testRandom/" + node1,
+                    superuser.save();
+                    superuser.getWorkspace().copy("/testRandom/" + node1,
                             "/testRandom/" + node2);
                 }
                 break;
             }
         }
-        session.save();
+        superuser.save();
         for(int i=0; i<opCounts.length; i++) {
             log(i + ": " + opCounts[i]);
         }
         testRoot.remove();
-        session.save();
+        superuser.save();
     }
 
     private void log(String s) {

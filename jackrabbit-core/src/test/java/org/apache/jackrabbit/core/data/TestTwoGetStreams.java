@@ -40,8 +40,7 @@ public class TestTwoGetStreams extends AbstractJCRTest {
     private static final int STREAM_LENGTH = 1 * 1024 * 1024;
     
     private boolean isDataStoreEnabled() throws RepositoryException {
-        Session session = helper.getSuperuserSession();
-        RepositoryImpl rep = (RepositoryImpl) session.getRepository();        
+        RepositoryImpl rep = (RepositoryImpl) superuser.getRepository();
         return rep.getDataStore() != null;
     }
     
@@ -54,12 +53,10 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             return;
         }
         
-        Session session = helper.getSuperuserSession();
-        
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
         root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
-        session.save();
+        superuser.save();
 
         Value v1 = root.getProperty("p1").getValue();
         Value v2 = root.getProperty("p2").getValue();
@@ -78,7 +75,7 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             Value v = root.getProperty("p1").getValue();
             root.setProperty("p3", v);
         }
-        session.save();
+        superuser.save();
         time = System.currentTimeMillis() - time;
         // streaming the value again and again takes about 4.3 seconds
         // on my computer; copying the data identifier takes about 16 ms
@@ -95,11 +92,10 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             return;
         }
         
-        Session session = helper.getSuperuserSession();
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
         root.setProperty("p2", new RandomInputStream(2, STREAM_LENGTH));
-        session.save();
+        superuser.save();
 
         InputStream i1 = root.getProperty("p1").getStream();
         InputStream i2 = root.getProperty("p2").getStream();
@@ -126,11 +122,10 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             return;
         }
         
-        Session session = helper.getSuperuserSession();
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
         root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
-        session.save();
+        superuser.save();
 
         InputStream i1 = root.getProperty("p1").getStream();
         InputStream i2 = root.getProperty("p2").getStream();
@@ -157,10 +152,9 @@ public class TestTwoGetStreams extends AbstractJCRTest {
             return;
         }
         
-        Session session = helper.getSuperuserSession();
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
-        session.save();
+        superuser.save();
 
         InputStream i1 = root.getProperty("p1").getStream();
         InputStream i2 = root.getProperty("p1").getStream();
