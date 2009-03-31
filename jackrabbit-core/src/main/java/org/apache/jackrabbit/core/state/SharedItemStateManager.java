@@ -446,6 +446,12 @@ public class SharedItemStateManager
      * Disposes this <code>SharedItemStateManager</code> and frees resources.
      */
     public void dispose() {
+        // remove virtual item state providers (see JCR-2023)
+        for (int i = 0; i < virtualProviders.length; i++) {
+            virtualProviders[i].removeListener(this);
+        }
+        virtualProviders = new VirtualItemStateProvider[0];
+
         // clear cache
         cache.evictAll();
     }
