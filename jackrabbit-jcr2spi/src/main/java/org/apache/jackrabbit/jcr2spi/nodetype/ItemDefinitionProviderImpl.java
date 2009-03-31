@@ -83,12 +83,13 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
             EffectiveNodeType entTarget = getEffectiveNodeType(ntName);
             definition = getQNodeDefinition(ent, entTarget, nodeName);
         } catch (RepositoryException e) {
-            definition = service.getNodeDefinition(sessionInfo, nodeId);
+            log.debug("Cannot determine effective node type of {}: {}", nodeId, e);
+            definition = getNodeDefinition(service, sessionInfo, nodeId);
         }
         return definition;
     }
 
-   /**
+    /**
      * @inheritDoc
      */
    public QNodeDefinition getQNodeDefinition(Name[] parentNodeTypeNames, Name name, Name nodeTypeName)
@@ -119,7 +120,8 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
             EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
             definition = getQPropertyDefinition(ent, propertyName, propertType, isMultiValued, true);
         } catch (RepositoryException e) {
-            definition = service.getPropertyDefinition(sessionInfo, propertyId);
+            log.debug("Cannot determine property defintion of {}: {}", propertyId, e);
+            definition = getPropertyDefinition(service, sessionInfo, propertyId);
         }
         return definition;
     }
@@ -365,6 +367,30 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
             }
         }
         return match;
+    }
+
+    private static QNodeDefinition getNodeDefinition(RepositoryService service, SessionInfo sessionInfo,
+            NodeId nodeId) throws RepositoryException {
+
+        try {
+            return service.getNodeDefinition(sessionInfo, nodeId);
+        }
+        catch (RepositoryException e) {
+            log.error("Cannot determine node definition of {}: {}", nodeId, e);
+            throw e;
+        }
+    }
+
+    private static QPropertyDefinition getPropertyDefinition(RepositoryService service,
+            SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {
+
+        try {
+            return service.getPropertyDefinition(sessionInfo, propertyId);
+        }
+        catch (RepositoryException e) {
+            log.error("Cannot determine property definition of {}: {}", propertyId, e);
+            throw e;
+        }
     }
 
 }
