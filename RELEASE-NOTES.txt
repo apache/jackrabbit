@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.3
+Release Notes -- Apache Jackrabbit -- Version 1.5.4
 
 Introduction
 ------------
@@ -10,7 +10,7 @@ content, full text search, versioning, transactions, observation, and
 more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
-Apache Jackrabbit 1.5.3 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.5.4 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 1.5.x releases.
 
@@ -20,33 +20,16 @@ Changes in this release
 -----------------------
 
 All the fixes in this release are listed below per affected component.
-The modified components have had their version numbers upgraded to 1.5.3;
+The modified components have had their version numbers upgraded to 1.5.4;
 other components are still at their previous 1.5.x versions.
-
-jackrabbit-jcr-commons
-
-  Bug fixes
-  [JCR-1952] DOMException: NAMESPACE_ERR thrown when exporting document view
 
 jackrabbit-core
 
   Bug fixes
-  [JCR-1334] Deadlock due different Thread access while prepare and commit ...
-  [JCR-1554] StaleItemStateException with distributed transactions
-  [JCR-1923] Startup fails if clustered jackrabbit is upgrade from 1.4.4 to 1.5
-  [JCR-1941] AccessManager asks for property (jcr:created) permissions ...
-  [JCR-1956] Database Data Store: close result sets
-  [JCR-1979] Deadlock on concurrent read & transactional write operations
-
-jackrabbit-webapp
-
-  Bug fixes
-  [JCR-1970] populate.jsp uses Java 1.5 method
-
-jackrabbit-ocm
-
-  Bug fixes
-  [JCR-1889] Incorrect support for java interfaces in typed collection fields
+  [JCR-2000] Deadlock on concurrent commits
+  [JCR-2008] System search manager uses a SessionItemStateManager
+  [JCR-2023] WorkspaceInfo.dispose() does not deregister ...
+  [JCR-2024] Bundle cache is not cleared when *BundlePersistenceManager ...
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
@@ -57,27 +40,20 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Alexander T            Grégory Joseph        Przemo Pakulski
-    Angela Schreiber       Jacco van Weert       Robert Sauer
-    Christian Schröder     Jukka Zitting         Stefan Guggisberg
-    Christophe Lombart     Julian Reschke        Stephane Landelle
-    Claus Köll             Lóránt Pintér         Sven Rieckhoff
-    Dominique Pfister      Marcel Reutegger      Thomas Mueller
-    Fabrizio Giustina      Martin Schreiber      Yoav Landman
-    Francois Masurel       Philipp Salzgeber
+    Jukka Zitting         Marcel Reutegger      Przemo Pakulski
 
 Thank you to everyone involved!
 
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.3-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.4-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.3-src.jar
-    cd jackrabbit-1.5.3-src
+    jar xf jackrabbit-1.5.4-src.jar
+    cd jackrabbit-1.5.4-src
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
