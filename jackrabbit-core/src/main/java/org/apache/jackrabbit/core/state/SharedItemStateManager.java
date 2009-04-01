@@ -756,7 +756,8 @@ public class SharedItemStateManager
 
                 /* let listener know about finished operation */
                 if (eventChannel != null) {
-                    eventChannel.updateCommitted(this);
+                    String path = events.getSession().getUserID() + "@" + events.getCommonPath();
+                    eventChannel.updateCommitted(this, path);
                 }
 
             } catch (InterruptedException e) {
@@ -871,12 +872,12 @@ public class SharedItemStateManager
          */
         private void updateReferences() throws ItemStateException {
             // process added REFERENCE properties
-            for (Iterator i = local.addedStates(); i.hasNext(); ) {
+            for (Iterator i = local.addedStates(); i.hasNext();) {
                 addReferences((ItemState) i.next());
             }
 
             // process modified REFERENCE properties
-            for (Iterator i = local.modifiedStates(); i.hasNext(); ) {
+            for (Iterator i = local.modifiedStates(); i.hasNext();) {
                 ItemState state = (ItemState) i.next();
                 if (!state.isNode()) {
                     // remove old references from the target
@@ -887,7 +888,7 @@ public class SharedItemStateManager
             }
 
             // process removed REFERENCE properties
-            for (Iterator i = local.deletedStates(); i.hasNext(); ) {
+            for (Iterator i = local.deletedStates(); i.hasNext();) {
                 removeReferences((ItemState) i.next());
             }
         }
@@ -910,7 +911,7 @@ public class SharedItemStateManager
                 throws ItemStateException {
             NodeReferencesId refsId = new NodeReferencesId(uuid);
             if (virtualProvider == null
-                    || ! virtualProvider.hasNodeReferences(refsId)) {
+                    || !virtualProvider.hasNodeReferences(refsId)) {
                 // get or create the references instance
                 NodeReferences refs = local.get(refsId);
                 if (refs == null) {
