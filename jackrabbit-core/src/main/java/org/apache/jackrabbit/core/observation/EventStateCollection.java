@@ -35,6 +35,7 @@ import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.ObservationManager;
@@ -495,7 +496,7 @@ public final class EventStateCollection {
      * Return the session who is the origin of this events.
      * @return event source
      */
-    SessionImpl getSession() {
+    public SessionImpl getSession() {
         return session;
     }
 
@@ -618,5 +619,34 @@ public final class EventStateCollection {
             builder.addLast(elements[i]);
         }
         return builder.getPath();
+    }
+
+    /**
+     * Get the longest common path of all event state paths. 
+     * 
+     * @return the longest common path
+     */
+    public String getCommonPath() {
+        String common = null;
+        try {
+            for (int i = 0; i < events.size(); i++) {
+                EventState state = (EventState) events.get(i);
+                String s = session.getJCRPath(state.getParentPath());
+                if (common == null) {
+                    common = s;
+                } else if (!common.equals(s)) {
+                    while (!s.startsWith(common)) {
+                        int idx = s.lastIndexOf('/');
+                        if (idx < 0) {
+                            break;
+                        }
+                        common = s.substring(0, idx);
+                    }
+                }
+            }
+        } catch (NamespaceException e) {
+            // ignore
+        }
+        return common;
     }
 }

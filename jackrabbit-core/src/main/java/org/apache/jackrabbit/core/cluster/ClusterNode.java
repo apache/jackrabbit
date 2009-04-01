@@ -636,7 +636,7 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updateCommitted(Update update) {
+        public void updateCommitted(Update update, String path) {
             if (status != STARTED) {
                 log.info("not started: update commit ignored.");
                 return;
@@ -650,7 +650,7 @@ public class ClusterNode implements Runnable,
             try {
                 record.update();
                 setRevision(record.getRevision());
-                log.debug("Appended revision: {}", new Long(record.getRevision()));
+                log.debug("revision {} {}", new Long(record.getRevision()), path);
             } catch (JournalException e) {
                 String msg = "Unable to commit log entry.";
                 log.error(msg, e);

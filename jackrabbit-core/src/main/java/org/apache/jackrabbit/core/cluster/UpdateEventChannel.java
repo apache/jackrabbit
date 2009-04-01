@@ -39,8 +39,9 @@ public interface UpdateEventChannel {
      * Called when an a update operation has been committed.
      *
      * @param update update operation
+     * @param path the change path
      */
-    void updateCommitted(Update update);
+    void updateCommitted(Update update, String path);
 
     /**
      * Called when an a update operation has been cancelled.

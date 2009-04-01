@@ -107,7 +107,7 @@ public class ClusterRecordTest extends JUnitTest {
         UpdateEventChannel channel = master.createUpdateChannel(DEFAULT_WORKSPACE);
         channel.updateCreated(update);
         channel.updatePrepared(update);
-        channel.updateCommitted(update);
+        channel.updateCommitted(update, null);
 
         SimpleEventListener listener = new SimpleEventListener();
         slave.createUpdateChannel(DEFAULT_WORKSPACE).setListener(listener);
