@@ -29,6 +29,8 @@ import org.apache.jackrabbit.util.Timer;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -353,21 +355,26 @@ public class MultiIndex {
      *
      * @param stateMgr the item state manager.
      * @param rootId   the id of the node from where to start.
+     * @param rootPath the path of the node from where to start.
      * @throws IOException           if an error occurs while indexing the
      *                               workspace.
      * @throws IllegalStateException if this index is not empty.
      */
-    void createInitialIndex(ItemStateManager stateMgr, NodeId rootId, Path rootPath)
+    void createInitialIndex(ItemStateManager stateMgr,
+                            NodeId rootId,
+                            Path rootPath)
             throws IOException {
         // only do an initial index if there are no indexes at all
         if (indexNames.size() == 0) {
             reindexing = true;
             try {
+                long count = 0;
                 // traverse and index workspace
                 executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
-                createIndex(rootState, rootPath, stateMgr);
+                count = createIndex(rootState, rootPath, stateMgr, count);
                 executeAndLog(new Commit(getTransactionId()));
+                log.info("Created initial index for {} nodes", new Long(count));
                 scheduleFlushTask();
             } catch (Exception e) {
                 String msg = "Error indexing workspace";
@@ -1042,19 +1049,33 @@ public class MultiIndex {
      * <code>node</code>.
      *
      * @param node     the current NodeState.
+     * @param path     the path of the current node.
      * @param stateMgr the shared item state manager.
+     * @param count    the number of nodes already indexed.
+     * @return the number of nodes indexed so far.
      * @throws IOException         if an error occurs while writing to the
      *                             index.
      * @throws ItemStateException  if an node state cannot be found.
      * @throws RepositoryException if any other error occurs
      */
-    private void createIndex(NodeState node, Path path, ItemStateManager stateMgr)
+    private long createIndex(NodeState node,
+                             Path path,
+                             ItemStateManager stateMgr,
+                             long count)
             throws IOException, ItemStateException, RepositoryException {
         NodeId id = node.getNodeId();
         if (excludedIDs.contains(id)) {
-            return;
+            return count;
         }
         executeAndLog(new AddNode(getTransactionId(), id.getUUID()));
+        if (++count % 100 == 0) {
+            PathResolver resolver = new DefaultNamePathResolver(
+                    handler.getContext().getNamespaceRegistry());
+            log.info("indexing... {} ({})", resolver.getJCRPath(path), new Long(count));
+        }
+        if (count % 10 == 0) {
+            checkIndexingQueue(true);
+        }
         checkVolatileCommit();
         List children = node.getChildNodeEntries();
         for (Iterator it = children.iterator(); it.hasNext();) {
@@ -1069,9 +1090,10 @@ public class MultiIndex {
                         e, handler, path, node, child);
             }
             if (childState != null) {
-                createIndex(childState, childPath, stateMgr);
+                count = createIndex(childState, childPath, stateMgr, count);
             }
         }
+        return count;
     }
 
     /**
@@ -1140,10 +1162,27 @@ public class MultiIndex {
     }
 
     /**
-     * Checks the indexing queue for finished text extrator jobs and
-     * updates the index accordingly if there are any new ones.
+     * Checks the indexing queue for finished text extrator jobs and updates the
+     * index accordingly if there are any new ones. This method is synchronized
+     * and should only be called by the timer task that periodically checks if
+     * there are documents ready in the indexing queue. A new transaction is
+     * used when documents are transfered from the indexing queue to the index.
      */
     private synchronized void checkIndexingQueue() {
+        checkIndexingQueue(false);
+    }
+
+    /**
+     * Checks the indexing queue for finished text extrator jobs and updates the
+     * index accordingly if there are any new ones.
+     *
+     * @param transactionPresent whether a transaction is in progress and the
+     *                           current {@link #getTransactionId()} should be
+     *                           used. If <code>false</code> a new transaction
+     *                           is created when documents are transfered from
+     *                           the indexing queue to the index.
+     */
+    private void checkIndexingQueue(boolean transactionPresent) {
         Document[] docs = indexingQueue.getFinishedDocuments();
         Map finished = new HashMap();
         for (int i = 0; i < docs.length; i++) {
@@ -1153,17 +1192,26 @@ public class MultiIndex {
 
         // now update index with the remaining ones if there are any
         if (!finished.isEmpty()) {
-            log.debug("updating index with {} nodes from indexing queue.",
+            log.info("updating index with {} nodes from indexing queue.",
                     new Long(finished.size()));
 
             // remove documents from the queue
-            Iterator it = finished.keySet().iterator();
-            while (it.hasNext()) {
+            for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
                 indexingQueue.removeDocument(it.next().toString());
             }
 
             try {
-                update(finished.keySet(), finished.values());
+                if (transactionPresent) {
+                    for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
+                        executeAndLog(new DeleteNode(getTransactionId(), (UUID) it.next()));
+                    }
+                    for (Iterator it = finished.values().iterator(); it.hasNext(); ) {
+                        executeAndLog(new AddNode(
+                                getTransactionId(), (Document) it.next()));
+                    }
+                } else {
+                    update(finished.keySet(), finished.values());
+                }
             } catch (IOException e) {
                 // update failed
                 log.warn("Failed to update index with deferred text extraction", e);
