@@ -862,7 +862,6 @@ public class NodeIndexer {
             length = value.getBLOBFileValue().getLength();
         } else if (value.getType() == PropertyType.NAME
                 || value.getType() == PropertyType.PATH) {
-            // TODO https://jsr-283.dev.java.net/issues/show_bug.cgi?id=464
             return;
         } else {
             length = value.toString().length();
