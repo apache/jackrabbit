@@ -4737,13 +4737,25 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     // TODO: JCR-1565 JSR 283 lifecycle management
     public String[] getAllowedLifecycleTransistions()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
+            throw new UnsupportedRepositoryOperationException();
+        } else {
+            throw new UnsupportedRepositoryOperationException(
+                    "Only nodes with mixin node type mix:lifecycle"
+                    + " may participate in a lifecycle.");
+        }
     }
 
     // TODO: JCR-1565 JSR 283 lifecycle management
     public void followLifecycleTransition(String transition)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException();
+        if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
+            throw new UnsupportedRepositoryOperationException();
+        } else {
+            throw new UnsupportedRepositoryOperationException(
+                    "Only nodes with mixin node type mix:lifecycle"
+                    + " may participate in a lifecycle.");
+        }
     }
 
     //--------------------------------------------------------------< Object >
