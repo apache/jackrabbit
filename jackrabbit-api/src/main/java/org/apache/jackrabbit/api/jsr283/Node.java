@@ -19,6 +19,7 @@ package org.apache.jackrabbit.api.jsr283;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -196,5 +197,51 @@ public interface Node extends javax.jcr.Node {
      * @since JCR 2.0
      */
     public void removeSharedSet() throws VersionException, LockException, ConstraintViolationException, RepositoryException;
+
+    /**
+     * Causes the lifecycle state of this node to undergo the specified
+     * <code>transition</code>.
+     * <p>
+     * This method may change the value of the <code>jcr:currentLifecycleState</code>
+     * property, in most cases it is expected that the implementation will change
+     * the value to that of the passed <code>transition</code> parameter, though
+     * this is an implementation-specific issue. If the <code>jcr:currentLifecycleState</code>
+     * property is changed the change is persisted immediately, there is no need
+     * to call <code>save</code>.
+     * <p>
+     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
+     * implementation does not support lifecycle actions or if this node does
+     * not have the <code>mix:lifecycle</code> mixin.
+     * <p>
+     * Throws <code>InvalidLifecycleTransitionException</code> if the lifecycle
+     * transition is not successful.
+     *
+     * @param transition a state transition
+     * @throws UnsupportedRepositoryOperationException
+     *                             if this implementation does
+     *                             not support lifecycle actions or if this node does not have the
+     *                             <code>mix:lifecycle</code> mixin.
+     * @throws InvalidLifecycleTransitionException
+     *                             if the lifecycle transition is not successful.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public void followLifecycleTransition(String transition)
+        throws UnsupportedRepositoryOperationException,
+        InvalidLifecycleTransitionException, RepositoryException;
+
+    /**
+     * Returns the list of valid state transitions for this node.
+     *
+     * @return a <code>String</code> array.
+     * @throws UnsupportedRepositoryOperationException
+     *                             if this implementation does
+     *                             not support lifecycle actions or if this node does not have the
+     *                             <code>mix:lifecycle</code> mixin.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public String[] getAllowedLifecycleTransistions()
+        throws UnsupportedRepositoryOperationException, RepositoryException;
 
 }
