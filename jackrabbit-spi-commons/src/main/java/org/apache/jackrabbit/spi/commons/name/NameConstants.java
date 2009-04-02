@@ -311,6 +311,25 @@ public class NameConstants {
      */
     public static final Name JCR_REQUIREDPRIMARYTYPES = FACTORY.create(Name.NS_JCR_URI, "requiredPrimaryTypes");
 
+
+    //-------------------------------< lifecycle related item name constants >
+
+    /**
+     * <code>jcr:lifecyclePolicy</code>: This property is a reference to
+     * another node that contains lifecycle policy information.
+     * @since JCR 2.0
+     */
+    public static final Name JCR_LIFECYCLE_POLICY =
+        FACTORY.create(Name.NS_JCR_URI, "lifecyclePolicy");
+
+    /**
+     * <code>jcr:currentLifecycleState</code>: This property is a string
+     * identifying the current lifecycle state of this node.
+     * @since JCR 2.0
+     */
+    public static final Name JCR_CURRENT_LIFECYCLE_STATE =
+        FACTORY.create(Name.NS_JCR_URI, "currentLifecycleState");
+
     //-------------------------------------------< node type name constants >---
     /**
      * nt:unstructured
@@ -401,6 +420,12 @@ public class NameConstants {
      */
     public static final Name NT_CHILDNODEDEFINITION = FACTORY.create(Name.NS_NT_URI, "childNodeDefinition");
 
+    /**
+     * <code>mix:lifecycle</code>
+     * @since JCR 2.0
+     */
+    public static final Name MIX_LIFECYCLE =
+        FACTORY.create(Name.NS_MIX_URI, "lifecycle");
 
     //--------------------------------------------------------------------------
     /**
