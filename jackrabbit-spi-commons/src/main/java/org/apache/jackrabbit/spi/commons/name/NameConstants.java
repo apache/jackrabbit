@@ -421,7 +421,8 @@ public class NameConstants {
     public static final Name NT_CHILDNODEDEFINITION = FACTORY.create(Name.NS_NT_URI, "childNodeDefinition");
 
     /**
-     * <code>mix:lifecycle</code>
+     * <code>mix:lifecycle</code>: Only nodes with mixin node type
+     * <code>mix:lifecycle</code> may participate in a lifecycle.
      * @since JCR 2.0
      */
     public static final Name MIX_LIFECYCLE =
