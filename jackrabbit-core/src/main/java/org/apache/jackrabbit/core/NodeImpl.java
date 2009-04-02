@@ -55,6 +55,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.api.jsr283.InvalidLifecycleTransitionException;
 import org.apache.jackrabbit.api.jsr283.lock.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -4731,6 +4732,18 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 }
             }
         }
+    }
+
+    // TODO: JCR-1565 JSR 283 lifecycle management
+    public String[] getAllowedLifecycleTransistions()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    // TODO: JCR-1565 JSR 283 lifecycle management
+    public void followLifecycleTransition(String transition)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
     }
 
     //--------------------------------------------------------------< Object >
