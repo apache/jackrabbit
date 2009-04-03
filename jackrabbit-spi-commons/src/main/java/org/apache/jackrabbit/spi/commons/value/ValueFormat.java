@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi.commons.value;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
@@ -116,20 +115,12 @@ public class ValueFormat {
                 qValue = factory.create(jcrValue.getBytes());
                 break;
             case PropertyType.NAME:
-                try {
-                    Name qName = resolver.getQName(jcrValue);
-                    qValue = factory.create(qName);
-                } catch (NameException e) {
-                    throw new RepositoryException(e);
-                }
+                Name qName = resolver.getQName(jcrValue);
+                qValue = factory.create(qName);
                 break;
             case PropertyType.PATH:
-                try {
-                    Path qPath = resolver.getQPath(jcrValue).getNormalizedPath();
-                    qValue = factory.create(qPath);
-                } catch (NameException e) {
-                    throw new RepositoryException(e);
-                }
+                Path qPath = resolver.getQPath(jcrValue).getNormalizedPath();
+                qValue = factory.create(qPath);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid property type.");
