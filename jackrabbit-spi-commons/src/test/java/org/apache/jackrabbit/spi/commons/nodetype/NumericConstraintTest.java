@@ -49,7 +49,7 @@ public class NumericConstraintTest extends ValueConstraintTest {
         return PropertyType.DOUBLE;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
+    protected String[] getInvalidQualifiedDefinitions() throws RepositoryException {
         return new String[] {"test", resolver.getQPath("/a/b/jcr:c").getString(), "true"};
     }
 

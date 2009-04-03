@@ -21,8 +21,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.slf4j.Logger;
@@ -58,7 +56,7 @@ public abstract class ValueConstraintTest extends TestCase {
 
     protected abstract int getType();
 
-    protected abstract String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException;
+    protected abstract String[] getInvalidQualifiedDefinitions() throws RepositoryException;
 
     protected abstract String[] getDefinitions() throws RepositoryException;
 
