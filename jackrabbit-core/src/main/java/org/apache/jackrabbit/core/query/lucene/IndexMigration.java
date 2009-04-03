@@ -85,14 +85,11 @@ public class IndexMigration {
             }
         } finally {
             reader.release();
+            index.releaseWriterAndReaders();
         }
 
         // if we get here then the index must be migrated
         log.debug("Index requires migration {}", indexDir);
-
-        // make sure readers are closed, otherwise the directory
-        // cannot be deleted
-        index.releaseWriterAndReaders();
 
         String migrationName = index.getName() + "_v2.3";
         if (directoryManager.hasDirectory(migrationName)) {
