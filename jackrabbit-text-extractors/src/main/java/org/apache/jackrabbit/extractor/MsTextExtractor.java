@@ -20,7 +20,7 @@ package org.apache.jackrabbit.extractor;
 /**
  * Text extractor for Microsoft Word documents.
  */
-public class MsTextExtractor extends TikaTextExtractor {
+public class MsTextExtractor extends DefaultTextExtractor {
 
     private static String[] TYPES = new String[] {
         "application/vnd.ms-word", 
