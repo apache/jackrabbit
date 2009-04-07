@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.test.RepositoryStubException;
+import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.rmi.client.ClientRepositoryFactory;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -30,7 +31,7 @@ import java.net.MalformedURLException;
  * <code>RMIRepositoryStub</code> implements a repository stub that initializes
  * a Jackrabbit RMI client.
  */
-public class RMIRepositoryStub extends DefaultRepositoryStub {
+public class RMIRepositoryStub extends JackrabbitRepositoryStub {
 
     /**
      * Property for the repository url

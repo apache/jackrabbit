@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
+import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.jcr2spi.AbstractRepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -31,7 +32,7 @@ import java.util.Properties;
  * initializes a Jackrabbit repository and wraps it with a SPI2JCR layer and
  * a JCR2SPI layer.
  */
-public class RepositoryStubImpl extends DefaultRepositoryStub {
+public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     /**
      * The Jackrabbit repository.
