@@ -44,6 +44,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -83,6 +84,11 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
     private final SessionImpl session;
 
     /**
+     * The value factory obtained from the current session.
+     */
+    private final ValueFactory valueFactory;
+
+    /**
      * The root node definition.
      */
     private final NodeDefinitionImpl rootNodeDef;
@@ -112,11 +118,14 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      *
      * @param ntReg      node type registry
      * @param session    current session
+     * @throws RepositoryException If an error occurs.
      */
     public NodeTypeManagerImpl(
-            NodeTypeRegistry ntReg, SessionImpl session, DataStore store) {
+            NodeTypeRegistry ntReg, SessionImpl session, DataStore store)
+            throws RepositoryException {
         this.ntReg = ntReg;
         this.session = session;
+        this.valueFactory = session.getValueFactory();
         this.ntReg.addListener(this);
         this.store = store;
 
@@ -185,7 +194,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 NodeTypeDef def = ntReg.getNodeTypeDef(name);
-                nt = new NodeTypeImpl(ent, def, this, session, store);
+                nt = new NodeTypeImpl(ent, def, this, session, valueFactory, store);
                 ntCache.put(name, nt);
             }
             return nt;

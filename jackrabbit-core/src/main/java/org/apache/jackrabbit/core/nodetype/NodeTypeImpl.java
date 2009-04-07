@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +30,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -51,6 +51,8 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
     private final NodeTypeManagerImpl ntMgr;
     // resolver used to translate qualified names to JCR names
     private final NamePathResolver resolver;
+    // value factory used for type conversion
+    private final ValueFactory valueFactory;
     private final DataStore store;
 
     /**
@@ -66,10 +68,12 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
      * @param resolver
      */
     NodeTypeImpl(EffectiveNodeType ent, NodeTypeDef ntd,
-                 NodeTypeManagerImpl ntMgr, NamePathResolver resolver, DataStore store) {
+                 NodeTypeManagerImpl ntMgr, NamePathResolver resolver,
+                 ValueFactory valueFactory, DataStore store) {
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.resolver = resolver;
+        this.valueFactory = valueFactory;
         this.ntd = ntd;
         this.store = store;
     }
@@ -444,7 +448,7 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
                 // type conversion required
                 Value targetVal = ValueHelper.convert(
                         value, targetType,
-                        ValueFactoryImpl.getInstance());
+                        valueFactory);
                 internalValue = InternalValue.create(targetVal, resolver, store);
             } else {
                 // no type conversion required
@@ -521,8 +525,7 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
                     if (targetType != type) {
                         // type conversion required
                         Value targetVal = ValueHelper.convert(
-                                values[i], targetType,
-                                ValueFactoryImpl.getInstance());
+                                values[i], targetType, valueFactory);
                         internalValue = InternalValue.create(targetVal, resolver, store);
                     } else {
                         // no type conversion required
