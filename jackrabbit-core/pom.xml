@@ -96,18 +96,6 @@
         </configuration>
         <executions>
           <execution>
-            <id>do_init</id>
-            <phase>pre-integration-test</phase>
-            <configuration>
-              <includes>
-                <include>**/integration/PrepareTestRepository.java</include>
-              </includes>
-            </configuration>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-          <execution>
             <id>do_test</id>
             <phase>integration-test</phase>
             <configuration>
