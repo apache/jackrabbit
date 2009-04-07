@@ -16,11 +16,50 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.Set;
+
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.ParsingReader;
+
 /**
- * Composite text extractor that by default contains the standard
- * text extractors found in this package.
- *
- * @deprecated Use {@link TikaTextExtractor} instead
+ * Default text extractor based on Apache Tika.
  */
-public class DefaultTextExtractor extends TikaTextExtractor {
+public class DefaultTextExtractor implements TextExtractor {
+
+    /**
+     * Auto-detecting parser.
+     */
+    private static final Parser PARSER;
+
+    /**
+     * Supported content types.
+     */
+    private static final String[] TYPES;
+
+    static {
+        AutoDetectParser parser = new AutoDetectParser();
+        PARSER = parser;
+        Set types = parser.getParsers().keySet();
+        TYPES = (String[]) types.toArray(new String[types.size()]);
+    }
+
+    public String[] getContentTypes() {
+        return TYPES;
+    }
+
+    public Reader extractText(InputStream stream, String type, String encoding)
+            throws IOException {
+        Metadata metadata = new Metadata();
+        if (type != null && type.trim().length() > 0) {
+            metadata.set(Metadata.CONTENT_TYPE, type.trim());
+        }
+        // TODO: This creates a background thread. Is that a problem?
+        return new ParsingReader(PARSER, stream, metadata);
+    }
+
 }
