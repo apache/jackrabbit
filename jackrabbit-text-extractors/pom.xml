@@ -61,28 +61,25 @@
   </build>
 
   <dependencies>
-  <dependency>
+    <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version>3.5-beta3</version>
+      <version>3.5-beta5</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>openxml4j</artifactId>
       <version>1.0-beta</version>
     </dependency>
-
-    <!-- not sure if this is requred at runtime
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>ooxml-schemas</artifactId>
       <version>1.0</version>
     </dependency>
-    -->
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-scratchpad</artifactId>
-      <version>3.5-beta3</version>
+      <version>3.5-beta5</version>
     </dependency>
     <dependency>
       <groupId>pdfbox</groupId>
