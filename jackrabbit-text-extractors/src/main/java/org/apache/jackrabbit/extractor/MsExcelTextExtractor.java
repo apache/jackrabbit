@@ -16,61 +16,19 @@
  */
 package org.apache.jackrabbit.extractor;
 
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.hssf.extractor.ExcelExtractor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.Reader;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.StringReader;
-
 /**
  * Text extractor for Microsoft Excel sheets.
  */
-public class MsExcelTextExtractor extends AbstractTextExtractor {
+public class MsExcelTextExtractor extends DefaultTextExtractor {
 
-    /**
-     * Logger instance.
-     */
-    private static final Logger logger =
-        LoggerFactory.getLogger(MsExcelTextExtractor.class);
+    private static String[] TYPES = new String[] {
+        "application/vnd.ms-excel",
+        "application/msexcel",
+        "application/excel"
+    };
 
-    /**
-     * Force loading of dependent class.
-     */
-    static {
-        POIFSFileSystem.class.getName();
+    public String[] getContentTypes() {
+        return TYPES;
     }
 
-    /**
-     * Creates a new <code>MsExcelTextExtractor</code> instance.
-     */
-    public MsExcelTextExtractor() {
-        super(new String[] {
-                "application/vnd.ms-excel",
-                "application/msexcel",
-                "application/excel"
-        });
-    }
-
-    //-------------------------------------------------------< TextExtractor >
-
-    /**
-     * {@inheritDoc}
-     */
-    public Reader extractText(InputStream stream,
-                              String type,
-                              String encoding) throws IOException {
-        try {
-            POIFSFileSystem fs = new POIFSFileSystem(stream);
-            return new StringReader(new ExcelExtractor(fs).getText());
-        } catch (RuntimeException e) {
-            logger.warn("Failed to extract Excel text content", e);
-            return new StringReader("");
-        } finally {
-            stream.close();
-        }
-    }
 }
