@@ -18,7 +18,6 @@ package org.apache.jackrabbit.servlet;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 
