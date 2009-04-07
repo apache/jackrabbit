@@ -68,13 +68,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
-      <artifactId>openxml4j</artifactId>
-      <version>1.0-beta</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.poi</groupId>
-      <artifactId>ooxml-schemas</artifactId>
-      <version>1.0</version>
+      <artifactId>poi-ooxml</artifactId>
+      <version>3.5-beta5</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
