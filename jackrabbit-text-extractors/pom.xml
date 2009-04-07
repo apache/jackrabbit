@@ -62,28 +62,10 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.poi</groupId>
-      <artifactId>poi</artifactId>
-      <version>3.5-beta5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.poi</groupId>
-      <artifactId>poi-ooxml</artifactId>
-      <version>3.5-beta5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.poi</groupId>
-      <artifactId>poi-scratchpad</artifactId>
-      <version>3.5-beta5</version>
-    </dependency>
-    <dependency>
-      <groupId>pdfbox</groupId>
-      <artifactId>pdfbox</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.nekohtml</groupId>
-      <artifactId>nekohtml</artifactId>
-      <version>1.9.7</version>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika</artifactId>
+      <version>0.3</version>
+      <classifier>jdk14</classifier>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
