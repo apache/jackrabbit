@@ -16,67 +16,25 @@
  */
 package org.apache.jackrabbit.extractor;
 
-import org.apache.poi.extractor.ExtractorFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.Reader;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.StringReader;
 
 /**
  * Text extractor for Microsoft Word documents.
  */
-public class MsTextExtractor extends AbstractTextExtractor {
+public class MsTextExtractor extends TikaTextExtractor {
 
-    /**
-     * Logger instance.
-     */
-    private static final Logger logger =
-        LoggerFactory.getLogger(MsTextExtractor.class);
+    private static String[] TYPES = new String[] {
+        "application/vnd.ms-word", 
+        "application/msword",
+        "application/vnd.ms-powerpoint",
+        "application/mspowerpoint",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    };
 
-    /**
-     * Force loading of dependent class.
-     */
-    static {
-        ExtractorFactory.class.getName();
-    }
-
-    /**
-     * Creates a new <code>MsWordTextExtractor</code> instance.
-     */
-    public MsTextExtractor() {
-        super(new String[]{"application/vnd.ms-word", 
-                           "application/msword",
-                           "application/vnd.ms-powerpoint",
-                           "application/mspowerpoint",
-                           "application/vnd.ms-excel",
-                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    }
-
-    //-------------------------------------------------------< TextExtractor >
-
-    /**
-     * {@inheritDoc}
-     * Returns an empty reader if an error occured extracting text from
-     * the word document.
-     */
-    public Reader extractText(InputStream stream,
-                              String type,
-                              String encoding) throws IOException {
-        try {
-            String text = ExtractorFactory.createExtractor(stream).getText();
-            return new StringReader(text);
-        } catch (Exception e) {
-            logger.warn("Failed to extract Microsoft Document text content", e);
-            return new StringReader("");
-        } finally {
-            stream.close();
-        }
+    public String[] getContentTypes() {
+        return TYPES;
     }
 
 }
