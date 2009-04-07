@@ -19,16 +19,8 @@ package org.apache.jackrabbit.extractor;
 /**
  * Composite text extractor that by default contains the standard
  * text extractors found in this package.
+ *
+ * @deprecated Use {@link TikaTextExtractor} instead
  */
-public class DefaultTextExtractor extends CompositeTextExtractor {
-
-    /**
-     * Creates the default text extractor by adding instances of the standard
-     * text extractors as components.
-     */
-    public DefaultTextExtractor() {
-        addTextExtractor(new PlainTextExtractor());
-        addTextExtractor(new XMLTextExtractor());
-    }
-
+public class DefaultTextExtractor extends TikaTextExtractor {
 }
