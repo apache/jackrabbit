@@ -22,8 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -36,6 +39,7 @@ import javax.jcr.ValueFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
@@ -170,8 +174,16 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
 
     private void prepareTestContent(Session session)
             throws RepositoryException, IOException {
-        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
-            session.getWorkspace().getNodeTypeManager();
+        JackrabbitWorkspace workspace =
+            (JackrabbitWorkspace) session.getWorkspace();
+        Set workspaces = new HashSet(
+                Arrays.asList(workspace.getAccessibleWorkspaceNames()));
+        if (!workspaces.contains("test")) {
+            workspace.createWorkspace("test");
+        }
+
+        JackrabbitNodeTypeManager manager =
+            (JackrabbitNodeTypeManager) workspace.getNodeTypeManager();
         if (!manager.hasNodeType("test:versionable")) {
             InputStream xml = getResource("test-nodetypes.xml");
             try {
