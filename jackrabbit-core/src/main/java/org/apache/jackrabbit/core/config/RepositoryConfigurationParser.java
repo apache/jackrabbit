@@ -525,22 +525,22 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * </pre>
      *
      * @param parent Workspace-Root-Element
-     * @return
+     * @return a new <code>WorkspaceSecurityConfig</code>
      * @throws ConfigurationException
      */
     public WorkspaceSecurityConfig parseWorkspaceSecurityConfig(Element parent)
         throws ConfigurationException {
 
-        BeanConfig factConf = null;
+        BeanConfig acProviderConfig = null;
         Element element = getElement(parent, WSP_SECURITY_ELEMENT, false);
         if (element != null) {
             Element provFact = getElement(element, AC_PROVIDER_ELEMENT, false);
             if (provFact != null) {
-                factConf = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
-                factConf.setValidate(false); // JCR-1920
+                acProviderConfig = parseBeanConfig(element, AC_PROVIDER_ELEMENT);
+                acProviderConfig.setValidate(false); // JCR-1920
             }
         }
-        return new WorkspaceSecurityConfig(factConf);
+        return new WorkspaceSecurityConfig(acProviderConfig);
     }
 
     /**
