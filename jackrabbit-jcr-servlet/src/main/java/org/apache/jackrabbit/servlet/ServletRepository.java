@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.servlet;
 
+import javax.servlet.FilterConfig;
 import javax.servlet.GenericServlet;
+import javax.servlet.ServletException;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
 
@@ -50,9 +52,26 @@ import org.apache.jackrabbit.commons.repository.ProxyRepository;
  *
  * }
  * </pre>
+ * <p>
+ * Starting with version 1.6 this class can also be used by a servlet filter:
+ * <pre>
+ * public class MyFilter implements Filter {
+ *
+ *     private Repository repository;
+ *
+ *     public void init(FilterConfig config) {
+ *         repository = new ServletRepository(config);
+ *     }
+ *
+ *     // ...
+ *
+ * }
+ * </pre>
+ 
  *
  * @since 1.4
  * @see ServletRepositoryFactory
+ * @see FilterRepositoryFactory
  */
 public class ServletRepository extends ProxyRepository {
 
@@ -64,6 +83,17 @@ public class ServletRepository extends ProxyRepository {
      */
     public ServletRepository(GenericServlet servlet) {
         super(new ServletRepositoryFactory(servlet));
+    }
+
+    /**
+     * Creates a proxy for a repository found in the servlet context
+     * associated with the given filter configuration.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param config filter configuration
+     */
+    public ServletRepository(FilterConfig config) {
+        super(new FilterRepositoryFactory(config));
     }
 
 }
