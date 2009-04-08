@@ -107,6 +107,11 @@ public class FieldNames {
     public static final String REINDEXING_REQUIRED = "_:REINDEXING_REQUIRED".intern();
 
     /**
+     * Name of the field that marks shareable nodes.
+     */
+    public static final String SHAREABLE_NODE = "_:SHAREABLE_NODE".intern();
+
+    /**
      * Returns a named length for use as a term in the index. The named length
      * is of the form: <code>propertyName</code> + '[' +
      * {@link LongField#longToString(long)}.

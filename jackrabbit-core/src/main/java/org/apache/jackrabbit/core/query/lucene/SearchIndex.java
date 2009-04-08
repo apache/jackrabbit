@@ -1410,11 +1410,11 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * @inheritDoc
          */
-        public int getParent(int n) throws IOException {
+        public int[] getParents(int n, int[] docNumbers) throws IOException {
             int i = readerIndex(n);
             DocId id = subReaders[i].getParentDocId(n - starts[i]);
             id = id.applyOffset(starts[i]);
-            return id.getDocumentNumber(this);
+            return id.getDocumentNumbers(this, docNumbers);
         }
 
         //-------------------------< MultiIndexReader >-------------------------

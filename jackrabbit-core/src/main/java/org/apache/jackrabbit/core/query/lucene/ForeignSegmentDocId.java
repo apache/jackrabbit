@@ -26,6 +26,11 @@ import java.util.BitSet;
 final class ForeignSegmentDocId extends DocId {
 
     /**
+     * Empty array of {@link ForeignSegmentDocId}s.
+     */
+    static final ForeignSegmentDocId[] EMPTY_ARRAY = new ForeignSegmentDocId[0];
+
+    /**
      * The document number.
      */
     private final int docNumber;
@@ -64,13 +69,23 @@ final class ForeignSegmentDocId extends DocId {
     /**
      * @inheritDoc
      */
-    int getDocumentNumber(MultiIndexReader reader) throws IOException {
-        return reader.getDocumentNumber(this);
+    int[] getDocumentNumbers(MultiIndexReader reader, int[] docNumbers) throws IOException {
+        int doc = reader.getDocumentNumber(this);
+        if (doc == -1) {
+            return EMPTY;
+        } else {
+            if (docNumbers.length == 1) {
+                docNumbers[0] = doc;
+                return docNumbers;
+            } else {
+                return new int[]{doc};
+            }
+        }
     }
 
     /**
      * This implementation will return <code>this</code>. Document number is
-     * not known until resolved in {@link #getDocumentNumber(MultiIndexReader)}.
+     * not known until resolved in {@link DocId#getDocumentNumbers(MultiIndexReader,int[])}.
      *
      * {@inheritDoc}
      */
@@ -82,7 +97,7 @@ final class ForeignSegmentDocId extends DocId {
      * Always returns <code>true</code> because this calls is in context of the
      * index segment where this DocId lives. Within this segment this DocId is
      * always valid. Whether the target of this DocId is valid can only be
-     * checked in the method {@link #getDocumentNumber(MultiIndexReader)}.
+     * checked in the method {@link DocId#getDocumentNumbers(MultiIndexReader,int[])}.
      *
      * @param deleted the deleted documents in the segment where this DocId
      *                lives.

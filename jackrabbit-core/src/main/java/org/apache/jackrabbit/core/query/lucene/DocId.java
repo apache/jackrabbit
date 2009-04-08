@@ -27,6 +27,8 @@ import java.util.BitSet;
  */
 abstract class DocId {
 
+    static final int[] EMPTY = new int[0];
+
     /**
      * Indicates a null DocId. Will be returned if the root node is asked for
      * its parent.
@@ -34,12 +36,14 @@ abstract class DocId {
     static final DocId NULL = new DocId() {
 
         /**
-         * Always returns <code>-1</code>.
+         * Always returns an empty array.
          * @param reader the index reader.
-         * @return always <code>-1</code>.
+         * @param docNumbers a int array for reuse as return value.
+         * @return always an empty array.
          */
-        final int getDocumentNumber(MultiIndexReader reader) {
-            return -1;
+        final int[] getDocumentNumbers(MultiIndexReader reader,
+                                       int[] docNumbers) {
+            return EMPTY;
         }
 
         /**
@@ -62,15 +66,22 @@ abstract class DocId {
     };
 
     /**
-     * Returns the document number of this <code>DocId</code>. If this id is
-     * invalid <code>-1</code> is returned.
+     * Returns the document numbers of this <code>DocId</code>. An empty array
+     * is returned if this id is invalid.
      *
-     * @param reader the IndexReader to resolve this <code>DocId</code>.
-     * @return the document number of this <code>DocId</code> or <code>-1</code>
-     *         if it is invalid (e.g. does not exist).
+     * @param reader     the IndexReader to resolve this <code>DocId</code>.
+     * @param docNumbers an array for reuse. An implementation should use the
+     *                   passed array as a container for the return value,
+     *                   unless the length of the returned array is different
+     *                   from <code>docNumbers</code>. In which case an
+     *                   implementation will create a new array with an
+     *                   appropriate size.
+     * @return the document numbers of this <code>DocId</code> or
+     *         empty if it is invalid (e.g. does not exist).
      * @throws IOException if an error occurs while reading from the index.
      */
-    abstract int getDocumentNumber(MultiIndexReader reader) throws IOException;
+    abstract int[] getDocumentNumbers(MultiIndexReader reader, int[] docNumbers)
+            throws IOException;
 
     /**
      * Applies an offset to this <code>DocId</code>. The returned <code>DocId</code>
@@ -123,6 +134,16 @@ abstract class DocId {
         return new UUIDDocId(uuid);
     }
 
+    /**
+     * Creates a <code>DocId</code> that references multiple UUIDs.
+     *
+     * @param uuids the UUIDs of the referenced nodes.
+     * @return a <code>DocId</code> based on multiple node UUIDs.
+     */
+    static DocId create(String[] uuids)  {
+        return new MultiUUIDDocId(uuids);
+    }
+
     //--------------------------< internal >------------------------------------
 
     /**
@@ -147,8 +168,13 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        int getDocumentNumber(MultiIndexReader reader) {
-            return docNumber;
+        int[] getDocumentNumbers(MultiIndexReader reader, int[] docNumbers) {
+            if (docNumbers.length == 1) {
+                docNumbers[0] = docNumber;
+                return docNumbers;
+            } else {
+                return new int[]{docNumber};
+            }
         }
 
         /**
@@ -208,7 +234,8 @@ abstract class DocId {
         /**
          * @inheritDoc
          */
-        int getDocumentNumber(MultiIndexReader reader) throws IOException {
+        int[] getDocumentNumbers(MultiIndexReader reader, int[] docNumbers)
+                throws IOException {
             int realDoc = -1;
             ForeignSegmentDocId segDocId = doc;
             if (segDocId != null) {
@@ -222,12 +249,18 @@ abstract class DocId {
                     doc = segDocId;
                 }
             }
-            return realDoc;
+
+            if (docNumbers.length == 1) {
+                docNumbers[0] = realDoc;
+                return docNumbers;
+            } else {
+                return new int[]{realDoc};
+            }
         }
 
         /**
          * This implementation will return <code>this</code>. Document number is
-         * not known until resolved in {@link #getDocumentNumber(MultiIndexReader)}.
+         * not known until resolved in {@link #getDocumentNumbers(MultiIndexReader,int[])}.
          *
          * @inheritDoc
          */
@@ -252,6 +285,78 @@ abstract class DocId {
          */
         public String toString() {
             return "UUIDDocId(" + new UUID(msb, lsb) + ")";
+        }
+    }
+
+    /**
+     * A DocId based on multiple UUIDDocIds.
+     */
+    private static final class MultiUUIDDocId extends DocId {
+
+        /**
+         * The internal uuid based doc ids.
+         */
+        private final UUIDDocId[] docIds;
+
+        /**
+         * @param uuids the uuids of the referenced nodes.
+         * @throws IllegalArgumentException if one of the uuids is malformed.
+         */
+        MultiUUIDDocId(String[] uuids) {
+            this.docIds = new UUIDDocId[uuids.length];
+            for (int i = 0; i < uuids.length; i++) {
+                docIds[i] = new UUIDDocId(UUID.fromString(uuids[i]));
+            }
+        }
+
+        /**
+         * @inheritDoc
+         */
+        int[] getDocumentNumbers(MultiIndexReader reader, int[] docNumbers)
+                throws IOException {
+            int[] tmp = new int[1];
+            docNumbers = new int[docIds.length];
+            for (int i = 0; i < docNumbers.length; i++) {
+                docNumbers[i] = docIds[i].getDocumentNumbers(reader, tmp)[0];
+            }
+            return docNumbers;
+        }
+
+        /**
+         * This implementation will return <code>this</code>. Document number is
+         * not known until resolved in {@link #getDocumentNumbers(MultiIndexReader,int[])}.
+         *
+         * @inheritDoc
+         */
+        DocId applyOffset(int offset) {
+            return this;
+        }
+
+        /**
+         * Always returns <code>true</code>.
+         *
+         * @param deleted the deleted documents.
+         * @return always <code>true</code>.
+         */
+        boolean isValid(BitSet deleted) {
+            return true;
+        }
+
+        /**
+         * Returns a String representation for this <code>DocId</code>.
+         *
+         * @return a String representation for this <code>DocId</code>.
+         */
+        public String toString() {
+            StringBuffer sb = new StringBuffer("MultiUUIDDocId(");
+            String separator = "";
+            for (int i = 0; i < docIds.length; i++) {
+                sb.append(separator);
+                separator = ", ";
+                sb.append(new UUID(docIds[i].msb, docIds[i].lsb));
+            }
+            sb.append(")");
+            return sb.toString();
         }
     }
 }

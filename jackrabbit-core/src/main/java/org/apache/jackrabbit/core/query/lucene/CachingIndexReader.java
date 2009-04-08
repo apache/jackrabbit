@@ -56,6 +56,12 @@ class CachingIndexReader extends FilterIndexReader {
     private static long currentTick;
 
     /**
+     * BitSet where bits that correspond to document numbers are set for
+     * shareable nodes.
+     */
+    private final BitSet shareableNodes;
+
+    /**
      * Cache of nodes parent relation. If an entry in the array is not null,
      * that means the node with the document number = array-index has the node
      * with <code>DocId</code> as parent.
@@ -105,6 +111,16 @@ class CachingIndexReader extends FilterIndexReader {
         super(delegatee);
         this.cache = cache;
         this.parents = new DocId[delegatee.maxDoc()];
+        this.shareableNodes = new BitSet();
+        TermDocs tDocs = delegatee.termDocs(
+                new Term(FieldNames.SHAREABLE_NODE, ""));
+        try {
+            while (tDocs.next()) {
+                shareableNodes.set(tDocs.doc());
+            }
+        } finally {
+            tDocs.close();
+        }
         this.cacheInitializer = new CacheInitializer(delegatee);
         if (initCache) {
             cacheInitializer.run();
@@ -144,31 +160,33 @@ class CachingIndexReader extends FilterIndexReader {
 
         if (parent == null) {
             Document doc = document(n, FieldSelectors.UUID_AND_PARENT);
-            String parentUUID = doc.get(FieldNames.PARENT);
-            if (parentUUID == null || parentUUID.length() == 0) {
+            String[] parentUUIDs = doc.getValues(FieldNames.PARENT);
+            if (parentUUIDs.length == 0 || parentUUIDs[0].length() == 0) {
+                // root node
                 parent = DocId.NULL;
             } else {
-                // only create a DocId from document number if there is no
-                // existing DocId
-                if (!existing) {
-                    Term id = new Term(FieldNames.UUID, parentUUID);
-                    TermDocs docs = termDocs(id);
-                    try {
-                        while (docs.next()) {
-                            if (!deleted.get(docs.doc())) {
-                                parent = DocId.create(docs.doc());
-                                break;
+                if (shareableNodes.get(n)) {
+                    parent = DocId.create(parentUUIDs);
+                } else {
+                    if (!existing) {
+                        Term id = new Term(FieldNames.UUID, parentUUIDs[0]);
+                        TermDocs docs = termDocs(id);
+                        try {
+                            while (docs.next()) {
+                                if (!deleted.get(docs.doc())) {
+                                    parent = DocId.create(docs.doc());
+                                    break;
+                                }
                             }
+                        } finally {
+                            docs.close();
                         }
-                    } finally {
-                        docs.close();
                     }
-                }
-
-                // if still null, then parent is not in this index, or existing
-                // DocId was invalid. thus, only allowed to create DocId from uuid
-                if (parent == null) {
-                    parent = DocId.create(parentUUID);
+                    // if still null, then parent is not in this index, or existing
+                    // DocId was invalid. thus, only allowed to create DocId from uuid
+                    if (parent == null) {
+                        parent = DocId.create(parentUUIDs[0]);
+                    }
                 }
             }
 
@@ -379,8 +397,12 @@ class CachingIndexReader extends FilterIndexReader {
                 public void collect(Term term, TermDocs tDocs) throws IOException {
                     UUID uuid = UUID.fromString(term.text());
                     while (tDocs.next()) {
-                        NodeInfo info = new NodeInfo(tDocs.doc(), uuid);
-                        docs.put(new Integer(info.docId), info);
+                        int doc = tDocs.doc();
+                        // skip shareable nodes
+                        if (!shareableNodes.get(doc)) {
+                            NodeInfo info = new NodeInfo(doc, uuid);
+                            docs.put(new Integer(doc), info);
+                        }
                     }
                 }
             });
@@ -392,9 +414,13 @@ class CachingIndexReader extends FilterIndexReader {
                     while (tDocs.next()) {
                         Integer docId = new Integer(tDocs.doc());
                         NodeInfo info = (NodeInfo) docs.get(docId);
-                        info.parent = uuid;
-                        docs.remove(docId);
-                        docs.put(info.uuid, info);
+                        if (info == null) {
+                            // shareable node, see above
+                        } else {
+                            info.parent = uuid;
+                            docs.remove(docId);
+                            docs.put(info.uuid, info);
+                        }
                     }
                 }
             });
@@ -413,6 +439,9 @@ class CachingIndexReader extends FilterIndexReader {
                 } else if (info.parent != null) {
                     foreignParents++;
                     parents[info.docId] = DocId.create(info.parent);
+                } else if (shareableNodes.get(info.docId)) {
+                    Document doc = reader.document(info.docId, FieldSelectors.UUID_AND_PARENT);
+                    parents[info.docId] = DocId.create(doc.getValues(FieldNames.PARENT));
                 } else {
                     // no parent -> root node
                     parents[info.docId] = DocId.NULL;
@@ -491,7 +520,7 @@ class CachingIndexReader extends FilterIndexReader {
         void collect(Term term, TermDocs tDocs) throws IOException;
     }
 
-    private static class NodeInfo {
+    private final static class NodeInfo {
 
         final int docId;
 
