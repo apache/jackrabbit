@@ -43,6 +43,12 @@
   - jcr:lockOwner (string) protected ignore
   - jcr:lockIsDeep (boolean) protected ignore
 
+/**
+ * @since 2.0
+ */
+[mix:shareable] > mix:referenceable
+  mixin
+
 //------------------------------------------------------------------------------
 // V E R S I O N I N G
 //------------------------------------------------------------------------------
@@ -58,7 +64,7 @@
     < 'nt:version'
   - jcr:mergeFailed (reference) protected multiple abort
 
-[nt:versionHistory] > mix:referenceable
+[nt:versionHistory] > nt:base, mix:referenceable
   - jcr:versionableUuid (string) mandatory autocreated protected abort
   + jcr:rootVersion (nt:version) = nt:version mandatory autocreated protected abort
   + jcr:versionLabels (nt:versionLabels) = nt:versionLabels mandatory autocreated protected abort
@@ -68,7 +74,7 @@
   - * (reference) protected abort
     < 'nt:version'
 
-[nt:version] > mix:referenceable
+[nt:version] > nt:base, mix:referenceable
   - jcr:created (date) mandatory autocreated protected abort
   - jcr:predecessors (reference) protected multiple abort
     < 'nt:version'
@@ -76,7 +82,7 @@
     < 'nt:version'
   + jcr:frozenNode (nt:frozenNode) protected abort
 
-[nt:frozenNode] > mix:referenceable
+[nt:frozenNode] > nt:base, mix:referenceable
   orderable
   - jcr:frozenPrimaryType (name) mandatory autocreated protected abort
   - jcr:frozenMixinTypes (name) protected multiple abort
@@ -142,7 +148,7 @@
 [nt:linkedFile] > nt:hierarchyNode
   - jcr:content (reference) primary mandatory
 
-[nt:resource] > mix:referenceable
+[nt:resource] > nt:base, mix:referenceable
   - jcr:encoding (string)
   - jcr:mimeType (string) mandatory
   - jcr:data (binary) primary mandatory
@@ -201,7 +207,7 @@
 // Principal based AC
 // -----------------------------------------------------------------------------
 
-[rep:AccessControl] > nt:base
+[rep:AccessControl]
   + * (rep:AccessControl) protected ignore
   + * (rep:PrincipalAccessControl) protected ignore
 
