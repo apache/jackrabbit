@@ -202,7 +202,7 @@ public class RepositoryImpl extends AbstractRepository
     private long nodesCount = 0;
     private long propsCount = 0;
 
-    // flag indicating if respository has been shut down
+    // flag indicating if repository has been shut down
     private boolean disposed = false;
 
     /**
