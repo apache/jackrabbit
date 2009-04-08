@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,7 +61,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private static Logger log = LoggerFactory.getLogger(NodeTypeRegistry.class);
 
     private static final String BUILTIN_NODETYPES_RESOURCE_PATH =
-            "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.xml";
+            "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.cnd";
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
             "custom_nodetypes.xml";
 
@@ -798,7 +800,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         InputStream in = null;
         try {
             in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
-            store.load(in);
+            if (in != null) {
+                Reader r = new InputStreamReader(in, "utf-8");
+                store.loadCND(r, BUILTIN_NODETYPES_RESOURCE_PATH);
+            }
         } catch (IOException ioe) {
             String error =
                     "internal error: failed to read built-in node type definitions stored in "
