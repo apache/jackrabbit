@@ -495,6 +495,16 @@ public abstract class AbstractReadableRepositoryService
     }
 
     /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep,
+                         boolean sessionScoped, long timeoutHint, String ownerHint)
+            throws UnsupportedRepositoryOperationException, LockException,
+            AccessDeniedException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
      * @return <code>null</code>.
      */
     public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId)
