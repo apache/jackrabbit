@@ -316,19 +316,26 @@ public class CompactNodeTypeDefReader {
      * @throws ParseException
      */
     private void doOptions(NodeTypeDef ntd) throws ParseException {
-        if (currentTokenEquals(Lexer.ORDERABLE)) {
-            ntd.setOrderableChildNodes(true);
-            nextToken();
-            if (currentTokenEquals(Lexer.MIXIN)) {
-                ntd.setMixin(true);
-                nextToken();
-            }
-        } else if (currentTokenEquals(Lexer.MIXIN)) {
-            ntd.setMixin(true);
-            nextToken();
+        boolean hasOption = true;
+        while (hasOption) {
             if (currentTokenEquals(Lexer.ORDERABLE)) {
-                ntd.setOrderableChildNodes(true);
                 nextToken();
+                ntd.setOrderableChildNodes(true);
+            } else if (currentTokenEquals(Lexer.MIXIN)) {
+                nextToken();
+                ntd.setMixin(true);
+            } else if (currentTokenEquals(Lexer.ABSTRACT)) {
+                nextToken();
+                ntd.setAbstract(true);
+            } else if (currentTokenEquals(Lexer.NOQUERY)) {
+                nextToken();
+                // ntd.setNoQuery(true);
+            } else if (currentTokenEquals(Lexer.PRIMARYITEM)) {
+                nextToken();
+                ntd.setPrimaryItemName(toQName(currentToken));
+                nextToken();
+            } else {
+                hasOption = false;
             }
         }
     }
