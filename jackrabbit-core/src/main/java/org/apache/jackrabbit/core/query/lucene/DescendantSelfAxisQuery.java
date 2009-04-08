@@ -26,6 +26,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.ItemManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -269,6 +270,8 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
                 private NodeTraversingQueryHits currentTraversal;
 
+                private ItemManager itemMgr = session.getItemManager();
+
                 {
                     fetchNextTraversal();
                 }
@@ -419,6 +422,16 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
         private int[] ancestorDocs = new int[2];
 
         /**
+         * Reusable array that holds document numbers of parents.
+         */
+        private int[] pDocs = new int[1];
+
+        /**
+         * Reusable array that holds a single document number.
+         */
+        private final int[] singleDoc = new int[1];
+
+        /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
          *
          * @param similarity the <code>Similarity</code> instance to use.
@@ -476,12 +489,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             boolean match = subScorer.skipTo(target);
             if (match) {
                 collectContextHits();
-                if (isValid(subScorer.doc())) {
-                    return true;
-                } else {
-                    // find next valid
-                    return next();
-                }
+                return isValid(subScorer.doc()) || next();
             } else {
                 return false;
             }
@@ -532,25 +540,46 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             }
 
             // check if doc is a descendant of one of the context nodes
-            int parentDoc = hResolver.getParent(doc);
+            pDocs = hResolver.getParents(doc, pDocs);
+
+            if (pDocs.length == 0) {
+                return false;
+            }
 
             int ancestorCount = 0;
-            ancestorDocs[ancestorCount++] = parentDoc;
+            // can only remember one parent doc per level
+            ancestorDocs[ancestorCount++] = pDocs[0];
 
             // traverse
-            while (parentDoc != -1 && (!contextHits.get(parentDoc) || ancestorCount < minLevels)) {
-                parentDoc = hResolver.getParent(parentDoc);
-                // resize array if needed
-                if (ancestorCount == ancestorDocs.length) {
-                    // double the size of the new array
-                    int[] copy = new int[ancestorDocs.length * 2];
-                    System.arraycopy(ancestorDocs, 0, copy, 0, ancestorDocs.length);
-                    ancestorDocs = copy;
+            while (pDocs.length != 0) {
+                boolean valid = false;
+                for (int i = 0; i < pDocs.length; i++) {
+                    if (ancestorCount >= minLevels && contextHits.get(pDocs[i])) {
+                        valid = true;
+                        break;
+                    }
                 }
-                ancestorDocs[ancestorCount++] = parentDoc;
+                if (valid) {
+                    break;
+                } else {
+                    // load next level
+                    pDocs = getParents(pDocs, singleDoc);
+                    // resize array if needed
+                    if (ancestorCount == ancestorDocs.length) {
+                        // double the size of the new array
+                        int[] copy = new int[ancestorDocs.length * 2];
+                        System.arraycopy(ancestorDocs, 0, copy, 0, ancestorDocs.length);
+                        ancestorDocs = copy;
+                    }
+                    if (pDocs.length != 0) {
+                        // can only remember one parent doc per level
+                        ancestorDocs[ancestorCount++] = pDocs[0];
+                    }
+                }
             }
-            if (parentDoc != -1) {
-                // since current parentDoc is a descendant of one of the context
+
+            if (pDocs.length > 0) {
+                // since current parentDocs are descendants of one of the context
                 // docs we can promote all ancestorDocs to the context hits
                 for (int i = 0; i < ancestorCount; i++) {
                     contextHits.set(ancestorDocs[i]);
@@ -558,6 +587,32 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 return true;
             }
             return false;
+        }
+
+        /**
+         * Returns the parent document numbers for the given <code>docs</code>.
+         *
+         * @param docs  the current document numbers, for which to get the
+         *              parents.
+         * @param pDocs an array of document numbers for reuse as return value.
+         * @return the parent document number for the given <code>docs</code>.
+         * @throws IOException if an error occurs while reading from the index.
+         */
+        private int[] getParents(int[] docs, int[] pDocs) throws IOException {
+            // optimize single doc
+            if (docs.length == 1) {
+                return hResolver.getParents(docs[0], pDocs);
+            } else {
+                pDocs = new int[0];
+                for (int i = 0; i < docs.length; i++) {
+                    int[] p = hResolver.getParents(docs[i], new int[0]);
+                    int[] tmp = new int[p.length + pDocs.length];
+                    System.arraycopy(pDocs, 0, tmp, 0, pDocs.length);
+                    System.arraycopy(p, 0, tmp, pDocs.length, p.length);
+                    pDocs = tmp;
+                }
+                return pDocs;
+            }
         }
     }
 }

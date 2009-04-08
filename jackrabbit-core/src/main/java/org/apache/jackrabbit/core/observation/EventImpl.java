@@ -165,6 +165,17 @@ public final class EventImpl implements JackrabbitEvent {
     }
 
     /**
+     * Returns a flag indicating whether the child node of this event is a
+     * shareable node. Only applies to node added/removed events.
+     *
+     * @return <code>true</code> for a shareable child node, <code>false</code>
+     *         otherwise.
+     */
+    public boolean isShareableChildNode() {
+        return eventState.isShareableNode();
+    }
+
+    /**
      * Return a flag indicating whether this is an externally generated event.
      *
      * @return <code>true</code> if this is an external event;

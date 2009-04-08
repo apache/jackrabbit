@@ -797,6 +797,36 @@ public class NodeState extends ItemState {
         }
     }
 
+    /**
+     * Returns a set of shares that were added.
+     *
+     * @return the set of shares that were added. Set of {@link NodeId}s.
+     */
+    public synchronized Set getAddedShares() {
+        if (!hasOverlayedState() || !isShareable()) {
+            return Collections.EMPTY_SET;
+        }
+        NodeState other = (NodeState) getOverlayedState();
+        HashSet set = new HashSet(sharedSet);
+        set.removeAll(other.sharedSet);
+        return set;
+    }
+
+    /**
+     * Returns a set of shares that were removed.
+     *
+     * @return the set of shares that were removed. Set of {@link NodeId}s.
+     */
+    public synchronized Set getRemovedShares() {
+        if (!hasOverlayedState() || !isShareable()) {
+            return Collections.EMPTY_SET;
+        }
+        NodeState other = (NodeState) getOverlayedState();
+        HashSet set = new HashSet(other.sharedSet);
+        set.removeAll(sharedSet);
+        return set;
+    }
+
     //--------------------------------------------------< ItemState overrides >
 
     /**

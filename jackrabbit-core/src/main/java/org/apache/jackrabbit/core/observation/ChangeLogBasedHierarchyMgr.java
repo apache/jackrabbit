@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -68,14 +69,29 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
      * Same as {@link #getPath(ItemId)}} except that the <i>old</i> path is
      * returned in case of a moved/removed item.
      *
-     * @param id
-     * @return
-     * @throws ItemNotFoundException
-     * @throws RepositoryException
+     * @param id the id of the node for which to retrieve the path.
+     * @return the path of the item.
+     * @throws ItemNotFoundException if an item state cannot be found.
+     * @throws RepositoryException if another error occurs.
      */
     public Path getZombiePath(ItemId id)
             throws ItemNotFoundException, RepositoryException {
         return zombieHierMgr.getPath(id);
+    }
+
+    /**
+     * Same as {@link #getName(NodeId, NodeId)} except that the <i>old</i> path
+     * is returned in case of moved/removed item.
+     *
+     * @param id the id of the node for which to retrieve the name.
+     * @param parentId the id of the parent node.
+     * @return the name of the node.
+     * @throws ItemNotFoundException if an item state cannot be found.
+     * @throws RepositoryException if another error occurs.
+     */
+    public Name getZombieName(NodeId id, NodeId parentId)
+            throws ItemNotFoundException, RepositoryException {
+        return zombieHierMgr.getName(id, parentId);
     }
 
     /**

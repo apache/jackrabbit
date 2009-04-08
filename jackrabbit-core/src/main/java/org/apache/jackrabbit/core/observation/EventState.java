@@ -113,6 +113,12 @@ public class EventState {
     private final boolean external;
 
     /**
+     * If set to <code>true</code>, indicates that the child node of a node
+     * added or removed event is a shareable node.
+     */
+    private boolean shareableNode = false;
+
+    /**
      * Creates a new <code>EventState</code> instance.
      *
      * @param type       the type of this event.
@@ -560,6 +566,27 @@ public class EventState {
      */
     boolean isExternal() {
         return external;
+    }
+
+    /**
+     * Returns a flag indicating whether the child node of this event is a
+     * shareable node. Only applies to node added/removed events.
+     *
+     * @return <code>true</code> for a shareable child node, <code>false</code>
+     *         otherwise.
+     */
+    boolean isShareableNode() {
+        return shareableNode;
+    }
+
+    /**
+     * Sets a new value for the {@link #shareableNode} flag.
+     *
+     * @param shareableNode whether the child node is shareable.
+     * @see #isShareableNode()
+     */
+    void setShareableNode(boolean shareableNode) {
+        this.shareableNode = shareableNode;
     }
 
     /**

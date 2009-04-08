@@ -173,6 +173,8 @@ public final class EventStateCollection {
                 // 4) child node removed
                 // 5) node moved
                 // 6) node reordered
+                // 7) shareable node added
+                // 8) shareable node removed
                 // cases 1) and 2) are detected with added and deleted states
                 // on the PropertyState itself.
                 // cases 3) and 4) are detected with added and deleted states
@@ -183,6 +185,10 @@ public final class EventStateCollection {
                 // the node that actually got moved.
                 // in case 6) only one node state changes. the state of the
                 // parent node.
+                // in case 7) parent of added shareable node has new child node
+                // entry.
+                // in case 8) parent of removed shareable node has removed child
+                // node entry.
                 NodeState n = (NodeState) state;
 
                 if (n.hasOverlayedState()) {
@@ -326,6 +332,9 @@ public final class EventStateCollection {
                                 session));
                     }
                 }
+
+                // create events if n is shareable
+                createShareableNodeEvents(n, changes, hmgr, stateMgr);
             } else {
                 // property changed
                 Path path = getPath(state.getId(), hmgr);
@@ -359,6 +368,9 @@ public final class EventStateCollection {
                         nodeType.getQName(),
                         mixins,
                         session));
+
+                // create events if n is shareable
+                createShareableNodeEvents(n, changes, hmgr, stateMgr);
             } else {
                 // property removed
                 // only create an event if node still exists
@@ -400,6 +412,9 @@ public final class EventStateCollection {
                         nodeType.getQName(),
                         mixins,
                         session));
+
+                // create events if n is shareable
+                createShareableNodeEvents(n, changes, hmgr, stateMgr);
             } else {
                 // property created / set
                 NodeState n = (NodeState) changes.get(state.getParentId());
@@ -518,6 +533,67 @@ public final class EventStateCollection {
 
     //----------------------------< internal >----------------------------------
 
+    private void createShareableNodeEvents(NodeState n,
+                                           ChangeLog changes,
+                                           ChangeLogBasedHierarchyMgr hmgr,
+                                           ItemStateManager stateMgr)
+            throws ItemStateException {
+        if (n.isShareable()) {
+            // check if a share was added or removed
+            for (Iterator added = n.getAddedShares().iterator(); added.hasNext(); ) {
+                NodeId parentId = (NodeId) added.next();
+                // ignore primary parent id
+                if (n.getParentId().equals(parentId)) {
+                    continue;
+                }
+                NodeState parent = (NodeState) changes.get(parentId);
+                if (parent == null) {
+                    // happens when mix:shareable is added to an existing node
+                    // usually the parent node state is in the change log
+                    // when a node is added to a shared set -> new child node
+                    // entry on parent node state.
+                    parent = (NodeState) stateMgr.getItemState(parentId);
+                }
+                Name ntName = getNodeType(parent, session).getQName();
+                EventState es = EventState.childNodeAdded(parentId,
+                        getPath(parentId, hmgr),
+                        n.getNodeId(),
+                        getNameElement(n.getNodeId(), parentId, hmgr),
+                        ntName,
+                        parent.getMixinTypeNames(),
+                        session);
+                es.setShareableNode(true);
+                events.add(es);
+            }
+            for (Iterator removed = n.getRemovedShares().iterator(); removed.hasNext(); ) {
+                NodeId parentId = (NodeId) removed.next();
+                // if this shareable node is removed, only create events for
+                // parent ids that are not primary
+                if (n.getParentId().equals(parentId)) {
+                    continue;
+                }
+                NodeState parent = (NodeState) changes.get(parentId);
+                if (parent == null) {
+                    // happens when mix:shareable is removed from an existing
+                    // node. Usually the parent node state is in the change log
+                    // when a node is removed to a shared set -> removed child
+                    // node entry on parent node state.
+                    parent = (NodeState) stateMgr.getItemState(parentId);
+                }
+                Name ntName = getNodeType(parent, session).getQName();
+                EventState es = EventState.childNodeRemoved(parentId,
+                        getZombiePath(parentId, hmgr),
+                        n.getNodeId(),
+                        getZombieNameElement(n.getNodeId(), parentId, hmgr),
+                        ntName,
+                        parent.getMixinTypeNames(),
+                        session);
+                es.setShareableNode(true);
+                events.add(es);
+            }
+        }
+    }
+
     /**
      * Resolves the node type name in <code>node</code> into a {@link javax.jcr.nodetype.NodeType}
      * object using the {@link javax.jcr.nodetype.NodeTypeManager} of <code>session</code>.
@@ -573,6 +649,61 @@ public final class EventStateCollection {
         } catch (RepositoryException e) {
             // should never happen actually
             String msg = "Unable to resolve path for item: " + itemId;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Returns the name element for the node with the given <code>nodeId</code>
+     * and its parent with <code>parentId</code>. This method is only useful
+     * if <code>nodeId</code> denotes a shareable node.
+     *
+     * @param nodeId the node id of a shareable node.
+     * @param parentId the id of the parent node.
+     * @param hmgr the hierarchy manager.
+     * @return the name element for the node.
+     * @throws ItemStateException if an error occurs while resolving the name.
+     */
+    private Path.Element getNameElement(NodeId nodeId,
+                                        NodeId parentId,
+                                        HierarchyManager hmgr)
+            throws ItemStateException {
+        try {
+            Name name = hmgr.getName(nodeId, parentId);
+            PathBuilder builder = new PathBuilder();
+            builder.addFirst(name);
+            return builder.getPath().getNameElement();
+        } catch (RepositoryException e) {
+            String msg = "Unable to get name for node with id: " + nodeId;
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Returns the <i>zombie</i> (i.e. the old) name element for the node with
+     * the given <code>nodeId</code> and its parent with <code>parentId</code>.
+     * This method is only useful if <code>nodeId</code> denotes a shareable
+     * node.
+     *
+     * @param nodeId   the node id of a shareable node.
+     * @param parentId the id of the parent node.
+     * @param hmgr     the hierarchy manager.
+     * @return the name element for the node.
+     * @throws ItemStateException if an error occurs while resolving the name.
+     */
+    private Path.Element getZombieNameElement(NodeId nodeId,
+                                              NodeId parentId,
+                                              ChangeLogBasedHierarchyMgr hmgr)
+            throws ItemStateException {
+        try {
+            Name name = hmgr.getZombieName(nodeId, parentId);
+            PathBuilder builder = new PathBuilder();
+            builder.addFirst(name);
+            return builder.getPath().getNameElement();
+        } catch (RepositoryException e) {
+            // should never happen actually
+            String msg = "Unable to resolve zombie name for item: " + nodeId;
             log.error(msg);
             throw new ItemStateException(msg, e);
         }

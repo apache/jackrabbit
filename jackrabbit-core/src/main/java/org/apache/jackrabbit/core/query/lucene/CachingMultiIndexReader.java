@@ -83,17 +83,11 @@ public final class CachingMultiIndexReader
     }
 
     /**
-     * Returns the document number of the parent of <code>n</code> or
-     * <code>-1</code> if <code>n</code> does not have a parent (<code>n</code>
-     * is the root node).
-     *
-     * @param n the document number.
-     * @return the document number of <code>n</code>'s parent.
-     * @throws IOException if an error occurs while reading from the index.
+     * {@inheritDoc}
      */
-    public int getParent(int n) throws IOException {
+    public int[] getParents(int n, int[] docNumbers) throws IOException {
         DocId id = getParentDocId(n);
-        return id.getDocumentNumber(this);
+        return id.getDocumentNumbers(this, docNumbers);
     }
 
     /**

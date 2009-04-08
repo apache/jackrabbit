@@ -82,8 +82,8 @@ public final class JackrabbitIndexReader
     /**
      * {@inheritDoc}
      */
-    public int getParent(int n) throws IOException {
-        return resolver.getParent(n);
+    public int[] getParents(int n, int[] docNumbers) throws IOException {
+        return resolver.getParents(n, docNumbers);
     }
 
     //-------------------------< MultiIndexReader >-----------------------------

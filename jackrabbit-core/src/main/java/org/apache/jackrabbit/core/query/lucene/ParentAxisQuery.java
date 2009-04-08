@@ -312,13 +312,24 @@ class ParentAxisQuery extends Query {
 
                 final IOException[] ex = new IOException[1];
                 contextScorer.score(new HitCollector() {
+
+                    private int[] docs = new int[1];
+
                     public void collect(int doc, float score) {
                         try {
-                            doc = hResolver.getParent(doc);
-                            if (doc != -1) {
-                                hits.set(doc);
+                            docs = hResolver.getParents(doc, docs);
+                            if (docs.length == 1) {
+                                // optimize single value
+                                hits.set(docs[0]);
                                 if (score != DEFAULT_SCORE.floatValue()) {
-                                    scores.put(new Integer(doc), new Float(score));
+                                    scores.put(new Integer(docs[0]), new Float(score));
+                                }
+                            } else {
+                                for (int i = 0; i < docs.length; i++) {
+                                    hits.set(docs[i]);
+                                    if (score != DEFAULT_SCORE.floatValue()) {
+                                        scores.put(new Integer(docs[i]), new Float(score));
+                                    }
                                 }
                             }
                         } catch (IOException e) {

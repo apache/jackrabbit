@@ -387,8 +387,18 @@ public class SearchManager implements SynchronousEventListener {
                     if (e.isExternal()) {
                         removedNodes.add(e.getChildId());
                     }
+                    if (e.isShareableChildNode()) {
+                        // simply re-index shareable nodes
+                        removedNodes.add(e.getChildId());
+                    }
                 } else if (type == Event.NODE_REMOVED) {
                     removedNodes.add(e.getChildId());
+                    if (e.isShareableChildNode()) {
+                        // check if there is a node remaining in the shared set
+                        if (itemMgr.hasItemState(e.getChildId())) {
+                            addedNodes.put(e.getChildId(), e);
+                        }
+                    }
                 } else {
                     propEvents.add(e);
                 }

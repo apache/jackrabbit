@@ -701,9 +701,20 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             long time = System.currentTimeMillis();
             Hits childrenHits = new AdaptingHits();
             Hits nameHits = new ScorerHits(nameTestScorer);
+            int[] docs = new int[1];
             for (int h = nameHits.next(); h > -1; h = nameHits.next()) {
-                if (docIds.contains(new Integer(hResolver.getParent(h)))) {
-                    childrenHits.set(h);
+                docs = hResolver.getParents(h, docs);
+                if (docs.length == 1) {
+                    // optimize single value
+                    if (docIds.contains(new Integer(docs[0]))) {
+                        childrenHits.set(h);
+                    }
+                } else {
+                    for (int i = 0; i < docs.length; i++) {
+                        if (docIds.contains(new Integer(docs[i]))) {
+                            childrenHits.set(h);
+                        }
+                    }
                 }
             }
             time = System.currentTimeMillis() - time;

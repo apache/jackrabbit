@@ -186,28 +186,24 @@ public class NodeIndexer {
         // UUID
         doc.add(new Field(
                 FieldNames.UUID, node.getNodeId().getUUID().toString(),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
         try {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES,
+                        Field.Index.NOT_ANALYZED_NO_NORMS));
                 addNodeName(doc, "", "");
+            } else if (node.getSharedSet().isEmpty()) {
+                addParentChildRelation(doc, node.getParentId());
             } else {
-                doc.add(new Field(
-                        FieldNames.PARENT, node.getParentId().toString(),
-                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
-                NodeState parent = (NodeState) stateProvider.getItemState(node.getParentId());
-                ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
-                if (child == null) {
-                    // this can only happen when jackrabbit
-                    // is running in a cluster.
-                    throw new RepositoryException(
-                            "Missing child node entry for node with id: "
-                            + node.getNodeId());
+                // shareable node
+                for (Iterator it = node.getSharedSet().iterator(); it.hasNext(); ) {
+                    addParentChildRelation(doc, (NodeId) it.next());
                 }
-                Name name = child.getName();
-                addNodeName(doc, name.getNamespaceURI(), name.getLocalName());
+                // mark shareable nodes
+                doc.add(new Field(FieldNames.SHAREABLE_NODE, "",
+                        Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
@@ -889,5 +885,33 @@ public class NodeIndexer {
             doc.add(new Field(FieldNames.NAMESPACE_URI, namespaceURI, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.add(new Field(FieldNames.LOCAL_NAME, localName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
         }
+    }
+
+    /**
+     * Adds a parent child relation to the given <code>doc</code>.
+     *
+     * @param doc      the document.
+     * @param parentId the id of the parent node.
+     * @throws ItemStateException  if the parent node cannot be read.
+     * @throws RepositoryException if the parent node does not have a child node
+     *                             entry for the current node.
+     */
+    protected void addParentChildRelation(Document doc,
+                                          NodeId parentId)
+            throws ItemStateException, RepositoryException {
+        doc.add(new Field(
+                FieldNames.PARENT, parentId.toString(),
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+        NodeState parent = (NodeState) stateProvider.getItemState(parentId);
+        ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
+        if (child == null) {
+            // this can only happen when jackrabbit
+            // is running in a cluster.
+            throw new RepositoryException(
+                    "Missing child node entry for node with id: "
+                    + node.getNodeId());
+        }
+        Name name = child.getName();
+        addNodeName(doc, name.getNamespaceURI(), name.getLocalName());
     }
 }
