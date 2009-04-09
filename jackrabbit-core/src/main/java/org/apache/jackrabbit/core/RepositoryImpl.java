@@ -242,22 +242,25 @@ public class RepositoryImpl extends AbstractRepository
     private WorkspaceEventChannel createWorkspaceEventChannel;
 
     /**
-     * private constructor
+     * Protected constructor.
      *
-     * @param repConfig
+     * @param repConfig the repository configuration.
+     * @throws RepositoryException if there is already another repository
+     *                             instance running on the given configuration
+     *                             or another error occurs.
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
+
+        // Acquire a lock on the repository home
+        repLock = repConfig.getRepositoryLockMechanism();
+        repLock.init(repConfig.getHomeDir());
+        repLock.acquire();
 
         log.info("Starting repository...");
 
         boolean succeeded = false;
         try {
             this.repConfig = repConfig;
-
-            // Acquire a lock on the repository home
-            repLock = repConfig.getRepositoryLockMechanism();
-            repLock.init(repConfig.getHomeDir());
-            repLock.acquire();
 
             // setup file systems
             repStore = repConfig.getFileSystem();
