@@ -20,18 +20,25 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.api.jsr283.observation.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.Session;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.observation.Event;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Collections;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * The <code>EventState</code> class encapsulates the session
@@ -43,6 +50,26 @@ public class EventState {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(EventState.class);
+
+    /**
+     * The key <code>srcAbsPath</code> in the info map.
+     */
+    static final String SRC_ABS_PATH = "srcAbsPath";
+
+    /**
+     * The key <code>destAbsPath</code> in the info map.
+     */
+    static final String DEST_ABS_PATH = "destAbsPath";
+
+    /**
+     * The key <code>srcChildRelPath</code> in the info map.
+     */
+    static final String SRC_CHILD_REL_PATH = "srcChildRelPath";
+
+    /**
+     * The key <code>destChildRelPath</code> in the info map.
+     */
+    static final String DEST_CHILD_REL_PATH = "destChildRelPath";
 
     /**
      * The {@link javax.jcr.observation.Event} of this event.
@@ -111,6 +138,11 @@ public class EventState {
      * another node in a clustered environment.
      */
     private final boolean external;
+
+    /**
+     * The info Map associated with this event.
+     */
+    private Map info = Collections.EMPTY_MAP;
 
     /**
      * If set to <code>true</code>, indicates that the child node of a node
@@ -272,6 +304,128 @@ public class EventState {
 
         return new EventState(Event.NODE_REMOVED, parentId, parentPath,
                 childId, childPath, nodeType, mixins, session, external);
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * <code>NODE_MOVED</code>. The parent node associated with this event type
+     * is the parent node of the destination of the move!
+     * This method creates an event state without an info map. A caller of this
+     * method must ensure that it is properly set afterwards.
+     *
+     * @param parentId   the id of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param parentPath the path of the parent node associated with
+     *                   this <code>EventState</code>.
+     * @param childId    the id of the child node associated with this event.
+     * @param childPath  the relative path of the child node that was moved.
+     * @param nodeType   the node type of the parent node.
+     * @param mixins     mixins assigned to the parent node.
+     * @param session    the session that moved the node.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState nodeMoved(NodeId parentId,
+                                       Path parentPath,
+                                       NodeId childId,
+                                       Path.Element childPath,
+                                       Name nodeType,
+                                       Set mixins,
+                                       Session session,
+                                       boolean external) {
+
+        return new EventState(Event.NODE_MOVED, parentId, parentPath,
+                childId, childPath, nodeType, mixins, session, external);
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * <code>NODE_MOVED</code>. The parent node associated with this event type
+     * is the parent node of the destination of the move!
+     *
+     * @param parentId the id of the parent node associated with this
+     *                 <code>EventState</code>.
+     * @param destPath the path of the destination of the move.
+     * @param childId  the id of the child node associated with this event.
+     * @param srcPath  the path of the source of the move.
+     * @param nodeType the node type of the parent node.
+     * @param mixins   mixins assigned to the parent node.
+     * @param session  the session that removed the node.
+     * @param external flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     * @throws ItemStateException if <code>destPath</code> does not have a
+     *                            parent.
+     */
+    public static EventState nodeMoved(NodeId parentId,
+                                       Path destPath,
+                                       NodeId childId,
+                                       Path srcPath,
+                                       Name nodeType,
+                                       Set mixins,
+                                       Session session,
+                                       boolean external)
+            throws ItemStateException {
+        try {
+            EventState es = nodeMoved(parentId, destPath.getAncestor(1),
+                    childId, destPath.getNameElement(), nodeType, mixins,
+                    session, external);
+            Map info = new HashMap();
+            info.put(SRC_ABS_PATH, InternalValue.create(srcPath));
+            info.put(DEST_ABS_PATH, InternalValue.create(destPath));
+            es.setInfo(info);
+            return es;
+        } catch (PathNotFoundException e) {
+            // should never happen actually
+            String msg = "Unable to resolve parent for path: " + destPath;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        }
+    }
+
+    /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * <code>NODE_MOVED</code>. The parent node associated with this event type
+     * is the parent node of the destination of the reorder!
+     *
+     * @param parentId      the id of the parent node associated with this
+     *                      <code>EventState</code>.
+     * @param parentPath    the path of the parent node associated with
+     *                      this <code>EventState</code>.
+     * @param childId       the id of the child node associated with this
+     *                      event.
+     * @param destChildPath the name element of the node before it was reordered.
+     * @param srcChildPath  the name element of the reordered node before the
+     *                      reorder operation.
+     * @param beforeChildPath the name element of the node before which the
+     *                      reordered node is placed. (may be <code>null</code>
+     *                      if reordered to the end.
+     * @param nodeType      the node type of the parent node.
+     * @param mixins        mixins assigned to the parent node.
+     * @param session       the session that removed the node.
+     * @param external      flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState nodeReordered(NodeId parentId,
+                                           Path parentPath,
+                                           NodeId childId,
+                                           Path.Element destChildPath,
+                                           Path.Element srcChildPath,
+                                           Path.Element beforeChildPath,
+                                           Name nodeType,
+                                           Set mixins,
+                                           Session session,
+                                           boolean external) {
+        EventState es = nodeMoved(parentId, parentPath, childId, destChildPath,
+               nodeType, mixins, session, external);
+        Map info = new HashMap();
+        info.put(SRC_CHILD_REL_PATH, createValue(srcChildPath));
+        InternalValue value = null;
+        if (beforeChildPath != null) {
+            value = createValue(beforeChildPath);
+        }
+        info.put(DEST_CHILD_REL_PATH, value);
+        es.setInfo(info);
+        return es;
     }
 
     /**
@@ -569,6 +723,22 @@ public class EventState {
     }
 
     /**
+     * @return an unmodifiable info Map.
+     */
+    public Map getInfo() {
+        return info;
+    }
+
+    /**
+     * Sets a new info map for this event.
+     *
+     * @param info the new info map.
+     */
+    public void setInfo(Map info) {
+        this.info = Collections.unmodifiableMap(new HashMap(info));
+    }
+
+    /**
      * Returns a flag indicating whether the child node of this event is a
      * shareable node. Only applies to node added/removed events.
      *
@@ -601,6 +771,7 @@ public class EventState {
             sb.append(", Parent: ").append(parentId);
             sb.append(", Child: ").append(childRelPath);
             sb.append(", UserId: ").append(session.getUserID());
+            sb.append(", Info: ").append(info);
             stringValue = sb.toString();
         }
         return stringValue;
@@ -619,6 +790,7 @@ public class EventState {
             h = 37 * h + parentId.hashCode();
             h = 37 * h + childRelPath.hashCode();
             h = 37 * h + session.hashCode();
+            h = 37 * h + info.hashCode();
             hashCode = h;
         }
         return hashCode;
@@ -641,7 +813,8 @@ public class EventState {
             return this.type == other.type
                     && this.parentId.equals(other.parentId)
                     && this.childRelPath.equals(other.childRelPath)
-                    && this.session.equals(other.session);
+                    && this.session.equals(other.session)
+                    && this.info.equals(other.info);
         }
         return false;
     }
@@ -655,6 +828,8 @@ public class EventState {
     public static String valueOf(int eventType) {
         if (eventType == Event.NODE_ADDED) {
             return "NodeAdded";
+        } else if (eventType == Event.NODE_MOVED) {
+            return "NodeMoved";
         } else if (eventType == Event.NODE_REMOVED) {
             return "NodeRemoved";
         } else if (eventType == Event.PROPERTY_ADDED) {
@@ -668,4 +843,20 @@ public class EventState {
         }
     }
 
+    /**
+     * Creates an internal path value from the given path <code>element</code>.
+     *
+     * @param element the path element.
+     * @return an internal value wrapping the path element.
+     */
+    private static InternalValue createValue(Path.Element element) {
+        PathBuilder builder = new PathBuilder();
+        builder.addFirst(element);
+        try {
+            return InternalValue.create(builder.getPath());
+        } catch (MalformedPathException e) {
+            // this exception is only thrown when number of element is zero
+            throw new InternalError();
+        }
+    }
 }

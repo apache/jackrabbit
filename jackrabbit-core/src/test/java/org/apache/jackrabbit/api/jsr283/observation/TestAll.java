@@ -14,33 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.observation;
+package org.apache.jackrabbit.api.jsr283.observation;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all jackrabbit specific testcases for the
- * observation module.
+ * <code>TestAll</code> is a test suite for all observation related tests in
+ * this package.
  */
 public class TestAll extends TestCase {
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
-     */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Observation tests");
+        TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.observation tests");
 
-        suite.addTestSuite(ReorderTest.class);
-        suite.addTestSuite(MixinTest.class);
-        suite.addTestSuite(VersionEventsTest.class);
-        suite.addTestSuite(MoveInPlaceTest.class);
-        suite.addTestSuite(ShareableNodesTest.class);
+        suite.addTestSuite(EventJournalTest.class);
+        suite.addTestSuite(GetDateTest.class);
+        suite.addTestSuite(GetIdentifierTest.class);
+        suite.addTestSuite(GetInfoTest.class);
+        suite.addTestSuite(NodeMovedTest.class);
+        suite.addTestSuite(NodeReorderTest.class);
 
         return suite;
     }

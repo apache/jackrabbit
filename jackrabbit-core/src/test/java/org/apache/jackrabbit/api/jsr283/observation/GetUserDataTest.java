@@ -14,18 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.observation;
+package org.apache.jackrabbit.api.jsr283.observation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.observation.Event;
 
-import org.apache.jackrabbit.test.api.observation.EventResult;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
- * <code>UserDataTest</code>...
+ * <code>GetUserDataTest</code> performs observation tests with user data set
+ * on the observation manager.
  */
-public class UserDataTest extends AbstractObservationTest {
+public class GetUserDataTest extends AbstractObservationTest {
 
     public void testSave() throws RepositoryException {
         runWithUserData(new Callable() {
@@ -49,7 +51,10 @@ public class UserDataTest extends AbstractObservationTest {
         }, ALL_TYPES);
     }
 
-    public void testVersioning() throws RepositoryException {
+    public void testVersioning()
+            throws RepositoryException, NotExecutableException {
+        checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
+
         final Node n1 = testRootNode.addNode(nodeName1);
         n1.addMixin(mixVersionable);
         testRootNode.save();
@@ -61,26 +66,20 @@ public class UserDataTest extends AbstractObservationTest {
         }, Event.NODE_ADDED); // get events for added version node
     }
 
-    protected void runWithUserData(Callable c, int eventTypes)
+    protected void runWithUserData(final Callable c, int eventTypes)
             throws RepositoryException {
-        EventResult result = new EventResult(log);
-        addEventListener(result, eventTypes);
-        String data = createRandomString(5);
-        getObservationManager().setUserData(data);
+        final String data = createRandomString(5);
+        Event[] events = getEvents(new Callable() {
+            public void call() throws RepositoryException {
+                setUserData(data);
+                c.call();
+            }
+        }, eventTypes);
 
-        c.call();
-
-        removeEventListener(result);
-
-        Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         assertTrue("no events returned", events.length > 0);
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong user data", data, getUserData(events[i]));
         }
     }
 
-    public interface Callable {
-
-        public void call() throws RepositoryException;
-    }
 }

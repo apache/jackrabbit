@@ -22,11 +22,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
+import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.Record;
 import org.apache.jackrabbit.core.observation.EventState;
@@ -36,6 +39,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.api.jsr283.observation.Event;
 
 /**
  * Cluster record representing a workspace or version update.
@@ -278,8 +282,32 @@ public class ChangeLogRecord extends ClusterRecord {
             mixins.add(record.readQName());
         }
         String userId = record.readString();
-        events.add(createEventState(type, parentId, parentPath, childId,
-                childRelPath, ntName, mixins, userId));
+
+        Map info = null;
+        if (type == Event.NODE_MOVED) {
+            info = new HashMap();
+            // read info map
+            int infoSize = record.readInt();
+            for (int i = 0; i < infoSize; i++) {
+                String key = record.readString();
+                int propType = record.readInt();
+                InternalValue value;
+                if (propType == PropertyType.UNDEFINED) {
+                    // indicates null value
+                    value = null;
+                } else {
+                    value = InternalValue.valueOf(record.readString(), propType);
+                }
+                info.put(key, value);
+            }
+        }
+
+        EventState es = createEventState(type, parentId, parentPath, childId,
+                childRelPath, ntName, mixins, userId);
+        if (info != null) {
+            es.setInfo(info);
+        }
+        events.add(es);
     }
 
     /**
@@ -299,24 +327,27 @@ public class ChangeLogRecord extends ClusterRecord {
                                         NodeId childId, Path.Element childRelPath,
                                         Name ntName, Set mixins, String userId) {
         switch (type) {
-        case Event.NODE_ADDED:
-            return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
-                    ntName, mixins, getOrCreateSession(userId), true);
-        case Event.NODE_REMOVED:
-            return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
-                    ntName, mixins, getOrCreateSession(userId), true);
-        case Event.PROPERTY_ADDED:
-            return EventState.propertyAdded(parentId, parentPath, childRelPath,
-                    ntName, mixins, getOrCreateSession(userId), true);
-        case Event.PROPERTY_CHANGED:
-            return EventState.propertyChanged(parentId, parentPath, childRelPath,
-                    ntName, mixins, getOrCreateSession(userId), true);
-        case Event.PROPERTY_REMOVED:
-            return EventState.propertyRemoved(parentId, parentPath, childRelPath,
-                    ntName, mixins, getOrCreateSession(userId), true);
-        default:
-            String msg = "Unexpected event type: " + type;
-            throw new IllegalArgumentException(msg);
+            case Event.NODE_ADDED:
+                return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.NODE_MOVED:
+                return EventState.nodeMoved(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.NODE_REMOVED:
+                return EventState.childNodeRemoved(parentId, parentPath, childId, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_ADDED:
+                return EventState.propertyAdded(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_CHANGED:
+                return EventState.propertyChanged(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            case Event.PROPERTY_REMOVED:
+                return EventState.propertyRemoved(parentId, parentPath, childRelPath,
+                        ntName, mixins, getOrCreateSession(userId), true);
+            default:
+                String msg = "Unexpected event type: " + type;
+                throw new IllegalArgumentException(msg);
         }
     }
 
@@ -448,6 +479,25 @@ public class ChangeLogRecord extends ClusterRecord {
             record.writeQName((Name) iter.next());
         }
         record.writeString(event.getUserId());
+
+        if (event.getType() == Event.NODE_MOVED) {
+            // write info map
+            Map info = event.getInfo();
+            record.writeInt(info.size());
+            for (Iterator it = info.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry entry = (Map.Entry) it.next();
+                String key = (String) entry.getKey();
+                InternalValue value = (InternalValue) entry.getValue();
+                record.writeString(key);
+                if (value == null) {
+                    // use undefined for null value
+                    record.writeInt(PropertyType.UNDEFINED);
+                } else {
+                    record.writeInt(value.getType());
+                    record.writeString(value.toString());
+                }
+            }
+        }
     }
 
     /**
