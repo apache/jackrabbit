@@ -23,6 +23,7 @@ import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.api.jsr283.observation.AbstractObservationTest;
 
 /**
  * <code>ShareableNodesTest</code>...

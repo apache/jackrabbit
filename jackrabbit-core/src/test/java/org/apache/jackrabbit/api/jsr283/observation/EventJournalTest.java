@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.observation;
+package org.apache.jackrabbit.api.jsr283.observation;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -26,7 +26,6 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
 
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
@@ -178,7 +177,7 @@ public class EventJournalTest extends AbstractObservationTest {
     public void testUserData() throws RepositoryException {
         testRootNode.addNode(nodeName1);
         String data = createRandomString(5);
-        getObservationManager().setUserData(data);
+        setUserData(data);
 
         journal = getEventJournal(ALL_TYPES, testRoot, true, null, null);
         journal.skipTo(System.currentTimeMillis());

@@ -217,7 +217,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * @throws RepositoryException if an error occurs while retrieving the nodes
      *                             from event instances.
      */
-    private void checkNodes(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths, long eventType)
+    protected void checkNodes(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths, long eventType)
             throws RepositoryException {
         Set paths = new HashSet();
         for (int i = 0; i < events.length; i++) {

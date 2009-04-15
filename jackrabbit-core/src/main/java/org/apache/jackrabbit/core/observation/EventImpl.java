@@ -16,9 +16,15 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
+import org.apache.jackrabbit.api.jsr283.observation.Event;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -31,7 +37,7 @@ import javax.jcr.RepositoryException;
  * Implementation of the {@link javax.jcr.observation.Event} and
  * the {@link JackrabbitEvent} interface.
  */
-public final class EventImpl implements JackrabbitEvent {
+public final class EventImpl implements JackrabbitEvent, Event {
 
     /**
      * Logger instance for this class
@@ -117,6 +123,35 @@ public final class EventImpl implements JackrabbitEvent {
      */
     public String getUserData() {
         return userData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getIdentifier() throws RepositoryException {
+        NodeId id = eventState.getChildId();
+        if (id == null) {
+            // property event
+            id = eventState.getParentId();
+        }
+        return id.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Map getInfo() throws RepositoryException {
+        Map info = new HashMap();
+        for (Iterator it = eventState.getInfo().entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry entry = (Map.Entry) it.next();
+            InternalValue value = (InternalValue) entry.getValue();
+            String strValue = null;
+            if (value != null) {
+                strValue = value.toJCRValue(session).getString();
+            }
+            info.put(entry.getKey(), strValue);
+        }
+        return info;
     }
 
     //-----------------------------------------------------------< EventImpl >
@@ -205,6 +240,7 @@ public final class EventImpl implements JackrabbitEvent {
             sb.append(", UserId: ").append(getUserID());
             sb.append(", Timestamp: ").append(timestamp);
             sb.append(", UserData: ").append(userData);
+            sb.append(", Info: ").append(eventState.getInfo());
             stringValue = sb.toString();
         }
         return stringValue;
