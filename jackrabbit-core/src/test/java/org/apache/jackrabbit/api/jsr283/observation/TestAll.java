@@ -29,6 +29,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.observation tests");
 
+        suite.addTestSuite(AddEventListenerTest.class);
         suite.addTestSuite(EventJournalTest.class);
         suite.addTestSuite(GetDateTest.class);
         suite.addTestSuite(GetIdentifierTest.class);
