@@ -43,7 +43,7 @@ public class FrozenNodeIteratorAdapter extends RangeIteratorAdapter implements N
         try {
             return ((Version) next()).getFrozenNode();
         } catch (RepositoryException e) {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException(e.toString());
         }
     }
 }
