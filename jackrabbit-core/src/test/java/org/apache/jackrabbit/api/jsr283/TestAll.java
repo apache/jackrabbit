@@ -25,13 +25,12 @@ import org.slf4j.LoggerFactory;
 /** <code>TestAll</code>... */
 public class TestAll extends TestCase {
 
-    private static Logger log = LoggerFactory.getLogger(TestAll.class);
-
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283 tests");
 
-        suite.addTestSuite(WorkspaceTest.class);
+        suite.addTestSuite(RepositoryFactoryTest.class);
         suite.addTestSuite(SessionRemoveItemTest.class);
+        suite.addTestSuite(WorkspaceTest.class);
 
         return suite;
     }

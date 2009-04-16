@@ -114,6 +114,10 @@ public abstract class RepositoryStub {
      */
     public static final String PROP_HOLD_NAME = "holdname";
 
+    /**
+     * @since JCR 2.0
+     */
+    public static final String REPOSITORY_FACTORY = "repository.factory";
 
     protected final Properties environment;
 
