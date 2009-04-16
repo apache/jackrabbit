@@ -2,12 +2,22 @@ NodeTypeName
   mix:versionable
 Supertypes
   mix:referenceable
+  mix:simpleVersionable
 IsMixin
   true
 HasOrderableChildNodes
   false
 PrimaryItemName
   null
+PropertyDefinition
+  Name jcr:activity
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false
 PropertyDefinition
   Name jcr:baseVersion
   RequiredType REFERENCE
@@ -18,12 +28,12 @@ PropertyDefinition
   Protected true
   Multiple false
 PropertyDefinition
-  Name jcr:isCheckedOut
-  RequiredType BOOLEAN
-  DefaultValues [true]
-  AutoCreated true
-  Mandatory true
-  OnParentVersion IGNORE
+  Name jcr:configuration
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
   Protected true
   Multiple false
 PropertyDefinition

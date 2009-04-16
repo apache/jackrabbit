@@ -44,6 +44,8 @@ import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
 import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -56,6 +58,7 @@ import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.api.jsr283.InvalidLifecycleTransitionException;
+import org.apache.jackrabbit.api.jsr283.version.VersionManager;
 import org.apache.jackrabbit.api.jsr283.lock.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1001,10 +1004,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
-        // special handling of mix:versionable. since adding the mixin alters
+        // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
         // in addition.
-        if (NameConstants.MIX_VERSIONABLE.equals(mixinName)) {
+        if (NameConstants.MIX_VERSIONABLE.equals(mixinName)
+                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
         session.getValidator().checkModify(this, options, permissions);
@@ -2779,10 +2783,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
                 ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
-        // special handling of mix:versionable. since adding the mixin alters
+        // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
         // in addition.
-        if (NameConstants.MIX_VERSIONABLE.equals(ntName)) {
+        if (NameConstants.MIX_VERSIONABLE.equals(ntName)
+                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
         if (!session.getValidator().canModify(this, options, permissions)) {
@@ -3222,7 +3227,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         sanityCheck();
 
         // check if versionable
-        checkVersionable();
+        boolean isFull = checkVersionable();
 
         // check if checked out
         if (!internalIsCheckedOut()) {
@@ -3239,8 +3244,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         boolean success = false;
         try {
             internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
-            internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
-            internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+            if (isFull) {
+                internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+                internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+            }
             save();
             success = true;
         } finally {
@@ -3267,7 +3274,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         sanityCheck();
 
         // check if versionable
-        checkVersionable();
+        boolean isFull = checkVersionable();
 
         // check checked-out status
         if (internalIsCheckedOut()) {
@@ -3284,13 +3291,17 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         boolean success = false;
         try {
             props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
-            props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
-                    new InternalValue[]{
-                            InternalValue.create(new UUID(getBaseVersion().getUUID()))
-                    });
+            if (isFull) {
+                props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
+                        new InternalValue[]{
+                                InternalValue.create(new UUID(getBaseVersion().getUUID()))
+                        });
+            }
             if (hasPendingChanges) {
                 for (int i = 0; i < props.length; i++) {
-                    props[i].save();
+                    if (props[i] != null) {
+                        props[i].save();
+                    }
                 }
             } else {
                 save();
@@ -3317,7 +3328,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public void update(String srcWorkspaceName)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
-        internalMerge(srcWorkspaceName, null, false);
+        internalMerge(srcWorkspaceName, null, false, false);
     }
 
     /**
@@ -3327,9 +3338,19 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throws NoSuchWorkspaceException, AccessDeniedException,
             VersionException, LockException, InvalidItemStateException,
             RepositoryException {
+        return merge(srcWorkspace, bestEffort, false);
+    }
+
+    /**
+     * @see VersionManager#merge(String, String, boolean, boolean)
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow)
+            throws NoSuchWorkspaceException, AccessDeniedException,
+            VersionException, LockException, InvalidItemStateException,
+            RepositoryException {
 
         List failedIds = new ArrayList();
-        internalMerge(srcWorkspace, failedIds, bestEffort);
+        internalMerge(srcWorkspace, failedIds, bestEffort, isShallow);
 
         return new LazyItemIterator(itemMgr, failedIds);
     }
@@ -3421,7 +3442,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             NodeImpl node;
             try {
                 // check if versionable node exists
-                InternalFrozenNode fn = ((VersionImpl) version).getFrozenNode();
+                InternalFrozenNode fn = ((VersionImpl) version).getInternalFrozenNode();
                 node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
                 if (removeExisting) {
                     try {
@@ -3441,7 +3462,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 }
             } catch (ItemNotFoundException e) {
                 // not found, create new one
-                node = addNode(relPath, ((VersionImpl) version).getFrozenNode());
+                node = addNode(relPath, ((VersionImpl) version).getInternalFrozenNode());
             }
 
             // recreate node from frozen state
@@ -3479,13 +3500,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        checkVersionable();
+        boolean isFull = checkVersionable();
 
-        // transactions workaround.
-        NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_VERSIONHISTORY).getString());
-        session.getVersionManager().getVersionHistory(id);
-
-        return (VersionHistory) getProperty(NameConstants.JCR_VERSIONHISTORY).getNode();
+        InternalVersionHistory vh;
+        if (isFull) {
+            NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_VERSIONHISTORY).getString());
+            vh = session.getVersionManager().getVersionHistory(id);
+        } else {
+            vh = session.getVersionManager().getVersionHistoryOfNode((NodeId) id);
+        }
+        return (VersionHistory) session.getNodeById(vh.getId());
     }
 
     /**
@@ -3496,28 +3520,39 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         // check state of this instance
         sanityCheck();
 
-        checkVersionable();
+        boolean isFull = checkVersionable();
 
-        // transactions workaround.
-        NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_BASEVERSION).getString());
-        session.getVersionManager().getVersion(id);
+        InternalVersion v;
+        if (isFull) {
+            NodeId id = NodeId.valueOf(getProperty(NameConstants.JCR_BASEVERSION).getString());
+            v = session.getVersionManager().getVersion(id);
+        } else {
+            // note, that the method currently only works for linear version
+            // graphs (i.e. simple versioning)
+            v = session.getVersionManager().getHeadVersionOfNode(((NodeId) id));
+        }
 
-        return (Version) getProperty(NameConstants.JCR_BASEVERSION).getNode();
+        return (Version) session.getNodeById(v.getId());
     }
 
     //-----------------------------------< versioning support: implementation >
     /**
-     * Checks if this node is versionable, i.e. has 'mix:versionable'.
-     *
+     * Checks if this node is versionable, i.e. has 'mix:versionable' or a
+     * 'mix:simpleVersionable'.
+     * @return <code>true</code> if this node is full versionable, i.e. is
+     *         of nodetype mix:versionable
      * @throws UnsupportedRepositoryOperationException
-     *          if this node is not versionable
+     *          if this node is not versionable at all
      */
-    private void checkVersionable()
+    private boolean checkVersionable()
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        if (!isNodeType(NameConstants.MIX_VERSIONABLE)) {
-            String msg =
-                "Unable to perform a versioning operation on"
-                + " a non versionable node: " + this;
+        if (isNodeType(NameConstants.MIX_VERSIONABLE)) {
+            return true;
+        } else if (isNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
+            return false;
+        } else {
+            String msg = "Unable to perform a versioning operation on a " +
+                         "non versionable node: " + this;
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
         }
@@ -3927,7 +3962,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      * @throws RepositoryException
      */
     private void internalMerge(String srcWorkspaceName,
-                               List failedIds, boolean bestEffort)
+                               List failedIds, boolean bestEffort,
+                               boolean shallow)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
 
@@ -3950,7 +3986,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             // create session on other workspace for current subject
             // (may throw NoSuchWorkspaceException and AccessDeniedException)
             srcSession = rep.createSession(session.getSubject(), srcWorkspaceName);
-            internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+            internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
             session.save();
             success = true;
         } finally {
@@ -3980,8 +4016,13 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
      * @throws RepositoryException
      */
     private void internalMerge(SessionImpl srcSession, List failedIds,
-                               boolean bestEffort, boolean removeExisting, boolean replaceExisting)
+                               boolean bestEffort, boolean removeExisting,
+                               boolean replaceExisting, boolean shallow)
             throws LockException, RepositoryException {
+
+        if (shallow) {
+            throw new UnsupportedRepositoryOperationException("Shallow merge not supported yet");
+        }
 
         NodeImpl srcNode = doMergeTest(srcSession, failedIds, bestEffort);
         if (srcNode == null) {
@@ -3991,7 +4032,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             while (iter.hasNext()) {
                 NodeImpl n = (NodeImpl) iter.nextNode();
                 if (n.isNodeType(NameConstants.MIX_VERSIONABLE)) {
-                    n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+                    n.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
                 }
             }
             return;
@@ -4088,9 +4129,9 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 for (int i = 0; i < mixins.length; i++) {
                     dstNode.addMixin(mixins[i].getName());
                 }
-                dstNode.internalMerge(srcSession, null, bestEffort, removeExisting, replaceExisting);
+                dstNode.internalMerge(srcSession, null, bestEffort, removeExisting, replaceExisting, shallow);
             } else {
-                dstNode.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting);
+                dstNode.internalMerge(srcSession, failedIds, bestEffort, removeExisting, replaceExisting, shallow);
             }
         }
     }
@@ -4144,6 +4185,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new VersionException("Restore of root version not allowed.");
         }
 
+        boolean isFull = checkVersionable();
+
         // check permission
         session.getAccessManager().checkPermission(getPrimaryPath(), Permission.VERSION_MNGMT);
 
@@ -4154,19 +4197,25 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
         HashSet restored = new HashSet();
-        restoreFrozenState(version.getFrozenNode(), vsel, restored, removeExisting);
+        restoreFrozenState(version.getInternalFrozenNode(), vsel, restored, removeExisting);
         restored.add(version);
 
-        // 2. N's jcr:baseVersion property will be changed to point to V.
-        UUID uuid = ((NodeId) version.getId()).getUUID();
-        internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(uuid));
+        if (isFull) {
+            // 2. N's jcr:baseVersion property will be changed to point to V.
+            UUID uuid = ((NodeId) version.getId()).getUUID();
+            internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(uuid));
 
-        // 4. N's jcr:predecessor property is set to null
-        internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+            // 4. N's jcr:predecessor property is set to null
+            internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
 
-        // also clear mergeFailed
-        internalSetProperty(NameConstants.JCR_MERGEFAILED, (InternalValue[]) null);
+            // also clear mergeFailed
+            internalSetProperty(NameConstants.JCR_MERGEFAILED, (InternalValue[]) null);
 
+        } else {
+            // with simple versioning, the node is checked in automatically,
+            // thus not allowing any branches
+            session.getVersionManager().checkin(this);
+        }
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
 
@@ -4341,7 +4390,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         }
                         v = (VersionImpl) vs[0];
                     }
-                    restoredChild = addNode(child.getName(), v.getFrozenNode());
+                    restoredChild = addNode(child.getName(), v.getInternalFrozenNode());
                 } else {
                     restoredChild = session.getNodeById(nodeId);
                     if (v == null || oldVersion == null || v.getName().equals(oldVersion)) {

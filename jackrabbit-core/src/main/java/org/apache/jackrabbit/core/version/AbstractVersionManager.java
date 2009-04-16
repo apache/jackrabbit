@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.version.VersionException;
 
 /**
@@ -94,6 +95,42 @@ abstract class AbstractVersionManager implements VersionManager {
             throws RepositoryException {
         // lock handling via getItem()
         return (InternalVersionHistory) getItem(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalVersionHistory getVersionHistoryOfNode(NodeId id)
+            throws RepositoryException {
+        ReadLock lock = acquireReadLock();
+        try {
+            String uuid = id.getUUID().toString();
+            Name name = getName(uuid);
+
+            NodeStateEx parent = getParentNode(uuid, false);
+            if (parent != null && parent.hasNode(name)) {
+                NodeStateEx history = parent.getNode(name, 1);
+                return getVersionHistory(history.getNodeId());
+            } else {
+                throw new ItemNotFoundException("Version history of node " + id + " not found.");
+            }
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Assumes that all versions are stored chronologically below the version
+     * history and just returns the last one. i.e. currently only works for
+     * simple versioning.
+     */
+    public InternalVersion getHeadVersionOfNode(NodeId id) throws RepositoryException {
+        InternalVersionHistory vh = getVersionHistoryOfNode(id);
+        Name[] names = vh.getVersionNames();
+        InternalVersion last = vh.getVersion(names[names.length - 1]);
+        return getVersion(last.getId());
     }
 
     //-------------------------------------------------------< implementation >
@@ -237,7 +274,6 @@ abstract class AbstractVersionManager implements VersionManager {
         return info;
     }
 
-
     /**
      * Creates a new version history. This action is needed either when creating
      * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
@@ -374,15 +410,17 @@ abstract class AbstractVersionManager implements VersionManager {
      *
      * @param history the version history
      * @param node node to checkin
+     * @param simple flag indicates simple versioning
      * @return internal version
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
      */
-    protected InternalVersion checkin(InternalVersionHistoryImpl history, NodeImpl node)
+    protected InternalVersion checkin(InternalVersionHistoryImpl history,
+                                      NodeImpl node, boolean simple)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
-            String versionName = calculateCheckinVersionName(history, node);
+            String versionName = calculateCheckinVersionName(history, node, simple);
             InternalVersionImpl v = history.checkin(NameFactoryImpl.getInstance().create("", versionName), node);
             operation.save();
             return v;
@@ -431,20 +469,27 @@ abstract class AbstractVersionManager implements VersionManager {
      *
      * @param history the version history
      * @param node the node to checkin
+     * @param simple if <code>true</code> indicates simple versioning
      * @return the new version name
      * @throws RepositoryException if an error occurs.
      */
     protected String calculateCheckinVersionName(InternalVersionHistoryImpl history,
-                                                 NodeImpl node)
+                                                 NodeImpl node, boolean simple)
             throws RepositoryException {
-        // 1. search a predecessor, suitable for generating the new name
-        Value[] values = node.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
         InternalVersion best = null;
-        for (int i = 0; i < values.length; i++) {
-            InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
-            if (best == null
-                    || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
-                best = pred;
+        if (simple) {
+            // 1. in simple versioning just take the 'head' version
+            Name[] names = history.getVersionNames();
+            best = history.getVersion(names[names.length - 1]);
+        } else {
+            // 1. search a predecessor, suitable for generating the new name
+            Value[] values = node.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
+            for (int i = 0; i < values.length; i++) {
+                InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
+                if (best == null
+                        || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
+                    best = pred;
+                }
             }
         }
         // 2. generate version name (assume no namespaces in version names)

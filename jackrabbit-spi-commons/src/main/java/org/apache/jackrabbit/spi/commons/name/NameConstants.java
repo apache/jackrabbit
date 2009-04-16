@@ -384,6 +384,10 @@ public class NameConstants {
      */
     public static final Name MIX_VERSIONABLE = FACTORY.create(Name.NS_MIX_URI, "versionable");
     /**
+     * mix:simpleVersionable
+     */
+    public static final Name MIX_SIMPLE_VERSIONABLE = FACTORY.create(Name.NS_MIX_URI, "simpleVersionable");
+    /**
      * mix:shareable
      */
     public static final Name MIX_SHAREABLE = FACTORY.create(Name.NS_MIX_URI, "shareable");

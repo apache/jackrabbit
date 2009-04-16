@@ -1,0 +1,19 @@
+NodeTypeName
+  nt:activity
+Supertypes
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:activityTitle
+  RequiredType STRING
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false

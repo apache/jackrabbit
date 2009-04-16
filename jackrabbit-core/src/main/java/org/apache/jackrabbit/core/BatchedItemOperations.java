@@ -1683,7 +1683,8 @@ public class BatchedItemOperations extends ItemValidator {
             NodeId id;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
             boolean referenceable = ent.includesNodeType(NameConstants.MIX_REFERENCEABLE);
-            boolean versionable = ent.includesNodeType(NameConstants.MIX_VERSIONABLE);
+            boolean versionable = ent.includesNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE);
+            boolean fullVersionable = ent.includesNodeType(NameConstants.MIX_VERSIONABLE);
             boolean shareable = ent.includesNodeType(NameConstants.MIX_SHAREABLE);
             switch (flag) {
                 case COPY:
@@ -1844,24 +1845,34 @@ public class BatchedItemOperations extends ItemValidator {
                      * adjusted accordingly.
                      */
                     VersionManager manager = session.getVersionManager();
-                    if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
-                        // jcr:versionHistory
-                        VersionHistoryInfo history =
+                    if (fullVersionable) {
+                        if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
+                            // jcr:versionHistory
+                            VersionHistoryInfo history =
+                                manager.getVersionHistory(session, newState);
+                            InternalValue value = InternalValue.create(
+                                    history.getVersionHistoryId().getUUID());
+                            newChildState.setValues(new InternalValue[] { value });
+                        } else if (propName.equals(NameConstants.JCR_BASEVERSION)
+                                || propName.equals(NameConstants.JCR_PREDECESSORS)) {
+                            // jcr:baseVersion or jcr:predecessors
+                            VersionHistoryInfo history =
+                                manager.getVersionHistory(session, newState);
+                            InternalValue value = InternalValue.create(
+                                    history.getRootVersionId().getUUID());
+                            newChildState.setValues(new InternalValue[] { value });
+                        } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
+                            // jcr:isCheckedOut
+                            newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
+                        }
+                    } else {
+                        // for simple versionable, we just initialize the
+                        // version history when we see the jcr:isCheckedOut
+                        if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
+                            // jcr:isCheckedOut
+                            newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
                             manager.getVersionHistory(session, newState);
-                        InternalValue value = InternalValue.create(
-                                history.getVersionHistoryId().getUUID());
-                        newChildState.setValues(new InternalValue[] { value });
-                    } else if (propName.equals(NameConstants.JCR_BASEVERSION)
-                            || propName.equals(NameConstants.JCR_PREDECESSORS)) {
-                        // jcr:baseVersion or jcr:predecessors
-                        VersionHistoryInfo history =
-                            manager.getVersionHistory(session, newState);
-                        InternalValue value = InternalValue.create(
-                                history.getRootVersionId().getUUID());
-                        newChildState.setValues(new InternalValue[] { value });
-                    } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
-                        // jcr:isCheckedOut
-                        newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
+                        }
                     }
                 }
 

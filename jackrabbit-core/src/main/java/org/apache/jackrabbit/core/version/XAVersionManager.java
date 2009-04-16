@@ -161,9 +161,19 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public Version checkin(NodeImpl node) throws RepositoryException {
         if (isInXA()) {
-            String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
-            InternalVersion version = checkin((InternalVersionHistoryImpl)
-                    getVersionHistory(NodeId.valueOf(histUUID)), node);
+            InternalVersionHistory vh;
+            InternalVersion version;
+            if (node.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                // in full versioning, the history id can be retrieved via
+                // the property
+                String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
+                vh = getVersionHistory(NodeId.valueOf(histUUID));
+                version = checkin((InternalVersionHistoryImpl) vh, node, false);
+            } else {
+                // in simple versioning the history id needs to be calculated
+                vh = getVersionHistoryOfNode(node.getNodeId());
+                version = checkin((InternalVersionHistoryImpl) vh, node, true);
+            }
             return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
         }
         return vMgr.checkin(node);
@@ -371,14 +381,14 @@ public class XAVersionManager extends AbstractVersionManager
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion checkin(InternalVersionHistoryImpl history,
-                                      NodeImpl node)
+                                      NodeImpl node, boolean simple)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.checkin(history, node);
+        InternalVersion version = super.checkin(history, node, simple);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {

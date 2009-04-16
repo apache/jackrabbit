@@ -55,9 +55,9 @@ public interface VersionSelector {
      * is unable to select one, it can return <code>null</code>. Please note,
      * that a version selector is not allowed to return the root version.
      *
-     * @param versionHistory
+     * @param versionHistory version history to select a version from
      * @return A version or <code>null</code>.
-     * @throws RepositoryException if an error occurrs.
+     * @throws RepositoryException if an error occurs.
      */
     Version select(VersionHistory versionHistory) throws RepositoryException;
 

@@ -305,7 +305,7 @@ public class WorkspaceImporter implements Importer {
          * todo FIXME delegate to 'node type instance handler'
          */
         EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
-        if (ent.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+        if (ent.includesNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
             /**
              * check if there's already a version history for that
              * node; this would e.g. be the case if a versionable node
@@ -321,25 +321,28 @@ public class WorkspaceImporter implements Importer {
             InternalValue versionId = InternalValue.create(
                     history.getRootVersionId().getUUID());
 
-            // jcr:versionHistory
-            conditionalAddProperty(
-                    node, NameConstants.JCR_VERSIONHISTORY,
-                    PropertyType.REFERENCE, false, historyId);
-
-            // jcr:baseVersion
-            conditionalAddProperty(
-                    node, NameConstants.JCR_BASEVERSION,
-                    PropertyType.REFERENCE, false, versionId);
-
-            // jcr:predecessors
-            conditionalAddProperty(
-                    node, NameConstants.JCR_PREDECESSORS,
-                    PropertyType.REFERENCE, true, versionId);
-
             // jcr:isCheckedOut
             conditionalAddProperty(
                     node, NameConstants.JCR_ISCHECKEDOUT,
                     PropertyType.BOOLEAN, false, InternalValue.create(true));
+            
+            // set extra properties only for full versionable nodes
+            if (ent.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+                // jcr:versionHistory
+                conditionalAddProperty(
+                        node, NameConstants.JCR_VERSIONHISTORY,
+                        PropertyType.REFERENCE, false, historyId);
+
+                // jcr:baseVersion
+                conditionalAddProperty(
+                        node, NameConstants.JCR_BASEVERSION,
+                        PropertyType.REFERENCE, false, versionId);
+
+                // jcr:predecessors
+                conditionalAddProperty(
+                        node, NameConstants.JCR_PREDECESSORS,
+                        PropertyType.REFERENCE, true, versionId);
+            }
         }
     }
 

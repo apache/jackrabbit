@@ -21,6 +21,8 @@ import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.api.jsr283.version.Version;
+import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +30,8 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 import java.util.Calendar;
 
 /**
@@ -77,7 +78,7 @@ public class VersionImpl extends NodeImpl implements Version {
     /**
      * {@inheritDoc}
      */
-    public Version[] getSuccessors() throws RepositoryException {
+    public javax.jcr.version.Version[] getSuccessors() throws RepositoryException {
         // need to wrap it around proper node
         InternalVersion[] suc = getInternalVersion().getSuccessors();
         Version[] ret = new Version[suc.length];
@@ -90,7 +91,7 @@ public class VersionImpl extends NodeImpl implements Version {
     /**
      * {@inheritDoc}
      */
-    public Version[] getPredecessors() throws RepositoryException {
+    public javax.jcr.version.Version[] getPredecessors() throws RepositoryException {
         // need to wrap it around proper node
         InternalVersion[] pred = getInternalVersion().getPredecessors();
         Version[] ret = new Version[pred.length];
@@ -103,18 +104,48 @@ public class VersionImpl extends NodeImpl implements Version {
     /**
      * {@inheritDoc}
      */
-    public VersionHistory getContainingHistory() throws RepositoryException {
+    public Version getLinearSuccessor() throws RepositoryException {
+        // get base version. this can certainly be optimized
+        InternalVersionHistory vh = ((VersionHistoryImpl) getContainingHistory())
+                .getInternalVersionHistory();
+        NodeId id = new NodeId(vh.getVersionableUUID());
+        Node vn = session.getNodeById(id);
+        InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
+
+        InternalVersion suc = getInternalVersion().getLinearSuccessor(base);
+        return (Version) session.getNodeById(suc.getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public javax.jcr.version.Version getLinearPredecessor() throws RepositoryException {
+        InternalVersion pred = getInternalVersion().getLinearPredecessor();
+        return (Version) session.getNodeById(pred.getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public javax.jcr.version.VersionHistory getContainingHistory() throws RepositoryException {
         return (VersionHistory) getParent();
     }
 
     /**
      * Returns the frozen node of this version
      *
-     * @return
-     * @throws javax.jcr.RepositoryException
+     * @return the internal frozen node
+     * @throws javax.jcr.RepositoryException if an error occurs
      */
-    public InternalFrozenNode getFrozenNode() throws RepositoryException {
+    public InternalFrozenNode getInternalFrozenNode() throws RepositoryException {
         return getInternalVersion().getFrozenNode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Node getFrozenNode() throws RepositoryException {
+        return session.getNodeById(getInternalVersion().getFrozenNodeId());
     }
 
     /**
@@ -142,6 +173,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * @param v the version to check
      * @return <code>true</code> if the version is more recent;
      *         <code>false</code> otherwise.
+     * @throws RepositoryException if a repository error occurs
      */
     public boolean isMoreRecent(VersionImpl v) throws RepositoryException {
         return getInternalVersion().isMoreRecent(v.getInternalVersion());
@@ -151,6 +183,7 @@ public class VersionImpl extends NodeImpl implements Version {
      * Checks if this is the root version.
      * @return <code>true</code> if this version is the root version;
      *         <code>false</code> otherwise.
+     * @throws RepositoryException if a repository error occurs
      */
     public boolean isRootVersion() throws RepositoryException {
         return getInternalVersion().isRootVersion();
