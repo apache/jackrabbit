@@ -446,7 +446,7 @@ public class RepositoryImpl extends AbstractRepository
      *
      * @param vConfig the versioning config
      * @return the newly created version manager
-     * @throws RepositoryException if an error occurrs
+     * @throws RepositoryException if an error occurs
      */
     protected VersionManagerImpl createVersionManager(VersioningConfig vConfig,
                                                       DelegatingObservationDispatcher delegatingDispatcher)
