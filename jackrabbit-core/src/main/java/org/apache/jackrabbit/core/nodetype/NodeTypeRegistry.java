@@ -792,7 +792,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @param store The {@link NodeTypeDefStore} into which the node type
      *              definitions are loaded.
-     * @throws RepositoryException If an error occurrs while loading the
+     * @throws RepositoryException If an error occurs while loading the
      *                             built-in node type definitions.
      */
     protected void loadBuiltInNodeTypeDefs(NodeTypeDefStore store)
@@ -829,7 +829,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      *
      * @param store The {@link NodeTypeDefStore} into which the node type
      *              definitions are loaded.
-     * @throws RepositoryException If an error occurrs while loading the
+     * @throws RepositoryException If an error occurs while loading the
      *                             custom node type definitions.
      */
     protected void loadCustomNodeTypeDefs(NodeTypeDefStore store)

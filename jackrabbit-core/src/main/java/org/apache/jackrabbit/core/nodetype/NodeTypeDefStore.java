@@ -69,7 +69,7 @@ public class NodeTypeDefStore {
      * @param in reader containing the nodetype definitions
      * @param systemId optional name of the stream
      *
-     * @throws IOException if an I/O error during reading occurrs
+     * @throws IOException if an I/O error during reading occurs
      * @throws InvalidNodeTypeDefException if the CND cannot be parsed
      */
     public void loadCND(Reader in, String systemId)
