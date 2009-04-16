@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.api.jsr283.version.Version;
 
 import java.util.Calendar;
 
@@ -52,6 +53,7 @@ public interface InternalVersion extends InternalVersionItem {
      * Equivalent to {@link javax.jcr.version.Version#getCreated()}
      *
      * @see javax.jcr.version.Version#getCreated()
+     * @return the created date
      */
     Calendar getCreated();
 
@@ -59,15 +61,35 @@ public interface InternalVersion extends InternalVersionItem {
      * Equivalent to {@link javax.jcr.version.Version#getSuccessors()}}
      *
      * @see javax.jcr.version.Version#getSuccessors()
+     * @return the successors as internal versions
      */
     InternalVersion[] getSuccessors();
+
+    /**
+     * Equivalent to {@link Version#getLinearSuccessor()}.
+     *
+     * @param baseVersion base version to determine single line of descent
+     * @return the successor as internal version
+     *
+     * @see Version#getLinearSuccessor()
+     */
+    InternalVersion getLinearSuccessor(InternalVersion baseVersion);
 
     /**
      * Equivalent to {@link javax.jcr.version.Version#getPredecessors()}}
      *
      * @see javax.jcr.version.Version#getPredecessors()
+     * @return the predecessors as internal versions
      */
     InternalVersion[] getPredecessors();
+
+    /**
+     * Equivalent to {@link Version#getLinearPredecessor()}
+     *
+     * @see Version#getLinearPredecessor()
+     * @return the predecessor as internal version
+     */
+    InternalVersion getLinearPredecessor();
 
     /**
      * Checks if this version is more recent than the given version <code>v</code>.

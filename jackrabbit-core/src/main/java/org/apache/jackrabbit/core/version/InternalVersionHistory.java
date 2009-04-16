@@ -30,13 +30,17 @@ public interface InternalVersionHistory extends InternalVersionItem {
     /**
      * Equivalalent to {@link javax.jcr.version.VersionHistory#getRootVersion()}.
      *
+     * @return the root version
      * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
     InternalVersion getRootVersion();
 
     /**
-     * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersion(java.lang.String)}.
+     * Equivalent to {@link javax.jcr.version.VersionHistory#getVersion(java.lang.String)}.
      *
+     * @param versionName the name of the version
+     * @return the version
+     * @throws VersionException if the version does not exist
      * @see javax.jcr.version.VersionHistory#getVersion(java.lang.String)
      */
     InternalVersion getVersion(Name versionName) throws VersionException;
@@ -63,7 +67,9 @@ public interface InternalVersionHistory extends InternalVersionItem {
      * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)}
      * but returns <code>null</code> if the version does not exists.
      *
+     * @param label the lable
      * @see javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)
+     * @return the version or <code>null</code> if not exists
      */
     InternalVersion getVersionByLabel(Name label);
 
@@ -82,12 +88,18 @@ public interface InternalVersionHistory extends InternalVersionItem {
     UUID getVersionableUUID();
 
     /**
-     * Returns a string  iterator over all version labels that exist in this
+     * Returns a name array of all version labels that exist in this
      * version history
      *
      * @return the labels
      */
     Name[] getVersionLabels();
+
+    /**
+     * Returns a name array of all version names that exist in this version history.
+     * @return the names
+     */
+    Name[] getVersionNames();
 
     /**
      * Returns the Id of the version labels node.

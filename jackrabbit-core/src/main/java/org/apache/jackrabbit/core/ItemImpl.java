@@ -445,7 +445,8 @@ public abstract class ItemImpl implements Item {
                 PropDef[] pda = ent.getMandatoryPropDefs();
                 for (int i = 0; i < pda.length; i++) {
                     PropDef pd = pda[i];
-                    if (pd.getDeclaringNodeType().equals(NameConstants.MIX_VERSIONABLE)) {
+                    if (pd.getDeclaringNodeType().equals(NameConstants.MIX_VERSIONABLE)
+                            || pd.getDeclaringNodeType().equals(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                         /**
                          * todo FIXME workaround for mix:versionable:
                          * the mandatory properties are initialized at a
@@ -750,6 +751,21 @@ public abstract class ItemImpl implements Item {
                         node.internalSetProperty(
                                 NameConstants.JCR_PREDECESSORS,
                                 new InternalValue[] { versionId });
+                        createdTransientState = true;
+                    }
+                } else if (nt.includesNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
+                    // we need to check the version manager for an existing
+                    // version history, since simple versioning does not
+                    // expose it's reference in a property
+                    VersionManager vMgr = session.getVersionManager();
+                    vMgr.getVersionHistory(session, nodeState);
+
+                    // create isCheckedOutProperty if not already exists
+                    NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
+                    if (!nodeState.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
+                        node.internalSetProperty(
+                                NameConstants.JCR_ISCHECKEDOUT,
+                                InternalValue.create(true));
                         createdTransientState = true;
                     }
                 }

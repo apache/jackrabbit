@@ -280,9 +280,18 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
         InternalVersion version = (InternalVersion)
                 escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget() {
             public Object run() throws RepositoryException {
-                String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
-                return checkin((InternalVersionHistoryImpl)
-                        getVersionHistory(NodeId.valueOf(histUUID)), node);
+                InternalVersionHistory vh;
+                if (node.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                    // in full versioning, the history id can be retrieved via
+                    // the property
+                    String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
+                    vh = getVersionHistory(NodeId.valueOf(histUUID));
+                    return checkin((InternalVersionHistoryImpl) vh, node, false);
+                } else {
+                    // in simple versioning the history id needs to be calculated
+                    vh = getVersionHistoryOfNode(node.getNodeId());
+                    return checkin((InternalVersionHistoryImpl) vh, node, true);
+                }
             }
         });
 

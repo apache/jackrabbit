@@ -26,9 +26,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Node;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 

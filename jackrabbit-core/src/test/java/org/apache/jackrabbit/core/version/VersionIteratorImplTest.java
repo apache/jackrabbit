@@ -57,6 +57,8 @@ public class VersionIteratorImplTest extends TestCase {
         public boolean isMoreRecent(InternalVersion v) {return false;}
         public boolean isRootVersion() {return false;}
         public InternalVersionItem getParent() {return null;}
+        public InternalVersion getLinearSuccessor(InternalVersion baseVersion) { return null; }
+        public InternalVersion getLinearPredecessor() { return null; }
     }
 
     public void testVersionIterator() throws Exception {

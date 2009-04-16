@@ -332,7 +332,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
             if (opv == OnParentVersionAction.ABORT) {
                 throw new VersionException("Checkin aborted due to OPV in " + child);
             } else if (opv == OnParentVersionAction.VERSION) {
-                if (child.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                if (child.isNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                     // create frozen versionable child
                     NodeStateEx newChild = node.addNode(child.getQName(), NameConstants.NT_VERSIONEDCHILD, null, false);
                     newChild.setPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY,

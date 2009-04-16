@@ -48,7 +48,7 @@ public interface VersionManager {
      * only be called by code that already knows that the specified node
      * is versionable.
      *
-     * @param session
+     * @param session workspace session
      * @param node node whose version history should be returned
      * @return identifiers of the version history and root version nodes
      * @throws RepositoryException if an error occurs
@@ -60,17 +60,17 @@ public interface VersionManager {
      * invokes the checkin() on the persistent version manager and remaps the
      * newly created version objects.
      *
-     * @param node
-     * @return
-     * @throws RepositoryException
+     * @param node node to checkin
+     * @return the newly created version
+     * @throws RepositoryException if an error occurs
      */
     Version checkin(NodeImpl node) throws RepositoryException;
 
     /**
      * Removes the specified version from the given version history.
-     * @param history
-     * @param versionName
-     * @throws RepositoryException
+     * @param history version history to remove the version from
+     * @param versionName name of the version
+     * @throws RepositoryException if an error occurs
      */
     void removeVersion(VersionHistory history, Name versionName)
             throws RepositoryException;
@@ -83,12 +83,12 @@ public interface VersionManager {
      * In either case, the version the label was previously assigned is returned,
      * or <code>null</code> of the label was not moved.
      *
-     * @param history
-     * @param version
-     * @param label
-     * @param move
-     * @return
-     * @throws RepositoryException
+     * @param history version history
+     * @param version name of the version
+     * @param label new label
+     * @param move if <code>true</code> label will be moved
+     * @return the version that had the label or <code>null</code>
+     * @throws RepositoryException if an error occurs
      */
     Version setVersionLabel(VersionHistory history, Name version, Name label,
                             boolean move)
@@ -97,21 +97,42 @@ public interface VersionManager {
     /**
      * Returns the version history with the given id
      *
-     * @param id
+     * @param id id of the version history
      * @return the version history.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     InternalVersionHistory getVersionHistory(NodeId id)
             throws RepositoryException;
 
     /**
+     * Returns the version history for the versionable node with the given id.
+     *
+     * @param id id of the node to retrieve the version history for
+     * @return the version history
+     * @throws RepositoryException if an error occurs or the history does not exit
+     */
+    InternalVersionHistory getVersionHistoryOfNode(NodeId id)
+            throws RepositoryException;
+
+    /**
      * Returns the version with the given id
      *
-     * @param id
+     * @param id id of the version to retrieve
      * @return the version.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     InternalVersion getVersion(NodeId id) throws RepositoryException;
+
+    /**
+     * Returns the head version of the node with the given id. this is always
+     * the last of all versions. this only works correctly for liner version
+     * graphs (i.e. simple versioning)
+     *
+     * @param id id of the node to retrieve the version for
+     * @return the version.
+     * @throws RepositoryException if an error occurs
+     */
+    InternalVersion getHeadVersionOfNode(NodeId id) throws RepositoryException;
 
     /**
      * Close this version manager. After having closed a persistence

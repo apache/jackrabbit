@@ -38,6 +38,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.LinkedHashMap;
 
 /**
  * Implements a <code>InternalVersionHistory</code>
@@ -72,19 +73,19 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * key = version name
      * value = version id (NodeId)
      */
-    private HashMap nameCache = new HashMap();
+    private LinkedHashMap/*<Name, NodeId>*/ nameCache = new LinkedHashMap/*<Name, NodeId>*/();
 
     /**
      * the hashmap of all versions
      * key = version id (NodeId)
      * value = version
      */
-    private HashMap versionCache = new HashMap();
+    private HashMap/*<NodeId, InternalVersion>*/ versionCache = new HashMap/*<NodeId, InternalVersion>*/();
 
     /**
      * Temporary version cache, used on a refresh.
      */
-    private HashMap tempVersionCache = new HashMap();
+    private HashMap/*<NodeId, InternalVersion>*/ tempVersionCache = new HashMap/*<NodeId, InternalVersion>*/();
 
     /**
      * the node that holds the label nodes
@@ -103,6 +104,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
     /**
      * Creates a new VersionHistory object for the given node state.
+     * @param vMgr version manager
+     * @param node version history node state
+     * @throws RepositoryException if an error occurs
      */
     public InternalVersionHistoryImpl(AbstractVersionManager vMgr, NodeStateEx node)
             throws RepositoryException {
@@ -113,7 +117,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * Initialies the history and loads all internal caches
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     private void init() throws RepositoryException {
         nameCache.clear();
@@ -176,6 +180,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
     /**
      * Reload this object and all its dependent version objects.
+     * @throws RepositoryException if an error occurs
      */
     void reload() throws RepositoryException {
         tempVersionCache.putAll(versionCache);
@@ -193,6 +198,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
     /**
      * Create a version instance.
+     * @param name name of the version
+     * @return the new internal version
+     * @throws IllegalArgumentException if the version does not exist
      */
     InternalVersionImpl createVersionInstance(Name name) {
         try {
@@ -219,6 +227,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * Create a version instance. May resurrect versions temporarily swapped
      * out when refreshing this history.
+     * @param child child node state
+     * @return new version instance
      */
     InternalVersionImpl createVersionInstance(NodeStateEx child) {
         InternalVersionImpl v = (InternalVersionImpl) tempVersionCache.remove(child.getNodeId());
@@ -312,6 +322,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    public Name[] getVersionNames() {
+        return (Name[]) nameCache.keySet().toArray(new Name[nameCache.size()]);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
     public int getNumVersions() {
         return nameCache.size();
     }
@@ -346,8 +363,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * predecessors of the removed version and vice versa. then, the entire
      * version node and all its subnodes are removed.
      *
-     * @param versionName
-     * @throws VersionException
+     * @param versionName name of the version to remove
+     * @throws VersionException if removal is not possible
      */
     void removeVersion(Name versionName) throws RepositoryException {
 
@@ -371,7 +388,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // detach from the version graph
         v.internalDetach();
 
-        // remove from persistance state
+        // remove from persistence state
         node.removeNode(v.getName());
 
         // and remove from history
@@ -400,7 +417,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @param label the label to assgign
      * @param move  flag what to do by collisions
      * @return the version that was previously assigned by this label or <code>null</code>.
-     * @throws VersionException
+     * @throws VersionException if the version does not exist or if the label is already defined.
      */
     InternalVersion setVersionLabel(Name versionName, Name label, boolean move)
             throws VersionException {
@@ -453,24 +470,40 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * Checks in a node. It creates a new version with the given name and freezes
      * the state of the given node.
      *
-     * @param name
-     * @param src
-     * @return
-     * @throws RepositoryException
+     * @param name new version name
+     * @param src source node to version
+     * @return the newly created version
+     * @throws RepositoryException if an error occurs
      */
     InternalVersionImpl checkin(Name name, NodeImpl src)
             throws RepositoryException {
 
         // copy predecessors from src node
-        Value[] preds = src.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-        InternalValue[] predecessors = new InternalValue[preds.length];
-        for (int i = 0; i < preds.length; i++) {
-            UUID predId = UUID.fromString(preds[i].getString());
-            // check if version exist
-            if (!nameCache.containsValue(new NodeId(predId))) {
-                throw new RepositoryException("invalid predecessor in source node");
+        InternalValue[] predecessors;
+        if (src.hasProperty(NameConstants.JCR_PREDECESSORS)) {
+            Value[] preds = src.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
+            predecessors = new InternalValue[preds.length];
+            for (int i = 0; i < preds.length; i++) {
+                UUID predId = UUID.fromString(preds[i].getString());
+                // check if version exist
+                if (!nameCache.containsValue(new NodeId(predId))) {
+                    throw new RepositoryException("invalid predecessor in source node");
+                }
+                predecessors[i] = InternalValue.create(predId);
             }
-            predecessors[i] = InternalValue.create(predId);
+        } else {
+            // with simple versioning, the node does not contain a predecessors
+            // property and we just use the 'head' version as predecessor
+            Iterator iter = nameCache.values().iterator();
+            NodeId last = null;
+            while (iter.hasNext()) {
+                last = (NodeId) iter.next();
+            }
+            if (last == null) {
+                // should never happen
+                last = rootVersion.getId();
+            }
+            predecessors = new InternalValue[]{InternalValue.create(last.getUUID())};
         }
 
         NodeId versionId = new NodeId(UUID.randomUUID());
@@ -504,10 +537,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * Creates a new version history below the given parent node and with
      * the given name.
      *
-     * @param parent
-     * @param name
-     * @return
-     * @throws RepositoryException
+     * @param vMgr version manager
+     * @param parent parent node
+     * @param name history name
+     * @param nodeState node state
+     * @return new node state
+     * @throws RepositoryException if an error occurs
      */
     static NodeStateEx create(
             AbstractVersionManager vMgr, NodeStateEx parent, Name name,

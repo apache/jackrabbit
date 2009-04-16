@@ -107,9 +107,19 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         testPredefinedNodeType("mix:referenceable");
     }
 
+    /** Test for the predefined mix:referenceable node type. */
+    public void testShareable() throws NotExecutableException {
+        testPredefinedNodeType("mix:shareable");
+    }
+
     /** Test for the predefined mix:versionable node type. */
     public void testVersionable() throws NotExecutableException {
         testPredefinedNodeType("mix:versionable");
+    }
+
+    /** Test for the predefined mix:simpleVersionable node type. */
+    public void testSimpleVersionable() throws NotExecutableException {
+        testPredefinedNodeType("mix:simpleVersionable");
     }
 
     /** Test for the predefined nt:base node type. */
@@ -172,6 +182,16 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         testPredefinedNodeType("nt:version");
     }
 
+    /** Test for the predefined nt:activity node type. */
+    public void testActivity() throws NotExecutableException {
+        testPredefinedNodeType("nt:activity");
+    }
+
+    /** Test for the predefined nt:configuration node type. */
+    public void testConfiguration() throws NotExecutableException {
+        testPredefinedNodeType("nt:configuration");
+    }
+
     /** Test for the predefined nt:frozenNode node type. */
     public void testFrozenNode() throws NotExecutableException {
         testPredefinedNodeType("nt:frozenNode");
@@ -222,11 +242,11 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             }
 
             NodeType type = manager.getNodeType(name);
-            String current = getNodeTypeSpec(type);
+            String current = getNodeTypeSpec(type).trim();
             if (!System.getProperty("line.separator").equals("\n")) {
                 current = normalizeLineSeparators(current);
             }
-            String expected = normalizeLineSeparators(spec.toString());
+            String expected = normalizeLineSeparators(spec.toString()).trim();
 
             assertEquals("Predefined node type " + name, expected, current);
         } catch (IOException e) {
@@ -268,8 +288,10 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         for (int i = 0; i < supertypes.length; i++) {
             String name = supertypes[i].getName();
             if (name.startsWith("nt:") ||
+                    name.equals("mix:simpleVersionable") ||
                     (name.equals("mix:referenceable") &&
                         (typeName.equals("mix:versionable") ||
+                            typeName.equals("mix:shareable") ||
                             typeName.equals("nt:resource") ||
                             typeName.equals("nt:versionHistory") ||
                             typeName.equals("nt:version") ||

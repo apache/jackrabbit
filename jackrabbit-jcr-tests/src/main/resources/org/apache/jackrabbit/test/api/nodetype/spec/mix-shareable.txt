@@ -1,0 +1,10 @@
+NodeTypeName
+  mix:shareable
+Supertypes
+  mix:referenceable
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null

@@ -67,7 +67,9 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * persistance node. please note, that versions must be created by the
      * version history.
      *
-     * @param node
+     * @param vh containing version history
+     * @param node node state of this version
+     * @param name name of this version
      */
     public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) {
         super(vh.getVersionManager(), node);
@@ -158,6 +160,20 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    public InternalVersion getLinearSuccessor(InternalVersion baseVersion) {
+        // walk up all predecessors of the base version until 'this' version
+        // is found.
+        InternalVersion pred = baseVersion.getLinearPredecessor();
+        while (pred != null && !pred.getId().equals(getId())) {
+            baseVersion = pred;
+            pred = baseVersion.getLinearPredecessor();
+        }
+        return pred == null ? null : baseVersion;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public InternalVersion[] getPredecessors() {
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null) {
@@ -169,6 +185,21 @@ class InternalVersionImpl extends InternalVersionItemImpl
             return versions;
         } else {
             return new InternalVersion[0];
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Always return the left most predecessor
+     */
+    public InternalVersion getLinearPredecessor() {
+        InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
+        if (values != null && values.length > 0) {
+            NodeId vId = new NodeId(values[0].getUUID());
+            return versionHistory.getVersion(vId);
+        } else {
+            return null;
         }
     }
 
@@ -224,9 +255,12 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * stores the given successors or predecessors to the persistance node
      *
-     * @throws RepositoryException
+     * @param cessors list of versions to store
+     * @param propname property name to store
+     * @param store if <code>true</code> the node is stored
+     * @throws RepositoryException if a repository error occurs
      */
-    private void storeXCessors(List cessors, Name propname, boolean store)
+    private void storeXCessors(List/*<InternalVersion>*/ cessors, Name propname, boolean store)
             throws RepositoryException {
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
@@ -242,7 +276,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Detaches itself from the version graph.
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if a repository error occurs
      */
     void internalDetach() throws RepositoryException {
         // detach this from all successors
@@ -251,7 +285,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
             ((InternalVersionImpl) succ[i]).internalDetachPredecessor(this, true);
         }
 
-        // detach cached successors from preds
+        // detach cached successors from predecessors
         InternalVersion[] preds = getPredecessors();
         for (int i = 0; i < preds.length; i++) {
             ((InternalVersionImpl) preds[i]).internalDetachSuccessor(this, true);
@@ -265,7 +299,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * Attaches this version as successor to all predecessors. assuming that the
      * predecessors are already set.
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if a repository error occurs
      */
     void internalAttach() throws RepositoryException {
         InternalVersion[] preds = getPredecessors();
@@ -277,9 +311,9 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Adds a version to the set of successors.
      *
-     * @param succ
-     * @param store
-     * @throws RepositoryException
+     * @param succ successor
+     * @param store <code>true</code> if node is stored
+     * @throws RepositoryException if a repository error occurs
      */
     private void internalAddSuccessor(InternalVersionImpl succ, boolean store)
             throws RepositoryException {
@@ -297,6 +331,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * please note, that this operation might corrupt the version graph
      *
      * @param v the successor to detach
+     * @param store <code>true</code> if node is stored immediately
+     * @throws RepositoryException if a repository error occurs
      */
     private void internalDetachPredecessor(InternalVersionImpl v, boolean store)
             throws RepositoryException {
@@ -304,7 +340,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         List l = new ArrayList(Arrays.asList(getPredecessors()));
         l.remove(v);
 
-        // attach v's predecessors
+        // attach V's predecessors
         l.addAll(Arrays.asList(v.getPredecessors()));
         storeXCessors(l, NameConstants.JCR_PREDECESSORS, store);
     }
@@ -316,6 +352,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * please note, that this operation might corrupt the version graph
      *
      * @param v the successor to detach
+     * @param store <code>true</code> if node is stored immediately
+     * @throws RepositoryException if a repository error occurs
      */
     private void internalDetachSuccessor(InternalVersionImpl v, boolean store)
             throws RepositoryException {
@@ -323,7 +361,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         List l = new ArrayList(Arrays.asList(getSuccessors()));
         l.remove(v);
 
-        // attach v's successors
+        // attach V's successors
         l.addAll(Arrays.asList(v.getSuccessors()));
         storeXCessors(l, NameConstants.JCR_SUCCESSORS, store);
     }
@@ -331,7 +369,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * adds a label to the label cache. does not affect storage
      *
-     * @param label
+     * @param label label to add
      * @return <code>true</code> if the label was added
      */
     boolean internalAddLabel(Name label) {
@@ -344,29 +382,21 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * removes a label from the label cache. does not affect storage
      *
-     * @param label
+     * @param label label to remove
      * @return <code>true</code> if the label was removed
      */
     boolean internalRemoveLabel(Name label) {
-        if (labelCache == null) {
-            return false;
-        } else {
-            return labelCache.remove(label);
-        }
+        return labelCache != null && labelCache.remove(label);
     }
 
     /**
      * checks, if a label is in the label cache
      *
-     * @param label
+     * @param label label to check
      * @return <code>true</code> if the label exists
      */
     boolean internalHasLabel(Name label) {
-        if (labelCache == null) {
-            return false;
-        } else {
-            return labelCache.contains(label);
-        }
+        return labelCache != null && labelCache.contains(label);
     }
 
     /**
@@ -392,7 +422,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Resolves jcr:successor properties that are missing.
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if a repository error occurs
      */
     void legacyResolveSuccessors() throws RepositoryException {
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);

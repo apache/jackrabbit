@@ -53,19 +53,33 @@
 // V E R S I O N I N G
 //------------------------------------------------------------------------------
 
-[mix:versionable] > mix:referenceable
+/**
+ * @since 2.0
+ */
+[mix:simpleVersionable]
+  mixin
+  - jcr:isCheckedOut (boolean) = 'true' mandatory autocreated protected ignore
+
+[mix:versionable] > mix:simpleVersionable, mix:referenceable
   mixin
   - jcr:versionHistory (reference) mandatory protected
     < 'nt:versionHistory'
   - jcr:baseVersion (reference) mandatory protected ignore
     < 'nt:version'
-  - jcr:isCheckedOut (boolean) = 'true' mandatory autocreated protected ignore
   - jcr:predecessors (reference) mandatory protected multiple
     < 'nt:version'
   - jcr:mergeFailed (reference) protected multiple abort
+    /** @since 2.0 */
+  - jcr:activity (reference) protected
+    < 'nt:activity'
+    /** @since 2.0 */
+  - jcr:configuration (reference) protected
+    < 'nt:configuration'
 
 [nt:versionHistory] > nt:base, mix:referenceable
   - jcr:versionableUuid (string) mandatory autocreated protected abort
+    /** @since 2.0 */
+    // - jcr:copiedFrom (weakreference) protected abort < 'nt:version'
   + jcr:rootVersion (nt:version) = nt:version mandatory autocreated protected abort
   + jcr:versionLabels (nt:versionLabels) = nt:versionLabels mandatory autocreated protected abort
   + * (nt:version) = nt:version protected abort
@@ -80,6 +94,9 @@
     < 'nt:version'
   - jcr:successors (reference) protected multiple abort
     < 'nt:version'
+    /** @since 2.0 */
+  - jcr:activity (reference) protected abort
+    < 'nt:activity'
   + jcr:frozenNode (nt:frozenNode) protected abort
 
 [nt:frozenNode] > nt:base, mix:referenceable
@@ -94,6 +111,18 @@
 [nt:versionedChild]
   - jcr:childVersionHistory (reference) mandatory autocreated protected abort
     < 'nt:versionHistory'
+
+/**
+ * @since 2.0
+ */
+[nt:activity] > nt:base, mix:referenceable
+  - jcr:activityTitle (string) mandatory autocreated protected
+
+/**
+ * @since 2.0
+ */
+[nt:configuration] > nt:base, mix:versionable
+  - jcr:root (reference) mandatory autocreated protected
 
 //------------------------------------------------------------------------------
 // N O D E T Y P E S

@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
+import org.apache.jackrabbit.api.jsr283.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +35,10 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
 /**
@@ -53,7 +55,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * Create a new instance of this class.
      * @param itemMgr item manager
      * @param session session
-     * @param data
+     * @param data node data
      */
     public VersionHistoryImpl(ItemManager itemMgr, SessionImpl session, AbstractNodeData data) {
         super(itemMgr, session, data);
@@ -78,7 +80,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see javax.jcr.version.VersionHistory#getRootVersion()
      */
-    public Version getRootVersion() throws RepositoryException {
+    public javax.jcr.version.Version getRootVersion() throws RepositoryException {
         return (Version) session.getNodeById(
                 getInternalVersionHistory().getRootVersion().getId());
     }
@@ -92,9 +94,36 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
+     * @see VersionHistory#getAllFrozenNodes()
+     */
+    public NodeIterator getAllFrozenNodes() throws RepositoryException {
+        return new FrozenNodeIteratorAdapter(getAllVersions());
+    }
+
+    /**
+     * @see VersionHistory#getAllLinearVersions()
+     */
+    public VersionIterator getAllLinearVersions() throws RepositoryException {
+        // get base version. this can certainly be optimized
+        InternalVersionHistory vh = getInternalVersionHistory();
+        NodeId id = new NodeId(vh.getVersionableUUID());
+        Node vn = session.getNodeById(id);
+        InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
+
+        return new VersionIteratorImpl(session, vh.getRootVersion(), base);
+    }
+
+    /**
+     * @see VersionHistory#getAllLinearFrozenNodes()
+     */
+    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
+        return new FrozenNodeIteratorAdapter(getAllLinearVersions());
+    }
+
+    /**
      * @see javax.jcr.version.VersionHistory#getVersion(String)
      */
-    public Version getVersion(String versionName)
+    public javax.jcr.version.Version getVersion(String versionName)
             throws VersionException, RepositoryException {
         try {
             Name name = session.getQName(versionName);
@@ -111,7 +140,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see javax.jcr.version.VersionHistory#getVersionByLabel(String)
      */
-    public Version getVersionByLabel(String label) throws RepositoryException {
+    public javax.jcr.version.Version getVersionByLabel(String label) throws RepositoryException {
         try {
             Name qLabel = session.getQName(label);
             InternalVersion v =
@@ -148,7 +177,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            Version existing = session.getVersionManager().setVersionLabel(this, null, session.getQName(label), true);
+            javax.jcr.version.Version existing = session.getVersionManager().setVersionLabel(this, null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -173,9 +202,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see javax.jcr.version.VersionHistory#getVersionLabels(javax.jcr.version.Version)
      */
-    public String[] getVersionLabels(Version version)
+    public String[] getVersionLabels(javax.jcr.version.Version version)
             throws VersionException, RepositoryException {
-        checkOwnVersion(version);
+        checkOwnVersion((Version) version);
         Name[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
@@ -199,9 +228,9 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see javax.jcr.version.VersionHistory#hasVersionLabel(javax.jcr.version.Version, String)
      */
-    public boolean hasVersionLabel(Version version, String label)
+    public boolean hasVersionLabel(javax.jcr.version.Version version, String label)
             throws VersionException, RepositoryException {
-        checkOwnVersion(version);
+        checkOwnVersion((Version)version);
         try {
             Name qLabel = session.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
@@ -246,13 +275,21 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * {@inheritDoc}
      */
     public String getVersionableUUID() throws RepositoryException {
+        return getVersionableIdentifier();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getVersionableIdentifier() throws RepositoryException {
         return getInternalVersionHistory().getVersionableUUID().toString();
     }
 
     /**
-     * 
-     * @return
-     * @throws RepositoryException
+     * Checks if the current session has version management permission
+     *
+     * @throws AccessDeniedException if version management is not allowed
+     * @throws RepositoryException if an error occurs
      */
     private void checkVersionManagementPermission() throws RepositoryException {
         try {
@@ -265,9 +302,10 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * Checks if the given version belongs to this history
      *
-     * @param version
-     * @throws javax.jcr.version.VersionException
-     * @throws javax.jcr.RepositoryException
+     * @param version the version
+     * @throws javax.jcr.version.VersionException if the specified version is
+     *         not part of this version history
+     * @throws javax.jcr.RepositoryException if a repository error occurs
      */
     private void checkOwnVersion(Version version)
             throws VersionException, RepositoryException {

@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.version.DateVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.version.JcrVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
@@ -127,6 +128,11 @@ public class WorkspaceImpl extends AbstractWorkspace
      * locks and determine the lock status.
      */
     private org.apache.jackrabbit.api.jsr283.lock.LockManager jcr283LockManager;
+
+    /**
+     * The API Version manager for this workspace
+     */
+    protected JcrVersionManagerImpl versionMgr;
 
     /**
      * The internal manager used to evaluate effective retention policies and
@@ -294,8 +300,12 @@ public class WorkspaceImpl extends AbstractWorkspace
     /**
      * @see org.apache.jackrabbit.api.jsr283.Workspace#getVersionManager()
      */
-    public VersionManager getVersionManager() throws UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+    public VersionManager getVersionManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        if (versionMgr == null) {
+            versionMgr = new JcrVersionManagerImpl(session);
+        }
+        return versionMgr;
     }
 
     //-------------------------------< JackrabbitWorkspace/new JSR 283 method >
@@ -908,7 +918,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                 while (iter.hasNext()) {
                     VersionImpl v = (VersionImpl) iter.next();
                     try {
-                        NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getFrozenNode().getFrozenUUID());
+                        NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getInternalFrozenNode().getFrozenUUID());
                         restored = node.internalRestore(v, vsel, removeExisting);
                         // remove restored versions from set
                         for (int i = 0; i < restored.length; i++) {

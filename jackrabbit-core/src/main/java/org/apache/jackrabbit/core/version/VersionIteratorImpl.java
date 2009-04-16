@@ -26,6 +26,7 @@ import javax.jcr.version.VersionIterator;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.Arrays;
 
 /**
  * This Class implements a VersionIterator that iterates over a version
@@ -33,13 +34,17 @@ import java.util.NoSuchElementException;
  * the id's of the versions and returns them when iterating. please note, that
  * a version can be deleted while traversing this iterator and the 'nextVesion'
  * would produce a  ConcurrentModificationException.
+ * <p/>
+ * If this iterator is initialized with a base version, it will only iterate
+ * on the versions of a single line of decent from the given root version to the
+ * base version.
  */
 class VersionIteratorImpl implements VersionIterator {
 
     /**
      * the id's of the versions to return
      */
-    private LinkedList versions = new LinkedList();
+    private LinkedList/*<NodeId>*/ versions = new LinkedList/*<NodeId>*/();
 
     /**
      * the current position
@@ -60,12 +65,29 @@ class VersionIteratorImpl implements VersionIterator {
      * Creates a new VersionIterator that iterates over the version tree,
      * starting the root node.
      *
-     * @param rootVersion
+     * @param session repository session
+     * @param rootVersion the root version
      */
     public VersionIteratorImpl(Session session, InternalVersion rootVersion) {
-        this.session = (SessionImpl) session;
+        this(session, rootVersion, null);
+    }
 
-        addVersion(rootVersion);
+    /**
+     * Creates a new VersionIterator that iterates over a single line of decent
+     * of all versions starting at the root version and ending at the given
+     * base version
+     *
+     * @param session repository session
+     * @param rootVersion the root version
+     * @param baseVersion the ending base version
+     */
+    public VersionIteratorImpl(Session session, InternalVersion rootVersion, InternalVersion baseVersion) {
+        this.session = (SessionImpl) session;
+        if (baseVersion == null) {
+            initVersions(rootVersion);
+        } else {
+            initVersions(rootVersion, baseVersion);
+        }
         // retrieve initial size, since size of the list is not stable
         size = versions.size();
     }
@@ -134,25 +156,43 @@ class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * Adds the version 'v' to the list of versions to return and then iterates
-     * over the hierarchy of successors of 'v'.
+     * Adds the version subtree starting at <code>root</code> to the internal
+     * set of versions.
      *
-     * @param v
+     * @param root the root version
      */
-    private synchronized void addVersion(InternalVersion v) {
+    private synchronized void initVersions(InternalVersion root) {
         LinkedList workQueue = new LinkedList();
-        workQueue.add(v);
+        workQueue.add(root);
         while (!workQueue.isEmpty()) {
             InternalVersion currentVersion = (InternalVersion) workQueue.removeFirst();
             NodeId id = currentVersion.getId();
             if (!versions.contains(id)) {
                 versions.add(id);
                 InternalVersion[] successors = currentVersion.getSuccessors();
-                for (int i = 0; i < successors.length; i++) {
-                    workQueue.add(successors[i]);
-                }
+                workQueue.addAll(Arrays.asList(successors));
             }
         }
 
+    }
+
+    /**
+     * Adds all versions of a single line of decent starting from <code>root</code>
+     * and ending at <code>base</code>.
+     *
+     * @param root the root version
+     * @param base the base version
+     */
+    private synchronized void initVersions(InternalVersion root, InternalVersion base) {
+        NodeId rootId = root == null ? null : root.getId();
+        while (base != null && !base.getId().equals(rootId)) {
+            versions.addFirst(base.getId());
+            InternalVersion[] preds = base.getPredecessors();
+            if (preds.length == 0) {
+                base = null;
+            } else {
+                base = preds[0];
+            }
+        }
     }
 }
