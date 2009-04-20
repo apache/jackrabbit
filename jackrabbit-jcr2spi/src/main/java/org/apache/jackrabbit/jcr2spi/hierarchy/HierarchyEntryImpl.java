@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.lang.ref.Reference;
 
 /**
@@ -39,7 +39,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     private static Logger log = LoggerFactory.getLogger(HierarchyEntryImpl.class);
 
     /**
-     * Cached weak reference to the target ItemState.
+     * Cached soft reference to the target ItemState.
      */
     private Reference target;
 
@@ -90,7 +90,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     ItemState resolve() throws ItemNotFoundException, RepositoryException {
         // check if already resolved
         ItemState state = internalGetItemState();
-        // not yet resolved. retrieve and keep weak reference to state
+        // not yet resolved. retrieve and keep soft reference to state
         if (state == null) {
             try {
                 state = doResolve();
@@ -216,7 +216,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (currentState == null) {
             // not connected yet to an item state. either a new entry or
             // an unresolved hierarchy entry.
-            target = new WeakReference(state);
+            target = new SoftReference(state);
         } else {
             // was already resolved before -> merge the existing state
             // with the passed state.
