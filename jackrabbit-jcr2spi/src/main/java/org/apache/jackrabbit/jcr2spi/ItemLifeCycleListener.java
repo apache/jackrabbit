@@ -34,17 +34,13 @@ public interface ItemLifeCycleListener {
     public void itemCreated(Item item);
 
     /**
-     * Called when an <code>Item</code> instance has been invalidated
-     * (i.e. it has been temporarily rendered 'invalid').
-     * <p/>
-     * Note that most methods of <code>{@link javax.jcr.Item}</code>,
-     * <code>{@link javax.jcr.Node}</code> and <code>{@link javax.jcr.Property}</code>
-     * will throw an <code>InvalidItemStateException</code> when called
-     * on an 'invalidated' item.
+     * Called when an <code>Item</code> instance has been refreshed. If
+     * <code>modified</code> is <code>true</code>, the refresh included
+     * some modification.
      *
-     * @param item the instance which has been discarded
+     * @param item the instance which has been refreshed
      */
-    void itemInvalidated(Item item);
+    void itemUpdated(Item item, boolean modified);
 
     /**
      * Called when an <code>ItemImpl</code> instance has been destroyed

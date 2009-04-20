@@ -76,4 +76,16 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
             listeners[i].created(createdState);
         }
     }
+
+    /**
+     *
+     * @param state
+     */
+    void notifyUpdated(ItemState state, int previousStatus) {
+        ItemStateCreationListener[] listeners = getListeners();
+        for (int i = 0; i < listeners.length; i++) {
+            // now inform about creation
+            listeners[i].statusChanged(state, previousStatus);
+        }
+    }
 }
