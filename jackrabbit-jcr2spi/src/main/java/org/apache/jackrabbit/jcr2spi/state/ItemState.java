@@ -302,7 +302,7 @@ public abstract class ItemState {
     /**
      * Unmodifiable iterator over the listeners present on this item state.
      *
-     * @return
+     * @return iterator over <code>ItemStateLifeCycleListener</code>s.
      */
     public Iterator getListeners() {
         return Collections.unmodifiableCollection(listeners).iterator();
@@ -348,6 +348,12 @@ public abstract class ItemState {
          * was modified.
          */
         public boolean modified();
+
+        /**
+         * Dispose this MergeResult and release all internal resources that
+         * are not needed any more.
+         */
+        public void dispose();
     }
 
     /**
@@ -367,6 +373,10 @@ public abstract class ItemState {
 
         public boolean modified() {
             return modified;
+        }
+
+        public void dispose() {
+            // nothing to do.
         }
     }
 
