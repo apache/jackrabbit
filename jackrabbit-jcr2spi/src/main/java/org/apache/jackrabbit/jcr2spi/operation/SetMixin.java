@@ -46,7 +46,9 @@ public class SetMixin extends AbstractOperation {
         // add the jcr:mixinTypes property state as affected if it already exists
         // and therefore gets modified by this operation.
         try {
-            addAffectedItemState(nodeState.getPropertyState(NameConstants.JCR_MIXINTYPES));
+            if (nodeState.hasPropertyName(NameConstants.JCR_MIXINTYPES)) {
+                addAffectedItemState(nodeState.getPropertyState(NameConstants.JCR_MIXINTYPES));
+            }
         } catch (RepositoryException e) {
             // jcr:mixinTypes does not exist -> ignore
         }

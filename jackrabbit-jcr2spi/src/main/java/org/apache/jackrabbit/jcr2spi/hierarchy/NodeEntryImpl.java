@@ -397,18 +397,18 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 //    refresh will bring up new entries added in the mean time
                 //    on the persistent layer.
                 if (entry.childNodeEntries.isComplete()) {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
                 // -> check for moved child entry in node-attic
                 // -> check if child points to a removed/moved sns
                 List siblings = entry.childNodeEntries.get(name);
                 if (entry.containsAtticChild(siblings, name, index)) {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
                 // shortcut: entry is NEW and still unresolved remaining path
                 // elements -> hierarchy doesn't exist anyway.
                 if (entry.getStatus() == Status.NEW) {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
                /*
                 * Unknown entry (not-existing or not yet loaded):
@@ -435,7 +435,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 if (ne != null) {
                     return ne;
                 } else {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
             }
         }
@@ -471,13 +471,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 //    refresh will bring up new entries added in the mean time
                 //    on the persistent layer.
                 if (entry.childNodeEntries.isComplete()) {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
                 // -> check for moved child entry in node-attic
                 // -> check if child points to a removed/moved sns
                 List siblings = entry.childNodeEntries.get(name);
                 if (entry.containsAtticChild(siblings, name, index)) {
-                    throw new PathNotFoundException(path.toString());
+                    throw new PathNotFoundException(factory.saveGetJCRPath(path));
                 }
                 // break out of the loop and start deep loading the property
                 break;
@@ -513,7 +513,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
 
         if (pe == null) {
-            throw new PathNotFoundException(path.toString());
+            throw new PathNotFoundException(factory.saveGetJCRPath(path));
         }
         return pe;
     }
@@ -669,7 +669,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @see NodeEntry#addNodeEntry(Name, String, int)
+     * @see NodeEntry#getOrAddNodeEntry(Name, int, String)
      */
     public NodeEntry getOrAddNodeEntry(Name nodeName, int index, String uniqueID) throws RepositoryException {
         NodeEntry ne = lookupNodeEntry(uniqueID, nodeName, index);
@@ -747,7 +747,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @see NodeEntry#addPropertyEntry(Name)
+     * @see NodeEntry#getOrAddPropertyEntry(Name)
      */
     public PropertyEntry getOrAddPropertyEntry(Name propName) throws ItemExistsException {
         PropertyEntry pe = lookupPropertyEntry(propName);
@@ -796,7 +796,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     }
 
     /**
-     * @see NodeEntry#addNewPropertyEntry(Name, QPropertyDefinition)
+     * @see NodeEntry#addNewPropertyEntry(Name, QPropertyDefinition, QValue[], int)
      */
     public PropertyEntry addNewPropertyEntry(Name propName, QPropertyDefinition definition, QValue[] values, int propertyType)
             throws ItemExistsException, RepositoryException {
@@ -1088,7 +1088,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
      * @param oldName
      * @param oldIndex
      * @return <code>true</code> if the given oldName and oldIndex match
-     * {@link #getWorkspaceName()} and {@link #getWorkspaceIndex()}, respectively.
+     * {@link #getName(boolean)} and {@link #getIndex(boolean)}, respectively.
      */
     boolean matches(Name oldName, int oldIndex) {
         try {
@@ -1102,7 +1102,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     /**
      * @param oldName
      * @return <code>true</code> if the given oldName matches
-     * {@link #getWorkspaceName()}.
+     * {@link #getName(boolean)}.
      */
     boolean matches(Name oldName) {
         return getName(true).equals(oldName);

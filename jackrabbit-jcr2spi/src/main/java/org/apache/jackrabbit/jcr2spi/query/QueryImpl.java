@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -218,7 +219,7 @@ public class QueryImpl implements Query {
             queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT), statement);
             node = queryNode;
             return node;
-        } catch (org.apache.jackrabbit.spi.commons.conversion.NameException e) {
+        } catch (NameException e) {
             throw new RepositoryException(e.getMessage(), e);
         }
     }
