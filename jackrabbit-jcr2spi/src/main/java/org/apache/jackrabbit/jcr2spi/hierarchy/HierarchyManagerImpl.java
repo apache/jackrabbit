@@ -19,12 +19,14 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,17 +40,25 @@ import javax.jcr.RepositoryException;
  */
 public class HierarchyManagerImpl implements HierarchyManager {
 
-    private static Logger log = LoggerFactory.getLogger(org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl.class);
+    private static Logger log = LoggerFactory.getLogger(HierarchyManagerImpl.class);
 
     private final NodeEntry rootEntry;
     private final UniqueIdResolver uniqueIdResolver;
     private final IdFactory idFactory;
+    private NamePathResolver resolver;
 
     public HierarchyManagerImpl(TransientItemStateFactory isf, IdFactory idFactory,
                                 PathFactory pathFactory) {
         uniqueIdResolver = new UniqueIdResolver(isf);
         rootEntry = new EntryFactory(isf, idFactory, uniqueIdResolver, pathFactory).createRootEntry();
         this.idFactory = idFactory;
+    }
+
+    public void setResolver(NamePathResolver resolver) {
+        this.resolver = resolver;
+        if (rootEntry instanceof HierarchyEntryImpl) {
+            ((HierarchyEntryImpl) rootEntry).factory.setResolver(resolver);
+        }
     }
 
     //---------------------------------------------------< HierarchyManager >---
@@ -138,7 +148,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         } else {
             if (propertyId.getPath() == null) {
                 // a property id always contains a Path part.
-                throw new ItemNotFoundException();
+                throw new ItemNotFoundException("No property found for id " + LogUtil.saveGetIdString(propertyId, resolver));
             } else {
                 NodeEntry nEntry = uniqueIdResolver.resolve(idFactory.createNodeId(uniqueID), rootEntry);
                 return nEntry.getDeepPropertyEntry(propertyId.getPath());
@@ -173,7 +183,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             if (state.isValid()) {
                 return state;
             } else {
-                throw new PathNotFoundException();
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(qPath, resolver));
             }
         } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(e);
@@ -190,7 +200,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             if (state.isValid()) {
                 return state;
             } else {
-                throw new PathNotFoundException();
+                throw new PathNotFoundException(LogUtil.safeGetJCRPath(qPath, resolver));
             }
         } catch (ItemNotFoundException e) {
             throw new PathNotFoundException(e);

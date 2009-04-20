@@ -108,13 +108,14 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         if (depth == 0) {
             return session.getRootNode();
         }
+        String msg = "No ancestor at depth = " + depth;
         try {
             // Path.getAncestor requires relative degree, i.e. we need
             // to convert absolute to relative ancestor degree
             Path path = getQPath();
             int relDegree = path.getAncestorCount() - depth;
             if (relDegree < 0) {
-                throw new ItemNotFoundException();
+                throw new ItemNotFoundException(msg);
             }
             Path ancestorPath = path.getAncestor(relDegree);
             if (relDegree == 0) {
@@ -122,8 +123,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             } else {
                 return getItemManager().getNode(ancestorPath);
             }
-        } catch (PathNotFoundException pnfe) {
-            throw new ItemNotFoundException();
+        } catch (PathNotFoundException e) {
+            throw new ItemNotFoundException(msg);
         }
     }
 

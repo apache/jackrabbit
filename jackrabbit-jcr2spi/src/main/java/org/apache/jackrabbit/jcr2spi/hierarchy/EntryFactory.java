@@ -19,9 +19,12 @@ package org.apache.jackrabbit.jcr2spi.hierarchy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * <code>EntryFactory</code>...
@@ -49,7 +52,21 @@ public class EntryFactory {
      */
     private final TransientItemStateFactory isf;
 
-    public EntryFactory(TransientItemStateFactory isf, IdFactory idFactory, NodeEntryListener listener, PathFactory pathFactory) {
+    /**
+     * NamePathResolver used to generate human readable error messages.
+     */
+    private NamePathResolver resolver;
+
+    /**
+     * Create a new instance of the <code>EntryFactory</code>.
+     *
+     * @param isf
+     * @param idFactory
+     * @param listener
+     * @param pathFactory
+     */
+    public EntryFactory(TransientItemStateFactory isf, IdFactory idFactory,
+                        NodeEntryListener listener, PathFactory pathFactory) {
         this.idFactory = idFactory;
         this.pathFactory = pathFactory;
         this.isf = isf;
@@ -58,8 +75,7 @@ public class EntryFactory {
     }
 
     /**
-     *
-     * @return
+     * @return the root entry.
      */
     public NodeEntry createRootEntry() {
         return rootEntry;
@@ -99,6 +115,26 @@ public class EntryFactory {
         listener.uniqueIdChanged(entry, previousUniqueID);
     }
 
+    //--------------------------------------------------------------------------
+    /**
+     * @param resolver
+     */
+    void setResolver(NamePathResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    /**
+     * @param path
+     * @return jcr presentation of the specified path.
+     */
+    String saveGetJCRPath(Path path) {
+        if (resolver == null) {
+            return path.toString();
+        } else {
+            return LogUtil.safeGetJCRPath(path, resolver);
+        }
+    }
+    
     //--------------------------------------------------------------------------
     public interface NodeEntryListener {
 

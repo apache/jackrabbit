@@ -38,8 +38,7 @@ public interface HierarchyManager {
     public void dispose();
 
     /**
-     *
-     * @return
+     * @return the root entry.
      */
     public NodeEntry getRootEntry();
 
@@ -54,7 +53,7 @@ public interface HierarchyManager {
      * loaded yet.
      *
      * @param workspaceItemId
-     * @return
+     * @return the HierarchyEntry with the given <code>workspaceItemId</code>.
      */
     public HierarchyEntry lookup(ItemId workspaceItemId);
 
@@ -67,8 +66,8 @@ public interface HierarchyManager {
      * or {@link #getPropertyEntry(Path)} for methods that resolves the path
      * including lookup in the persistence layer if the entry has not been loaded yet.
      *
-     * @param workspaceItemId
-     * @return
+     * @param workspacePath
+     * @return the HierarchyEntry with the given <code>workspacePath</code>.
      */
     public HierarchyEntry lookup(Path workspacePath);
 
