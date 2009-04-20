@@ -230,6 +230,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             } else if (mergeResult.modified()) {
                 currentState.setStatus(Status.MODIFIED);
             } // else: not modified. just leave status as it is.
+            mergeResult.dispose();
         }
     }
 
