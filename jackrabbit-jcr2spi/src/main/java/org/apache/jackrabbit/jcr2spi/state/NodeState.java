@@ -449,7 +449,7 @@ public class NodeState extends ItemState {
              */
             NodeState parent = getParent();
             NodeId wspId = (NodeId) getWorkspaceId();
-            def = definitionProvider.getQNodeDefinition(getParent().getNodeTypeNames(), getName(), getNodeTypeName(), wspId);
+            def = definitionProvider.getQNodeDefinition(parent.getNodeTypeNames(), getName(), getNodeTypeName(), wspId);
         }
         return def;
     }
