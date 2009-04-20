@@ -16,19 +16,21 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
-import java.lang.ref.SoftReference;
-import java.lang.ref.Reference;
+
+import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.state.ItemState.MergeResult;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>HierarchyEntryImpl</code> implements base functionality for child node
@@ -222,10 +224,10 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             // with the passed state.
             int currentStatus = currentState.getStatus();
             boolean keepChanges = Status.isTransient(currentStatus) || Status.isStale(currentStatus);
-            boolean modified = currentState.merge(state, keepChanges);
+            MergeResult mergeResult = currentState.merge(state, keepChanges);
             if (currentStatus == Status.INVALIDATED) {
                 currentState.setStatus(Status.EXISTING);
-            } else if (modified) {
+            } else if (mergeResult.modified()) {
                 currentState.setStatus(Status.MODIFIED);
             } // else: not modified. just leave status as it is.
         }

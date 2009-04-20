@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.spi.ItemId;
@@ -25,11 +30,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
-import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
  * <code>PropertyState</code> represents the state of a <code>Property</code>.
@@ -130,28 +130,28 @@ public class PropertyState extends ItemState {
      *
      * @see ItemState#merge(ItemState, boolean)
      */
-    public boolean merge(ItemState another, boolean keepChanges) {
-        if (another == null || another == this) {
-            return false;
+    public MergeResult merge(ItemState another, boolean keepChanges) {
+        boolean modified = false;
+        if (another != null && another != this) {
+            if (another.isNode()) {
+                throw new IllegalArgumentException("Attempt to merge property state with node state.");
+            }
+            PropertyDiffer result = new PropertyDiffer(data, ((PropertyState) another).data);
+
+            // reset the pInfo to point to the pInfo of another state.
+            this.data = ((PropertyState) another).data;
+            // if transient changes should be preserved OR if there are not
+            // transient changes, simply return diff to indicate if this state
+            // was internally changed.
+            if (keepChanges || transientData == null) {
+                return result;
+            } else {
+                transientData.discardValues();
+                transientData = null;
+                modified = true;
+            }
         }
-        if (another.isNode()) {
-            throw new IllegalArgumentException("Attempt to merge property state with node state.");
-        }
-        // calculate if the persistent values of this state differ from the
-        // other state.
-        boolean diff = diff(data, ((PropertyState) another).data);
-        // reset the pInfo to point to the pInfo of another state.
-        this.data = ((PropertyState) another).data;
-        // if transient changes should be preserved OR if there are not
-        // transient changes, simply return diff to indicate if this state
-        // was internally changed.
-        if (keepChanges || transientData == null) {
-            return diff;
-        } else {
-            transientData.discardValues();
-            transientData = null;
-            return true;
-        }
+        return new SimpleMergeResult(modified);
     }
 
     /**
@@ -340,9 +340,9 @@ public class PropertyState extends ItemState {
      * Inner class storing property values an their type.
      */
     private class PropertyData {
-
         private int type;
         private QValue[] values;
+        private boolean discarded;
 
         private PropertyData(PropertyInfo pInfo) {
             this.type = pInfo.getType();
@@ -365,6 +365,7 @@ public class PropertyState extends ItemState {
         }
 
         private void discardValues() {
+            discarded = true;
             if (values != null) {
                 for (int i = 0; i < values.length; i++) {
                     if (values[i] != null) {
@@ -376,4 +377,27 @@ public class PropertyState extends ItemState {
             }
         }
     }
+
+    /**
+     * Helper class for delayed determination of property differences.
+     */
+    private class PropertyDiffer implements MergeResult {
+        private final PropertyData thisData;
+        private final PropertyData thatData;
+
+        PropertyDiffer(PropertyData thisData, PropertyData thatData) {
+            super();
+            this.thisData = thisData;
+            this.thatData = thatData;
+        }
+
+        public boolean modified() {
+            if (thisData.discarded || thatData.discarded) {
+                log.warn("Property data has been discarded");
+                return true;
+            }
+            return diff(thisData, thatData);
+        }
+    }
+
 }
