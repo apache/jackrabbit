@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.state;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -88,15 +87,9 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             throws ItemNotFoundException, RepositoryException {
         // build new node state from server information
         try {
-            NodeState nodeState;
-            if (entry.getStatus() == Status.INVALIDATED) {
-                // simple reload -> don't use batch-read
-                NodeInfo nInfo = service.getNodeInfo(sessionInfo, nodeId);
-                nodeState = createItemStates(nodeId, Collections.singletonList(nInfo).iterator(), entry, false);
-            } else {
-                Iterator infos = service.getItemInfos(sessionInfo, nodeId);
-                nodeState = createItemStates(nodeId, infos, entry, false);
-            }
+            Iterator infos = service.getItemInfos(sessionInfo, nodeId);
+            NodeState nodeState = createItemStates(nodeId, infos, entry, false);
+
             if (nodeState == null) {
                 throw new ItemNotFoundException("HierarchyEntry does not belong to any existing ItemInfo.");
             }
@@ -226,14 +219,12 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
         // deal with all additional ItemInfos that may be present.
         NodeEntry parentEntry = nodeState.getNodeEntry();
-        if (parentEntry.getStatus() != Status.INVALIDATED) {
-            while (itemInfos.hasNext()) {
-                ItemInfo info = (ItemInfo) itemInfos.next();
-                if (info.denotesNode()) {
-                    createDeepNodeState((NodeInfo) info, parentEntry, infos);
-                } else {
-                    createDeepPropertyState((PropertyInfo) info, parentEntry, infos);
-                }
+        while (itemInfos.hasNext()) {
+            ItemInfo info = (ItemInfo) itemInfos.next();
+            if (info.denotesNode()) {
+                createDeepNodeState((NodeInfo) info, parentEntry, infos);
+            } else {
+                createDeepPropertyState((PropertyInfo) info, parentEntry, infos);
             }
         }
         return nodeState;
