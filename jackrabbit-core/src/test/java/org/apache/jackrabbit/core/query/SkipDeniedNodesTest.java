@@ -68,6 +68,11 @@ public class SkipDeniedNodesTest extends AbstractAccessControlTest {
         acMgr.setPolicy(n2.getPath(), acl);
         superuser.save();
     }
+    
+    protected void tearDown() throws Exception {
+        anonymous.logout();
+        super.tearDown();
+    }
 
     public void testSkipNodes() throws RepositoryException {
         Node testNode = (Node) anonymous.getItem(testRoot);
