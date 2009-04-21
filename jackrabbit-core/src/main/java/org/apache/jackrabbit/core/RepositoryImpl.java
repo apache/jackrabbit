@@ -480,7 +480,7 @@ public class RepositoryImpl extends AbstractRepository
            secWspName = smc.getWorkspaceName();
         }
         try {
-            initWorkspace((WorkspaceInfo) wspInfos.get(wspName));
+            ((WorkspaceInfo) wspInfos.get(wspName)).initialize();
             if (secWspName != null && !wspInfos.containsKey(secWspName)) {
                 createWorkspace(secWspName);
                 log.info("created system workspace: {}", secWspName);
@@ -635,48 +635,6 @@ public class RepositoryImpl extends AbstractRepository
         }
     }
 
-    private void initWorkspace(WorkspaceInfo wspInfo) throws RepositoryException {
-        // first initialize workspace info
-        if (!wspInfo.initialize()) {
-            // workspace has already been initialized, we're done
-            return;
-        }
-
-        // get system session and Workspace instance
-        SessionImpl sysSession = wspInfo.getSystemSession();
-        WorkspaceImpl wsp = (WorkspaceImpl) sysSession.getWorkspace();
-
-        /**
-         * todo implement 'System' workspace
-         * FIXME
-         * - there should be one 'System' workspace per repository
-         * - the 'System' workspace should have the /jcr:system node
-         * - versions, version history and node types should be reflected in
-         *   this system workspace as content under /jcr:system
-         * - all other workspaces should be dynamic workspaces based on
-         *   this 'read-only' system workspace
-         *
-         * for now, the jcr:system node is created in
-         * {@link org.apache.jackrabbit.core.state.SharedItemStateManager#createRootNodeState}
-         */
-
-        // register the repository as event listener for keeping repository statistics
-        wsp.getObservationManager().addEventListener(this,
-                Event.NODE_ADDED | Event.NODE_REMOVED
-                | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
-                "/", true, null, null, false);
-
-        // register SearchManager as event listener
-        SearchManager searchMgr = wspInfo.getSearchManager();
-        if (searchMgr != null) {
-            wsp.getObservationManager().addEventListener(searchMgr,
-                    Event.NODE_ADDED | Event.NODE_REMOVED
-                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED
-                    | Event.PROPERTY_CHANGED,
-                    "/", true, null, null, false);
-        }
-    }
-
     /**
      * Returns the system search manager or <code>null</code> if none is
      * configured.
@@ -768,7 +726,7 @@ public class RepositoryImpl extends AbstractRepository
         }
 
         try {
-            initWorkspace(wspInfo);
+            wspInfo.initialize();
         } catch (RepositoryException e) {
             log.error("Unable to initialize workspace '" + workspaceName + "'", e);
             throw new NoSuchWorkspaceException(workspaceName);
@@ -1875,6 +1833,7 @@ public class RepositoryImpl extends AbstractRepository
                 log.info("initializing workspace '" + getName() + "'...");
                 doInitialize();
                 initialized = true;
+                doPostInitialize();
                 log.info("workspace '" + getName() + "' initialized");
                 return true;
             } finally {
@@ -1926,6 +1885,49 @@ public class RepositoryImpl extends AbstractRepository
 
             // register the observation factory of that workspace
             delegatingDispatcher.addDispatcher(dispatcher);
+        }
+
+        /**
+         * Initializes the search manager of this workspace info. This method
+         * is called while still holding the write lock on this workspace
+         * info, but {@link #initialized} is already set to <code>true</code>.
+         *
+         * @throws RepositoryException if the search manager could not be created
+         */
+        protected void doPostInitialize()
+                throws RepositoryException {
+            // get system Workspace instance
+            WorkspaceImpl wsp = (WorkspaceImpl) getSystemSession().getWorkspace();
+
+            /**
+             * todo implement 'System' workspace
+             * FIXME
+             * - there should be one 'System' workspace per repository
+             * - the 'System' workspace should have the /jcr:system node
+             * - versions, version history and node types should be reflected in
+             *   this system workspace as content under /jcr:system
+             * - all other workspaces should be dynamic workspaces based on
+             *   this 'read-only' system workspace
+             *
+             * for now, the jcr:system node is created in
+             * {@link org.apache.jackrabbit.core.state.SharedItemStateManager#createRootNodeState}
+             */
+
+            // register the repository as event listener for keeping repository statistics
+            wsp.getObservationManager().addEventListener(RepositoryImpl.this,
+                    Event.NODE_ADDED | Event.NODE_REMOVED
+                    | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED,
+                    "/", true, null, null, false);
+
+            // register SearchManager as event listener
+            SearchManager searchMgr = getSearchManager();
+            if (searchMgr != null) {
+                wsp.getObservationManager().addEventListener(searchMgr,
+                        Event.NODE_ADDED | Event.NODE_REMOVED
+                                | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED
+                                | Event.PROPERTY_CHANGED,
+                        "/", true, null, null, false);
+            }
         }
 
         /**
