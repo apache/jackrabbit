@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(XATest.class);
         suite.addTestSuite(RestoreAndCheckoutTest.class);
         suite.addTestSuite(NodeImplTest.class);
+        suite.addTestSuite(SessionGarbageCollectedTest.class);
 
         return suite;
     }
