@@ -67,64 +67,69 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
         }
 
         for (int i = 0; i < names.length; i++) {
-            Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
-            m.setAccessible(true);
-            Object info = m.invoke(r, new String[] { names[i] });
-            m = info.getClass().getDeclaredMethod("getPersistenceManager", new Class[0]);
-            m.setAccessible(true);
-            PersistenceManager pm = (PersistenceManager) m.invoke(info, new Object[0]);
-            if (!(pm instanceof AbstractBundlePersistenceManager)) {
-                log("PM skipped: " + pm.getClass());
-                continue;
-            }
-            AbstractBundlePersistenceManager apm = (AbstractBundlePersistenceManager) pm;
-            log("PM: " + pm.getClass().getName());
+            Session s = helper.getSuperuserSession(names[i]);
+            try {
+                Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
+                m.setAccessible(true);
+                Object info = m.invoke(r, new String[] { names[i] });
+                m = info.getClass().getDeclaredMethod("getPersistenceManager", new Class[0]);
+                m.setAccessible(true);
+                PersistenceManager pm = (PersistenceManager) m.invoke(info, new Object[0]);
+                if (!(pm instanceof AbstractBundlePersistenceManager)) {
+                    log("PM skipped: " + pm.getClass());
+                    continue;
+                }
+                AbstractBundlePersistenceManager apm = (AbstractBundlePersistenceManager) pm;
+                log("PM: " + pm.getClass().getName());
 
-            log("All nodes in one step");
-            NodeIdIterator it = apm.getAllNodeIds(null, 0);
-            NodeId after = null;
-            NodeId first = null;
-            while (it.hasNext()) {
-                NodeId id = it.nextNodeId();
-                log("  " + id.toString());
-                if (first == null) {
-                    // initialize first node id
-                    first = id;
-                }
-                if (after != null) {
-                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
-                }
-                after = id;
-            }
-
-            // start with first
-            after = first;
-            log("All nodes using batches");
-            while (true) {
-                log(" bigger than: " + after);
-                it = apm.getAllNodeIds(after, 2);
-                if (!it.hasNext()) {
-                    break;
-                }
+                log("All nodes in one step");
+                NodeIdIterator it = apm.getAllNodeIds(null, 0);
+                NodeId after = null;
+                NodeId first = null;
                 while (it.hasNext()) {
                     NodeId id = it.nextNodeId();
-                    log("    " + id.toString());
-                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
+                    log("  " + id.toString());
+                    if (first == null) {
+                        // initialize first node id
+                        first = id;
+                    }
+                    if (after != null) {
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
+                    }
                     after = id;
                 }
-            }
 
-            log("Random access");
-            for (int j = 0; j < 50; j++) {
-                after = new NodeId(UUID.randomUUID());
-                log(" bigger than: " + after);
-                it = apm.getAllNodeIds(after, 2);
-                while (it.hasNext()) {
-                    NodeId id = it.nextNodeId();
-                    log("    " + id.toString());
-                    assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
-                    after = id;
+                // start with first
+                after = first;
+                log("All nodes using batches");
+                while (true) {
+                    log(" bigger than: " + after);
+                    it = apm.getAllNodeIds(after, 2);
+                    if (!it.hasNext()) {
+                        break;
+                    }
+                    while (it.hasNext()) {
+                        NodeId id = it.nextNodeId();
+                        log("    " + id.toString());
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
+                        after = id;
+                    }
                 }
+
+                log("Random access");
+                for (int j = 0; j < 50; j++) {
+                    after = new NodeId(UUID.randomUUID());
+                    log(" bigger than: " + after);
+                    it = apm.getAllNodeIds(after, 2);
+                    while (it.hasNext()) {
+                        NodeId id = it.nextNodeId();
+                        log("    " + id.toString());
+                        assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
+                        after = id;
+                    }
+                }
+            } finally {
+                s.logout();
             }
         }
     }
