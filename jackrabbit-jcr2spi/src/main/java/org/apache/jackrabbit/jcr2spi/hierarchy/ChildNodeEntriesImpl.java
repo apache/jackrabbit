@@ -472,12 +472,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     position = 0;
                     for (Iterator it = entries.linkNodeIterator(); it.hasNext(); ) {
                         LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
-                        if (!insertName.equals(ln.qName)) {
-                            continue; // not a SNS -> not relevant for position count
-                        }
-                        if (ln != insertLN) {
+                        if (insertName.equals(ln.qName) && (ln != insertLN)) {
                             position++;
-                        } // ln == inserLN -> not relevant for position count
+                        }
                         if (ln == afterLN) {
                             break;
                         }
@@ -555,7 +552,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             if (insertAfter == null) {
                 // insert at the beginning
                 newNode = new LinkedEntries.LinkNode(cne, index);
-                addFirst(cne);
+                addNode(newNode, header);
             } else if (insertAfter.getNextLinkNode() == null) {
                 newNode = add(cne, index);
             } else {
@@ -699,7 +696,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         private class LinkNodeIterator implements Iterator {
 
             private LinkedEntries.LinkNode next = ((LinkedEntries.LinkNode) header).getNextLinkNode();
-            private int expectedModCount = modCount;
+            private final int expectedModCount = modCount;
 
             public boolean hasNext() {
                 checkModCount();
@@ -736,8 +733,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      */
     private static class NameMap {
 
-        private Map snsMap = new HashMap();
-        private Map nameMap = new HashMap();
+        private final Map snsMap = new HashMap();
+        private final Map nameMap = new HashMap();
 
         /**
          * Return true if more than one NodeEnty with the given name exists.
