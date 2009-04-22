@@ -25,13 +25,15 @@ import javax.jcr.Node;
  */
 public class AbstractIndexingTest extends AbstractQueryTest {
 
+    protected static final String WORKSPACE_NAME = "indexing-test";
+
     protected Session session;
 
     protected Node testRootNode;
 
     protected void setUp() throws Exception {
         super.setUp();
-        session = helper.getSuperuserSession("indexing-test");
+        session = helper.getSuperuserSession(WORKSPACE_NAME);
         testRootNode = cleanUpTestRoot(session);
         // overwrite query manager
         qm = session.getWorkspace().getQueryManager();
