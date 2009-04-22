@@ -530,7 +530,11 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public void setValue(Calendar value) throws RepositoryException {
         if (value != null) {
-            setValue(session.getValueFactory().createValue(value));
+            try {
+                setValue(session.getValueFactory().createValue(value));
+            } catch (IllegalArgumentException e) {
+                throw new ValueFormatException(e.getMessage());
+            }
         } else {
             remove();
         }

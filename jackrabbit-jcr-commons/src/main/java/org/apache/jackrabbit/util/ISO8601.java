@@ -211,21 +211,12 @@ public final class ISO8601 {
      * @param cal the time value to be formatted into a date/time string.
      * @return the formatted date/time string.
      * @throws IllegalArgumentException if a <code>null</code> argument is passed
+     * or the calendar cannot be represented as defined by ISO 8601 (i.e. year
+     * with more than four digits).
      */
-    public static String format(Calendar cal) {
+    public static String format(Calendar cal) throws IllegalArgumentException {
         if (cal == null) {
             throw new IllegalArgumentException("argument can not be null");
-        }
-
-        // determine era and adjust year if necessary
-        int year = cal.get(Calendar.YEAR);
-        if (cal.isSet(Calendar.ERA)
-                && cal.get(Calendar.ERA) == GregorianCalendar.BC) {
-            /**
-             * calculate year using astronomical system:
-             * year n BCE => astronomical year -n + 1
-             */
-            year = 0 - year + 1;
         }
 
         /**
@@ -237,7 +228,7 @@ public final class ISO8601 {
          */
         StringBuffer buf = new StringBuffer();
         // year ([-]YYYY)
-        buf.append(XXXX_FORMAT.format(year));
+        buf.append(XXXX_FORMAT.format(getYear(cal)));
         buf.append('-');
         // month (MM)
         buf.append(XX_FORMAT.format(cal.get(Calendar.MONTH) + 1));
@@ -271,5 +262,33 @@ public final class ISO8601 {
             buf.append('Z');
         }
         return buf.toString();
+    }
+
+    /**
+     * Returns the astonomical year of the given calendar.
+     *
+     * @param cal a calendar instance.
+     * @return the astronomical year.
+     * @throws IllegalArgumentException if calendar cannot be represented as
+     *                                  defined by ISO 8601 (i.e. year with more
+     *                                  than four digits).
+     */
+    public static int getYear(Calendar cal) throws IllegalArgumentException {
+        // determine era and adjust year if necessary
+        int year = cal.get(Calendar.YEAR);
+        if (cal.isSet(Calendar.ERA)
+                && cal.get(Calendar.ERA) == GregorianCalendar.BC) {
+            /**
+             * calculate year using astronomical system:
+             * year n BCE => astronomical year -n + 1
+             */
+            year = 0 - year + 1;
+        }
+
+        if (year > 9999 || year < -9999) {
+            throw new IllegalArgumentException("Calendar has more than four " +
+                    "year digits, cannot be formatted as ISO8601: " + year);
+        }
+        return year;
     }
 }
