@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.util;
 
-import junit.framework.TestCase;
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NameFormat;
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+
+import junit.framework.TestCase;
+
+import org.apache.jackrabbit.name.IllegalNameException;
+import org.apache.jackrabbit.name.NameFormat;
 
 /**
  * Test cases for the Text utility class.
@@ -144,18 +145,46 @@ public class TextTest extends TestCase {
         }
     }
 
+    public void testUrlEscape() {
+        String testString = "\u4e2d\u56fd\u7684\u7f51\u9875 $% \u20acuro %$ ";
+
+        String escaped = testString
+            .replaceAll("%", "%25")
+            .replaceAll(" ", "%20");
+        String unescaped = Text.unescape(escaped);
+        assertEquals(testString, unescaped);
+
+        escaped = Text.escape(testString);
+        unescaped = Text.unescape(escaped);
+        assertEquals(testString, unescaped);
+
+        assertEquals("%", Text.unescape("%25"));
+        assertEquals("", Text.unescape(""));
+        assertEquals("\u4e2d\u56fd\u7684\u7f51\u9875", Text.unescape("\u4e2d\u56fd\u7684\u7f51\u9875"));
+    }
+
     /**
      * @see <a href="https://issues.apache.org/jira/browse/JCR-1926">JCR-1926</a>
      */
     public void testUnescapeWithInvalidInput() {
         assertInvalidUnescape("%");   // too short
+        assertInvalidUnescape("anything%");   // too short
         assertInvalidUnescape("%%");  // too short
+        assertInvalidUnescape("anything%%");  // too short
+        assertInvalidUnescape("%1");  // too short
+        assertInvalidUnescape("anything%1");  // too short
         assertInvalidUnescape("%%%"); // not a number
+        assertInvalidUnescape("%ag"); // not a number
+        assertInvalidUnescape("anything%%%"); // not a number
+        assertInvalidUnescape("anything%ag"); // not a number
+        assertInvalidUnescape("anything%%%anything"); // not a number
+        assertInvalidUnescape("anything%aganything"); // not a number
     }
 
     private void assertInvalidUnescape(String string) {
         try {
             Text.unescape(string);
+            fail("Text.unescape(" + string + ") should throw IllegalArgumentException");
         } catch (IllegalArgumentException expected) {
         } catch (RuntimeException unexpected) {
             fail("Text.unescape(" + string + "): " + unexpected.getMessage());
