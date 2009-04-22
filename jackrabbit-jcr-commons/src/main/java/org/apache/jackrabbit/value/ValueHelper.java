@@ -35,6 +35,8 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.FilterInputStream;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -754,7 +756,7 @@ public class ValueHelper {
             // decode to temp file
             TransientFileFactory fileFactory = TransientFileFactory.getInstance();
             final File tmpFile = fileFactory.createTransientFile("bin", null, null);
-            FileOutputStream out = new FileOutputStream(tmpFile);
+            OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
             try {
                 Base64.decode(reader, out);
             } finally {
