@@ -29,8 +29,74 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+/**
+ * Test importing and exporting large binary and text objects.
+ */
 public class ExportImportTest extends AbstractJCRTest {
 
+    /**
+     * Test importing a large text property with Unicode characters larger than 255.
+     */
+    public void testExportImportText() throws RepositoryException {
+        doTestExportImportLargeText("Hello \t\r\n!".toCharArray());
+        doTestExportImportLargeText("World\f\f\f.".toCharArray());
+        doTestExportImportLargeText("Hello\t\n\n.\n".toCharArray());
+        doTestExportImportLargeRandomText(100);
+        doTestExportImportLargeRandomText(10000);
+        doTestExportImportLargeRandomText(100000);
+    }
+    
+    private void doTestExportImportLargeRandomText(int len) throws RepositoryException {
+        char[] chars = new char[len];
+        Random random = new Random(1);
+        // The UCS code values 0xd800-0xdfff (UTF-16 surrogates)
+        // as well as 0xfffe and 0xffff (UCS non-characters)
+        // should not appear in conforming UTF-8 streams.
+        // (String.getBytes("UTF-8") only returns 1 byte for 0xd800-0xdfff)            
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = (char) random.nextInt(0xd000);
+        }
+        doTestExportImportLargeText(chars);
+    }
+    
+    private void doTestExportImportLargeText(char[] chars) throws RepositoryException {
+        try {
+            Session session = helper.getReadWriteSession();
+            Node root = session.getRootNode();
+            clean(root);
+            Node test = root.addNode("testText");
+            session.save();
+            String s = new String(chars);
+            test.setProperty("text", s);
+            test.save();
+            session.save();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            session.exportSystemView("/testText", out, false, false);
+            byte[] output = out.toByteArray();
+            Node test2 = root.addNode("testText2");
+            Node test3 = root.addNode("testText3");
+            session.save();
+            session.importXML("/testText2", new ByteArrayInputStream(output), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+            session.save();
+            session.getWorkspace().importXML("/testText3", new ByteArrayInputStream(output), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+            test2 = root.getNode("testText2");
+            test2 = test2.getNode("testText");
+            test3 = root.getNode("testText3");
+            test3 = test3.getNode("testText");
+            String s2 = test2.getProperty("text").getString();
+            String s3 = test3.getProperty("text").getString();
+            assertEquals(s.length(), s2.length());
+            assertEquals(s.length(), s3.length());
+            assertEquals(s, s2);
+            assertEquals(s, s3);
+            clean(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertFalse(e.getMessage(), true);
+        }
+    }
+
+    
     /**
      * Test a node type with a binary default value
      * @throws RepositoryException
@@ -104,6 +170,15 @@ public class ExportImportTest extends AbstractJCRTest {
         }
         while (root.hasNode("testBinary3")) {
             root.getNode("testBinary3").remove();
+        }
+        while (root.hasNode("testText")) {
+            root.getNode("testText").remove();
+        }
+        while (root.hasNode("testText2")) {
+            root.getNode("testText2").remove();
+        }
+        while (root.hasNode("testText3")) {
+            root.getNode("testText3").remove();
         }
         root.getSession().save();
     }

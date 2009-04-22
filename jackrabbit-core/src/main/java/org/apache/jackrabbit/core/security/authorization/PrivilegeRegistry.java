@@ -165,7 +165,7 @@ public final class PrivilegeRegistry {
      */
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
-            throw new AccessControlException();
+            throw new AccessControlException("Privilege array is empty or null.");
         }
         int bits = NO_PRIVILEGE;
         for (int i = 0; i < privileges.length; i++) {

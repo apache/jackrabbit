@@ -29,15 +29,20 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 
 /**
@@ -54,42 +59,46 @@ class BufferedStringValue implements TextValue {
     private static Logger log = LoggerFactory.getLogger(BufferedStringValue.class);
 
     /**
-     * max size for buffering data in memory
+     * The maximum size for buffering data in memory.
      */
     private static final int MAX_BUFFER_SIZE = 0x10000;
+    
     /**
-     * size of increment if capacity buffer needs to be enlarged
+     * The in-memory buffer.
      */
-    private static final int BUFFER_INCREMENT = 0x2000;
+    private StringWriter buffer;
+    
     /**
-     * in-memory buffer
+     * The number of characters written so far.
+     * If the in-memory buffer is used, this is position within buffer (size of actual data in buffer)
      */
-    private char[] buffer;
-    /**
-     * current position within buffer (size of actual data in buffer)
-     */
-    private int bufferPos;
+    private long length;
 
     /**
-     * backing temporary file created when size of data exceeds
-     * MAX_BUFFER_SIZE
+     * Backing temporary file created when size of data exceeds
+     * MAX_BUFFER_SIZE.
      */
     private File tmpFile;
+    
     /**
-     * writer used to write to tmpFile; writer & tmpFile are always
-     * instantiated together, i.e. they are either both null or both not null.
+     * Writer used to write to tmpFile.
      */
     private Writer writer;
 
     private final NamePathResolver nsContext;
+    
+    /**
+     * Whether the value is base64 encoded.
+     */
+    private boolean base64;
 
     /**
      * Constructs a new empty <code>BufferedStringValue</code>.
      * @param nsContext
      */
     protected BufferedStringValue(NamePathResolver nsContext) {
-        buffer = new char[0x2000];
-        bufferPos = 0;
+        buffer = new StringWriter();
+        length = 0;
         tmpFile = null;
         writer = null;
         this.nsContext = nsContext;
@@ -102,15 +111,17 @@ class BufferedStringValue implements TextValue {
      * @throws IOException if an I/O error occurs
      */
     public long length() throws IOException {
-        if (buffer != null) {
-            return bufferPos;
-        } else if (tmpFile != null) {
-            // flush writer first
-            writer.flush();
-            return tmpFile.length();
-        } else {
-            throw new IOException("this instance has already been disposed");
+        return length;
+    }
+    
+    private String retrieveString() throws IOException {
+        String value = retrieve();
+        if (base64) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Base64.decode(value, out);
+            value = new String(out.toByteArray(), "UTF-8");
         }
+        return value;
     }
 
     /**
@@ -121,18 +132,18 @@ class BufferedStringValue implements TextValue {
      */
     public String retrieve() throws IOException {
         if (buffer != null) {
-            return new String(buffer, 0, bufferPos);
+            return buffer.toString();
         } else if (tmpFile != null) {
-            // flush writer first
-            writer.flush();
+            // close writer first
+            writer.close();
             if (tmpFile.length() > Integer.MAX_VALUE) {
                 throw new IOException("size of value is too big, use reader()");
             }
-            StringBuffer sb = new StringBuffer((int) tmpFile.length());
+            StringBuffer sb = new StringBuffer((int) length);
             char[] chunk = new char[0x2000];
-            int read;
-            Reader reader = new FileReader(tmpFile);
+            Reader reader = openReader();
             try {
+                int read;
                 while ((read = reader.read(chunk)) > -1) {
                     sb.append(chunk, 0, read);
                 }
@@ -144,6 +155,11 @@ class BufferedStringValue implements TextValue {
             throw new IOException("this instance has already been disposed");
         }
     }
+    
+    private Reader openReader() throws IOException {
+        return new InputStreamReader(
+                new BufferedInputStream(new FileInputStream(tmpFile)), "UTF-8");
+    }
 
     /**
      * Returns a <code>Reader</code> for reading the serialized value.
@@ -153,11 +169,11 @@ class BufferedStringValue implements TextValue {
      */
     public Reader reader() throws IOException {
         if (buffer != null) {
-            return new StringReader(new String(buffer, 0, bufferPos));
+            return new StringReader(retrieve());
         } else if (tmpFile != null) {
-            // flush writer first
-            writer.flush();
-            return new FileReader(tmpFile);
+            // close writer first
+            writer.close();
+            return openReader();
         } else {
             throw new IOException("this instance has already been disposed");
         }
@@ -168,48 +184,32 @@ class BufferedStringValue implements TextValue {
      *
      * @param chars  the characters to be appended
      * @param start  the index of the first character to append
-     * @param length the number of characters to append
+     * @param len the number of characters to append
      * @throws IOException if an I/O error occurs
      */
-    public void append(char[] chars, int start, int length)
+    public void append(char[] chars, int start, int len)
             throws IOException {
         if (buffer != null) {
-            if (bufferPos + length > MAX_BUFFER_SIZE) {
+            if (this.length + len > MAX_BUFFER_SIZE) {
                 // threshold for keeping data in memory exceeded;
                 // create temp file and spool buffer contents
                 TransientFileFactory fileFactory = TransientFileFactory.getInstance();
                 tmpFile = fileFactory.createTransientFile("txt", null, null);
-                final FileOutputStream fout = new FileOutputStream(tmpFile);
-                writer = new OutputStreamWriter(fout) {
-                    public void flush() throws IOException {
-                        // flush this writer
-                        super.flush();
-                        // force synchronization with underlying file
-                        fout.getFD().sync();
-                    }
-                };
-                writer.write(buffer, 0, bufferPos);
-                writer.write(chars, start, length);
-                // reset fields
+                BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(tmpFile));
+                writer = new OutputStreamWriter(fout, "UTF-8");
+                writer.write(buffer.toString());
+                writer.write(chars, start, len);
+                // reset the in-memory buffer
                 buffer = null;
-                bufferPos = 0;
             } else {
-                if (bufferPos + length > buffer.length) {
-                    // reallocate new buffer and spool old buffer contents
-                    int bufferSize =
-                            BUFFER_INCREMENT * (((bufferPos + length) / BUFFER_INCREMENT) + 1);
-                    char[] newBuffer = new char[bufferSize];
-                    System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
-                    buffer = newBuffer;
-                }
-                System.arraycopy(chars, start, buffer, bufferPos, length);
-                bufferPos += length;
+                buffer.write(chars, start, len);
             }
         } else if (tmpFile != null) {
-            writer.write(chars, start, length);
+            writer.write(chars, start, len);
         } else {
             throw new IOException("this instance has already been disposed");
         }
+        length += len;
     }
 
     /**
@@ -262,7 +262,7 @@ class BufferedStringValue implements TextValue {
                 }
             } else {
                 // all other types
-                return ValueHelper.deserialize(retrieve(), targetType, false, ValueFactoryImpl.getInstance());
+                return ValueHelper.deserialize(retrieveString(), targetType, false, ValueFactoryImpl.getInstance());
             }
         } catch (IOException e) {
             String msg = "failed to retrieve serialized value";
@@ -286,7 +286,7 @@ class BufferedStringValue implements TextValue {
                     return InternalValue.create(baos.toByteArray());
                 } else {
                     // >= 65kb: deserialize BINARY type
-                    // using Reader and temporay file
+                    // using Reader and temporary file
                     if (InternalValue.USE_DATA_STORE) {
                         Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
                         return InternalValue.createTemporary(in);
@@ -307,13 +307,16 @@ class BufferedStringValue implements TextValue {
                 // convert serialized value to InternalValue using
                 // current namespace context of xml document
                 return InternalValue.create(ValueHelper.convert(
-                        retrieve(), type, ValueFactoryImpl.getInstance()), nsContext);
+                        retrieveString(), type, ValueFactoryImpl.getInstance()), nsContext);
             }
         } catch (IOException e) {
             throw new RepositoryException("Error accessing property value", e);
         }
     }
 
+    /**
+     * This class converts the text read Converts a base64 reader to an input stream.
+     */
     private static class Base64ReaderInputStream extends InputStream {
 
         private static final int BUFFER_SIZE = 1024;
@@ -361,7 +364,6 @@ class BufferedStringValue implements TextValue {
     public void dispose() {
         if (buffer != null) {
             buffer = null;
-            bufferPos = 0;
         } else if (tmpFile != null) {
             try {
                 writer.close();
@@ -375,4 +377,14 @@ class BufferedStringValue implements TextValue {
             log.warn("this instance has already been disposed");
         }
     }
+
+    /**
+     * Whether this value is base64 encoded
+     * 
+     * @param base64 the flag
+     */
+    public void setBase64(boolean base64) {
+        this.base64 = base64;
+    }
+
 }
