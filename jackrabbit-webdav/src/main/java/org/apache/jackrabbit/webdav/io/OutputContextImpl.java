@@ -57,10 +57,13 @@ public class OutputContextImpl implements OutputContext {
     }
 
     public void setContentLength(long contentLength) {
-        int length = Integer.parseInt(contentLength + "");
-        if (length >= 0) {
-            response.setContentLength(length);
-        }
+        if (contentLength >= 0) {
+            if (contentLength <= Integer.MAX_VALUE) {
+                response.setContentLength((int) contentLength);
+            } else {
+                response.addHeader(DavConstants.HEADER_CONTENT_LENGTH, Long.toString(contentLength));
+            }
+        } // else: negative content length -> ignore.
     }
 
     public void setContentType(String contentType) {

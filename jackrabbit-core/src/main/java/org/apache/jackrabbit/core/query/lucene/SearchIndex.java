@@ -1157,7 +1157,6 @@ public class SearchIndex extends AbstractQueryHandler {
                     NodeState root = aggregateRules[i].getAggregateRoot(state);
                     if (root != null) {
                         map.put(root.getNodeId(), root);
-                        break;
                     }
                 }
             } catch (Exception e) {
