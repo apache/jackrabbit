@@ -68,6 +68,11 @@ public class FileDataStore implements DataStore {
     private static final int DEFAULT_MIN_RECORD_LENGTH = 100;
 
     /**
+     * The maximum last modified time resolution of the file system.
+     */
+    private static final int ACCESS_TIME_RESOLUTION = 2000;
+
+    /**
      * Name of the directory used for temporary files.
      * Must be at least 3 characters.
      */
@@ -137,7 +142,7 @@ public class FileDataStore implements DataStore {
         synchronized (this) {
             if (minModifiedDate != 0 && file.exists() && file.canWrite()) {
                 if (file.lastModified() < minModifiedDate) {
-                    file.setLastModified(System.currentTimeMillis());
+                    file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION);
                 }
             }
             usesIdentifier(identifier);
