@@ -680,11 +680,17 @@ public class SessionImpl extends AbstractSession
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = rep.getWorkspaceNames();
-        SystemSession[] sysSessions = new SystemSession[wspNames.length];
+        Session[] sessions = new Session[wspNames.length];
         for (int i = 0; i < wspNames.length; i++) {
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
-            sysSessions[i] = rep.getSystemSession(wspName);
+            // this will initialize the workspace if required
+            wspInfo.getSystemSession();
+            SessionImpl session = SystemSession.create(rep, wspInfo.getConfig());
+            // mark this session as 'active' so the workspace does not get disposed
+            // by the workspace-janitor until the garbage collector is done
+            rep.onSessionCreated(session);
+            sessions[i] = session;
             pm = wspInfo.getPersistenceManager();
             pmList.add(pm);
         }
@@ -697,7 +703,7 @@ public class SessionImpl extends AbstractSession
             }
             ipmList[i] = (IterablePersistenceManager) pm;
         }
-        GarbageCollector gc = new GarbageCollector(this, ipmList, sysSessions);
+        GarbageCollector gc = new GarbageCollector(this, ipmList, sessions);
         return gc;
     }
 

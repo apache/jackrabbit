@@ -55,7 +55,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             public void run() {
                 try {
                     node.setProperty("slowBlob", new InputStream() {
-                        int pos = 0;
+                        int pos;
                         public int read() throws IOException {
                             pos++;
                             if (pos < 10000) {
