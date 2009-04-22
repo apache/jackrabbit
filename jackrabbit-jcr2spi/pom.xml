@@ -33,6 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
+  <version>1.5.5-SNAPSHOT</version>
   <name>Jackrabbit JCR to SPI</name>
 
   <scm>
@@ -86,7 +87,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
