@@ -41,6 +41,7 @@
     <param name="excerptProviderClass" value="org.apache.jackrabbit.core.query.lucene.WeightedHTMLExcerpt"/>
     <param name="textFilterClasses" value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.core.query.lucene.IndexingQueueTest$Extractor"/>
     <param name="extractorPoolSize" value="2"/>
+    <param name="extractorTimeout" value="10"/>
   </SearchIndex>
 </Workspace>
 
