@@ -372,18 +372,15 @@ public abstract class ItemImpl implements Item {
         while (dirtyIter.hasNext()) {
             ItemState itemState = (ItemState) dirtyIter.next();
 
-            if (itemState.getStatus() != ItemState.STATUS_NEW) {
-                /* transient item is not 'new', therefore it has to be 'modified'
-                   detect the effective set of modification:
-                   - child additions -> add_node perm on the child
-                   - property additions, modifications or removals -> set_property permission
-                   note: removed items are checked later on.
-                */
-                // check WRITE permission
-                Path path = stateMgr.getHierarchyMgr().getPath(itemState.getId());
-                boolean isGranted = true;
-                if (itemState.isNode()) {
+            // check WRITE permission
+            Path path = stateMgr.getHierarchyMgr().getPath(itemState.getId());
+            boolean isGranted = true;
+            if (itemState.isNode()) {
+                if (itemState.getStatus() != ItemState.STATUS_NEW) {
                     // modified node state -> check possible modifications
+                    // - child additions -> add_node perm on the child
+                    // - property additions, modifications or removals -> set_property permission
+                    // note: removed items are checked later on.
                     NodeState nState = (NodeState) itemState;
                     for (Iterator it = nState.getAddedChildNodeEntries().iterator();
                          it.hasNext() && isGranted;) {
@@ -395,15 +392,16 @@ public abstract class ItemImpl implements Item {
                         Name propName = (Name) it.next();
                         isGranted = accessMgr.isGranted(path, propName, Permission.SET_PROPERTY);
                     }
-                } else {
-                    isGranted = accessMgr.isGranted(path, Permission.SET_PROPERTY);
                 }
+            } else {
+                // a property has been modified or added, check set_poperty
+                isGranted = accessMgr.isGranted(path, Permission.SET_PROPERTY);
+            }
 
-                if (!isGranted) {
-                    String msg = itemMgr.safeGetJCRPath(path) + ": not allowed to modify item";
-                    log.debug(msg);
-                    throw new AccessDeniedException(msg);
-                }
+            if (!isGranted) {
+                String msg = itemMgr.safeGetJCRPath(path) + ": not allowed to modify item";
+                log.debug(msg);
+                throw new AccessDeniedException(msg);
             }
 
             if (itemState.isNode()) {
