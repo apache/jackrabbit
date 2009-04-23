@@ -34,7 +34,7 @@
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
   <name>Jackrabbit JCR Server</name>
-  <version>1.5.5-SNAPSHOT</version>
+  <version>1.5.2</version>
   <description>WebDAV server implementations for JCR</description>
 
   <scm>
@@ -76,12 +76,12 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.5.5-SNAPSHOT</version>
+      <version>1.5.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webdav</artifactId>
-      <version>1.5.5-SNAPSHOT</version>
+      <version>1.5.2</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
