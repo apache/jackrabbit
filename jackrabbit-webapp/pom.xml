@@ -67,7 +67,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
-      <version>1.5.5-SNAPSHOT</version>
+      <version>1.5.2</version>
       <exclusions>
         <!-- JCR-683: The commons-httpclient dependency from            -->
         <!-- jackrabbit-webapp depends on commons-logging. Since this   -->
@@ -79,6 +79,11 @@
           <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-webdav</artifactId>
+      <version>1.5.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
