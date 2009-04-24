@@ -11,8 +11,9 @@ more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
 Apache Jackrabbit 1.5.5 is a bug fix release that fixes issues reported
-against previous releases. This release is fully compatible with the
-earlier 1.5.x releases.
+against previous releases. The jackrabbit-jcr2spi component contains also
+some other improvements over previous releases. This release is fully
+compatible with the earlier 1.5.x releases.
 
 See below for a full listing of fixes included in this release.
 
@@ -65,7 +66,6 @@ Bug fixes
   [JCR-2016] ChildNodeEntriesImpl.update logs incorrect errors
 
 Improvements
-
   [JCR-1870] jcr2spi: reloading of invalidated nodes doesn't benefit from ...
   [JCR-1871] jcr2spi: use jcr names and path for log and exception message
   [JCR-1891] jcr2spi: use Soft refs for hierarchy
