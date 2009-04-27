@@ -22,7 +22,6 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.FilteredTermEnum;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -113,7 +112,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
         // initialize with prefix as dummy value
         input = new OffsetCharSequence(prefix.length(), prefix, transform);
-        this.pattern = createRegexp(pattern.substring(idx)).matcher(input);
+        this.pattern = Util.createRegexp(pattern.substring(idx)).matcher(input);
 
         if (transform == TRANSFORM_NONE) {
             setEnum(reader.terms(new Term(field, prefix)));
@@ -154,56 +153,6 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
     }
 
     //--------------------------< internal >------------------------------------
-
-    /**
-     * Creates a regexp from <code>likePattern</code>.
-     *
-     * @param likePattern the pattern.
-     * @return the regular expression <code>Pattern</code>.
-     */
-    private Pattern createRegexp(String likePattern) {
-        // - escape all non alphabetic characters
-        // - escape constructs like \<alphabetic char> into \\<alphabetic char>
-        // - replace non escaped _ % into . and .*
-        StringBuffer regexp = new StringBuffer();
-        boolean escaped = false;
-        for (int i = 0; i < likePattern.length(); i++) {
-            if (likePattern.charAt(i) == '\\') {
-                if (escaped) {
-                    regexp.append("\\\\");
-                    escaped = false;
-                } else {
-                    escaped = true;
-                }
-            } else {
-                if (Character.isLetterOrDigit(likePattern.charAt(i))) {
-                    if (escaped) {
-                        regexp.append("\\\\").append(likePattern.charAt(i));
-                        escaped = false;
-                    } else {
-                        regexp.append(likePattern.charAt(i));
-                    }
-                } else {
-                    if (escaped) {
-                        regexp.append('\\').append(likePattern.charAt(i));
-                        escaped = false;
-                    } else {
-                        switch (likePattern.charAt(i)) {
-                            case '_':
-                                regexp.append('.');
-                                break;
-                            case '%':
-                                regexp.append(".*");
-                                break;
-                            default:
-                                regexp.append('\\').append(likePattern.charAt(i));
-                        }
-                    }
-                }
-            }
-        }
-        return Pattern.compile(regexp.toString(), Pattern.DOTALL);
-    }
 
     /**
      * Implements a term enum which respects the transformation flag and

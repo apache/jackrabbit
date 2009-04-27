@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jcr.PropertyType;
-
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
@@ -188,23 +186,7 @@ public class SharedFieldSortComparator extends SortComparator {
          *         are equal
          */
         public int compare(ScoreDoc i, ScoreDoc j) {
-            Comparable iTerm = sortValue(i);
-            Comparable jTerm = sortValue(j);
-
-            if (iTerm == jTerm) {
-                return 0;
-            } else if (iTerm == null) {
-                return -1;
-            } else if (jTerm == null) {
-                return 1;
-            } else if (iTerm.getClass() == jTerm.getClass()) {
-                return iTerm.compareTo(jTerm);
-            } else {
-                // differing types -> compare class names
-                String iName = iTerm.getClass().getName();
-                String jName = jTerm.getClass().getName();
-                return iName.compareTo(jName);
-            }
+            return Util.compare(sortValue(i), sortValue(j));
         }
 
         public int sortType() {
@@ -256,11 +238,11 @@ public class SharedFieldSortComparator extends SortComparator {
             super(reader);
             this.indexes = new SharedFieldCache.ValueIndex[readers.size()];
 
+            String namedValue = FieldNames.createNamedValue(propertyName, "");
             for (int i = 0; i < readers.size(); i++) {
                 IndexReader r = (IndexReader) readers.get(i);
                 indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(r, field,
-                        FieldNames.createNamedValue(propertyName, ""),
-                        SharedFieldSortComparator.this);
+                        namedValue, SharedFieldSortComparator.this);
             }
         }
 
@@ -317,41 +299,11 @@ public class SharedFieldSortComparator extends SortComparator {
                 }
                 InternalValue[] values = state.getValues();
                 if (values.length > 0) {
-                    return getComparable(values[0]);
+                    return Util.getComparable(values[0]);
                 }
                 return null;
             } catch (Exception e) {
                 return null;
-            }
-        }
-
-        /**
-         * Returns a comparable for the <code>value</code>.
-         *
-         * @param value an internal value.
-         * @return a comparable for the given <code>value</code>.
-         */
-        private Comparable getComparable(InternalValue value) {
-            switch (value.getType()) {
-                case PropertyType.BINARY:
-                    return null;
-                case PropertyType.BOOLEAN:
-                    return ComparableBoolean.valueOf(value.getBoolean());
-                case PropertyType.DATE:
-                    return new Long(value.getDate().getTimeInMillis());
-                case PropertyType.DOUBLE:
-                    return new Double(value.getDouble());
-                case PropertyType.LONG:
-                    return new Long(value.getLong());
-                case PropertyType.NAME:
-                    return value.getQName().toString();
-                case PropertyType.PATH:
-                    return value.getPath().toString();
-                case PropertyType.REFERENCE:
-                case PropertyType.STRING:
-                    return value.getString();
-                default:
-                    return null;
             }
         }
     }

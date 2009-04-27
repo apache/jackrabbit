@@ -162,9 +162,4 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      *         /jcr:system to be queried; <code>false</code> otherwise.
      */
     public abstract boolean needsSystemTree();
-
-    /**
-     * @return the selector names for this query.
-     */
-    public abstract Name[] getSelectorNames();
 }

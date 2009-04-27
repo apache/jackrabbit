@@ -754,10 +754,52 @@ public class SearchIndex extends AbstractQueryHandler {
         Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
 
         final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
-        JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(session, reader);
+        JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
+                session, reader, getContext().getItemStateManager());
         searcher.setSimilarity(getSimilarity());
         return new FilterMultiColumnQueryHits(
-                searcher.execute(query, sort, resultFetchHint)) {
+                searcher.execute(query, sort, resultFetchHint,
+                        QueryImpl.DEFAULT_SELECTOR_NAME)) {
+            public void close() throws IOException {
+                try {
+                    super.close();
+                } finally {
+                    PerQueryCache.getInstance().dispose();
+                    Util.closeOrRelease(reader);
+                }
+            }
+        };
+    }
+
+    /**
+     * Executes the query on the search index.
+     *
+     * @param session         the session that executes the query.
+     * @param query           the query.
+     * @param orderProps      name of the properties for sort order.
+     * @param orderSpecs      the order specs for the sort order properties.
+     *                        <code>true</code> indicates ascending order,
+     *                        <code>false</code> indicates descending.
+     * @param resultFetchHint a hint on how many results should be fetched.
+     * @return the query hits.
+     * @throws IOException if an error occurs while searching the index.
+     */
+    public MultiColumnQueryHits executeQuery(SessionImpl session,
+                                             MultiColumnQuery query,
+                                             Path[] orderProps,
+                                             boolean[] orderSpecs,
+                                             long resultFetchHint)
+            throws IOException {
+        checkOpen();
+
+        Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
+
+        final IndexReader reader = getIndexReader();
+        JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
+                session, reader, getContext().getItemStateManager());
+        searcher.setSimilarity(getSimilarity());
+        return new FilterMultiColumnQueryHits(
+                query.execute(searcher, sort, resultFetchHint)) {
             public void close() throws IOException {
                 try {
                     super.close();
@@ -985,6 +1027,13 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected MultiIndex getIndex() {
         return index;
+    }
+
+    /**
+     * @return the sort comparator source for this index.
+     */
+    protected SortComparatorSource getSortComparatorSource() {
+        return scs;
     }
 
     /**

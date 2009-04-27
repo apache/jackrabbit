@@ -64,6 +64,24 @@ public class DescendantNodeJoinConditionImpl
         return getJCRName(ancestorSelectorName);
     }
 
+    /**
+     * Gets the name of the descendant selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getDescendantSelectorQName() {
+        return descendantSelectorName;
+    }
+
+    /**
+     * Gets the name of the ancestor selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getAncestorSelectorQName() {
+        return ancestorSelectorName;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**

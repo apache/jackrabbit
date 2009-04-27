@@ -64,6 +64,24 @@ public class ChildNodeJoinConditionImpl
         return getJCRName(parentSelectorName);
     }
 
+    /**
+     * Gets the name of the child selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getChildSelectorQName() {
+        return childSelectorName;
+    }
+
+    /**
+     * Gets the name of the parent selector.
+     *
+     * @return the selector name; non-null
+     */
+    public Name getParentSelectorQName() {
+        return parentSelectorName;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**

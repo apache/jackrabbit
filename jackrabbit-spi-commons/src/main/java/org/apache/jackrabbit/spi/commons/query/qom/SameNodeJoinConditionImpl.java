@@ -99,6 +99,15 @@ public class SameNodeJoinConditionImpl
         return selector2Name;
     }
 
+    /**
+     * Gets the path relative to the second selector.
+     *
+     * @return the relative path, or null for none
+     */
+    public Path getSelector2QPath() {
+        return selector2Path;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**
