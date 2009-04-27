@@ -67,11 +67,7 @@ public class LazyFileInputStream extends AutoCloseInputStream {
             in = new FileInputStream(file);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     * When the stream is consumed, the database objects held by the instance are closed.
-     */
+    
     public int read() throws IOException {
         openStream();
         return super.read();
