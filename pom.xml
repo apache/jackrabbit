@@ -59,21 +59,6 @@
     <module>jackrabbit-standalone</module>
   </modules>
 
-
-  <profiles>
-    <!-- JCR-1756: Include OCM in the main Jackrabbit build when using Java 5 -->
-    <profile>
-      <id>java5</id>
-      <activation>
-        <jdk>!1.4</jdk>
-      </activation>
-      <modules>
-        <module>jackrabbit-ocm</module>
-        <module>jackrabbit-ocm-nodemanagement</module>
-      </modules>
-    </profile>
-  </profiles>
-
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
