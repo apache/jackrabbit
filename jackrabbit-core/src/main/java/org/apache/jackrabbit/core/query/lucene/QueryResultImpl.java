@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +36,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Implements the <code>javax.jcr.query.QueryResult</code> interface.
+ * Implements the <code>QueryResult</code> interface.
  */
-public class QueryResultImpl implements QueryResult {
+public abstract class QueryResultImpl implements QueryResult {
 
     /**
      * The logger instance for this class
@@ -49,12 +48,12 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The search index to execute the query.
      */
-    private final SearchIndex index;
+    protected final SearchIndex index;
 
     /**
      * The item manager of the session executing the query
      */
-    private final ItemManager itemMgr;
+    protected final ItemManager itemMgr;
 
     /**
      * The session executing the query
@@ -64,17 +63,12 @@ public class QueryResultImpl implements QueryResult {
     /**
      * The access manager of the session that executes the query.
      */
-    private final AccessManager accessMgr;
+    protected final AccessManager accessMgr;
 
     /**
      * The query instance which created this query result.
      */
     protected final AbstractQueryImpl queryImpl;
-
-    /**
-     * The lucene query to execute.
-     */
-    protected final Query query;
 
     /**
      * The spell suggestion or <code>null</code> if not available.
@@ -112,6 +106,12 @@ public class QueryResultImpl implements QueryResult {
     private int numResults = -1;
 
     /**
+     * The selector names associated with the score nodes. The selector names
+     * are set when the query is executed via {@link #getResults(long)}.
+     */
+    private Name[] selectorNames;
+
+    /**
      * The number of results that are invalid, either because a node does not
      * exist anymore or because the session does not have access to the node.
      */
@@ -120,7 +120,7 @@ public class QueryResultImpl implements QueryResult {
     /**
      * If <code>true</code> nodes are returned in document order.
      */
-    private final boolean docOrder;
+    protected final boolean docOrder;
 
     /**
      * The excerpt provider or <code>null</code> if none was created yet.
@@ -138,7 +138,8 @@ public class QueryResultImpl implements QueryResult {
     private final long limit;
 
     /**
-     * Creates a new query result.
+     * Creates a new query result. The concrete sub class is responsible for
+     * calling {@link #getResults(long)} after this constructor had been called.
      *
      * @param index           the search index where the query is executed.
      * @param itemMgr         the item manager of the session executing the
@@ -148,7 +149,6 @@ public class QueryResultImpl implements QueryResult {
      *                        query.
      * @param queryImpl       the query instance which created this query
      *                        result.
-     * @param query           the lucene query to execute on the index.
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
      *                        is available.
      * @param selectProps     the select properties of the query.
@@ -167,7 +167,6 @@ public class QueryResultImpl implements QueryResult {
                            SessionImpl session,
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
-                           Query query,
                            SpellSuggestion spellSuggestion,
                            Name[] selectProps,
                            Path[] orderProps,
@@ -180,7 +179,6 @@ public class QueryResultImpl implements QueryResult {
         this.session = session;
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
-        this.query = query;
         this.spellSuggestion = spellSuggestion;
         this.selectProps = selectProps;
         this.orderProps = orderProps;
@@ -188,8 +186,6 @@ public class QueryResultImpl implements QueryResult {
         this.docOrder = orderProps.length == 0 && documentOrder;
         this.offset = offset;
         this.limit = limit;
-        // if document order is requested get all results right away
-        getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }
 
     /**
@@ -222,13 +218,13 @@ public class QueryResultImpl implements QueryResult {
     public RowIterator getRows() throws RepositoryException {
         if (excerptProvider == null) {
             try {
-                excerptProvider = index.createExcerptProvider(query);
+                excerptProvider = createExcerptProvider();
             } catch (IOException e) {
                 throw new RepositoryException(e);
             }
         }
         return new RowIteratorImpl(getScoreNodes(), selectProps,
-                queryImpl.getSelectorNames(), itemMgr,
+                selectorNames, itemMgr,
                 index.getContext().getHierarchyManager(), session,
                 excerptProvider, spellSuggestion);
     }
@@ -241,10 +237,17 @@ public class QueryResultImpl implements QueryResult {
      * @return hits for this query result.
      * @throws IOException if an error occurs while executing the query.
      */
-    protected MultiColumnQueryHits executeQuery(long resultFetchHint) throws IOException {
-        return index.executeQuery(session, queryImpl,
-                query, orderProps, orderSpecs, resultFetchHint);
-    }
+    protected abstract MultiColumnQueryHits executeQuery(long resultFetchHint)
+            throws IOException;
+
+    /**
+     * Creates an excerpt provider for this result set.
+     *
+     * @return an excerpt provider.
+     * @throws IOException if an error occurs.
+     */
+    protected abstract ExcerptProvider createExcerptProvider()
+            throws IOException;
 
     //--------------------------------< internal >------------------------------
 
@@ -271,7 +274,7 @@ public class QueryResultImpl implements QueryResult {
      * @throws RepositoryException if an error occurs while executing the
      *                             query.
      */
-    private void getResults(long size) throws RepositoryException {
+    protected void getResults(long size) throws RepositoryException {
         if (log.isDebugEnabled()) {
             log.debug("getResults({}) limit={}", new Long(size), new Long(limit));
         }
@@ -295,6 +298,8 @@ public class QueryResultImpl implements QueryResult {
             result = executeQuery(maxResultSize);
             log.debug("query executed in {} ms",
                     new Long(System.currentTimeMillis() - time));
+            // set selector names
+            selectorNames = result.getSelectorNames();
 
             if (resultNodes.isEmpty() && offset > 0) {
                 // collect result offset into dummy list

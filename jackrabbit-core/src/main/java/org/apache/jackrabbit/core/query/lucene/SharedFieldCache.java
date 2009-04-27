@@ -36,7 +36,7 @@ import javax.jcr.PropertyType;
  * but it only works on the basis of a field name. There is no further control
  * over the terms to iterate, that's why we use our own implementation.
  */
-class SharedFieldCache {
+public class SharedFieldCache {
 
     /**
      * Expert: Stores term text values and document ordering data.

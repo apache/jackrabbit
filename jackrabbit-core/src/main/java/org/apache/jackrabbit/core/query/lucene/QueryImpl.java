@@ -128,7 +128,7 @@ public class QueryImpl extends AbstractQueryImpl {
             ascSpecs[i] = orderSpecs[i].isAscending();
         }
 
-        return new QueryResultImpl(index, itemMgr,
+        return new SingleColumnQueryResult(index, itemMgr,
                 session, session.getAccessManager(),
                 this, query, new SpellSuggestion(index.getSpellChecker(), root),
                 getSelectProperties(), orderProperties, ascSpecs,
@@ -195,10 +195,4 @@ public class QueryImpl extends AbstractQueryImpl {
         return this.root.needsSystemTree();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Name[] getSelectorNames() {
-        return new Name[]{DEFAULT_SELECTOR_NAME};
-    }
 }

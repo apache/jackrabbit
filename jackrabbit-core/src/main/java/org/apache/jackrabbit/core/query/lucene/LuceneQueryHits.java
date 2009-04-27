@@ -57,9 +57,10 @@ public class LuceneQueryHits implements QueryHits {
         if (!scorer.next()) {
             return null;
         }
-        String uuid = reader.document(scorer.doc()).get(FieldNames.UUID);
+        int doc = scorer.doc();
+        String uuid = reader.document(doc).get(FieldNames.UUID);
         NodeId id = new NodeId(UUID.fromString(uuid));
-        return new ScoreNode(id, scorer.score());
+        return new ScoreNode(id, scorer.score(), doc);
     }
 
     /**

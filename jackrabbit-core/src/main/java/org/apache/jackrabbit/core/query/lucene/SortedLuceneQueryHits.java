@@ -159,7 +159,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
         for (int i = scoreNodes.size(); i < docs.length; i++) {
             String uuid = reader.document(docs[i].doc).get(FieldNames.UUID);
             NodeId id = new NodeId(UUID.fromString(uuid));
-            scoreNodes.add(new ScoreNode(id, docs[i].score));
+            scoreNodes.add(new ScoreNode(id, docs[i].score, docs[i].doc));
         }
         log.debug("getHits() {}/{}", new Integer(scoreNodes.size()), new Integer(numHits));
         // double hits for next round

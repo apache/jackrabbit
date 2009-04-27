@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
+import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
@@ -24,13 +26,11 @@ import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.lucene.search.Query;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -77,22 +77,10 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */ 
-    public Name[] getSelectorNames() {
-        SelectorImpl[] selectors = qomTree.getSource().getSelectors();
-        Name[] names = new Name[selectors.length];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = selectors[i].getSelectorQName();
-        }
-        return names;
-    }
-
     //-------------------------< ExecutableQuery >------------------------------
 
     /**
-     * Executes this query and returns a <code>{@link javax.jcr.query.QueryResult}</code>.
+     * Executes this query and returns a <code>{@link QueryResult}</code>.
      *
      * @param offset the offset in the total result set
      * @param limit  the maximum result size
@@ -101,11 +89,22 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      */
     public QueryResult execute(long offset, long limit)
             throws RepositoryException {
-        Query query = JQOM2LuceneQueryBuilder.createQuery(qomTree, session,
-                index.getContext().getItemStateManager(),
+
+        LuceneQueryFactory factory = new LuceneQueryFactoryImpl(session,
+                index.getSortComparatorSource(),
+                index.getContext().getHierarchyManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
-                propReg, index.getSynonymProvider(), getBindVariableValues(),
-                index.getIndexFormatVersion());
+                index.getSynonymProvider(), index.getIndexFormatVersion());
+
+        MultiColumnQuery query = factory.create(qomTree.getSource());
+
+        if (qomTree.getConstraint() != null) {
+            Constraint c = ConstraintBuilder.create(qomTree.getConstraint(),
+                    getBindVariableValues(), qomTree.getSource().getSelectors(),
+                    factory, session.getValueFactory());
+            query = new FilterMultiColumnQuery(query, c);
+        }
+
 
         ColumnImpl[] columns = qomTree.getColumns();
         Name[] selectProps = new Name[columns.length];
@@ -126,7 +125,7 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
                         orderings[i].getOperand() + " not yet implemented");
             }
         }
-        return new QueryResultImpl(index, itemMgr,
+        return new MultiColumnQueryResult(index, itemMgr,
                 session, session.getAccessManager(),
                 // TODO: spell suggestion missing
                 this, query, null, selectProps, orderProps, orderSpecs,

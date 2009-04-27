@@ -114,6 +114,24 @@ public class EquiJoinConditionImpl
         return selector2Name;
     }
 
+    /**
+     * Gets the property name in the first selector.
+     *
+     * @return the property name; non-null
+     */
+    public Name getProperty1QName() {
+        return property1Name;
+    }
+
+    /**
+     * Gets the property name in the second selector.
+     *
+     * @return the property name; non-null
+     */
+    public Name getProperty2QName() {
+        return property2Name;
+    }
+
     //------------------------< AbstractQOMNode >-------------------------------
 
     /**

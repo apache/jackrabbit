@@ -853,18 +853,12 @@ public class NodeIndexer {
     protected void addLength(Document doc,
                              String propertyName,
                              InternalValue value) {
-        long length;
-        if (value.getType() == PropertyType.BINARY) {
-            length = value.getBLOBFileValue().getLength();
-        } else if (value.getType() == PropertyType.NAME
-                || value.getType() == PropertyType.PATH) {
-            return;
-        } else {
-            length = value.toString().length();
+        long length = Util.getLength(value);
+        if (length != -1) {
+            doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
+                    FieldNames.createNamedLength(propertyName, length),
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
         }
-        doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
-                FieldNames.createNamedLength(propertyName, length),
-                Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
     }
 
     /**
