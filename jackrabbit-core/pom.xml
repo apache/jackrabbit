@@ -88,7 +88,6 @@
               <name>known.issues</name>
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
-                org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
                 org.apache.jackrabbit.core.ShareableNodeTest#testSharedNodePath
               </value>
             </property>
