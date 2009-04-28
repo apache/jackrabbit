@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
@@ -51,8 +52,11 @@ public class LazyFileInputStream extends AutoCloseInputStream {
      * 
      * @param file the file
      */
-    protected LazyFileInputStream(File file) {
+    public LazyFileInputStream(File file) throws FileNotFoundException {
         super(null);
+        if (!file.canRead()) {
+            throw new FileNotFoundException(file.getPath());
+        }        
         this.file = file;
     }
 
