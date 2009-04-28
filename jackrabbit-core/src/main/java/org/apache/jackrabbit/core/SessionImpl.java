@@ -685,11 +685,13 @@ public class SessionImpl extends AbstractSession
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = rep.getWorkspaceInfo(wspName);
             // this will initialize the workspace if required
-            wspInfo.getSystemSession();
             SessionImpl session = SystemSession.create(rep, wspInfo.getConfig());
             // mark this session as 'active' so the workspace does not get disposed
             // by the workspace-janitor until the garbage collector is done
             rep.onSessionCreated(session);
+            // the workspace could be disposed again, so re-initialize if required
+            // afterwards it will not be disposed because a session is registered
+            wspInfo.initialize();
             sessions[i] = session;
             pm = wspInfo.getPersistenceManager();
             pmList.add(pm);
