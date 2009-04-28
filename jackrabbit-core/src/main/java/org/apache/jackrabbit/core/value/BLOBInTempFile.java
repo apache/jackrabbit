@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.core.value;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.LazyFileInputStream;
 import org.apache.jackrabbit.util.TransientFileFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -141,7 +141,7 @@ public class BLOBInTempFile extends BLOBFileValue {
      */
     public InputStream getStream() throws IllegalStateException, RepositoryException {
         try {
-            return new FileInputStream(file);
+            return new LazyFileInputStream(file);
         } catch (FileNotFoundException fnfe) {
             throw new RepositoryException("file backing binary value not found", fnfe);
         }

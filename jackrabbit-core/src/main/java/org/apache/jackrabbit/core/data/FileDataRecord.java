@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -52,7 +53,11 @@ public class FileDataRecord extends AbstractDataRecord {
      * {@inheritDoc}
      */
     public InputStream getStream() throws DataStoreException {
-        return new LazyFileInputStream(file);
+        try {
+            return new LazyFileInputStream(file);
+        } catch (IOException e) {
+            throw new DataStoreException("Error opening input stream of " + file.getAbsolutePath(), e);
+        }
     }
 
     /**
