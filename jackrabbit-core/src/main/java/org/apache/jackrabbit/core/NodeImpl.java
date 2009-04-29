@@ -4574,6 +4574,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         }
     }
 
+    public PropertyIterator getWeakReferences() throws RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2061");
+    }
+
+    public PropertyIterator getWeakReferences(String name) throws RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2061");
+    }
+
     /**
      * @see org.apache.jackrabbit.api.jsr283.Node#setPrimaryType(String) 
      * @since JCR 2.0
