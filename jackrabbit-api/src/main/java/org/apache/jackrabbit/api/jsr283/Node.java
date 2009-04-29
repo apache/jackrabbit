@@ -77,6 +77,52 @@ public interface Node extends javax.jcr.Node {
     public PropertyIterator getReferences(String name) throws RepositoryException;
 
     /**
+     * This method returns all <code>WEAKREFERENCE</code> properties that refer
+     * to this node and that are accessible through the current
+     * <code>Session</code>. Equivalent to <code>Node.getWeakReferences(null)</code>.
+     *
+     * @return A <code>PropertyIterator</code>.
+     *
+     * @throws RepositoryException if an error occurs.
+     * @see #getWeakReferences(String).
+     * @since JCR 2.0
+     */
+    public PropertyIterator getWeakReferences() throws RepositoryException;
+
+    /**
+     * This method returns all <code>WEAKREFERENCE</code> properties that refer
+     * to this node, have the specified <code>name</code> and that are
+     * accessible through the current <code>Session</code>.
+     * <p/>
+     * If the <code>name</code> parameter is <code>null</code> then all
+     * referring <code>WEAKREFERENCE</code> are returned regardless of name.
+     * <p/>
+     * Some implementations may only return properties that have been persisted.
+     * Some may return both properties that have been persisted and those that
+     * have been dispatched but not persisted (for example, those saved within a
+     * transaction but not yet committed) while others implementations may return
+     * these two categories of property as well as properties that are still
+     * pending and not yet dispatched.
+     * <p/>
+     * In implementations that support versioning, this method does not return
+     * properties that are part of the frozen state of a version in version
+     * storage.
+     * <p/>
+     * If this node has no referring properties with the specified name, an
+     * empty iterator is returned.
+     *
+     * @param name name of referring <code>WEAKREFERENCE</code> properties to be
+     * returned; if <code>null</code> then all referring
+     * <code>WEAKREFERENCE</code>s are returned.
+     *
+     * @return A <code>PropertyIterator</code>.
+     *
+     * @throws RepositoryException if an error occurs.
+     * @since JCR 2.0
+     */
+    public PropertyIterator getWeakReferences(String name) throws RepositoryException;
+
+    /**
      * Changes the primary node type of this node to <code>nodeTypeName</code>.
      * Also immediately changes this node's <code>jcr:primaryType</code> property
      * appropriately. Semantically, the new node type may take effect
