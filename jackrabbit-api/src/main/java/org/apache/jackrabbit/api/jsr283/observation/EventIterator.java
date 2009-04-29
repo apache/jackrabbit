@@ -16,22 +16,24 @@
  */
 package org.apache.jackrabbit.api.jsr283.observation;
 
+import java.util.Calendar;
+
 /**
- * An <code>EventJournal</code> is an extension of <code>EventIterator</code>
- * that provides the additional method {@link #skipTo(long)}:
- *
  * @since JCR 2.0
  */
-public interface EventJournal extends EventIterator {
+public interface EventIterator extends javax.jcr.observation.EventIterator {
 
     /**
-     * Skip all elements of the iterator earlier than <code>date</code>.
+     * Returns the date associated with this event iterator, or
+     * <code>null</code>.
      * <p/>
-     * If an attempt is made to skip past the last element of the iterator,
-     * no exception is thrown but the subsequent {@link #nextEvent()} will fail.
+     * The date is required to be non-null for event iterators obtained through
+     * an {@link EventJournal}.
      *
-     * @param date a date that is represented by the number of milliseconds
-     *          since January 1, 1970, 00:00:00 GMT
+     * @return the date associated with this event iterator, or
+     *         <code>null</code>.
+     *
+     * @since JCR 2.0
      */
-     public void skipTo(long date);
+    public Calendar getDate();
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Calendar;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -174,6 +175,10 @@ public class EventJournalImpl implements EventJournal {
         }
         position++;
         return next;
+    }
+
+    public Calendar getDate() {
+        throw new RuntimeException("Not implemented yet, see JCR-2086");
     }
 
     //------------------------< RangeIterator >---------------------------------
