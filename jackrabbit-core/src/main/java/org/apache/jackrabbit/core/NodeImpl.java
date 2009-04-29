@@ -57,7 +57,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.api.jsr283.InvalidLifecycleTransitionException;
+import org.apache.jackrabbit.api.jsr283.Binary;
 import org.apache.jackrabbit.api.jsr283.version.VersionManager;
 import org.apache.jackrabbit.api.jsr283.lock.LockManager;
 import org.slf4j.Logger;
@@ -95,6 +95,7 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -1688,6 +1689,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw re;
         }
         return prop;
+    }
+
+    public Property setProperty(String name, BigDecimal value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
+    }
+
+    public Property setProperty(String name, Binary value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
     }
 
     /**
@@ -4827,5 +4838,4 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     public String toString() {
         return "node " + super.toString();
     }
-
 }

@@ -16,10 +16,15 @@
  */
 package org.apache.jackrabbit.api.jsr283;
 
+import java.math.BigDecimal;
+
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -179,6 +184,60 @@ public interface Node extends javax.jcr.Node {
      * @since JCR 2.0
      */
     public void setPrimaryType(String nodeTypeName) throws NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException, RepositoryException;
+
+    /**
+     * The behavior of this method is identical to that of {@link
+     * #setProperty(String name, Value value)} except that the value is
+     * specified as a {@link BigDecimal} and, if possible, the type assigned to
+     * the property is <code>DECIMAL</code>, otherwise a best-effort conversion
+     * is attempted.
+     *
+     * @param name The name of a property of this node
+     * @param value The value to assigned
+     *
+     * @return The updated <code>Property</code> object
+     *
+     * @throws ValueFormatException if <code>value</code> cannot be converted to
+     * the type of the specified property or if the property already exists and
+     * is multi-valued.
+     * @throws VersionException if this node is read-only due to a checked-in node and
+     * this implementation performs this validation immediately.
+     * @throws LockException if a lock prevents the setting of the property and
+     * this implementation performs this validation immediately.
+     * @throws ConstraintViolationException if the change would violate a
+     * node-type or other constraint and this implementation performs this
+     * validation immediately.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public Property setProperty(String name, BigDecimal value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException;
+
+    /**
+     * The behavior of this method is identical to that of {@link
+     * #setProperty(String name, Value value)} except that the value is
+     * specified as a {@link Binary} and, if possible, the type assigned to the
+     * property is <code>BINARY</code>, otherwise a best-effort conversion is
+     * attempted.
+     *
+     * @param name The name of a property of this node
+     * @param value The value to assigned
+     *
+     * @return The updated <code>Property</code> object
+     *
+     * @throws ValueFormatException if <code>value</code> cannot be converted to
+     * the type of the specified property or if the property already exists and
+     * is multi-valued.
+     * @throws VersionException if this node is read-only due to a checked-in node and
+     * this implementation performs this validation immediately.
+     * @throws LockException if a lock prevents the setting of the property and
+     * this implementation performs this validation immediately.
+     * @throws ConstraintViolationException if the change would violate a
+     * node-type or other constraint and this implementation performs this
+     * validation immediately.
+     * @throws RepositoryException if another error occurs.
+     * @since JCR 2.0
+     */
+    public Property setProperty(String name, Binary value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException;
 
     /**
      * Returns an iterator over all nodes that are in the shared set of this
