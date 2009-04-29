@@ -30,6 +30,7 @@ import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 
@@ -58,7 +59,7 @@ import javax.naming.Referenceable;
  * needed.
  */
 public class BindableRepository extends AbstractRepository
-        implements JackrabbitRepository, Referenceable, Serializable {
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, Referenceable, Serializable {
 
     /**
      * The serialization UID of this class.
@@ -177,6 +178,22 @@ public class BindableRepository extends AbstractRepository
         return repository.getDescriptorKeys();
     }
 
+    public Value getDescriptorValue(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isStandardDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
     //--------------------------------------------------------< Referenceable >
 
     /**
@@ -229,5 +246,4 @@ public class BindableRepository extends AbstractRepository
             // ignore. exception is thrown when hook itself calls shutdown
         }
     }
-
 }

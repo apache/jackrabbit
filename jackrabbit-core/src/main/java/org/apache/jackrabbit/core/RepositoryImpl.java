@@ -84,6 +84,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
@@ -110,7 +111,7 @@ import java.util.Set;
  * A <code>RepositoryImpl</code> ...
  */
 public class RepositoryImpl extends AbstractRepository
-        implements JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 
@@ -1417,6 +1418,23 @@ public class RepositoryImpl extends AbstractRepository
         Arrays.sort(keys);
         return keys;
     }
+
+    public Value getDescriptorValue(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isStandardDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
 
     //------------------------------------------------------< SessionListener >
     /**
