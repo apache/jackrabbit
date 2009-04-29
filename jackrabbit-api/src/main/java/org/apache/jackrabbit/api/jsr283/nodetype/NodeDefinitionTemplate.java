@@ -73,14 +73,14 @@ public interface NodeDefinitionTemplate extends NodeDefinition {
      *
      * @param requiredPrimaryTypes a <code>String</code> array.
      */
-    void setRequiredPrimaryTypes(String[] requiredPrimaryTypes);
+    void setRequiredPrimaryTypeNames(String[] requiredPrimaryTypes);
 
     /**
      * Sets the default primary type of this node.
      *
      * @param defaultPrimaryType a <code>String</code>.
      */
-    void setDefaultPrimaryType(String defaultPrimaryType);
+    void setDefaultPrimaryTypeName(String defaultPrimaryType);
 
 
     /**

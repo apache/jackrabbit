@@ -68,14 +68,14 @@ class NodeDefinitionTemplateImpl
     /**
      * {@inheritDoc}
      */
-    public void setRequiredPrimaryTypes(String[] requiredPrimaryTypeNames) {
+    public void setRequiredPrimaryTypeNames(String[] requiredPrimaryTypeNames) {
         this.requiredPrimaryTypeNames = requiredPrimaryTypeNames;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setDefaultPrimaryType(String defaultPrimaryType) {
+    public void setDefaultPrimaryTypeName(String defaultPrimaryType) {
         this.defaultPrimaryTypeName = defaultPrimaryType;
     }
 
