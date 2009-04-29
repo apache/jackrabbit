@@ -31,6 +31,7 @@ import java.util.Properties;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
@@ -48,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * shut down the repository.
  */
 public class TransientRepository
-        implements JackrabbitRepository, SessionListener {
+        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.
@@ -378,6 +379,23 @@ public class TransientRepository
         return login(null, null);
     }
 
+
+    public Value getDescriptorValue(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
+    public boolean isStandardDescriptor(String key) {
+        throw new RuntimeException("not implemented yet - see JCR-2062");
+    }
+
     //--------------------------------------------------<JackrabbitRepository>
 
     /**
@@ -423,5 +441,4 @@ public class TransientRepository
      */
     public void loggingOut(SessionImpl session) {
     }
-
 }
