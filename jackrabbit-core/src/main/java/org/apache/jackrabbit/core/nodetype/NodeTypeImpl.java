@@ -35,6 +35,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,7 +43,7 @@ import java.util.HashSet;
 /**
  * A <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
+public class NodeTypeImpl implements NodeType, org.apache.jackrabbit.api.jsr283.nodetype.NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
@@ -652,5 +653,15 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
             // fall through
         }
         return false;
+    }
+
+    public NodeTypeIterator getDeclaredSubtypes() {
+        // TODO 
+        throw new RuntimeException("Not implemented yet, see JCR-2090");
+    }
+
+    public NodeTypeIterator getSubtypes() {
+        // TODO 
+        throw new RuntimeException("Not implemented yet, see JCR-2090");
     }
 }
