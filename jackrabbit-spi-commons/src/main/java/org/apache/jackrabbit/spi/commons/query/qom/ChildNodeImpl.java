@@ -20,9 +20,8 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
-
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.ChildNode;
 import javax.jcr.RepositoryException;
 
 /**
@@ -85,6 +84,11 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      */
     public Path getQPath() {
         return path;
+    }
+
+    public String getParentPath() {
+        // TODO
+        throw new RuntimeException("Not implemented yet - see JCR-2092");
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

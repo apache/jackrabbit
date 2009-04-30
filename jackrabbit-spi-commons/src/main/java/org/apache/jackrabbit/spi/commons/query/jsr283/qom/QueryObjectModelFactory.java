@@ -18,12 +18,16 @@ package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.ChildNode;
 import javax.jcr.query.qom.ChildNodeJoinCondition;
+import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.EquiJoinCondition;
+import javax.jcr.query.qom.FullTextSearchScore;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.Length;
