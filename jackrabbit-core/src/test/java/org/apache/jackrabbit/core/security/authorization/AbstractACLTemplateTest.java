@@ -16,20 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AbstractAccessControlTest;
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.core.security.TestPrincipal;
+import java.security.Principal;
+import java.util.Collections;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.security.Principal;
-import java.util.Collections;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>AbstractACLTemplateTest</code>...
