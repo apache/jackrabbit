@@ -12,10 +12,33 @@ and records management systems.
 
 Version 1.0 of the JCR API was specified by the Java Specification
 Request 170 (JSR 170, http://jcp.org/en/jsr/detail?id=170) and work
-on the JCR version 2.0 has begun in JSR 283.
+on the JCR version 2.0 is ongoing in JSR 283.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
+Building Jackrabbit
+===================
+
+Jackrabbit currently depends on the Proposed Final Draft (PFD) version of
+the JCR 2.0 API jar file from JSR 283. To build Jackrabbit, you need to
+download the PFD from http://jcp.org/en/jsr/detail?id=283 and install the
+contained jcr-2.0.jar file to your local Maven repository.
+
+Use the following command to install the required JCR API jar with metadata
+included in the jcr-2.0-pfd.xml file in this directory:
+
+    mvn install:install-file \
+        -Dfile=/path/to/lib/jcr-2.0.jar -DpomFile=jcr-2.0-pfd.xml    
+
+Once you've installed the JCR 2.0 (PFD) API jar, you can build Jackrabbit
+with the following command:
+
+    mvn clean install
+
+You need Maven 2.0.9 (or higher) with Java 5 (or higher) for the build.
+For more instructions, please see the documentation at:
+
+   http://jackrabbit.apache.org/building-jackrabbit.html
 
 License (see also LICENSE.txt)
 ==============================
@@ -64,23 +87,6 @@ or with ViewVC at
 To checkout the main Jackrabbit source tree, run
 
    svn checkout https://svn.apache.org/repos/asf/jackrabbit/trunk jackrabbit
-
-Once you have a copy of the source code tree, you can use Apache Maven
-
-   http://maven.apache.org/
-
-to build the project. You should use Maven 2 to build Jackrabbit.
-The minimal command to build, test, and package all the main Jackrabbit
-components is:
-
-   mvn install
-
-Note that the OCM components require Java 5, and will not be included
-in the build if you use Java 1.4.
-
-For more instructions, please see the documentation at:
-
-   http://jackrabbit.apache.org/building-jackrabbit.html
 
 Credits
 =======
