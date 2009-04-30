@@ -74,6 +74,14 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
         return allowsSameNameSiblings;
     }
 
+    public String getDefaultPrimaryTypeName() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public String[] getRequiredPrimaryTypeNames() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
     //-------------------------------------< implementation specific method >---
     /**
      * Returns xml representation
@@ -110,4 +118,5 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
     String getElementName() {
 	return CHILDNODEDEFINITION_ELEMENT;
     }
+
 }
