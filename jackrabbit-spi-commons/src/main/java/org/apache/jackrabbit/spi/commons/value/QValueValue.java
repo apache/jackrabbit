@@ -19,8 +19,10 @@ package org.apache.jackrabbit.spi.commons.value;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
+import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -86,6 +88,11 @@ public final class QValueValue implements Value {
         } else {
             throw new ValueFormatException("incompatible type " + PropertyType.nameFromValue(qvalue.getType()));
         }
+    }
+
+    public Binary getBinary() throws RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2056");
     }
 
     /**
@@ -211,4 +218,5 @@ public final class QValueValue implements Value {
         }
         state = STATE_VALUE_CONSUMED;
     }
+
 }
