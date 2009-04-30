@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.DynamicOperand;
+
 /**
  * Evaluates to a <code>DOUBLE</code> value equal to the full-text search score
  * of a node.
