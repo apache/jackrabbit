@@ -16,14 +16,17 @@
  */
 package org.apache.jackrabbit.value;
 
+import java.io.InputStream;
+import java.util.Calendar;
+
+import javax.jcr.Binary;
 import javax.jcr.Node;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
-import javax.jcr.PropertyType;
-import java.io.InputStream;
-import java.util.Calendar;
 
 /**
  * This class implements the <code>ValueFactory</code> interface.
@@ -137,4 +140,13 @@ public class ValueFactoryImpl implements ValueFactory {
         }
         return val;
     }
+
+    public Binary createBinary(InputStream stream) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2056");
+    }
+
+    public Value createValue(Binary value) {
+        throw new UnsupportedOperationException("JCR-2056");
+    }
+
 }
