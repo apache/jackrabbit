@@ -90,6 +90,11 @@ public final class QValueValue implements Value {
         }
     }
 
+    public BigDecimal getDecimal() throws ValueFormatException, IllegalStateException, RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
+    }
+
     public Binary getBinary() throws RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-2056");
@@ -218,5 +223,4 @@ public final class QValueValue implements Value {
         }
         state = STATE_VALUE_CONSUMED;
     }
-
 }
