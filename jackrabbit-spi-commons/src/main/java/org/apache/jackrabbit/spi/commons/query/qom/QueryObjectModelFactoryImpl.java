@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.And;
@@ -36,6 +35,7 @@ import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.EquiJoinCondition;
+import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.FullTextSearchScore;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
@@ -528,7 +528,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      * @throws javax.jcr.RepositoryException if the operation otherwise fails
      */
     public FullTextSearch fullTextSearch(String propertyName,
-                                         String fullTextSearchExpression)
+            StaticOperand fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException                          // CM
     {
         Name propName = null;
@@ -555,7 +555,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public FullTextSearch fullTextSearch(String selectorName,
                                          String propertyName,
-                                         String fullTextSearchExpression)
+                                         StaticOperand fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException {
         Name propName = null;
         if (propertyName != null) {
@@ -1087,7 +1087,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
         }
     }
 
-    private String checkFullTextSearchExpression(String fullTextSearchExpression)
+    private StaticOperand checkFullTextSearchExpression(StaticOperand fullTextSearchExpression)
             throws RepositoryException {
         if (fullTextSearchExpression == null) {
             // TODO: correct exception?
