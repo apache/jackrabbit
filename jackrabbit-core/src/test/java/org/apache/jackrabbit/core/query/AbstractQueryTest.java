@@ -16,25 +16,26 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.Row;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Value;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Abstract base class for query test cases.
