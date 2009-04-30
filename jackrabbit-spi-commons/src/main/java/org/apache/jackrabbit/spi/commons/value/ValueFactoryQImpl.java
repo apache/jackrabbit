@@ -18,8 +18,10 @@ package org.apache.jackrabbit.spi.commons.value;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
+import javax.jcr.Binary;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
@@ -184,5 +186,15 @@ public class ValueFactoryQImpl implements ValueFactory {
         } catch (RepositoryException ex) {
             throw new ValueFormatException(ex);
         }
+    }
+
+    public Binary createBinary(InputStream stream) throws RepositoryException {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2056");
+    }
+
+    public Value createValue(Binary value) {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-2056");
     }
 }
