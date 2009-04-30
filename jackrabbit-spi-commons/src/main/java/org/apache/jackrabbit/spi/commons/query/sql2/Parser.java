@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
@@ -28,7 +26,6 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConsta
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
 import java.math.BigDecimal;
@@ -40,7 +37,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.StaticOperand;
 
 /**
  * The SQL2 parser can convert a JCR-SQL2 query to a QueryObjectModel.
