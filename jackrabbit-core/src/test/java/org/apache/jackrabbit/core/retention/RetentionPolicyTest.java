@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import javax.jcr.retention.AbstractRetentionTest;
 import javax.jcr.retention.RetentionPolicy;
 
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.api.jsr283.retention.AbstractRetentionTest;
 
 /**
  * <code>RetentionPolicyTest</code>...

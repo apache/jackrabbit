@@ -26,6 +26,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.collections.BeanMap;
+import org.apache.jackrabbit.commons.repository.ProxyRepository;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
@@ -124,25 +126,13 @@ public class TestRepository {
             (Repository) helper.get("repository");
         final Credentials superuser =
             (Credentials) helper.get("superuserCredentials");
-        return new Repository() {
+        return new ProxyRepository(new RepositoryFactory() {
 
-            public String[] getDescriptorKeys() {
-                return repository.getDescriptorKeys();
+            public Repository getRepository() throws RepositoryException {
+                return repository;
             }
 
-            public String getDescriptor(String key) {
-                return repository.getDescriptor(key);
-            }
-
-            public Session login(Credentials credentials, String workspace)
-                    throws RepositoryException {
-                return repository.login(credentials, workspace);
-            }
-
-            public Session login(Credentials credentials)
-                    throws RepositoryException {
-                return repository.login(credentials);
-            }
+        }) {
 
             public Session login(String workspace) throws RepositoryException {
                 return repository.login(superuser, workspace);

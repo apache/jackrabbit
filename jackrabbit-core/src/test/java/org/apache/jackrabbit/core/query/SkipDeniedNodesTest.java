@@ -16,24 +16,25 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.security.AbstractAccessControlTest;
-import javax.jcr.security.AccessControlPolicyIterator;
+import java.security.Principal;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.NodeIterator;
-import javax.jcr.query.QueryManager;
-import javax.jcr.query.Query;
-import java.security.Principal;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>SkipDeniedNodesTest</code> checks if nodes are correctly skipped

@@ -16,23 +16,24 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import javax.jcr.security.AbstractAccessControlTest;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>JackrabbitAccessControlListTest</code>...
