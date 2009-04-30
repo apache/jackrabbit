@@ -16,37 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import javax.jcr.observation.EventJournal;
-import javax.jcr.version.VersionManager;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.lock.SessionLockManager;
-import org.apache.jackrabbit.core.observation.EventStateCollection;
-import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.core.observation.EventJournalImpl;
-import org.apache.jackrabbit.core.observation.EventFilter;
-import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.version.DateVersionSelector;
-import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.version.VersionSelector;
-import org.apache.jackrabbit.core.version.JcrVersionManagerImpl;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.Importer;
-import org.apache.jackrabbit.core.xml.WorkspaceImporter;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
-import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.commons.AbstractWorkspace;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -66,10 +37,33 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
-import javax.security.auth.Subject;
+import javax.jcr.version.VersionManager;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.commons.AbstractWorkspace;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.lock.SessionLockManager;
+import org.apache.jackrabbit.core.observation.EventStateCollection;
+import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.core.query.QueryManagerImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.JcrVersionManagerImpl;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.Importer;
+import org.apache.jackrabbit.core.xml.WorkspaceImporter;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 
 /**
  * A <code>WorkspaceImpl</code> ...
@@ -787,7 +781,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             try {
                 obsMgr = new ObservationManagerImpl(
                         rep.getObservationDispatcher(wspConfig.getName()),
-                        session, session.getItemManager());
+                        session,
+                        session.getItemManager(),
+                        rep.getClusterNode());
             } catch (NoSuchWorkspaceException nswe) {
                 // should never get here
                 String msg = "internal error: failed to instantiate observation manager";
@@ -796,43 +792,6 @@ public class WorkspaceImpl extends AbstractWorkspace
             }
         }
         return obsMgr;
-    }
-
-    /**
-     * Returns the event journal for this workspace. The events are filtered
-     * according to the passed criteria.
-     *
-     * @param eventTypes A combination of one or more event type constants encoded as a bitmask.
-     * @param absPath an absolute path.
-     * @param isDeep a <code>boolean</code>.
-     * @param uuid array of UUIDs.
-     * @param nodeTypeName array of node type names.
-     * @return the event journal for this repository.
-     * @throws UnsupportedRepositoryOperationException if this repository does
-     *          not support an event journal (cluster journal disabled).
-     * @throws RepositoryException if another error occurs.
-     */
-    public EventJournal getEventJournal(int eventTypes,
-                                        String absPath,
-                                        boolean isDeep,
-                                        String[] uuid,
-                                        String[] nodeTypeName)
-            throws RepositoryException {
-        Subject subject = ((SessionImpl) getSession()).getSubject();
-        if (subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
-            throw new RepositoryException("Only administrator session may " +
-                    "access EventJournal");
-        }
-        ClusterNode clusterNode = rep.getClusterNode();
-        if (clusterNode == null) {
-            throw new UnsupportedRepositoryOperationException();
-        }
-
-        ObservationManagerImpl obsMgr = (ObservationManagerImpl) session.getWorkspace().getObservationManager();
-        EventFilter filter = obsMgr.createEventFilter(eventTypes, absPath,
-                isDeep, uuid, nodeTypeName, false);
-        return new EventJournalImpl(filter, clusterNode.getJournal(),
-                clusterNode.getId());
     }
 
     /**
