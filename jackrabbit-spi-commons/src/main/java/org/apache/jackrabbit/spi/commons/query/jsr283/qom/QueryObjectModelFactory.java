@@ -21,8 +21,10 @@ import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.StaticOperand;
+import javax.jcr.query.qom.UpperCase;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
