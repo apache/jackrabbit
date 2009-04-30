@@ -18,14 +18,14 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.io.IOException;
 
-import javax.jcr.Value;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 
 /**
  * <code>ComparisonConstraint</code> implements a comparison constraint.
@@ -41,7 +41,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint
     /**
      * The operator.
      */
-    private final int operator;
+    private final String operator;
 
     /**
      * The static operand.
@@ -49,7 +49,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint
     private final Value operand2;
 
     /**
-     * Creates a new comparision constraint.
+     * Creates a new comparison constraint.
      *
      * @param operand1 the dynamic operand.
      * @param operator the operator.
@@ -57,7 +57,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint
      * @param selector the selector for this constraint.
      */
     public ComparisonConstraint(DynamicOperand operand1,
-                                int operator,
+                                String operator,
                                 Value operand2,
                                 SelectorImpl selector) {
         super(selector);
@@ -101,21 +101,20 @@ public class ComparisonConstraint extends SelectorBasedConstraint
      */
     protected boolean evaluate(Value op1) throws RepositoryException {
         int c = Util.compare(op1, operand2);
-        switch (operator) {
-            case OPERATOR_EQUAL_TO:
-                return c == 0;
-            case OPERATOR_GREATER_THAN:
-                return c > 0;
-            case OPERATOR_GREATER_THAN_OR_EQUAL_TO:
-                return c >= 0;
-            case OPERATOR_LESS_THAN:
-                return c < 0;
-            case OPERATOR_LESS_THAN_OR_EQUAL_TO:
-                return c <= 0;
-            case OPERATOR_NOT_EQUAL_TO:
-                return c != 0;
-            default:
-                throw new IllegalStateException("unsupported operation: " + operator);
+        if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
+            return c == 0;
+        } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
+            return c > 0;
+        } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
+            return c >= 0;
+        } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
+            return c < 0;
+        } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
+            return c <= 0;
+        } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
+            return c != 0;
+        } else {
+            throw new IllegalStateException("unsupported operation: " + operator);
         }
     }
 }

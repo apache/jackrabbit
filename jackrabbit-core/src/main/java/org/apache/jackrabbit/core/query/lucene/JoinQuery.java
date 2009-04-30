@@ -43,7 +43,7 @@ public class JoinQuery implements MultiColumnQuery {
     /**
      * The join type.
      */
-    private final int joinType;
+    private final String joinType;
 
     /**
      * The QOM join condition.
@@ -72,7 +72,7 @@ public class JoinQuery implements MultiColumnQuery {
      */
     public JoinQuery(MultiColumnQuery left,
                      MultiColumnQuery right,
-                     int joinType,
+                     String joinType,
                      JoinConditionImpl joinCondition,
                      SortComparatorSource scs,
                      HierarchyManager hmgr) {

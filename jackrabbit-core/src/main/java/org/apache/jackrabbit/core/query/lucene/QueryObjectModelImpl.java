@@ -16,25 +16,25 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
-import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
+import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -116,7 +116,9 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         Path[] orderProps = new Path[orderings.length];
         boolean[] orderSpecs = new boolean[orderings.length];
         for (int i = 0; i < orderings.length; i++) {
-            orderSpecs[i] = orderings[i].getOrder() == QueryObjectModelConstants.ORDER_ASCENDING;
+            orderSpecs[i] = 
+                QueryObjectModelConstants.JCR_ORDER_ASCENDING.equals(
+                        orderings[i].getOrder());
             if (orderings[i].getOperand() instanceof PropertyValue) {
                 PropertyValue pv = (PropertyValue) orderings[i].getOperand();
                 orderProps[i] = PathFactoryImpl.getInstance().create(pv.getPropertyName());
