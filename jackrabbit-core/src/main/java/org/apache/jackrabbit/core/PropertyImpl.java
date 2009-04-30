@@ -23,7 +23,6 @@ import java.util.Calendar;
 
 import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -527,6 +526,14 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public void setValue(BigDecimal value) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("JCR-1609");
+    }
+
+    public Binary getBinary() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2056");
+    }
+
+    public void setValue(Binary value) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2056");
     }
 
     public void setValue(Calendar value) throws RepositoryException {
