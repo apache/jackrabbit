@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Random;
-import java.util.Map;
-import java.util.HashMap;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 /**
  * <code>UpperLowerCaseQueryTest</code> tests the functions fn:lower-case() and
@@ -39,16 +39,17 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
     /**
      * Maps operator strings to QueryObjectModelConstants.
      */
-    private static final Map OPERATORS = new HashMap();
+    private static final Map<String, String> OPERATORS =
+        new HashMap<String, String>();
 
     static {
-        OPERATORS.put("=", new Integer(OPERATOR_EQUAL_TO));
-        OPERATORS.put(">", new Integer(OPERATOR_GREATER_THAN));
-        OPERATORS.put(">=", new Integer(OPERATOR_GREATER_THAN_OR_EQUAL_TO));
-        OPERATORS.put("<", new Integer(OPERATOR_LESS_THAN));
-        OPERATORS.put("<=", new Integer(OPERATOR_LESS_THAN_OR_EQUAL_TO));
-        OPERATORS.put("like", new Integer(OPERATOR_LIKE));
-        OPERATORS.put("!=", new Integer(OPERATOR_NOT_EQUAL_TO));
+        OPERATORS.put("=", JCR_OPERATOR_EQUAL_TO);
+        OPERATORS.put(">", JCR_OPERATOR_GREATER_THAN);
+        OPERATORS.put(">=", JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+        OPERATORS.put("<", JCR_OPERATOR_LESS_THAN);
+        OPERATORS.put("<=", JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+        OPERATORS.put("like", JCR_OPERATOR_LIKE);
+        OPERATORS.put("!=", JCR_OPERATOR_NOT_EQUAL_TO);
     }
 
     public void testEqualsGeneralComparison() throws RepositoryException {
@@ -261,7 +262,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
             it.nextNode().remove();
         }
-        Set matchingNodes = new HashSet();
+        Set<Node> matchingNodes = new HashSet<Node>();
         for (int i = 0; i < values.length; i++) {
             Node n = testRootNode.addNode("node" + i);
             n.setProperty(propertyName1, values[i]);
@@ -271,7 +272,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         }
         testRootNode.save();
 
-        Node[] nodes = (Node[]) matchingNodes.toArray(new Node[matchingNodes.size()]);
+        Node[] nodes = matchingNodes.toArray(new Node[matchingNodes.size()]);
         String sqlOperation = operation;
         if (operation.equals("!=")) {
             sqlOperation = "<>";
@@ -344,11 +345,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         return pool.charAt(random.nextInt(pool.length()));
     }
 
-    protected static int getOperatorForString(String operator) {
-        Integer i = (Integer) OPERATORS.get(operator);
-        if (i == null) {
-            throw new IllegalArgumentException("unknown operator: " + operator);
-        }
-        return i.intValue();
+    protected static String getOperatorForString(String operator) {
+        return OPERATORS.get(operator);
     }
 }
