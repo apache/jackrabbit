@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.value;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
 import javax.jcr.Binary;
@@ -147,6 +148,10 @@ public class ValueFactoryImpl implements ValueFactory {
 
     public Value createValue(Binary value) {
         throw new UnsupportedOperationException("JCR-2056");
+    }
+
+    public Value createValue(BigDecimal arg0) {
+        throw new UnsupportedOperationException("JCR-1609");
     }
 
 }
