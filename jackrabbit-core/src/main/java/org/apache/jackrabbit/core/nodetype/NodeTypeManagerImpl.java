@@ -619,11 +619,9 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * @since JCR 2.0
      */
     public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate)
-            throws InvalidNodeTypeDefinitionException, NodeTypeExistsException,
-            UnsupportedRepositoryOperationException, RepositoryException {
-        HashSet defs = new HashSet();
-        defs.add(ntd);
-        return (NodeType) registerNodeTypes(defs, allowUpdate).next();
+            throws RepositoryException {
+        NodeTypeDefinition[] ntds = new NodeTypeDefinition[] { ntd };
+        return registerNodeTypes(ntds, allowUpdate).nextNodeType();
     }
 
     /**
@@ -664,8 +662,8 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
      * @throws RepositoryException if another error occurs.
      * @since JCR 2.0
      */
-    public NodeTypeIterator registerNodeTypes(Collection definitions,
-                                              boolean allowUpdate)
+    public NodeTypeIterator registerNodeTypes(
+            NodeTypeDefinition[] definitions, boolean allowUpdate)
             throws InvalidNodeTypeDefinitionException, NodeTypeExistsException,
             UnsupportedRepositoryOperationException, RepositoryException {
         // split the node types into new and already registered node types.
@@ -673,8 +671,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         // registered node types which make circular dependencies possible
         List addedDefs = new ArrayList();
         List modifiedDefs = new ArrayList();
-        for (Iterator iter = definitions.iterator(); iter.hasNext();) {
-            NodeTypeDefinition definition = (NodeTypeDefinition) iter.next();
+        for (NodeTypeDefinition definition : definitions) {
             // convert to NodeTypeDef
             NodeTypeDef def = toNodeTypeDef(definition);
             if (ntReg.isRegistered(def.getName())) {
@@ -956,4 +953,5 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
         ps.println();
         ntReg.dump(ps);
     }
+
 }
