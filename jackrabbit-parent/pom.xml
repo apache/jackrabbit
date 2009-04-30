@@ -98,10 +98,10 @@
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <source>1.4</source>
+          <source>1.5</source>
           <aggregate>true</aggregate>
           <links>
-            <link>http://java.sun.com/j2se/1.4.2/docs/api/</link>
+            <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
             <link>http://www.day.com/maven/jsr170/javadocs/jcr-1.0/</link>
           </links>
         </configuration>
@@ -113,7 +113,7 @@
         <version>2.0</version>
         <configuration>
           <downloadSources>true</downloadSources>
-          <jdkLevel>1.4</jdkLevel>
+          <jdkLevel>1.5</jdkLevel>
         </configuration>
       </plugin>
       <plugin>
