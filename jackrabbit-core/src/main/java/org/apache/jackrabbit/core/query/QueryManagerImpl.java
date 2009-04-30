@@ -16,23 +16,24 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.core.SearchManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+
+import org.apache.jackrabbit.core.ItemManager;
+import org.apache.jackrabbit.core.SearchManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * This class implements the {@link QueryManager} interface.
