@@ -251,7 +251,7 @@ class RowIteratorImpl implements RowIterator {
      * Implements the {@link javax.jcr.query.Row} interface, which represents
      * a row in the query result.
      */
-    class RowImpl implements org.apache.jackrabbit.api.jsr283.query.Row {
+    class RowImpl implements javax.jcr.query.Row {
 
         /**
          * The score for this result row

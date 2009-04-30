@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.ItemImpl;

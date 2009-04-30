@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 import org.apache.jackrabbit.core.security.authorization.AbstractLockManagementTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import javax.jcr.security.AccessControlManager;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;

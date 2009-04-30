@@ -56,7 +56,7 @@ public interface LockManager {
      * @return the lock.
      * @throws LockException if this node already is locked, or some descendant
      *         node is locked and <code>isDeep</code> is <code>true</code>
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
      * @throws RepositoryException
      */
     Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)

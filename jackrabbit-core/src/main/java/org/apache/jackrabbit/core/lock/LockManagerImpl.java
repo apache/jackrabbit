@@ -47,7 +47,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
-import org.apache.jackrabbit.api.jsr283.Workspace;
+import javax.jcr.Workspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

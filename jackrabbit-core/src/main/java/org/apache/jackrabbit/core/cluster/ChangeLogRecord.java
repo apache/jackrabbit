@@ -39,7 +39,7 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.api.jsr283.observation.Event;
+import javax.jcr.observation.Event;
 
 /**
  * Cluster record representing a workspace or version update.

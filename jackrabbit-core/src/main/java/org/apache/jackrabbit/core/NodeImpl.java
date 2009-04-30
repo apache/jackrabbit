@@ -57,9 +57,9 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.api.jsr283.Binary;
-import org.apache.jackrabbit.api.jsr283.version.VersionManager;
-import org.apache.jackrabbit.api.jsr283.lock.LockManager;
+import javax.jcr.Binary;
+import javax.jcr.version.VersionManager;
+import javax.jcr.lock.LockManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +108,7 @@ import java.util.Set;
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
  */
-public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr283.Node {
+public class NodeImpl extends ItemImpl implements javax.jcr.Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -4535,7 +4535,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Node#getIdentifier()
+     * @see javax.jcr.Node#getIdentifier()
      * @since JCR 2.0
      */
     public String getIdentifier() throws RepositoryException {
@@ -4543,7 +4543,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Node#getReferences(String)
+     * @see javax.jcr.Node#getReferences(String)
      * @since JCR 2.0
      */
     public PropertyIterator getReferences(String name)
@@ -4596,7 +4596,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Node#setPrimaryType(String) 
+     * @see javax.jcr.Node#setPrimaryType(String) 
      * @since JCR 2.0
      */
     public void setPrimaryType(String nodeTypeName)

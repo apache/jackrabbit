@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.api.jsr283.nodetype.NodeDefinitionTemplate;
+import javax.jcr.nodetype.NodeDefinitionTemplate;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.RepositoryException;

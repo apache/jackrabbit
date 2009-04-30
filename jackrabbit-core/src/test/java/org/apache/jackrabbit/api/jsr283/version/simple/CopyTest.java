@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package javax.jcr.version.simple;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.api.jsr283.Workspace;
-import org.apache.jackrabbit.api.jsr283.Node;
-import org.apache.jackrabbit.api.jsr283.version.VersionManager;
-import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
+import javax.jcr.Workspace;
+import javax.jcr.Node;
+import javax.jcr.version.VersionManager;
+import javax.jcr.version.VersionHistory;
 
 /**
  * <code>CopyTest</code> checks if simple versionable nodes are copied correctly:
@@ -36,7 +36,7 @@ import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
  *
  * @test
  * @sources CopyTest.java
- * @executeClass org.apache.jackrabbit.api.jsr283.version.simple.CopyTest
+ * @executeClass javax.jcr.version.simple.CopyTest
  * @keywords simple-versioning
  */
 public class CopyTest extends AbstractVersionTest {
@@ -53,7 +53,7 @@ public class CopyTest extends AbstractVersionTest {
         wsp.copy(srcPath, dstPath);
 
         // check versionable
-        Node v = (Node) ((org.apache.jackrabbit.api.jsr283.Session) superuser).getNode(dstPath);
+        Node v = (Node) ((javax.jcr.Session) superuser).getNode(dstPath);
         assertTrue("Copied Node.isNodeType(mix:simpleVersionable) must return true.",
                 v.isNodeType(mixSimpleVersionable));
         assertFalse("Copied Node.isNodeType(mix:versionable) must return false.",
@@ -72,7 +72,7 @@ public class CopyTest extends AbstractVersionTest {
         // remove copied node
         try {
             String dstPath = getProperty("destination");
-            ((org.apache.jackrabbit.api.jsr283.Session) superuser).getNode(dstPath).remove();
+            ((javax.jcr.Session) superuser).getNode(dstPath).remove();
             testRootNode.save();
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());

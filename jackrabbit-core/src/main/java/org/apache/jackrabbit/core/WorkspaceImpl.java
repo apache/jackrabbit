@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
-import org.apache.jackrabbit.api.jsr283.version.VersionManager;
+import javax.jcr.observation.EventJournal;
+import javax.jcr.version.VersionManager;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.SessionLockManager;
@@ -75,7 +75,7 @@ import java.util.Iterator;
  * A <code>WorkspaceImpl</code> ...
  */
 public class WorkspaceImpl extends AbstractWorkspace
-        implements JackrabbitWorkspace, org.apache.jackrabbit.api.jsr283.Workspace,
+        implements JackrabbitWorkspace, javax.jcr.Workspace,
         EventStateCollectionFactory {
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceImpl.class);
@@ -127,7 +127,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * The API LockManager for this workspace, used to create and release
      * locks and determine the lock status.
      */
-    private org.apache.jackrabbit.api.jsr283.lock.LockManager jcr283LockManager;
+    private javax.jcr.lock.LockManager jcr283LockManager;
 
     /**
      * The API Version manager for this workspace
@@ -287,10 +287,10 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager
+     * @see javax.jcr.Workspace#getLockManager()
+     * @see javax.jcr.lock.LockManager
      */
-    public org.apache.jackrabbit.api.jsr283.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
+    public javax.jcr.lock.LockManager getLockManager() throws UnsupportedRepositoryOperationException, RepositoryException {
         if (jcr283LockManager == null) {
             jcr283LockManager = new SessionLockManager(session, session.getLockManager());
         }
@@ -298,7 +298,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Workspace#getVersionManager()
+     * @see javax.jcr.Workspace#getVersionManager()
      */
     public VersionManager getVersionManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {

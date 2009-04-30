@@ -28,7 +28,7 @@ import javax.naming.InitialContext;
 import javax.naming.Context;
 import javax.imageio.spi.ServiceRegistry;
 
-import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
+import javax.jcr.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;

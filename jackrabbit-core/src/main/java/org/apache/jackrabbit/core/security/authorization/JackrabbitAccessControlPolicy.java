@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicy;
 
 /**
  * <code>JackrabbitAccessControlPolicy</code> is an extension of the
  * <code>AccessControlPolicy</code> that exposes the path of the Node to
- * which it can be applied using {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy)}.
+ * which it can be applied using {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy)}.
  */
 public interface JackrabbitAccessControlPolicy extends AccessControlPolicy {
 

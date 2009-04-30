@@ -35,8 +35,8 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.retention.RetentionManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -107,29 +107,29 @@ import java.util.Arrays;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements org.apache.jackrabbit.api.jsr283.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
+        implements javax.jcr.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
-     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_READ} instead.
+     * @deprecated Use {@link javax.jcr.Session#ACTION_READ} instead.
      */
-    public static final String READ_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_READ;
+    public static final String READ_ACTION = javax.jcr.Session.ACTION_READ;
 
     /**
-     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_REMOVE} instead.
+     * @deprecated Use {@link javax.jcr.Session#ACTION_REMOVE} instead.
      */
-    public static final String REMOVE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE;
+    public static final String REMOVE_ACTION = javax.jcr.Session.ACTION_REMOVE;
 
     /**
-     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_ADD_NODE} instead.
+     * @deprecated Use {@link javax.jcr.Session#ACTION_ADD_NODE} instead.
      */
-    public static final String ADD_NODE_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE;
+    public static final String ADD_NODE_ACTION = javax.jcr.Session.ACTION_ADD_NODE;
 
     /**
-     * @deprecated Use {@link org.apache.jackrabbit.api.jsr283.Session#ACTION_SET_PROPERTY} instead.
+     * @deprecated Use {@link javax.jcr.Session#ACTION_SET_PROPERTY} instead.
      */
-    public static final String SET_PROPERTY_ACTION = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY;
+    public static final String SET_PROPERTY_ACTION = javax.jcr.Session.ACTION_SET_PROPERTY;
 
     /**
      * flag indicating whether this session is alive
@@ -1320,7 +1320,7 @@ public class SessionImpl extends AbstractSession
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getNodeByIdentifier(String)
+     * @see javax.jcr.Session#getNodeByIdentifier(String)
      * @since JCR 2.0
      */
     public Node getNodeByIdentifier(String id)
@@ -1335,7 +1335,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getNode(String)
+     * @see javax.jcr.Session#getNode(String)
      * @since JCR 2.0
      */
     public Node getNode(String absPath)
@@ -1359,7 +1359,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getProperty(String)
+     * @see javax.jcr.Session#getProperty(String)
      * @since JCR 2.0
      */
     public Property getProperty(String absPath)
@@ -1383,7 +1383,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#nodeExists(String)
+     * @see javax.jcr.Session#nodeExists(String)
      * @since JCR 2.0
      */
     public boolean nodeExists(String absPath) throws RepositoryException {
@@ -1404,7 +1404,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#propertyExists(String)
+     * @see javax.jcr.Session#propertyExists(String)
      * @since JCR 2.0
      */
     public boolean propertyExists(String absPath) throws RepositoryException {
@@ -1425,7 +1425,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#removeItem(String)
+     * @see javax.jcr.Session#removeItem(String)
      * @since JCR 2.0
      */
     public void removeItem(String absPath) throws VersionException,
@@ -1450,7 +1450,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#hasPermission(String, String)
+     * @see javax.jcr.Session#hasPermission(String, String)
      * @since 2.0
      */
     public boolean hasPermission(String absPath, String actions) throws RepositoryException {
@@ -1500,7 +1500,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#hasCapability(String, Object, Map)
+     * @see javax.jcr.Session#hasCapability(String, Object, Map)
      * @since JCR 2.0
      */
     public boolean hasCapability(String methodType, Object target, Map arguments)
@@ -1510,7 +1510,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getAccessControlManager()
+     * @see javax.jcr.Session#getAccessControlManager()
      * @since JCR 2.0
      */
     public AccessControlManager getAccessControlManager()
@@ -1523,7 +1523,7 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.Session#getRetentionManager()
+     * @see javax.jcr.Session#getRetentionManager()
      * @since JCR 2.0
      */
     public RetentionManager getRetentionManager()

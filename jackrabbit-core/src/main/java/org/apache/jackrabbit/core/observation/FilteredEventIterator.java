@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  */
-class FilteredEventIterator implements org.apache.jackrabbit.api.jsr283.observation.EventIterator {
+class FilteredEventIterator implements javax.jcr.observation.EventIterator {
 
     /**
      * Logger instance for this class

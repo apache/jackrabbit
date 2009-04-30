@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.value.StringValue;
 import org.apache.jackrabbit.value.ValueHelper;
 
@@ -31,7 +31,7 @@ import java.util.HashMap;
 
 /**
  * Simple, immutable implementation of the
- * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlEntry}
+ * {@link javax.jcr.security.AccessControlEntry}
  * and the {@link JackrabbitAccessControlEntry} interfaces.
  */
 public abstract class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
@@ -160,14 +160,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
 
     //-------------------------------------------------< AccessControlEntry >---
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrincipal()
+     * @see javax.jcr.security.AccessControlEntry#getPrincipal()
      */
     public Principal getPrincipal() {
         return principal;
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlEntry#getPrivileges()
+     * @see javax.jcr.security.AccessControlEntry#getPrivileges()
      */
     public Privilege[] getPrivileges() {
         return privileges;

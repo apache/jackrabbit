@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
 
 import javax.jcr.RepositoryException;
 import java.security.Principal;
@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * <code>JackrabbitAccessControlList</code> is an extension of the <code>AccessControlList</code>.
  * Similar to the latter any modifications made will not take effect, until it is
- * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
+ * {@link javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
  * written back} and {@link javax.jcr.Session#save() saved}.
  */
 public interface JackrabbitAccessControlList extends JackrabbitAccessControlPolicy, AccessControlList {

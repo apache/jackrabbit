@@ -23,7 +23,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 
-import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
+import javax.jcr.RepositoryFactory;
 
 /**
  * <code>RepositoryFactoryImpl</code> implements a repository factory that

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.api.jsr283.retention.AbstractRetentionTest;
-import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import javax.jcr.retention.AbstractRetentionTest;
+import javax.jcr.retention.Hold;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.fs.FileSystem;

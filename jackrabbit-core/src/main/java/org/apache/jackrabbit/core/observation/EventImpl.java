@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
-import org.apache.jackrabbit.api.jsr283.observation.Event;
+import javax.jcr.observation.Event;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;

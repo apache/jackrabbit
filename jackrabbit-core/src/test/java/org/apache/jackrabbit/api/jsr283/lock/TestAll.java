@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package javax.jcr.lock;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
@@ -28,7 +28,7 @@ public class TestAll extends TestCase {
     private static Logger log = LoggerFactory.getLogger(TestAll.class);
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.lock tests");
+        TestSuite suite = new TestSuite("javax.jcr.lock tests");
 
         suite.addTestSuite(LockManagerTest.class);
         suite.addTestSuite(OpenScopedLockTest.class);

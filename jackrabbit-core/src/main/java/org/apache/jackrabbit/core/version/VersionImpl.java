@@ -21,8 +21,8 @@ import org.apache.jackrabbit.core.AbstractNodeData;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.jsr283.version.Version;
-import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -59,7 +59,7 @@ import javax.naming.Referenceable;
  * needed.
  */
 public class BindableRepository extends AbstractRepository
-        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, Referenceable, Serializable {
+        implements javax.jcr.Repository, JackrabbitRepository, Referenceable, Serializable {
 
     /**
      * The serialization UID of this class.

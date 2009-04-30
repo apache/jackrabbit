@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import org.apache.jackrabbit.api.jsr283.GuestCredentials;
+import javax.jcr.GuestCredentials;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;

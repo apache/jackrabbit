@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.commons.collections.map.ListOrderedMap;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -51,7 +51,7 @@ import java.util.Map;
  * Implementation of the {@link JackrabbitAccessControlList} interface that
  * is detached from the effective access control content. Consequently, any
  * modifications applied to this ACL only take effect, if the policy gets
- * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy) reapplied}
+ * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
 class ACLTemplate implements JackrabbitAccessControlList {
@@ -308,7 +308,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
 
     //--------------------------------------------------< AccessControlList >---
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#getAccessControlEntries()
+     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
      */
     public AccessControlEntry[] getAccessControlEntries() throws RepositoryException {
         List l = internalGetEntries();
@@ -316,7 +316,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
+     * @see javax.jcr.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
      */
     public boolean addAccessControlEntry(Principal principal, Privilege[] privileges)
             throws AccessControlException, RepositoryException {
@@ -324,7 +324,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
+     * @see javax.jcr.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
      */
     public synchronized void removeAccessControlEntry(AccessControlEntry ace)
             throws AccessControlException, RepositoryException {

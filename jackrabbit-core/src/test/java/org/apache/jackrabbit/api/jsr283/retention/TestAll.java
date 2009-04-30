@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.retention;
+package javax.jcr.retention;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for package org.apache.jackrabbit.api.jsr283.retention.
+ * Test suite that includes all testcases for package javax.jcr.retention.
  */
 public class TestAll extends TestCase {
 
@@ -30,7 +30,7 @@ public class TestAll extends TestCase {
      * package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.retention tests");
+        TestSuite suite = new TestSuite("javax.jcr.retention tests");
 
         suite.addTestSuite(HoldTest.class);
         suite.addTestSuite(HoldEffectTest.class);

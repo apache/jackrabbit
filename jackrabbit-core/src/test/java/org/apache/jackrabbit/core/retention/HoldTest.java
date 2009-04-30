@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import org.apache.jackrabbit.api.jsr283.retention.AbstractRetentionTest;
-import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import javax.jcr.retention.AbstractRetentionTest;
+import javax.jcr.retention.Hold;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

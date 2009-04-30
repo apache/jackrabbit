@@ -18,10 +18,10 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AbstractAccessControlTest;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.JackrabbitSession;

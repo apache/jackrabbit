@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package javax.jcr.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,14 +101,14 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isDeep()}.
+     * Test {@link javax.jcr.lock.Lock#isDeep()}.
      */
     public void testIsDeep() {
         assertEquals("Lock.isDeep must be consistent with lock call.", isDeep(), lock.isDeep());
     }
 
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getNode()}.
+     * Test {@link javax.jcr.lock.Lock#getNode()}.
      *
      * @throws RepositoryException If an execption occurs.
      */
@@ -137,14 +137,14 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
     
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isSessionScoped()}
+     * Test {@link javax.jcr.lock.Lock#isSessionScoped()}
      */
     public void testIsSessionScoped() {
         assertEquals("Lock.isSessionScoped must be consistent with lock call.", isSessionScoped(), lock.isSessionScoped());
     }
 
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()}
+     * Test {@link javax.jcr.lock.Lock#isLockOwningSession()}
      *
      * @throws RepositoryException If an execption occurs.
      */
@@ -178,7 +178,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()} 
+     * Test {@link javax.jcr.lock.Lock#getSecondsRemaining()} 
      */
     public void testGetSecondsRemaining() throws RepositoryException {
         if (lock.isLive()) {
@@ -189,7 +189,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     /**
-     * Test {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()}
+     * Test {@link javax.jcr.lock.Lock#getSecondsRemaining()}
      */
     public void testGetSecondsRemainingAfterUnlock() throws RepositoryException {
         lockMgr.unlock(lockedNode.getPath());

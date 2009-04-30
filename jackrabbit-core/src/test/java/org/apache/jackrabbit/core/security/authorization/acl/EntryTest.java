@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
 

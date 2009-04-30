@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package javax.jcr;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -42,7 +42,7 @@ public class WorkspaceTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests {@link org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()}.
+     * Tests {@link javax.jcr.Workspace#getLockManager()}.
      * 
      * @throws RepositoryException
      */

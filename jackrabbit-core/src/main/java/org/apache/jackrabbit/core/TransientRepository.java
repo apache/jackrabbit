@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * shut down the repository.
  */
 public class TransientRepository
-        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener {
+        implements javax.jcr.Repository, JackrabbitRepository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.

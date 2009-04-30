@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -101,14 +101,14 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
 
         // TODO: remove casts once jsr 283 is released.        
         String changedNtName = "nt:folder";
-        ((org.apache.jackrabbit.api.jsr283.Node) child).setPrimaryType(changedNtName);
+        ((javax.jcr.Node) child).setPrimaryType(changedNtName);
         child.save();
 
         try {
             checkReadOnly(childNode.getPath());
 
             try {
-                ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
+                ((javax.jcr.Node) childNode).setPrimaryType(ntName);
                 childNode.save();
                 fail("TestSession does not have sufficient privileges to change the primary type.");
             } catch (AccessDeniedException e) {
@@ -122,7 +122,7 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
              */
             modifyPrivileges(childNode.getPath(), Privilege.JCR_NODE_TYPE_MANAGEMENT, true);
             try {
-                ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
+                ((javax.jcr.Node) childNode).setPrimaryType(ntName);
                 childNode.save();
                 fail("TestSession does not have sufficient privileges to change the primary type.");
             } catch (AccessDeniedException e) {
@@ -132,12 +132,12 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
 
             // with complete write permission the call must succeed.
             modifyPrivileges(childNode.getPath(), Privilege.JCR_MODIFY_PROPERTIES, true);
-            ((org.apache.jackrabbit.api.jsr283.Node) childNode).setPrimaryType(ntName);
+            ((javax.jcr.Node) childNode).setPrimaryType(ntName);
             childNode.save();
 
         } finally {
             if (!ntName.equals(child.getPrimaryNodeType().getName())) {
-                ((org.apache.jackrabbit.api.jsr283.Node) child).setPrimaryType(ntName);
+                ((javax.jcr.Node) child).setPrimaryType(ntName);
                 child.save();
             }
         }

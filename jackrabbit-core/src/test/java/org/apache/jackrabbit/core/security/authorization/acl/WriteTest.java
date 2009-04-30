@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -171,7 +171,7 @@ public class WriteTest extends AbstractWriteTest {
            content that requires jcr:modifyAccessControl privilege instead.
          */
         String policyPath = childNPath + "/rep:policy";
-        assertFalse(getTestSession().hasPermission(policyPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(getTestSession().hasPermission(policyPath, javax.jcr.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(policyPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 

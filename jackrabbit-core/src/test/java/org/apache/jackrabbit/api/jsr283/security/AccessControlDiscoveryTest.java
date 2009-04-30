@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package javax.jcr.security;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.spi.Name;

@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AbstractAccessControlTest;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.test.NotExecutableException;
