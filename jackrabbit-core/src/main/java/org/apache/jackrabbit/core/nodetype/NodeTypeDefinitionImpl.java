@@ -113,6 +113,11 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
         return ntd.isMixin();
     }
 
+    public boolean isQueryable() {
+        // TODO 
+        throw new RuntimeException("Not implemented yet, see JCR-1591");
+    }
+
     /**
      * {@inheritDoc}
      */

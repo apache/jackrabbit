@@ -169,6 +169,11 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         return mixin;
     }
 
+    public boolean isQueryable() {
+        // TODO 
+        throw new RuntimeException("Not implemented yet, see JCR-1591");
+    }
+
     /**
      * {@inheritDoc}
      */
