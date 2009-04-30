@@ -85,6 +85,18 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
 	return isMultiple;
     }
 
+    public String[] getAvailableQueryOperators() {
+        throw new UnsupportedOperationException("JCR-2091");
+    }
+
+    public boolean isFullTextSearchable() {
+        throw new UnsupportedOperationException("JCR-2091");
+    }
+
+    public boolean isQueryOrderable() {
+        throw new UnsupportedOperationException("JCR-2091");
+    }
+
     //-------------------------------------< implementation specific method >---
     /**
      * Return xml representation
@@ -135,4 +147,5 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
     String getElementName() {
 	return PROPERTYDEFINITION_ELEMENT;
     }
+
 }
