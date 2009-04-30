@@ -21,6 +21,7 @@ import javax.jcr.nodetype.PropertyDefinitionTemplate;
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 /**
  * A <code>PropertyDefinitionTemplateImpl</code> ...
@@ -83,6 +84,18 @@ class PropertyDefinitionTemplateImpl
         this.multiple = multiple;
     }
 
+    public void setAvailablrQueryOperators(String[] operators) {
+        // ignored, TODO JCR-2091
+    }
+
+    public void setFullTextSearchable(boolean searchable) {
+        // ignored, TODO JCR-2091
+    }
+
+    public void setQueryOrderable(boolean orderable) {
+        // ignored, TODO JCR-2091
+    }
+
     //---------------------------------------------------< PropertyDefinition >
     /**
      * {@inheritDoc}
@@ -110,5 +123,26 @@ class PropertyDefinitionTemplateImpl
      */
     public boolean isMultiple() {
         return multiple;
+    }
+
+    public String[] getAvailableQueryOperators() {
+        // TODO: JCR-2091
+        return new String[] {
+                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
+                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
+        };
+    }
+
+    public boolean isFullTextSearchable() {
+        return true; // TODO: JCR-2091
+    }
+
+    public boolean isQueryOrderable() {
+        return true; // TODO: JCR-2091
     }
 }
