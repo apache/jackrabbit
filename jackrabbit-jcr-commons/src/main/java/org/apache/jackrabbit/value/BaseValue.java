@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.value;
 
+import org.apache.jackrabbit.util.ISO8601;
+
+import javax.jcr.Binary;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.util.Calendar;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-
-import org.apache.jackrabbit.util.ISO8601;
 
 /**
  * This class is the superclass of the type-specific
@@ -212,6 +213,15 @@ public abstract class BaseValue implements Value {
             throw new RepositoryException(DEFAULT_ENCODING
                     + " not supported on this platform", e);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Binary getBinary()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2056");
     }
 
     /**
