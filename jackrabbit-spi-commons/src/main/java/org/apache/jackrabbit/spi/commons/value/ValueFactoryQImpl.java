@@ -198,7 +198,12 @@ public class ValueFactoryQImpl implements ValueFactory {
         throw new RuntimeException("Not implemented yet, see JCR-2056");
     }
 
-    public Value createValue(BigDecimal arg0) {
+    public Value createValue(BigDecimal value) {
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1609");
+    }
+
+    public Value createValue(Node value, boolean weak) throws RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-1609");
     }
