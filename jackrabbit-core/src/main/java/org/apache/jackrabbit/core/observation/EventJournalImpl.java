@@ -178,6 +178,7 @@ public class EventJournalImpl implements EventJournal {
     }
 
     public Calendar getDate() {
+        // TODO
         throw new RuntimeException("Not implemented yet, see JCR-2086");
     }
 
