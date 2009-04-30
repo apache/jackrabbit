@@ -41,7 +41,6 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
@@ -57,6 +56,7 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Literal;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.SameNode;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import java.util.BitSet;
