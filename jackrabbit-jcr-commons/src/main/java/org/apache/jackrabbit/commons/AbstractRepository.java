@@ -16,10 +16,14 @@
  */
 package org.apache.jackrabbit.commons;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
 /**
  * Abstract base class for implementing the JCR {@link Repository} interface.
@@ -29,6 +33,78 @@ import javax.jcr.Session;
  * arguments as specified in the JCR API.
  */
 public abstract class AbstractRepository implements Repository {
+
+    /**
+     * The set of standard descriptor keys defined in the
+     * {@link Repository} interface. 
+     */
+    private static final Set<String> STANDARD_KEYS = new HashSet<String>() {{
+        add(Repository.IDENTIFIER_STABILITY);
+        add(Repository.IDENTIFIER_STABILITY_INDEFINITE_DURATION);
+        add(Repository.IDENTIFIER_STABILITY_METHOD_DURATION);
+        add(Repository.IDENTIFIER_STABILITY_SAVE_DURATION);
+        add(Repository.IDENTIFIER_STABILITY_SESSION_DURATION);
+        add(Repository.LEVEL_1_SUPPORTED);
+        add(Repository.LEVEL_2_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_AUTOCREATED_DEFINITIONS_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE);
+        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_MINIMAL);
+        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_MULTIPLE);
+        add(Repository.NODE_TYPE_MANAGEMENT_INHERITANCE_SINGLE);
+        add(Repository.NODE_TYPE_MANAGEMENT_MULTIPLE_BINARY_PROPERTIES_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_MULTIVALUED_PROPERTIES_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_ORDERABLE_CHILD_NODES_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_OVERRIDES_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_PRIMARY_ITEM_NAME_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_PROPERTY_TYPES);
+        add(Repository.NODE_TYPE_MANAGEMENT_RESIDUAL_DEFINITIONS_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_SAME_NAME_SIBLINGS_SUPPORTED);
+        add(Repository.NODE_TYPE_MANAGEMENT_VALUE_CONSTRAINTS_SUPPORTED);
+        add(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        add(Repository.OPTION_JOURNALED_OBSERVATION_SUPPORTED);
+        add(Repository.OPTION_LIFECYCLE_SUPPORTED);
+        add(Repository.OPTION_LOCKING_SUPPORTED);
+        add(Repository.OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED);
+        add(Repository.OPTION_OBSERVATION_SUPPORTED);
+        add(Repository.OPTION_QUERY_SQL_SUPPORTED);
+        add(Repository.OPTION_RETENTION_SUPPORTED);
+        add(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
+        add(Repository.OPTION_SIMPLE_VERSIONING_SUPPORTED);
+        add(Repository.OPTION_TRANSACTIONS_SUPPORTED);
+        add(Repository.OPTION_UNFILED_CONTENT_SUPPORTED);
+        add(Repository.OPTION_UPDATE_MIXIN_NODE_TYPES_SUPPORTED);
+        add(Repository.OPTION_UPDATE_PRIMARY_NODE_TYPE_SUPPORTED);
+        add(Repository.OPTION_VERSIONING_SUPPORTED);
+        add(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
+        add(Repository.OPTION_XML_EXPORT_SUPPORTED);
+        add(Repository.OPTION_XML_IMPORT_SUPPORTED);
+        add(Repository.QUERY_FULL_TEXT_SEARCH_SUPPORTED);
+        add(Repository.QUERY_JOINS);
+        add(Repository.QUERY_JOINS_INNER);
+        add(Repository.QUERY_JOINS_INNER_OUTER);
+        add(Repository.QUERY_JOINS_NONE);
+        add(Repository.QUERY_LANGUAGES);
+        add(Repository.QUERY_STORED_QUERIES_SUPPORTED);
+        add(Repository.QUERY_XPATH_DOC_ORDER);
+        add(Repository.QUERY_XPATH_POS_INDEX);
+        add(Repository.REP_NAME_DESC);
+        add(Repository.REP_VENDOR_DESC);
+        add(Repository.REP_VENDOR_URL_DESC);
+        add(Repository.SPEC_NAME_DESC);
+        add(Repository.SPEC_VERSION_DESC);
+        add(Repository.WRITE_SUPPORTED);
+    }};
+
+    /**
+     * Returns true if the given key identifies a standard descriptor.
+     *
+     * @param key descriptor key
+     * @return <code>true</code> if the key identifies a standard descriptor,
+     *         <code>false</code> otherwise
+     */
+    public boolean isStandardDescriptor(String key) {
+        return STANDARD_KEYS.contains(key);
+    }
 
     /**
      * Calls {@link Repository#login(Credentials, String)} with
