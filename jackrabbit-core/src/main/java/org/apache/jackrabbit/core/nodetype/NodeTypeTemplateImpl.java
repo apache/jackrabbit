@@ -140,6 +140,10 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         return nodeDefinitionTemplates;
     }
 
+    public void setQueryable(boolean queryable) {
+        // ignored, TODO JCR-2091
+    }
+
     //---------------------------------------------------< NodeTypeDefinition >
     /**
      * {@inheritDoc}
@@ -211,4 +215,5 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
                     new NodeDefinition[nodeDefinitionTemplates.size()]);
         }
     }
+
 }
