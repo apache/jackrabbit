@@ -43,8 +43,6 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Length;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeName;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeLocalName;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 
@@ -54,6 +52,8 @@ import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
+import javax.jcr.query.qom.NodeLocalName;
+import javax.jcr.query.qom.NodeName;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;

@@ -22,6 +22,8 @@ import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
+import javax.jcr.query.qom.NodeLocalName;
+import javax.jcr.query.qom.NodeName;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
