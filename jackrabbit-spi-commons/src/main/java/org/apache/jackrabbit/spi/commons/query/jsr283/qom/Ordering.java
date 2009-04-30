@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.DynamicOperand;
+
 /**
  * Determines the relative order of two node-tuples by evaluating
  * {@link #getOperand operand} for each.

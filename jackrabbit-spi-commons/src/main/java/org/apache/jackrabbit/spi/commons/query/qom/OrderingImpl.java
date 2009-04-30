@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import javax.jcr.query.qom.DynamicOperand;
+
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 
 /**
  * <code>OrderingImpl</code>...

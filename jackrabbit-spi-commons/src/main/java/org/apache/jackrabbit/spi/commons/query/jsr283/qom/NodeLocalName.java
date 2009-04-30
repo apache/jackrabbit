@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.DynamicOperand;
+
 /**
  * Evaluates to a <code>NAME</code> value equal to the local (unprefixed) name
  * of a node.

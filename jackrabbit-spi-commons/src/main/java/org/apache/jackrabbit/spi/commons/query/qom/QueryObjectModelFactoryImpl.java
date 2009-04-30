@@ -37,7 +37,6 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
@@ -54,6 +53,7 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConsta
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.StaticOperand;

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
@@ -39,6 +38,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.StaticOperand;
 

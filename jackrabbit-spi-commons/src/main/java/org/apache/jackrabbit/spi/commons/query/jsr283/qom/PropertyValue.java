@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.DynamicOperand;
+
 /**
  * Evaluates to the value (or values, if multi-valued) of a property.
  * <p/>
