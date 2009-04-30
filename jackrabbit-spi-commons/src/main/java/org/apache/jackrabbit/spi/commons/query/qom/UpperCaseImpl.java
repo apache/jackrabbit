@@ -17,10 +17,9 @@
 package org.apache.jackrabbit.spi.commons.query.qom;
 
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.UpperCase;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.UpperCase;
 
 /**
  * <code>UpperCaseImpl</code>...
