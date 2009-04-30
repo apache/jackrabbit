@@ -22,13 +22,10 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.ChildNode;
 import javax.jcr.query.qom.ChildNodeJoinCondition;
@@ -47,9 +44,12 @@ import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.NodeLocalName;
 import javax.jcr.query.qom.NodeName;
+import javax.jcr.query.qom.Not;
+import javax.jcr.query.qom.Or;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.SameNodeJoinCondition;
