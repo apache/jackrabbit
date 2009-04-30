@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.commons.iterator;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -38,12 +39,28 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
         new EventIteratorAdapter(RangeIteratorAdapter.EMPTY);
 
     /**
+     * Date associated with this iterator.
+     */
+    private final Calendar date;
+
+    /**
+     * Creates an adapter for the given {@link RangeIterator}.
+     *
+     * @param iterator iterator of {@link Event}s
+     */
+    public EventIteratorAdapter(EventIterator iterator) {
+        super(iterator);
+        this.date = iterator.getDate();
+    }
+
+    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link Event}s
      */
     public EventIteratorAdapter(RangeIterator iterator) {
         super(iterator);
+        this.date = null;
     }
 
     /**
@@ -53,6 +70,7 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      */
     public EventIteratorAdapter(Iterator iterator) {
         super(new RangeIteratorAdapter(iterator));
+        this.date = null;
     }
 
     /**
@@ -62,6 +80,7 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      */
     public EventIteratorAdapter(Collection collection) {
         super(new RangeIteratorAdapter(collection));
+        this.date = null;
     }
 
     //-------------------------------------------------------< EventIterator >
@@ -74,6 +93,15 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      */
     public Event nextEvent() throws NoSuchElementException {
         return (Event) next();
+    }
+
+    /**
+     * Returns the date associated with this iterator.
+     *
+     * @return date associated with this iterator, or <code>null</code> 
+     */
+    public Calendar getDate() {
+        return date;
     }
 
 }
