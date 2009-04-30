@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.JoinCondition;
+
 /**
  * Tests whether the value of a property in a first selector is equal to the
  * value of a property in a second selector.

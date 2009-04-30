@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.JoinCondition;
+
 /**
  * Tests whether the {@link #getChildSelectorName childSelector} node is a child
  * of the {@link #getParentSelectorName parentSelector} node.  A node-tuple

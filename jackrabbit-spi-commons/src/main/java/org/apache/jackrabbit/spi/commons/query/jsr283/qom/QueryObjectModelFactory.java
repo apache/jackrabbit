@@ -18,13 +18,24 @@ package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.Join;
+import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.Length;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.NodeLocalName;
 import javax.jcr.query.qom.NodeName;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyExistence;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.SameNode;
+import javax.jcr.query.qom.Selector;
+import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 import javax.jcr.RepositoryException;
@@ -127,9 +138,9 @@ public interface QueryObjectModelFactory extends QueryObjectModelConstants {
      * @param right         the right node-tuple source; non-null
      * @param joinType      either
      *                      <ul>
-     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *                      <li>{@link QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_LEFT_OUTER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
      * @param joinCondition the join condition; non-null
      * @return the join; non-null
@@ -138,7 +149,7 @@ public interface QueryObjectModelFactory extends QueryObjectModelConstants {
      */
     Join join(
             Source left, Source right,
-            int joinType, JoinCondition joinCondition)
+            String joinType, JoinCondition joinCondition)
         throws InvalidQueryException, RepositoryException;
 
     ///
@@ -264,13 +275,13 @@ public interface QueryObjectModelFactory extends QueryObjectModelConstants {
      * @param operand1 the first operand; non-null
      * @param operator the operator; either
      *                 <ul>
-     *                 <li>{@link #OPERATOR_EQUAL_TO},</li>
-     *                 <li>{@link #OPERATOR_NOT_EQUAL_TO},</li>
-     *                 <li>{@link #OPERATOR_LESS_THAN},</li>
-     *                 <li>{@link #OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *                 <li>{@link #OPERATOR_GREATER_THAN},</li>
-     *                 <li>{@link #OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li>
-     *                 <li>{@link #OPERATOR_LIKE}</li>
+     *                 <li>{@link #JCR_OPERATOR_EQUAL_TO},</li>
+     *                 <li>{@link #JCR_OPERATOR_NOT_EQUAL_TO},</li>
+     *                 <li>{@link #JCR_OPERATOR_LESS_THAN},</li>
+     *                 <li>{@link #JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *                 <li>{@link #JCR_OPERATOR_GREATER_THAN},</li>
+     *                 <li>{@link #JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li>
+     *                 <li>{@link #JCR_OPERATOR_LIKE}</li>
      *                 </ul>
      * @param operand2 the second operand; non-null
      * @return the constraint; non-null
@@ -278,7 +289,7 @@ public interface QueryObjectModelFactory extends QueryObjectModelConstants {
      * @throws RepositoryException   if the operation otherwise fails
      */
     Comparison comparison(
-            DynamicOperand operand1, int operator, StaticOperand operand2)
+            DynamicOperand operand1, String operator, StaticOperand operand2)
         throws InvalidQueryException, RepositoryException;
 
     /**

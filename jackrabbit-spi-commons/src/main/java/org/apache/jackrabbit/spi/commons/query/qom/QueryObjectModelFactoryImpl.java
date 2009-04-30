@@ -23,43 +23,44 @@ import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.EquiJoinCondition;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNodeJoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNodeJoinCondition;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Length;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.Join;
+import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.Length;
 import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.NodeLocalName;
 import javax.jcr.query.qom.NodeName;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyExistence;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.SameNode;
+import javax.jcr.query.qom.Selector;
+import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>QueryObjectModelFactoryImpl</code> implements the query object model
@@ -67,27 +68,27 @@ import java.util.BitSet;
  */
 public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
-    private static final BitSet VALID_OPERATORS = new BitSet();
+    private static final Set<String> VALID_OPERATORS = new HashSet<String>();
 
-    private static final BitSet VALID_JOIN_TYPES = new BitSet();
+    private static final Set<String> VALID_JOIN_TYPES = new HashSet<String>();
 
-    private static final BitSet VALID_ORDERS = new BitSet();
+    private static final Set<String> VALID_ORDERS = new HashSet<String>();
 
     static {
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_EQUAL_TO);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_GREATER_THAN);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LESS_THAN);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_LIKE);
-        VALID_OPERATORS.set(QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
+        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
 
-        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_INNER);
-        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_LEFT_OUTER);
-        VALID_JOIN_TYPES.set(QueryObjectModelConstants.JOIN_TYPE_RIGHT_OUTER);
+        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
+        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
+        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
 
-        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_ASCENDING);
-        VALID_ORDERS.set(QueryObjectModelConstants.ORDER_DESCENDING);
+        VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_ASCENDING);
+        VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_DESCENDING);
     }
 
     /**
@@ -235,9 +236,9 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      *
      * @param left          the left node-tuple source; non-null
      * @param right         the right node-tuple source; non-null
-     * @param joinType      either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *                      <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     * @param joinType      either <ul> <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_LEFT_OUTER},</li>
+     *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
      * @param joinCondition the join condition; non-null
      * @return the join; non-null
@@ -247,7 +248,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public Join join(Source left,
                      Source right,
-                     int joinType,
+                     String joinType,
                      JoinCondition joinCondition)
             throws InvalidQueryException, RepositoryException {
         if (!(left instanceof SourceImpl) || !(right instanceof SourceImpl)) {
@@ -256,7 +257,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
         if (!(joinCondition instanceof JoinConditionImpl)) {
             throw new RepositoryException("Unknwon JoinCondition implementation");
         }
-        if (!VALID_JOIN_TYPES.get(joinType)) {
+        if (!VALID_JOIN_TYPES.contains(joinType)) {
             throw new RepositoryException("Invalid joinType");
         }
         return new JoinImpl(resolver, (SourceImpl) left, (SourceImpl) right,
@@ -443,12 +444,12 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      * Filters node-tuples based on the outcome of a binary operation.
      *
      * @param operand1 the first operand; non-null
-     * @param operator the operator; either <ul> <li>{@link #OPERATOR_EQUAL_TO},</li>
-     *                 <li>{@link #OPERATOR_NOT_EQUAL_TO},</li> <li>{@link
-     *                 #OPERATOR_LESS_THAN},</li> <li>{@link #OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *                 <li>{@link #OPERATOR_GREATER_THAN},</li> <li>{@link
-     *                 #OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li> <li>{@link
-     *                 #OPERATOR_LIKE}</li> </ul>
+     * @param operator the operator; either <ul> <li>{@link #JCR_OPERATOR_EQUAL_TO},</li>
+     *                 <li>{@link #JCR_OPERATOR_NOT_EQUAL_TO},</li> <li>{@link
+     *                 #JCR_OPERATOR_LESS_THAN},</li> <li>{@link #JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *                 <li>{@link #JCR_OPERATOR_GREATER_THAN},</li> <li>{@link
+     *                 #JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li> <li>{@link
+     *                 #JCR_OPERATOR_LIKE}</li> </ul>
      * @param operand2 the second operand; non-null
      * @return the constraint; non-null
      * @throws javax.jcr.query.InvalidQueryException
@@ -456,14 +457,14 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      * @throws javax.jcr.RepositoryException if the operation otherwise fails
      */
     public Comparison comparison(DynamicOperand operand1,
-                                 int operator,
+                                 String operator,
                                  StaticOperand operand2)
             throws InvalidQueryException, RepositoryException {
         if (operand1 == null || operand2 == null) {
             // TODO: correct exception?
             throw new RepositoryException("operands must not be null");
         }
-        if (!VALID_OPERATORS.get(operator)) {
+        if (!VALID_OPERATORS.contains(operator)) {
             // TODO: correct exception?
             throw new RepositoryException("invalid operator");
         }
@@ -900,7 +901,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
             throw new RepositoryException("Unknown DynamicOperand implementation");
         }
         return new OrderingImpl(resolver, (DynamicOperandImpl) operand,
-                QueryObjectModelConstants.ORDER_ASCENDING);
+                QueryObjectModelConstants.JCR_ORDER_ASCENDING);
     }
 
     /**
@@ -918,7 +919,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
             throw new RepositoryException("Unknown DynamicOperand implementation");
         }
         return new OrderingImpl(resolver, (DynamicOperandImpl) operand,
-                QueryObjectModelConstants.ORDER_DESCENDING);
+                QueryObjectModelConstants.JCR_ORDER_DESCENDING);
     }
 
     /**

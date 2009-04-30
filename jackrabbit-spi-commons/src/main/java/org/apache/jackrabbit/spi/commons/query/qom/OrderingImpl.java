@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.spi.commons.query.qom;
 
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
 
 /**
  * <code>OrderingImpl</code>...
@@ -40,11 +40,11 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * The order.
      */
-    private final int order;
+    private final String order;
 
     OrderingImpl(NamePathResolver resolver,
                  DynamicOperandImpl operand,
-                 int order) {
+                 String order) {
         super(resolver);
         this.operand = operand;
         this.order = order;
@@ -62,11 +62,11 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * Gets the order.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_ASCENDING}
-     *         or</li> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#ORDER_DESCENDING}</li>
+     * @return either <ul> <li>{@link QueryObjectModelConstants#JCR_ORDER_ASCENDING}
+     *         or</li> <li>{@link QueryObjectModelConstants#JCR_ORDER_DESCENDING}</li>
      *         </ul>
      */
-    public int getOrder() {
+    public String getOrder() {
         return order;
     }
 
