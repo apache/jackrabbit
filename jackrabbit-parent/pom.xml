@@ -94,18 +94,6 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Interoperate with Maven 1 -->
-      <plugin>
-        <artifactId>maven-one-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>install-maven-one-repository</goal>
-            </goals>
-            <phase>install</phase>
-          </execution>
-        </executions>
-      </plugin>
       <!-- Generate aggregate Javadocs -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
