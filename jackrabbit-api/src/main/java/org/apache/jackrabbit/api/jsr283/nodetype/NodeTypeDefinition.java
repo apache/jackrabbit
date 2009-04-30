@@ -111,6 +111,23 @@ public interface NodeTypeDefinition {
     boolean hasOrderableChildNodes();
 
     /**
+     * Returns <code>true</code> if the node type is queryable, meaning that the
+     * available-query-operators, full-text-searchable and query-orderable
+     * attributes of its property definitions take effect. See {@link
+     * javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators()},
+     * {@link javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable()} and
+     * {@link javax.jcr.nodetype.PropertyDefinition#isQueryOrderable()}.
+     * <p/>
+     * If a node type is declared non-queryable then these attributes of its
+     * property definitions have no effect.
+     *
+     * @return a <code>boolean</code>
+     *
+     * @since JCR 2.0
+     */
+    public boolean isQueryable();
+    
+    /**
      * Returns the name of the primary item (one of the child items of the nodes
      * of this node type). If this node has no primary item, then this method
      * returns <code>null</code>. This indicator is used by the method
