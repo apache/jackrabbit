@@ -206,7 +206,8 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         QueryParser parser = new JackrabbitQueryParser(
                 fieldname, analyzer, synonymProvider);
         try {
-            return parser.parse(fts.getFullTextSearchExpression());
+            // TODO: JCR-2093 How to handle the StaticOperand below?
+            return parser.parse(fts.getFullTextSearchExpression().toString());
         } catch (ParseException e) {
             throw new RepositoryException(e);
         }
