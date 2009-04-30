@@ -53,32 +53,32 @@ public class NodeLocalNameTest extends AbstractQOMTest {
 
     public void testStringLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(nodeLocalName);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testStringLiteralInvalidName() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue("[" + nodeLocalName);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
     public void testBinaryLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.BINARY);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testDateLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Calendar.getInstance());
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
     public void testDoubleLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Math.PI);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
@@ -88,37 +88,37 @@ public class NodeLocalNameTest extends AbstractQOMTest {
 
     public void testLongLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(283);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
     public void testBooleanLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(true);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
     public void testNameLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.NAME);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testPathLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.PATH);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
 
         literal = superuser.getValueFactory().createValue(
                 node1.getPath(), PropertyType.PATH);
-        q = createQuery(OPERATOR_EQUAL_TO, literal);
+        q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
 
         literal = superuser.getValueFactory().createValue(
                 nodeName1 + "/" + nodeName1, PropertyType.PATH);
-        q = createQuery(OPERATOR_EQUAL_TO, literal);
+        q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
@@ -128,7 +128,7 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         }
         node1.save();
         Value literal = superuser.getValueFactory().createValue(node1);
-        Query q = createQuery(OPERATOR_EQUAL_TO, literal);
+        Query q = createQuery(JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
@@ -141,36 +141,36 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     }
 
     public void testEqualTo() throws RepositoryException {
-        checkOperator(OPERATOR_EQUAL_TO, false, true, false);
+        checkOperator(JCR_OPERATOR_EQUAL_TO, false, true, false);
     }
 
     public void testGreaterThan() throws RepositoryException {
-        checkOperator(OPERATOR_GREATER_THAN, true, false, false);
+        checkOperator(JCR_OPERATOR_GREATER_THAN, true, false, false);
     }
 
     public void testGreaterThanOrEqualTo() throws RepositoryException {
-        checkOperator(OPERATOR_GREATER_THAN_OR_EQUAL_TO, true, true, false);
+        checkOperator(JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO, true, true, false);
     }
 
     public void testLessThan() throws RepositoryException {
-        checkOperator(OPERATOR_LESS_THAN, false, false, true);
+        checkOperator(JCR_OPERATOR_LESS_THAN, false, false, true);
     }
 
     public void testLessThanOrEqualTo() throws RepositoryException {
-        checkOperator(OPERATOR_LESS_THAN_OR_EQUAL_TO, false, true, true);
+        checkOperator(JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO, false, true, true);
     }
 
     public void testLike() throws RepositoryException {
-        checkOperator(OPERATOR_LIKE, false, true, false);
+        checkOperator(JCR_OPERATOR_LIKE, false, true, false);
     }
 
     public void testNotEqualTo() throws RepositoryException {
-        checkOperator(OPERATOR_NOT_EQUAL_TO, true, false, true);
+        checkOperator(JCR_OPERATOR_NOT_EQUAL_TO, true, false, true);
     }
 
     //------------------------------< helper >----------------------------------
 
-    private void checkOperator(int operator,
+    private void checkOperator(String operator,
                                boolean matchesLesser,
                                boolean matchesEqual,
                                boolean matchesGreater)
@@ -181,7 +181,7 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     }
 
     private void checkOperatorSingleLiteral(String literal,
-                                            int operator,
+                                            String operator,
                                             boolean matches)
             throws RepositoryException {
         Value value = superuser.getValueFactory().createValue(literal);
@@ -201,7 +201,8 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         return tmp.toString();
     }
 
-    private Query createQuery(int operator, Value literal) throws RepositoryException {
+    private Query createQuery(String operator, Value literal)
+            throws RepositoryException {
         return qomFactory.createQuery(
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(

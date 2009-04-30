@@ -16,13 +16,12 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import javax.jcr.query.QueryResult;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>AbstractJoinTest</code> provides utility methods for join related
@@ -52,20 +51,20 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         checkResult(result, SELECTOR_NAMES, nodes);
     }
 
-    protected QueryObjectModel createQuery(int joinType,
+    protected QueryObjectModel createQuery(String joinType,
                                            JoinCondition condition)
             throws RepositoryException {
         return createQuery(joinType, condition, null, null);
     }
 
-    protected QueryObjectModel createQuery(int joinType,
+    protected QueryObjectModel createQuery(String joinType,
                                            JoinCondition condition,
                                            Constraint left,
                                            Constraint right)
             throws RepositoryException {
         // only consider nodes under test root
         Constraint constraint;
-        if (joinType == JOIN_TYPE_LEFT_OUTER) {
+        if (JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
             constraint = qomFactory.descendantNode(LEFT, testRoot);
         } else {
             constraint = qomFactory.descendantNode(RIGHT, testRoot);

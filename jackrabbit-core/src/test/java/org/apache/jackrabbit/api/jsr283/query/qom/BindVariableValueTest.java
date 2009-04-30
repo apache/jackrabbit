@@ -51,7 +51,7 @@ public class BindVariableValueTest extends AbstractQOMTest {
                         qomFactory.childNode("s", testRoot),
                         qomFactory.comparison(
                                 qomFactory.propertyValue(propertyName1),
-                                OPERATOR_EQUAL_TO,
+                                JCR_OPERATOR_EQUAL_TO,
                                 qomFactory.bindVariable("v")
                         )
                 ), null, null);

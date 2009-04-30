@@ -130,7 +130,7 @@ public class LengthTest extends AbstractQOMTest {
         node.save();
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
-        executeQuery(propertyName1, OPERATOR_EQUAL_TO, vf.createValue(length));
+        executeQuery(propertyName1, JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     public void testLengthBinaryLiteral() throws RepositoryException {
@@ -139,7 +139,7 @@ public class LengthTest extends AbstractQOMTest {
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
         InputStream in = new ByteArrayInputStream(length.getBytes());
-        executeQuery(propertyName1, OPERATOR_EQUAL_TO, vf.createValue(in));
+        executeQuery(propertyName1, JCR_OPERATOR_EQUAL_TO, vf.createValue(in));
     }
 
     public void testLengthDoubleLiteral() throws RepositoryException {
@@ -147,7 +147,7 @@ public class LengthTest extends AbstractQOMTest {
         node.save();
 
         double length = node.getProperty(propertyName1).getLength();
-        executeQuery(propertyName1, OPERATOR_EQUAL_TO, vf.createValue(length));
+        executeQuery(propertyName1, JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     public void testLengthDateLiteral() throws RepositoryException {
