@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.retention;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.jsr283.retention.Hold;
-import org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy;
+import javax.jcr.retention.Hold;
+import javax.jcr.retention.RetentionPolicy;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;

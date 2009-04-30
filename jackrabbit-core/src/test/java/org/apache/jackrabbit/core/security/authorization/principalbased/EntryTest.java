@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;

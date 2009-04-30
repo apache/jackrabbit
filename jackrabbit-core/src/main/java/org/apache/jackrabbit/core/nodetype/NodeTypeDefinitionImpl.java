@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;

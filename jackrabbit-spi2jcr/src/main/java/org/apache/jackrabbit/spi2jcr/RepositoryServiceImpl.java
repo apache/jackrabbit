@@ -580,8 +580,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 Node n = getNode(nodeId, sInfo);
                 Lock lock;
                 // TODO: remove check once jsr283 is released
-                if (sInfo.getSession() instanceof org.apache.jackrabbit.api.jsr283.Session) {
-                    org.apache.jackrabbit.api.jsr283.lock.LockManager lMgr = (((org.apache.jackrabbit.api.jsr283.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
+                if (sInfo.getSession() instanceof javax.jcr.Session) {
+                    javax.jcr.lock.LockManager lMgr = (((javax.jcr.Workspace) sInfo.getSession().getWorkspace()).getLockManager());
                     lock = lMgr.lock(n.getPath(), deep, sessionScoped, timeoutHint, ownerHint);
                 } else {
                     lock = n.lock(deep, sessionScoped);

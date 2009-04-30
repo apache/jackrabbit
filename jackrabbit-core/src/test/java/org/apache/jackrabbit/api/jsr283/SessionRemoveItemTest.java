@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package javax.jcr;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +48,14 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
         if (superuser instanceof Session) {
             adminSession = (Session) superuser;
         } else {
-            throw new NotExecutableException("org.apache.jackrabbit.api.jsr283.Session expected.");
+            throw new NotExecutableException("javax.jcr.Session expected.");
         }
 
         javax.jcr.Session s = helper.getReadOnlySession();
         if (s instanceof Session) {
             readOnlySession = (Session) s;
         } else {
-            throw new NotExecutableException("org.apache.jackrabbit.api.jsr283.Session expected.");
+            throw new NotExecutableException("javax.jcr.Session expected.");
         }
 
         removeNode = testRootNode.addNode(nodeName1, testNodeType);

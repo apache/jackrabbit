@@ -636,8 +636,8 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             String itemPath = member.getLocator().getRepositoryPath();
             Item memItem = getJcrSession().getItem(itemPath);
             //TODO once jcr2 is out: simply call removeShare()
-            if (memItem instanceof org.apache.jackrabbit.api.jsr283.Node) {
-                org.apache.jackrabbit.api.jsr283.Node n = (org.apache.jackrabbit.api.jsr283.Node) memItem;
+            if (memItem instanceof javax.jcr.Node) {
+                javax.jcr.Node n = (javax.jcr.Node) memItem;
                 n.removeShare();
             } else {
                 memItem.remove();
@@ -938,13 +938,13 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         try {
             if (node.getDepth() > 0) {
                 //TODO remove this check once jcr2 is out
-                if (!(node instanceof org.apache.jackrabbit.api.jsr283.Node)) {
+                if (!(node instanceof javax.jcr.Node)) {
                     DavResourceLocator loc = locator.getFactory().createResourceLocator(
                             locator.getPrefix(), locator.getWorkspacePath(), node.getParent().getPath(), false);
                     return Collections.singleton(new ParentElement(loc.getHref(true), node.getName()));
                 }
                 Set ps = new HashSet();
-                NodeIterator sharedSetIterator = ((org.apache.jackrabbit.api.jsr283.Node) node).getSharedSet();
+                NodeIterator sharedSetIterator = ((javax.jcr.Node) node).getSharedSet();
                 while (sharedSetIterator.hasNext()) {
                     Node sharednode = sharedSetIterator.nextNode();
                     DavResourceLocator loc = locator.getFactory().createResourceLocator(

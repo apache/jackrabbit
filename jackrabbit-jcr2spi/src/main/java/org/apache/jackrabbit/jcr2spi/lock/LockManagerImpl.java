@@ -54,7 +54,7 @@ import java.util.Date;
  * <code>LockManagerImpl</code>...
  * TODO: TOBEFIXED. Lock objects obtained through this mgr are not informed if another session is or becomes lock-holder and removes the lock again.
  */
-public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.jsr283.lock.LockManager, SessionListener {
+public class LockManagerImpl implements LockManager, javax.jcr.lock.LockManager, SessionListener {
 
     private static Logger log = LoggerFactory.getLogger(LockManagerImpl.class);
 
@@ -93,15 +93,15 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
 
     //--------------------------------------------------------< LockManager >---
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLock(String)
+     * @see javax.jcr.lock.LockManager#getLock(String)
      */
-    public org.apache.jackrabbit.api.jsr283.lock.Lock getLock(String absPath) throws LockException, RepositoryException {
+    public javax.jcr.lock.Lock getLock(String absPath) throws LockException, RepositoryException {
         Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return (org.apache.jackrabbit.api.jsr283.lock.Lock) n.getLock();
+        return (javax.jcr.lock.Lock) n.getLock();
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#isLocked(String)
+     * @see javax.jcr.lock.LockManager#isLocked(String)
      */
     public boolean isLocked(String absPath) throws RepositoryException {
         Node n = itemManager.getNode(resolver.getQPath(absPath));
@@ -109,7 +109,7 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#holdsLock(String)
+     * @see javax.jcr.lock.LockManager#holdsLock(String)
      */
     public boolean holdsLock(String absPath) throws RepositoryException {
         Node n = itemManager.getNode(resolver.getQPath(absPath));
@@ -117,15 +117,15 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
      */
-    public org.apache.jackrabbit.api.jsr283.lock.Lock lock(String absPath, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo) throws RepositoryException {
+    public javax.jcr.lock.Lock lock(String absPath, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo) throws RepositoryException {
         Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return (org.apache.jackrabbit.api.jsr283.lock.Lock) ((NodeImpl) n).lock(isDeep, isSessionScoped, timeoutHint, ownerInfo);
+        return (javax.jcr.lock.Lock) ((NodeImpl) n).lock(isDeep, isSessionScoped, timeoutHint, ownerInfo);
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#unlock(String) 
+     * @see javax.jcr.lock.LockManager#unlock(String) 
      */
     public void unlock(String absPath) throws LockException, RepositoryException {
         Node n = itemManager.getNode(resolver.getQPath(absPath));
@@ -702,7 +702,7 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
     /**
      * Inner class implementing the {@link Lock} interface.
      */
-    private class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock, LockTokenListener {
+    private class LockImpl implements javax.jcr.lock.Lock, LockTokenListener {
 
         private final LockState lockState;
         private final Node node;
@@ -806,7 +806,7 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
         }
 
         /**
-         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
+         * @see javax.jcr.lock.Lock#getSecondsRemaining()
          */
         public long getSecondsRemaining() throws RepositoryException {
             updateLockInfo();
@@ -814,7 +814,7 @@ public class LockManagerImpl implements LockManager, org.apache.jackrabbit.api.j
         }
 
         /**
-         * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
+         * @see javax.jcr.lock.Lock#isLockOwningSession()
          */
         public boolean isLockOwningSession(){
             return lockState.lockInfo.isLockOwner();

@@ -16,10 +16,10 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+import javax.jcr.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;

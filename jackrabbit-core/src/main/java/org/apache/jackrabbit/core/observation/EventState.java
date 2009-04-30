@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.api.jsr283.observation.Event;
+import javax.jcr.observation.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

@@ -21,7 +21,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionIterator;
 
-import org.apache.jackrabbit.api.jsr283.version.Version;
+import javax.jcr.version.Version;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 /**

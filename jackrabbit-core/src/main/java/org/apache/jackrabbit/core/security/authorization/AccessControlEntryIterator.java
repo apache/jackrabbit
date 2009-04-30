@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlEntry;
 
 import javax.jcr.RepositoryException;
 import java.util.Iterator;

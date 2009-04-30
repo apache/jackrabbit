@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlList;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -51,7 +51,7 @@ import java.util.Set;
  * Implementation of the {@link JackrabbitAccessControlList} interface that
  * is detached from the effective access control content. Consequently, any
  * modifications applied to this ACL only take effect, if the policy gets
- * {@link org.apache.jackrabbit.api.jsr283.security.AccessControlManager#setPolicy(String, org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy) reapplied}
+ * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
  * to the <code>AccessControlManager</code> and the changes are saved.
  */
 class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants {

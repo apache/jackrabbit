@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
 

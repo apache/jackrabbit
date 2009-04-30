@@ -23,7 +23,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.jsr283.retention.Hold;
+import javax.jcr.retention.Hold;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
@@ -81,14 +81,14 @@ class HoldImpl implements Hold {
 
     //-----------------------------------------------------------< Hold >---
     /**
-     * @see org.apache.jackrabbit.api.jsr283.retention.Hold#isDeep()
+     * @see javax.jcr.retention.Hold#isDeep()
      */
     public boolean isDeep() throws RepositoryException {
         return isDeep;
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.retention.Hold#getName()
+     * @see javax.jcr.retention.Hold#getName()
      */
     public String getName() throws RepositoryException {
         return resolver.getJCRName(name);

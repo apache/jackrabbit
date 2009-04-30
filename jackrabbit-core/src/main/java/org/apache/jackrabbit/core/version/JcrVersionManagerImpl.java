@@ -30,20 +30,20 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemValidator;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.api.jsr283.version.Version;
-import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 /**
- * Implementation of the {@link org.apache.jackrabbit.api.jsr283.version.VersionManager}.
+ * Implementation of the {@link javax.jcr.version.VersionManager}.
  * <p/>
  * Note: For a cleaner architecture, we should probably rename the existing classes
  * that implement the internal version manager, and name this VersionManagerImpl.
  */
-public class JcrVersionManagerImpl implements org.apache.jackrabbit.api.jsr283.version.VersionManager {
+public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
 
     /**
      * default logger

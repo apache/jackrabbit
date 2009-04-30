@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.observation;
+package javax.jcr.observation;
 
 import java.util.Map;
 import java.util.Arrays;
@@ -36,9 +36,9 @@ public abstract class AbstractObservationTest
     /**
      * TODO: remove when JSR 283 is final
      */
-    protected static final int NODE_MOVED = org.apache.jackrabbit.api.jsr283.observation.Event.NODE_MOVED;
+    protected static final int NODE_MOVED = javax.jcr.observation.Event.NODE_MOVED;
 
-    protected static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED | org.apache.jackrabbit.api.jsr283.observation.Event.NODE_MOVED;
+    protected static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED | javax.jcr.observation.Event.NODE_MOVED;
 
     protected void setUserData(String userData) throws RepositoryException {
         // TODO: remove when JCR 2.0 is final
@@ -47,27 +47,27 @@ public abstract class AbstractObservationTest
 
     protected static String getUserData(Event e) throws RepositoryException {
         // TODO: remove when JCR 2.0 is final
-        return ((org.apache.jackrabbit.api.jsr283.observation.Event) e).getUserData();
+        return ((javax.jcr.observation.Event) e).getUserData();
     }
 
     protected String getIdentifier(Node node) throws RepositoryException {
         // TODO: remove when JSR 283 is final
-        return ((org.apache.jackrabbit.api.jsr283.Node) node).getIdentifier();
+        return ((javax.jcr.Node) node).getIdentifier();
     }
 
     protected String getIdentifier(Event event) throws RepositoryException {
         // TODO: remove when JSR 283 is final
-        return ((org.apache.jackrabbit.api.jsr283.observation.Event) event).getIdentifier();
+        return ((javax.jcr.observation.Event) event).getIdentifier();
     }
 
     protected Map getInfo(Event event) throws RepositoryException {
         // TODO: remove when JSR 283 is final
-        return ((org.apache.jackrabbit.api.jsr283.observation.Event) event).getInfo();
+        return ((javax.jcr.observation.Event) event).getInfo();
     }
 
     protected long getDate(Event event) throws RepositoryException {
         // TODO: remove when JSR 283 is final
-        return ((org.apache.jackrabbit.api.jsr283.observation.Event) event).getDate();
+        return ((javax.jcr.observation.Event) event).getDate();
     }
 
     /**

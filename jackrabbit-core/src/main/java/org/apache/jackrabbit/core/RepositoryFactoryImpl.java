@@ -23,7 +23,7 @@ import java.io.IOException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.api.jsr283.RepositoryFactory;
+import javax.jcr.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 
 /**

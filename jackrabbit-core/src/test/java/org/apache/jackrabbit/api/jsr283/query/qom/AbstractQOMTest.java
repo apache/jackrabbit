@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.query.qom;
+package javax.jcr.query.qom;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactor
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.query.QueryImpl;
-import org.apache.jackrabbit.api.jsr283.query.Row;
+import javax.jcr.query.Row;
 
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;

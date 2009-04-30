@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;

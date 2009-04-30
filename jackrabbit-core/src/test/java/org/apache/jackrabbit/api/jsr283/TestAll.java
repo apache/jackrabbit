@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package javax.jcr;
 
 import junit.framework.TestCase;
 import junit.framework.Test;
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class TestAll extends TestCase {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283 tests");
+        TestSuite suite = new TestSuite("javax.jcr tests");
 
         suite.addTestSuite(RepositoryFactoryTest.class);
         suite.addTestSuite(SessionRemoveItemTest.class);

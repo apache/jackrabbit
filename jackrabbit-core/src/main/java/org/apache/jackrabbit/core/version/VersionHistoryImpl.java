@@ -24,8 +24,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.api.jsr283.version.VersionHistory;
-import org.apache.jackrabbit.api.jsr283.version.Version;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

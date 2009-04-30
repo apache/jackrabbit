@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
@@ -130,7 +130,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
          - nodebased wins over principalbased -> READ is denied
          */
         assertFalse(testSession.itemExists(path));
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_READ));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_READ));
         assertFalse(testAcMgr.hasPrivileges(path, readPrivs));
 
         // remove the nodebased policy
@@ -143,7 +143,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
          - READ privilege is present again.
          */
         assertTrue(testSession.itemExists(path));
-        assertTrue(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_READ));
+        assertTrue(testSession.hasPermission(path, javax.jcr.Session.ACTION_READ));
         assertTrue(testAcMgr.hasPrivileges(path, readPrivs));
 
         // nodebased: add WRITE privilege for 'testUser' at 'path'
@@ -156,7 +156,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
          expected result:
          - MODIFY_PROPERTIES privilege still present
          */
-        assertTrue(testSession.hasPermission(path+"/anyproperty", org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY));
+        assertTrue(testSession.hasPermission(path+"/anyproperty", javax.jcr.Session.ACTION_SET_PROPERTY));
         assertTrue(testAcMgr.hasPrivileges(path, wrtPrivileges));
 
         // nodebased: deny MODIFY_PROPERTIES privileges for 'testUser'
@@ -167,10 +167,10 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
          - MODIFY_PROPERTIES privilege still present at 'path'
          - no-MODIFY_PROPERTIES privilege at 'childNPath'
          */
-        assertTrue(testSession.hasPermission(path+"/anyproperty", org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY));
+        assertTrue(testSession.hasPermission(path+"/anyproperty", javax.jcr.Session.ACTION_SET_PROPERTY));
         assertTrue(testAcMgr.hasPrivileges(path, modPropPrivs));
 
-        assertFalse(testSession.hasPermission(childNPath+"/anyproperty", org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY));
+        assertFalse(testSession.hasPermission(childNPath+"/anyproperty", javax.jcr.Session.ACTION_SET_PROPERTY));
         assertFalse(testAcMgr.hasPrivileges(childNPath, modPropPrivs));
     }
 }

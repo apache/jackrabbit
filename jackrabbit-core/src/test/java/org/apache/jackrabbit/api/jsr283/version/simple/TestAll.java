@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package javax.jcr.version.simple;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class TestAll extends TestCase {
     private static Logger log = LoggerFactory.getLogger(TestAll.class);
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.api.jsr283.version.simple tests");
+        TestSuite suite = new TestSuite("javax.jcr.version.simple tests");
 
         suite.addTestSuite(BasicTest.class);
         suite.addTestSuite(CheckinTest.class);

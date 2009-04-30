@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlPolicy;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
 import org.slf4j.Logger;

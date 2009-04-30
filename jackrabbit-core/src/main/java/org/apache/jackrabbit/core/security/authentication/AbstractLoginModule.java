@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.commons.collections.set.ListOrderedSet;
-import org.apache.jackrabbit.api.jsr283.GuestCredentials;
+import javax.jcr.GuestCredentials;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;

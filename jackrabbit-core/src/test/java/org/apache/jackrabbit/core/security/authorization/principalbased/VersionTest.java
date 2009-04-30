@@ -20,8 +20,8 @@ import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControl
 import org.apache.jackrabbit.core.security.authorization.AbstractVersionManagementTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.Privilege;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package javax.jcr.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class SessionScopedLockTest extends AbstractLockTest {
     }
 
     /**
-     * {@link org.apache.jackrabbit.api.jsr283.lock.Lock#getLockToken()} must
+     * {@link javax.jcr.lock.Lock#getLockToken()} must
      * always return <code>null</code> for session scoped locks.
      */
     public void testGetLockToken() {

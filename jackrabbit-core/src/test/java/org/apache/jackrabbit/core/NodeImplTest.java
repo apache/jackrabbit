@@ -20,10 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 
 import javax.jcr.Node;

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlEntry;
+import javax.jcr.security.AccessControlEntry;
 
 import javax.jcr.Value;
 

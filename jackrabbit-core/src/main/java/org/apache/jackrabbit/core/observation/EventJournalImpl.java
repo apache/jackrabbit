@@ -31,7 +31,7 @@ import java.text.DateFormat;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import org.apache.jackrabbit.api.jsr283.observation.EventJournal;
+import javax.jcr.observation.EventJournal;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.core.journal.JournalException;

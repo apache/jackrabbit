@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.retention;
+package javax.jcr.retention;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -68,10 +68,10 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
         }
     }
 
-    protected static org.apache.jackrabbit.api.jsr283.Session getJsr283Session(Session s) throws NotExecutableException {
+    protected static javax.jcr.Session getJsr283Session(Session s) throws NotExecutableException {
         // TODO: get rid of method once jsr 283 is released
-        if (s instanceof org.apache.jackrabbit.api.jsr283.Session) {
-            return (org.apache.jackrabbit.api.jsr283.Session) s;
+        if (s instanceof javax.jcr.Session) {
+            return (javax.jcr.Session) s;
         } else {
             throw new NotExecutableException();
         }

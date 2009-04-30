@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.nodetype;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.api.jsr283.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.value.ValueHelper;
@@ -43,7 +43,7 @@ import java.util.HashSet;
 /**
  * A <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType, org.apache.jackrabbit.api.jsr283.nodetype.NodeType, NodeTypeDefinition {
+public class NodeTypeImpl implements NodeType, javax.jcr.nodetype.NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 

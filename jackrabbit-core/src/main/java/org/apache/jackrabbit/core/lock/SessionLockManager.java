@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.api.jsr283.lock.Lock;
+import javax.jcr.lock.Lock;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemValidator;
@@ -35,15 +35,15 @@ import java.util.Set;
 
 /**
  * <code>SessionLockManager</code> implements the
- * {@link org.apache.jackrabbit.api.jsr283.lock.LockManager}. In contrast
+ * {@link javax.jcr.lock.LockManager}. In contrast
  * to the internal {@link LockManager} interface that is created once
  * for each <code>WorkspaceInfo</code>, the JSR 283 <code>LockManager</code>
  * is associated with a single <code>Session</code> and its
  * <code>Workspace</code>.
  *
- * @see org.apache.jackrabbit.api.jsr283.Workspace#getLockManager()
+ * @see javax.jcr.Workspace#getLockManager()
  */
-public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock.LockManager {
+public class SessionLockManager implements javax.jcr.lock.LockManager {
 
     private static Logger log = LoggerFactory.getLogger(SessionLockManager.class);
 
@@ -57,7 +57,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLockTokens()
+     * @see javax.jcr.lock.LockManager#getLockTokens()
      */
     public String[] getLockTokens() throws RepositoryException {
         synchronized (lockTokens) {
@@ -68,7 +68,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#addLockToken(String)
+     * @see javax.jcr.lock.LockManager#addLockToken(String)
      */
     public void addLockToken(String lockToken) throws LockException, RepositoryException {
         if (!lockTokens.contains(lockToken)) {
@@ -79,7 +79,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#removeLockToken(String)
+     * @see javax.jcr.lock.LockManager#removeLockToken(String)
      */
     public void removeLockToken(String lockToken) throws LockException, RepositoryException {
         if (lockTokens.contains(lockToken)) {
@@ -90,7 +90,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#isLocked(String)
+     * @see javax.jcr.lock.LockManager#isLocked(String)
      */
     public boolean isLocked(String absPath) throws RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
@@ -110,7 +110,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#getLock(String)
+     * @see javax.jcr.lock.LockManager#getLock(String)
      */
     public Lock getLock(String absPath) throws
             UnsupportedRepositoryOperationException, LockException,
@@ -132,7 +132,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#holdsLock(String)
+     * @see javax.jcr.lock.LockManager#holdsLock(String)
      */
     public boolean holdsLock(String absPath) throws RepositoryException {
         NodeImpl node = (NodeImpl) session.getNode(absPath);
@@ -146,7 +146,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#lock(String, boolean, boolean, long, String)
+     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
      */
     public Lock lock(String absPath, boolean isDeep, boolean isSessionScoped,
                      long timeoutHint, String ownerInfo) throws RepositoryException {
@@ -162,7 +162,7 @@ public class SessionLockManager implements org.apache.jackrabbit.api.jsr283.lock
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.LockManager#unlock(String)
+     * @see javax.jcr.lock.LockManager#unlock(String)
      */
     public void unlock(String absPath) throws
             UnsupportedRepositoryOperationException, LockException,

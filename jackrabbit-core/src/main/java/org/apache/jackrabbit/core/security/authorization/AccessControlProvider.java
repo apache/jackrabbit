@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicy;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.ItemNotFoundException;
@@ -81,7 +81,7 @@ public interface AccessControlProvider {
      * @throws ItemNotFoundException If no Node with the specified
      * <code>absPath</code> exists.
      * @throws RepositoryException If another error occurs.
-     * @see org.apache.jackrabbit.api.jsr283.security.AccessControlManager#getEffectivePolicies(String)
+     * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
      */
     AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException;
 

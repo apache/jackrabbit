@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package javax.jcr.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

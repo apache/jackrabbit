@@ -28,7 +28,7 @@ import javax.jcr.lock.LockException;
  * Implementation of a <code>Lock</code> that gets returned to clients asking
  * for a lock.
  */
-class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
+class LockImpl implements javax.jcr.lock.Lock {
 
     /**
      * Lock info containing latest information
@@ -127,14 +127,14 @@ class LockImpl implements org.apache.jackrabbit.api.jsr283.lock.Lock {
     //--------------------------------------------------< new JSR 283 methods >
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#getSecondsRemaining()
+     * @see javax.jcr.lock.Lock#getSecondsRemaining()
      */
     public long getSecondsRemaining() {
         return info.getSecondsRemaining();
     }
 
     /**
-     * @see org.apache.jackrabbit.api.jsr283.lock.Lock#isLockOwningSession()
+     * @see javax.jcr.lock.Lock#isLockOwningSession()
      */
     public boolean isLockOwningSession() {
         try {

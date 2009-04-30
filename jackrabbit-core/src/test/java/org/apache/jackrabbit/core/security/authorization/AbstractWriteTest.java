@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -405,9 +405,9 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - add-node
          - remove.
          */
-        String aActions = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY + "," + org.apache.jackrabbit.api.jsr283.Session.ACTION_READ;
+        String aActions = javax.jcr.Session.ACTION_SET_PROPERTY + "," + javax.jcr.Session.ACTION_READ;
         assertTrue(testSession.hasPermission(childNPath, aActions));
-        String dActions = org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE + "," + org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE;
+        String dActions = javax.jcr.Session.ACTION_REMOVE + "," + javax.jcr.Session.ACTION_ADD_NODE;
         assertFalse(testSession.hasPermission(childNPath, dActions));
 
         /*
@@ -450,8 +450,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - neither node at path nor at childNPath can be removed since
            REMOVE_NODE privilege is missing.
          */
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
-        assertFalse(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
     }
 
     public void testRemovePermission2() throws NotExecutableException, RepositoryException {
@@ -472,8 +472,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - neither node at path nor at childNPath can be removed permission
            due to missing remove_child_nodes privilege.
          */
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
-        assertFalse(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
     }
 
     public void testRemovePermission3() throws NotExecutableException, RepositoryException {
@@ -500,8 +500,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - privileges: both at path and at childNPath 'remove_node' and
            'remove_child_nodes' are present.
         */
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
-        assertTrue(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+        assertTrue(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
 
         assertTrue(testAcMgr.hasPrivileges(path, privs));
         assertTrue(testAcMgr.hasPrivileges(childNPath, privs));
@@ -530,8 +530,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - remove-permission present for node at childNPath
          - both remove_node and remove_childNodes privilege present at childNPath
          */
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
-        assertTrue(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+        assertTrue(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 
@@ -551,7 +551,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          expected result:
          - node at childNPath can't be removed since REMOVE_CHILD_NODES is missing.
          */
-        assertFalse(getTestSession().hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(getTestSession().hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
     }
 
     public void testRemovePermission6() throws NotExecutableException, RepositoryException {
@@ -579,8 +579,8 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - no remove_node privilege at childNPath
          - read, remove_child_nodes privilege at childNPath
          */
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
-        assertFalse(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(childNPath, privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_REMOVE_CHILD_NODES})));
         assertFalse(testAcMgr.hasPrivileges(childNPath, privilegesFromName(Privilege.JCR_REMOVE_NODE)));
     }
@@ -606,7 +606,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          expected result:
          - node at childNPath can't be removed.
          */
-        assertFalse(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
 
         // additionally add remove_child_nodes priv at 'childNPath'
         givePrivileges(childNPath, rmChildNodes, getRestrictions(superuser, childNPath));
@@ -615,7 +615,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          - node at childNPath still can't be removed.
          - but both privileges (remove_node, remove_child_nodes) are present.
          */
-        assertFalse(testSession.hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertFalse(testSession.hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 
@@ -641,7 +641,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          expected result:
          - remove permission must be granted at childNPath
          */
-        assertTrue(getTestSession().hasPermission(childNPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_REMOVE));
+        assertTrue(getTestSession().hasPermission(childNPath, javax.jcr.Session.ACTION_REMOVE));
         assertTrue(testAcMgr.hasPrivileges(childNPath, new Privilege[] {rmChildNodes[0], rmNode[0]}));
     }
 
@@ -763,7 +763,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         /* testuser must get the permissions/privileges inherited from
            the group it is member of.
          */
-        String actions = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY + "," + org.apache.jackrabbit.api.jsr283.Session.ACTION_READ;
+        String actions = javax.jcr.Session.ACTION_SET_PROPERTY + "," + javax.jcr.Session.ACTION_READ;
 
         assertTrue(getTestSession().hasPermission(path, actions));
         Privilege[] privs = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
@@ -788,7 +788,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
          since user-permissions overrule the group permissions, testuser must
          not have set_property action / modify_properties privilege.
          */
-        String actions = org.apache.jackrabbit.api.jsr283.Session.ACTION_SET_PROPERTY;
+        String actions = javax.jcr.Session.ACTION_SET_PROPERTY;
         assertFalse(getTestSession().hasPermission(path, actions));
         assertFalse(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES)));
     }
@@ -813,7 +813,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] privs = testAcMgr.getPrivileges(childPath);
         assertEquals(PrivilegeRegistry.getBits(privilegesFromName(Privilege.JCR_READ)),
                 PrivilegeRegistry.getBits(privs));
-        getTestSession().checkPermission(childPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_READ);
+        getTestSession().checkPermission(childPath, javax.jcr.Session.ACTION_READ);
     }
 
     public void testNonExistingItem() throws RepositoryException, NotExecutableException {
@@ -824,7 +824,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Session testSession = getTestSession();
         String rootPath = testSession.getRootNode().getPath();
         checkReadOnly(rootPath);
-        testSession.checkPermission(rootPath + "nonExistingItem", org.apache.jackrabbit.api.jsr283.Session.ACTION_READ);
+        testSession.checkPermission(rootPath + "nonExistingItem", javax.jcr.Session.ACTION_READ);
     }
 
     public void testACItemsAreProtected() throws NotExecutableException, RepositoryException {
@@ -898,10 +898,10 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
            - testSession can add child-nodes below path
          */
         SessionImpl testSession = getTestSession();
-        assertFalse(testSession.hasPermission(path, org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE));
-        assertTrue(testSession.hasPermission(path+"/anychild", org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE));
+        assertFalse(testSession.hasPermission(path, javax.jcr.Session.ACTION_ADD_NODE));
+        assertTrue(testSession.hasPermission(path+"/anychild", javax.jcr.Session.ACTION_ADD_NODE));
         String childPath = n.getPath();
-        assertTrue(testSession.hasPermission(childPath, org.apache.jackrabbit.api.jsr283.Session.ACTION_ADD_NODE));
+        assertTrue(testSession.hasPermission(childPath, javax.jcr.Session.ACTION_ADD_NODE));
     }
 
     public void testAclReferingToRemovedPrincipal() throws

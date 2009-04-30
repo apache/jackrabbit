@@ -111,7 +111,7 @@ import java.util.Set;
  * A <code>RepositoryImpl</code> ...
  */
 public class RepositoryImpl extends AbstractRepository
-        implements org.apache.jackrabbit.api.jsr283.Repository, JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
+        implements javax.jcr.Repository, JackrabbitRepository, SessionListener, EventListener, WorkspaceListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
 

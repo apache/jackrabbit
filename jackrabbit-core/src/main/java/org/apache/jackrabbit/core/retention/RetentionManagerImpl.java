@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.retention;
 
-import org.apache.jackrabbit.api.jsr283.retention.Hold;
-import org.apache.jackrabbit.api.jsr283.retention.RetentionManager;
-import org.apache.jackrabbit.api.jsr283.retention.RetentionPolicy;
+import javax.jcr.retention.Hold;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.retention.RetentionPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;

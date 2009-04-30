@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.jackrabbit.api.jsr283.security.AccessControlException;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;

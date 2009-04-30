@@ -26,9 +26,9 @@ import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlManager;
-import org.apache.jackrabbit.api.jsr283.security.Privilege;
-import org.apache.jackrabbit.api.jsr283.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
+import javax.jcr.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;

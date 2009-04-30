@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.query.qom;
+package javax.jcr.query.qom;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
