@@ -16,44 +16,44 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.BindVariableValue;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNodeJoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNodeJoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.EquiJoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Join;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Length;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.LowerCase;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeLocalName;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.NodeName;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.SameNodeJoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.UpperCase;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Constraint;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DynamicOperand;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
-
-import javax.jcr.RepositoryException;
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.query.qom.And;
+import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.ChildNode;
+import javax.jcr.query.qom.ChildNodeJoinCondition;
+import javax.jcr.query.qom.Column;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNode;
+import javax.jcr.query.qom.DescendantNodeJoinCondition;
+import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.EquiJoinCondition;
+import javax.jcr.query.qom.FullTextSearch;
+import javax.jcr.query.qom.FullTextSearchScore;
+import javax.jcr.query.qom.Join;
+import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.Length;
+import javax.jcr.query.qom.LowerCase;
+import javax.jcr.query.qom.NodeLocalName;
+import javax.jcr.query.qom.NodeName;
+import javax.jcr.query.qom.Not;
+import javax.jcr.query.qom.Or;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyExistence;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.SameNode;
+import javax.jcr.query.qom.SameNodeJoinCondition;
+import javax.jcr.query.qom.Selector;
+import javax.jcr.query.qom.Source;
+import javax.jcr.query.qom.StaticOperand;
+import javax.jcr.query.qom.UpperCase;
 
 /**
  * <code>QueryObjectModelFactoryTest</code> tests all methods on the
@@ -97,17 +97,17 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     private static final Set JOIN_TYPES = new HashSet();
 
     static {
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_EQUAL_TO));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_GREATER_THAN));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_LESS_THAN));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_LIKE));
-        OPERATORS.add(new Integer(QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_LIKE));
+        OPERATORS.add(new Integer(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO));
 
-        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JOIN_TYPE_INNER));
-        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JOIN_TYPE_LEFT_OUTER));
-        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JOIN_TYPE_RIGHT_OUTER));
+        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER));
+        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER));
+        JOIN_TYPES.add(new Integer(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER));
     }
 
     /**
@@ -130,7 +130,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         PropertyValue op = qomFactory.propertyValue(propertyName1);
         Ordering asc = qomFactory.ascending(op);
         assertEquals("Ordering.getOrder() must return QueryObjectModelConstants.ORDER_ASCENDING",
-                QueryObjectModelConstants.ORDER_ASCENDING, asc.getOrder());
+                QueryObjectModelConstants.JCR_ORDER_ASCENDING, asc.getOrder());
         assertTrue("Not a PropertyValue operand", asc.getOperand() instanceof PropertyValue);
     }
 

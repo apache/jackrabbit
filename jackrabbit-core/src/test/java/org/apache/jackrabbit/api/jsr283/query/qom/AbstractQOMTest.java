@@ -16,24 +16,23 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
-import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.core.query.QueryManagerImpl;
-import org.apache.jackrabbit.core.query.QueryImpl;
-import javax.jcr.query.Row;
-
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.RowIterator;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.Node;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+
+import org.apache.jackrabbit.core.query.QueryImpl;
+import org.apache.jackrabbit.core.query.QueryManagerImpl;
+import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
 /**
  * <code>AbstractQOMTest</code> is a base class for test cases on the JQOM.

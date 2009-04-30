@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>ChildNodeJoinConditionTest</code> contains test cases that cover
@@ -45,19 +44,19 @@ public class ChildNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testInnerJoin() throws RepositoryException {
         JoinCondition c = qomFactory.childNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JOIN_TYPE_INNER, c);
+        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_INNER, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}});
     }
 
     public void testRightOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.childNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JOIN_TYPE_RIGHT_OUTER, c);
+        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_RIGHT_OUTER, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}, {null, n2}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.childNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JOIN_TYPE_LEFT_OUTER, c);
+        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_LEFT_OUTER, c);
         List result = new ArrayList();
         result.add(new Node[]{n2, n1});
         if (testRootNode.isNodeType(testNodeType)) {
