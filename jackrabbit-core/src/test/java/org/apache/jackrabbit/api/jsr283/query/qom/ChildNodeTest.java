@@ -38,11 +38,6 @@ public class ChildNodeTest extends AbstractQOMTest {
         Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
                 qomFactory.childNode("s", testRoot), null, null);
         checkResult(q.execute(), new Node[]{n});
-
-        // using default selector
-        q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                qomFactory.childNode(testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n});
     }
 
     public void testChildNodes() throws RepositoryException {
@@ -54,22 +49,11 @@ public class ChildNodeTest extends AbstractQOMTest {
         Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
                 qomFactory.childNode("s", testRoot), null, null);
         checkResult(q.execute(), new Node[]{n1, n2, n3});
-
-        // using default selector
-        q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                qomFactory.childNode(testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n1, n2, n3});
     }
 
     public void testPathDoesNotExist() throws RepositoryException {
         Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
                 qomFactory.childNode("s", testRoot + "/" + nodeName1),
-                null, null);
-        checkResult(q.execute(), new Node[]{});
-
-        // using default selector
-        q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                qomFactory.childNode(testRoot + "/" + nodeName1),
                 null, null);
         checkResult(q.execute(), new Node[]{});
     }
@@ -89,11 +73,6 @@ public class ChildNodeTest extends AbstractQOMTest {
                 Query q = qomFactory.createQuery(qomFactory.selector(nt.getName(), "s"),
                         qomFactory.childNode("s", testRoot), null, null);
                 checkResult(q.execute(), new Node[]{});
-
-                // using default selector
-                q = qomFactory.createQuery(qomFactory.selector(nt.getName()),
-                        qomFactory.childNode(testRoot), null, null);
-                checkResult(q.execute(), new Node[]{});
                 return;
             }
         }
@@ -105,16 +84,6 @@ public class ChildNodeTest extends AbstractQOMTest {
         try {
             Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
                     qomFactory.childNode("s", testPath), null, null);
-            q.execute();
-            fail("ChildNode with relative path argument must throw InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
-
-        // using default selector
-        try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                    qomFactory.childNode(testPath), null, null);
             q.execute();
             fail("ChildNode with relative path argument must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
@@ -132,17 +101,6 @@ public class ChildNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
-
-        // using default selector
-        try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                    qomFactory.childNode(testRoot + "/" + nodeName1 + "["),
-                    null, null);
-            q.execute();
-            fail("ChildNode with syntactically invalid path argument must throw InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
     }
 
     public void testNotASelectorName() throws RepositoryException {
@@ -154,24 +112,6 @@ public class ChildNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
-
-        // using default selector
-        try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType),
-                    qomFactory.childNode("x", testRoot), null, null);
-            q.execute();
-            fail("ChildNode with an invalid selector name must throw InvalidQueryException");
-        } catch (InvalidQueryException e) {
-            // expected
-        }
     }
 
-    public void testDefaultSelector() throws RepositoryException {
-        Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
-
-        Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                qomFactory.childNode(testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n});
-    }
 }
