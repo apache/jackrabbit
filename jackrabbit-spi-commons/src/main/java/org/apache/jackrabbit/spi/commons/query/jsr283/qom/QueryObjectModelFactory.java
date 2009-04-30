@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.Constraint;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 

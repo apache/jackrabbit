@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.Constraint;
+
 /**
  * Tests whether the {@link #getSelectorName selector} node is a descendant
  * of a node reachable by absolute path {@link #getPath path}.
