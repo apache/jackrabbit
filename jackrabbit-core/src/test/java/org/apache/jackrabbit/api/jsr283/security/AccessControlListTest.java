@@ -14,17 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.security;
+package org.apache.jackrabbit.api.jsr283.security;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.TestPrincipal;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -33,6 +24,23 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlEntryTest</code>...

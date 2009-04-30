@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.version.simple;
+package org.apache.jackrabbit.api.jsr283.version.simple;
 
-import javax.jcr.version.Version;
-import javax.jcr.RepositoryException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.Version;
 
 /**
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}

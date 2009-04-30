@@ -14,21 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr;
+package org.apache.jackrabbit.api.jsr283;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
-
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
-import javax.jcr.Value;
-import javax.jcr.version.VersionException;
-import javax.jcr.lock.LockException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>SessionRemoveItemTest</code>... */
 public class SessionRemoveItemTest extends AbstractJCRTest {

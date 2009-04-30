@@ -14,18 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.observation;
+package org.apache.jackrabbit.api.jsr283.observation;
 
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.EventJournal;
 
-import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
@@ -197,7 +198,7 @@ public class EventJournalTest extends AbstractObservationTest {
                                         String[] nodeTypeName)
             throws RepositoryException {
         // TODO: remove cast when JCR 2.0 is final
-        return ((WorkspaceImpl) superuser.getWorkspace()).getEventJournal(
+        return ((ObservationManagerImpl) superuser.getWorkspace().getObservationManager()).getEventJournal(
                 eventTypes, absPath, isDeep, uuid, nodeTypeName);
     }
 

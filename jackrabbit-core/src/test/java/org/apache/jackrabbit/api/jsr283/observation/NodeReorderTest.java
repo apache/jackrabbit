@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.observation;
+package org.apache.jackrabbit.api.jsr283.observation;
 
 import java.util.Map;
 

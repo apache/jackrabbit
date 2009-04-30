@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.version.simple;
+package org.apache.jackrabbit.api.jsr283.version.simple;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-import javax.jcr.version.VersionHistory;
-
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.OnParentVersionAction;
+import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.NodeIterator;
+
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>RestoreTest</code> covers tests related to the restore methods available

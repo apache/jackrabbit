@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.retention;
+package org.apache.jackrabbit.api.jsr283.retention;
 
-import org.apache.jackrabbit.test.NotExecutableException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
@@ -25,11 +28,11 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.LockException;
+import javax.jcr.retention.Hold;
+import javax.jcr.retention.RetentionManager;
 import javax.jcr.version.VersionException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>RetentionManagerTest</code>...

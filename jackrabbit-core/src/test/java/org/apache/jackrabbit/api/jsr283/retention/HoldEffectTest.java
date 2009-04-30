@@ -14,17 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.retention;
+package org.apache.jackrabbit.api.jsr283.retention;
+
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.retention.Hold;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
-
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
-import javax.jcr.Property;
-import javax.jcr.Node;
-import javax.jcr.Value;
-import javax.jcr.nodetype.NodeType;
 
 /**
  * <code>HoldEffectTest</code>...

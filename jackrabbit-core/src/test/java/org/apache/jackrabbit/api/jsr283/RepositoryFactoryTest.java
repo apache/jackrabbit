@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr;
+package org.apache.jackrabbit.api.jsr283;
 
 import java.util.Collections;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.RepositoryFactory;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryStub;

@@ -14,16 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.version.simple;
+package org.apache.jackrabbit.api.jsr283.version.simple;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-
-import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.version.VersionHistory;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * <code>AbstractVersionTest</code> is the abstract base class for all

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.lock;
+package org.apache.jackrabbit.api.jsr283.lock;
 
 import junit.framework.TestCase;
 import junit.framework.Test;

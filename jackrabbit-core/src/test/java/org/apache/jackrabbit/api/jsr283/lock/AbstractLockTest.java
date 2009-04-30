@@ -14,25 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.lock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.RepositoryStub;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.JUnitTest;
-import org.apache.jackrabbit.test.api.observation.EventResult;
-import org.apache.jackrabbit.core.WorkspaceImpl;
+package org.apache.jackrabbit.api.jsr283.lock;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.RepositoryException;
 import javax.jcr.Repository;
-import javax.jcr.observation.ObservationManager;
-import javax.jcr.observation.Event;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.ObservationManager;
+
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.JUnitTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
+import org.apache.jackrabbit.test.api.observation.EventResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>AbstractLockTest</code>... */
 public abstract class AbstractLockTest extends AbstractJCRTest {
