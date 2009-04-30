@@ -22,9 +22,11 @@ import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
@@ -91,6 +93,13 @@ public class QueryManagerImpl implements QueryManager {
                 return searchMgr.createQueryObjectModel(
                         session, qomTree, QueryImpl.JCR_SQL2);
             }
+
+            public FullTextSearch fullTextSearch(
+                    String arg0, String arg1, String arg2)
+                    throws RepositoryException {
+                throw new UnsupportedRepositoryOperationException("JCR-1104");
+            }
+
         };
     }
 
