@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.Constraint;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
 
 /**
  * <code>AndImpl</code>...

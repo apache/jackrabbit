@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.ChildNode;
 import javax.jcr.query.qom.ChildNodeJoinCondition;
@@ -35,9 +36,12 @@ import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.NodeLocalName;
 import javax.jcr.query.qom.NodeName;
+import javax.jcr.query.qom.Not;
+import javax.jcr.query.qom.Or;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.SameNodeJoinCondition;
@@ -52,7 +56,7 @@ import javax.jcr.Value;
  * A <code>QueryObjectModelFactory</code> creates instances of the JCR query
  * object model.
  * <p/>
- * Refer to {@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel} for a description of the query object
+ * Refer to {@link QueryObjectModel} for a description of the query object
  * model.
  *
  * @since JCR 2.0

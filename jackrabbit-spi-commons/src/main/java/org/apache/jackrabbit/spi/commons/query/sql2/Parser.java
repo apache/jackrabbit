@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,6 +36,7 @@ import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
