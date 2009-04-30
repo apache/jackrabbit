@@ -16,15 +16,17 @@
  */
 package org.apache.jackrabbit.value;
 
-import org.apache.jackrabbit.util.ISO8601;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Calendar;
+
+import org.apache.jackrabbit.util.ISO8601;
 
 /**
  * This class is the superclass of the type-specific
@@ -170,6 +172,22 @@ public abstract class BaseValue implements Value {
 
         try {
             return Double.parseDouble(getInternalString());
+        } catch (NumberFormatException e) {
+            throw new ValueFormatException("conversion to double failed", e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        try {
+            // TODO: Is this the correct way to handle BigDecimal conversion
+            return new BigDecimal(getInternalString());
         } catch (NumberFormatException e) {
             throw new ValueFormatException("conversion to double failed", e);
         }
