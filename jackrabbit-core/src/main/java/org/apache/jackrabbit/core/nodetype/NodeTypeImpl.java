@@ -16,15 +16,8 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.core.data.DataStore;
-import javax.jcr.nodetype.NodeTypeDefinition;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -35,15 +28,23 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
-import java.util.ArrayList;
-import java.util.HashSet;
+
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType, javax.jcr.nodetype.NodeType, NodeTypeDefinition {
+public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
