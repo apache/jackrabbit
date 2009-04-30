@@ -23,23 +23,23 @@ import org.apache.jackrabbit.spi.Path;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.And;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Or;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Not;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.ChildNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.DescendantNode;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearchScore;
 
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.ChildNode;
 import javax.jcr.query.qom.ChildNodeJoinCondition;
+import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.EquiJoinCondition;
+import javax.jcr.query.qom.FullTextSearchScore;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.Length;

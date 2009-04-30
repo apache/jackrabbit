@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
@@ -30,6 +29,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.JoinCondition;
