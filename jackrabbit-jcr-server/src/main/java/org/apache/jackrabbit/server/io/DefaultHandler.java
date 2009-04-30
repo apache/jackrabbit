@@ -308,7 +308,14 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                 }
             }
             if (contentNode == null) {
-                contentNode = parentNode.addNode(JcrConstants.JCR_CONTENT, getContentNodeType());
+                if (parentNode.getPrimaryNodeType().canAddChildNode(JcrConstants.JCR_CONTENT,
+                        getContentNodeType())) {
+
+                    contentNode = parentNode.addNode(JcrConstants.JCR_CONTENT, getContentNodeType());
+                }
+                else {
+                    contentNode = parentNode.addNode(JcrConstants.JCR_CONTENT);
+                }
             }
         }
         return contentNode;
