@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +36,7 @@ import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
@@ -130,7 +129,7 @@ public class Parser {
             String selectorName = readName();
             return factory.selector(nodeTypeName, selectorName);
         } else {
-            return factory.selector(nodeTypeName);
+            return factory.selector(nodeTypeName, null /* TODO */);
         }
     }
 
@@ -203,7 +202,7 @@ public class Parser {
                 if (readIf(",")) {
                     c = factory.sameNodeJoinCondition(selector1, selector2, readPath());
                 } else {
-                    c = factory.sameNodeJoinCondition(selector1, selector2);
+                    c = factory.sameNodeJoinCondition(selector1, selector2, null /* TODO */);
                 }
             } else if ("ISCHILDNODE".equals(name)) {
                 String childSelector = readName();
@@ -265,7 +264,7 @@ public class Parser {
             } else if (readIf(".")) {
                 a = parseCondition(factory.propertyValue(identifier, readName()));
             } else {
-                a = parseCondition(factory.propertyValue(identifier));
+                a = parseCondition(factory.propertyValue(identifier, null /* TODO */));
             }
         } else {
             throw getSyntaxError();
@@ -341,7 +340,7 @@ public class Parser {
 
     private PropertyExistence getPropertyExistence(PropertyValue p) throws InvalidQueryException, RepositoryException {
         if (p.getSelectorName() == null) {
-            return factory.propertyExistence(p.getPropertyName());
+            return factory.propertyExistence(p.getPropertyName(), null /* TODO */);
         } else {
             return factory.propertyExistence(p.getSelectorName(), p.getPropertyName());
         }
@@ -364,28 +363,28 @@ public class Parser {
                 }
             } else {
                 read(",");
-                c = factory.fullTextSearch(name, readString());
+                c = factory.fullTextSearch(name, readString(), null /* TODO */);
             }
         } else if ("ISSAMENODE".equals(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.sameNode(name, readPath());
             } else {
-                c = factory.sameNode(name);
+                c = factory.sameNode(name, null /* TODO */);
             }
         } else if ("ISCHILDNODE".equals(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.childNode(name, readPath());
             } else {
-                c = factory.childNode(name);
+                c = factory.childNode(name, null /* TODO */);
             }
         } else if ("ISDESCENDANTNODE".equals(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.descendantNode(name, readPath());
             } else {
-                c = factory.descendantNode(name);
+                c = factory.descendantNode(name, null /* TODO */);
             }
         } else {
             return null;
@@ -416,19 +415,19 @@ public class Parser {
             op = factory.length(parsePropertyValue(readName()));
         } else if ("NAME".equals(functionName)) {
             if (isToken(")")) {
-                op = factory.nodeName();
+                op = factory.nodeName(null /* TODO */);
             } else {
                 op = factory.nodeName(readName());
             }
         } else if ("LOCALNAME".equals(functionName)) {
             if (isToken(")")) {
-                op = factory.nodeLocalName();
+                op = factory.nodeLocalName(null /* TODO */);
             } else {
                 op = factory.nodeLocalName(readName());
             }
         } else if ("SCORE".equals(functionName)) {
             if (isToken(")")) {
-                op = factory.fullTextSearchScore();
+                op = factory.fullTextSearchScore(null /* TODO */);
             } else {
                 op = factory.fullTextSearchScore(readName());
             }
@@ -448,7 +447,7 @@ public class Parser {
         if (readIf(".")) {
             return factory.propertyValue(name, readName());
         } else {
-            return factory.propertyValue(name);
+            return factory.propertyValue(name, null /* TODO */);
         }
     }
 
@@ -563,9 +562,9 @@ public class Parser {
                 if (c.selectorName != null) {
                     column = factory.column(c.selectorName, c.propertyName, c.columnName);
                 } else if (c.columnName != null) {
-                    column = factory.column(c.propertyName, c.columnName);
+                    column = factory.column(c.propertyName, c.columnName, null /* TODO */);
                 } else {
-                    column = factory.column(c.propertyName);
+                    column = factory.column(c.propertyName, null /* TODO */, null /* TODO */);
                 }
                 columns.add(column);
             }

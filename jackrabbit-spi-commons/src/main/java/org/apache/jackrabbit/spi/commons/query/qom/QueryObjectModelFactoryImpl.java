@@ -21,8 +21,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
@@ -51,6 +49,7 @@ import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.SameNodeJoinCondition;
 import javax.jcr.query.qom.Selector;
