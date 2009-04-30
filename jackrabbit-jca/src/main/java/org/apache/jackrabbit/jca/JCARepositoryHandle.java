@@ -26,13 +26,17 @@ import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
+
+import org.apache.jackrabbit.commons.repository.ProxyRepository;
+import org.apache.jackrabbit.commons.repository.RepositoryFactory;
+
 import java.io.Serializable;
 
 /**
  * This class implements the JCA implementation of repository.
  */
-public final class JCARepositoryHandle
-        implements Repository, Referenceable, Serializable {
+public final class JCARepositoryHandle extends ProxyRepository
+        implements Referenceable, Serializable {
 
     /**
      * Managed connection factory.
@@ -52,7 +56,9 @@ public final class JCARepositoryHandle
     /**
      * Construct the repository.
      */
-    public JCARepositoryHandle(JCAManagedConnectionFactory mcf, ConnectionManager cm) {
+    public JCARepositoryHandle(
+            JCAManagedConnectionFactory mcf, ConnectionManager cm) {
+        super(new JCARepositoryFactory(mcf));
         this.mcf = mcf;
         this.cm = cm;
     }
@@ -60,45 +66,13 @@ public final class JCARepositoryHandle
     /**
      * Creates a new session.
      */
-    public Session login()
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(null, null);
-    }
-
-    /**
-     * Creates a new session.
-     */
-    public Session login(Credentials creds)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(creds, null);
-    }
-
-    /**
-     * Creates a new session.
-     */
-    public Session login(String workspace)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(null, workspace);
-    }
-
-    /**
-     * Creates a new session.
-     */
     public Session login(Credentials creds, String workspace)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
-        return login(new JCAConnectionRequestInfo(creds, workspace));
-    }
-
-    /**
-     * Creates a new session.
-     */
-    private Session login(JCAConnectionRequestInfo cri)
-            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+            throws RepositoryException {
         try {
-            return (Session) cm.allocateConnection(mcf, cri);
+            return (Session) cm.allocateConnection(
+                    mcf, new JCAConnectionRequestInfo(creds, workspace));
         } catch (ResourceException e) {
             Throwable cause = e.getCause();
-
             if (cause instanceof LoginException) {
                 throw (LoginException) cause;
             } else if (cause instanceof NoSuchWorkspaceException) {
@@ -114,20 +88,6 @@ public final class JCARepositoryHandle
     }
 
     /**
-     * Return the descriptor keys.
-     */
-    public String[] getDescriptorKeys() {
-        return mcf.getRepository().getDescriptorKeys();
-    }
-
-    /**
-     * Return the descriptor for key.
-     */
-    public String getDescriptor(String key) {
-        return mcf.getRepository().getDescriptor(key);
-    }
-
-    /**
      * Return the reference.
      */
     public Reference getReference() {
@@ -140,4 +100,20 @@ public final class JCARepositoryHandle
     public void setReference(Reference reference) {
         this.reference = reference;
     }
+
+    private static class JCARepositoryFactory
+            implements RepositoryFactory, Serializable {
+
+        private final JCAManagedConnectionFactory mcf;
+
+        public JCARepositoryFactory(JCAManagedConnectionFactory mcf) {
+            this.mcf = mcf;
+        }
+
+        public Repository getRepository() {
+            return mcf.getRepository();
+        }
+
+    }
+
 }
