@@ -154,4 +154,9 @@ public class ValueFactoryImpl implements ValueFactory {
         throw new UnsupportedOperationException("JCR-1609");
     }
 
+    public Value createValue(Node node, boolean weak)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1609");
+    }
+
 }
