@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
 import javax.jcr.query.Query;
+import javax.jcr.query.qom.Constraint;
 
 /**
  * A query in the JCR query object model.

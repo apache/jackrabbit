@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.Constraint;
+
 /**
  * Filters node-tuples based on the outcome of a binary operation.
  * <p/>
