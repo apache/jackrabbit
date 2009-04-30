@@ -18,23 +18,26 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.util.Map;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
-import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
-import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
+import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.AndImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ComparisonImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
@@ -45,20 +48,17 @@ import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NotImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 
 /**
  * <code>ConstraintBuilder</code> builds a {@link Constraint} from a tree of
@@ -173,7 +173,7 @@ public class ConstraintBuilder {
 
             DynamicOperand dynOp = (DynamicOperand) op1.accept(this, staticValue);
             SelectorImpl selector = getSelector(op1.getSelectorQName());
-            if (node.getOperator() == QueryObjectModelConstants.OPERATOR_LIKE) {
+            if (QueryObjectModelConstants.JCR_OPERATOR_LIKE.equals(node.getOperator())) {
                 return new LikeConstraint(dynOp, staticValue, selector);
             } else {
                 return new ComparisonConstraint(dynOp, node.getOperator(),
@@ -230,7 +230,7 @@ public class ConstraintBuilder {
         }
 
         public Object visit(LiteralImpl node, Object data) throws Exception {
-            return node.getValue();
+            return node.getLiteralValue();
         }
 
         public Object visit(LowerCaseImpl node, Object data) throws Exception {
