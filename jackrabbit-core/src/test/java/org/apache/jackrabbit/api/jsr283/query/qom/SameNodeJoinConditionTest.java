@@ -58,7 +58,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                         qomFactory.selector(testNodeType, LEFT),
                         qomFactory.selector(mixReferenceable, RIGHT),
                         JCR_JOIN_TYPE_LEFT_OUTER,
-                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT)
+                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")
                 ),
                qomFactory.descendantNode(LEFT, testRoot),
                null, null);
@@ -79,7 +79,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                          qomFactory.selector(mixReferenceable, LEFT),
                          qomFactory.selector(testNodeType, RIGHT),
                          JCR_JOIN_TYPE_RIGHT_OUTER,
-                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT)
+                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")
                  ),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
@@ -111,7 +111,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
         if (relPath != null) {
             c = qomFactory.sameNodeJoinCondition(LEFT, RIGHT, relPath);
         } else {
-            c = qomFactory.sameNodeJoinCondition(LEFT, RIGHT);
+            c = qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".");
         }
         return createQuery(joinType, c);
     }
