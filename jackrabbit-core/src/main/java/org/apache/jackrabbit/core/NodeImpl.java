@@ -16,54 +16,19 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
-import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.core.nodetype.ItemDef;
-import org.apache.jackrabbit.core.nodetype.NodeDef;
-import org.apache.jackrabbit.core.nodetype.NodeDefId;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.version.DateVersionSelector;
-import org.apache.jackrabbit.core.version.InternalFreeze;
-import org.apache.jackrabbit.core.version.InternalFrozenNode;
-import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
-import org.apache.jackrabbit.core.version.LabelVersionSelector;
-import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.version.VersionSelector;
-import org.apache.jackrabbit.core.version.InternalVersionHistory;
-import org.apache.jackrabbit.core.version.InternalVersion;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.util.ChildrenCollectorFilter;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.ValueHelper;
-import javax.jcr.Binary;
-import javax.jcr.version.VersionManager;
-import javax.jcr.lock.LockManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
@@ -84,6 +49,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -94,21 +60,56 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import javax.jcr.version.VersionManager;
+
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.core.nodetype.ItemDef;
+import org.apache.jackrabbit.core.nodetype.NodeDef;
+import org.apache.jackrabbit.core.nodetype.NodeDefId;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.version.DateVersionSelector;
+import org.apache.jackrabbit.core.version.InternalFreeze;
+import org.apache.jackrabbit.core.version.InternalFrozenNode;
+import org.apache.jackrabbit.core.version.InternalFrozenVersionHistory;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
+import org.apache.jackrabbit.core.version.LabelVersionSelector;
+import org.apache.jackrabbit.core.version.VersionImpl;
+import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
  */
-public class NodeImpl extends ItemImpl implements javax.jcr.Node {
+public class NodeImpl extends ItemImpl implements Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -2637,6 +2638,16 @@ public class NodeImpl extends ItemImpl implements javax.jcr.Node {
         }
     }
 
+    public NodeIterator getNodes(String[] nameGlobs)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2060");
+    }
+
+    public PropertyIterator getProperty(String[] nameGlobs)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2060");
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -4838,4 +4849,5 @@ public class NodeImpl extends ItemImpl implements javax.jcr.Node {
     public String toString() {
         return "node " + super.toString();
     }
+
 }
