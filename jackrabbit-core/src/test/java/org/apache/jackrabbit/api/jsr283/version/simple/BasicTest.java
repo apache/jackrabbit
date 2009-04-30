@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.version.simple;
+package org.apache.jackrabbit.api.jsr283.version.simple;
 
 import javax.jcr.RepositoryException;
 

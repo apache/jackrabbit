@@ -14,16 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.retention;
-
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.RepositoryStub;
-import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
+package org.apache.jackrabbit.api.jsr283.retention;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.retention.RetentionPolicy;
+
+import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 /**
  * <code>AbstractAccessControlTest</code>...

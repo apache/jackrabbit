@@ -14,16 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.security;
-
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.apache.jackrabbit.api.jsr283.security;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlPolicyTest</code>...
@@ -94,8 +98,6 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
             testAcMgr.setPolicy(path, it.nextAccessControlPolicy());
             fail("read only session may not modify AC content.");
         } catch (AccessControlException e) {
-            // fine as well (policy validity was check first).
-        } catch (AccessDeniedException e) {
             // success.
         }
     }
@@ -113,8 +115,6 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
             fail("Invalid policy may not be set by a READ-only session.");
         } catch (AccessControlException e) {
             // success.
-        } catch (AccessDeniedException e) {
-            // fine as well (privileges were apparently checked first)
         }
     }
 }

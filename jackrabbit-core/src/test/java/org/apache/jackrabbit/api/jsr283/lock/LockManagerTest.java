@@ -14,22 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.lock;
+package org.apache.jackrabbit.api.jsr283.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.core.WorkspaceImpl;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Session;
-import javax.jcr.Repository;
-import javax.jcr.lock.LockException;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
+
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** <code>LockManagerTest</code>... */
 public class LockManagerTest extends AbstractJCRTest {

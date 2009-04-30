@@ -14,16 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.security;
+package org.apache.jackrabbit.api.jsr283.security;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.NoSuchElementException;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import java.util.NoSuchElementException;
+import javax.jcr.security.AccessControlPolicyIterator;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlPolicyIteratorTest</code>...

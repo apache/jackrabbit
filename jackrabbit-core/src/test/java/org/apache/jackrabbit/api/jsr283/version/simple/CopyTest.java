@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.version.simple;
+package org.apache.jackrabbit.api.jsr283.version.simple;
 
-import javax.jcr.RepositoryException;
-
-import javax.jcr.Workspace;
 import javax.jcr.Node;
-import javax.jcr.version.VersionManager;
+import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 
 /**
  * <code>CopyTest</code> checks if simple versionable nodes are copied correctly:
@@ -29,7 +28,7 @@ import javax.jcr.version.VersionHistory;
  * 15.1.4 Copying Versionable Nodes and Version Lineage
  * Under both simple and full versioning, when an existing versionable node N is
  * copied to a new location either in the same workspace or another, and the
- * repository preserves the versionable mixin (see §10.7.4 Dropping Mixins on
+ * repository preserves the versionable mixin (see ï¿½10.7.4 Dropping Mixins on
  * Copy):
  * ? A copy of N, call it M, is created, as usual.
  * ? A new, empty, version history for M, call it HM, is also created.

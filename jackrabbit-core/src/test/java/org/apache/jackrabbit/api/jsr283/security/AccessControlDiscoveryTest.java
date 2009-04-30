@@ -14,21 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.security;
+package org.apache.jackrabbit.api.jsr283.security;
 
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.spi.Name;
-
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Iterator;
+
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>AccessControlDiscoveryTest</code>...

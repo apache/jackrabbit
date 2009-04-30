@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package javax.jcr.security;
-
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
+package org.apache.jackrabbit.api.jsr283.security;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>AbstractAccessControlTest</code>...
