@@ -74,12 +74,12 @@
 
   <build>
     <plugins>
-      <!-- Use Java 1.4 everywhere -->
+      <!-- JCR-2087: Upgrade to Java 5 as the base platform -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <target>1.4</target>
-          <source>1.4</source>
+          <target>1.5</target>
+          <source>1.5</source>
         </configuration>
       </plugin>
       <!-- JCR-704: Enable maven-source-plugin -->
