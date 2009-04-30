@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import javax.jcr.query.qom.StaticOperand;
 
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.StaticOperand;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * <code>StaticOperandImpl</code>...
