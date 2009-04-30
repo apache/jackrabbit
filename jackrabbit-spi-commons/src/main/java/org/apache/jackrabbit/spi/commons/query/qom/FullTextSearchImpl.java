@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import javax.jcr.query.qom.FullTextSearch;
+import javax.jcr.query.qom.StaticOperand;
+
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.FullTextSearch;
 
 /**
  * <code>FullTextSearchImpl</code>...
@@ -41,12 +42,12 @@ public class FullTextSearchImpl
     /**
      * Full text search expression.
      */
-    private final String fullTextSearchExpression;
+    private final StaticOperand fullTextSearchExpression;
 
     FullTextSearchImpl(NamePathResolver resolver,
                        Name selectorName,
                        Name propertyName,
-                       String fullTextSearchExpression) {
+                       StaticOperand fullTextSearchExpression) {
         super(resolver);
         this.selectorName = selectorName;
         this.propertyName = propertyName;
@@ -100,7 +101,7 @@ public class FullTextSearchImpl
      *
      * @return the full-text search expression; non-null
      */
-    public String getFullTextSearchExpression() {
+    public StaticOperand getFullTextSearchExpression() {
         return fullTextSearchExpression;
     }
 

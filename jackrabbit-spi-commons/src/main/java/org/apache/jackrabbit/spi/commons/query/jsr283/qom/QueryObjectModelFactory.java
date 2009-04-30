@@ -28,6 +28,7 @@ import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DescendantNodeJoinCondition;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.EquiJoinCondition;
+import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.FullTextSearchScore;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
