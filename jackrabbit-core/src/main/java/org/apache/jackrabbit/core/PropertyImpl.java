@@ -16,37 +16,42 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.state.ItemState;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.nodetype.PropDefId;
-import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
 
+import javax.jcr.Binary;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
-import javax.jcr.InvalidItemStateException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
+
+import org.apache.jackrabbit.core.nodetype.PropDefId;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.value.BLOBFileValue;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>PropertyImpl</code> implements the <code>Property</code> interface.
@@ -510,6 +515,18 @@ public class PropertyImpl extends ItemImpl implements Property {
             // TODO: The specification suggests using value conversion
             throw new ValueFormatException("property must be of type REFERENCE");
         }
+    }
+
+    public Property getProperty() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1609");
+    }
+
+    public BigDecimal getDecimal() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1609");
+    }
+
+    public void setValue(BigDecimal value) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1609");
     }
 
     public void setValue(Calendar value) throws RepositoryException {
