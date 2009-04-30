@@ -17,14 +17,7 @@
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Column;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.JoinCondition;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Ordering;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyExistence;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.PropertyValue;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelFactory;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Selector;
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Source;
 import org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModel;
 
 import java.math.BigDecimal;
@@ -39,7 +32,14 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyExistence;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.Selector;
+import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 
 /**
@@ -168,15 +168,15 @@ public class Parser {
         selectors.add(selector);
         Source source = selector;
         while (true) {
-            int type;
+            String type;
             if (readIf("RIGHT")) {
                 read("OUTER");
-                type = QueryObjectModelConstants.JOIN_TYPE_RIGHT_OUTER;
+                type = QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER;
             } else if (readIf("LEFT")) {
                 read("OUTER");
-                type = QueryObjectModelConstants.JOIN_TYPE_LEFT_OUTER;
+                type = QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
             } else if (readIf("INNER")) {
-                type = QueryObjectModelConstants.JOIN_TYPE_INNER;
+                type = QueryObjectModelConstants.JCR_JOIN_TYPE_INNER;
             } else {
                 break;
             }
@@ -278,33 +278,33 @@ public class Parser {
         Constraint c;
         if (readIf("=")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_EQUAL_TO,
+                    QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
                     parseStaticOperand());
         } else if (readIf("<>")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_NOT_EQUAL_TO,
+                    QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO,
                     parseStaticOperand());
         } else if (readIf("<")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_LESS_THAN,
+                    QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
                     parseStaticOperand());
         } else if (readIf(">")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_GREATER_THAN,
+                    QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
                     parseStaticOperand());
         } else if (readIf("<=")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_LESS_THAN_OR_EQUAL_TO,
+                    QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
                     parseStaticOperand());
         } else if (readIf(">=")) {
             c = factory
                     .comparison(
                             left,
-                            QueryObjectModelConstants.OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+                            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
                             parseStaticOperand());
         } else if (readIf("LIKE")) {
             c = factory.comparison(left,
-                    QueryObjectModelConstants.OPERATOR_LIKE,
+                    QueryObjectModelConstants.JCR_OPERATOR_LIKE,
                     parseStaticOperand());
         } else if (readIf("IS")) {
             boolean not = readIf("NOT");
@@ -330,7 +330,7 @@ public class Parser {
             } else {
                 read("LIKE");
                 c = factory.not(factory.comparison(left,
-                        QueryObjectModelConstants.OPERATOR_LIKE,
+                        QueryObjectModelConstants.JCR_OPERATOR_LIKE,
                         parseStaticOperand()));
             }
         } else {

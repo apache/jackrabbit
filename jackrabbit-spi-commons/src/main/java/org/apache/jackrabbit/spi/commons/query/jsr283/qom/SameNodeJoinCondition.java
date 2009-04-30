@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.query.jsr283.qom;
 
+import javax.jcr.query.qom.JoinCondition;
+
 /**
  * Tests whether two nodes are "the same" according to the <code>isSame</code>
  * method of <code>javax.jcr.Item</code>.

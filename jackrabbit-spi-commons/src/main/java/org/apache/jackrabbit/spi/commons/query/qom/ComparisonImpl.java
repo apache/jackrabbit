@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.StaticOperand;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
-import org.apache.jackrabbit.spi.commons.query.jsr283.qom.Comparison;
 
 /**
  * <code>ComparisonImpl</code>...
@@ -36,7 +36,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
     /**
      * The operator.
      */
-    private final int operator;
+    private final String operator;
 
     /**
      * The second operand.
@@ -45,7 +45,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
 
     ComparisonImpl(NamePathResolver resolver,
                    DynamicOperandImpl operand1,
-                   int operator,
+                   String operator,
                    StaticOperandImpl operand2) {
         super(resolver);
         this.operand1 = operand1;
@@ -65,16 +65,16 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
     /**
      * Gets the operator.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_NOT_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_GREATER_THAN_OR_EQUAL_TO},
-     *         or</li> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#OPERATOR_LIKE}</li>
+     * @return either <ul> <li>{@link QueryObjectModelConstants#JCR_OPERATOR_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_OPERATOR_NOT_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_OPERATOR_LESS_THAN},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_OPERATOR_GREATER_THAN},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO},
+     *         or</li> <li>{@link QueryObjectModelConstants#JCR_OPERATOR_LIKE}</li>
      *         </ul>
      */
-    public int getOperator() {
+    public String getOperator() {
         return operator;
     }
 
