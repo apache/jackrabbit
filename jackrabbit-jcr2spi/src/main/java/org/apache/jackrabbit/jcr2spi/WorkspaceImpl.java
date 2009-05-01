@@ -516,4 +516,22 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) {
         return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
     }
+
+    public void createWorkspace(String name) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public void createWorkspace(String name, String srcWorkspace)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public void deleteWorkspace(String name) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public javax.jcr.version.VersionManager getVersionManager()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
 }
