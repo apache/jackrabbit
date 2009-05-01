@@ -21,6 +21,7 @@ import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.StaticOperand;
 
 /**
  * Enumeration of the JCR 2.0 query operators.
@@ -81,7 +82,7 @@ public enum Operator {
      */
     public Comparison comparison(
             QueryObjectModelFactory factory,
-            DynamicOperand left, StaticOperandImpl right)
+            DynamicOperand left, StaticOperand right)
             throws RepositoryException {
         return factory.comparison(left, name, right);
     }
