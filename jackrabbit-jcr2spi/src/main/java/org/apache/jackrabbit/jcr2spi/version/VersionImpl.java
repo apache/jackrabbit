@@ -159,4 +159,17 @@ public class VersionImpl extends NodeImpl implements Version {
         }
         return versions;
     }
+
+    public Node getFrozenNode() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public Version getLinearPredecessor() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public Version getLinearSuccessor() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
 }
