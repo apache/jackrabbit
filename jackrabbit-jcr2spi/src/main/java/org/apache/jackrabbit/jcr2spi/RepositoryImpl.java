@@ -26,6 +26,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.NamingException;
@@ -39,6 +40,7 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.XASessionInfo;
+import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 /**
  * <code>RepositoryImpl</code>...
@@ -73,6 +75,29 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
      */
     public String getDescriptor(String descriptorKey) {
         return (String) descriptors.get(descriptorKey);
+    }
+
+    public Value getDescriptorValue(String key) {
+        String value = getDescriptor(key);
+        if (value != null) {
+            // TODO: Do we have a better value factory?
+            return ValueFactoryImpl.getInstance().createValue(value);
+        } else {
+            return null;
+        }
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        Value value = getDescriptorValue(key);
+        if (value != null) {
+            return new Value[] { value };
+        } else {
+            return null;
+        }
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        return descriptors.containsKey(key);
     }
 
     /**
@@ -207,4 +232,5 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
             return res;
         }
     }
+
 }
