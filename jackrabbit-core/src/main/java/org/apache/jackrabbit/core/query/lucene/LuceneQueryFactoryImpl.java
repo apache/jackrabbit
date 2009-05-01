@@ -250,7 +250,7 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
     public MultiColumnQuery create(JoinImpl join) throws RepositoryException {
         MultiColumnQuery left = create((SourceImpl) join.getLeft());
         MultiColumnQuery right = create((SourceImpl) join.getRight());
-        return new JoinQuery(left, right, join.getJoinType(),
+        return new JoinQuery(left, right, join.getJoinTypeInstance(),
                 (JoinConditionImpl) join.getJoinCondition(), scs, hmgr);
     }
 }
