@@ -164,7 +164,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         Column col = qomFactory.column(SELECTOR_NAME1, propertyName1, null);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertEquals("Wrong property name", propertyName1, col.getPropertyName());
-        assertEquals("Wrong column name", propertyName1, col.getColumnName());
+        assertNull("Column name must be null", col.getColumnName());
     }
 
     /**
@@ -207,7 +207,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
             Comparison comp = operator.comparison(qomFactory, op1, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
-            assertEquals("Wrong operator", operator, comp.getOperator());
+            assertEquals("Wrong operator", operator.toString(), comp.getOperator());
         }
     }
 
@@ -310,7 +310,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testDescendantNode() throws RepositoryException {
         DescendantNode descNode = qomFactory.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
-        assertNull("Selector must be null", descNode.getSelectorName());
+        assertEquals("Wrong selector", SELECTOR_NAME1, descNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), descNode.getAncestorPath());
     }
 
@@ -389,7 +389,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testFullTextSearchScore() throws RepositoryException {
         FullTextSearchScore score = qomFactory.fullTextSearchScore(SELECTOR_NAME1);
-        assertNull("Selector must be null", score.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, score.getSelectorName());
     }
 
     /**
@@ -439,7 +439,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testNodeLocalName() throws RepositoryException {
         NodeLocalName localName = qomFactory.nodeLocalName(SELECTOR_NAME1);
-        assertNull("Selector name must be null", localName.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, localName.getSelectorName());
     }
 
     /**
@@ -455,7 +455,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testNodeName() throws RepositoryException {
         NodeName nodeName = qomFactory.nodeName(SELECTOR_NAME1);
-        assertNull("Selector name must be null", nodeName.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, nodeName.getSelectorName());
     }
 
     /**
@@ -493,7 +493,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testPropertyExistence() throws RepositoryException {
         PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        assertNull("Selector name must be null", propExist.getSelectorName());
+        assertEquals("Wrong selector", SELECTOR_NAME1, propExist.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propExist.getPropertyName());
     }
 
@@ -511,7 +511,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testPropertyValue() throws RepositoryException {
         PropertyValue propVal = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        assertNull("Selector name must be null", propVal.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, propVal.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propVal.getPropertyName());
     }
 
@@ -529,7 +529,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      */
     public void testSameNode() throws RepositoryException {
         SameNode sameNode = qomFactory.sameNode(SELECTOR_NAME1, testRootNode.getPath());
-        assertNull("Selector name must be null", sameNode.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, sameNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), sameNode.getPath());
     }
 
@@ -549,7 +549,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         SameNodeJoinCondition cond = qomFactory.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, ".");
         assertEquals("Wrong selector name", SELECTOR_NAME1, cond.getSelector1Name());
         assertEquals("Wrong selector name", SELECTOR_NAME2, cond.getSelector2Name());
-        assertNull("Path must be null", cond.getSelector2Path());
+        assertEquals("Wrong selector path", ".", cond.getSelector2Path());
     }
 
     /**
