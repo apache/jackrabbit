@@ -24,6 +24,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.query.lucene.join.Join;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 
 /**
  * <code>JoinQuery</code> implements a query that performs a join.
@@ -43,7 +44,7 @@ public class JoinQuery implements MultiColumnQuery {
     /**
      * The join type.
      */
-    private final String joinType;
+    private final JoinType joinType;
 
     /**
      * The QOM join condition.
@@ -72,7 +73,7 @@ public class JoinQuery implements MultiColumnQuery {
      */
     public JoinQuery(MultiColumnQuery left,
                      MultiColumnQuery right,
-                     String joinType,
+                     JoinType joinType,
                      JoinConditionImpl joinCondition,
                      SortComparatorSource scs,
                      HierarchyManager hmgr) {

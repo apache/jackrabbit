@@ -33,6 +33,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.index.IndexReader;
@@ -120,7 +121,7 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
      */
     public static Join create(final MultiColumnQueryHits left,
                               final MultiColumnQueryHits right,
-                              final String joinType,
+                              final JoinType joinType,
                               final JoinConditionImpl condition,
                               final IndexReader reader,
                               final HierarchyResolver resolver,
@@ -130,8 +131,7 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
         try {
             return (Join) condition.accept(new DefaultQOMTreeVisitor() {
 
-                private boolean isInner =
-                    JCR_JOIN_TYPE_INNER.equals(joinType);
+                private boolean isInner = JoinType.INNER == joinType;
                 private MultiColumnQueryHits outer;
                 private int outerIdx;
 
@@ -140,10 +140,9 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
                     MultiColumnQueryHits ancestor = getSourceWithName(node.getAncestorSelectorQName(), left, right);
                     MultiColumnQueryHits descendant = getSourceWithName(node.getDescendantSelectorQName(), left, right);
                     Condition c;
-                    if (isInner || descendant == left
-                            && JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)
-                            || descendant == right
-                            && JCR_JOIN_TYPE_RIGHT_OUTER.equals(joinType)) {
+                    if (isInner
+                            || descendant == left && JoinType.LEFT == joinType
+                            || descendant == right && JoinType.RIGHT == joinType) {
                         // also applies to inner join
                         // assumption: DescendantNodeJoin is more
                         // efficient than AncestorNodeJoin, TODO: verify
