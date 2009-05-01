@@ -1,0 +1,125 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.jackrabbit.spi.commons.query.qom;
+
+import javax.jcr.query.qom.QueryObjectModelConstants;
+
+/**
+ * Enumeration of the JCR 2.0 query operators.
+ *
+ * @since Apache Jackrabbit 2.0
+ */
+public enum Operator {
+
+    EQ("{http://www.jcp.org/jcr/1.0}operatorEqualTo", "="),
+    // EQ(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, "="),
+
+    NE("{http://www.jcp.org/jcr/1.0}operatorNotEqualTo", "!=", "<>"),
+    // NE(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO, "!=", "<>"),
+
+    GT(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN, ">"),
+
+    GE(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO, ">="),
+
+    LT(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN, "<"),
+
+    LE(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO, "<="),
+
+    LIKE(QueryObjectModelConstants.JCR_OPERATOR_LIKE, null, "like");
+
+    /**
+     * JCR name of this operator.
+     */
+    private final String name;
+
+    /**
+     * This operator in XPath syntax.
+     */
+    private final String xpath;
+
+    /**
+     * This operator in SQL syntax.
+     */
+    private final String sql;
+
+    private Operator(String name, String op) {
+        this(name, op, op);
+    }
+
+    private Operator(String name, String xpath, String sql) {
+        this.name = name;
+        this.xpath = xpath;
+        this.sql = sql;
+    }
+
+    /**
+     * Formats an XPath constraint with this operator and the given operands.
+     * The operands are simply used as-is, without any quoting or escaping.
+     *
+     * @param a first operand
+     * @param b second operand
+     * @return XPath constraint, <code>a op b</code> or
+     *         <code>jcr:like(a, b)</code> for {@link #LIKE}
+     */
+    public String formatXpath(String a, String b) {
+        if (this == LIKE) {
+            return "jcr:like(" + a + ", " + b + ")";
+        } else {
+            return a + " " + xpath + " " + b;
+        }
+    }
+
+    /**
+     * Formats an SQL constraint with this operator and the given operands.
+     * The operands are simply used as-is, without any quoting or escaping.
+     *
+     * @param a first operand
+     * @param b second operand
+     * @return SQL constraint, <code>a op b</code>
+     */
+    public String formatSql(String a, String b) {
+        return a + " " + sql + " " + b;
+    }
+
+    /**
+     * Returns the JCR 2.0 name of this query operator.
+     *
+     * @see QueryObjectModelConstants
+     * @return JCR name of this operator
+     */
+    public String toString() {
+        return name;
+    }
+
+    /**
+     * Returns an array of the names of all the JCR 2.0 query operators.
+     *
+     * @return names of all query operators
+     */
+    public static String[] getAllQueryOperators() {
+        return new String[] {
+                EQ.toString(),
+                NE.toString(),
+                GT.toString(),
+                GE.toString(),
+                LT.toString(),
+                LE.toString(),
+                LIKE.toString()
+        };
+    }
+
+}
