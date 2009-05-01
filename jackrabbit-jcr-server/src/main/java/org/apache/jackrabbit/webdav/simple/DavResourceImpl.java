@@ -635,10 +635,8 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         try {
             String itemPath = member.getLocator().getRepositoryPath();
             Item memItem = getJcrSession().getItem(itemPath);
-            //TODO once jcr2 is out: simply call removeShare()
-            if (memItem instanceof javax.jcr.Node) {
-                javax.jcr.Node n = (javax.jcr.Node) memItem;
-                n.removeShare();
+            if (memItem instanceof Node) {
+                ((Node)memItem).removeShare();
             } else {
                 memItem.remove();
             }
@@ -937,14 +935,8 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
     public Set getParentElements() {
         try {
             if (node.getDepth() > 0) {
-                //TODO remove this check once jcr2 is out
-                if (!(node instanceof javax.jcr.Node)) {
-                    DavResourceLocator loc = locator.getFactory().createResourceLocator(
-                            locator.getPrefix(), locator.getWorkspacePath(), node.getParent().getPath(), false);
-                    return Collections.singleton(new ParentElement(loc.getHref(true), node.getName()));
-                }
                 Set ps = new HashSet();
-                NodeIterator sharedSetIterator = ((javax.jcr.Node) node).getSharedSet();
+                NodeIterator sharedSetIterator = node.getSharedSet();
                 while (sharedSetIterator.hasNext()) {
                     Node sharednode = sharedSetIterator.nextNode();
                     DavResourceLocator loc = locator.getFactory().createResourceLocator(
