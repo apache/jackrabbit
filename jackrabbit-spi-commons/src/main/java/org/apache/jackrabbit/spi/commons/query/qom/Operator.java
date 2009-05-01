@@ -143,4 +143,21 @@ public enum Operator {
         };
     }
 
+    /**
+     * Returns the operator with the given JCR name.
+     *
+     * @param name JCR name of an a operator
+     * @return operator with the given name
+     * @throws RepositoryException if the given name is unknown
+     */
+    public static Operator getOperatorByName(String name)
+            throws RepositoryException {
+        for (Operator operator : Operator.values()) {
+            if (operator.name.equals(name)) {
+                return operator;
+            }
+        }
+        throw new RepositoryException("Unknown query name: " + name);
+    }
+
 }

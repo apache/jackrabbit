@@ -67,21 +67,11 @@ import java.util.Set;
  */
 public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
-    private static final Set<String> VALID_OPERATORS = new HashSet<String>();
-
     private static final Set<String> VALID_JOIN_TYPES = new HashSet<String>();
 
     private static final Set<String> VALID_ORDERS = new HashSet<String>();
 
     static {
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
-        VALID_OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
-
         VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
         VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
         VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
@@ -442,40 +432,34 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     /**
      * Filters node-tuples based on the outcome of a binary operation.
      *
-     * @param operand1 the first operand; non-null
-     * @param operator the operator; either <ul> <li>{@link #JCR_OPERATOR_EQUAL_TO},</li>
+     * @param left the first operand; non-null
+     * @param operatorName the operator; either <ul> <li>{@link #JCR_OPERATOR_EQUAL_TO},</li>
      *                 <li>{@link #JCR_OPERATOR_NOT_EQUAL_TO},</li> <li>{@link
      *                 #JCR_OPERATOR_LESS_THAN},</li> <li>{@link #JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO},</li>
      *                 <li>{@link #JCR_OPERATOR_GREATER_THAN},</li> <li>{@link
      *                 #JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO}, or</li> <li>{@link
      *                 #JCR_OPERATOR_LIKE}</li> </ul>
-     * @param operand2 the second operand; non-null
+     * @param right the second operand; non-null
      * @return the constraint; non-null
      * @throws javax.jcr.query.InvalidQueryException
      *                                       if the query is invalid
      * @throws javax.jcr.RepositoryException if the operation otherwise fails
      */
-    public Comparison comparison(DynamicOperand operand1,
-                                 String operator,
-                                 StaticOperand operand2)
+    public Comparison comparison(
+            DynamicOperand left, String operatorName, StaticOperand right)
             throws InvalidQueryException, RepositoryException {
-        if (operand1 == null || operand2 == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("operands must not be null");
+        if (!(left instanceof DynamicOperandImpl)) {
+            throw new RepositoryException("Invalid left operand: " + left);
         }
-        if (!VALID_OPERATORS.contains(operator)) {
-            // TODO: correct exception?
-            throw new RepositoryException("invalid operator");
+        if (!(right instanceof StaticOperandImpl)) {
+            throw new RepositoryException("Invalid right operand: " + right);
         }
-        if (operand1 instanceof DynamicOperandImpl
-                && operand2 instanceof StaticOperandImpl) {
-            return new ComparisonImpl(resolver,
-                    (DynamicOperandImpl) operand1,
-                    operator,
-                    (StaticOperandImpl) operand2);
-        } else {
-            throw new RepositoryException("Unknown operand implementation");
-        }
+
+        return new ComparisonImpl(
+                resolver,
+                (DynamicOperandImpl) left,
+                Operator.getOperatorByName(operatorName),
+                (StaticOperandImpl) right);
     }
 
     /**
