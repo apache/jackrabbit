@@ -123,7 +123,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     public void testChildNode() throws RepositoryException {
         ChildNode childNode = qomFactory.childNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong path", testRootNode.getPath(), childNode.getParentPath());
-        assertNull("Selector must be null", childNode.getSelectorName());
+        assertEquals("Wrong selector name", SELECTOR_NAME1, childNode.getSelectorName());
     }
 
     /**

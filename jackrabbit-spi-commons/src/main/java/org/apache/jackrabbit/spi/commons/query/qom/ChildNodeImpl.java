@@ -64,7 +64,7 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      *
      * @return the path; non-null
      */
-    public String getPath() {
+    public String getParentPath() {
         return getJCRPath(path);
     }
 
@@ -84,11 +84,6 @@ public class ChildNodeImpl extends ConstraintImpl implements ChildNode {
      */
     public Path getQPath() {
         return path;
-    }
-
-    public String getParentPath() {
-        // TODO
-        throw new RuntimeException("Not implemented yet - see JCR-2092");
     }
 
     //------------------------< AbstractQOMNode >-------------------------------
