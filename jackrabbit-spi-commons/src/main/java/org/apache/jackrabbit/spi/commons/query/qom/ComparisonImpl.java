@@ -53,6 +53,12 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
         this.operand2 = operand2;
     }
 
+    public Operator getOperatorInstance() {
+        return operator;
+    }
+
+    //----------------------------------------------------------< Comparison >
+
     /**
      * Gets the first operand.
      *
