@@ -35,12 +35,12 @@ import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
@@ -169,15 +169,15 @@ public class Parser {
         selectors.add(selector);
         Source source = selector;
         while (true) {
-            String type;
+            JoinType type;
             if (readIf("RIGHT")) {
                 read("OUTER");
-                type = QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER;
+                type = JoinType.RIGHT;
             } else if (readIf("LEFT")) {
                 read("OUTER");
-                type = QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
+                type = JoinType.LEFT;
             } else if (readIf("INNER")) {
-                type = QueryObjectModelConstants.JCR_JOIN_TYPE_INNER;
+                type = JoinType.INNER;
             } else {
                 break;
             }
@@ -186,7 +186,7 @@ public class Parser {
             selectors.add(selector);
             read("ON");
             JoinCondition on = parseJoinCondition();
-            source = factory.join(source, selector, type, on);
+            source = type.join(factory, source, selector, on);
         }
         return source;
     }
