@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.spi.commons.query.qom;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 /**
  * Enumeration of the JCR 2.0 query operators.
@@ -64,6 +68,22 @@ public enum Operator {
         this.name = name;
         this.xpath = xpath;
         this.sql = sql;
+    }
+
+    /**
+     * Returns a comparison between the given operands using this operator.
+     *
+     * @param factory factory for creating the comparison
+     * @param left operand on the left hand side
+     * @param right operand on the right hand side
+     * @return comparison
+     * @throws RepositoryException if the comparison can not be created
+     */
+    public Comparison comparison(
+            QueryObjectModelFactory factory,
+            DynamicOperand left, StaticOperandImpl right)
+            throws RepositoryException {
+        return factory.comparison(left, name, right);
     }
 
     /**
