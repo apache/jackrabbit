@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -29,6 +27,8 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+
 /**
  * <code>UpperLowerCaseQueryTest</code> tests the functions fn:lower-case() and
  * fn:upper-case() in XPath, LOWER() and UPPER() in SQL and UpperCase and
@@ -36,44 +36,28 @@ import javax.jcr.query.qom.QueryObjectModelConstants;
  */
 public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryObjectModelConstants {
 
-    /**
-     * Maps operator strings to QueryObjectModelConstants.
-     */
-    private static final Map<String, String> OPERATORS =
-        new HashMap<String, String>();
-
-    static {
-        OPERATORS.put("=", JCR_OPERATOR_EQUAL_TO);
-        OPERATORS.put(">", JCR_OPERATOR_GREATER_THAN);
-        OPERATORS.put(">=", JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
-        OPERATORS.put("<", JCR_OPERATOR_LESS_THAN);
-        OPERATORS.put("<=", JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
-        OPERATORS.put("like", JCR_OPERATOR_LIKE);
-        OPERATORS.put("!=", JCR_OPERATOR_NOT_EQUAL_TO);
-    }
-
     public void testEqualsGeneralComparison() throws RepositoryException {
         check(new String[]{"foo", "Foo", "fOO", "FOO", "fooBar", "fo", "fooo"},
-                "=",
+                Operator.EQ,
                 "foo",
                 new boolean[]{true, true, true, true, false, false, false});
-        check(new String[]{"foo"}, "=", "", new boolean[]{false});
-        check(new String[]{""}, "=", "", new boolean[]{true});
+        check(new String[]{"foo"}, Operator.EQ, "", new boolean[]{false});
+        check(new String[]{""}, Operator.EQ, "", new boolean[]{true});
     }
 
     public void testGreaterThanGeneralComparison() throws RepositoryException {
         // check edges
         check(new String[]{"foo", "FOO", "FoO", "fOo", "FON", "fon", "fo", "FO"},
-                ">",
+                Operator.GT,
                 "foo",
                 new boolean[]{false, false, false, false, false, false, false, false});
         check(new String[]{"foo ", "FOOa", "FoOO", "fOo1", "FOp", "foP", "fp", "g", "G"},
-                ">",
+                Operator.GT,
                 "foo",
                 new boolean[]{true, true, true, true, true, true, true, true, true});
         // check combinations
         check(new String[]{"foo", "fooo", "FooO", "fo", "FON", "fon"},
-                ">",
+                Operator.GT,
                 "foo",
                 new boolean[]{false, true, true, false, false, false});
     }
@@ -81,16 +65,16 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
     public void testLessThanGeneralComparison() throws RepositoryException {
         // check edges
         check(new String[]{"foo", "FOO", "FoO", "fOo", "foOo", "foo ", "fooa", "fop"},
-                "<",
+                Operator.LT,
                 "foo",
                 new boolean[]{false, false, false, false, false, false, false, false});
         check(new String[]{"fo", "FOn", "FoN", "fO", "FO1", "fn", "fN", "E", "e"},
-                "<",
+                Operator.LT,
                 "foo",
                 new boolean[]{true, true, true, true, true, true, true, true, true});
         // check combinations
         check(new String[]{"foo", "fooo", "FooO", "fo", "FON", "fon"},
-                "<",
+                Operator.LT,
                 "foo",
                 new boolean[]{false, false, false, true, true, true});
     }
@@ -98,16 +82,16 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
     public void testGreaterEqualsGeneralComparison() throws RepositoryException {
         // check edges
         check(new String[]{"fo", "FO", "Fon", "fONo", "FON", "fO", "fo", "FO"},
-                ">=",
+                Operator.GE,
                 "foo",
                 new boolean[]{false, false, false, false, false, false, false, false});
         check(new String[]{"foo", "FoO", "FoOO", "fOo1", "FOp", "foP", "fp", "g", "G"},
-                ">=",
+                Operator.GE,
                 "foo",
                 new boolean[]{true, true, true, true, true, true, true, true, true});
         // check combinations
         check(new String[]{"foo", "fooo", "FOo", "fo", "FON", "fon"},
-                ">=",
+                Operator.GE,
                 "foo",
                 new boolean[]{true, true, true, false, false, false});
     }
@@ -115,16 +99,16 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
     public void testLessEqualsGeneralComparison() throws RepositoryException {
         // check edges
         check(new String[]{"fooo", "FOoo", "Fop", "fOpo", "FOP", "fOo ", "fp", "G"},
-                "<=",
+                Operator.LE,
                 "foo",
                 new boolean[]{false, false, false, false, false, false, false, false});
         check(new String[]{"foo", "FoO", "Foo", "fOn", "FO", "fo", "f", "E", "e"},
-                "<=",
+                Operator.LE,
                 "foo",
                 new boolean[]{true, true, true, true, true, true, true, true, true});
         // check combinations
         check(new String[]{"foo", "fo", "FOo", "fop", "FOP", "fooo"},
-                "<=",
+                Operator.LE,
                 "foo",
                 new boolean[]{true, true, true, false, false, false});
     }
@@ -132,35 +116,35 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
     public void testNotEqualsGeneralComparison() throws RepositoryException {
         // check edges
         check(new String[]{"fooo", "FOoo", "Fop", "fOpo", "FOP", "fOo ", "fp", "G", ""},
-                "!=",
+                Operator.NE,
                 "foo",
                 new boolean[]{true, true, true, true, true, true, true, true, true});
         check(new String[]{"foo", "FoO", "Foo", "foO", "FOO"},
-                "!=",
+                Operator.NE,
                 "foo",
                 new boolean[]{false, false, false, false, false});
         // check combinations
         check(new String[]{"foo", "fo", "FOo", "fop", "FOP", "fooo"},
-                "!=",
+                Operator.NE,
                 "foo",
                 new boolean[]{false, true, false, true, true, true});
     }
 
     public void testLikeComparison() throws RepositoryException {
         check(new String[]{"foo", "Foo", "fOO", "FO "},
-                "like",
+                Operator.LIKE,
                 "fo_",
                 new boolean[]{true, true, true, true});
         check(new String[]{"foo", "Foo", "fOO", "FOO"},
-                "like",
+                Operator.LIKE,
                 "f_o",
                 new boolean[]{true, true, true, true});
         check(new String[]{"foo", "Foo", "fOO", " OO"},
-                "like",
+                Operator.LIKE,
                 "_oo",
                 new boolean[]{true, true, true, true});
         check(new String[]{"foo", "Foa", "fOO", "FO", "foRm", "fPo", "fno", "FPo", "Fno"},
-                "like",
+                Operator.LIKE,
                 "fo%",
                 new boolean[]{true, true, true, true, true, false, false, false, false});
     }
@@ -190,25 +174,25 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
                 values[n] = value;
             }
             pattern += "%";
-            check(values, "like", pattern, matches);
+            check(values, Operator.LIKE, pattern, matches);
         }
     }
 
     public void testRangeWithEmptyString() throws RepositoryException {
         check(new String[]{" ", "a", "A", "1", "3", "!", "@"},
-                ">",
+                Operator.GT,
                 "",
                 new boolean[]{true, true, true, true, true, true, true});
         check(new String[]{"", "a", "A", "1", "3", "!", "@"},
-                ">=",
+                Operator.GE,
                 "",
                 new boolean[]{true, true, true, true, true, true, true});
         check(new String[]{"", "a", "A", "1", "3", "!", "@"},
-                "<",
+                Operator.LT,
                 "",
                 new boolean[]{false, false, false, false, false, false, false});
         check(new String[]{"", "a", "A", "1", "3", "!", "@"},
-                "<=",
+                Operator.LE,
                 "",
                 new boolean[]{true, false, false, false, false, false, false});
     }
@@ -238,7 +222,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
 
     //----------------------------< internal >----------------------------------
 
-    private void check(String[] values, String operation, String queryTerm, boolean[] matches)
+    private void check(String[] values, Operator operator, String queryTerm, boolean[] matches)
             throws RepositoryException {
         if (values.length != matches.length) {
             throw new IllegalArgumentException("values and matches must have same length");
@@ -273,25 +257,18 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         testRootNode.save();
 
         Node[] nodes = matchingNodes.toArray(new Node[matchingNodes.size()]);
-        String sqlOperation = operation;
-        if (operation.equals("!=")) {
-            sqlOperation = "<>";
-        }
 
         // run queries with lower-case
-        String xpath = testPath;
-        if (operation.equals("like")) {
-            xpath += "/*[jcr:like(fn:lower-case(@" + propertyName1 +
-                    "), '" + queryTerm.toLowerCase() + "')]";
-        } else {
-            xpath += "/*[fn:lower-case(@" + propertyName1 +
-                    ") " + operation + " '" + queryTerm.toLowerCase() + "']";
-        }
-        executeXPathQuery(xpath, nodes);
+        String xpath = operator.formatXpath(
+                "fn:lower-case(@" + propertyName1 + ")",
+                "'" + queryTerm.toLowerCase() + "'");
+        executeXPathQuery(testPath + "/*[" + xpath + "]", nodes);
 
-        String sql = "select * from nt:base where jcr:path like '" +
-                testRoot + "/%' and LOWER(" + propertyName1 + ") " +
-                sqlOperation + " '" + queryTerm.toLowerCase() + "'";
+        String sql = "select * from nt:base where "
+            + "jcr:path like '" + testRoot + "/%' and "
+            + operator.formatSql(
+                    "LOWER(" + propertyName1 + ")",
+                    "'" + queryTerm.toLowerCase() + "'");
         executeSQLQuery(sql, nodes);
 
         QueryResult result = qomFactory.createQuery(
@@ -301,7 +278,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
                         qomFactory.comparison(
                                 qomFactory.lowerCase(
                                         qomFactory.propertyValue("s", propertyName1)),
-                                getOperatorForString(operation),
+                                operator.toString(),
                                 qomFactory.literal(
                                         superuser.getValueFactory().createValue(
                                                 queryTerm.toLowerCase()))
@@ -310,29 +287,26 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         checkResult(result, nodes);
 
         // run queries with upper-case
-        xpath = testPath;
-        if (operation.equals("like")) {
-            xpath += "/*[jcr:like(fn:upper-case(@" + propertyName1 +
-                    "), '" + queryTerm.toUpperCase() + "')]";
-        } else {
-            xpath += "/*[fn:upper-case(@" + propertyName1 +
-                    ") " + operation + " '" + queryTerm.toUpperCase() + "']";
-        }
-        executeXPathQuery(xpath, nodes);
+        xpath = operator.formatXpath(
+                "fn:upper-case(@" + propertyName1 + ")",
+                "'" + queryTerm.toUpperCase() + "'");
+        executeXPathQuery(testPath + "/*[" + xpath + "]", nodes);
 
-        sql = "select * from nt:base where jcr:path like '" +
-                testRoot + "/%' and UPPER(" + propertyName1 + ") " +
-                sqlOperation + " '" + queryTerm.toUpperCase() + "'";
+        sql = "select * from nt:base where "
+            + "jcr:path like '" + testRoot + "/%' and "
+            + operator.formatSql(
+                    "UPPER(" + propertyName1 + ")",
+                    "'" + queryTerm.toUpperCase() + "'");
         executeSQLQuery(sql, nodes);
 
         result = qomFactory.createQuery(
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
+                        operator.comparison(
+                                qomFactory,
                                 qomFactory.upperCase(
                                         qomFactory.propertyValue("s", propertyName1)),
-                                getOperatorForString(operation),
                                 qomFactory.literal(
                                         superuser.getValueFactory().createValue(
                                                 queryTerm.toUpperCase()))
@@ -345,7 +319,4 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest implements QueryO
         return pool.charAt(random.nextInt(pool.length()));
     }
 
-    protected static String getOperatorForString(String operator) {
-        return OPERATORS.get(operator);
-    }
 }
