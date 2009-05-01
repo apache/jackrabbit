@@ -99,5 +99,13 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
     public boolean allowsSameNameSiblings() {
         return ((QNodeDefinition) itemDef).allowsSameNameSiblings();
     }
+
+    public String getDefaultPrimaryTypeName() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public String[] getRequiredPrimaryTypeNames() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
 }
 
