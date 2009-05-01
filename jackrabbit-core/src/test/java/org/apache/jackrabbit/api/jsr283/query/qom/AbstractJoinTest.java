@@ -20,8 +20,11 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
+
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 
 /**
  * <code>AbstractJoinTest</code> provides utility methods for join related
@@ -51,20 +54,20 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         checkResult(result, SELECTOR_NAMES, nodes);
     }
 
-    protected QueryObjectModel createQuery(String joinType,
+    protected QueryObjectModel createQuery(JoinType joinType,
                                            JoinCondition condition)
             throws RepositoryException {
         return createQuery(joinType, condition, null, null);
     }
 
-    protected QueryObjectModel createQuery(String joinType,
+    protected QueryObjectModel createQuery(JoinType joinType,
                                            JoinCondition condition,
                                            Constraint left,
                                            Constraint right)
             throws RepositoryException {
         // only consider nodes under test root
         Constraint constraint;
-        if (JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
+        if (JoinType.LEFT == joinType) {
             constraint = qomFactory.descendantNode(LEFT, testRoot);
         } else {
             constraint = qomFactory.descendantNode(RIGHT, testRoot);
@@ -76,13 +79,11 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         if (right != null) {
             constraint = qomFactory.and(constraint, right);
         }
-        return qomFactory.createQuery(
-                qomFactory.join(
-                        qomFactory.selector(testNodeType, LEFT),
-                        qomFactory.selector(testNodeType, RIGHT),
-                        joinType,
-                        condition
-                ), constraint, null, null
-        );
+        Join join = joinType.join(
+                qomFactory,
+                qomFactory.selector(testNodeType, LEFT),
+                qomFactory.selector(testNodeType, RIGHT),
+                condition);
+        return qomFactory.createQuery(join, constraint, null, null);
     }
 }
