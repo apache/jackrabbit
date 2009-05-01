@@ -17,16 +17,16 @@
 package org.apache.jackrabbit.jcr2spi.lock;
 
 import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.jcr2spi.state.NodeState;
-
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
+
+import org.apache.jackrabbit.jcr2spi.state.NodeState;
 
 /**
  * Defines the functionality needed for locking and unlocking nodes.
  */
-public interface LockManager {
+public interface LockStateManager extends LockManager {
 
     /**
      * Lock a node. Checks whether the node is not locked and then
