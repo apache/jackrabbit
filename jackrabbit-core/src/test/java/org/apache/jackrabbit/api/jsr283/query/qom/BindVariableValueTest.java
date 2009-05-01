@@ -21,6 +21,9 @@ import javax.jcr.Node;
 import javax.jcr.ValueFactory;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
+
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+
 import java.util.Calendar;
 
 /**
@@ -49,9 +52,9 @@ public class BindVariableValueTest extends AbstractQOMTest {
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
+                        Operator.EQ.comparison(
+                                qomFactory,
                                 qomFactory.propertyValue("s", propertyName1),
-                                JCR_OPERATOR_EQUAL_TO,
                                 qomFactory.bindVariable("v")
                         )
                 ), null, null);
