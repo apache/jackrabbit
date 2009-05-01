@@ -40,7 +40,7 @@ public class JoinImpl extends SourceImpl implements Join {
     /**
      * The join type.
      */
-    private final String joinType;
+    private final JoinType joinType;
 
     /**
      * The join condition.
@@ -50,13 +50,17 @@ public class JoinImpl extends SourceImpl implements Join {
     JoinImpl(NamePathResolver resolver,
              SourceImpl left,
              SourceImpl right,
-             String joinType,
+             JoinType joinType,
              JoinConditionImpl joinCondition) {
         super(resolver);
         this.left = left;
         this.right = right;
         this.joinType = joinType;
         this.joinCondition = joinCondition;
+    }
+
+    public JoinType getJoinTypeInstance() {
+        return joinType;
     }
 
     /**
@@ -86,7 +90,7 @@ public class JoinImpl extends SourceImpl implements Join {
      *         </ul>
      */
     public String getJoinType() {
-        return joinType;
+        return joinType.toString();
     }
 
     /**

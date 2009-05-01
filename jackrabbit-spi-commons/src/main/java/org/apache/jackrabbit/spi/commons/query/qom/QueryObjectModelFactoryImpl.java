@@ -67,15 +67,9 @@ import java.util.Set;
  */
 public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
 
-    private static final Set<String> VALID_JOIN_TYPES = new HashSet<String>();
-
     private static final Set<String> VALID_ORDERS = new HashSet<String>();
 
     static {
-        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
-        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
-        VALID_JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
-
         VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_ASCENDING);
         VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_DESCENDING);
     }
@@ -225,7 +219,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      *
      * @param left          the left node-tuple source; non-null
      * @param right         the right node-tuple source; non-null
-     * @param joinType      either <ul> <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
+     * @param joinTypeName  either <ul> <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
      *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_LEFT_OUTER},</li>
      *                      <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_RIGHT_OUTER}</li>
      *                      </ul>
@@ -237,7 +231,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public Join join(Source left,
                      Source right,
-                     String joinType,
+                     String joinTypeName,
                      JoinCondition joinCondition)
             throws InvalidQueryException, RepositoryException {
         if (!(left instanceof SourceImpl) || !(right instanceof SourceImpl)) {
@@ -246,11 +240,12 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
         if (!(joinCondition instanceof JoinConditionImpl)) {
             throw new RepositoryException("Unknwon JoinCondition implementation");
         }
-        if (!VALID_JOIN_TYPES.contains(joinType)) {
-            throw new RepositoryException("Invalid joinType");
-        }
-        return new JoinImpl(resolver, (SourceImpl) left, (SourceImpl) right,
-                joinType, (JoinConditionImpl) joinCondition);
+        return new JoinImpl(
+                resolver,
+                (SourceImpl) left,
+                (SourceImpl) right,
+                JoinType.getJoinTypeByName(joinTypeName),
+                (JoinConditionImpl) joinCondition);
     }
 
     /**
