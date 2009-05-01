@@ -41,6 +41,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 
@@ -480,5 +481,33 @@ public class NodeTypeImpl implements NodeType {
             // fall through
         }
         return false;
+    }
+
+    public boolean canRemoveNode(String nodeName) {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public boolean canRemoveProperty(String propertyName) {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public NodeTypeIterator getDeclaredSubtypes() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public NodeTypeIterator getSubtypes() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public String[] getDeclaredSupertypeNames() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public boolean isAbstract() {
+        throw new UnsupportedOperationException("JCR-1591");
+    }
+
+    public boolean isQueryable() {
+        throw new UnsupportedOperationException("JCR-1591");
     }
 }
