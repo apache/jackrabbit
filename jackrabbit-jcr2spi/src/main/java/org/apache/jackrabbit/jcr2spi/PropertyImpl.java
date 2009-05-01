@@ -16,36 +16,36 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.state.PropertyState;
-import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.Binary;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.Item;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.PropertyType;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
+
+import javax.jcr.Binary;
+import javax.jcr.Item;
+import javax.jcr.ItemVisitor;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.value.ValueHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>PropertyImpl</code>...
@@ -196,6 +196,19 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
+     * @see Property#setValue(Binary)
+     */
+    public void setValue(Binary value) throws RepositoryException {
+        checkIsWritable(false);
+        int reqType = getRequiredType(PropertyType.BINARY);
+        if (value == null) {
+            setInternalValues(null, reqType);
+        } else {
+            setValue(session.getValueFactory().createValue(value), reqType);
+        }
+    }
+
+    /**
      * @see Property#setValue(long)
      */
     public void setValue(long value) throws ValueFormatException, VersionException, LockException, RepositoryException {
@@ -291,6 +304,13 @@ public class PropertyImpl extends ItemImpl implements Property {
      */
     public InputStream getStream() throws ValueFormatException, RepositoryException {
         return getValue().getStream();
+    }
+
+    /**
+     * @see Property#getBinary()
+     */
+    public Binary getBinary() throws RepositoryException {
+        return getValue().getBinary();
     }
 
     /**
