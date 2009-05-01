@@ -20,18 +20,17 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 
 /**
  * <code>ComparisonConstraint</code> implements a comparison constraint.
  */
-public class ComparisonConstraint extends SelectorBasedConstraint
-        implements QueryObjectModelConstants {
+public class ComparisonConstraint extends SelectorBasedConstraint {
 
     /**
      * The dynamic operand.
@@ -41,7 +40,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint
     /**
      * The operator.
      */
-    private final String operator;
+    private final Operator operator;
 
     /**
      * The static operand.
@@ -57,7 +56,7 @@ public class ComparisonConstraint extends SelectorBasedConstraint
      * @param selector the selector for this constraint.
      */
     public ComparisonConstraint(DynamicOperand operand1,
-                                String operator,
+                                Operator operator,
                                 Value operand2,
                                 SelectorImpl selector) {
         super(selector);
@@ -101,20 +100,21 @@ public class ComparisonConstraint extends SelectorBasedConstraint
      */
     protected boolean evaluate(Value op1) throws RepositoryException {
         int c = Util.compare(op1, operand2);
-        if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
+        if (operator == Operator.EQ) {
             return c == 0;
-        } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
+        } else if (operator == Operator.GT) {
             return c > 0;
-        } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
+        } else if (operator == Operator.GE) {
             return c >= 0;
-        } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
+        } else if (operator == Operator.LT) {
             return c < 0;
-        } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
+        } else if (operator == Operator.LE) {
             return c <= 0;
-        } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
+        } else if (operator == Operator.NE) {
             return c != 0;
         } else {
-            throw new IllegalStateException("unsupported operation: " + operator);
+            throw new UnsupportedOperationException(
+                    "Unsupported comparison operator: " + operator);
         }
     }
 }

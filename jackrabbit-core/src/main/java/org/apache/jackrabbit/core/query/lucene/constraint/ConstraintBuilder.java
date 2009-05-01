@@ -24,7 +24,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -48,6 +47,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NotImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.OrImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
@@ -168,16 +168,17 @@ public class ConstraintBuilder {
 
         public Object visit(ComparisonImpl node, Object data) throws Exception {
             DynamicOperandImpl op1 = (DynamicOperandImpl) node.getOperand1();
+            Operator operator = node.getOperatorInstance();
             StaticOperandImpl op2 = ((StaticOperandImpl) node.getOperand2());
             Value staticValue = (Value) op2.accept(this, null);
 
             DynamicOperand dynOp = (DynamicOperand) op1.accept(this, staticValue);
             SelectorImpl selector = getSelector(op1.getSelectorQName());
-            if (QueryObjectModelConstants.JCR_OPERATOR_LIKE.equals(node.getOperator())) {
+            if (operator == Operator.LIKE) {
                 return new LikeConstraint(dynOp, staticValue, selector);
             } else {
-                return new ComparisonConstraint(dynOp, node.getOperator(),
-                        staticValue, selector);
+                return new ComparisonConstraint(
+                        dynOp, operator, staticValue, selector);
             }
         }
 
