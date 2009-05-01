@@ -17,31 +17,29 @@
 package org.apache.jackrabbit.core.query.lucene.join;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 
-import javax.jcr.query.qom.QueryObjectModelConstants;
-
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
-import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
-import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
-import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.SortComparatorSource;
 
 /**
  * <code>Join</code> implements the result of a join.
  */
-public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
+public class Join implements MultiColumnQueryHits {
 
     /**
      * The outer query hits.
@@ -166,10 +164,9 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
                     Name innerName;
                     Name innerPropName;
                     Name outerPropName;
-                    if (isInner || src1 == left
-                            && JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)
-                            || src1 == right
-                            && JCR_JOIN_TYPE_RIGHT_OUTER.equals(joinType)) {
+                    if (isInner
+                            || src1 == left && JoinType.LEFT == joinType
+                            || src1 == right && JoinType.RIGHT == joinType) {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
                         inner = src2;
@@ -195,10 +192,8 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
                     MultiColumnQueryHits child = getSourceWithName(node.getChildSelectorQName(), left, right);
                     MultiColumnQueryHits parent = getSourceWithName(node.getParentSelectorQName(), left, right);
                     Condition c;
-                    if (child == left
-                            && JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)
-                            || child == right
-                            && JCR_JOIN_TYPE_RIGHT_OUTER.equals(joinType)) {
+                    if (child == left && JoinType.LEFT == joinType
+                            || child == right && JoinType.RIGHT == joinType) {
                         outer = child;
                         outerIdx = getIndex(outer, node.getChildSelectorQName());
                         c = new ChildNodeJoin(parent, reader, resolver, node);
@@ -218,10 +213,9 @@ public class Join implements MultiColumnQueryHits, QueryObjectModelConstants {
                     MultiColumnQueryHits src1 = getSourceWithName(node.getSelector1QName(), left, right);
                     MultiColumnQueryHits src2 = getSourceWithName(node.getSelector2QName(), left, right);
                     Condition c;
-                    if (isInner || src1 == left
-                            && JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)
-                            || src1 == right
-                            && JCR_JOIN_TYPE_RIGHT_OUTER.equals(joinType)) {
+                    if (isInner
+                            || src1 == left && JoinType.LEFT == joinType
+                            || src1 == right && JoinType.RIGHT == joinType) {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
                         if (node.getSelector2QPath() != null) {

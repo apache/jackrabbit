@@ -56,12 +56,11 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testLeftOuterJoin() throws RepositoryException {
        QueryObjectModel qom = qomFactory.createQuery(
-               qomFactory.join(
-                        qomFactory.selector(testNodeType, LEFT),
-                        qomFactory.selector(mixReferenceable, RIGHT),
-                        JCR_JOIN_TYPE_LEFT_OUTER,
-                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")
-                ),
+               JoinType.LEFT.join(
+                       qomFactory,
+                       qomFactory.selector(testNodeType, LEFT),
+                       qomFactory.selector(mixReferenceable, RIGHT),
+                       qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                qomFactory.descendantNode(LEFT, testRoot),
                null, null);
 
@@ -77,12 +76,11 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testRightOuterJoin() throws RepositoryException {
         QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.join(
-                         qomFactory.selector(mixReferenceable, LEFT),
-                         qomFactory.selector(testNodeType, RIGHT),
-                         JCR_JOIN_TYPE_RIGHT_OUTER,
-                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")
-                 ),
+                JoinType.RIGHT.join(
+                        qomFactory,
+                        qomFactory.selector(mixReferenceable, LEFT),
+                        qomFactory.selector(testNodeType, RIGHT),
+                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
 
@@ -92,12 +90,11 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testRightOuterJoinWithPath() throws RepositoryException {
         QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.join(
-                         qomFactory.selector(mixReferenceable, LEFT),
-                         qomFactory.selector(testNodeType, RIGHT),
-                         JCR_JOIN_TYPE_RIGHT_OUTER,
-                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)
-                 ),
+                JoinType.RIGHT.join(
+                        qomFactory,
+                        qomFactory.selector(mixReferenceable, LEFT),
+                        qomFactory.selector(testNodeType, RIGHT),
+                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
 
