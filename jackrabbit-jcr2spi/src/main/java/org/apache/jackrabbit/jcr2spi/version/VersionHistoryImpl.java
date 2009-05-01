@@ -16,36 +16,38 @@
  */
 package org.apache.jackrabbit.jcr2spi.version;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.jcr2spi.NodeImpl;
-import org.apache.jackrabbit.jcr2spi.SessionImpl;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
+
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
+import org.apache.jackrabbit.jcr2spi.NodeImpl;
+import org.apache.jackrabbit.jcr2spi.SessionImpl;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
-
-import javax.jcr.version.VersionHistory;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionIterator;
-import javax.jcr.version.VersionException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.nodetype.ConstraintViolationException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>VersionHistoryImpl</code>...
@@ -420,4 +422,21 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         // TODO: check again.. is this correct? or should NodeEntry be altered
         entry.getNodeState();
     }
+
+    public NodeIterator getAllFrozenNodes() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public VersionIterator getAllLinearVersions() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public String getVersionableIdentifier() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
 }
