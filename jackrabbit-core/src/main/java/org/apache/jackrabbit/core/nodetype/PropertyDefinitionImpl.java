@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.qom.QueryObjectModelConstants;
+
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -117,15 +117,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
 
     public String[] getAvailableQueryOperators() {
         // TODO: JCR-2091
-        return new String[] {
-                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
-        };
+        return Operator.getAllQueryOperators();
     }
 
     public boolean isFullTextSearchable() {

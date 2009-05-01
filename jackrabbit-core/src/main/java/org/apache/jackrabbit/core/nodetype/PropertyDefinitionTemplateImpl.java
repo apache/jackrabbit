@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import javax.jcr.nodetype.PropertyDefinitionTemplate;
-
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.nodetype.PropertyDefinitionTemplate;
+
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
  * A <code>PropertyDefinitionTemplateImpl</code> ...
@@ -127,15 +127,7 @@ class PropertyDefinitionTemplateImpl
 
     public String[] getAvailableQueryOperators() {
         // TODO: JCR-2091
-        return new String[] {
-                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
-        };
+        return Operator.getAllQueryOperators();
     }
 
     public boolean isFullTextSearchable() {
