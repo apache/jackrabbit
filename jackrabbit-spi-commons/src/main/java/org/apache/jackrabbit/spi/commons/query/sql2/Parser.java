@@ -41,6 +41,8 @@ import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+
 /**
  * The SQL2 parser can convert a JCR-SQL2 query to a QueryObjectModel.
  */
@@ -276,35 +278,19 @@ public class Parser {
     private Constraint parseCondition(DynamicOperand left) throws RepositoryException {
         Constraint c;
         if (readIf("=")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                    parseStaticOperand());
+            c = Operator.EQ.comparison(factory, left, parseStaticOperand());
         } else if (readIf("<>")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO,
-                    parseStaticOperand());
+            c = Operator.NE.comparison(factory, left, parseStaticOperand());
         } else if (readIf("<")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-                    parseStaticOperand());
+            c = Operator.LT.comparison(factory, left, parseStaticOperand());
         } else if (readIf(">")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-                    parseStaticOperand());
+            c = Operator.GT.comparison(factory, left, parseStaticOperand());
         } else if (readIf("<=")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-                    parseStaticOperand());
+            c = Operator.LE.comparison(factory, left, parseStaticOperand());
         } else if (readIf(">=")) {
-            c = factory
-                    .comparison(
-                            left,
-                            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-                            parseStaticOperand());
+            c = Operator.GE.comparison(factory, left, parseStaticOperand());
         } else if (readIf("LIKE")) {
-            c = factory.comparison(left,
-                    QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                    parseStaticOperand());
+            c = Operator.LIKE.comparison(factory, left, parseStaticOperand());
         } else if (readIf("IS")) {
             boolean not = readIf("NOT");
             read("NULL");
@@ -328,9 +314,8 @@ public class Parser {
                 c = getPropertyExistence(pv);
             } else {
                 read("LIKE");
-                c = factory.not(factory.comparison(left,
-                        QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                        parseStaticOperand()));
+                c = factory.not(Operator.LIKE.comparison(
+                        factory, left, parseStaticOperand()));
             }
         } else {
             throw getSyntaxError();
