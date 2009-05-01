@@ -68,7 +68,7 @@ public class DescendantNodeImpl
      *
      * @return the path; non-null
      */
-    public String getPath() {
+    public String getAncestorPath() {
         return getJCRPath(path);
     }
 
@@ -88,11 +88,6 @@ public class DescendantNodeImpl
      */
     public Path getQPath() {
         return path;
-    }
-
-    public String getAncestorPath() {
-        // TODO
-        throw new RuntimeException("Not implemented yet - see JCR-2092");
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

@@ -42,7 +42,7 @@ public class DescendantNodeConstraint extends HierarchyConstraint {
      */
     public DescendantNodeConstraint(DescendantNodeImpl constraint,
                                     SelectorImpl selector) {
-        super(constraint.getPath(), selector);
+        super(constraint.getAncestorPath(), selector);
     }
 
     /**
