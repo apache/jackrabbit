@@ -54,7 +54,7 @@ import java.util.Date;
  * <code>LockManagerImpl</code>...
  * TODO: TOBEFIXED. Lock objects obtained through this mgr are not informed if another session is or becomes lock-holder and removes the lock again.
  */
-public class LockManagerImpl implements LockManager, javax.jcr.lock.LockManager, SessionListener {
+public class LockManagerImpl implements LockStateManager, SessionListener {
 
     private static Logger log = LoggerFactory.getLogger(LockManagerImpl.class);
 

@@ -19,8 +19,8 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
-import org.apache.jackrabbit.jcr2spi.lock.LockManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
+import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
@@ -99,7 +99,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     private final WorkspaceManager wspManager;
 
-    private LockManager lockManager;
+    private LockStateManager lockManager;
     private ObservationManager obsManager;
     private QueryManager qManager;
     private VersionManager versionManager;
@@ -390,7 +390,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * @see ManagerProvider#getLockManager()
      */
-    public LockManager getLockManager() {
+    public LockStateManager getLockManager() {
         if (lockManager == null) {
             lockManager = createLockManager(wspManager, session.getItemManager());
         }
@@ -492,8 +492,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @param itemManager
      * @return a new <code>LockManager</code> instance.
      */
-    protected LockManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        LockManager lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
+    protected LockStateManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
+        LockManagerImpl lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
         session.addListener((LockManagerImpl) lMgr);
         return lMgr;
     }

@@ -19,7 +19,7 @@ package org.apache.jackrabbit.jcr2spi;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
-import org.apache.jackrabbit.jcr2spi.lock.LockManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
@@ -54,7 +54,7 @@ public interface ManagerProvider {
      * @return the <code>AccessManager</code> associated with this
      * <code>ManagerProvider</code>
      */
-    public LockManager getLockManager();
+    public LockStateManager getLockManager();
 
     /**
      * Returns the <code>VersionManager</code> associated with this

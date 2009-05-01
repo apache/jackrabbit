@@ -21,6 +21,7 @@ import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.lock.LockManager;
+import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
@@ -1129,7 +1130,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // a node that is new or not lockable never holds a lock
             return false;
         } else {
-            LockManager lMgr = session.getLockManager();
+            LockStateManager lMgr = session.getLockManager();
             return (lMgr.isLocked(getNodeState()) && lMgr.getLock(getNodeState()).getNode().isSame(this));
         }
     }
