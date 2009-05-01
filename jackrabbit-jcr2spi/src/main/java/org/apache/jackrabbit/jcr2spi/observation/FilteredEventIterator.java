@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  */
@@ -164,4 +165,10 @@ class FilteredEventIterator implements EventIterator {
             next = filter.accept(event, isLocal) ? new EventImpl(resolver, event) : null;
         }
     }
+
+    public Calendar getDate() {
+        // TODO JCR-1839
+        return null;
+    }
+
 }

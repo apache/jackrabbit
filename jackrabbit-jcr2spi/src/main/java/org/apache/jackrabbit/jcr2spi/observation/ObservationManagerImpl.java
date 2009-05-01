@@ -16,28 +16,31 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.EventBundle;
-import org.apache.jackrabbit.spi.EventFilter;
-import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.EventListenerIterator;
-import javax.jcr.observation.ObservationManager;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.observation.EventJournal;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.EventListenerIterator;
+import javax.jcr.observation.ObservationManager;
+
+import org.apache.jackrabbit.commons.iterator.EventListenerIteratorAdapter;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ObservationManagerImpl</code>...
@@ -162,6 +165,14 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             activeListeners = readOnlySubscriptions;
         }
         return new EventListenerIteratorAdapter(activeListeners.keySet());
+    }
+
+    public EventJournal getEventJournal() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1849");
+    }
+
+    public void setUserData(String userData) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1904");
     }
 
     //-----------------------< InternalEventListener >--------------------------
