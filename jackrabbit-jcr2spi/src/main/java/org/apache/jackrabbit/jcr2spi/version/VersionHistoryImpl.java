@@ -163,7 +163,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Name qLabel = getQLabel(label);
         NodeState vState = getVersionState(versionName);
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
+        session.getVersionStateManager().addVersionLabel((NodeState) getItemState(), vState, qLabel, moveLabel);
     }
 
     /**
@@ -179,7 +179,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         Version version = getVersionByLabel(qLabel);
         NodeState vState = getVersionState(version.getName());
         // delegate to version manager that operates on workspace directely
-        session.getVersionManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
+        session.getVersionStateManager().removeVersionLabel((NodeState) getItemState(), vState, qLabel);
     }
 
     /**
@@ -281,7 +281,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         VersionException, RepositoryException {
         checkStatus();
         NodeState vState = getVersionState(versionName);
-        session.getVersionManager().removeVersion((NodeState) getItemState(), vState);
+        session.getVersionStateManager().removeVersion((NodeState) getItemState(), vState);
     }
 
     //---------------------------------------------------------------< Item >---
