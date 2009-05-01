@@ -36,7 +36,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
     /**
      * The operator.
      */
-    private final String operator;
+    private final Operator operator;
 
     /**
      * The second operand.
@@ -45,7 +45,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
 
     ComparisonImpl(NamePathResolver resolver,
                    DynamicOperandImpl operand1,
-                   String operator,
+                   Operator operator,
                    StaticOperandImpl operand2) {
         super(resolver);
         this.operand1 = operand1;
@@ -75,7 +75,7 @@ public class ComparisonImpl extends ConstraintImpl implements Comparison {
      *         </ul>
      */
     public String getOperator() {
-        return operator;
+        return operator.toString();
     }
 
     /**
