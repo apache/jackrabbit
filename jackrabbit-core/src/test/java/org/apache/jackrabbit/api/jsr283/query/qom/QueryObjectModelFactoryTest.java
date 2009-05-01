@@ -54,6 +54,8 @@ import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+
 /**
  * <code>QueryObjectModelFactoryTest</code> tests all methods on the
  * {@link QueryObjectModelFactory}.
@@ -86,24 +88,11 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     private static final String FULLTEXT_SEARCH_EXPR = "foo -bar";
 
     /**
-     * Set of all possible operators.
-     */
-    private static final Set<String> OPERATORS = new HashSet<String>();
-
-    /**
      * Set of all possible join types.
      */
     private static final Set<String> JOIN_TYPES = new HashSet<String>();
 
     static {
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
-        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
-
         JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
         JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
         JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
@@ -214,8 +203,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     public void testComparison() throws RepositoryException {
         PropertyValue op1 = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
         BindVariableValue op2 = qomFactory.bindVariable(VARIABLE_NAME);
-        for (String operator : OPERATORS) {
-            Comparison comp = qomFactory.comparison(op1, operator, op2);
+        for (Operator operator : Operator.values()) {
+            Comparison comp = operator.comparison(qomFactory, op1, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
             assertEquals("Wrong operator", operator, comp.getOperator());
