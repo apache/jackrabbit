@@ -26,6 +26,7 @@ import javax.jcr.Session;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 /**
  * This class implements the {@link QueryManager} interface.
@@ -96,6 +97,10 @@ public class QueryManagerImpl implements QueryManager {
         return wspManager.getSupportedQueryLanguages();
     }
 
+    public QueryObjectModelFactory getQOMFactory() {
+        throw new UnsupportedOperationException("JCR-1104");
+    }
+
     //------------------------------------------------------------< private >---
     /**
      * Checks if this <code>QueryManagerImpl</code> instance is still usable,
@@ -109,4 +114,5 @@ public class QueryManagerImpl implements QueryManager {
             throw new RepositoryException("corresponding session has been closed");
         }
     }
+
 }

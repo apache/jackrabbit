@@ -19,28 +19,29 @@ package org.apache.jackrabbit.jcr2spi.query;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.jackrabbit.jcr2spi.ItemManager;
-import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.QueryInfo;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * Provides the default implementation for a JCR query.
@@ -223,5 +224,18 @@ public class QueryImpl implements Query {
             throw new RepositoryException(e.getMessage(), e);
         }
     }
-}
 
+    public void bindValue(String varName, Value value)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    public void setLimit(long limit) {
+        throw new UnsupportedOperationException("JCR-1104");
+    }
+
+    public void setOffset(long offset) {
+        throw new UnsupportedOperationException("JCR-1104");
+    }
+
+}
