@@ -32,16 +32,24 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.PropertyDefinitionTemplate;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -425,4 +433,51 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
             e.printStackTrace(ps);
         }
     }
+
+    public NodeDefinitionTemplate createNodeDefinitionTemplate()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public NodeTypeTemplate createNodeTypeTemplate()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public PropertyDefinitionTemplate createPropertyDefinitionTemplate()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public boolean hasNodeType(String name) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public NodeType registerNodeType(
+            NodeTypeDefinition ntd, boolean allowUpdate)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public NodeTypeIterator registerNodeTypes(
+            NodeTypeDefinition[] ntds, boolean allowUpdate)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public void unregisterNodeType(String name)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
+    public void unregisterNodeTypes(String[] names)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1591");
+    }
+
 }
