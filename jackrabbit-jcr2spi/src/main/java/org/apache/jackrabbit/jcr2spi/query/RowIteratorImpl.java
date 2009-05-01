@@ -16,25 +16,27 @@
  */
 package org.apache.jackrabbit.jcr2spi.query;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
-import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 /**
@@ -261,5 +263,31 @@ class RowIteratorImpl implements RowIterator {
                 throw new RepositoryException(e.getMessage(), e);
             }
         }
+
+        public Node getNode() throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
+        public Node getNode(String selectorName) throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
+        public String getPath() throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
+        public String getPath(String selectorName) throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
+        public double getScore() throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
+        public double getScore(String selectorName) throws RepositoryException {
+            throw new UnsupportedRepositoryOperationException("JCR-1104");
+        }
+
     }
+
 }
