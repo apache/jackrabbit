@@ -22,6 +22,8 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+
 /**
  * <code>SameNodeJoinConditionTest</code> contains test cases that cover
  * <code>SameNodeJoinCondition</code>.
@@ -41,13 +43,13 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testInnerJoin() throws RepositoryException {
-        QueryObjectModel qom = createQueryX(JCR_JOIN_TYPE_INNER, (String) null);
+        QueryObjectModel qom = createQuery(JoinType.INNER, (String) null);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n1, n1}, {n2, n2}});
     }
 
     public void testInnerJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = createQueryX(JCR_JOIN_TYPE_INNER, nodeName2);
+        QueryObjectModel qom = createQuery(JoinType.INNER, nodeName2);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n2, n1}});
     }
@@ -68,7 +70,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testLeftOuterJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = createQueryX(JCR_JOIN_TYPE_LEFT_OUTER, nodeName2);
+        QueryObjectModel qom = createQuery(JoinType.LEFT, nodeName2);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n1, null}, {n2, n1}});
     }
@@ -105,7 +107,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     //-----------------------------< utilities >--------------------------------
 
-    private QueryObjectModel createQueryX(String joinType, String relPath)
+    private QueryObjectModel createQuery(JoinType joinType, String relPath)
             throws RepositoryException {
         JoinCondition c;
         if (relPath != null) {

@@ -23,6 +23,8 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+
 /**
  * <code>SelectorTest</code>...
  */
@@ -71,10 +73,10 @@ public class SelectorTest extends AbstractQOMTest {
     public void testDuplicateNodeType() throws RepositoryException {
         try {
             Query q = qomFactory.createQuery(
-                    qomFactory.join(
+                    JoinType.INNER.join(
+                            qomFactory,
                             qomFactory.selector(testNodeType, "nt"),
                             qomFactory.selector(testNodeType, "nt"),
-                            JCR_JOIN_TYPE_INNER,
                             qomFactory.descendantNodeJoinCondition("nt", "nt")),
                     null, null, null);
             q.execute();

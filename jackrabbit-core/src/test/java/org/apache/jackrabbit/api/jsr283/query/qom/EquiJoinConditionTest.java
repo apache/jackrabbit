@@ -21,6 +21,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+
 /**
  * <code>EquiJoinConditionTest</code> contains test cases that cover
  * <code>EquiJoinCondition</code>.
@@ -47,35 +49,35 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
     public void testInnerJoin1() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_INNER, c);
+        QueryObjectModel qom = createQuery(JoinType.INNER, c);
         checkResult(qom.execute(), new Node[][]{{n1, n2}, {n2, n2}});
     }
 
     public void testInnerJoin2() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_INNER, c);
+        QueryObjectModel qom = createQuery(JoinType.INNER, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}, {n2, n2}});
     }
 
     public void testRightOuterJoin1() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_RIGHT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.RIGHT, c);
         checkResult(qom.execute(), new Node[][]{{null, n1}, {n1, n2}, {n2, n2}});
     }
 
     public void testRightOuterJoin2() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_RIGHT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.RIGHT, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}, {n2, n2}});
     }
 
     public void testLeftOuterJoin1() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_LEFT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.LEFT, c);
         checkResult(qom.execute(), new Node[][]{{n1, n2}, {n2, n2}});
     }
 
@@ -83,7 +85,7 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
     public void testLeftOuterJoin2() throws RepositoryException {
         JoinCondition c = qomFactory.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_LEFT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.LEFT, c);
         checkResult(qom.execute(), new Node[][]{{n1, null}, {n2, n1}, {n2, n2}});
     }
 }

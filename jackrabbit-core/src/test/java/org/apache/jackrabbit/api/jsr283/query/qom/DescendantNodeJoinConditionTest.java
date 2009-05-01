@@ -24,6 +24,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+
 /**
  * <code>DescendantNodeJoinConditionTest</code> contains test cases that cover
  * <code>DescendantNodeJoinCondition</code>.
@@ -44,19 +46,19 @@ public class DescendantNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testInnerJoin() throws RepositoryException {
         JoinCondition c = qomFactory.descendantNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_INNER, c);
+        QueryObjectModel qom = createQuery(JoinType.INNER, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}});
     }
 
     public void testRightOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.descendantNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_RIGHT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.RIGHT, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}, {null, n2}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.descendantNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(JCR_JOIN_TYPE_LEFT_OUTER, c);
+        QueryObjectModel qom = createQuery(JoinType.LEFT, c);
         List result = new ArrayList();
         result.add(new Node[]{n2, n1});
         // for each ancestor-or-self of testRootNode check

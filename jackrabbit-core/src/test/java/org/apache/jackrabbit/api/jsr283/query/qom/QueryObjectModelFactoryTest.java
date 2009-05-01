@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
@@ -54,6 +51,7 @@ import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 
+import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
@@ -86,17 +84,6 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * A test full text search expression
      */
     private static final String FULLTEXT_SEARCH_EXPR = "foo -bar";
-
-    /**
-     * Set of all possible join types.
-     */
-    private static final Set<String> JOIN_TYPES = new HashSet<String>();
-
-    static {
-        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
-        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
-        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
-    }
 
     /**
      * Test case for {@link QueryObjectModelFactory#and(Constraint, Constraint)}
@@ -407,11 +394,11 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         Selector s1 = qomFactory.selector(ntBase, SELECTOR_NAME1);
         Selector s2 = qomFactory.selector(testNodeType, SELECTOR_NAME1);
         JoinCondition cond = qomFactory.equiJoinCondition(ntBase, jcrPrimaryType, testNodeType, jcrPrimaryType);
-        for (String joinType : JOIN_TYPES) {
-            Join join = qomFactory.join(s1, s2, joinType, cond);
+        for (JoinType joinType : JoinType.values()) {
+            Join join = joinType.join(qomFactory, s1, s2, cond);
             assertTrue("Not a selector source", join.getLeft() instanceof Selector);
             assertTrue("Not a selector source", join.getRight() instanceof Selector);
-            assertEquals("Wrong join type", joinType, join.getJoinType());
+            assertEquals("Wrong join type", joinType.toString(), join.getJoinType());
             assertTrue("Not an EquiJoinCondition", join.getJoinCondition() instanceof EquiJoinCondition);
         }
     }
