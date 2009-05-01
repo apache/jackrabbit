@@ -146,7 +146,7 @@ public enum Operator {
     /**
      * Returns the operator with the given JCR name.
      *
-     * @param name JCR name of an a operator
+     * @param name JCR name of an operator
      * @return operator with the given name
      * @throws RepositoryException if the given name is unknown
      */
@@ -157,7 +157,7 @@ public enum Operator {
                 return operator;
             }
         }
-        throw new RepositoryException("Unknown query name: " + name);
+        throw new RepositoryException("Unknown operator name: " + name);
     }
 
 }
