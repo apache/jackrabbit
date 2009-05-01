@@ -20,13 +20,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,15 +122,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
 
     public String[] getAvailableQueryOperators() {
         // TODO: JCR-2091
-        return new String[] {
-                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
-        };
+        return Operator.getAllQueryOperators();
     }
 
     public boolean isFullTextSearchable() {
