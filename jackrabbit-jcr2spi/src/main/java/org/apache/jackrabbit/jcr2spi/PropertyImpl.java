@@ -33,6 +33,8 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
+import javax.jcr.Binary;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
@@ -42,6 +44,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.PropertyType;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 
 /**
@@ -211,6 +214,15 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
+     * @see Property#setValue(BigDecimal)
+     */
+    public void setValue(BigDecimal value) throws RepositoryException {
+        checkIsWritable(false);
+        int reqType = getRequiredType(PropertyType.DECIMAL);
+        setValue(session.getValueFactory().createValue(value), reqType);
+    }
+
+    /**
      * @see Property#setValue(Calendar)
      */
     public void setValue(Calendar value) throws ValueFormatException, VersionException, LockException, RepositoryException {
@@ -296,6 +308,13 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     /**
+     * @see Property#getDecimal()
+     */
+    public BigDecimal getDecimal() throws RepositoryException {
+        return getValue().getDecimal();
+    }
+
+    /**
      * @see Property#getDate()
      */
     public Calendar getDate() throws ValueFormatException, RepositoryException {
@@ -319,6 +338,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         } else {
             throw new ValueFormatException("Property must be of type REFERENCE (" + safeGetJCRPath() + ")");
         }
+    }
+
+    /**
+     * @see Property#getProperty()
+     */
+    public Property getProperty() throws RepositoryException {
+        // TODO JCR-1609 - this should probably be handled a bit better...
+        return getParent().getProperty(getString());
     }
 
     /**
@@ -536,4 +563,5 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException("Property must be of type REFERENCE.");
         }
     }
+
 }
