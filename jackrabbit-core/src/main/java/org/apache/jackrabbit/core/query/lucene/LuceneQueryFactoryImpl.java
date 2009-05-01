@@ -24,6 +24,8 @@ import java.util.Iterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.RepositoryException;
 
 import org.apache.lucene.search.Query;
@@ -206,8 +208,14 @@ public class LuceneQueryFactoryImpl implements LuceneQueryFactory {
         QueryParser parser = new JackrabbitQueryParser(
                 fieldname, analyzer, synonymProvider);
         try {
-            // TODO: JCR-2093 How to handle the StaticOperand below?
-            return parser.parse(fts.getFullTextSearchExpression().toString());
+            StaticOperand expr = fts.getFullTextSearchExpression();
+            if (expr instanceof Literal) {
+                return parser.parse(
+                        ((Literal) expr).getLiteralValue().getString());
+            } else {
+                throw new RepositoryException(
+                        "Unknown static operand type: " + expr);
+            }
         } catch (ParseException e) {
             throw new RepositoryException(e);
         }

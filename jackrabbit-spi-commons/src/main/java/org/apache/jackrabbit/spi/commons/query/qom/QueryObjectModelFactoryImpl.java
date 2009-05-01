@@ -58,6 +58,8 @@ import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -79,8 +81,15 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     private final NamePathResolver resolver;
 
-    public QueryObjectModelFactoryImpl(NamePathResolver resolver) {
+    /**
+     * Value factory of the current session.
+     */
+    private final ValueFactory factory;
+
+    public QueryObjectModelFactoryImpl(
+            NamePathResolver resolver, ValueFactory factory) {
         this.resolver = resolver;
+        this.factory = factory;
     }
 
     /**
@@ -533,15 +542,21 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
      */
     public FullTextSearch fullTextSearch(String selectorName,
                                          String propertyName,
-                                         StaticOperand fullTextSearchExpression)
+                                         String fullTextSearchExpression)
             throws InvalidQueryException, RepositoryException {
+        if (fullTextSearchExpression == null) {
+            throw new IllegalArgumentException(
+                    "Full text search expression is null");
+        }
         Name propName = null;
         if (propertyName != null) {
             propName = checkPropertyName(propertyName);
         }
+        Literal literal =
+            literal(factory.createValue(fullTextSearchExpression));
         return new FullTextSearchImpl(resolver,
                 checkSelectorName(selectorName), propName,
-                checkFullTextSearchExpression(fullTextSearchExpression));
+                checkFullTextSearchExpression(literal));
     }
 
     /**
