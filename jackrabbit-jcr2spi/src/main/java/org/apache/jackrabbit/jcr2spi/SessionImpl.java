@@ -630,10 +630,10 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see ManagerProvider#getVersionManager()
+     * @see ManagerProvider#getVersionStateManager()
      */
-    public VersionManager getVersionManager() {
-        return workspace.getVersionManager();
+    public VersionManager getVersionStateManager() {
+        return workspace.getVersionStateManager();
     }
 
     /**

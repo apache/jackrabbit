@@ -776,7 +776,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkHasPendingChanges();
         checkIsLocked();
         if (isCheckedOut()) {
-            NodeEntry newVersion = session.getVersionManager().checkin(getNodeState());
+            NodeEntry newVersion = session.getVersionStateManager().checkin(getNodeState());
             return (Version) getItemManager().getItem(newVersion);
         } else {
             // nothing to do
@@ -792,7 +792,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsVersionable();
         checkIsLocked();
         if (!isCheckedOut()) {
-            session.getVersionManager().checkout(getNodeState());
+            session.getVersionStateManager().checkout(getNodeState());
         } else {
             // nothing to do
             log.debug("Node " + safeGetJCRPath() + " is already checked out.");
@@ -850,7 +850,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         NodeState versionState = session.getVersionState(version);
-        session.getVersionManager().resolveMergeConflict(getNodeState(), versionState, done);
+        session.getVersionStateManager().resolveMergeConflict(getNodeState(), versionState, done);
     }
 
     /**
@@ -891,7 +891,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
-        Iterator failedIds = session.getVersionManager().merge(getNodeState(), srcWorkspace, bestEffort);
+        Iterator failedIds = session.getVersionStateManager().merge(getNodeState(), srcWorkspace, bestEffort);
         return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), failedIds);
     }
 
@@ -957,7 +957,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isNew()) {
             return true;
         }
-        return session.getVersionManager().isCheckedOut(getNodeState());
+        return session.getVersionStateManager().isCheckedOut(getNodeState());
     }
 
     /**
@@ -1070,7 +1070,7 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         NodeState versionState = session.getVersionState(version);
-        session.getVersionManager().restore(targetNode.getNodeState(), relQPath, versionState, removeExisting);
+        session.getVersionStateManager().restore(targetNode.getNodeState(), relQPath, versionState, removeExisting);
     }
 
     /**

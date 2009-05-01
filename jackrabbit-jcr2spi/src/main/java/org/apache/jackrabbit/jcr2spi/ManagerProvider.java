@@ -63,7 +63,7 @@ public interface ManagerProvider {
      * @return the <code>VersionManager</code> associated with this
      * <code>ManagerProvider</code>
      */
-    public VersionManager getVersionManager();
+    public VersionManager getVersionStateManager();
 
     public ItemDefinitionProvider getItemDefinitionProvider();
 
