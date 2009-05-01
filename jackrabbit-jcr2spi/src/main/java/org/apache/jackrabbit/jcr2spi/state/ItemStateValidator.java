@@ -467,7 +467,7 @@ public class ItemStateValidator {
             throws PathNotFoundException, VersionException, RepositoryException {
 
         NodeState nodeState = (itemState.isNode()) ? (NodeState)itemState : itemState.getParent();
-        mgrProvider.getVersionManager().checkIsCheckedOut(nodeState);
+        mgrProvider.getVersionStateManager().checkIsCheckedOut(nodeState);
     }
 
     /**
