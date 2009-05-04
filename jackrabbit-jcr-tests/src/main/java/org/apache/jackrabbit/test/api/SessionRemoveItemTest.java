@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package org.apache.jackrabbit.test.api;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -28,36 +29,22 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** <code>SessionRemoveItemTest</code>... */
 public class SessionRemoveItemTest extends AbstractJCRTest {
 
-    private static Logger log = LoggerFactory.getLogger(SessionRemoveItemTest.class);
-
     private Session adminSession;
     private Session readOnlySession;
 
-    private javax.jcr.Node removeNode;
+    private Node removeNode;
     private String nPath;
 
     protected void setUp() throws Exception {
         super.setUp();
 
-        // TODO: rm casts once jsr283 is released
-        if (superuser instanceof Session) {
-            adminSession = (Session) superuser;
-        } else {
-            throw new NotExecutableException("javax.jcr.Session expected.");
-        }
+        adminSession = superuser;
 
-        javax.jcr.Session s = helper.getReadOnlySession();
-        if (s instanceof Session) {
-            readOnlySession = (Session) s;
-        } else {
-            throw new NotExecutableException("javax.jcr.Session expected.");
-        }
+        readOnlySession = helper.getReadOnlySession();
 
         removeNode = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
@@ -131,7 +118,7 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
 
     public void testRemoveLockedChildItem() throws RepositoryException, NotExecutableException {
         // add a child property and a child node to test deep lock effect.
-        javax.jcr.Node childN = removeNode.addNode(nodeName2);
+        Node childN = removeNode.addNode(nodeName2);
         Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE2, RepositoryStub.PROP_PROP_TYPE2, "propvalue2");        
         Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();
@@ -175,7 +162,7 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
 
     public void testRemoveCheckedInItem() throws RepositoryException, NotExecutableException {
         // add a child property and a child node to test deep lock effect.
-        javax.jcr.Node childN = removeNode.addNode(nodeName2);
+        Node childN = removeNode.addNode(nodeName2);
         Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE2, RepositoryStub.PROP_PROP_TYPE2, "propvalue2");
         Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();

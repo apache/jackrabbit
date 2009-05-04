@@ -137,6 +137,10 @@ public class TestAll extends TestCase {
 
         // JCR 2.0
         
+        //// new Session features
+        
+        suite.addTestSuite(SessionRemoveItemTest.class);
+
         //// new Workspace features
         
         suite.addTestSuite(WorkspaceTest.class);

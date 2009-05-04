@@ -26,8 +26,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr tests");
 
-        suite.addTestSuite(SessionRemoveItemTest.class);
-
         return suite;
     }
 }
