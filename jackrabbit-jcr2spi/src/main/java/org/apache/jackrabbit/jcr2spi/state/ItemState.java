@@ -215,6 +215,9 @@ public abstract class ItemState {
      * @return the status of this item.
      */
     public final int getStatus() {
+        // Call calculateStatus to apply a possible pending invalidation
+        // in the entry hierarchy.
+        getHierarchyEntry().calculateStatus();
         return status;
     }
 
@@ -306,6 +309,18 @@ public abstract class ItemState {
      */
     public Iterator getListeners() {
         return Collections.unmodifiableCollection(listeners).iterator();
+    }
+
+    /**
+     * Invalidates this state: set its {@link Status} to {@link Status#INVALIDATED}
+     * if the current status is {@link Status#EXISTING}. Does nothing otherwise.
+     */
+    public void invalidate() {
+        if (status == Status.EXISTING) {
+            setStatus(Status.INVALIDATED);
+        } else {
+            log.debug("Skip invalidation for item {} with status {}", getName(), Status.getName(status));
+        }
     }
 
     /**

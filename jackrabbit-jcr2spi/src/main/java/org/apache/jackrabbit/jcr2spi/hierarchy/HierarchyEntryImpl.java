@@ -26,9 +26,12 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.ItemState.MergeResult;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +76,30 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         this.parent = parent;
         this.name = name;
         this.factory = factory;
+    }
+
+    /**
+     * Shortcut for {@link EntryFactory#getItemStateFactory()}
+     * @return
+     */
+    protected TransientItemStateFactory getItemStateFactory() {
+        return factory.getItemStateFactory();
+    }
+
+    /**
+     * Shortcut for {@link EntryFactory#getPathFactory()}
+     * @return
+     */
+    protected PathFactory getPathFactory() {
+        return factory.getPathFactory();
+    }
+
+    /**
+     * Shortcut for {@link EntryFactory#getIdFactory()}
+     * @return
+     */
+    protected IdFactory getIdFactory() {
+        return factory.getIdFactory();
     }
 
     /**
@@ -239,11 +266,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
      * @see HierarchyEntry#invalidate(boolean)
      */
     public void invalidate(boolean recursive) {
-        if (getStatus() == Status.EXISTING) {
-            ItemState state = internalGetItemState();
-            state.setStatus(Status.INVALIDATED);
+        ItemState state = internalGetItemState();
+        if (state == null) {
+            log.debug("Skip invalidation for unresolved HierarchyEntry " + name);
         } else {
-            log.debug("Skip invalidation for HierarchyEntry " + name + " with status " + Status.getName(getStatus()));
+            state.invalidate();
         }
     }
 
@@ -314,7 +341,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
          * then be merged into the current state.
          */
         try {
-            ItemStateFactory isf = factory.getItemStateFactory();
+            ItemStateFactory isf = getItemStateFactory();
             if (denotesNode()) {
                 NodeEntry ne = (NodeEntry) this;
                 isf.createNodeState(ne.getWorkspaceId(), ne);

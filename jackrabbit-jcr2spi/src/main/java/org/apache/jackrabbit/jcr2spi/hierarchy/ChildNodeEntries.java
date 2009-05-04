@@ -16,14 +16,15 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Iterator;
+
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * <code>ChildNodeEntries</code> represents a collection of <code>NodeEntry</code>s that
@@ -37,12 +38,6 @@ public interface ChildNodeEntries {
      * mean time.
      */
     boolean isComplete();
-
-    /**
-     * Mark <code>ChildNodeEntries</code> in order to force reloading the
-     * entries.
-     */
-    void invalidate();
 
     /**
      * Reloads this <code>ChildNodeEntries</code> object.
