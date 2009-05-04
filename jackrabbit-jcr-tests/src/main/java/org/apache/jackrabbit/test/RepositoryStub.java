@@ -18,7 +18,11 @@ package org.apache.jackrabbit.test;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.retention.RetentionPolicy;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -297,4 +301,10 @@ public abstract class RepositoryStub {
     public String getProperty(String name) {
         return environment.getProperty(name);
     }
+    
+    /**
+     * Return a retention policy for testing.
+     * @return retention policy
+     */
+    public abstract RetentionPolicy getRetentionPolicy(Session session) throws NotExecutableException, RepositoryException;
 }
