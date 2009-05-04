@@ -141,6 +141,10 @@ public class TestAll extends TestCase {
         
         suite.addTestSuite(ShareableNodeTest.class);
         
+        //// repository factory
+        
+        suite.addTestSuite(RepositoryFactoryTest.class);
+        
         return suite;
     }
 }
