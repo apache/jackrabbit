@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package org.apache.jackrabbit.test.api;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -22,7 +22,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>WorkspaceTest</code>...
@@ -34,12 +33,7 @@ public class WorkspaceTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        javax.jcr.Workspace wsp = superuser.getWorkspace();
-        if (wsp instanceof Workspace) {
-            workspace = (Workspace) wsp;
-        } else {
-            throw new NotExecutableException("JCR 2.0 Workspace expected.");
-        }
+        workspace = superuser.getWorkspace();
     }
 
     /**
