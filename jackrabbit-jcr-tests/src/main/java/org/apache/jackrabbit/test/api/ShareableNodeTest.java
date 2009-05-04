@@ -27,6 +27,7 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -45,6 +46,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     
     protected void setUp() throws Exception {
         super.setUp();
+        ensureSupportsFeature(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
         ensureKnowsNodeType(superuser, "mix:shareable");
     }
 

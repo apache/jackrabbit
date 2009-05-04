@@ -652,6 +652,24 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
+     * Checks that the repository supports the named feature. The given
+     * feature name must be the key of a boolean-valued repository descriptor.
+     * A {@link NotExecutableException} is thrown if the descriptor does not
+     * exists or is not <code>true</code>.
+     *
+     * @param feature descriptor key
+     * @throws NotExecutableException if the named feature is not supported
+     */
+    protected void ensureSupportsFeature(String feature)
+            throws NotExecutableException {
+        String value = superuser.getRepository().getDescriptor(feature);
+        if (!Boolean.parseBoolean(value)) {
+            throw new NotExecutableException(
+                    "Repository feature not supported: " + feature);
+        }
+    }
+
+    /**
      * Checks that the repository can set the property to the required type, otherwise aborts with
      * {@link NotExecutableException}.
      * @throws NotExecutableException when setting the property to the required
