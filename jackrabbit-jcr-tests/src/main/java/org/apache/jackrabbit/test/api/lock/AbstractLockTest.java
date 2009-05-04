@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package org.apache.jackrabbit.test.api.lock;
 
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -27,7 +27,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -98,8 +97,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     }
 
     private static LockManager getLockManager(Session session) throws RepositoryException {
-        // TODO: rm cast and adjust call as soon as 283 is released
-        return ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        return session.getWorkspace().getLockManager();
     }
 
     /**
@@ -152,12 +150,12 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      */
     public void testIsLockOwningSession() throws RepositoryException {
         assertTrue("Session must be lock owner", lock.isLockOwningSession());
-        assertTrue("Session must be lock owner", ((Lock) lockedNode.getLock()).isLockOwningSession());
+        assertTrue("Session must be lock owner", lockedNode.getLock().isLockOwningSession());
         assertTrue("Session must be lock owner", lockMgr.getLock(lockedNode.getPath()).isLockOwningSession());
 
         Session otherSession = helper.getReadOnlySession();
         try {
-            Lock lck = (Lock) ((Node) otherSession.getItem(lockedNode.getPath())).getLock();
+            Lock lck = otherSession.getNode(lockedNode.getPath()).getLock();
             assertFalse("Session must not be lock owner", lck.isLockOwningSession());
 
             Lock lck2 = getLockManager(otherSession).getLock(lockedNode.getPath());
@@ -168,7 +166,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
 
         Session otherAdmin = helper.getSuperuserSession();
         try {
-            Lock lck = (Lock) ((Node) otherAdmin.getItem(lockedNode.getPath())).getLock();
+            Lock lck = otherAdmin.getNode(lockedNode.getPath()).getLock();
             assertFalse("Other Session for the same userID must not be lock owner", lck.isLockOwningSession());
 
             Lock lck2 = getLockManager(otherAdmin).getLock(lockedNode.getPath());
@@ -291,7 +289,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     public void testGetLockOnChild() throws RepositoryException {
         if (isDeep()) {
             // get lock must succeed even if child is not lockable.
-            javax.jcr.lock.Lock lock = childNode.getLock();
+            Lock lock = childNode.getLock();
             assertNotNull(lock);
             assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock.getNode()));
 
@@ -318,7 +316,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         Node newChild = lockedNode.addNode(nodeName3, testNodeType);
         if (isDeep()) {
             // get lock must succeed even if child is not lockable.
-            javax.jcr.lock.Lock lock = newChild.getLock();
+            Lock lock = newChild.getLock();
             assertNotNull(lock);
             assertTrue("Lock.getNode() must return the lock holding node", lockedNode.isSame(lock.getNode()));
 

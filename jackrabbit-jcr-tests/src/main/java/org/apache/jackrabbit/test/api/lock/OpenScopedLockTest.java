@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package org.apache.jackrabbit.test.api.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** <code>SessionScopedLockTest</code>... */
-public class SessionScopedLockTest extends AbstractLockTest {
+/** <code>OpenScopedLockTest</code>... */
+public class OpenScopedLockTest extends AbstractLockTest {
 
-    private static Logger log = LoggerFactory.getLogger(SessionScopedLockTest.class);
+    private static Logger log = LoggerFactory.getLogger(OpenScopedLockTest.class);
 
     protected boolean isSessionScoped() {
-        return true;
+        return false;
     }
 
     protected boolean isDeep() {
@@ -33,10 +33,9 @@ public class SessionScopedLockTest extends AbstractLockTest {
     }
 
     /**
-     * {@link javax.jcr.lock.Lock#getLockToken()} must
-     * always return <code>null</code> for session scoped locks.
+     *
      */
     public void testGetLockToken() {
-        assertNull("A session scoped lock may never expose the token.", lock.getLockToken());
-    }
+        assertNotNull("A open scoped lock must expose the token to the lock holder.", lock.getLockToken());
+    } 
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.lock;
+package org.apache.jackrabbit.test.api.lock;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +28,6 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
@@ -74,8 +73,7 @@ public class LockManagerTest extends AbstractJCRTest {
     }
 
    private static LockManager getLockManager(Session session) throws RepositoryException {
-        // TODO: rm cast and adjust call as soon as 283 is released
-        return ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        return session.getWorkspace().getLockManager();
     }
 
     private static boolean containsLockToken(LockManager lMgr, String token) throws RepositoryException {
