@@ -29,6 +29,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
@@ -688,6 +689,21 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
     }
 
+    /**
+     * Checks that the repository supports the specified node type, otherwise aborts with
+     * {@link NotExecutableException}
+     * @throws NotExecutableException when the specified node type is unknown
+     */
+    protected void ensureKnowsNodeType(Session session, String nodetype) throws NotExecutableException, RepositoryException {
+        
+        try {
+            session.getWorkspace().getNodeTypeManager().getNodeType(nodetype);
+        }
+        catch (NoSuchNodeTypeException ex) {
+            throw new NotExecutableException("Repository does not support node type " + nodetype);
+        }
+    }
+    
     /**
      * Checks whether the node already has the specified mixin node type
      */

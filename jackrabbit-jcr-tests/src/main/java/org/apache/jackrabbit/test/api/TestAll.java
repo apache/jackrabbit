@@ -135,6 +135,12 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(ValueFactoryTest.class);
 
+        // JCR 2.0
+        
+        //// shareable nodes
+        
+        suite.addTestSuite(ShareableNodeTest.class);
+        
         return suite;
     }
 }
