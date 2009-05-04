@@ -27,6 +27,7 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
 import javax.jcr.NamespaceException;
 import javax.jcr.RangeIterator;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -34,6 +35,8 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.retention.RetentionPolicy;
 
 import java.util.StringTokenizer;
 import java.util.Random;
@@ -743,11 +746,29 @@ public abstract class AbstractJCRTest extends JUnitTest {
         s.refresh(false);
         Node root = s.getRootNode();
         Node testRootNode;
+        
+        RetentionManager rm;
+        try {
+            rm = s.getRetentionManager();
+        } catch (UnsupportedRepositoryOperationException ex) {
+            rm = null;
+        }
+        
         if (root.hasNode(testPath)) {
             // clean test root
             testRootNode = root.getNode(testPath);
             for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
                 Node child = children.nextNode();
+
+                // Remove retention policy if needed
+                if (rm != null) {
+                    RetentionPolicy pol = rm.getRetentionPolicy(child.getPath());
+                    if (pol != null) {
+                        rm.removeRetentionPolicy(child.getPath());
+                        s.save();
+                    }
+                }
+                
                 NodeDefinition nodeDef = child.getDefinition();
                 if (!nodeDef.isMandatory() && !nodeDef.isProtected()) {
                     // try to remove child

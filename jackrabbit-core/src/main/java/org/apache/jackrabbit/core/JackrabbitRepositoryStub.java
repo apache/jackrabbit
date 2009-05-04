@@ -43,8 +43,6 @@ import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
-import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
@@ -176,10 +174,6 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         return repository;
     }
 
-    public RetentionPolicy getRetentionPolicy(Session session) throws NotExecutableException, RepositoryException {
-        return RetentionPolicyImpl.createRetentionPolicy(RepositoryStub.RETENTION_POLICY_NAME, session);
-    }
-
     private void prepareTestContent(Session session)
             throws RepositoryException, IOException {
         JackrabbitWorkspace workspace =
@@ -206,10 +200,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         addQueryTestData(getOrAddNode(data, "query"));
         addNodeTestData(getOrAddNode(data, "node"));
         addExportTestData(getOrAddNode(data, "docViewTest"));
-        
-        // add a policy
-        // TODO check we're doing the right thing here
-        RetentionPolicyImpl.createRetentionPolicy("retentionPolicyName", session);
+        addRetentionTestData(getOrAddNode(data, "retentionTest"));
         
         session.save();
     }
@@ -237,6 +228,14 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         ValueFactory factory = node.getSession().getValueFactory();
         node.setProperty("path", factory.createValue("/", PropertyType.PATH));
         node.setProperty("multi", new String[] { "one", "two", "three" });
+    }
+
+    /**
+     * Creates a node with a RetentionPolicy
+     */
+    private void addRetentionTestData(Node node) throws RepositoryException {
+        RetentionPolicy rp = RetentionPolicyImpl.createRetentionPolicy("testRetentionPolicy", node.getSession());
+        node.getSession().getRetentionManager().setRetentionPolicy(node.getPath(), rp);
     }
 
     /**
