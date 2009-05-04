@@ -113,6 +113,8 @@ public abstract class RepositoryStub {
      * @since JCR 2.0
      */
     public static final String PROP_HOLD_NAME = "holdname";
+    
+    public static final String RETENTION_POLICY_NAME = "retentionPolicyName";
 
     /**
      * @since JCR 2.0

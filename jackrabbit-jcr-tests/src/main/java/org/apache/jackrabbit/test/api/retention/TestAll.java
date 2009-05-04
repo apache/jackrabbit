@@ -14,29 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.retention;
+package org.apache.jackrabbit.test.api.retention;
 
-import javax.jcr.retention.RetentionPolicy;
-
-import javax.jcr.RepositoryException;
-
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
- * <code>RetentionPolicyTest</code>...
+ * Test suite that includes all testcases for package javax.jcr.retention.
  */
-public class RetentionPolicyTest extends AbstractRetentionTest {
+public class TestAll extends TestCase {
 
-    public void testSetInvalidRetentionPolicy() {
-        try {
-            RetentionPolicy invalidRPolicy = new RetentionPolicy() {
-                public String getName() throws RepositoryException {
-                    return "anyName";
-                }
-            };
-            retentionMgr.setRetentionPolicy(testNodePath, invalidRPolicy);
-            fail("Setting an invalid retention policy must fail.");
-        } catch (RepositoryException e) {
-            // success
-        }
+    /**
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     */
+    public static Test suite() {
+        TestSuite suite = new TestSuite("javax.jcr.retention tests");
+
+        suite.addTestSuite(HoldTest.class);
+        suite.addTestSuite(HoldEffectTest.class);
+        suite.addTestSuite(RetentionPolicyTest.class);
+        suite.addTestSuite(RetentionPolicyEffectTest.class);
+
+        return suite;
     }
 }

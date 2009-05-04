@@ -27,11 +27,11 @@ import javax.jcr.Value;
 import javax.jcr.retention.Hold;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.jsr283.retention.AbstractRetentionTest;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.mem.MemoryFileSystem;
+import org.apache.jackrabbit.core.retention.AbstractRetentionTest;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;

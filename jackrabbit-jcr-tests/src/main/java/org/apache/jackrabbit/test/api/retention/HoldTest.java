@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.retention;
+package org.apache.jackrabbit.test.api.retention;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,7 +161,7 @@ public class HoldTest extends AbstractRetentionTest {
     public void testNonExistingNodePath() throws RepositoryException, NotExecutableException {
         String invalidPath = testNodePath + "/nonexisting";
         int cnt = 0;
-        while (getJsr283Session(superuser).nodeExists(invalidPath)) {
+        while (superuser.nodeExists(invalidPath)) {
             invalidPath += cnt++;
         }
 
@@ -190,7 +190,7 @@ public class HoldTest extends AbstractRetentionTest {
         String propPath = null;
         for (PropertyIterator it = testRootNode.getProperties(); it.hasNext();) {
             String path = it.nextProperty().getPath();
-            if (!getJsr283Session(superuser).nodeExists(path)) {
+            if (! superuser.nodeExists(path)) {
                 propPath = path;
                 break;
             }

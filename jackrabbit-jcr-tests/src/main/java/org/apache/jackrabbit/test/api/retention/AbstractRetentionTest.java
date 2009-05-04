@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.retention;
+package org.apache.jackrabbit.test.api.retention;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.retention.RetentionPolicy;
 
-import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
@@ -36,8 +36,7 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
     protected String testNodePath;
 
     protected void setUp() throws Exception {
-        // TODO: uncomment again.
-        // checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
 
         super.setUp();
 
@@ -54,27 +53,17 @@ public abstract class AbstractRetentionTest extends AbstractJCRTest {
     }
 
     protected RetentionPolicy getApplicableRetentionPolicy() throws NotExecutableException, RepositoryException {
-        return getApplicableRetentionPolicy("retentionPolicyName");
+        return getApplicableRetentionPolicy(RepositoryStub.RETENTION_POLICY_NAME);
     }
 
     protected RetentionPolicy getApplicableRetentionPolicy(String jcrName) throws NotExecutableException, RepositoryException {
-        // TODO: move to repositoryStub/helper and adjust accordingly
-        return RetentionPolicyImpl.createRetentionPolicy(jcrName, superuser);
+        return retentionMgr.getRetentionPolicy(jcrName);
     }
 
     protected static RetentionManager getRetentionManager(Session s) throws RepositoryException, NotExecutableException {
         try {
-            return getJsr283Session(s).getRetentionManager();
+            return s.getRetentionManager();
         } catch (UnsupportedRepositoryOperationException e) {
-            throw new NotExecutableException();
-        }
-    }
-
-    protected static javax.jcr.Session getJsr283Session(Session s) throws NotExecutableException {
-        // TODO: get rid of method once jsr 283 is released
-        if (s instanceof javax.jcr.Session) {
-            return (javax.jcr.Session) s;
-        } else {
             throw new NotExecutableException();
         }
     }
