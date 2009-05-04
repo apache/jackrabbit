@@ -16,27 +16,28 @@
  */
 package org.apache.jackrabbit.jcr2spi.hierarchy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.ChildInfo;
-import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.commons.collections.list.AbstractLinkedList;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
+import org.apache.commons.collections.list.AbstractLinkedList;
+import org.apache.jackrabbit.jcr2spi.state.Status;
+import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>ChildNodeEntriesImpl</code> implements a memory sensitive implementation
@@ -49,7 +50,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     private static final int STATUS_OK = 0;
     private static final int STATUS_INVALIDATED = 1;
 
-    private int status = STATUS_OK;
     private boolean complete = false;
 
     /**
@@ -122,16 +122,9 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
      * @see ChildNodeEntries#isComplete()
      */
     public boolean isComplete() {
-        return (status == STATUS_OK && complete) ||
+        return (parent.getStatus() != Status.INVALIDATED && complete) ||
                 parent.getStatus() == Status.NEW ||
                 Status.isTerminal(parent.getStatus());
-    }
-
-    /**
-     * @see ChildNodeEntries#invalidate()
-     */
-    public void invalidate() {
-        this.status = STATUS_INVALIDATED;
     }
 
     /**
@@ -189,7 +182,6 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             prevLN = ln;
         }
         // finally reset the status
-        status = STATUS_OK;
         complete = true;
     }
 
