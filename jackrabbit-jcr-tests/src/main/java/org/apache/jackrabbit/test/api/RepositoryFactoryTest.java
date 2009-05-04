@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283;
+package org.apache.jackrabbit.test.api;
 
 import java.util.Collections;
 
