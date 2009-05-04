@@ -88,7 +88,7 @@
               <name>known.issues</name>
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
-                org.apache.jackrabbit.core.ShareableNodeTest#testSharedNodePath
+                org.apache.jackrabbit.test.api.ShareableNodeTest#testSharedNodePath
               </value>
             </property>
           </systemProperties>
