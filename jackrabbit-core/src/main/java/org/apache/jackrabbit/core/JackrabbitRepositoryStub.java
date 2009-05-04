@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -41,6 +42,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
@@ -198,6 +201,11 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         addQueryTestData(getOrAddNode(data, "query"));
         addNodeTestData(getOrAddNode(data, "node"));
         addExportTestData(getOrAddNode(data, "docViewTest"));
+        
+        // add a policy
+        // TODO check we're doing the right thing here
+        RetentionPolicyImpl.createRetentionPolicy("retentionPolicyName", session);
+        
         session.save();
     }
 

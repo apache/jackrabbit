@@ -32,11 +32,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.retention tests");
 
-        suite.addTestSuite(HoldTest.class);
-        suite.addTestSuite(HoldEffectTest.class);
-        suite.addTestSuite(RetentionPolicyTest.class);
-        suite.addTestSuite(RetentionPolicyEffectTest.class);
-
         return suite;
     }
 }

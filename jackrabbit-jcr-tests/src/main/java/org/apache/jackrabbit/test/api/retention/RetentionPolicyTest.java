@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.retention;
+package org.apache.jackrabbit.test.api.retention;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
@@ -161,7 +161,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
     public void testNonExistingNodePath() throws RepositoryException, NotExecutableException {
         String invalidPath = testNodePath + "/nonexisting";
         int cnt = 0;
-        while (getJsr283Session(superuser).nodeExists(invalidPath)) {
+        while (superuser.nodeExists(invalidPath)) {
             invalidPath += cnt++;
         }
 
@@ -189,7 +189,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         String propPath = null;
         for (PropertyIterator it = testRootNode.getProperties(); it.hasNext();) {
             String path = it.nextProperty().getPath();
-            if (!getJsr283Session(superuser).nodeExists(path)) {
+            if (!superuser.nodeExists(path)) {
                 propPath = path;
                 break;
             }
@@ -234,7 +234,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
     }
 
     public void testReadOnlySession() throws NotExecutableException, RepositoryException {
-        javax.jcr.Session s = helper.getReadOnlySession();
+        Session s = helper.getReadOnlySession();
         try {
             RetentionManager rmgr = getRetentionManager(s);
             try {
@@ -258,7 +258,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         String childPath = getLockedChildNode().getPath();
 
         // get another session.
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        Session otherS = helper.getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
@@ -282,7 +282,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         retentionMgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
         testRootNode.save();
 
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        Session otherS = helper.getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.removeRetentionPolicy(childPath);
@@ -324,7 +324,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         String childPath = child.getPath();
 
         // get another session.
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        Session otherS = helper.getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
@@ -353,7 +353,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         superuser.save();
         child.checkin();
 
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        Session otherS = helper.getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.removeRetentionPolicy(child.getPath());
