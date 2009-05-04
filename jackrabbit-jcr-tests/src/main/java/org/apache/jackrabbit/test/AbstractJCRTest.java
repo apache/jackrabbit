@@ -666,7 +666,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected void ensureSupportsFeature(String feature)
             throws NotExecutableException {
         String value = superuser.getRepository().getDescriptor(feature);
-        if (!Boolean.parseBoolean(value)) {
+        if (! Boolean.valueOf(value).booleanValue()) {
             throw new NotExecutableException(
                     "Repository feature not supported: " + feature);
         }
