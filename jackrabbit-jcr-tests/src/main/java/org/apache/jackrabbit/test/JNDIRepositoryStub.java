@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.test;
 
+import java.util.Properties;
+
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.retention.RetentionPolicy;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.rmi.PortableRemoteObject;
-import java.util.Properties;
 
 /**
  * Implements the abstract class <code>RepositoryStub</code> and uses JNDI
@@ -65,10 +63,4 @@ public class JNDIRepositoryStub extends RepositoryStub {
         }
         return repository;
     }
-
-    public RetentionPolicy getRetentionPolicy(Session session) throws NotExecutableException, RepositoryException {
-        // TODO
-        throw new NotExecutableException("");
-    }
-
 }

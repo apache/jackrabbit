@@ -118,7 +118,7 @@ public abstract class RepositoryStub {
      */
     public static final String PROP_HOLD_NAME = "holdname";
     
-    public static final String RETENTION_POLICY_NAME = "retentionPolicyName";
+    public static final String RETENTION_POLICY_HOLDER = "retentionpolicyholder";
 
     /**
      * @since JCR 2.0
@@ -301,10 +301,4 @@ public abstract class RepositoryStub {
     public String getProperty(String name) {
         return environment.getProperty(name);
     }
-    
-    /**
-     * Return a retention policy for testing.
-     * @return retention policy
-     */
-    public abstract RetentionPolicy getRetentionPolicy(Session session) throws NotExecutableException, RepositoryException;
 }

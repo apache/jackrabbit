@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.test;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Credentials;
-import javax.jcr.retention.RetentionPolicy;
-
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Utility class to get access to {@link javax.jcr.Session} instances.
@@ -188,9 +187,4 @@ public class RepositoryHelper {
     public Credentials getSuperuserCredentials() {
         return repoStub.getSuperuserCredentials();
     }
-    
-    public RetentionPolicy getRetentionPolicy(Session session) throws NotExecutableException, RepositoryException {
-        return repoStub.getRetentionPolicy(session);
-    }
-    
 }
