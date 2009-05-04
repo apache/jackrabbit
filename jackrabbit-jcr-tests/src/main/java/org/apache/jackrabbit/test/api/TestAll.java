@@ -137,6 +137,10 @@ public class TestAll extends TestCase {
 
         // JCR 2.0
         
+        //// new Workspace features
+        
+        suite.addTestSuite(WorkspaceTest.class);
+        
         //// shareable nodes
         
         suite.addTestSuite(ShareableNodeTest.class);
