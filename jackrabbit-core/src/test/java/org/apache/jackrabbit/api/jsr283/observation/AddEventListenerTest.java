@@ -42,7 +42,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 Event.PROPERTY_ADDED,
                 testRoot,
                 true,
-                new String[]{getIdentifier(n1)},
+                new String[]{n1.getIdentifier()},
                 null,
                 false);
         n1.setProperty(propertyName1, "foo");

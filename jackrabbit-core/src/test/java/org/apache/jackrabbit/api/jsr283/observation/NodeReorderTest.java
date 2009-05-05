@@ -89,7 +89,7 @@ public class NodeReorderTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         testRootNode.orderBefore(nodeName3, nodeName2);
         testRootNode.save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -161,7 +161,7 @@ public class NodeReorderTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         testRootNode.orderBefore(nodeName1 + "[3]", nodeName1 + "[2]");
         //testRootNode.orderBefore(nodeName1 + "[2]", null);
         testRootNode.save();
@@ -240,7 +240,7 @@ public class NodeReorderTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         testRootNode.orderBefore(nodeName1 + "[2]", null);
         testRootNode.getNode(nodeName3).remove();
         testRootNode.save();
@@ -294,9 +294,9 @@ public class NodeReorderTest extends AbstractObservationTest {
     protected void checkNodeReordered(Event[] events, String src,
                                       String dest, String before)
             throws RepositoryException {
-        checkNodes(events, new String[]{dest}, null, NODE_MOVED);
+        checkNodes(events, new String[]{dest}, null, Event.NODE_MOVED);
         assertEquals("Wrong number of events", 1, events.length);
-        Map info = getInfo(events[0]);
+        Map info = events[0].getInfo();
         checkInfoEntry(info, SRC_CHILD_REL_PATH, src);
         checkInfoEntry(info, DEST_CHILD_REL_PATH, before);
     }
