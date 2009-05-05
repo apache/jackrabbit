@@ -21,6 +21,7 @@ import javax.jcr.Node;
 import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 import org.apache.jackrabbit.test.api.observation.EventResult;
 
 /**

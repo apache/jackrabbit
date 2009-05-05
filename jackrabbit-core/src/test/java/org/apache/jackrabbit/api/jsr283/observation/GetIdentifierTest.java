@@ -21,6 +21,8 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.observation.Event;
 
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
+
 /**
  * <code>IdentifierTest</code> checks if the identifier of an event is correct.
  */

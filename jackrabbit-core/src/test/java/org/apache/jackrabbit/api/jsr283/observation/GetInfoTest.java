@@ -21,6 +21,8 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.observation.Event;
 
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
+
 /**
  * <code>GetInfoTest</code> checks that the info map is empty for event types:
  * {@link Event#NODE_ADDED}, {@link Event#NODE_REMOVED},

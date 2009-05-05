@@ -27,6 +27,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventJournal;
 
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
