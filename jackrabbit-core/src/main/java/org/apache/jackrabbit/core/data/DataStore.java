@@ -106,7 +106,7 @@ public interface DataStore {
      * @return an iterator over all DataIdentifier objects
      * @throws DataStoreException if the list could not be read
      */
-    Iterator getAllIdentifiers() throws DataStoreException;
+    Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException;
 
     /**
      * Initialized the data store
