@@ -71,6 +71,10 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
                 org.apache.jackrabbit.test.api.lock.LockTest
+                org.apache.jackrabbit.test.api.lock.LockManagerTest
+                org.apache.jackrabbit.test.api.lock.SessionScopedLockTest
+                org.apache.jackrabbit.test.api.lock.OpenScopedLockTest
+                org.apache.jackrabbit.test.api.lock.DeepLockTest
                 org.apache.jackrabbit.jcr2spi.lock.SessionScopedLockTest
               </value>
             </property>
