@@ -68,13 +68,13 @@ public class Parser {
     private String currentToken;
     private boolean currentTokenQuoted;
     private Value currentValue;
-    private ArrayList expected;
+    private ArrayList<String> expected;
 
     // The bind variables
-    private HashMap bindVariables;
+    private HashMap<String, BindVariableValue> bindVariables;
 
     // The list of selectors of this query
-    private ArrayList selectors;
+    private ArrayList<Selector> selectors;
 
     // SQL injection protection: if disabled, literals are not allowed
     private boolean allowTextLiterals = true, allowNumberLiterals = true;
@@ -103,12 +103,12 @@ public class Parser {
     // Page 125
     public QueryObjectModel createQueryObjectModel(String query) throws RepositoryException {
         initialize(query);
-        selectors = new ArrayList();
-        expected = new ArrayList();
-        bindVariables = new HashMap();
+        selectors = new ArrayList<Selector>();
+        expected = new ArrayList<String>();
+        bindVariables = new HashMap<String, BindVariableValue>();
         read();
         read("SELECT");
-        ArrayList list = parseColumns();
+        ArrayList<ColumnOrWildcard> list = parseColumns();
         read("FROM");
         Source source = parseSource();
         Column[] columnArray = resolveColumns(list);
@@ -461,7 +461,7 @@ public class Parser {
         } else if (currentTokenType == PARAMETER) {
             read();
             String name = readName();
-            BindVariableValue var = (BindVariableValue) bindVariables.get(name);
+            BindVariableValue var = bindVariables.get(name);
             if (var == null) {
                 var = factory.bindVariable(name);
                 bindVariables.put(name, var);
@@ -480,7 +480,7 @@ public class Parser {
 
     // Page 157
     private Ordering[] parseOrder() throws RepositoryException {
-        ArrayList orderList = new ArrayList();
+        ArrayList<Ordering> orderList = new ArrayList<Ordering>();
         do {
             Ordering ordering;
             DynamicOperand op = parseDynamicOperand();
@@ -498,8 +498,8 @@ public class Parser {
     }
 
     // Page 159
-    private ArrayList parseColumns() throws RepositoryException {
-        ArrayList list = new ArrayList();
+    private ArrayList<ColumnOrWildcard> parseColumns() throws RepositoryException {
+        ArrayList<ColumnOrWildcard> list = new ArrayList<ColumnOrWildcard>();
         if (readIf("*")) {
             list.add(new ColumnOrWildcard());
         } else {
@@ -527,13 +527,11 @@ public class Parser {
         return list;
     }
 
-    private Column[] resolveColumns(ArrayList list) throws RepositoryException {
-        ArrayList columns = new ArrayList();
-        for (int i = 0; i < list.size(); i++) {
-            ColumnOrWildcard c = (ColumnOrWildcard) list.get(i);
+    private Column[] resolveColumns(ArrayList<ColumnOrWildcard> list) throws RepositoryException {
+        ArrayList<Column> columns = new ArrayList<Column>();
+        for (ColumnOrWildcard c : list) {
             if (c.propertyName == null) {
-                for (int j = 0; j < selectors.size(); j++) {
-                    Selector selector = (Selector) selectors.get(j);
+                for (Selector selector : selectors) {
                     if (c.selectorName == null
                             || c.selectorName
                                     .equals(selector.getSelectorName())) {
@@ -915,12 +913,12 @@ public class Parser {
         if (expected == null || expected.size() == 0) {
             return getSyntaxError(null);
         } else {
-            StringBuffer buff = new StringBuffer();
-            for (int i = 0; i < expected.size(); i++) {
-                if (i > 0) {
+            StringBuilder buff = new StringBuilder();
+            for (String exp : expected) {
+                if (buff.length() > 0) {
                     buff.append(", ");
                 }
-                buff.append(expected.get(i));
+                buff.append(exp);
             }
             return getSyntaxError(buff.toString());
         }
