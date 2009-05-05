@@ -49,6 +49,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(AddEventListenerTest.class);
         suite.addTestSuite(WorkspaceOperationTest.class);
 
+        // JCR 2.0
+        
+        suite.addTestSuite(GetDateTest.class);
+        
         return suite;
     }
 }
