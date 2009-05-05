@@ -605,8 +605,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @throws NotExecutableException If the feature is not supported.
      */
     protected void checkSupportedOption(String descriptorKey) throws RepositoryException, NotExecutableException {
-        if (Boolean.FALSE.toString().equals(helper.getRepository().getDescriptor(descriptorKey))) {
-            throw new NotExecutableException();
+        String value = helper.getRepository().getDescriptor(descriptorKey);
+        if (value == null || ! Boolean.valueOf(value).booleanValue()) {
+            throw new NotExecutableException (
+                    "Repository feature not supported: " + descriptorKey);
         }
     }
 
@@ -651,24 +653,6 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 canSetIt |= canSetProperty(mixins[i], propertyName, propertyType, isMultiple);
             }
             return canSetIt;
-        }
-    }
-
-    /**
-     * Checks that the repository supports the named feature. The given
-     * feature name must be the key of a boolean-valued repository descriptor.
-     * A {@link NotExecutableException} is thrown if the descriptor does not
-     * exists or is not <code>true</code>.
-     *
-     * @param feature descriptor key
-     * @throws NotExecutableException if the named feature is not supported
-     */
-    protected void ensureSupportsFeature(String feature)
-            throws NotExecutableException {
-        String value = superuser.getRepository().getDescriptor(feature);
-        if (! Boolean.valueOf(value).booleanValue()) {
-            throw new NotExecutableException(
-                    "Repository feature not supported: " + feature);
         }
     }
 
