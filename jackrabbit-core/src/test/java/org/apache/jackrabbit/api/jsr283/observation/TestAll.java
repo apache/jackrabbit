@@ -30,7 +30,6 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("javax.jcr.observation tests");
 
         suite.addTestSuite(EventJournalTest.class);
-        suite.addTestSuite(GetIdentifierTest.class);
         suite.addTestSuite(GetInfoTest.class);
         suite.addTestSuite(NodeMovedTest.class);
         suite.addTestSuite(NodeReorderTest.class);
