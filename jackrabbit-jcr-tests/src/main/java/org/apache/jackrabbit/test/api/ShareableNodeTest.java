@@ -46,7 +46,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     
     protected void setUp() throws Exception {
         super.setUp();
-        ensureSupportsFeature(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
         ensureKnowsNodeType(superuser, "mix:shareable");
     }
 
