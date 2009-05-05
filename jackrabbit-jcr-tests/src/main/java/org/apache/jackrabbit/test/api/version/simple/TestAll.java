@@ -14,19 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package org.apache.jackrabbit.test.api.version.simple;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /** <code>TestAll</code>... */
 public class TestAll extends TestCase {
-
-    private static Logger log = LoggerFactory.getLogger(TestAll.class);
 
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.version.simple tests");
@@ -34,7 +29,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(BasicTest.class);
         suite.addTestSuite(CheckinTest.class);
         suite.addTestSuite(CheckoutTest.class);
+        suite.addTestSuite(CopyTest.class);
         suite.addTestSuite(FrozenNodeTest.class);
+        suite.addTestSuite(RestoreTest.class);
 
         return suite;
     }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package org.apache.jackrabbit.test.api.version.simple;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -44,15 +44,28 @@ public class CopyTest extends AbstractVersionTest {
         super.setUp();
     }
 
+    protected void tearDown() throws Exception {
+        // remove copied node
+        try {
+            String dstPath = getProperty("destination");
+            superuser.getNode(dstPath).remove();
+            testRootNode.save();
+        } catch (Exception e) {
+            log.println("Exception in tearDown: " + e.toString());
+        } finally {
+            super.tearDown();
+        }
+    }
+
     public void testCopy() throws RepositoryException {
-        Workspace wsp = (Workspace) superuser.getWorkspace();
+        Workspace wsp = superuser.getWorkspace();
         VersionManager vMgr = wsp.getVersionManager();
         String srcPath = versionableNode.getPath();
         String dstPath = getProperty("destination");
         wsp.copy(srcPath, dstPath);
 
         // check versionable
-        Node v = (Node) ((javax.jcr.Session) superuser).getNode(dstPath);
+        Node v = superuser.getNode(dstPath);
         assertTrue("Copied Node.isNodeType(mix:simpleVersionable) must return true.",
                 v.isNodeType(mixSimpleVersionable));
         assertFalse("Copied Node.isNodeType(mix:versionable) must return false.",
@@ -66,19 +79,4 @@ public class CopyTest extends AbstractVersionTest {
         // check if 1 version
         assertEquals("Copied node must have 1 version.", 1, getNumberOfVersions(vh2));
     }
-
-    protected void tearDown() throws Exception {
-        // remove copied node
-        try {
-            String dstPath = getProperty("destination");
-            ((javax.jcr.Session) superuser).getNode(dstPath).remove();
-            testRootNode.save();
-        } catch (Exception e) {
-            log.println("Exception in tearDown: " + e.toString());
-        } finally {
-            super.tearDown();
-        }
-    }
-
-
 }

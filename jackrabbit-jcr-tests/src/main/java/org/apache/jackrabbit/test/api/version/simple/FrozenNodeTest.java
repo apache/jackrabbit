@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package org.apache.jackrabbit.test.api.version.simple;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -41,7 +41,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testFrozenNodeUUUID() throws RepositoryException {
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode();
         String puuid = n.getProperty(jcrUUID).getValue().getString();
         String nuuid = n.getUUID();
@@ -54,7 +54,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
     public void testFrozenChildNodeUUUID() throws RepositoryException {
         versionableNode.addNode("child");
         versionableNode.save();
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode().getNode("child");
         String puuid = n.getProperty(jcrUUID).getValue().getString();
         String nuuid = n.getUUID();
@@ -68,7 +68,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
         // make versionable node referenceable
         versionableNode.addMixin(mixReferenceable);
         versionableNode.save();
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode();
         String fuuid = n.getProperty(jcrFrozenUuid).getValue().getString();
         String ruuid = versionableNode.getUUID();
@@ -82,7 +82,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
         Node n1 = versionableNode.addNode("child");
         n1.addMixin(mixReferenceable);
         versionableNode.save();
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode().getNode("child");
         String fuuid = n.getProperty(jcrFrozenUuid).getValue().getString();
         String ruuid = n1.getUUID();
@@ -94,7 +94,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testFrozenNodeNodeType() throws RepositoryException {
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode();
         String puuid = n.getProperty(jcrPrimaryType).getValue().getString();
         String nuuid = n.getPrimaryNodeType().getName();
@@ -107,7 +107,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
     public void testFrozenChildNodeNodeType() throws RepositoryException {
         versionableNode.addNode("child");
         versionableNode.save();
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode().getNode("child");
         String puuid = n.getProperty(jcrPrimaryType).getValue().getString();
         String nuuid = n.getPrimaryNodeType().getName();
@@ -118,7 +118,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testFrozenNodeType() throws RepositoryException {
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode();
         String fuuid = n.getProperty("jcr:frozenPrimaryType").getValue().getString();
         String ruuid = versionableNode.getPrimaryNodeType().getName();
@@ -131,7 +131,7 @@ public class FrozenNodeTest extends AbstractVersionTest {
     public void testFrozenChildNodeType() throws RepositoryException {
         Node n1 = versionableNode.addNode("child");
         versionableNode.save();
-        Version v = (Version) versionableNode.checkin();
+        Version v = versionableNode.checkin();
         Node n = v.getFrozenNode().getNode("child");
         String fuuid = n.getProperty("jcr:frozenPrimaryType").getValue().getString();
         String ruuid = n1.getPrimaryNodeType().getName();
