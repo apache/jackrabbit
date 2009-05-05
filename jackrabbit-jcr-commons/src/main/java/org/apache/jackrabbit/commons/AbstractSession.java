@@ -30,6 +30,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -355,6 +356,14 @@ public abstract class AbstractSession implements Session {
 
     //-----------------------------------------------------< Item handling >--
 
+    private String toRelativePath(String absPath) throws PathNotFoundException {
+        if (absPath.startsWith("/") && absPath.length() > 1) {
+            return absPath.substring(1);
+        } else {
+            throw new PathNotFoundException("Not an absolute path: " + absPath);
+        }
+    }
+
     /**
      * Returns the node or property at the given path.
      * <p>
@@ -369,6 +378,7 @@ public abstract class AbstractSession implements Session {
      *     above call fails with a {@link PathNotFoundException}
      * </ul>
      *
+     * @see Session#getItem(String)
      * @param absPath absolute path
      * @return the node or property with the given path
      * @throws PathNotFoundException if the given path is invalid or not found
@@ -376,20 +386,16 @@ public abstract class AbstractSession implements Session {
      */
     public Item getItem(String absPath)
             throws PathNotFoundException, RepositoryException {
-        if (!absPath.startsWith("/")) {
-            throw new PathNotFoundException("Not an absolute path: " + absPath);
-        }
-
         Node root = getRootNode();
-        String relPath = absPath.substring(1);
-        if (relPath.length() == 0) {
+        if (absPath.equals("/")) {
             return root;
-        }
-
-        try {
-            return root.getNode(relPath);
-        } catch (PathNotFoundException e) {
-            return root.getProperty(relPath);
+        } else {
+            String relPath = toRelativePath(absPath);
+            if (root.hasNode(relPath)) {
+                return root.getNode(relPath);
+            } else {
+                return root.getProperty(relPath);
+            }
         }
     }
 
@@ -399,17 +405,98 @@ public abstract class AbstractSession implements Session {
      * if a {@link PathNotFoundException} was thrown. Other exceptions are
      * passed through.
      *
+     * @see Session#itemExists(String)
      * @param absPath absolute path
      * @return <code>true</code> if an item exists at the given path,
      *         <code>false</code> otherwise
      * @throws RepositoryException if an error occurs
      */
     public boolean itemExists(String absPath) throws RepositoryException {
-        try {
-            getItem(absPath);
+        if (absPath.equals("/")) {
             return true;
-        } catch (PathNotFoundException e) {
+        } else {
+            Node root = getRootNode();
+            String relPath = toRelativePath(absPath);
+            return root.hasNode(relPath) || root.hasProperty(relPath);
+        }
+    }
+
+    /**
+     * Removes the identified item. Implemented by calling
+     * {@link Item#remove()} on the item removed by {@link #getItem(String)}.
+     *
+     * @see Session#removeItem(String)
+     * @param absolute path of the item to be removed
+     * @throws RepositoryException if the item can not be removed
+     */
+    public void removeItem(String absPath) throws RepositoryException {
+        getItem(absPath).remove();
+    }
+
+    /**
+     * Returns the node with the given absolute path.
+     *
+     * @see Session#getNode(String)
+     * @param absPath absolute path
+     * @return node at the given path
+     * @throws RepositoryException if the node can not be accessed
+     */
+    public Node getNode(String absPath) throws RepositoryException {
+        Node root = getRootNode();
+        if (absPath.equals("/")) {
+            return root;
+        } else {
+            return root.getNode(toRelativePath(absPath));
+        }
+    }
+
+    /**
+     * Checks whether a node with the given absolute path exists.
+     *
+     * @see Session#nodeExists(String)
+     * @param absPath absolute path
+     * @return <code>true</code> if a node with the given path exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException if the path is invalid
+     */
+    public boolean nodeExists(String absPath) throws RepositoryException {
+        if (absPath.equals("/")) {
+            return true;
+        } else {
+            return getRootNode().hasNode(toRelativePath(absPath));
+        }
+    }
+
+    /**
+     * Returns the property with the given absolute path.
+     *
+     * @see Session#getProperty(String)
+     * @param absPath absolute path
+     * @return node at the given path
+     * @throws RepositoryException if the property can not be accessed
+     */
+    public Property getProperty(String absPath) throws RepositoryException {
+        if (absPath.equals("/")) {
+            throw new RepositoryException("The root node is not a property");
+        } else {
+            return getRootNode().getProperty(toRelativePath(absPath));
+        }
+    }
+
+    /**
+     * Checks whether a property with the given absolute path exists.
+     *
+     * @see Session#propertyExists(String)
+     * @param absPath absolute path
+     * @return <code>true</code> if a property with the given path exists,
+     *         <code>false</code> otherwise
+     * @throws RepositoryException if the path is invalid
+     */
+    public boolean propertyExists(String absPath) throws RepositoryException {
+        if (absPath.equals("/")) {
             return false;
+        } else {
+            return getRootNode().hasProperty(toRelativePath(absPath));
         }
     }
 
