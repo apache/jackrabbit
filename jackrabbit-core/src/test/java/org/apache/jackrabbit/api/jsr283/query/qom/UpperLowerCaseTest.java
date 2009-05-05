@@ -24,8 +24,6 @@ import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.DynamicOperand;
 
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-
 /**
  * <code>UpperLowerCaseTest</code> performs tests with upper- and lower-case
  * operands.
@@ -70,26 +68,26 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
 
         // upper case
         checkQueries(qomFactory.propertyValue("s", propertyName1),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.NAME,
                 new boolean[]{false, false, false, false, true});
 
         checkQueries(qomFactory.propertyValue("s", propertyName2),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.NAME,
                 new boolean[]{false, false, false, false, true});
 
         // lower case
         checkQueries(qomFactory.propertyValue("s", propertyName1),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.NAME,
                 new boolean[]{true, false, false, false, false});
 
         checkQueries(qomFactory.propertyValue("s", propertyName2),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.NAME,
                 new boolean[]{true, false, false, false, false});
@@ -98,26 +96,26 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     public void testPropertyValue() throws RepositoryException {
         // upper case
         checkQueries(qomFactory.propertyValue("s", propertyName1),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{false, false, false, false, true});
 
         checkQueries(qomFactory.propertyValue("s", propertyName2),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{false, false, false, false, true});
 
         // lower case
         checkQueries(qomFactory.propertyValue("s", propertyName1),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{true, false, false, false, false});
 
         checkQueries(qomFactory.propertyValue("s", propertyName2),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{true, false, false, false, false});
@@ -126,7 +124,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     public void testUpperLowerCase() throws RepositoryException {
         // first upper case, then lower case again
         checkQueries(qomFactory.upperCase(qomFactory.propertyValue("s", propertyName1)),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{true, false, false, false, false});
@@ -135,7 +133,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     public void testUpperCaseTwice() throws RepositoryException {
         // upper case twice
         checkQueries(qomFactory.upperCase(qomFactory.propertyValue("s", propertyName1)),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{false, false, false, false, true});
@@ -144,7 +142,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     public void testLowerUpperCase() throws RepositoryException {
         // first lower case, then upper case again
         checkQueries(qomFactory.lowerCase(qomFactory.propertyValue("s", propertyName1)),
-                true, Operator.EQ,
+                true, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{false, false, false, false, true});
@@ -153,7 +151,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     public void testLowerCaseTwice() throws RepositoryException {
         // lower case twice
         checkQueries(qomFactory.lowerCase(qomFactory.propertyValue("s", propertyName1)),
-                false, Operator.EQ,
+                false, JCR_OPERATOR_EQUAL_TO,
                 new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
                 PropertyType.STRING,
                 new boolean[]{true, false, false, false, false});
@@ -163,7 +161,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
 
     private void checkQueries(DynamicOperand operand,
                               boolean toUpper,
-                              Operator operator,
+                              String operator,
                               String[] literals,
                               int type,
                               boolean[] matches) throws RepositoryException {
@@ -175,7 +173,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     
     private Query createQuery(DynamicOperand operand,
                               boolean toUpper,
-                              Operator operator,
+                              String operator,
                               Value literal) throws RepositoryException {
         if (toUpper) {
             operand = qomFactory.upperCase(operand);
@@ -186,10 +184,11 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
-                        operator.comparison(
-                                qomFactory,
+                        qomFactory.comparison(
                                 operand,
-                                qomFactory.literal(literal))
+                                operator,
+                                qomFactory.literal(literal)
+                        )
                 ), null, null);
     }
 }

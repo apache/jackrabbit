@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Calendar;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.Node;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.query.InvalidQueryException;
+import javax.jcr.PropertyType;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-import org.apache.jackrabbit.test.NotExecutableException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Calendar;
 
 /**
  * <code>LengthTest</code> performs tests with the Query Object Model length
@@ -132,7 +132,7 @@ public class LengthTest extends AbstractQOMTest {
         node.save();
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
-        executeQuery(propertyName1, Operator.EQ, vf.createValue(length));
+        executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     public void testLengthBinaryLiteral() throws RepositoryException {
@@ -141,7 +141,7 @@ public class LengthTest extends AbstractQOMTest {
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
         InputStream in = new ByteArrayInputStream(length.getBytes());
-        executeQuery(propertyName1, Operator.EQ, vf.createValue(in));
+        executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(in));
     }
 
     public void testLengthDoubleLiteral() throws RepositoryException {
@@ -149,7 +149,7 @@ public class LengthTest extends AbstractQOMTest {
         node.save();
 
         double length = node.getProperty(propertyName1).getLength();
-        executeQuery(propertyName1, Operator.EQ, vf.createValue(length));
+        executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     public void testLengthDateLiteral() throws RepositoryException {
@@ -158,12 +158,12 @@ public class LengthTest extends AbstractQOMTest {
 
         Calendar length = Calendar.getInstance();
         length.setTimeInMillis(node.getProperty(propertyName1).getLength());
-        executeQuery(propertyName1, Operator.EQ, vf.createValue(length));
+        executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     public void testLengthBooleanLiteral() throws RepositoryException {
         try {
-            executeQuery(propertyName1, Operator.EQ, vf.createValue(false));
+            executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(false));
             fail("Boolean literal cannot be converted to long");
         } catch (InvalidQueryException e) {
             // expected
@@ -172,7 +172,7 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testLengthNameLiteral() throws RepositoryException {
         try {
-            executeQuery(propertyName1, Operator.EQ, vf.createValue(
+            executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(
                     propertyName1, PropertyType.NAME));
             fail("Name literal cannot be converted to long");
         } catch (InvalidQueryException e) {
@@ -182,7 +182,7 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testLengthPathLiteral() throws RepositoryException {
         try {
-            executeQuery(propertyName1, Operator.EQ, vf.createValue(
+            executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(
                     node.getPath(), PropertyType.PATH));
             fail("Path literal cannot be converted to long");
         } catch (InvalidQueryException e) {
@@ -200,7 +200,7 @@ public class LengthTest extends AbstractQOMTest {
             throw new NotExecutableException("Cannot add mix:referenceable to node");
         }
         try {
-            executeQuery(propertyName1, Operator.EQ, vf.createValue(node));
+            executeQuery(propertyName1, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, vf.createValue(node));
             fail("Reference literal cannot be converted to long");
         } catch (InvalidQueryException e) {
             // expected
@@ -223,27 +223,27 @@ public class LengthTest extends AbstractQOMTest {
 
     private void checkOperators(String propertyName,
                                 long length) throws RepositoryException {
-        checkLength(propertyName, Operator.EQ, length, true);
-        checkLength(propertyName, Operator.EQ, length - 1, false);
+        checkLength(propertyName, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, length, true);
+        checkLength(propertyName, AbstractQOMTest.JCR_OPERATOR_EQUAL_TO, length - 1, false);
 
-        checkLength(propertyName, Operator.GT, length - 1, true);
-        checkLength(propertyName, Operator.GT, length, false);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN, length - 1, true);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN, length, false);
 
-        checkLength(propertyName, Operator.GE, length, true);
-        checkLength(propertyName, Operator.GE, length + 1, false);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO, length, true);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO, length + 1, false);
 
-        checkLength(propertyName, Operator.LT, length + 1, true);
-        checkLength(propertyName, Operator.LT, length, false);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN, length + 1, true);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN, length, false);
 
-        checkLength(propertyName, Operator.LE, length, true);
-        checkLength(propertyName, Operator.LE, length - 1, false);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO, length, true);
+        checkLength(propertyName, QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO, length - 1, false);
 
-        checkLength(propertyName, Operator.NE, length - 1, true);
-        checkLength(propertyName, Operator.NE, length, false);
+        checkLength(propertyName, AbstractQOMTest.JCR_OPERATOR_NOT_EQUAL_TO, length - 1, true);
+        checkLength(propertyName, AbstractQOMTest.JCR_OPERATOR_NOT_EQUAL_TO, length, false);
     }
 
     private void checkLength(String propertyName,
-                             Operator operator,
+                             String operator,
                              long length,
                              boolean matches) throws RepositoryException {
         Node[] result;
@@ -256,25 +256,26 @@ public class LengthTest extends AbstractQOMTest {
     }
 
     private QueryResult executeQuery(String propertyName,
-                                     Operator operator,
+                                     String operator,
                                      long length) throws RepositoryException {
         Value v = vf.createValue(length);
         return executeQuery(propertyName, operator, v);
     }
 
     private QueryResult executeQuery(String propertyName,
-                                     Operator operator,
+                                     String operator,
                                      Value length) throws RepositoryException {
         return qomFactory.createQuery(
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
-                        operator.comparison(
-                                qomFactory,
+                        qomFactory.comparison(
                                 qomFactory.length(
                                         qomFactory.propertyValue(
                                                 "s", propertyName)),
+                                operator,
                                 qomFactory.literal(length))
+
                 ), null, null).execute();
     }
 }
