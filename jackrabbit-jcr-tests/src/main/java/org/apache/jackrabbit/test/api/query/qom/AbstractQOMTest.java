@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.query.qom;
+package org.apache.jackrabbit.test.api.query.qom;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,13 +24,12 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
-import org.apache.jackrabbit.core.query.QueryImpl;
-import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
 /**
@@ -47,7 +46,7 @@ public class AbstractQOMTest extends AbstractQueryTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        QueryManagerImpl qm = (QueryManagerImpl) superuser.getWorkspace().getQueryManager();
+        QueryManager qm = superuser.getWorkspace().getQueryManager();
         qomFactory = qm.getQOMFactory();
     }
 
@@ -64,8 +63,7 @@ public class AbstractQOMTest extends AbstractQueryTest {
      */
     protected void bindVariableValue(Query q, String var, Value value)
             throws RepositoryException {
-        // TODO: remove cast when bindValue() is available on JSR 283 Query
-        ((QueryImpl) q).bindValue(var, value);
+        q.bindValue(var, value);
     }
 
     protected void checkResult(QueryResult result,
