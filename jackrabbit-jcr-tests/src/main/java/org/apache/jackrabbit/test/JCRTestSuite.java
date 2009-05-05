@@ -27,6 +27,7 @@ public class JCRTestSuite extends TestSuite {
         super("JCR API tests");
         addTest(org.apache.jackrabbit.test.api.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.query.TestAll.suite());
+        addTest(org.apache.jackrabbit.test.api.query.qom.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.nodetype.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.util.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.lock.TestAll.suite());
