@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
@@ -51,9 +55,6 @@ import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
 
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-
 /**
  * <code>QueryObjectModelFactoryTest</code> tests all methods on the
  * {@link QueryObjectModelFactory}.
@@ -84,6 +85,30 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * A test full text search expression
      */
     private static final String FULLTEXT_SEARCH_EXPR = "foo -bar";
+
+    /**
+     * Set of all possible operators.
+     */
+    private static final Set OPERATORS = new HashSet();
+
+    /**
+     * Set of all possible join types.
+     */
+    private static final Set JOIN_TYPES = new HashSet();
+
+    static {
+        OPERATORS.add(AbstractQOMTest.JCR_OPERATOR_EQUAL_TO);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
+        OPERATORS.add(AbstractQOMTest.JCR_OPERATOR_NOT_EQUAL_TO);
+
+        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
+        JOIN_TYPES.add(AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER);
+        JOIN_TYPES.add(AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER);
+    }
 
     /**
      * Test case for {@link QueryObjectModelFactory#and(Constraint, Constraint)}
@@ -190,8 +215,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     public void testComparison() throws RepositoryException {
         PropertyValue op1 = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
         BindVariableValue op2 = qomFactory.bindVariable(VARIABLE_NAME);
-        for (Operator operator : Operator.values()) {
-            Comparison comp = operator.comparison(qomFactory, op1, op2);
+        for (Iterator it = OPERATORS.iterator(); it.hasNext(); ) {
+            String operator = (String) it.next();
+            Comparison comp = qomFactory.comparison(op1, operator, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
             assertEquals("Wrong operator", operator.toString(), comp.getOperator());
@@ -394,8 +420,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         Selector s1 = qomFactory.selector(ntBase, SELECTOR_NAME1);
         Selector s2 = qomFactory.selector(testNodeType, SELECTOR_NAME1);
         JoinCondition cond = qomFactory.equiJoinCondition(ntBase, jcrPrimaryType, testNodeType, jcrPrimaryType);
-        for (JoinType joinType : JoinType.values()) {
-            Join join = joinType.join(qomFactory, s1, s2, cond);
+        for (Iterator it = JOIN_TYPES.iterator(); it.hasNext(); ) {
+            String joinType = (String) it.next();
+            Join join = qomFactory.join(s1, s2, joinType, cond);
             assertTrue("Not a selector source", join.getLeft() instanceof Selector);
             assertTrue("Not a selector source", join.getRight() instanceof Selector);
             assertEquals("Wrong join type", joinType.toString(), join.getJoinType());
