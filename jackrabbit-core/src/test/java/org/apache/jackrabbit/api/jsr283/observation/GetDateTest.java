@@ -25,6 +25,8 @@ import java.util.Collections;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
+
 /**
  * <code>GetDateTest</code> checks if the dates returned by events are
  * monotonically increasing.

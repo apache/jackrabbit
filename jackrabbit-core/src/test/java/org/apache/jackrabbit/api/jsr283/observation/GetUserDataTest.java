@@ -22,6 +22,7 @@ import javax.jcr.Repository;
 import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 
 /**
  * <code>GetUserDataTest</code> performs observation tests with user data set

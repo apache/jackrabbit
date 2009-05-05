@@ -21,8 +21,8 @@ import javax.jcr.Node;
 import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 
+import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 import org.apache.jackrabbit.test.api.observation.EventResult;
-import org.apache.jackrabbit.api.jsr283.observation.AbstractObservationTest;
 import org.apache.jackrabbit.core.NodeImpl;
 
 /**
