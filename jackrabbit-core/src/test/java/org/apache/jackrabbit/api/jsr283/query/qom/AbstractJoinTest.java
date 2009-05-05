@@ -24,8 +24,6 @@ import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
 
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
-
 /**
  * <code>AbstractJoinTest</code> provides utility methods for join related
  * tests.
@@ -47,6 +45,11 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
      */
     protected static final String[] SELECTOR_NAMES = new String[]{LEFT, RIGHT};
 
+    // Constants broken in JCR 2.0 PFD
+    // TODO remove when API is fixed
+    protected static String JCR_JOIN_TYPE_LEFT_OUTER = "{http://www.jcp.org/jcr/1.0}joinTypeLeftOuter";
+    protected static String JCR_JOIN_TYPE_RIGHT_OUTER = "{http://www.jcp.org/jcr/1.0}joinTypeRightOuter";
+    
     //--------------------------< utilities >-----------------------------------
 
     protected void checkResult(QueryResult result, Node[][] nodes)
@@ -54,20 +57,20 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         checkResult(result, SELECTOR_NAMES, nodes);
     }
 
-    protected QueryObjectModel createQuery(JoinType joinType,
+    protected QueryObjectModel createQuery(String joinType,
                                            JoinCondition condition)
             throws RepositoryException {
         return createQuery(joinType, condition, null, null);
     }
 
-    protected QueryObjectModel createQuery(JoinType joinType,
+    protected QueryObjectModel createQuery(String joinType,
                                            JoinCondition condition,
                                            Constraint left,
                                            Constraint right)
             throws RepositoryException {
         // only consider nodes under test root
         Constraint constraint;
-        if (JoinType.LEFT == joinType) {
+        if (JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
             constraint = qomFactory.descendantNode(LEFT, testRoot);
         } else {
             constraint = qomFactory.descendantNode(RIGHT, testRoot);
@@ -79,10 +82,10 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         if (right != null) {
             constraint = qomFactory.and(constraint, right);
         }
-        Join join = joinType.join(
-                qomFactory,
+        Join join = qomFactory.join(
                 qomFactory.selector(testNodeType, LEFT),
                 qomFactory.selector(testNodeType, RIGHT),
+                joinType,
                 condition);
         return qomFactory.createQuery(join, constraint, null, null);
     }

@@ -21,8 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
-
-import org.apache.jackrabbit.spi.commons.query.qom.JoinType;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 /**
  * <code>SameNodeJoinConditionTest</code> contains test cases that cover
@@ -43,23 +42,23 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testInnerJoin() throws RepositoryException {
-        QueryObjectModel qom = createQuery(JoinType.INNER, (String) null);
+        QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, (String) null);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n1, n1}, {n2, n2}});
     }
 
     public void testInnerJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = createQuery(JoinType.INNER, nodeName2);
+        QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, nodeName2);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n2, n1}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
        QueryObjectModel qom = qomFactory.createQuery(
-               JoinType.LEFT.join(
-                       qomFactory,
+               qomFactory.join(
                        qomFactory.selector(testNodeType, LEFT),
                        qomFactory.selector(mixReferenceable, RIGHT),
+                       AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER,
                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                qomFactory.descendantNode(LEFT, testRoot),
                null, null);
@@ -69,17 +68,17 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testLeftOuterJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = createQuery(JoinType.LEFT, nodeName2);
+        QueryObjectModel qom = createQomQuery(AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER, nodeName2);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n1, null}, {n2, n1}});
     }
 
     public void testRightOuterJoin() throws RepositoryException {
         QueryObjectModel qom = qomFactory.createQuery(
-                JoinType.RIGHT.join(
-                        qomFactory,
+                qomFactory.join(
                         qomFactory.selector(mixReferenceable, LEFT),
                         qomFactory.selector(testNodeType, RIGHT),
+                        AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER,
                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
@@ -90,10 +89,10 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testRightOuterJoinWithPath() throws RepositoryException {
         QueryObjectModel qom = qomFactory.createQuery(
-                JoinType.RIGHT.join(
-                        qomFactory,
+                qomFactory.join(
                         qomFactory.selector(mixReferenceable, LEFT),
                         qomFactory.selector(testNodeType, RIGHT),
+                        AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER,
                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
@@ -104,7 +103,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
 
     //-----------------------------< utilities >--------------------------------
 
-    private QueryObjectModel createQuery(JoinType joinType, String relPath)
+    private QueryObjectModel createQomQuery(String joinType, String relPath)
             throws RepositoryException {
         JoinCondition c;
         if (relPath != null) {
