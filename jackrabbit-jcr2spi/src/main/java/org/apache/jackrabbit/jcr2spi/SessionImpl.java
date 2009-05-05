@@ -33,7 +33,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -872,15 +871,7 @@ public class SessionImpl extends AbstractSession
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
-    public Node getNode(String absPath) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
     public Node getNodeByIdentifier(String id) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Property getProperty(String absPath) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
@@ -896,18 +887,6 @@ public class SessionImpl extends AbstractSession
 
     public boolean hasPermission(String absPath, String actions)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public boolean nodeExists(String absPath) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public boolean propertyExists(String absPath) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void removeItem(String absPath) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
