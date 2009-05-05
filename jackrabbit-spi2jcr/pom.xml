@@ -76,6 +76,12 @@
                 org.apache.jackrabbit.test.api.lock.OpenScopedLockTest
                 org.apache.jackrabbit.test.api.lock.DeepLockTest
                 org.apache.jackrabbit.jcr2spi.lock.SessionScopedLockTest
+                org.apache.jackrabbit.test.api.observation.GetDateTest
+                org.apache.jackrabbit.test.api.observation.GetIdentifierTest
+                org.apache.jackrabbit.test.api.observation.GetInfoTest
+                org.apache.jackrabbit.test.api.observation.GetUserDataTest
+                org.apache.jackrabbit.test.api.observation.NodeMovedTest
+                org.apache.jackrabbit.test.api.observation.NodeReorderTest
               </value>
             </property>
           </systemProperties>
