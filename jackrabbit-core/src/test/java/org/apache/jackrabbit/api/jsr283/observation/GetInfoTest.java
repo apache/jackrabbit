@@ -37,7 +37,7 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.NODE_ADDED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, getInfo(events[i]).size());
+            assertEquals("info map must be empty", 0, events[i].getInfo().size());
         }
     }
 
@@ -51,7 +51,7 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.NODE_REMOVED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, getInfo(events[i]).size());
+            assertEquals("info map must be empty", 0, events[i].getInfo().size());
         }
     }
 
@@ -63,7 +63,7 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_ADDED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, getInfo(events[i]).size());
+            assertEquals("info map must be empty", 0, events[i].getInfo().size());
         }
     }
 
@@ -77,7 +77,7 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_CHANGED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, getInfo(events[i]).size());
+            assertEquals("info map must be empty", 0, events[i].getInfo().size());
         }
     }
 
@@ -91,7 +91,7 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_REMOVED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, getInfo(events[i]).size());
+            assertEquals("info map must be empty", 0, events[i].getInfo().size());
         }
     }
 }

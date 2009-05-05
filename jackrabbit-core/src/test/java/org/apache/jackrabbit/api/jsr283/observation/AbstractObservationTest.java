@@ -16,15 +16,12 @@
  */
 package org.apache.jackrabbit.api.jsr283.observation;
 
-import java.util.Map;
 import java.util.Arrays;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.test.api.observation.EventResult;
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 
 /**
  * <code>AbstractObservationTest</code> is a base class with utility methods
@@ -33,42 +30,7 @@ import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 public abstract class AbstractObservationTest
         extends org.apache.jackrabbit.test.api.observation.AbstractObservationTest {
 
-    /**
-     * TODO: remove when JSR 283 is final
-     */
-    protected static final int NODE_MOVED = javax.jcr.observation.Event.NODE_MOVED;
-
     protected static final int ALL_TYPES = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED | javax.jcr.observation.Event.NODE_MOVED;
-
-    protected void setUserData(String userData) throws RepositoryException {
-        // TODO: remove when JCR 2.0 is final
-        ((ObservationManagerImpl) obsMgr).setUserData(userData);
-    }
-
-    protected static String getUserData(Event e) throws RepositoryException {
-        // TODO: remove when JCR 2.0 is final
-        return ((javax.jcr.observation.Event) e).getUserData();
-    }
-
-    protected String getIdentifier(Node node) throws RepositoryException {
-        // TODO: remove when JSR 283 is final
-        return ((javax.jcr.Node) node).getIdentifier();
-    }
-
-    protected String getIdentifier(Event event) throws RepositoryException {
-        // TODO: remove when JSR 283 is final
-        return ((javax.jcr.observation.Event) event).getIdentifier();
-    }
-
-    protected Map getInfo(Event event) throws RepositoryException {
-        // TODO: remove when JSR 283 is final
-        return ((javax.jcr.observation.Event) event).getInfo();
-    }
-
-    protected long getDate(Event event) throws RepositoryException {
-        // TODO: remove when JSR 283 is final
-        return ((javax.jcr.observation.Event) event).getDate();
-    }
 
     /**
      * Returns the first event with the given <code>path</code>.

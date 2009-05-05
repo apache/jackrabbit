@@ -71,14 +71,14 @@ public class GetUserDataTest extends AbstractObservationTest {
         final String data = createRandomString(5);
         Event[] events = getEvents(new Callable() {
             public void call() throws RepositoryException {
-                setUserData(data);
+                obsMgr.setUserData(data);
                 c.call();
             }
         }, eventTypes);
 
         assertTrue("no events returned", events.length > 0);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("Wrong user data", data, getUserData(events[i]));
+            assertEquals("Wrong user data", data, events[i].getUserData());
         }
     }
 

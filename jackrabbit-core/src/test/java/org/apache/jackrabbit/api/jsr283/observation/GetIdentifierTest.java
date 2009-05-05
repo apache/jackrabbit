@@ -34,26 +34,26 @@ public class GetIdentifierTest extends AbstractObservationTest {
             }
         }, Event.NODE_ADDED);
         Node n = testRootNode.getNode(nodeName1);
-        assertEquals(getIdentifier(n), getIdentifier(getEventByPath(events, n.getPath())));
+        assertEquals(n.getIdentifier(), getEventByPath(events, n.getPath()).getIdentifier());
     }
 
     public void testNodeMoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
-        String id = getIdentifier(n);
+        String id = n.getIdentifier();
         testRootNode.save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 superuser.getWorkspace().move(n.getPath(), testRoot + "/" + nodeName2);
             }
-        }, NODE_MOVED);
+        }, Event.NODE_MOVED);
         String path = testRootNode.getNode(nodeName2).getPath();
-        assertEquals(id, getIdentifier(getEventByPath(events, path)));
+        assertEquals(id, getEventByPath(events, path).getIdentifier());
     }
 
     public void testNodeRemoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
         String path = n.getPath();
-        String id = getIdentifier(n);
+        String id = n.getIdentifier();
         testRootNode.save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
@@ -61,7 +61,7 @@ public class GetIdentifierTest extends AbstractObservationTest {
                 testRootNode.save();
             }
         }, Event.NODE_REMOVED);
-        assertEquals(id, getIdentifier(getEventByPath(events, path)));
+        assertEquals(id, getEventByPath(events, path).getIdentifier());
     }
 
     public void testPropertyAdded() throws RepositoryException {
@@ -73,7 +73,7 @@ public class GetIdentifierTest extends AbstractObservationTest {
         }, Event.PROPERTY_ADDED);
         Node n = testRootNode.getNode(nodeName1);
         Property prop = n.getProperty(propertyName1);
-        assertEquals(getIdentifier(n), getIdentifier(getEventByPath(events, prop.getPath())));
+        assertEquals(n.getIdentifier(), getEventByPath(events, prop.getPath()).getIdentifier());
     }
 
     public void testPropertyChanged() throws RepositoryException {
@@ -86,12 +86,12 @@ public class GetIdentifierTest extends AbstractObservationTest {
                 testRootNode.save();
             }
         }, Event.PROPERTY_CHANGED);
-        assertEquals(getIdentifier(n), getIdentifier(getEventByPath(events, prop.getPath())));
+        assertEquals(n.getIdentifier(), getEventByPath(events, prop.getPath()).getIdentifier());
     }
 
     public void testPropertyRemoved() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        String id = getIdentifier(n);
+        String id = n.getIdentifier();
         final Property prop = n.setProperty(propertyName1, "test");
         String propPath = prop.getPath();
         testRootNode.save();
@@ -101,6 +101,6 @@ public class GetIdentifierTest extends AbstractObservationTest {
                 testRootNode.save();
             }
         }, Event.PROPERTY_REMOVED);
-        assertEquals(id, getIdentifier(getEventByPath(events, propPath)));
+        assertEquals(id, getEventByPath(events, propPath).getIdentifier());
     }
 }

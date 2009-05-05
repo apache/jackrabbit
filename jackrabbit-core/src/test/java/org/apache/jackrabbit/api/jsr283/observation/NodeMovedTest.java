@@ -79,7 +79,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         superuser.move(n1.getPath(), testRoot + "/" + nodeName3);
         testRootNode.save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -118,7 +118,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         superuser.move(n2.getPath(), testRoot + "/" + nodeName2);
         testRootNode.save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -158,7 +158,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         EventResult moveNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, NODE_MOVED);
+        addEventListener(moveNodeListener, Event.NODE_MOVED);
         // move n2
         superuser.move(n2.getPath(), n3.getPath() + "/" + nodeName2);
         // remove n1
@@ -188,9 +188,9 @@ public class NodeMovedTest extends AbstractObservationTest {
      */
     protected void checkNodeMoved(Event[] events, String from, String to)
             throws RepositoryException {
-        checkNodes(events, new String[]{to}, null, NODE_MOVED);
+        checkNodes(events, new String[]{to}, null, Event.NODE_MOVED);
         assertEquals("Wrong number of events", 1, events.length);
-        Map info = getInfo(events[0]);
+        Map info = events[0].getInfo();
         checkInfoEntry(info, SRC_ABS_PATH, testRoot + "/" + from);
         checkInfoEntry(info, DEST_ABS_PATH, testRoot + "/" + to);
     }

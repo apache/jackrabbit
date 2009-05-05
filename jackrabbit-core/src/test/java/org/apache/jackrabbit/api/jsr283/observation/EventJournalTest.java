@@ -154,7 +154,7 @@ public class EventJournalTest extends AbstractObservationTest {
 
         Node n2 = n1.addNode(nodeName2);
 
-        journal = getEventJournal(ALL_TYPES, "/", true, new String[]{n1.getUUID()}, null);
+        journal = getEventJournal(ALL_TYPES, "/", true, new String[]{n1.getIdentifier()}, null);
         journal.skipTo(System.currentTimeMillis());
 
         superuser.save();
@@ -178,7 +178,7 @@ public class EventJournalTest extends AbstractObservationTest {
     public void testUserData() throws RepositoryException {
         testRootNode.addNode(nodeName1);
         String data = createRandomString(5);
-        setUserData(data);
+        obsMgr.setUserData(data);
 
         journal = getEventJournal(ALL_TYPES, testRoot, true, null, null);
         journal.skipTo(System.currentTimeMillis());
@@ -186,7 +186,7 @@ public class EventJournalTest extends AbstractObservationTest {
         superuser.save();
 
         assertTrue("no more events", journal.hasNext());
-        assertEquals("Wrong user data", data, getUserData(journal.nextEvent()));
+        assertEquals("Wrong user data", data, journal.nextEvent().getUserData());
     }
 
     //-------------------------------< internal >-------------------------------

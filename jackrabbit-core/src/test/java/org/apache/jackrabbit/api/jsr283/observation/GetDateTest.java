@@ -43,7 +43,7 @@ public class GetDateTest extends AbstractObservationTest {
                 }
             }, Event.NODE_ADDED);
             for (int i = 0; i < events.length; i++) {
-                dates.add(new Long(getDate(events[i])));
+                dates.add(new Long(events[i].getDate()));
             }
             try {
                 // wait for a moment
