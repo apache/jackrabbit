@@ -29,7 +29,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("javax.jcr.observation tests");
 
-        suite.addTestSuite(AddEventListenerTest.class);
         suite.addTestSuite(EventJournalTest.class);
         suite.addTestSuite(GetDateTest.class);
         suite.addTestSuite(GetIdentifierTest.class);
