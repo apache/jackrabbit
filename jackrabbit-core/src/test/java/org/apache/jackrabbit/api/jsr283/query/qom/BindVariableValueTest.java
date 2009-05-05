@@ -16,15 +16,13 @@
  */
 package org.apache.jackrabbit.api.jsr283.query.qom;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ValueFactory;
-import javax.jcr.Value;
-import javax.jcr.query.Query;
-
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
-
 import java.util.Calendar;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.query.Query;
 
 /**
  * <code>BindVariableValueTest</code>...
@@ -52,9 +50,9 @@ public class BindVariableValueTest extends AbstractQOMTest {
                 qomFactory.selector(testNodeType, "s"),
                 qomFactory.and(
                         qomFactory.childNode("s", testRoot),
-                        Operator.EQ.comparison(
-                                qomFactory,
+                        qomFactory.comparison(
                                 qomFactory.propertyValue("s", propertyName1),
+                                AbstractQOMTest.JCR_OPERATOR_EQUAL_TO,
                                 qomFactory.bindVariable("v")
                         )
                 ), null, null);
