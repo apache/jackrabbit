@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
@@ -56,8 +57,8 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     private List privilegesToRestore = new ArrayList();
 
     protected void setUp() throws Exception {
-        // TODO: test if options is supported
-        //checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+
         super.setUp();
 
         // TODO: make sure, entries to ADD are not present yet.
@@ -162,6 +163,10 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             Privilege[] privs = entries[i].getPrivileges();
             assertTrue("An ACE must contain at least a single privilege", privs != null && privs.length > 0);
         }
+    }
+    
+    public void testFoo() {
+        throw new RuntimeException("LALALA");
     }
 
     public void testAddAccessControlEntry() throws NotExecutableException, RepositoryException {
