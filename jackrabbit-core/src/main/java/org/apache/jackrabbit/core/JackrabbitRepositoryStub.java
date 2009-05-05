@@ -200,8 +200,10 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         addQueryTestData(getOrAddNode(data, "query"));
         addNodeTestData(getOrAddNode(data, "node"));
         addExportTestData(getOrAddNode(data, "docViewTest"));
-        addRetentionTestData(getOrAddNode(data, "retentionTest"));
-        
+
+        Node conf = getOrAddNode(session.getRootNode(), "testconf");
+        addRetentionTestData(getOrAddNode(conf, "retentionTest"));
+
         session.save();
     }
 
