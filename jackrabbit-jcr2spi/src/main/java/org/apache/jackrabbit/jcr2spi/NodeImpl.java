@@ -502,6 +502,11 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
+    public String getIdentifier() throws RepositoryException {
+        // FIXME: Support the UUID/path identifiers
+        return getUUID();
+    }
+
     /**
      * @see Node#getUUID()
      */
@@ -1643,10 +1648,6 @@ public class NodeImpl extends ItemImpl implements Node {
 
     public String[] getAllowedLifecycleTransistions()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public String getIdentifier() throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
