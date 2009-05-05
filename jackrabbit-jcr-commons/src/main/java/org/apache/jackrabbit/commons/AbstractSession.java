@@ -20,14 +20,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.Item;
 import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
@@ -39,7 +39,6 @@ import javax.jcr.Workspace;
 import org.apache.jackrabbit.commons.xml.DocumentViewExporter;
 import org.apache.jackrabbit.commons.xml.Exporter;
 import org.apache.jackrabbit.commons.xml.ParsingContentHandler;
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.commons.xml.SystemViewExporter;
 import org.apache.jackrabbit.commons.xml.ToXmlContentHandler;
 import org.apache.jackrabbit.util.XMLChar;
@@ -57,7 +56,8 @@ public abstract class AbstractSession implements Session {
      * This map is only accessed from synchronized methods (see
      * <a href="https://issues.apache.org/jira/browse/JCR-1793">JCR-1793</a>).
      */
-    private final Map namespaces = new HashMap();
+    private final Map<String, String> namespaces =
+        new HashMap<String, String>();
 
     /**
      * Clears the local namespace mappings. Subclasses that for example
@@ -86,11 +86,9 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String getNamespacePrefix(String uri)
             throws NamespaceException, RepositoryException {
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             if (entry.getValue().equals(uri)) {
-                return (String) entry.getKey();
+                return entry.getKey();
             }
         }
 
@@ -122,7 +120,7 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String getNamespaceURI(String prefix)
             throws NamespaceException, RepositoryException {
-        String uri = (String) namespaces.get(prefix);
+        String uri = namespaces.get(prefix);
 
         if (uri == null) {
             // Not in local mappings, try the global ones
@@ -153,14 +151,11 @@ public abstract class AbstractSession implements Session {
      */
     public synchronized String[] getNamespacePrefixes()
             throws RepositoryException {
-        NamespaceRegistry registry = getWorkspace().getNamespaceRegistry();
-        String[] uris = registry.getURIs();
-        for (int i = 0; i < uris.length; i++) {
-            getNamespacePrefix(uris[i]);
+        for (String uri : getWorkspace().getNamespaceRegistry().getURIs()) {
+            getNamespacePrefix(uri);
         }
 
-        return (String[])
-            namespaces.keySet().toArray(new String[namespaces.size()]);
+        return namespaces.keySet().toArray(new String[namespaces.size()]);
     }
 
     /**
@@ -199,20 +194,24 @@ public abstract class AbstractSession implements Session {
         // Currently JSR 283 does not specify this exception, but for
         // compatibility with JCR 1.0 TCK it probably should.
         // Note that the solution here also affects the remove() code below
-        String previous = (String) namespaces.get(prefix);
+        String previous = namespaces.get(prefix);
         if (previous != null && !previous.equals(uri)) {
             throw new NamespaceException("Namespace already mapped");
         }
 
+        // Remove existing mapping for the given prefix
         namespaces.remove(prefix);
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
+
+        // Remove existing mapping(s) for the given URI
+        Set<String> prefixes = new HashSet<String>();
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
             if (entry.getValue().equals(uri)) {
-                iterator.remove();
+                prefixes.add(entry.getKey());
             }
         }
+        namespaces.keySet().removeAll(prefixes);
 
+        // Add the new mapping
         namespaces.put(prefix, uri);
     }
 
