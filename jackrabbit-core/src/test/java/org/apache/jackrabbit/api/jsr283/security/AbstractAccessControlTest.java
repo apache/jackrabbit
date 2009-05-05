@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.api.jsr283.security;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -34,19 +34,15 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
     protected AccessControlManager acMgr;
 
     protected void setUp() throws Exception {
-        // TODO: uncomment again.
-        // checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+        
         super.setUp();
         acMgr = getAccessControlManager(superuser);
     }
 
     protected static AccessControlManager getAccessControlManager(Session s) throws RepositoryException, NotExecutableException {
-        // TODO: fix (Replace by Session) test as soon as jackrabbit implements 283
-        if (!(s instanceof SessionImpl)) {
-            throw new NotExecutableException();
-        }
         try {
-            return ((SessionImpl) s).getAccessControlManager();
+            return s.getAccessControlManager();
         } catch (UnsupportedRepositoryOperationException e) {
             throw new NotExecutableException();
         }
@@ -93,8 +89,7 @@ public abstract class AbstractAccessControlTest extends AbstractJCRTest {
 
     protected String getPathToProperty() throws RepositoryException {
         String path = testRootNode.getPath() + "/" + jcrPrimaryType;
-        // TODO: remove cast to SessionImpl again once 283 is released.
-        if (((SessionImpl) superuser).nodeExists(path)) {
+        if (superuser.nodeExists(path)) {
             throw new RepositoryException("Path " + path + " should point to property.");
         }
         return path;
