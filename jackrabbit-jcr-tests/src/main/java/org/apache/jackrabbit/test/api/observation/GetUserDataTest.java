@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.observation;
+package org.apache.jackrabbit.test.api.observation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -22,7 +22,6 @@ import javax.jcr.Repository;
 import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 
 /**
  * <code>GetUserDataTest</code> performs observation tests with user data set

@@ -53,7 +53,8 @@ public class TestAll extends TestCase {
         
         suite.addTestSuite(GetDateTest.class);
         suite.addTestSuite(GetIdentifierTest.class);
-        suite.addTestSuite(GetIdentifierTest.class);
+        suite.addTestSuite(GetInfoTest.class);
+        suite.addTestSuite(GetUserDataTest.class);
         
         return suite;
     }
