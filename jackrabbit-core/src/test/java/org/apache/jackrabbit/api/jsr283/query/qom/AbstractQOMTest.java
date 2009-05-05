@@ -83,7 +83,7 @@ public class AbstractQOMTest extends AbstractQueryTest {
         Set resultPaths = new HashSet();
         log.println("result:");
         for (RowIterator it = result.getRows(); it.hasNext();) {
-            Row r = (Row) it.nextRow();
+            Row r = it.nextRow();
             StringBuffer aggregatedPaths = new StringBuffer();
             for (int i = 0; i < selectorNames.length; i++) {
                 aggregatedPaths.append(getPath(r.getNode(selectorNames[i])));
