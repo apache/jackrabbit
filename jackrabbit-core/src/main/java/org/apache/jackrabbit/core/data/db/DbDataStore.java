@@ -282,12 +282,13 @@ public class DbDataStore implements DataStore {
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected Map inUse = Collections.synchronizedMap(new WeakHashMap());
+    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse = 
+        Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
     
     /**
      * The temporary identifiers that are currently in use.
      */
-    protected List temporaryInUse = Collections.synchronizedList(new ArrayList());
+    protected List<String> temporaryInUse = Collections.synchronizedList(new ArrayList<String>());
 
     /**
      * {@inheritDoc}
@@ -418,17 +419,15 @@ public class DbDataStore implements DataStore {
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
         try {
-            ArrayList touch = new ArrayList();
-            for (Iterator it = new ArrayList(inUse.keySet()).iterator(); it.hasNext();) {
-                DataIdentifier identifier = (DataIdentifier) it.next();
+            ArrayList<String> touch = new ArrayList<String>();
+            ArrayList<DataIdentifier> ids = new ArrayList<DataIdentifier>(inUse.keySet());
+            for (DataIdentifier identifier: ids) {
                 if (identifier != null) {
                     touch.add(identifier.toString());
                 }
             }
             touch.addAll(temporaryInUse);
-            Iterator it = touch.iterator();
-            while (it.hasNext()) {
-                String key = (String) it.next();
+            for (String key : touch) {
                 updateLastModifiedDate(key, 0);
             }
             // DELETE FROM DATASTORE WHERE LAST_MODIFIED<?
@@ -444,9 +443,9 @@ public class DbDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public Iterator getAllIdentifiers() throws DataStoreException {
+    public Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException {
         ConnectionRecoveryManager conn = getConnection();
-        ArrayList list = new ArrayList();
+        ArrayList<DataIdentifier> list = new ArrayList<DataIdentifier>();
         ResultSet rs = null;
         try {
             // SELECT ID FROM DATASTORE
@@ -830,16 +829,15 @@ public class DbDataStore implements DataStore {
      * {@inheritDoc}
      */
     public synchronized void close() {
-        ArrayList list = connectionPool.getAll();
-        for (int i = 0; i < list.size(); i++) {
-            ConnectionRecoveryManager conn = (ConnectionRecoveryManager) list.get(i);
+        ArrayList<ConnectionRecoveryManager> list = connectionPool.getAll();
+        for (ConnectionRecoveryManager conn : list) {
             conn.close();
         }
         list.clear();
     }
 
     protected void usesIdentifier(DataIdentifier identifier) {
-        inUse.put(identifier, new WeakReference(identifier));
+        inUse.put(identifier, new WeakReference<DataIdentifier>(identifier));
     }
 
     /**

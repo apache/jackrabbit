@@ -17,10 +17,11 @@
 package org.apache.jackrabbit.core.data.db;
 
 import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.RepositoryException;
 
-import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
+import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager;
 
 /**
  * Implementation of a simple ConnectionRecoveryManager pool.
@@ -29,9 +30,9 @@ import EDU.oswego.cs.dl.util.concurrent.LinkedQueue;
  */
 public class Pool {
     protected final int maxSize;
-    protected final ArrayList all = new ArrayList();
+    protected final ArrayList<ConnectionRecoveryManager> all = new ArrayList<ConnectionRecoveryManager>();
     protected final DbDataStore factory;
-    protected final LinkedQueue pool = new LinkedQueue();
+    protected final LinkedBlockingQueue<ConnectionRecoveryManager> pool = new LinkedBlockingQueue<ConnectionRecoveryManager>();
 
     /**
      * Create a new pool using the given factory and maximum pool size.
@@ -51,8 +52,8 @@ public class Pool {
      *
      * @return the connection
      */
-    protected Object get() throws InterruptedException, RepositoryException {
-        Object o = pool.poll(0);
+    protected ConnectionRecoveryManager get() throws InterruptedException, RepositoryException {
+        ConnectionRecoveryManager o = pool.poll();
         if (o == null) {
             synchronized (all) {
                 if (all.size() < maxSize) {
@@ -72,7 +73,7 @@ public class Pool {
      *
      * @param o the connection
      */
-    protected void add(Object o) throws InterruptedException {
+    protected void add(ConnectionRecoveryManager o) throws InterruptedException {
         pool.put(o);
     }
 
@@ -81,7 +82,7 @@ public class Pool {
      *
      * @return all connections
      */
-    protected ArrayList getAll() {
+    protected ArrayList<ConnectionRecoveryManager> getAll() {
         return all;
     }
 }

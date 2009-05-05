@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -78,7 +79,7 @@ public class GarbageCollector {
 
     private long startScanTimestamp;
 
-    private final ArrayList listeners = new ArrayList();
+    private final ArrayList<Listener> listeners = new ArrayList<Listener>();
 
     private final IterablePersistenceManager[] pmList;
 
@@ -157,8 +158,8 @@ public class GarbageCollector {
         }
 
         if (pmList == null || !persistenceManagerScan) {
-            for (int i = 0; i < sessionList.length; i++) {
-                scanNodes(sessionList[i]);
+            for (Session s : sessionList) {
+                scanNodes(s);
             }
         } else {
             scanPersistenceManagers();
@@ -199,11 +200,10 @@ public class GarbageCollector {
     }
 
     private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
-        for (int i = 0; i < pmList.length; i++) {
-            IterablePersistenceManager pm = pmList[i];
-            Iterator it = pm.getAllNodeIds(null, 0);
+        for (IterablePersistenceManager pm : pmList) {
+            NodeIdIterator it = pm.getAllNodeIds(null, 0);
             while (it.hasNext()) {
-                NodeId id = (NodeId) it.next();
+                NodeId id = it.nextNodeId();
                 if (callback != null) {
                     callback.beforeScanning(null);
                 }
@@ -216,9 +216,8 @@ public class GarbageCollector {
                         PropertyId pid = new PropertyId(id, name);
                         PropertyState ps = pm.load(pid);
                         if (ps.getType() == PropertyType.BINARY) {
-                            InternalValue[] values = ps.getValues();
-                            for (int j = 0; j < values.length; j++) {
-                                values[j].getBLOBFileValue().getLength();
+                            for (InternalValue v : ps.getValues()) {
+                                v.getBLOBFileValue().getLength();
                             }
                         }
                     }
@@ -235,8 +234,7 @@ public class GarbageCollector {
 
     public void stopScan() throws RepositoryException {
         checkScanStarted();
-        for (int i = 0; i < listeners.size(); i++) {
-            Listener listener = (Listener) listeners.get(i);
+        for (Listener listener : listeners) {
             try {
                 listener.stop();
             } catch (Exception e) {
