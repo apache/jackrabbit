@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.observation;
+package org.apache.jackrabbit.test.api.observation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.observation.Event;
-
-import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 
 /**
  * <code>IdentifierTest</code> checks if the identifier of an event is correct.
