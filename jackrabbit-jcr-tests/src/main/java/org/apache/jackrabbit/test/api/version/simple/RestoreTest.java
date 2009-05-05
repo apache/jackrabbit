@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.version.simple;
+package org.apache.jackrabbit.test.api.version.simple;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
@@ -26,7 +26,6 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -462,7 +461,7 @@ public class RestoreTest extends AbstractVersionTest {
      */
     public void testLinearVersions() throws Exception {
         // first get all linear versions
-        VersionIterator iter = ((VersionHistory) versionableNode.getVersionHistory()).getAllLinearVersions();
+        VersionIterator iter = versionableNode.getVersionHistory().getAllLinearVersions();
         StringBuffer expected = new StringBuffer();
         while (iter.hasNext()) {
             expected.append(iter.nextVersion().getName()).append(",");
@@ -473,7 +472,7 @@ public class RestoreTest extends AbstractVersionTest {
         expected.append(versionableNode.getBaseVersion().getName()).append(",");
 
         // get the version names again
-        iter = ((VersionHistory) versionableNode.getVersionHistory()).getAllLinearVersions();
+        iter = versionableNode.getVersionHistory().getAllLinearVersions();
         StringBuffer actual = new StringBuffer();
         while (iter.hasNext()) {
             actual.append(iter.nextVersion().getName()).append(",");
