@@ -16,28 +16,32 @@
  */
 package org.apache.jackrabbit.test.api.version;
 
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.Version;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.ItemVisitor;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyIterator;
-import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
-
-import java.util.HashMap;
-import java.util.GregorianCalendar;
-import java.util.Calendar;
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
+import javax.jcr.version.VersionManager;
 
 
 /**
@@ -156,6 +160,42 @@ public class VersionHistoryTest extends AbstractVersionTest {
             versions.remove(v.getUUID());
         }
         assertTrue("VersionHistory.getAllVersions() must contain the root version and all versions that have been created with a Node.checkin() call.", versions.isEmpty());
+    }
+
+    /**
+     * Test that {@link VersionHistory#getAllFrozenNodes()} returns an iterator
+     * containing the frozen nodes of all versions that have been created by
+     * {@link VersionManager#checkpoint(String)}.
+     *
+     * @see javax.jcr.version.VersionHistory#getAllFrozenNodes()
+     * @since JCR 2.0
+     */
+    public void testGetAllFrozenNodes() throws RepositoryException {
+
+        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
+        
+        String path = versionableNode.getPath();
+        int cnt = 2;
+        
+        for (int i = 0; i < cnt; i++) {
+            vm.checkpoint(path);
+        }
+
+        Set frozenIds = new HashSet();
+        for (VersionIterator it = vm.getVersionHistory(path).getAllVersions(); it.hasNext(); ) {
+            Version v = it.nextVersion();
+            frozenIds.add(v.getFrozenNode().getIdentifier());
+        }
+        
+        Set test = new HashSet();
+        for (NodeIterator it = vHistory.getAllFrozenNodes(); it.hasNext(); ) {
+            Node n = it.nextNode();
+            assertTrue("Node " + n.getPath() + " must be of type frozen node",
+                 n.isNodeType("nt:frozenNode"));
+            test.add(n.getIdentifier());
+        }
+        
+        assertEquals("getAllFrozenNodes must return the IDs of all frozen nodes", frozenIds, test);
     }
 
     /**
