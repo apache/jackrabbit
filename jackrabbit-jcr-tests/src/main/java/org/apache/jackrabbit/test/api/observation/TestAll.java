@@ -51,6 +51,7 @@ public class TestAll extends TestCase {
 
         // JCR 2.0
         
+        suite.addTestSuite(EventJournalTest.class);
         suite.addTestSuite(GetDateTest.class);
         suite.addTestSuite(GetIdentifierTest.class);
         suite.addTestSuite(GetInfoTest.class);
