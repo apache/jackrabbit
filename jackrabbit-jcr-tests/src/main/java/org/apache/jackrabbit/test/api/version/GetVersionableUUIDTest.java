@@ -18,10 +18,12 @@ package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 
 /**
  * <code>GetVersionableUUIDTest</code> provides test methods covering {@link
- * javax.jcr.version.VersionHistory#getVersionableUUID()}.
+ * VersionHistory#getVersionableUUID()} and {@link VersionHistory#getVersionableIdentifier()}.
  *
  * @test
  * @sources GetVersionableUUIDTest.java
@@ -42,5 +44,20 @@ public class GetVersionableUUIDTest extends AbstractVersionTest {
         assertEquals("Method getVersionableUUID() must return the UUID of the corresponding Node.",
                 version.getContainingHistory().getVersionableUUID(),
                 versionableNode.getUUID());
+    }
+
+    /**
+     * Tests if VersionHistory.getVersionableIdentifier() returns the ID of the
+     * corresponding versionable node.
+     * @since JCR 2.9
+     */
+    public void testGetVersionableIdentifier() throws RepositoryException {
+
+        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
+        vm.checkpoint(versionableNode.getPath());
+        
+        assertEquals("Method getVersionableIdentifier() must return the identifier of the corresponding Node.",
+                vm.getVersionHistory(versionableNode.getPath()).getVersionableIdentifier(),
+                versionableNode.getIdentifier());
     }
 }
