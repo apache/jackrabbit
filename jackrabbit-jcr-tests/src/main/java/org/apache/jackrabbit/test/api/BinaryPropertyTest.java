@@ -233,10 +233,10 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests the conversion from Binary type to Reference type. This conversion
+     * Tests the conversion from Binary type to Reference or Path type. This conversion
      * passes through previous String conversion.
      */
-    public void testAsReference() throws RepositoryException, NotExecutableException {
+    public void testGetNode() throws RepositoryException, NotExecutableException {
         if (!multiple) {
             // not testable since format of ID is implementation specific
         } else {
@@ -250,6 +250,24 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         }
     }
 
+    /**
+     * Tests the conversion from Binary type to Path type. This conversion
+     * passes through previous String conversion.
+     */
+    public void testGetProperty() throws RepositoryException, NotExecutableException {
+        if (!multiple) {
+            // not testable since format of ID is implementation specific
+        } else {
+            try {
+                prop.getNode();
+                fail("Property.getProperty() called on a multivalue property " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                // ok
+            }
+        }
+    }
+    
     /**
      * Tests the Property.getLength() method.
      */

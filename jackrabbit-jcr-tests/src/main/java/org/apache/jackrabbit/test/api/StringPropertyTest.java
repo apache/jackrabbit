@@ -209,14 +209,31 @@ public class StringPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests conversion from String type to Reference type.
+     * Tests conversion from String type to Reference or Path type.
      */
-    public void testAsReference() throws RepositoryException, NotExecutableException {
+    public void testGetNode() throws RepositoryException, NotExecutableException {
         if (!multiple) {
             // not testable since format of ID is implementation specific
         } else {
             try {
                 prop.getNode();
+                fail("Property.getNode() called on a multivalue property " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                // ok
+            }
+        }
+    }
+
+    /**
+     * Tests conversion from String type to Reference or Path type.
+     */
+    public void testGetProperty() throws RepositoryException, NotExecutableException {
+        if (!multiple) {
+            // not testable as a STRING may or may not be convertable to Path or Reference
+        } else {
+            try {
+                prop.getProperty();
                 fail("Property.getNode() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
