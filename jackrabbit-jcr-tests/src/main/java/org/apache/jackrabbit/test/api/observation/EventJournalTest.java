@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.observation;
+package org.apache.jackrabbit.test.api.observation;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -22,89 +22,122 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.observation.Event;
+import javax.jcr.Session;
 import javax.jcr.observation.EventJournal;
-
-import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
-import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
 
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
  */
 public class EventJournalTest extends AbstractObservationTest {
 
-    // TODO: most tests have been migrated over to jackrabbit-jcr-tests
-    // TODO: what's left here relies on Jackrabbit's ObservationManager
-    // TODO: allowing to specify filters when getting the EventJournal
-    
     private EventJournal journal;
 
     protected void setUp() throws Exception {
         super.setUp();
-        journal = getEventJournal(ALL_TYPES, "/", true, null, null);
+        journal = obsMgr.getEventJournal();
     }
 
-    public void testEventType() throws RepositoryException {
-        Node n1 = testRootNode.addNode(nodeName1);
-
-        journal = getEventJournal(Event.PROPERTY_ADDED, testRoot, true, null, null);
+    public void testSkipToNow() throws RepositoryException {
+        // skip everything
         journal.skipTo(System.currentTimeMillis());
+        assertFalse(journal.hasNext());
+    }
 
+    public void testSkipTo() throws Exception {
+        long time = System.currentTimeMillis();
+
+        // add some nodes
+        Node n1 = testRootNode.addNode(nodeName1);
+        Node n2 = testRootNode.addNode(nodeName2);
+
+        // make sure some time passed otherwise we might
+        // skip this change as well.
+        while (time == System.currentTimeMillis()) {
+            Thread.sleep(1);
+        }
+
+        // now save
         superuser.save();
 
-        checkJournal(new String[]{n1.getPath() + "/" + jcrPrimaryType},
-                new String[]{n1.getPath()});
+        journal.skipTo(time);
+        // at least the two added nodes must be returned by the journal
+        checkJournal(new String[]{n1.getPath(), n2.getPath()}, new String[0]);
     }
 
-    public void testPath() throws RepositoryException {
+    public void testLiveJournal() throws RepositoryException {
+        journal.skipTo(System.currentTimeMillis());
+        assertFalse(journal.hasNext());
+
+        testRootNode.addNode(nodeName1);
+        superuser.save();
+
+        assertTrue(journal.hasNext());
+    }
+
+    public void testWorkspaceSeparation() throws RepositoryException {
+        journal.skipTo(System.currentTimeMillis());
+        assertFalse(journal.hasNext());
+
+        Session session = helper.getSuperuserSession(workspaceName);
+        try {
+            Node rootNode = session.getRootNode();
+            if (rootNode.hasNode(nodeName1)) {
+                rootNode.getNode(nodeName1).remove();
+            } else {
+                rootNode.addNode(nodeName1);
+            }
+            session.save();
+        } finally {
+            session.logout();
+        }
+
+        assertFalse(journal.hasNext());
+    }
+
+    public void testIsDeepTrue() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1);
         Node n2 = n1.addNode(nodeName2);
 
-        journal = getEventJournal(ALL_TYPES, n1.getPath(), true, null, null);
+        journal = obsMgr.getEventJournal();
         journal.skipTo(System.currentTimeMillis());
 
         superuser.save();
 
-        checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
+        checkJournal(new String[]{n1.getPath(), n2.getPath()}, new String[0]);
     }
 
-    public void testIsDeepFalse() throws RepositoryException {
+    public void testUUID() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1);
+        if (!n1.isNodeType(mixReferenceable)) {
+            n1.addMixin(mixReferenceable);
+        }
+        superuser.save();
+
         Node n2 = n1.addNode(nodeName2);
 
-        journal = getEventJournal(ALL_TYPES, testRoot, false, null, null);
+        journal = obsMgr.getEventJournal();
         journal.skipTo(System.currentTimeMillis());
 
         superuser.save();
 
-        checkJournal(new String[]{n1.getPath()}, new String[]{n2.getPath()});
+        checkJournal(new String[]{n2.getPath()}, new String[0]);
     }
 
-    public void testNodeType() throws RepositoryException {
-        Node n1 = testRootNode.addNode(nodeName1, "nt:folder");
-        Node n2 = n1.addNode(nodeName2, "nt:folder");
+    public void testUserData() throws RepositoryException {
+        testRootNode.addNode(nodeName1);
+        String data = createRandomString(5);
+        obsMgr.setUserData(data);
 
-        journal = getEventJournal(ALL_TYPES, testRoot, true, null,
-                new String[]{"nt:folder"});
+        journal = obsMgr.getEventJournal();
         journal.skipTo(System.currentTimeMillis());
 
         superuser.save();
 
-        checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
+        assertTrue("no more events", journal.hasNext());
+        assertEquals("Wrong user data", data, journal.nextEvent().getUserData());
     }
 
     //-------------------------------< internal >-------------------------------
-
-    private EventJournal getEventJournal(int eventTypes,
-                                        String absPath,
-                                        boolean isDeep,
-                                        String[] uuid,
-                                        String[] nodeTypeName)
-            throws RepositoryException {
-        // TODO: remove cast when JCR 2.0 is final
-        return ((ObservationManagerImpl) superuser.getWorkspace().getObservationManager()).getEventJournal(
-                eventTypes, absPath, isDeep, uuid, nodeTypeName);
-    }
 
     /**
      * Checks the journal for events.
