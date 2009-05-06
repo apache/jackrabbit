@@ -56,7 +56,9 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         this.config = config;
         descriptors = config.getRepositoryService().getRepositoryDescriptors();
 
-        // Remove features that are not (yet) supported through the SPI layer
+        // JCR-2098: Only pass through supported repository descriptors
+        // TODO: This filtering can be removed as the SPI layer is updated
+        // to support more of JCR 2.0
         descriptors.remove(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
     }
 
