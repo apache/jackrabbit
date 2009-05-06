@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.test.api.security;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -37,8 +35,6 @@ import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +58,6 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         super.setUp();
 
         // TODO: make sure, entries to ADD are not present yet.
-        // TODO: retrieve principal name from tck-Configuration
-        // TODO: get rid of SessionImpl dependency
         try {
             // TODO: retrieve targetPath from configuration
             Node n = testRootNode.addNode(nodeName1, testNodeType);
@@ -76,20 +70,8 @@ public class AccessControlListTest extends AbstractAccessControlTest {
                 throw new NotExecutableException("No supported privileges at absPath " + path);
             }
 
-            if (superuser instanceof SessionImpl) {
-                for (Iterator it = ((SessionImpl) superuser).getSubject().getPrincipals().iterator(); it.hasNext();) {
-                    Principal p = (Principal) it.next();
-                    if (!(p instanceof Group)) {
-                        testPrincipal = p;
-                    }
-                }
-                if (testPrincipal == null) {
-                    throw new NotExecutableException("Test principal missing.");
-                }
-            } else {
-                throw new NotExecutableException("SessionImpl expected");
-            }
-
+            testPrincipal = helper.getKnownPrincipal(superuser);
+            
             // remember existing entries for test-principal -> later restore.
             privilegesToRestore = currentPrivileges(getList(acMgr, path), testPrincipal);
         } catch (Exception e) {
@@ -335,8 +317,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     public void testAddAccessControlEntryInvalidPrincipal() throws NotExecutableException, RepositoryException {
         checkCanModifyAc(path);
         try {
-            // TODO: retrieve unknown principal name from config
-            Principal invalidPrincipal = new TestPrincipal("an_unknown_principal");
+            Principal invalidPrincipal = helper.getUnknownPrincipal(superuser);
             AccessControlList acl = getList(acMgr, path);
             acl.addAccessControlEntry(invalidPrincipal, privs);
             fail("Adding an entry with an unknown principal must throw AccessControlException.");

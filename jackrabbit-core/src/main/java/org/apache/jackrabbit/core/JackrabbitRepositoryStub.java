@@ -22,6 +22,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.Principal;
+import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -43,6 +45,7 @@ import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
@@ -358,6 +361,38 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         byte[] bytes = "Hello w\u00F6rld.".getBytes(ENCODING);
         resource.setProperty(name, new ByteArrayInputStream(bytes));
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
+    }
+
+    @Override
+    public Principal getKnownPrincipal(Session session) throws RepositoryException {
+        
+        Principal knownPrincipal = null;
+        
+        if (session instanceof SessionImpl) {
+            for (Principal p : ((SessionImpl)session).getSubject().getPrincipals()) {
+                if (! (p instanceof Group)) {
+                    knownPrincipal = p;
+                }
+            }
+        }
+        
+        if (knownPrincipal != null) {
+            return knownPrincipal;
+        }
+        else {
+            throw new RepositoryException("no applicable principal found");
+        }
+    }
+
+    private static Principal UNKNOWN_PRINCIPAL = new Principal() {
+        public String getName() {
+            return "an_unknown_user";
+        }
+    };
+    
+    @Override
+    public Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException {
+        return UNKNOWN_PRINCIPAL;
     }
 
 }

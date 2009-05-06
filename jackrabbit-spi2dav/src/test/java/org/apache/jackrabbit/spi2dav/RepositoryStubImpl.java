@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -32,6 +33,9 @@ import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import java.security.Principal;
 import java.util.Properties;
 
 /**
@@ -79,5 +83,15 @@ public class RepositoryStubImpl  extends RepositoryStub {
         PathFactory pFactory = PathFactoryImpl.getInstance();
         QValueFactory vFactory = QValueFactoryImpl.getInstance();
         return new RepositoryServiceImpl(uri, idFactory, nFactory, pFactory, vFactory);
+    }
+
+    public Principal getKnownPrincipal(Session session) throws RepositoryException {
+        // TODO Auto-generated method stub
+        throw new RepositoryException("TBD");
+    }
+
+    public Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException {
+        // TODO Auto-generated method stub
+        throw new RepositoryException("TBD");
     }
 }

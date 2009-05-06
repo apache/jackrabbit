@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -186,5 +187,21 @@ public class RepositoryHelper {
      */
     public Credentials getSuperuserCredentials() {
         return repoStub.getSuperuserCredentials();
+    }
+    
+    /**
+     * Returns a {@link Principal} identifiying a known user.
+     * @param session
+     */
+    public Principal getKnownPrincipal(Session session) throws RepositoryException {
+        return repoStub.getKnownPrincipal(session);
+    }
+    
+    /**
+     * Returns a {@link Principal} identifiying an unknown user.
+     * @param session
+     */
+    public Principal getUnknownPrincipal(Session session) throws NotExecutableException, RepositoryException {
+        return repoStub.getUnknownPrincipal(session);
     }
 }

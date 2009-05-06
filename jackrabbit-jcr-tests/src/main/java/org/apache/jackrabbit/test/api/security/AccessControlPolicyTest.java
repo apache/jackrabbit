@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.test.api.security;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +53,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        // policy-option is cover the by the 'OPTION_ACCESS_CONTROL_SUPPORTED' -> see super-class
+        // policy-option is covered the by the 'OPTION_ACCESS_CONTROL_SUPPORTED' -> see super-class
 
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
@@ -79,7 +79,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         // call must succeed without exception
         AccessControlPolicy[] policies = acMgr.getEffectivePolicies(path);
-        if (policies == null && policies.length == 0) {
+        if (policies == null || policies.length == 0) {
             fail("To every existing node at least a single effective policy applies.");
         }
     }
