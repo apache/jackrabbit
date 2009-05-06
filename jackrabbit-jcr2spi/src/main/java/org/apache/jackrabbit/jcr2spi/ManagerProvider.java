@@ -48,13 +48,13 @@ public interface ManagerProvider {
     public AccessManager getAccessManager();
 
     /**
-     * Returns the <code>AccessManager</code> associated with this
+     * Returns the <code>LockStateManager</code> associated with this
      * <code>ManagerProvider</code>.
      *
-     * @return the <code>AccessManager</code> associated with this
+     * @return the <code>LockStateManager</code> associated with this
      * <code>ManagerProvider</code>
      */
-    public LockStateManager getLockManager();
+    public LockStateManager getLockStateManager();
 
     /**
      * Returns the <code>VersionManager</code> associated with this

@@ -264,27 +264,51 @@ class RowIteratorImpl implements RowIterator {
             }
         }
 
+        /**
+         * @see Row#getNode()
+         */
         public Node getNode() throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 
+        /**
+         * @see Row#getNode(String)
+         */
         public Node getNode(String selectorName) throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 
+        /**
+         * @see Row#getPath()
+         */
         public String getPath() throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 
+        /**
+         * @see Row#getPath(String)
+         */
         public String getPath(String selectorName) throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 
+        /**
+         * @see Row#getScore()
+         */
         public double getScore() throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 
+        /**
+         * @see Row#getScore(String)
+         */
         public double getScore(String selectorName) throws RepositoryException {
+            // TODO
             throw new UnsupportedRepositoryOperationException("JCR-1104");
         }
 

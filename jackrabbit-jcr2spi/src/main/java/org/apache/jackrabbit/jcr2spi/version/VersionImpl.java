@@ -88,6 +88,30 @@ public class VersionImpl extends NodeImpl implements Version {
         return getVersions(NameConstants.JCR_PREDECESSORS);
     }
 
+    /**
+     * @see Version#getFrozenNode()
+     */
+    public Node getFrozenNode() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Version#getLinearPredecessor()
+     */
+    public Version getLinearPredecessor() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Version#getLinearSuccessor()
+     */
+    public Version getLinearSuccessor() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
     //---------------------------------------------------------------< Item >---
     /**
      *
@@ -159,17 +183,4 @@ public class VersionImpl extends NodeImpl implements Version {
         }
         return versions;
     }
-
-    public Node getFrozenNode() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Version getLinearPredecessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Version getLinearSuccessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
 }

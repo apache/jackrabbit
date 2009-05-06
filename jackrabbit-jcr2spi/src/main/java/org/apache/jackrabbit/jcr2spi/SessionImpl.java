@@ -39,6 +39,7 @@ import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.Property;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.retention.RetentionManager;
@@ -295,7 +296,7 @@ public class SessionImpl extends AbstractSession
         checkIsAlive();
         Path qPath = getQPath(absPath).getNormalizedPath();
         ItemManager itemMgr = getItemManager();
-        return (itemMgr.nodeExists(qPath)) ? true : itemMgr.propertyExists(qPath);
+        return itemMgr.nodeExists(qPath) || itemMgr.propertyExists(qPath);
     }
 
     /**
@@ -476,7 +477,7 @@ public class SessionImpl extends AbstractSession
      */
     public void addLockToken(String lt) {
         try {
-            getLockManager().addLockToken(lt);
+            getLockStateManager().addLockToken(lt);
         } catch (RepositoryException e) {
             log.warn("Unable to add lock token '" +lt+ "' to this session.", e);
         }
@@ -486,7 +487,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#getLockTokens()
      */
     public String[] getLockTokens() {
-        return getLockManager().getLockTokens();
+        return getLockStateManager().getLockTokens();
     }
 
     /**
@@ -494,13 +495,112 @@ public class SessionImpl extends AbstractSession
      */
     public void removeLockToken(String lt) {
         try {
-            getLockManager().removeLockToken(lt);
+            getLockStateManager().removeLockToken(lt);
         } catch (RepositoryException e) {
             log.warn("Unable to remove lock token '" +lt+ "' from this session. (" + e.getMessage() + ")");
         }
     }
 
-    //-------------------------------------------------< NamespaceResolver >--
+    /**
+     * @see Session#getAccessControlManager()
+     */
+    public AccessControlManager getAccessControlManager()
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Session#getNode(String) 
+     */
+    public Node getNode(String absPath) throws RepositoryException {
+        checkIsAlive();
+        try {
+            Path qPath = getQPath(absPath).getNormalizedPath();
+            ItemManager itemMgr = getItemManager();
+            return itemMgr.getNode(qPath);
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(absPath);
+        }
+    }
+
+    /**
+     * @see Session#getNodeByIdentifier(String)
+     */
+    public Node getNodeByIdentifier(String id) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Session#getProperty(String)
+     */
+    public Property getProperty(String absPath) throws RepositoryException {
+        checkIsAlive();
+        try {
+            Path qPath = getQPath(absPath).getNormalizedPath();
+            ItemManager itemMgr = getItemManager();
+            return itemMgr.getProperty(qPath);
+        } catch (AccessDeniedException ade) {
+            throw new PathNotFoundException(absPath);
+        }
+    }
+
+    /**
+     * @see Session#getRetentionManager()
+     */
+    public RetentionManager getRetentionManager()
+            throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Session#hasCapability(String, Object, Map)
+     */
+    public boolean hasCapability(String methodName, Object target, Map arguments)
+            throws RepositoryException {
+        // TODO: implementation missing
+        return true;
+    }
+
+    /**
+     * @see Session#hasPermission(String, String)
+     */
+    public boolean hasPermission(String absPath, String actions)
+            throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see Session#nodeExists(String)
+     */
+    public boolean nodeExists(String absPath) throws RepositoryException {
+        checkIsAlive();
+        Path qPath = getQPath(absPath).getNormalizedPath();
+        ItemManager itemMgr = getItemManager();
+        return itemMgr.nodeExists(qPath);
+    }
+
+    /**
+     * @see Session#propertyExists(String)
+     */
+    public boolean propertyExists(String absPath) throws RepositoryException {
+        checkIsAlive();
+        Path qPath = getQPath(absPath).getNormalizedPath();
+        ItemManager itemMgr = getItemManager();
+        return itemMgr.propertyExists(qPath);
+    }
+
+    /**
+     * @see Session#removeItem(String)
+     */
+    public void removeItem(String absPath) throws RepositoryException {
+        Item item = getItem(absPath);
+        item.remove();
+    }
+
+    //--------------------------------------------------< NamespaceResolver >---
 
     public String getPrefix(String uri) throws NamespaceException {
         try {
@@ -584,8 +684,10 @@ public class SessionImpl extends AbstractSession
         return imgr;
     }
 
-    //---------------------------------------------------< ManagerProvider > ---
-
+    //----------------------------------------------------< ManagerProvider >---
+    /**
+     * @see ManagerProvider#getNamePathResolver()
+     */
     public NamePathResolver getNamePathResolver() {
         return npResolver;
     }
@@ -619,10 +721,10 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * @see ManagerProvider#getLockManager()
+     * @see ManagerProvider#getLockStateManager()
      */
-    public LockStateManager getLockManager() {
-        return workspace.getLockManager();
+    public LockStateManager getLockStateManager() {
+        return workspace.getLockStateManager();
     }
 
     /**
@@ -865,29 +967,4 @@ public class SessionImpl extends AbstractSession
             throw new NoSuchWorkspaceException("Unknown workspace: '" + workspaceName + "'.");
         }
     }
-
-    public AccessControlManager getAccessControlManager()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Node getNodeByIdentifier(String id) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public RetentionManager getRetentionManager()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public boolean hasCapability(String methodName, Object target, Map arguments)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public boolean hasPermission(String absPath, String actions)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
 }

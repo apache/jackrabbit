@@ -1105,7 +1105,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsLockable();
         checkHasPendingChanges();
 
-        return session.getLockManager().lock(getNodeState(), isDeep, isSessionScoped, timeoutHint, ownerHint);
+        return session.getLockStateManager().lock(getNodeState(), isDeep, isSessionScoped, timeoutHint, ownerHint);
     }
 
     /**
@@ -1114,7 +1114,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public Lock getLock() throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
         checkStatus();
-        return session.getLockManager().getLock(getNodeState());
+        return session.getLockStateManager().getLock(getNodeState());
     }
 
     /**
@@ -1124,7 +1124,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsLockable();
         checkHasPendingChanges();
 
-        session.getLockManager().unlock(getNodeState());
+        session.getLockStateManager().unlock(getNodeState());
     }
 
     /**
@@ -1137,7 +1137,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // a node that is new or not lockable never holds a lock
             return false;
         } else {
-            LockStateManager lMgr = session.getLockManager();
+            LockStateManager lMgr = session.getLockStateManager();
             return (lMgr.isLocked(getNodeState()) && lMgr.getLock(getNodeState()).getNode().isSame(this));
         }
     }
@@ -1148,7 +1148,119 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isLocked() throws RepositoryException {
         // lock can be inherited from a parent > do not check for node being lockable.
         checkStatus();
-        return session.getLockManager().isLocked(getNodeState());
+        return session.getLockStateManager().isLocked(getNodeState());
+    }
+
+    /**
+     * @see javax.jcr.Node#followLifecycleTransition(String)
+     */
+    public void followLifecycleTransition(String transition) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getAllowedLifecycleTransistions()
+     */
+    public String[] getAllowedLifecycleTransistions() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getNodes(String[])
+     */
+    public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * TODO: method name is wrong! should be getProperties (Issue 736 of the pfd)
+     * @see javax.jcr.Node#getProperty(String)
+     */
+    public PropertyIterator getProperty(String[] nameGlobs) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getReferences(String)
+     */
+    public PropertyIterator getReferences(String name) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getSharedSet()
+     */
+    public NodeIterator getSharedSet() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getWeakReferences()
+     */
+    public PropertyIterator getWeakReferences() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getWeakReferences()
+     */
+    public PropertyIterator getWeakReferences(String name) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * TODO: Issue 728 of the pfd... this method is a leftover and will be removed in the final version.
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#removeShare()
+     */
+    public void removeShare() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#removeSharedSet()
+     */
+    public void removeSharedSet() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#setPrimaryType(String)
+     */
+    public void setPrimaryType(String nodeTypeName) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#setProperty(String, Binary)
+     */
+    public Property setProperty(String name, Binary value) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#setProperty(String, BigDecimal)
+     */
+    public Property setProperty(String name, BigDecimal value) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     //--------------------------------------------------------< public impl >---
@@ -1253,7 +1365,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return;
         }
         // perform check
-        session.getLockManager().checkLock(getNodeState());
+        session.getLockStateManager().checkLock(getNodeState());
     }
 
     /**
@@ -1640,72 +1752,4 @@ public class NodeImpl extends ItemImpl implements Node {
             throws ConstraintViolationException, RepositoryException {
         return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState().getAllNodeTypeNames(), propertyName, type, multiValued);
     }
-
-    public void followLifecycleTransition(String transition)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public String[] getAllowedLifecycleTransistions()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public NodeIterator getNodes(String[] nameGlobs)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public PropertyIterator getProperty(String[] nameGlobs)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public PropertyIterator getReferences(String name)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public NodeIterator getSharedSet() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public PropertyIterator getWeakReferences() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public PropertyIterator getWeakReferences(String name)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public NodeIterator merge(
-            String srcWorkspace, boolean bestEffort, boolean isShallow)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void removeShare() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void removeSharedSet() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void setPrimaryType(String nodeTypeName)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Property setProperty(String name, Binary value)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public Property setProperty(String name, BigDecimal value)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
 }

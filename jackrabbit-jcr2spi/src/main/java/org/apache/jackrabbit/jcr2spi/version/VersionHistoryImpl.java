@@ -75,9 +75,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
 
     //-----------------------------------------------------< VersionHistory >---
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#getVersionableUUID()
      */
     public String getVersionableUUID() throws RepositoryException {
@@ -86,9 +83,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#getRootVersion()
      */
     public Version getRootVersion() throws RepositoryException {
@@ -103,9 +97,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#getAllVersions()
      */
     public VersionIterator getAllVersions() throws RepositoryException {
@@ -124,11 +115,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param versionName
-     * @return
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#getVersion(String)
      */
     public Version getVersion(String versionName) throws VersionException, RepositoryException {
@@ -138,10 +124,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param label
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#getVersionByLabel(String)
      */
     public Version getVersionByLabel(String label) throws RepositoryException {
@@ -150,12 +132,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param versionName
-     * @param label
-     * @param moveLabel
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
     public void addVersionLabel(String versionName, String label, boolean moveLabel) throws VersionException, RepositoryException {
@@ -167,10 +143,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param label
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#removeVersionLabel(String)
      */
     public void removeVersionLabel(String label) throws VersionException, RepositoryException {
@@ -183,10 +155,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param label
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#hasVersionLabel(String)
      */
     public boolean hasVersionLabel(String label) throws RepositoryException {
@@ -202,11 +170,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     * @param version
-     * @param label
-     * @return
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#hasVersionLabel(Version, String)
      */
     public boolean hasVersionLabel(Version version, String label) throws VersionException, RepositoryException {
@@ -226,9 +189,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see VersionHistory#getVersionLabels()
      */
     public String[] getVersionLabels() throws RepositoryException {
@@ -243,11 +203,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param version
-     * @return
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#getVersionLabels(Version)
      */
     public String[] getVersionLabels(Version version) throws VersionException, RepositoryException {
@@ -267,13 +222,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     }
 
     /**
-     *
-     * @param versionName
-     * @throws ReferentialIntegrityException
-     * @throws AccessDeniedException
-     * @throws UnsupportedRepositoryOperationException
-     * @throws VersionException
-     * @throws RepositoryException
      * @see VersionHistory#removeVersion(String)
      */
     public void removeVersion(String versionName) throws ReferentialIntegrityException,
@@ -284,6 +232,39 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         session.getVersionStateManager().removeVersion((NodeState) getItemState(), vState);
     }
 
+
+    /**
+     * @see VersionHistory#getAllFrozenNodes()
+     */
+    public NodeIterator getAllFrozenNodes() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see VersionHistory#getAllLinearFrozenNodes()
+     */
+    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see VersionHistory#getAllLinearVersions()
+     */
+    public VersionIterator getAllLinearVersions() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see VersionHistory#getVersionableIdentifier()
+     */
+    public String getVersionableIdentifier() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+    
     //---------------------------------------------------------------< Item >---
     /**
      *
@@ -422,21 +403,4 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         // TODO: check again.. is this correct? or should NodeEntry be altered
         entry.getNodeState();
     }
-
-    public NodeIterator getAllFrozenNodes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public VersionIterator getAllLinearVersions() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public String getVersionableIdentifier() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
 }
