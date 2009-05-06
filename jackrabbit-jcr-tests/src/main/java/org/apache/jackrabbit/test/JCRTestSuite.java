@@ -35,6 +35,7 @@ public class JCRTestSuite extends TestSuite {
         addTest(org.apache.jackrabbit.test.api.version.simple.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.observation.TestAll.suite());
         addTest(org.apache.jackrabbit.test.api.retention.TestAll.suite());
+        addTest(org.apache.jackrabbit.test.api.security.TestAll.suite());
     }
 
 }

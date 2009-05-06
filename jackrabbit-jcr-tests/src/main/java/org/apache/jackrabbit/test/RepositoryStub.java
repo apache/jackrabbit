@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.test;
 
-import javax.jcr.Credentials;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import javax.jcr.retention.RetentionPolicy;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Properties;
+import java.security.Principal;
 import java.util.Map;
+import java.util.Properties;
+
+import javax.jcr.Credentials;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 /**
  * The <code>RepositoryStub</code> is the entry point to the JCR Repository
@@ -301,4 +301,18 @@ public abstract class RepositoryStub {
     public String getProperty(String name) {
         return environment.getProperty(name);
     }
+    
+    /**
+     * Returns a {@link Principal} identifiying a known user (not group)
+     * @param session
+     */
+    public abstract Principal getKnownPrincipal(Session session) throws RepositoryException;
+
+    /**
+     * Returns a {@link Principal} identifiying an unknown user.
+     * @param session
+     * @throws NotExecutableException if the implementation can not provide an
+     * instance of Principal for unkwnown users
+     */
+    public abstract Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException;
 }

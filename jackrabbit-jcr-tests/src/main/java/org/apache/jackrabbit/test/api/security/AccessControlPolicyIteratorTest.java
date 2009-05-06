@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.test.api.security;
 
 import java.util.NoSuchElementException;
 
@@ -24,15 +24,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlPolicyIterator;
 
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlPolicyIteratorTest</code>...
  */
 public class AccessControlPolicyIteratorTest extends AbstractAccessControlTest {
-
-    private static Logger log = LoggerFactory.getLogger(AccessControlPolicyIteratorTest.class);
 
     private String path;
 

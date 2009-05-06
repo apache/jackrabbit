@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.test.api.security;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
@@ -26,15 +26,11 @@ import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>AccessControlPolicyTest</code>...
  */
 public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
-
-    private static Logger log = LoggerFactory.getLogger(RSessionAccessControlPolicyTest.class);
 
     private String path;
     private Session readOnlySession;

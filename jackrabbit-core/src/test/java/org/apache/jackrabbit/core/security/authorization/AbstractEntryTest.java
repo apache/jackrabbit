@@ -27,8 +27,8 @@ import javax.jcr.Value;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 
 /**
  * <code>AbstractEntryTest</code>...

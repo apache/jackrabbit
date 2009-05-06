@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.jsr283.security;
+package org.apache.jackrabbit.test.api.security;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +30,6 @@ import javax.jcr.Session;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
@@ -151,7 +150,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         Privilege allPriv = acMgr.privilegeFromName(Privilege.JCR_ALL);
         try {
             String remappedPrefix = "_jcr";
-            superuser.setNamespacePrefix(remappedPrefix, Name.NS_JCR_URI);
+            superuser.setNamespacePrefix(remappedPrefix, "http://www.jcp.org/jcr/1.0");
 
             List l = new ArrayList();
             l.add(acMgr.privilegeFromName(Privilege.JCR_ALL));
@@ -171,7 +170,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
                 // success
             }
         } finally {
-            superuser.setNamespacePrefix(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+            superuser.setNamespacePrefix("jcr", "http://www.jcp.org/jcr/1.0");
         }
     }
 

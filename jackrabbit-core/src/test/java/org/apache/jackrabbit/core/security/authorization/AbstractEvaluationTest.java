@@ -22,12 +22,12 @@ import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.api.jsr283.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.Session;
