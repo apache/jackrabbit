@@ -68,6 +68,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.observation.ObservationManager;
@@ -344,6 +345,52 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
     }
 
+    /**
+     * @see javax.jcr.Workspace#createWorkspace(String)
+     */
+    public void createWorkspace(String name) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+
+    /**
+     * @see javax.jcr.Workspace#createWorkspace(String, String)
+     */
+    public void createWorkspace(String name, String srcWorkspace)
+            throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+
+    /**
+     * @see javax.jcr.Workspace#deleteWorkspace(String)
+     */
+    public void deleteWorkspace(String name) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+
+    /**
+     * @see javax.jcr.Workspace#getLockManager()
+     */
+    public LockManager getLockManager() throws RepositoryException {
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
+        return getLockStateManager();
+    }
+
+    /**
+     * @see javax.jcr.Workspace#getVersionManager()
+     */
+    public javax.jcr.version.VersionManager getVersionManager()
+            throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
     //----------------------------------------------------< ManagerProvider >---
     /**
      * @see ManagerProvider#getNamePathResolver()
@@ -388,9 +435,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     }
 
     /**
-     * @see ManagerProvider#getLockManager()
+     * @see ManagerProvider#getLockStateManager()
      */
-    public LockStateManager getLockManager() {
+    public LockStateManager getLockStateManager() {
         if (lockManager == null) {
             lockManager = createLockManager(wspManager, session.getItemManager());
         }
@@ -494,7 +541,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     protected LockStateManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
         LockManagerImpl lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
-        session.addListener((LockManagerImpl) lMgr);
+        session.addListener(lMgr);
         return lMgr;
     }
 
@@ -515,23 +562,5 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) {
         return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
-    }
-
-    public void createWorkspace(String name) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void createWorkspace(String name, String srcWorkspace)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public void deleteWorkspace(String name) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    public javax.jcr.version.VersionManager getVersionManager()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 }

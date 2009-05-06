@@ -483,7 +483,7 @@ public class ItemStateValidator {
         // make sure there's no foreign lock present the node (or the parent node
         // in case the state represents a PropertyState).
         NodeState nodeState = (itemState.isNode()) ? ((NodeState)itemState) : itemState.getParent();
-        mgrProvider.getLockManager().checkLock(nodeState);
+        mgrProvider.getLockStateManager().checkLock(nodeState);
     }
 
     /**

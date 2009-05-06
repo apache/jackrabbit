@@ -225,17 +225,27 @@ public class QueryImpl implements Query {
         }
     }
 
-    public void bindValue(String varName, Value value)
-            throws RepositoryException {
+    /**
+     * @see Query#bindValue(String, Value)
+     */
+    public void bindValue(String varName, Value value) throws RepositoryException {
+        //TODO
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
+    /**
+     * @see Query#setLimit(long)
+     */
     public void setLimit(long limit) {
+        // TODO
         throw new UnsupportedOperationException("JCR-1104");
     }
 
+    /**
+     * @see Query#setOffset(long)
+     */
     public void setOffset(long offset) {
+        // TODO
         throw new UnsupportedOperationException("JCR-1104");
     }
-
 }

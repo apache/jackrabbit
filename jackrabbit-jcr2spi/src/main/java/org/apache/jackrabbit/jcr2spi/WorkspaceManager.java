@@ -552,6 +552,7 @@ public class WorkspaceManager
         }
         ntRegistry.dispose();
     }
+
     //------------------------------------------------------< AccessManager >---
     /**
      * @see AccessManager#isGranted(NodeState, Path, String[])
