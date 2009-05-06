@@ -179,13 +179,13 @@ public class DatePropertyTest extends AbstractPropertyTest {
 
 
     /**
-     * Tests failure of conversion from Date type to Reference type.
+     * Tests failure of conversion from Date type to Reference or Path type.
      */
-    public void testAsReference() throws RepositoryException {
+    public void testGetNode() throws RepositoryException {
         if (!multiple) {
             try {
                 prop.getNode();
-                fail("Conversion from a Date value to a Reference value " +
+                fail("Conversion from a Date value to a Reference or Path value " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 //ok
@@ -194,6 +194,29 @@ public class DatePropertyTest extends AbstractPropertyTest {
             try {
                 prop.getNode();
                 fail("Property.getNode() called on a multivalue property " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                // ok
+            }
+        }
+    }
+
+    /**
+     * Tests failure of conversion from Date type to Path type.
+     */
+    public void testGetProperty() throws RepositoryException {
+        if (!multiple) {
+            try {
+                prop.getProperty();
+                fail("Conversion from a Date value to a Path value " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                //ok
+            }
+        } else {
+            try {
+                prop.getProperty();
+                fail("Property.getProperty() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
                 // ok

@@ -40,6 +40,7 @@ import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -352,11 +353,34 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#getNode()
      */
     public Node getNode() throws ValueFormatException, RepositoryException {
-        QValue value = getQValue();
-        if (value.getType() == PropertyType.REFERENCE) {
-            return session.getNodeByUUID(value.getString());
-        } else {
-            throw new ValueFormatException("Property must be of type REFERENCE (" + safeGetJCRPath() + ")");
+        Value value = getValue();
+        int type = value.getType();
+        switch (type) {
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+                return session.getNodeByUUID(value.getString());
+
+            case PropertyType.PATH:
+            case PropertyType.NAME:
+                String path = value.getString();
+                Path p = session.getPathResolver().getQPath(path);
+                boolean absolute = p.isAbsolute();
+                return (absolute) ? session.getNode(path) : getParent().getNode(path);
+
+            case PropertyType.STRING:
+                try {
+                    Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
+                    return session.getNodeByUUID(refValue.getString());
+                } catch (RepositoryException e) {
+                    // try if STRING value can be interpreted as PATH value
+                    Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
+                    p = session.getPathResolver().getQPath(pathValue.getString());
+                    absolute = p.isAbsolute();
+                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
+                }
+
+            default:
+                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE");
         }
     }
 
@@ -364,8 +388,17 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see Property#getProperty()
      */
     public Property getProperty() throws RepositoryException {
-        // TODO JCR-1609 - this should probably be handled a bit better...
-        return getParent().getProperty(getString());
+        Value value = getValue();
+        Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
+        String path = pathValue.getString();
+        boolean absolute;
+        try {
+            Path p = session.getPathResolver().getQPath(path);
+            absolute = p.isAbsolute();
+        } catch (RepositoryException e) {
+            throw new ValueFormatException("Property value cannot be converted to a PATH");
+        }
+        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
     }
 
     /**
@@ -583,5 +616,4 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException("Property must be of type REFERENCE.");
         }
     }
-
 }

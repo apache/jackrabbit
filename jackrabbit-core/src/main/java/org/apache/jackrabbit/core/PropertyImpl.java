@@ -508,16 +508,48 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public Node getNode() throws ValueFormatException, RepositoryException {
         Value value = getValue();
-        if (value.getType() == PropertyType.REFERENCE) {
-            return session.getNodeByUUID(value.getString());
-        } else {
-            // TODO: The specification suggests using value conversion
-            throw new ValueFormatException("property must be of type REFERENCE");
+        int type = value.getType();
+        switch (type) {
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+                return session.getNodeByUUID(value.getString());
+
+            case PropertyType.PATH:
+            case PropertyType.NAME:
+                String path = value.getString();
+                Path p = session.getQPath(path);
+                boolean absolute = p.isAbsolute();
+                return (absolute) ? session.getNode(path) : getParent().getNode(path);
+
+            case PropertyType.STRING:
+                try {
+                    Value refValue = ValueHelper.convert(value, PropertyType.REFERENCE, session.getValueFactory());
+                    return session.getNodeByUUID(refValue.getString());
+                } catch (RepositoryException e) {
+                    // try if STRING value can be interpreted as PATH value
+                    Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
+                    p = session.getQPath(pathValue.getString());
+                    absolute = p.isAbsolute();
+                    return (absolute) ? session.getNode(pathValue.getString()) : getParent().getNode(pathValue.getString());
+                }
+
+            default:
+                throw new ValueFormatException("Property value cannot be converted to a PATH, REFERENCE or WEAKREFERENCE");
         }
     }
 
     public Property getProperty() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1609");
+        Value value = getValue();
+        Value pathValue = ValueHelper.convert(value, PropertyType.PATH, session.getValueFactory());
+        String path = pathValue.getString();
+        boolean absolute;
+        try {
+            Path p = session.getQPath(path);
+            absolute = p.isAbsolute();
+        } catch (RepositoryException e) {
+            throw new ValueFormatException("Property value cannot be converted to a PATH");
+        }
+        return (absolute) ? session.getProperty(path) : getParent().getProperty(path);
     }
 
     public BigDecimal getDecimal() throws RepositoryException {

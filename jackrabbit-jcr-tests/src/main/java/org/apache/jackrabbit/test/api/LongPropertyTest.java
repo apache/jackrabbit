@@ -171,20 +171,43 @@ public class LongPropertyTest extends AbstractPropertyTest {
     }
 
     /**
-     * Tests failure of conversion from Long type to Reference type.
+     * Tests failure of conversion from Long type to Reference, WeakReference or Path type.
      */
-    public void testAsReference() throws RepositoryException {
+    public void testGetNode() throws RepositoryException {
         if (!multiple) {
             try {
                 prop.getNode();
-                fail("Conversion from a Double value to a Reference value " +
+                fail("Conversion from a Long value to a Reference or Path value " +
                         "should throw a ValueFormatException.");
-            } catch (ValueFormatException vfe) {
-                //ok
+            } catch (ValueFormatException e) {
+                // success.
             }
         } else {
             try {
                 prop.getNode();
+                fail("Property.getNode() called on a multivalue property " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException vfe) {
+                //ok
+            }
+        }
+    }
+
+    /**
+     * Tests failure of conversion from Long type to Path type.
+     */
+    public void testGetProperty() throws RepositoryException {
+        if (!multiple) {
+            try {
+                prop.getProperty();
+                fail("Conversion from a Long value to a Path value " +
+                        "should throw a ValueFormatException.");
+            } catch (ValueFormatException e) {
+                // success.
+            }
+        } else {
+            try {
+                prop.getProperty();
                 fail("Property.getNode() called on a multivalue property " +
                         "should throw a ValueFormatException.");
             } catch (ValueFormatException vfe) {
