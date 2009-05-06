@@ -113,7 +113,7 @@ public class VersionImpl extends NodeImpl implements Version {
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
         InternalVersion suc = getInternalVersion().getLinearSuccessor(base);
-        return (Version) session.getNodeById(suc.getId());
+        return suc == null ? null : (Version) session.getNodeById(suc.getId());
     }
 
     /**
