@@ -26,8 +26,9 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * Tests <code>NodeType.canRemoveItem(String itemName)</code> returns true if a
- * node or property is removable
+ * Tests that {@link NodeType#canRemoveItem(String)} returns true
+ * node or property is removable (same for {@link NodeType#canRemoveNode(String)}
+ * and {@link NodeType#canRemoveProperty(String)}).
  *
  * @test
  * @sources CanRemoveItemTest.java
@@ -64,8 +65,9 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * true if <code>itemName</code> is nor a protected nor a mandatory
+     * Tests that {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveProperty(String)} return true
+     * if the specified property is not a protected nor a mandatory
      * property.
      */
     public void testRemovableProperty()
@@ -80,14 +82,19 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = propDef.getDeclaringNodeType();
 
-        assertTrue("NodeType.canRemoveIten(String itemName) must return true " +
-                "if itemName is nor a protected nor a mandatory property def.",
+        assertTrue("NodeType.canRemoveItem(String itemName) must return true " +
+                "if itemName is not a protected nor a mandatory property def.",
                 type.canRemoveItem(propDef.getName()));
+
+        assertTrue("NodeType.canRemoveProperty(String propertyName) must return true " +
+                "if propertyName is not a protected nor a mandatory property def.",
+                type.canRemoveProperty(propDef.getName()));
     }
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * false if <code>itemName</code> is a protected property.
+     * Tests if {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveProperty(String)} return false
+     * if the specified property is a protected property.
      */
     public void testProtectedProperty()
             throws NotExecutableException, RepositoryException {
@@ -101,14 +108,19 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = propDef.getDeclaringNodeType();
 
-        assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
+        assertFalse("NodeType.canRemoveItem(String itemName) must return false " +
                 "if itemName is a protected property def.",
                 type.canRemoveItem(propDef.getName()));
+
+        assertFalse("NodeType.canRemoveProperty(String propertyName) must return false " +
+                "if propertyName is a protected property def.",
+                type.canRemoveProperty(propDef.getName()));
     }
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * false if <code>itemName</code> is a mandatory property.
+     * Tests if {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveProperty(String)} return false
+     * if the specified property is a mandatory property.
      */
     public void testMandatoryProperty()
             throws NotExecutableException, RepositoryException {
@@ -122,14 +134,19 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = propDef.getDeclaringNodeType();
 
-        assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
+        assertFalse("NodeType.canRemoveItem(String itemName) must return false " +
                 "if itemName is a mandatory property def.",
                 type.canRemoveItem(propDef.getName()));
+
+        assertFalse("NodeType.canRemoveProperty(String propertyName) must return false " +
+                "if propertyName is a mandatory property def.",
+                type.canRemoveProperty(propDef.getName()));
     }
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * true if <code>itemName</code> is nor a protected nor a mandatory
+     * Tests if {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveNode(String)} return true
+     * if the specified node is not a protected nor a mandatory
      * child node.
      */
     public void testRemovableChildNode()
@@ -144,14 +161,19 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = nodeDef.getDeclaringNodeType();
 
-        assertTrue("NodeType.canRemoveIten(String itemName) must return true " +
-                "if itemName is nor a protected nor a mandatory child node def.",
+        assertTrue("NodeType.canRemoveItem(String itemName) must return true " +
+                "if itemName is not a protected nor a mandatory child node def.",
                 type.canRemoveItem(nodeDef.getName()));
-    }
+
+        assertTrue("NodeType.canRemoveNode(String nodeName) must return true " +
+                "if nodeName is not a protected nor a mandatory child node def.",
+                type.canRemoveNode(nodeDef.getName()));
+}
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * false if <code>itemName</code> is a protected child node.
+     * Tests if {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveNode(String)} return 
+     * false if the specified node is a protected child node.
      */
     public void testProtectedChildNode()
             throws NotExecutableException, RepositoryException {
@@ -165,14 +187,19 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = nodeDef.getDeclaringNodeType();
 
-        assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
+        assertFalse("NodeType.canRemoveItem(String itemName) must return false " +
                 "if itemName is a protected child node def.",
                 type.canRemoveItem(nodeDef.getName()));
-    }
+
+        assertFalse("NodeType.canRemoveNode(String nodeName) must return false " +
+                "if nodeName is a protected child node def.",
+                type.canRemoveNode(nodeDef.getName()));
+}
 
     /**
-     * Tests if <code>NodeType.canRemoveItem(String itemName)</code> removes
-     * false if <code>itemName</code> is a mandatory child node.
+     * Tests if {@link NodeType#canRemoveItem(String)} and
+     * {@link NodeType#canRemoveNode(String)} return 
+     * false if the specified node is a mandatory child node.
      */
     public void testMandatoryChildNode()
             throws NotExecutableException, RepositoryException {
@@ -186,8 +213,12 @@ public class CanRemoveItemTest extends AbstractJCRTest {
 
         NodeType type = nodeDef.getDeclaringNodeType();
 
-        assertFalse("NodeType.canRemoveIten(String itemName) must return false " +
+        assertFalse("NodeType.canRemoveItem(String itemName) must return false " +
                 "if itemName is a mandatory child node def.",
                 type.canRemoveItem(nodeDef.getName()));
+    
+        assertFalse("NodeType.canRemoveNode(String nodeName) must return false " +
+                "if nodeName is a mandatory child node def.",
+                type.canRemoveNode(nodeDef.getName()));
     }
 }
