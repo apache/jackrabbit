@@ -104,8 +104,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
     public void testAllPrivilegeContainsAll() throws RepositoryException, NotExecutableException {
         Privilege[] supported = acMgr.getSupportedPrivileges(testRootNode.getPath());
 
-        Set allSet = new HashSet();
         Privilege all = acMgr.privilegeFromName(Privilege.JCR_ALL);
+        Set allSet = new HashSet();
         allSet.addAll(Arrays.asList(all.getAggregatePrivileges()));
 
         String msg = "The all privilege must also contain ";
@@ -120,6 +120,12 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         }
     }
 
+    /**
+     * Test the jcr:all privilege.
+     * 
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
     public void testAllPrivilege() throws RepositoryException, NotExecutableException {
         Privilege all = acMgr.privilegeFromName(Privilege.JCR_ALL);
         assertFalse("All privilege must be not be abstract.", all.isAbstract());
@@ -129,6 +135,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
     }
 
     /**
+     * Test the jcr:write privilege.
      *
      * @throws RepositoryException If an error occurs.
      * @throws NotExecutableException If the test cannot be executed.
@@ -140,6 +147,35 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         assertEquals("The name of the write privilege must be " + expected, expected, w.getName());
     }
 
+    /**
+     * Test some simple characteristics of the known aggregate privileges (jcr:write and jcr:all).
+     *
+     * @throws RepositoryException
+     */
+    public void testAggregregatePrivileges() throws RepositoryException {
+        List l = new ArrayList();
+        l.add(getJCRName(Privilege.JCR_WRITE, superuser));
+        l.add(getJCRName(Privilege.JCR_ALL, superuser));
+
+        for (Iterator it = l.iterator(); it.hasNext();) {
+            String privName = it.next().toString();
+            Privilege p = acMgr.privilegeFromName(privName);
+
+            assertTrue("write and all must always be aggregate privileges.", p.isAggregate());
+            Privilege[] aggregatedPrvs = p.getAggregatePrivileges();
+            Privilege[] declaredPrvs = p.getDeclaredAggregatePrivileges();
+
+            assertNotNull("An aggregate privilege must return the aggregated privileges", aggregatedPrvs);
+            assertTrue("An aggregate privilege must return the aggregated privileges", aggregatedPrvs.length > 0);
+
+            assertNotNull("An aggregate privilege must return the declared aggregated privileges", declaredPrvs);
+            assertTrue("An aggregate privilege must return the declared aggregated privileges", declaredPrvs.length > 0);
+
+            assertTrue("The may be at least the same amount of declared aggregated privileges.", aggregatedPrvs.length >= declaredPrvs.length);
+        }
+
+    }
+    
     /**
      * Tests if the privilege name is treated as JCR Name and consequently
      * reflects changes made to the namespace prefix.
