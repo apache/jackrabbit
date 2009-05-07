@@ -225,7 +225,7 @@ public abstract class QueryResultImpl implements QueryResult {
         }
         return new RowIteratorImpl(getScoreNodes(), selectProps,
                 selectorNames, itemMgr,
-                index.getContext().getHierarchyManager(), session,
+                index.getContext().getHierarchyManager(), session, session.getValueFactory(),
                 excerptProvider, spellSuggestion);
     }
 

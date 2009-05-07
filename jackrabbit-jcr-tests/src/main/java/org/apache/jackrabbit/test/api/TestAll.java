@@ -67,6 +67,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ExportSysViewTest.class);
         suite.addTestSuite(ExportDocViewTest.class);
 
+        suite.addTestSuite(NameTest.class);
+        suite.addTestSuite(PathTest.class);
+
         // level 2 tests
         suite.addTestSuite(AddNodeTest.class);
         suite.addTestSuite(NamespaceRegistryTest.class);

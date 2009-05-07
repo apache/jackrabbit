@@ -48,6 +48,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.JcrConstants;
 
 import javax.jcr.RepositoryException;
@@ -74,6 +75,8 @@ import javax.jcr.Workspace;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Value;
 import javax.jcr.ItemVisitor;
+import javax.jcr.ValueFactory;
+import javax.jcr.GuestCredentials;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
@@ -128,6 +131,11 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final IdFactoryImpl idFactory = (IdFactoryImpl) IdFactoryImpl.getInstance();
 
     /**
+     * The QValueFactory
+     */
+    private QValueFactory qValueFactory = QValueFactoryImpl.getInstance();
+
+    /**
      * Set to <code>true</code> if the underlying JCR repository supports
      * observation.
      */
@@ -145,6 +153,16 @@ public class RepositoryServiceImpl implements RepositoryService {
         this.repository = repository;
         this.batchReadConfig = batchReadConfig;
         this.supportsObservation = "true".equals(repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED));
+
+        try {
+            Session s = repository.login(new GuestCredentials());
+            ValueFactory vf = s.getValueFactory();
+            if (vf instanceof ValueFactoryQImpl) {
+                qValueFactory = ((ValueFactoryQImpl) vf).getQValueFactory();
+            }
+        } catch (RepositoryException e) {
+            // ignore            
+        }
     }
 
     /**
@@ -172,7 +190,7 @@ public class RepositoryServiceImpl implements RepositoryService {
      * {@inheritDoc}
      */
     public QValueFactory getQValueFactory() {
-        return QValueFactoryImpl.getInstance();
+        return qValueFactory;
     }
 
     /**

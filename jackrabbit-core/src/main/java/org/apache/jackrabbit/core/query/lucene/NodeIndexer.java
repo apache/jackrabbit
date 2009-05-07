@@ -286,7 +286,7 @@ public class NodeIndexer {
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
      */
-    private void addValue(Document doc, InternalValue value, Name name) {
+    private void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);

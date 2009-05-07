@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 
@@ -39,10 +40,12 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
     private final NodeTypeDef ntd;
     // resolver used to translate qualified names to JCR names
     private final NamePathResolver resolver;
+    private final ValueFactory valueFactory;
 
-    public NodeTypeDefinitionImpl(NodeTypeDef ntd, NamePathResolver resolver) {
+    public NodeTypeDefinitionImpl(NodeTypeDef ntd, NamePathResolver resolver, ValueFactory valueFactory) {
         this.ntd = ntd;
         this.resolver = resolver;
+        this.valueFactory = valueFactory;
     }
 
     //---------------------------------------------------< NodeTypeDefinition >
@@ -162,7 +165,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
         PropDef[] pda = ntd.getPropertyDefs();
         PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
         for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = new PropertyDefinitionImpl(pda[i], null, resolver);
+            propDefs[i] = new PropertyDefinitionImpl(pda[i], null, resolver, valueFactory);
         }
         return propDefs;
     }

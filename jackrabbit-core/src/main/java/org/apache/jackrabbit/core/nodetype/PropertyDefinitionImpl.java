@@ -18,11 +18,13 @@ package org.apache.jackrabbit.core.nodetype;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,16 +42,20 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      */
     private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
+    private final ValueFactory valueFactory;
+
     /**
      * Package private constructor
      *
      * @param propDef    property definition
      * @param ntMgr      node type manager
      * @param resolver   name resolver
+     * @param valueFactory
      */
     PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
-                           NamePathResolver resolver) {
+                           NamePathResolver resolver, ValueFactory valueFactory) {
         super(propDef, ntMgr, resolver);
+        this.valueFactory = valueFactory;
     }
 
     /**
@@ -73,7 +79,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
         Value[] values = new Value[defVals.length];
         for (int i = 0; i < defVals.length; i++) {
             try {
-                values[i] = defVals[i].toJCRValue(resolver);
+                values[i] = ValueFormat.getJCRValue(defVals[i], resolver, valueFactory);
             } catch (RepositoryException re) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();

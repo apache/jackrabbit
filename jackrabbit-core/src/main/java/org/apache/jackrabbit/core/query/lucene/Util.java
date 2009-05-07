@@ -138,8 +138,9 @@ public class Util {
      *
      * @param value an internal value.
      * @return a comparable for the given <code>value</code>.
+     * @throws RepositoryException if retrieving the <code>Comparable</code> fails.
      */
-    public static Comparable getComparable(InternalValue value) {
+    public static Comparable getComparable(InternalValue value) throws RepositoryException {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 return null;
@@ -152,13 +153,13 @@ public class Util {
             case PropertyType.LONG:
                 return new Long(value.getLong());
             case PropertyType.NAME:
-                return value.getQName().toString();
+                return value.getName().toString();
             case PropertyType.PATH:
                 return value.getPath().toString();
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
-            // TODO: JSR 283 now node types
+            // TODO: JSR 283 adds new property types
             default:
                 return null;
         }

@@ -19,29 +19,31 @@ package org.apache.jackrabbit.spi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.FileWriter;
 import java.util.Calendar;
 
-/** <code>QValueFactoryTest</code>... */
-public class QValueFactoryTest extends AbstractSPITest {
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 
-    private static Logger log = LoggerFactory.getLogger(QValueFactoryTest.class);
+/**
+ * <code>QValueTest</code>...
+ */
+public class QValueTest extends AbstractSPITest {
 
-    protected QValueFactory factory;
+    private static Logger log = LoggerFactory.getLogger(QValueTest.class);
 
-    private final Calendar calendar = Calendar.getInstance();
+    private final Calendar CALENDAR = Calendar.getInstance();
     protected Path rootPath;
     protected Name testName;
     protected String reference;
+    protected QValueFactory factory;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -51,13 +53,6 @@ public class QValueFactoryTest extends AbstractSPITest {
         rootPath = service.getPathFactory().getRootPath();
         testName = service.getNameFactory().create(Name.NS_JCR_URI, "data");
         reference = getProperty("reference");
-    }
-
-    private static void assertValueLength(QValue v, long expectedLength) throws RepositoryException {
-        long length = v.getLength();
-        if (length != -1) {
-            assertEquals(expectedLength, length);
-        }
     }
 
     public void testIllegalType() throws RepositoryException {
@@ -117,7 +112,7 @@ public class QValueFactoryTest extends AbstractSPITest {
      * values. Test if the various create methods use the constants (thus always
      * return the 'same' object.
      *
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public void testFinalBooleanValue() throws RepositoryException {
         assertSame(factory.create(true), factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN));
@@ -131,7 +126,7 @@ public class QValueFactoryTest extends AbstractSPITest {
      * Test if creating Boolean QValue from boolean and from String with boolean
      * type return equal objects.
      *
-     * @throws RepositoryException
+     * @throws javax.jcr.RepositoryException
      */
     public void testCreateBooleanValueFromString() throws RepositoryException {
         QValue v = factory.create(Boolean.TRUE.toString(), PropertyType.BOOLEAN);
@@ -181,33 +176,29 @@ public class QValueFactoryTest extends AbstractSPITest {
         try {
             factory.create((Calendar) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
         try {
             factory.create(null, PropertyType.DATE);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
     }
 
     public void testDateValueType() throws RepositoryException {
-        QValue v = factory.create(calendar);
+        QValue v = factory.create(CALENDAR);
         assertTrue("Type of a date value must be PropertyType.DATE", v.getType() == PropertyType.DATE);
     }
     public void testDateValueEquality() throws RepositoryException {
-        QValue v = factory.create(calendar);
-        QValue otherV = factory.create(calendar);
+        QValue v = factory.create(CALENDAR);
+        QValue otherV = factory.create(CALENDAR);
         assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
     }
 
     public void testDateValueEquality2() throws RepositoryException {
-        QValue v = factory.create(calendar);
+        QValue v = factory.create(CALENDAR);
         QValue otherV = factory.create(v.getString(), PropertyType.DATE);
         assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
     }
@@ -218,10 +209,8 @@ public class QValueFactoryTest extends AbstractSPITest {
         try {
             factory.create(null, PropertyType.REFERENCE);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
     }
 
@@ -261,10 +250,8 @@ public class QValueFactoryTest extends AbstractSPITest {
         try {
             factory.create((Name) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
     }
 
@@ -315,10 +302,8 @@ public class QValueFactoryTest extends AbstractSPITest {
         try {
             factory.create((Path) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
     }
 
@@ -370,26 +355,20 @@ public class QValueFactoryTest extends AbstractSPITest {
         try {
             factory.create((byte[]) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
         try {
             factory.create((InputStream) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
         try {
             factory.create((File) null);
             fail();
-        } catch (IllegalArgumentException e) {
-          // ok
-        } catch (NullPointerException e) {
-          // ok
+        } catch (RuntimeException e) {
+            // ok
         }
     }
 
@@ -403,7 +382,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(new byte[] {'a', 'b', 'c'});
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 3);
+        assertEquals(3, v.getLength());
 
         assertEquals("abc", v.getString());
 
@@ -416,7 +395,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(new byte[0]);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 0);
+        assertEquals(0, v.getLength());
 
         assertEquals("", v.getString());
 
@@ -431,7 +410,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(in);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 3);
+        assertEquals(3, v.getLength());
 
         assertEquals("abc", v.getString());
 
@@ -446,7 +425,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(in);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 0);
+        assertEquals(0, v.getLength());
 
         assertEquals("", v.getString());
 
@@ -466,7 +445,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(f);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 3);
+        assertEquals(3, v.getLength());
 
         assertEquals("abc", v.getString());
 
@@ -482,7 +461,7 @@ public class QValueFactoryTest extends AbstractSPITest {
         QValue v = factory.create(f);
 
         assertEquals(PropertyType.BINARY, v.getType());
-        assertValueLength(v, 0);
+        assertEquals(0, v.getLength());
 
         assertEquals("", v.getString());
 
@@ -495,8 +474,8 @@ public class QValueFactoryTest extends AbstractSPITest {
      *
      * @param out
      * @param in
-     * @throws RepositoryException
-     * @throws IOException
+     * @throws javax.jcr.RepositoryException
+     * @throws java.io.IOException
      */
     private static void spool(OutputStream out, InputStream in) throws RepositoryException, IOException {
         try {

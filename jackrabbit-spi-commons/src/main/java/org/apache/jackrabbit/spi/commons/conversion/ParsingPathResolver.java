@@ -35,20 +35,40 @@ public class ParsingPathResolver implements PathResolver {
     /**
      * Name resolver.
      */
-    private final NameResolver resolver;
+    private final NameResolver nameResolver;
+
+    /**
+     * Identifier resolver.
+     */
+    private final IdentifierResolver idResolver;
 
     /**
      * Creates a parsing path resolver.
      *
+     * @param pathFactory path factory.
      * @param resolver name resolver
      */
     public ParsingPathResolver(PathFactory pathFactory, NameResolver resolver) {
-        this.pathFactory = pathFactory;
-        this.resolver = resolver;
+        this(pathFactory, resolver, null);
     }
 
     /**
-     * Parses the prefixed JCR path and returns the resolved qualified path.
+     * Creates a parsing path resolver.
+     *
+     * @param pathFactory path factory.
+     * @param nameResolver name resolver.
+     * @param idResolver identifier resolver.
+     * @since JCR 2.0
+     */
+    public ParsingPathResolver(PathFactory pathFactory, NameResolver nameResolver,
+                               IdentifierResolver idResolver) {
+        this.pathFactory = pathFactory;
+        this.nameResolver = nameResolver;
+        this.idResolver = idResolver;
+    }
+
+    /**
+     * Parses the given JCR path and returns the resolved qualified path.
      *
      * @param path prefixed JCR path
      * @return qualified path
@@ -57,12 +77,22 @@ public class ParsingPathResolver implements PathResolver {
      * @throws NamespaceException if a namespace prefix can not be resolved
      */
     public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
-        return PathParser.parse(path, resolver, pathFactory);
+        return PathParser.parse(path, nameResolver, idResolver, pathFactory);
+    }
+
+    /**
+     * Calls {@link PathParser#parse(String, NameResolver, IdentifierResolver, org.apache.jackrabbit.spi.PathFactory)}
+     * from the given <code>path</code>.
+     * 
+     * @see PathResolver#getQPath(String, boolean)
+     */
+    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return PathParser.parse(path, nameResolver, idResolver, pathFactory, normalizeIdentifier);
     }
 
 
     /**
-     * Returns the prefixed JCR path for the given qualified path.
+     * Returns the given JCR path for the given qualified path.
      *
      * @param path qualified path
      * @return prefixed JCR path
@@ -82,8 +112,10 @@ public class ParsingPathResolver implements PathResolver {
                 buffer.append('.');
             } else if (elements[i].denotesParent()) {
                 buffer.append("..");
+            } else if (elements[i].denotesIdentifier()) {
+                buffer.append(elements[i].getString());
             } else {
-                buffer.append(resolver.getJCRName(elements[i].getName()));
+                buffer.append(nameResolver.getJCRName(elements[i].getName()));
                 /**
                  * FIXME the [1] subscript should only be suppressed if the
                  * item in question can't have same-name siblings.

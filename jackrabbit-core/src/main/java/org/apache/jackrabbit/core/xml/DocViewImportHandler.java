@@ -32,6 +32,7 @@ import org.xml.sax.SAXException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -59,8 +60,8 @@ class DocViewImportHandler extends TargetImportHandler {
      *
      * @param importer
      */
-    DocViewImportHandler(Importer importer) {
-        super(importer);
+    DocViewImportHandler(Importer importer, ValueFactory valueFactory) {
+        super(importer, valueFactory);
     }
 
     /**
@@ -102,7 +103,7 @@ class DocViewImportHandler extends TargetImportHandler {
     private void appendCharacters(char[] ch, int start, int length)
             throws SAXException {
         if (textHandler == null) {
-            textHandler = new BufferedStringValue(resolver);
+            textHandler = new BufferedStringValue(resolver, valueFactory);
         }
         try {
             textHandler.append(ch, start, length);
@@ -250,7 +251,7 @@ class DocViewImportHandler extends TargetImportHandler {
                 // see also DocViewSAXEventGenerator#leavingProperties(Node, int)
                 // todo proper multi-value serialization support
                 propValues = new TextValue[1];
-                propValues[0] = new StringValue(attrValue, resolver);
+                propValues[0] = new StringValue(attrValue, resolver, valueFactory);
 
                 if (propName.equals(NameConstants.JCR_PRIMARYTYPE)) {
                     // jcr:primaryType

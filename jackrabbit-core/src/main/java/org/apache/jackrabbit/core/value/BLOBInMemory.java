@@ -20,8 +20,10 @@ import org.apache.jackrabbit.uuid.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
@@ -152,6 +154,17 @@ public class BLOBInMemory extends BLOBFileValue {
      */
     public InputStream getStream() {
         return new ByteArrayInputStream(data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getString() throws RepositoryException {
+        try {
+            return new String(data, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("UTF-8 not supported on this platform", e);
+        }
     }
 
     /**

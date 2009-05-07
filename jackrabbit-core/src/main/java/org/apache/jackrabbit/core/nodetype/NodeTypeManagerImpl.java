@@ -175,7 +175,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
             if (pdi == null) {
                 PropDef pd = ntReg.getPropDef(id);
                 if (pd != null) {
-                    pdi = new PropertyDefinitionImpl(pd, this, session);
+                    pdi = new PropertyDefinitionImpl(pd, this, session, valueFactory);
                     pdCache.put(id, pdi);
                 }
             }

@@ -673,13 +673,28 @@ public class BundleBinding extends ItemStateBinding {
                     }
                     break;
                 case PropertyType.DOUBLE:
-                    out.writeDouble(val.getDouble());
+                    try {
+                        out.writeDouble(val.getDouble());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing DOUBLE value.");
+                    }
                     break;
                 case PropertyType.LONG:
-                    out.writeLong(val.getLong());
+                    try {
+                        out.writeLong(val.getLong());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing LONG value.");
+                    }
                     break;
                 case PropertyType.BOOLEAN:
-                    out.writeBoolean(val.getBoolean());
+                    try {
+                        out.writeBoolean(val.getBoolean());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing BOOLEAN value.");
+                    }
                     break;
                 case PropertyType.NAME:
                     writeQName(out, val.getQName());
@@ -701,7 +716,6 @@ public class BundleBinding extends ItemStateBinding {
      * Write a small binary value and return the data.
      *
      * @param out the output stream to write
-     * @param size the size
      * @param blobVal the binary value
      * @param state the property state (for error messages)
      * @param i the index (for error messages)

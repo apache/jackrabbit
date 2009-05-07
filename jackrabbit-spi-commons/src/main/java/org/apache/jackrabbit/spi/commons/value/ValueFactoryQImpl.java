@@ -37,6 +37,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.util.ISO8601;
 
 /**
  * This class implements the <code>ValueFactory</code> interface,
@@ -61,6 +62,16 @@ public class ValueFactoryQImpl implements ValueFactory {
     public ValueFactoryQImpl(QValueFactory qfactory, NamePathResolver resolver) {
         this.qfactory = qfactory;
         this.resolver = resolver;
+    }
+
+    /**
+     * The <code>QValueFactory</code> that is wrapped by this <code>ValueFactory</code>
+     * instance.
+     *
+     * @return qfactory The <code>QValueFactory</code> wrapped by this instance.
+     */
+    public QValueFactory getQValueFactory() {
+        return qfactory;
     }
 
     /**
@@ -128,6 +139,7 @@ public class ValueFactoryQImpl implements ValueFactory {
      */
     public Value createValue(Calendar value) {
         try {
+            ISO8601.getYear(value);
             QValue qvalue = qfactory.create(value);
             return new QValueValue(qvalue, resolver);
         } catch (RepositoryException ex) {
@@ -168,7 +180,7 @@ public class ValueFactoryQImpl implements ValueFactory {
                 Name name = resolver.getQName(value);
                 qvalue = qfactory.create(name);
             } else if (type == PropertyType.PATH) {
-                Path path = resolver.getQPath(value);
+                Path path = resolver.getQPath(value, false);
                 qvalue = qfactory.create(path);
             } else {
                 qvalue = qfactory.create(value, type);

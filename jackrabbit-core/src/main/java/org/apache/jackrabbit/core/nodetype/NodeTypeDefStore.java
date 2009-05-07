@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;

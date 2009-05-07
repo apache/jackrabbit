@@ -152,6 +152,16 @@ public interface PathFactory {
     public Path.Element createElement(Name name, int index) throws IllegalArgumentException;
 
     /**
+     * Creates a path element from the given <code>identifier</code>.
+     *
+     * @param identifier Node identifier for which the path element should be created.
+     * @return a path element.
+     * @throws IllegalArgumentException If the <code>identifier</code> is <code>null</code>.
+     * @since JCR 2.0
+     */
+    public Path.Element createElement(String identifier) throws IllegalArgumentException;
+
+    /**
      * Return the current element.
      *
      * @return the current element.

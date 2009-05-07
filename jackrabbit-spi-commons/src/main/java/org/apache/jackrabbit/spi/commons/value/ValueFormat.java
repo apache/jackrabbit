@@ -119,7 +119,7 @@ public class ValueFormat {
                 qValue = factory.create(qName);
                 break;
             case PropertyType.PATH:
-                Path qPath = resolver.getQPath(jcrValue).getNormalizedPath();
+                Path qPath = resolver.getQPath(jcrValue, false);
                 qValue = factory.create(qPath);
                 break;
             default:
@@ -131,7 +131,8 @@ public class ValueFormat {
     /**
      * @param qualifiedValue
      * @param resolver
-     * @return
+     * @param factory
+     * @return the JCR value created from the given <code>qualifiedValue</code>.
      * @throws RepositoryException
      */
     public static Value getJCRValue(QValue qualifiedValue,

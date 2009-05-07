@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.spi.Name;
@@ -55,6 +56,8 @@ public class ImportHandler extends DefaultHandler {
 
     private final NamespaceHelper helper;
 
+    private final ValueFactory valueFactory;
+
     protected Locator locator;
 
     private TargetImportHandler targetHandler = null;
@@ -72,6 +75,7 @@ public class ImportHandler extends DefaultHandler {
         this.importer = importer;
         this.helper = new NamespaceHelper(session);
         this.localNamespaceMappings = helper.getNamespaces();
+        this.valueFactory = session.getValueFactory();
     }
 
     //---------------------------------------------------------< ErrorHandler >
@@ -149,9 +153,9 @@ public class ImportHandler extends DefaultHandler {
             // the namespace of the first element determines the type of XML
             // (system view/document view)
             if (Name.NS_SV_URI.equals(namespaceURI)) {
-                targetHandler = new SysViewImportHandler(importer);
+                targetHandler = new SysViewImportHandler(importer, valueFactory);
             } else {
-                targetHandler = new DocViewImportHandler(importer);
+                targetHandler = new DocViewImportHandler(importer, valueFactory);
             }
 
             targetHandler.startDocument();

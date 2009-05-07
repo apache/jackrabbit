@@ -28,7 +28,6 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -153,7 +152,7 @@ public class HierarchyEventListener implements InternalEventListener {
                         try {
                             Path parentPath = ev.getPath().getAncestor(1);
                             parent = hierarchyMgr.lookup(parentPath);
-                        } catch (PathNotFoundException e) {
+                        } catch (RepositoryException e) {
                             // should not occur
                             log.debug(e.getMessage());
                         }

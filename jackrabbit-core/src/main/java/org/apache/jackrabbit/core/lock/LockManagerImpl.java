@@ -53,7 +53,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -1069,7 +1068,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             if (parent != null) {
                 refresh(parent);
             }
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             log.warn("Unable to determine path of added node's parent.", e);
         } finally {
             release();
@@ -1091,7 +1090,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             if (parent != null) {
                 refresh(parent);
             }
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             log.warn("Unable to determine path of moved node's parent.", e);
         } finally {
             release();
@@ -1112,7 +1111,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             if (parent != null) {
                 refresh(parent);
             }
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             log.warn("Unable to determine path of removed node's parent.", e);
         } finally {
             release();

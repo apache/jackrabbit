@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.NamespaceException;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.ObservationManager;
 
@@ -628,7 +627,7 @@ public final class EventStateCollection {
     private Path getParent(Path p) throws ItemStateException {
         try {
             return p.getAncestor(1);
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             // should never happen actually
             String msg = "Unable to resolve parent for path: " + p;
             log.error(msg);

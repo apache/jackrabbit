@@ -48,7 +48,8 @@ public class BLOBInTempFile extends BLOBFileValue {
      * The input stream is always closed by this method.
      *
      * @param in the input stream
-     * @throws IOException
+     * @param temp
+     * @throws RepositoryException
      */
     private BLOBInTempFile(InputStream in, boolean temp) throws RepositoryException {
         this.temp = temp;

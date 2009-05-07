@@ -65,6 +65,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -2359,7 +2360,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-
+    //----------------------------------------------< NamespaceResolverImpl >---
+    /**
+     * NamespaceResolver implementation that uses a sessionInfo to determine
+     * namespace mappings either from cache or from the server.
+     */
     private class NamespaceResolverImpl implements NamespaceResolver {
 
         private final SessionInfo sessionInfo;
@@ -2398,6 +2403,53 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    //---------------------------------------------< IdentifierResolverImpl >---
+    private class IdentifierResolverImpl implements IdentifierResolver {
+
+        private final SessionInfo sessionInfo;
+        
+        private IdentifierResolverImpl(SessionInfo sessionInfo) {
+            this.sessionInfo = sessionInfo;
+        }
+
+        private Path buildPath(String uniqueID) throws RepositoryException {
+            String uri = uriResolver.getItemUri(getIdFactory().createNodeId(uniqueID), sessionInfo.getWorkspaceName(), sessionInfo);
+            return uriResolver.getQPath(uri, sessionInfo);
+        }
+
+        private Path resolvePath(String jcrPath) throws RepositoryException {
+            return ((SessionInfoImpl) sessionInfo).getNamePathResolver().getQPath(jcrPath);
+        }
+        
+        /**
+         * @inheritDoc
+         */
+        public Path getPath(String identifier) throws MalformedPathException {
+            try {
+                int pos = identifier.indexOf('/');
+                if (pos == -1) {
+                    // unique id identifier
+                    return buildPath(identifier);
+                } else if (pos == 0) {
+                    // jcr-path identifier
+                    return resolvePath(identifier);
+                } else {
+                    Path p1 = buildPath(identifier.substring(0, pos));
+                    Path p2 = resolvePath(identifier.substring(pos));
+                    return getPathFactory().create(p1, p2, true);
+                }
+            } catch (RepositoryException e) {
+                throw new MalformedPathException(identifier);
+            }
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public void checkFormat(String identifier) throws MalformedPathException {
+            // cannot be determined. assume ok.
+        }
+    }
     //-----------------------------------------------< NamePathResolverImpl >---
     /**
      * Implements a namespace resolver based on a session info.
@@ -2410,7 +2462,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         private NamePathResolverImpl(SessionInfo sessionInfo) {
             NamespaceResolver nsResolver = new NamespaceResolverImpl(sessionInfo);
             nResolver = new ParsingNameResolver(getNameFactory(), nsResolver);
-            pResolver = new ParsingPathResolver(getPathFactory(), nResolver);
+            IdentifierResolver idResolver = new IdentifierResolverImpl(sessionInfo);
+            pResolver = new ParsingPathResolver(getPathFactory(), nResolver, idResolver);
         }
 
         private NamePathResolverImpl(NamespaceResolver nsResolver) {
@@ -2442,11 +2495,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         /**
          * @inheritDoc
          */
+        public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+            return pResolver.getQPath(path, normalizeIdentifier);
+        }
+
+        /**
+         * @inheritDoc
+         */
         public String getJCRPath(Path path) throws NamespaceException {
             return pResolver.getJCRPath(path);
         }
     }
 
+    /**
+     * Namespace Cache
+     */
     private static class NamespaceCache extends AbstractNamespaceResolver {
 
         private final HashMap prefixToURI = new HashMap();

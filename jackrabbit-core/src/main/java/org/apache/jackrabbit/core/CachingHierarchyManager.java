@@ -657,9 +657,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param id    child node id
      *
      * @throws PathNotFoundException if the path was not found
+     * @throws RepositoryException If the path's direct ancestor cannot be determined.
+     * @throws ItemStateException If the id cannot be resolved to a NodeState.
      */
     private void nodeAdded(NodeState state, Path path, NodeId id)
-            throws PathNotFoundException, ItemStateException {
+            throws RepositoryException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
         PathMap.Element element = null;
@@ -699,10 +701,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * @param path  node path
      * @param id    node id
      *
-     * @throws PathNotFoundException if the path was not found
+     * @throws PathNotFoundException if the path was not found.
+     * @throws RepositoryException If the path's direct ancestor cannot be determined.
+     * @throws ItemStateException If the id cannot be resolved to a NodeState.
      */
     private void nodeRemoved(NodeState state, Path path, NodeId id)
-            throws PathNotFoundException, ItemStateException {
+            throws RepositoryException, ItemStateException {
 
         // assert: synchronized (cacheMonitor)
         PathMap.Element parent = pathCache.map(path.getAncestor(1), true);

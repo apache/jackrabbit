@@ -39,15 +39,20 @@ public class PathParser {
     private static final int STATE_INDEX_END = 5;
     private static final int STATE_DOT = 6;
     private static final int STATE_DOTDOT = 7;
+    private static final int STATE_IDENTIFIER = 8;
+    private static final int STATE_URI = 9;
+    private static final int STATE_URI_END = 10;
 
     /**
      * Parses <code>jcrPath</code> into a qualified path using
-     * <code>resolver</code> to convert prefixes into namespace URI's.
+     * <code>resolver</code> to convert prefixes into namespace URI's. If
+     * resolver is <code>null</code> this method only checks the format of the
+     * passed String and returns <code>null</code>.
      *
      * @param jcrPath the jcr path.
      * @param resolver the namespace resolver.
      * @param factory
-     * @return qualified path.
+     * @return A path object.
      * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
      * @throws IllegalNameException if any of the jcrNames is malformed.
      * @throws NamespaceException If an unresolvable prefix is encountered.
@@ -58,17 +63,76 @@ public class PathParser {
     }
 
     /**
-     * Parses the give <code>jcrPath</code> and returns a <code>Path</code>. If
+     * Parses <code>jcrPath</code> into a qualified path using
+     * <code>resolver</code> to convert prefixes into namespace URI's. If the
+     * specified <code>jcrPath</code> is an identifier based absolute path
+     * beginning with an identifier segment the specified
+     * <code>IdentifierResolver</code> will be used to resolve it to an
+     * absolute path.<p/>
+     * If <code>namResolver</code> is <code>null</code> or if <code>identifierResolver</code>
+     * is <code>null</code> and the path starts with an identifier segment, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param jcrPath the jcr path.
+     * @param nameResolver the namespace resolver.
+     * @param identifierResolver the resolver to validate any trailing identifier
+     * segment and resolve to an absolute path.
+     * @param factory
+     * @return A path object.
+     * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
+     * @throws IllegalNameException if any of the jcrNames is malformed.
+     * @throws NamespaceException If an unresolvable prefix is encountered.
+     * @since JCR 2.0
+     */
+    public static Path parse(String jcrPath, NameResolver nameResolver,
+                             IdentifierResolver identifierResolver, PathFactory factory)
+            throws MalformedPathException, IllegalNameException, NamespaceException {
+        return parse(null, jcrPath, nameResolver, identifierResolver, factory);
+    }
+
+    /**
+     * Parses <code>jcrPath</code> into a qualified path using
+     * <code>resolver</code> to convert prefixes into namespace URI's. If the
+     * specified <code>jcrPath</code> is an identifier based absolute path
+     * beginning with an identifier segment the specified
+     * <code>IdentifierResolver</code> will be used to resolve it to an
+     * absolute path.<p/>
+     * If <code>namResolver</code> is <code>null</code> or if <code>identifierResolver</code>
+     * is <code>null</code> and the path starts with an identifier segment, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param jcrPath the jcr path.
+     * @param nameResolver the namespace resolver.
+     * @param identifierResolver the resolver to validate any trailing identifier
+     * segment and resolve to an absolute path.
+     * @param factory
+     * @param normalizeIdentifier
+     * @return A path object.
+     * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
+     * @throws IllegalNameException if any of the jcrNames is malformed.
+     * @throws NamespaceException If an unresolvable prefix is encountered.
+     * @since JCR 2.0
+     */
+    public static Path parse(String jcrPath, NameResolver nameResolver,
+                             IdentifierResolver identifierResolver,
+                             PathFactory factory, boolean normalizeIdentifier)
+            throws MalformedPathException, IllegalNameException, NamespaceException {
+        return parse(null, jcrPath, nameResolver, identifierResolver, factory, normalizeIdentifier);
+    }
+
+    /**
+     * Parses the given <code>jcrPath</code> and returns a <code>Path</code>. If
      * <code>parent</code> is not <code>null</code>, it is prepended to the
-     * returned list. If <code>resolver</code> is <code>null</code>, this method
-     * only checks the format of the string and returns <code>null</code>.
+     * built path before it is returned. If <code>resolver</code> is
+     * <code>null</code>, this method only checks the format of the string and
+     * returns <code>null</code>.
      *
      * @param parent   the parent path
      * @param jcrPath  the JCR path
      * @param resolver the namespace resolver to get prefixes for namespace
      *                 URI's.
      * @param factory
-     * @return the fully qualified Path.
+     * @return the <code>Path</code> object.
      * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
      * @throws IllegalNameException if any of the jcrNames is malformed.
      * @throws NamespaceException If an unresolvable prefix is encountered.
@@ -76,6 +140,65 @@ public class PathParser {
     public static Path parse(Path parent, String jcrPath,
                              NameResolver resolver,
                              PathFactory factory) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return parse(parent, jcrPath, resolver, null, factory);
+    }
+
+    /**
+     * Parses the given <code>jcrPath</code> and returns a <code>Path</code>. If
+     * <code>parent</code> is not <code>null</code>, it is prepended to the
+     * built path before it is returned. If the specifed <code>jcrPath</code>
+     * is an identifier based absolute path beginning with an identifier segment
+     * the given <code>identifierResolver</code> will be used to resolve it to an
+     * absolute path.<p/>
+     * If <code>nameResolver</code> is <code>null</code> or if <code>identifierResolver</code>
+     * is <code>null</code> and the path starts with an identifier segment, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param parent the parent path.
+     * @param jcrPath the jcr path.
+     * @param nameResolver the namespace resolver.
+     * @param identifierResolver the resolver to validate any trailing identifier
+     * segment and resolve it to an absolute path.
+     * @param factory The path factory.
+     * @return the <code>Path</code> object.
+     * @throws MalformedPathException
+     * @throws IllegalNameException
+     * @throws NamespaceException
+     */
+    public static Path parse(Path parent, String jcrPath, NameResolver nameResolver,
+                             IdentifierResolver identifierResolver, PathFactory factory)
+            throws MalformedPathException, IllegalNameException, NamespaceException {
+        return parse(parent, jcrPath, nameResolver, identifierResolver, factory, true);
+    }
+
+    /**
+     * Parses the given <code>jcrPath</code> and returns a <code>Path</code>. If
+     * <code>parent</code> is not <code>null</code>, it is prepended to the
+     * built path before it is returned. If the specifed <code>jcrPath</code>
+     * is an identifier based absolute path beginning with an identifier segment
+     * the given <code>identifierResolver</code> will be used to resolve it to an
+     * absolute path.<p/>
+     * If <code>nameResolver</code> is <code>null</code> or if <code>identifierResolver</code>
+     * is <code>null</code> and the path starts with an identifier segment, this
+     * method only checks the format of the string and returns <code>null</code>.
+     *
+     * @param parent the parent path.
+     * @param jcrPath the jcr path.
+     * @param nameResolver the namespace resolver.
+     * @param identifierResolver the resolver to validate any trailing identifier
+     * segment and resolve it to an absolute path.
+     * @param factory The path factory.
+     * @param normalizeIdentifier
+     * @return the <code>Path</code> object.
+     * @throws MalformedPathException
+     * @throws IllegalNameException
+     * @throws NamespaceException
+     */
+    private static Path parse(Path parent, String jcrPath, NameResolver nameResolver,
+                             IdentifierResolver identifierResolver, PathFactory factory,
+                             boolean normalizeIdentifier)
+            throws MalformedPathException, IllegalNameException, NamespaceException {
+        
         final char EOF = (char) -1;
 
         // check for length
@@ -95,7 +218,7 @@ public class PathParser {
         int pos = 0;
         if (jcrPath.charAt(0) == '/') {
             if (parent != null) {
-                throw new MalformedPathException("'" + jcrPath + "' is not a relative path");
+                throw new MalformedPathException("'" + jcrPath + "' is not a relative path.");
             }
             builder.addRoot();
             pos++;
@@ -107,11 +230,25 @@ public class PathParser {
         }
 
         // parse the path
-        int state = STATE_PREFIX_START;
+        int state;
+        if (jcrPath.charAt(0) == '[') {
+            if (parent != null) {
+                throw new MalformedPathException("'" + jcrPath + "' is not a relative path.");
+            }
+            state = STATE_IDENTIFIER;
+            pos++;
+        } else {
+            state = STATE_PREFIX_START;
+        }
+
         int lastPos = pos;
+
         String name = null;
+
         int index = Path.INDEX_UNDEFINED;
         boolean wasSlash = false;
+
+        boolean checkFormat = (nameResolver == null);
 
         while (pos <= len) {
             char c = pos == len ? EOF : jcrPath.charAt(pos);
@@ -128,7 +265,8 @@ public class PathParser {
                     }
                     if (state == STATE_PREFIX
                             || state == STATE_NAME
-                            || state == STATE_INDEX_END) {
+                            || state == STATE_INDEX_END
+                            || state == STATE_URI_END) {
 
                         // eof pathelement
                         if (name == null) {
@@ -140,14 +278,38 @@ public class PathParser {
 
                         // only add element if resolver not null. otherwise this
                         // is just a check for valid format.
-                        if (resolver != null) {
-                            Name qName = resolver.getQName(name);
+                        if (checkFormat) {
+                            NameParser.checkFormat(name);
+                        } else {
+                            Name qName = nameResolver.getQName(name);
                             builder.addLast(qName, index);
                         }
                         state = STATE_PREFIX_START;
                         lastPos = pos;
                         name = null;
                         index = Path.INDEX_UNDEFINED;
+                    } else if (state == STATE_IDENTIFIER) {
+                        if (c == EOF) {
+                            // eof identifier reached                            
+                            if (jcrPath.charAt(pos - 2) != ']') {
+                                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: Unterminated identifier segment.");
+                            }
+                            String identifier = jcrPath.substring(lastPos, pos - 2);
+                            if (checkFormat) {
+                                if (identifierResolver != null) {
+                                    identifierResolver.checkFormat(identifier);
+                                } // else ignore. TODO: rather throw?
+                            } else if (identifierResolver == null) {
+                                throw new MalformedPathException("'" + jcrPath + "' is not a valid path: Identifier segments are not supported.");
+                            } else if (normalizeIdentifier) {
+                                builder.addAll(identifierResolver.getPath(identifier).getElements());
+                            } else {
+                                identifierResolver.checkFormat(identifier);
+                                builder.addLast(factory.createElement(identifier));
+                            }
+                            state = STATE_PREFIX_START;
+                            lastPos = pos;
+                        }
                     } else if (state == STATE_DOT) {
                         builder.addLast(factory.getCurrentElement());
                         lastPos = pos;
@@ -158,7 +320,7 @@ public class PathParser {
                         state = STATE_PREFIX_START;
                     } else if (state == STATE_PREFIX_START && c == EOF) {
                         // ignore trailing slash
-                    } else {
+                    } else if (state != STATE_URI) {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
                     }
                     break;
@@ -184,6 +346,8 @@ public class PathParser {
                         }
                         state = STATE_NAME_START;
                         // don't reset the lastPos/pos since prefix+name are passed together to the NameResolver
+                    } else if (state == STATE_IDENTIFIER || state == STATE_URI) {
+                        // nothing do
                     } else {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not valid name character");
                     }
@@ -197,6 +361,8 @@ public class PathParser {
                         state = STATE_INDEX;
                         name = jcrPath.substring(lastPos, pos - 1);
                         lastPos = pos;
+                    } else if (state == STATE_IDENTIFIER) {
+                        // nothing do
                     } else {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
                     }
@@ -213,6 +379,8 @@ public class PathParser {
                             throw new MalformedPathException("'" + jcrPath + "' is not a valid path. Index number invalid: " + index);
                         }
                         state = STATE_INDEX_END;
+                    } else if (state == STATE_IDENTIFIER) {
+                        // nothing do
                     } else {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
                     }
@@ -225,19 +393,32 @@ public class PathParser {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not valid after index. '/' expected.");
                     } else if (state == STATE_DOT || state == STATE_DOTDOT) {
                         state = STATE_PREFIX;
-                    } else if (state == STATE_INDEX_END) {
-                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not valid after index. '/' expected.");
                     }
                     break;
 
                 case '\t':
-                    throw new MalformedPathException("'" + jcrPath + "' is not a valid path. Whitespace not a allowed in name.");
-
+                    if (state != STATE_IDENTIFIER) {
+                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path. Whitespace not a allowed in name.");
+                    }
                 case '*':
                 case '\'':
                 case '\"':
-                    throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
+                    if (state != STATE_IDENTIFIER) {
+                        // TODO for JCR 2.0 remove limitation of ' and "
+                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
+                    }
+                case '{':
+                    if (state == STATE_PREFIX_START) {
+                        state = STATE_URI;
+                    }
+                    break;
 
+                case '}':
+                    if (state == STATE_URI) {
+                        state = STATE_URI_END;
+                    }
+                    break;
+                
                 default:
                     if (state == STATE_PREFIX_START || state == STATE_DOT || state == STATE_DOTDOT) {
                         state = STATE_PREFIX;
@@ -250,7 +431,7 @@ public class PathParser {
             wasSlash = c == ' ';
         }
 
-        if (resolver == null) {
+        if (checkFormat) {
             // this was only for checking the format
             return null;
         } else {
@@ -269,7 +450,7 @@ public class PathParser {
     public static void checkFormat(String jcrPath) throws MalformedPathException {
         try {
             // since no path is created -> use default factory
-            parse(jcrPath, null, PathFactoryImpl.getInstance());
+            parse(jcrPath, null, null, PathFactoryImpl.getInstance());
         } catch (NamespaceException e) {
             // will never occur
         } catch (IllegalNameException e) {

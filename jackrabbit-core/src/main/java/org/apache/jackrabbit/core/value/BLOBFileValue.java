@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.value;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 
 import javax.jcr.RepositoryException;
 
@@ -43,6 +45,39 @@ public abstract class BLOBFileValue {
      * @return An InputStream representation of this value.
      */
     public abstract InputStream getStream() throws RepositoryException;
+
+    /**
+     * Returns a String representation of this value.
+     *
+     * @return String representation of this value.
+     * @throws RepositoryException
+     */
+    public String getString() throws RepositoryException {
+        // TODO: review again. currently the getString method of the JCR Value is delegated to the QValue.
+        InputStream stream = getStream();
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = stream.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+            }
+            byte[] data = out.toByteArray();
+            return new String(data, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("UTF-8 not supported on this platform", e);
+        } catch (IOException e) {
+            throw new RepositoryException("conversion from stream to string failed", e);
+        } finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+    }
 
     /**
      * Returns the length of this <code>BLOBFileValue</code>.

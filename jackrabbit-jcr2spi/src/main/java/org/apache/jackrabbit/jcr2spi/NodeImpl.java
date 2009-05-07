@@ -502,11 +502,6 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    public String getIdentifier() throws RepositoryException {
-        // FIXME: Support the UUID/path identifiers
-        return getUUID();
-    }
-
     /**
      * @see Node#getUUID()
      */
@@ -1149,6 +1144,14 @@ public class NodeImpl extends ItemImpl implements Node {
         // lock can be inherited from a parent > do not check for node being lockable.
         checkStatus();
         return session.getLockStateManager().isLocked(getNodeState());
+    }         
+
+    /**
+     * @see Node#getIdentifier()
+     */
+    public String getIdentifier() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     /**

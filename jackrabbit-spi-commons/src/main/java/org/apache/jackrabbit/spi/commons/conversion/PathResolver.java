@@ -26,10 +26,10 @@ import javax.jcr.NamespaceException;
 public interface PathResolver {
 
     /**
-     * Returns the qualified path for the given prefixed JCR path.
+     * Returns the path object for the given JCR path string.
      *
      * @param path prefixed JCR path
-     * @return qualified path
+     * @return a <code>Path</code> object.
      * @throws MalformedPathException if the JCR path format is invalid.
      * @throws IllegalNameException if any of the JCR names contained in the path are invalid.
      * @throws NamespaceException if a namespace prefix can not be resolved.
@@ -37,10 +37,22 @@ public interface PathResolver {
     Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException;
 
     /**
-     * Returns the prefixed JCR path for the given qualified path.
+     * Returns the path object for the given JCR path string.
      *
-     * @param path qualified path
-     * @return prefixed JCR path
+     * @param path prefixed JCR path
+     * @param normalizeIdentifier
+     * @return a <code>Path</code> object.
+     * @throws MalformedPathException if the JCR path format is invalid.
+     * @throws IllegalNameException if any of the JCR names contained in the path are invalid.
+     * @throws NamespaceException if a namespace prefix can not be resolved.
+     */
+    Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException;
+
+    /**
+     * Returns the given JCR path string for the given path object.
+     *
+     * @param path a <code>Path</code> object.
+     * @return a JCR path string
      * @throws NamespaceException if a namespace URI can not be resolved
      */
     String getJCRPath(Path path) throws NamespaceException;

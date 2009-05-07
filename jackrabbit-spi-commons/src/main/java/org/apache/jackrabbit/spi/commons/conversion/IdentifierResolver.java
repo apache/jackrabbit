@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi;
+package org.apache.jackrabbit.spi.commons.conversion;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.apache.jackrabbit.spi.Path;
 
-/** <code>TestAll</code>... */
-public class TestAll extends TestCase {
+/**
+ * <code>IdentifierResolver</code> ....
+ */
+public interface IdentifierResolver {
+    
+    public Path getPath(String identifier) throws MalformedPathException;
 
-    public static Test suite() {
-
-        TestSuite suite = new TestSuite("SPI tests");
-
-        suite.addTestSuite(RepositoryServiceTest.class);
-        suite.addTestSuite(SessionInfoTest.class);
-        suite.addTestSuite(QValueFactoryTest.class);
-        suite.addTestSuite(QValueTest.class);
-
-        return suite;
-    }
+    public void checkFormat(String identifier) throws MalformedPathException;
 }

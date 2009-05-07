@@ -72,12 +72,33 @@ public class CachingPathResolver implements PathResolver {
      * @throws NamespaceException if a namespace prefix can not be resolved
      */
     public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
-        Path qpath = (Path) cache.get(path);
-        if (qpath == null) {
-            qpath = resolver.getQPath(path);
-            cache.put(path, qpath);
+        return getQPath(path, true);
+    }
+
+    /**
+     * @see PathResolver#getQPath(String, boolean) 
+     */
+    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+        Path qpath;
+        /*
+         * Jcr paths consisting of an identifier segment have 2 different
+         * path object representations depending on the given resolution flag:
+         * 1) a normalized absolute path if resolveIdentifier is true
+         * 2) a path denoting an identifier if resolveIdentifier is false.
+         * The latter are not cached in order not to return a wrong resolution
+         * when calling getQPath with the same identifier-jcr-path.
+         */
+        if (path.startsWith("[") && !normalizeIdentifier) {
+            qpath = resolver.getQPath(path, normalizeIdentifier);
+        } else {
+            qpath = (Path) cache.get(path);
+            if (qpath == null) {
+                qpath = resolver.getQPath(path, normalizeIdentifier);
+                cache.put(path, qpath);
+            }
         }
         return qpath;
+
     }
 
 
