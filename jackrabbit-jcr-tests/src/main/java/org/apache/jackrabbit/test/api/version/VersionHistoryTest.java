@@ -130,9 +130,12 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testInitialNumberOfLinearVersions() throws RepositoryException {
         long initialSize = getNumberOfVersions(vHistory);
         long initialLinearSize = getSize(vHistory.getAllLinearVersions());
+        long initialLinearFrozenSize = getSize(vHistory.getAllLinearFrozenNodes());
 
         assertEquals("VersionHistory.getAllVersions() and .getAllLinearVersions should return the same number of versions for a purely linear version history.",
                 initialSize, initialLinearSize);
+        assertEquals("VersionHistory.getAllVersions() and .getAllLinearFrozenNodes should return the same number of nodes for a purely linear version history.",
+                initialSize, initialLinearFrozenSize);
     }
 
     /**
