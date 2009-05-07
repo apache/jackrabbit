@@ -18,10 +18,12 @@ package org.apache.jackrabbit.test.api.version;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.ItemNotFoundException;
@@ -119,6 +121,21 @@ public class VersionHistoryTest extends AbstractVersionTest {
     }
 
     /**
+     * The version history must initially contain two versions (root version +
+     * first test version) - linear variant
+     *
+     * @throws RepositoryException
+     * @since JCR 2.0
+     */
+    public void testInitialNumberOfLinearVersions() throws RepositoryException {
+        long initialSize = getNumberOfVersions(vHistory);
+        long initialLinearSize = getSize(vHistory.getAllLinearVersions());
+
+        assertEquals("VersionHistory.getAllVersions() and .getAllLinearVersions should return the same number of versions for a purely linear version history.",
+                initialSize, initialLinearSize);
+    }
+
+    /**
      * Test if the iterator returned by {@link javax.jcr.version.VersionHistory#getAllVersions()}
      * contains the root version upon creation of the version history.
      *
@@ -131,6 +148,29 @@ public class VersionHistoryTest extends AbstractVersionTest {
             isContained |= it.nextVersion().isSame(rootVersion);
         }
         assertTrue("root version must be part of the version history", isContained);
+    }
+    
+    /**
+     * Test if the iterator returned by {@link javax.jcr.version.VersionHistory#getAllLinearVersions()}
+     * contains both the root and the base version upon creation of the version history.
+     * @since JCR 2.0
+     */
+    public void testInitiallyGetAllLinearVersionsContainsTheRootAndTheBaseVersion() throws RepositoryException {
+        
+        VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
+        
+        List lvh = new ArrayList();
+        for (VersionIterator it = vHistory.getAllLinearVersions(); it.hasNext(); ) {
+            lvh.add(it.nextVersion().getName());
+        }
+        
+        String rootVersion = vm.getVersionHistory(versionableNode.getPath()).getRootVersion().getName();
+        String baseVersion = vm.getBaseVersion(versionableNode.getPath()).getName();
+
+        assertTrue("root version " + rootVersion + " must be part of the linear version history: "
+                + lvh, lvh.contains(rootVersion));
+        assertTrue("base version " + baseVersion + " must be part of the linear version history: "
+                + lvh, lvh.contains(baseVersion));
     }
 
     /**
