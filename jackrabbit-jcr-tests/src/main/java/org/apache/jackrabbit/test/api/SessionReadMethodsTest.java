@@ -129,6 +129,19 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests session.getNodeByIdentifier()
+     * 
+     * @since JCR 2.0
+     */
+    public void testGetNodeByIdentifier() throws RepositoryException, NotExecutableException {
+        String identifier = testRootNode.getIdentifier();
+        Node node = session.getNodeByIdentifier(identifier);
+        assertTrue("Node retrieved with session.getNodeByIdentifier is not the same " +
+                "as the node having the given identifier.",
+                testRootNode.isSame(node));
+    }
+
+    /**
      * Tests if getAttribute(String name) returns not null if the requested
      * attribute is existing
      */
