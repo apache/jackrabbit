@@ -17,26 +17,21 @@
 package org.apache.jackrabbit.spi2davex;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.DavException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -67,11 +62,7 @@ import java.util.TimeZone;
 /**
  * <code>ValueFactoryImpl</code>...
  */
-class QValueFactoryImpl implements QValueFactory {
-
-    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
-    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
-    private static final String DEFAULT_ENCODING = "UTF-8";
+class QValueFactoryImpl extends AbstractQValueFactory {
 
     private final NamePathResolver resolver;
     private final ValueLoader loader;
@@ -173,14 +164,14 @@ class QValueFactoryImpl implements QValueFactory {
      * @see QValueFactory#create(double)
      */
     public QValue create(double value) {
-        return new QValueImpl(new Double(value));
+        return new QValueImpl(Double.valueOf(value));
     }
 
     /**
      * @see QValueFactory#create(long)
      */
     public QValue create(long value) {
-        return new QValueImpl(new Long(value));
+        return new QValueImpl(Long.valueOf(value));
     }
 
     /**
@@ -240,91 +231,46 @@ class QValueFactoryImpl implements QValueFactory {
         return new BinaryQValue(value);
     }
 
-    /**
-     * @see QValueFactory#computeAutoValues(QPropertyDefinition)
-     */
-    public QValue[] computeAutoValues(QPropertyDefinition propertyDefinition) throws RepositoryException {
-        Name nodeType = propertyDefinition.getDeclaringNodeType();
-        Name name = propertyDefinition.getName();
-
-        if (NameConstants.NT_HIERARCHYNODE.equals(nodeType) && NameConstants.JCR_CREATED.equals(name)) {
-            return new QValue[] { create(Calendar.getInstance()) };
-        } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
-            return new QValue[] { create(Calendar.getInstance()) };
-        } else if (NameConstants.MIX_REFERENCEABLE.equals(nodeType) && NameConstants.JCR_UUID.equals(name)) {
-            return new QValue[] { create(UUID.randomUUID().toString(), PropertyType.STRING) };
-        } else {
-            throw new RepositoryException("createFromDefinition not implemented for: " + name);
-        }
-    }
-
     //--------------------------------------------------------< Inner Class >---
     /**
      * <code>QValue</code> implementation for all valid <code>PropertyType</code>s
      * except for BINARY.
      * @see QValueFactoryImpl.BinaryQValue
      */
-    private static class QValueImpl implements QValue, Serializable {
+    private static class QValueImpl extends AbstractQValue implements Serializable {
 
         private static final QValue TRUE = new QValueImpl(Boolean.TRUE);
         private static final QValue FALSE = new QValueImpl(Boolean.FALSE);
 
-        private final Object val;
-        private final int type;
-
         private QValueImpl(String value, int type) {
-            val = value;
-            this.type = type;
+            super(value, type);
         }
 
         private QValueImpl(Long value) {
-            val = value;
-            type = PropertyType.LONG;
+            super(value);
         }
 
         private QValueImpl(Double value) {
-            val = value;
-            type = PropertyType.DOUBLE;
+            super(value);
         }
 
         private QValueImpl(Boolean value) {
-            val = value;
-            type = PropertyType.BOOLEAN;
+            super(value);
         }
 
         private QValueImpl(Calendar value) {
-            val = value;
-            this.type = PropertyType.DATE;
+            super(value);
         }
 
         private QValueImpl(Name value) {
-            val = value;
-            type = PropertyType.NAME;
+            super(value);
         }
 
         private QValueImpl(Path value) {
-            val = value;
-            type = PropertyType.PATH;
+            super(value);
         }
 
-        protected String getQString(int type) throws RepositoryException {
-            return getString();
-        }
         //---------------------------------------------------------< QValue >---
-        /**
-         * @see QValue#getType()
-         */
-        public int getType() {
-            return type;
-        }
-
-        /**
-         * @see QValue#getLength()
-         */
-        public long getLength() throws RepositoryException {
-            return getString().length();
-        }
-
         /**
          * @see QValue#getString()
          */
@@ -338,7 +284,7 @@ class QValueFactoryImpl implements QValueFactory {
         public InputStream getStream() throws RepositoryException {
             try {
                 // convert via string
-                return new ByteArrayInputStream(getString().getBytes(QValueFactoryImpl.DEFAULT_ENCODING));
+                return new ByteArrayInputStream(getString().getBytes(DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(QValueFactoryImpl.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
             }
@@ -429,92 +375,6 @@ class QValueFactoryImpl implements QValueFactory {
                 }
             }
         }
-
-        public boolean getBoolean() throws RepositoryException {
-            if (val instanceof Boolean) {
-                return ((Boolean) val).booleanValue();
-            } else {
-                return new Boolean(getString()).booleanValue();
-            }
-        }
-
-        /**
-         * @see QValue#getName()
-         */
-        public Name getName() throws RepositoryException {
-            if (val instanceof Name) {
-                return (Name) val;
-            } else {
-                try {
-                    return NAME_FACTORY.create(getString());
-                } catch (IllegalArgumentException e) {
-                    throw new ValueFormatException("not a valid Name value: " + getString(), e);
-                }
-            }
-        }
-
-        /**
-         * @see QValue#getPath()
-         */
-        public Path getPath() throws RepositoryException {
-            if (val instanceof Path) {
-                return (Path) val;
-            } else {
-                try {
-                    return PATH_FACTORY.create(getString());
-                } catch (IllegalArgumentException e) {
-                    throw new ValueFormatException("not a valid Path value: " + getString(), e);
-                }
-            }
-        }
-
-        /**
-         * @see QValue#discard()
-         */
-        public void discard() {
-            // nothing to do
-        }
-
-        //---------------------------------------------------------< Object >---
-        /**
-         * Returns the string representation of this internal value.
-         *
-         * @return string representation of this internal value.
-         * @see Object#toString() 
-         */
-        public String toString() {
-            return val.toString();
-        }
-
-        /**
-         * @see Object#equals(Object)
-         */
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof QValueImpl) {
-                QValueImpl other = (QValueImpl) obj;
-                if (type == other.type && type != PropertyType.UNDEFINED) {
-                    return getString().equals(other.getString());
-                }
-                try {
-                    int type = getType();
-                    return type == other.getType() && getQString(type).equals(other.getQString(type));
-                } catch (RepositoryException e) {
-                    // should never get here. return false.
-                }
-            }
-            return false;
-        }
-
-        /**
-         * @return the hashCode of the internal value object.
-         * @see Object#hashCode()
-         */
-        public int hashCode() {
-            return val.hashCode();
-        }
     }
 
     //--------------------------------------------------------< Inner Class >---
@@ -555,8 +415,7 @@ class QValueFactoryImpl implements QValueFactory {
                 return formattedStr.equals(other.formattedStr);
             } else if (obj instanceof QValueImpl) {
                 QValueImpl other = (QValueImpl) obj;
-                return formattedStr.equals(other.getString()) &&
-                       other.getType() == PropertyType.DATE;
+                return other.getType() == PropertyType.DATE && formattedStr.equals(other.getString());
             }
             return false;
         }

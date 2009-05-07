@@ -89,6 +89,8 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -139,7 +141,8 @@ public class SessionImpl extends AbstractSession
         workspace = createWorkspaceInstance(config, sessionInfo);
 
         // build local name-mapping
-        npResolver = new DefaultNamePathResolver(this, true);
+        IdentifierResolver idResolver = new IdResolver();
+        npResolver = new DefaultNamePathResolver(this, idResolver, true);
 
         // build ValueFactory
         valueFactory = new ValueFactoryQImpl(config.getRepositoryService().getQValueFactory(), npResolver);
@@ -601,7 +604,6 @@ public class SessionImpl extends AbstractSession
     }
 
     //--------------------------------------------------< NamespaceResolver >---
-
     public String getPrefix(String uri) throws NamespaceException {
         try {
             return getNamespacePrefix(uri);
@@ -965,6 +967,37 @@ public class SessionImpl extends AbstractSession
 
         if (!accessible) {
             throw new NoSuchWorkspaceException("Unknown workspace: '" + workspaceName + "'.");
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Inner class implementing the <code>IdentifierResolver</code> interface
+     */
+    private final class IdResolver implements IdentifierResolver {
+
+        //---------------------------------------------< IdentifierResolver >---
+        /**
+         * @see IdentifierResolver#getPath(String)
+         */
+        public Path getPath(String identifier) throws MalformedPathException {
+            try {
+                NodeId id = getIdFactory().createNodeId(identifier);
+                return getHierarchyManager().getNodeEntry(id).getPath();
+            } catch (RepositoryException e) {
+                throw new MalformedPathException("Invalid identifier '" + identifier + "'.");
+            }
+        }
+
+        /**
+         * @see IdentifierResolver#checkFormat(String)
+         */
+        public void checkFormat(String identifier) throws MalformedPathException {
+            try {
+                NodeId id = getIdFactory().createNodeId(identifier);
+            } catch (Exception e) {
+                throw new MalformedPathException("Invalid identifier '" + identifier + "'.");
+            }
         }
     }
 }

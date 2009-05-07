@@ -42,6 +42,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -193,12 +194,13 @@ public class CompactNodeTypeDefReader {
      * Returns the list of parsed node type definitions.
      *
      * @param resolver name resolver
+     * @param valueFactory the value factory used to create the property definitions.
      * @return a List of NodeTypeDefinitions objects
      */
-    public List getNodeTypeDefinitions(NamePathResolver resolver) {
+    public List getNodeTypeDefinitions(NamePathResolver resolver, ValueFactory valueFactory) {
         List l = new ArrayList(nodeTypeDefs.size());
         for (Iterator iter = nodeTypeDefs.iterator(); iter.hasNext();) {
-            l.add(new NodeTypeDefinitionImpl((NodeTypeDef) iter.next(), resolver));
+            l.add(new NodeTypeDefinitionImpl((NodeTypeDef) iter.next(), resolver, valueFactory));
         }
         return l;
     }

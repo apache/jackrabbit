@@ -38,7 +38,6 @@ import org.w3c.dom.CharacterData;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
-import javax.jcr.PathNotFoundException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,12 +95,13 @@ class AggregateRuleImpl implements AggregateRule {
      *                                characters.
      * @throws NamespaceException if a node type contains an unknown
      *                                prefix.
+     * @throws RepositoryException If another error occurs.
      */
     AggregateRuleImpl(Node config,
                       NameResolver resolver,
                       ItemStateManager ism,
                       HierarchyManager hmgr) throws MalformedPathException,
-            IllegalNameException, NamespaceException, PathNotFoundException {
+            IllegalNameException, NamespaceException, RepositoryException {
         this.resolver = resolver;
         this.nodeTypeName = getNodeTypeName(config);
         this.nodeIncludes = getNodeIncludes(config);
@@ -252,10 +252,12 @@ class AggregateRuleImpl implements AggregateRule {
      *                                characters.
      * @throws NamespaceException if the node type contains an unknown
      *                                prefix.
+     * @throws RepositoryException If the PropertyInclude cannot be builded
+     * due to unknown ancestor relationship.
      */
     private PropertyInclude[] getPropertyIncludes(Node config) throws
             MalformedPathException, IllegalNameException, NamespaceException,
-            PathNotFoundException {
+            RepositoryException {
         List includes = new ArrayList();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
@@ -442,7 +444,7 @@ class AggregateRuleImpl implements AggregateRule {
         private final Name propertyName;
 
         PropertyInclude(Path pattern)
-                throws PathNotFoundException {
+                throws RepositoryException {
             super(pattern.getAncestor(1), null);
             this.propertyName = pattern.getNameElement().getName();
         }

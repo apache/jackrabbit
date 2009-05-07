@@ -28,6 +28,7 @@ import javax.jcr.InvalidSerializedDataException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -60,8 +61,8 @@ class SysViewImportHandler extends TargetImportHandler {
      *
      * @param importer
      */
-    SysViewImportHandler(Importer importer) {
-        super(importer);
+    SysViewImportHandler(Importer importer, ValueFactory valueFactory) {
+        super(importer, valueFactory);
     }
 
     private void processNode(ImportState state, boolean start, boolean end)
@@ -172,7 +173,7 @@ class SysViewImportHandler extends TargetImportHandler {
             }
         } else if (name.equals(NameConstants.SV_VALUE)) {
             // sv:value element
-            currentPropValue = new BufferedStringValue(resolver);
+            currentPropValue = new BufferedStringValue(resolver, valueFactory);
             String xsiType = atts.getValue("xsi:type");
             currentPropValue.setBase64("xs:base64Binary".equals(xsiType));
         } else {

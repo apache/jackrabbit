@@ -177,8 +177,7 @@ public final class QValueValue implements Value {
     public boolean equals(Object obj) {
         if (obj instanceof QValueValue) {
             return qvalue.equals(((QValueValue) obj).qvalue);
-        }
-        else {
+        } else {
             return false;
         }
     }

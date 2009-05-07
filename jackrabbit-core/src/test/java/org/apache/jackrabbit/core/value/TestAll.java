@@ -14,23 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi;
+package org.apache.jackrabbit.core.value;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-/** <code>TestAll</code>... */
+/**
+ * Test suite that includes all testcases for package org.apache.jackrabbit.core.value.
+ */
 public class TestAll extends TestCase {
 
+    /**
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     */
     public static Test suite() {
+        TestSuite suite = new TestSuite("org.apache.jackrabbit.core.value tests");
 
-        TestSuite suite = new TestSuite("SPI tests");
-
-        suite.addTestSuite(RepositoryServiceTest.class);
-        suite.addTestSuite(SessionInfoTest.class);
-        suite.addTestSuite(QValueFactoryTest.class);
-        suite.addTestSuite(QValueTest.class);
+        suite.addTestSuite(InternalValueFactoryTest.class);
+        suite.addTestSuite(InternalValueTest.class);
 
         return suite;
     }

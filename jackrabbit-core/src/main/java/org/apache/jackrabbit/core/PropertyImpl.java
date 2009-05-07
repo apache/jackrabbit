@@ -48,6 +48,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -248,10 +249,10 @@ public class PropertyImpl extends ItemImpl implements Property {
             throw new ValueFormatException(msg + this);
         }
 
-        // check protected flag and for retention/hold      
+        // check protected flag and for retention/hold
         int options = ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
-        
+
         // make sure the parent is checked-out and neither locked nor under retention
         options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
                 ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
@@ -345,7 +346,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         if (reqType != PropertyType.NAME) {
             // type conversion required
             Value targetValue = ValueHelper.convert(
-                    InternalValue.create(name).toJCRValue(session),
+                    ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                     reqType, session.getValueFactory());
             internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
         } else {
@@ -396,7 +397,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                     if (reqType != PropertyType.NAME) {
                         // type conversion required
                         Value targetValue = ValueHelper.convert(
-                                InternalValue.create(name).toJCRValue(session),
+                                ValueFormat.getJCRValue(InternalValue.create(name), session, session.getValueFactory()),
                                 reqType, session.getValueFactory());
                         internalValue = InternalValue.create(targetValue, session, rep.getDataStore());
                     } else {
@@ -467,14 +468,14 @@ public class PropertyImpl extends ItemImpl implements Property {
         InternalValue[] internals = internalGetValues();
         Value[] values = new Value[internals.length];
         for (int i = 0; i < internals.length; i++) {
-            values[i] = internals[i].toJCRValue(session);
+            values[i] = ValueFormat.getJCRValue(internals[i], session, session.getValueFactory());
         }
         return values;
     }
 
     public Value getValue() throws RepositoryException {
         try {
-            return internalGetValue().toJCRValue(session);
+            return ValueFormat.getJCRValue(internalGetValue(), session, session.getValueFactory());
         } catch (RuntimeException e) {
             String msg = "Internal error while retrieving value of " + this;
             log.error(msg, e);

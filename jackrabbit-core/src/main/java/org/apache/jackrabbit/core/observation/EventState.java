@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.Session;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.Set;
 import java.util.HashSet;
@@ -374,7 +374,7 @@ public class EventState {
             info.put(DEST_ABS_PATH, InternalValue.create(destPath));
             es.setInfo(info);
             return es;
-        } catch (PathNotFoundException e) {
+        } catch (RepositoryException e) {
             // should never happen actually
             String msg = "Unable to resolve parent for path: " + destPath;
             log.error(msg);

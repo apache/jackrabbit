@@ -23,8 +23,10 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -84,7 +86,7 @@ public class PathFactoryTest extends TestCase {
 
     public void testCreateElementNullName() {
         try {
-            factory.createElement(null);
+            factory.createElement((Name) null);
             fail("Creating element with null name is invalid");
         } catch (IllegalArgumentException e) {
             // ok
@@ -194,6 +196,87 @@ public class PathFactoryTest extends TestCase {
             fail("Cannot create parent path with an index.");
         } catch (IllegalArgumentException e) {
             // ok
+        }
+    }
+
+    public void testIdentifier() {
+        String identifier = UUID.randomUUID().toString();
+
+        Path.Element elem = factory.createElement(identifier);
+        assertTrue(elem.denotesIdentifier());
+        assertFalse(elem.denotesCurrent());
+        assertFalse(elem.denotesName());
+        assertFalse(elem.denotesParent());
+        assertFalse(elem.denotesRoot());
+        assertNull(elem.getName());
+        assertNotNull(elem.getString());
+        assertEquals(Path.INDEX_UNDEFINED, elem.getIndex());
+        assertEquals(Path.INDEX_DEFAULT, elem.getNormalizedIndex());
+
+        Path p = factory.create(new Path.Element[] {elem});
+        assertTrue(p.denotesIdentifier());
+        assertTrue(p.isAbsolute());
+
+        assertFalse(p.denotesRoot());
+        assertFalse(p.isCanonical());
+        assertFalse(p.isNormalized());
+
+        assertEquals(1, p.getLength());
+        assertEquals(-1, p.getAncestorCount());
+
+        Path.Element lastElem = p.getNameElement();
+        assertNotNull(lastElem);
+        assertTrue(lastElem.denotesIdentifier());
+
+        assertEquals(1, p.getElements().length);
+
+        try {
+            p.getDepth();
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.getNormalizedPath();
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.getAncestor(1);
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.isAncestorOf(factory.getRootPath());
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.computeRelativePath(factory.getRootPath());
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.getCanonicalPath();
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.isDescendantOf(factory.getRootPath());
+            fail();
+        } catch (RepositoryException e) {
+            //expected
+        }
+        try {
+            p.isEquivalentTo(factory.getRootPath());
+            fail();
+        } catch (RepositoryException e) {
+            //expected
         }
     }
 

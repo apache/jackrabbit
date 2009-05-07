@@ -42,6 +42,7 @@ import javax.jcr.Value;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.NamespaceException;
 import javax.jcr.Node;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Arrays;
@@ -62,11 +63,6 @@ class RowIteratorImpl implements RowIterator {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(RowIteratorImpl.class);
-
-    /**
-     * The QValue factory.
-     */
-    private static final QValueFactory QVALUE_FACTORY = QValueFactoryImpl.getInstance();
 
     /**
      * The name of the excerpt function without prefix but with left parenthesis.
@@ -159,6 +155,7 @@ class RowIteratorImpl implements RowIterator {
                     ItemManager itemMgr,
                     HierarchyManager hmgr,
                     NamePathResolver resolver,
+                    ValueFactory valueFactory,
                     ExcerptProvider exProvider,
                     SpellSuggestion spellSuggestion) {
         this.scoreNodes = scoreNodes;
@@ -169,7 +166,12 @@ class RowIteratorImpl implements RowIterator {
         this.resolver = resolver;
         this.excerptProvider = exProvider;
         this.spellSuggestion = spellSuggestion;
-        this.valueFactory = new ValueFactoryQImpl(QVALUE_FACTORY, resolver);
+        if (valueFactory instanceof ValueFactoryQImpl) {
+            this.valueFactory = (ValueFactoryQImpl) valueFactory;
+        } else {
+            QValueFactory qvf = QValueFactoryImpl.getInstance();
+            this.valueFactory = new ValueFactoryQImpl(qvf, resolver);
+        }
     }
 
     /**
@@ -362,7 +364,7 @@ class RowIteratorImpl implements RowIterator {
                     }
                 }
                 if (NameConstants.JCR_PATH.equals(prop)) {
-                    QValue p = QVALUE_FACTORY.create(hmgr.getPath(sn[0].getNodeId()));
+                    QValue p = valueFactory.getQValueFactory().create(hmgr.getPath(sn[0].getNodeId()));
                     return valueFactory.createValue(p);
                 } else if (getNodeImpl().hasProperty(prop)) {
                     Property p = getNodeImpl().getProperty(prop);

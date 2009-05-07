@@ -49,6 +49,7 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -56,9 +57,9 @@ import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -107,7 +108,7 @@ import java.util.Arrays;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements javax.jcr.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, Dumpable {
+        implements javax.jcr.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -276,7 +277,7 @@ public class SessionImpl extends AbstractSession
 
         userId = retrieveUserId(subject);
 
-        namePathResolver = new DefaultNamePathResolver(this, true);
+        namePathResolver = new DefaultNamePathResolver(this, this, true);
         ntMgr = new NodeTypeManagerImpl(rep.getNodeTypeRegistry(), this, rep.getDataStore());
         String wspName = wspConfig.getName();
         wsp = createWorkspaceInstance(wspConfig,
@@ -751,6 +752,33 @@ public class SessionImpl extends AbstractSession
         return namePathResolver.getQPath(path);
     }
 
+    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return namePathResolver.getQPath(path, normalizeIdentifier);
+    }
+
+    //---------------------------------------------------< IdentifierResolver >
+    /**
+     * @see IdentifierResolver#getPath(String)
+     */
+    public Path getPath(String identifier) throws MalformedPathException {
+        try {
+            return getHierarchyManager().getPath(NodeId.valueOf(identifier));
+        } catch (RepositoryException e) {
+            throw new MalformedPathException("Identifier '" + identifier + "' cannot be resolved.");
+        }
+    }
+
+    /**
+     * @see IdentifierResolver#checkFormat(String)
+     */
+    public void checkFormat(String identifier) throws MalformedPathException {
+        try {
+            NodeId.valueOf(identifier);
+        } catch (IllegalArgumentException e) {
+            throw new MalformedPathException("Invalid identifier: " + identifier);
+        }
+    }
+
     //----------------------------------------------------< JackrabbitSession >
     /**
      * @see JackrabbitSession#getPrincipalManager()
@@ -1217,7 +1245,7 @@ public class SessionImpl extends AbstractSession
     public ValueFactory getValueFactory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (valueFactory == null) {
-            valueFactory = ValueFactoryImpl.getInstance();
+            valueFactory = new ValueFactoryImpl(this);
         }
         return valueFactory;
     }
@@ -1568,5 +1596,4 @@ public class SessionImpl extends AbstractSession
             logout();
         }
     }
-
 }

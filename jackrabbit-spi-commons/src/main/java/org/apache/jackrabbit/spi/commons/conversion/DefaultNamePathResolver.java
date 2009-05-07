@@ -42,7 +42,7 @@ public class DefaultNamePathResolver implements NamePathResolver {
     }
 
     public DefaultNamePathResolver(Session session) {
-        this(new SessionNamespaceResolver(session));
+        this(new SessionNamespaceResolver(session), ((session instanceof IdentifierResolver)? (IdentifierResolver) session : null), false);
     }
 
     public DefaultNamePathResolver(NamespaceRegistry registry) {
@@ -50,8 +50,12 @@ public class DefaultNamePathResolver implements NamePathResolver {
     }
 
     public DefaultNamePathResolver(NamespaceResolver nsResolver, boolean enableCaching) {
+        this(nsResolver, null, enableCaching);
+    }
+
+    public DefaultNamePathResolver(NamespaceResolver nsResolver, IdentifierResolver idResolver, boolean enableCaching) {
         NameResolver nr = new ParsingNameResolver(NameFactoryImpl.getInstance(), nsResolver);
-        PathResolver pr = new ParsingPathResolver(PathFactoryImpl.getInstance(), nr);
+        PathResolver pr = new ParsingPathResolver(PathFactoryImpl.getInstance(), nr, idResolver);
         if (enableCaching) {
             this.nResolver = new CachingNameResolver(nr);
             this.pResolver = new CachingPathResolver(pr);
@@ -76,6 +80,10 @@ public class DefaultNamePathResolver implements NamePathResolver {
 
     public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
         return pResolver.getQPath(path);
+    }
+
+    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return pResolver.getQPath(path, normalizeIdentifier);
     }
 
     public String getJCRPath(Path path) throws NamespaceException {
