@@ -141,7 +141,7 @@ public class Parser {
                 return s;
             } else {
                 int level = 1;
-                StringBuffer buff = new StringBuffer();
+                StringBuilder buff = new StringBuilder();
                 while (true) {
                     if (isToken("]")) {
                         if (--level <= 0) {
