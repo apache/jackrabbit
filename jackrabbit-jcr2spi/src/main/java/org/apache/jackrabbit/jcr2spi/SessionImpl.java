@@ -563,7 +563,7 @@ public class SessionImpl extends AbstractSession
     public boolean hasCapability(String methodName, Object target, Map arguments)
             throws RepositoryException {
         // TODO: implementation missing
-        return true;
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     /**
@@ -604,6 +604,9 @@ public class SessionImpl extends AbstractSession
     }
 
     //--------------------------------------------------< NamespaceResolver >---
+    /**
+     * @see NamespaceResolver#getPrefix(String)
+     */
     public String getPrefix(String uri) throws NamespaceException {
         try {
             return getNamespacePrefix(uri);
@@ -614,6 +617,9 @@ public class SessionImpl extends AbstractSession
         }
     }
 
+    /**
+     * @see NamespaceResolver#getURI(String) 
+     */
     public String getURI(String prefix) throws NamespaceException {
         try {
             return getNamespaceURI(prefix);
