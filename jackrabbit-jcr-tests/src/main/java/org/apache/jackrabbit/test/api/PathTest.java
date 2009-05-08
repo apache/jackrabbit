@@ -78,7 +78,7 @@ public class PathTest extends AbstractJCRTest {
         assertEquals(pathValue, p.getValue());
     }
 
-    public void testResolveeIdentifierBasedPropertyValue() throws RepositoryException {
+    public void testResolvedIdentifierBasedPropertyValue() throws RepositoryException {
         ValueFactory vf = superuser.getValueFactory();
         Value pathValue = vf.createValue("[" +identifier+ "]", PropertyType.PATH);
 
