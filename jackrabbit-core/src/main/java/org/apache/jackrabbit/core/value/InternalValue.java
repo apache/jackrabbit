@@ -549,11 +549,11 @@ public class InternalValue extends AbstractQValue {
     }
 
     private InternalValue(long value) {
-        super(new Long(value));
+        super(Long.valueOf(value));
     }
 
     private InternalValue(double value) {
-        super(new Double(value));
+        super(Double.valueOf(value));
     }
 
     private InternalValue(Calendar value) {

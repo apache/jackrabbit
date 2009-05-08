@@ -83,7 +83,7 @@ public class NodePropBundle {
     /**
      * the child node entries
      */
-    private LinkedList childNodeEntries = new LinkedList();
+    private LinkedList<NodePropBundle.ChildNodeEntry> childNodeEntries = new LinkedList<NodePropBundle.ChildNodeEntry>();
 
     /**
      * the properties
@@ -98,17 +98,17 @@ public class NodePropBundle {
     /**
      * flag that indicates if this bundle is referenceable
      */
-    private boolean isReferenceable = false;
+    private boolean isReferenceable;
 
     /**
      * the mod count
      */
-    private short modCount = 0;
+    private short modCount;
 
     /**
      * the size
      */
-    private long size = 0;
+    private long size;
     
     /**
      * Shared set, consisting of the parent ids of this shareable node. This
@@ -341,7 +341,7 @@ public class NodePropBundle {
      * Returns the list of the child node entries.
      * @return the list of the child node entries.
      */
-    public List getChildNodeEntries() {
+    public List<NodePropBundle.ChildNodeEntry> getChildNodeEntries() {
         return childNodeEntries;
     }
 

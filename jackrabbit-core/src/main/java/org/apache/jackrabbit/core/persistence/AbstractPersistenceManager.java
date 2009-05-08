@@ -57,9 +57,9 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
      * {@inheritDoc}
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
-        Iterator iter = changeLog.deletedStates();
+        Iterator<ItemState> iter = changeLog.deletedStates();
         while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+            ItemState state = iter.next();
             if (state.isNode()) {
                 destroy((NodeState) state);
             } else {
@@ -84,9 +84,9 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
                 store((PropertyState) state);
             }
         }
-        iter = changeLog.modifiedRefs();
+        Iterator<NodeReferences> refIter = changeLog.modifiedRefs();
         while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
+            NodeReferences refs = refIter.next();
             if (refs.hasReferences()) {
                 store(refs);
             } else {
