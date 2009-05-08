@@ -67,7 +67,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     private static Logger log = LoggerFactory.getLogger(BundleFsPersistenceManager.class);
 
     /** flag indicating if this manager was initialized */
-    protected boolean initialized = false;
+    protected boolean initialized;
 
     /** file system where BLOB data is stored */
     protected BundleFsPersistenceManager.CloseableBLOBStore blobStore;
@@ -76,7 +76,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * Default blocksize for BLOB filesystem:
      * @see #setBlobFSBlockSize(String)
      */
-    private int blobFSBlockSize = 0;
+    private int blobFSBlockSize;
 
     /**
      * the minimum size of a property until it gets written to the blob store
@@ -506,7 +506,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      */
     public NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException {
-        ArrayList list = new ArrayList();
+        ArrayList<NodeId> list = new ArrayList<NodeId>();
         try {
             getListRecursive(list, "", bigger == null ? null : bigger.getUUID(), maxCount);
             return new FileNodeIdIterator(list);
@@ -542,7 +542,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         return new UUID(u);
     }
 
-    private void getListRecursive(ArrayList list, String path, UUID bigger,
+    private void getListRecursive(ArrayList<NodeId> list, String path, UUID bigger,
             int maxCount) throws FileSystemException {
         if (maxCount > 0 && list.size() >= maxCount) {
             return;
@@ -572,12 +572,15 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         }
     }
 
+    /**
+     * Iterator over all node ids in this persistence manager.
+     */
     private static class FileNodeIdIterator implements NodeIdIterator {
 
-        private final ArrayList list;
+        private final ArrayList<NodeId> list;
         private int pos;
 
-        FileNodeIdIterator(ArrayList list) {
+        FileNodeIdIterator(ArrayList<NodeId> list) {
             this.list = list;
         }
 

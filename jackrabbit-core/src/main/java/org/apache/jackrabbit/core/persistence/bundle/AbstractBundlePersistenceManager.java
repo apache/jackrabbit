@@ -296,7 +296,7 @@ public abstract class AbstractBundlePersistenceManager implements
      * {@inheritDoc}
      */
     public synchronized void onExternalUpdate(ChangeLog changes) {
-        Iterator iter = changes.modifiedStates();
+        Iterator<ItemState> iter = changes.modifiedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
             if (state.isNode()) {

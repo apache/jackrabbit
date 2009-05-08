@@ -35,7 +35,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -104,7 +103,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     public static final int SM_LONGLONG_KEYS = 2;
 
     /** flag indicating if this manager was initialized */
-    protected boolean initialized = false;
+    protected boolean initialized;
 
     /** the jdbc driver name */
     protected String driver;
@@ -125,10 +124,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected String schemaObjectPrefix;
 
     /** flag indicating if a consistency check should be issued during startup */
-    protected boolean consistencyCheck = false;
+    protected boolean consistencyCheck;
 
     /** flag indicating if the consistency check should attempt to fix issues */
-    protected boolean consistencyFix = false;
+    protected boolean consistencyFix;
 
     /** initial size of buffer used to serialize objects */
     protected static final int INITIAL_BUFFER_SIZE = 1024;
@@ -137,7 +136,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected boolean externalBLOBs;
 
     /** indicates whether to block if the database connection is lost */
-    protected boolean blockOnConnectionLoss = false;
+    protected boolean blockOnConnectionLoss;
 
     /**
      * The class that manages statement execution and recovery from connection loss.
@@ -712,14 +711,12 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@linkplain NodePropBundle bundles} here
      */
     protected void checkBundleConsistency(NodeId id, NodePropBundle bundle,
-                                          boolean fix, Collection modifications) {
+                                          boolean fix, Collection<NodePropBundle> modifications) {
         //log.info(name + ": checking bundle '" + id + "'");
 
         // look at the node's children
-        Collection missingChildren = new ArrayList();
-        Iterator iter = bundle.getChildNodeEntries().iterator();
-        while (iter.hasNext()) {
-            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
+        Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
+        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
 
             // skip check for system nodes (root, system root, version storage, node types)
             if (entry.getId().toString().endsWith("babecafebabe")) {
@@ -752,9 +749,8 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
         // remove child node entry (if fixing is enabled)
         if (fix && !missingChildren.isEmpty()) {
-            Iterator iterator = missingChildren.iterator();
-            while (iterator.hasNext()) {
-                bundle.getChildNodeEntries().remove(iterator.next());
+            for (NodePropBundle.ChildNodeEntry entry : missingChildren) {
+                bundle.getChildNodeEntries().remove(entry);
             }
             modifications.add(bundle);
         }
@@ -781,7 +777,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
         int count = 0;
         int total = 0;
-        Collection modifications = new ArrayList();
+        Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();
 
         if (uuids == null) {
             // get all node bundles in the database with a single sql statement,
@@ -868,7 +864,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             //     b) check bundle, store any bundle-to-be-modified in collection
             //     c) if recursive, add child uuids to list of uuids
 
-            List uuidList = new ArrayList(uuids.length);
+            List<UUID> uuidList = new ArrayList<UUID>(uuids.length);
             // convert uuid string array to list of UUID objects
             for (int i = 0; i < uuids.length; i++) {
                 try {
@@ -894,9 +890,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     checkBundleConsistency(id, bundle, fix, modifications);
 
                     if (recursive) {
-                        Iterator iter = bundle.getChildNodeEntries().iterator();
-                        while (iter.hasNext()) {
-                            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
+                        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
                             uuidList.add(entry.getId().getUUID());
                         }
                     }
@@ -916,9 +910,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         // repair collected broken bundles
         if (fix && !modifications.isEmpty()) {
             log.info(name + ": Fixing " + modifications.size() + " inconsistent bundle(s)...");
-            Iterator iterator = modifications.iterator();
-            while (iterator.hasNext()) {
-                NodePropBundle bundle = (NodePropBundle) iterator.next();
+            for (NodePropBundle bundle : modifications) {
                 try {
                     log.info(name + ": Fixing bundle '" + bundle.getId() + "'");
                     bundle.markOld(); // use UPDATE instead of INSERT
@@ -1033,7 +1025,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     protected Object[] createParams(UUID uuid, Object p, boolean before) {
 
         // Create the key
-        List key = new ArrayList();
+        List<Object> key = new ArrayList<Object>();
         if (getStorageModel() == SM_BINARY_KEYS) {
             key.add(uuid.getRawBytes());
         } else {
@@ -1042,7 +1034,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // Create the parameters
-        List params = new ArrayList();
+        List<Object> params = new ArrayList<Object>();
         if (before) {
             params.add(p);
             params.addAll(key);
@@ -1082,7 +1074,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount);
             rs = stmt.getResultSet();
-            ArrayList result = new ArrayList();
+            ArrayList<UUID> result = new ArrayList<UUID>();
             while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {
                 UUID current;
                 if (getStorageModel() == SM_BINARY_KEYS) {
@@ -1609,10 +1601,10 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      */
     private class ListNodeIdIterator implements NodeIdIterator {
 
-        private final ArrayList list;
+        private final ArrayList<UUID> list;
         private int pos;
 
-        ListNodeIdIterator(ArrayList list) {
+        ListNodeIdIterator(ArrayList<UUID> list) {
             this.list = list;
         }
 
@@ -1620,7 +1612,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            return new NodeId((UUID) list.get(pos++));
+            return new NodeId(list.get(pos++));
         }
 
         public boolean hasNext() {
