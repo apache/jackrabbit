@@ -103,9 +103,9 @@ public class ConnectionRecoveryManager {
     public static final int TRIALS = 20;
 
     /**
-     * The map of prepared statements (key: SQL stmt, value: prepared stmt).
+     * The map of prepared statements
      */
-    private HashMap preparedStatements = new HashMap();
+    private HashMap<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
 
     /**
      * Indicates whether the managed connection is open or closed.
@@ -211,7 +211,7 @@ public class ConnectionRecoveryManager {
     private ResultSet executeQueryInternal(String sql) throws SQLException, RepositoryException {
         PreparedStatement stmt = null;
         try {
-            stmt = (PreparedStatement) preparedStatements.get(sql);
+            stmt = preparedStatements.get(sql);
             if (stmt == null) {
                 stmt = getConnection().prepareStatement(sql);
                 preparedStatements.put(sql, stmt);
@@ -285,7 +285,7 @@ public class ConnectionRecoveryManager {
             if (returnGeneratedKeys) {
                 key += " RETURN_GENERATED_KEYS";
             }
-            PreparedStatement stmt = (PreparedStatement) preparedStatements.get(key);
+            PreparedStatement stmt = preparedStatements.get(key);
             if (stmt == null) {
                 if (returnGeneratedKeys) {
                     stmt = getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);

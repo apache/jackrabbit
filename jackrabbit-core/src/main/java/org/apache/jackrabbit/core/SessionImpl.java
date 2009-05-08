@@ -676,7 +676,7 @@ public class SessionImpl extends AbstractSession
      * @throws RepositoryException
      */
     public GarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
-        ArrayList pmList = new ArrayList();
+        ArrayList<PersistenceManager> pmList = new ArrayList<PersistenceManager>();
         VersionManagerImpl vm = (VersionManagerImpl) rep.getVersionManager();
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);

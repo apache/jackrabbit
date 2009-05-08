@@ -104,14 +104,8 @@ public class BLOBInDataStore extends BLOBFileValue {
         return getDataRecord().getStream();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String toString() {
-        StringBuffer buff = new StringBuffer(20);
-        buff.append(PREFIX);
-        buff.append(identifier.toString());
-        return buff.toString();
+        return PREFIX + identifier;
     }
 
     static BLOBInDataStore getInstance(DataStore store, String s) {
