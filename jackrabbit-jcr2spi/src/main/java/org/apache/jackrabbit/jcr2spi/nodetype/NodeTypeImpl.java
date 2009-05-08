@@ -43,12 +43,13 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import java.util.ArrayList;
 
 /**
  * <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType {
+public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
@@ -173,9 +174,9 @@ public class NodeTypeImpl implements NodeType {
         ValueConstraint.checkValueConstraints(def, values);
     }
     
-    //-----------------------------------------------------------< NodeType >---
+    //-------------------------------------------------< NodeTypeDefinition >---
     /**
-     * @see javax.jcr.nodetype.NodeType#getName()
+     * @see javax.jcr.nodetype.NodeTypeDefinition#getName()
      */
     public String getName() {
         try {
@@ -188,7 +189,7 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getPrimaryItemName()
+     * @see javax.jcr.nodetype.NodeTypeDefinition#getPrimaryItemName()
      */
     public String getPrimaryItemName() {
         try {
@@ -206,12 +207,77 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#isMixin()
+     * @see javax.jcr.nodetype.NodeTypeDefinition#isMixin()
      */
     public boolean isMixin() {
         return ntd.isMixin();
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#hasOrderableChildNodes()
+     */
+    public boolean hasOrderableChildNodes() {
+        return ntd.hasOrderableChildNodes();
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#isAbstract()
+     */
+    public boolean isAbstract() {
+        return ntd.isAbstract();
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#isQueryable()
+     */
+    public boolean isQueryable() {
+        return ntd.isQueryable();
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredPropertyDefinitions()
+     */
+    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
+        QPropertyDefinition[] pda = ntd.getPropertyDefs();
+        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
+        for (int i = 0; i < pda.length; i++) {
+            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
+        }
+        return propDefs;
+    }
+
+
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredChildNodeDefinitions()
+     */
+    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
+        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
+        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
+        for (int i = 0; i < cnda.length; i++) {
+            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
+        }
+        return nodeDefs;
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeTypeDefinition#getDeclaredSupertypeNames()
+     */
+    public String[] getDeclaredSupertypeNames() {
+        Name[] stNames = ntd.getSupertypes();
+        String[] dstn = new String[stNames.length];
+        for (int i = 0; i < stNames.length; i++) {
+            try {
+                dstn[i] = resolver().getJCRName(stNames[i]);
+            } catch (NamespaceException e) {
+                // should never get here
+                log.error("invalid node type name: " + stNames[i], e);
+                dstn[i] = stNames.toString();
+            }
+        }
+        return dstn;
+    }
+
+    //-----------------------------------------------------------< NodeType >---
     /**
      * @see javax.jcr.nodetype.NodeType#isNodeType(String)
      */
@@ -227,13 +293,6 @@ public class NodeTypeImpl implements NodeType {
             return false;
         }
         return isNodeType(ntName);
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
-     */
-    public boolean hasOrderableChildNodes() {
-        return ntd.hasOrderableChildNodes();
     }
 
     /**
@@ -279,18 +338,6 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredPropertyDefinitions()
-     */
-    public PropertyDefinition[] getDeclaredPropertyDefinitions() {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        PropertyDefinition[] propDefs = new PropertyDefinition[pda.length];
-        for (int i = 0; i < pda.length; i++) {
-            propDefs[i] = ntMgr.getPropertyDefinition(pda[i]);
-        }
-        return propDefs;
-    }
-
-    /**
      * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypes()
      */
     public NodeType[] getDeclaredSupertypes() {
@@ -309,15 +356,19 @@ public class NodeTypeImpl implements NodeType {
     }
 
     /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefinitions()
+     * @see javax.jcr.nodetype.NodeType#getDeclaredSubtypes()
      */
-    public NodeDefinition[] getDeclaredChildNodeDefinitions() {
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        NodeDefinition[] nodeDefs = new NodeDefinition[cnda.length];
-        for (int i = 0; i < cnda.length; i++) {
-            nodeDefs[i] = ntMgr.getNodeDefinition(cnda[i]);
-        }
-        return nodeDefs;
+    public NodeTypeIterator getDeclaredSubtypes() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003: Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
+     * @see javax.jcr.nodetype.NodeType#getSubtypes()
+     */
+    public NodeTypeIterator getSubtypes() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003: Add support for JCR 2.0. Implementation missing");
     }
 
     /**
@@ -487,48 +538,30 @@ public class NodeTypeImpl implements NodeType {
      * @see javax.jcr.nodetype.NodeType#canRemoveNode(String)
      */
     public boolean canRemoveNode(String nodeName) {
-        throw new UnsupportedOperationException("JCR-1591");
+        Name name;
+        try {
+            name = resolver().getQName(nodeName);
+        } catch (RepositoryException e) {
+            // should never get here
+            log.warn("Unable to determine if there are any remove constraints for a node with name " + nodeName);
+            return false;
+        }
+        return !ent.hasRemoveNodeConstraint(name);
+
     }
 
     /**
      * @see javax.jcr.nodetype.NodeType#canRemoveProperty(String)
      */
     public boolean canRemoveProperty(String propertyName) {
-        throw new UnsupportedOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredSubtypes()
-     */
-    public NodeTypeIterator getDeclaredSubtypes() {
-        throw new UnsupportedOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getSubtypes()
-     */
-    public NodeTypeIterator getSubtypes() {
-        throw new UnsupportedOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypeNames()
-     */
-    public String[] getDeclaredSupertypeNames() {
-        throw new UnsupportedOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#isAbstract()
-     */
-    public boolean isAbstract() {
-        throw new UnsupportedOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#isQueryable()
-     */
-    public boolean isQueryable() {
-        throw new UnsupportedOperationException("JCR-1591");
+        Name name;
+        try {
+            name = resolver().getQName(propertyName);
+        } catch (RepositoryException e) {
+            // should never get here
+            log.warn("Unable to determine if there are any remove constraints for a property with name " + propertyName);
+            return false;
+        }
+        return !ent.hasRemovePropertyConstraint(name);
     }
 }

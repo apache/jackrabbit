@@ -33,6 +33,8 @@ import javax.jcr.Value;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * This class implements the <code>QPropertyDefinition</code> interface and additionally
@@ -59,6 +61,20 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      * The 'multiple' flag
      */
     private final boolean multiple;
+
+    /**
+     * TODO
+     */
+    private final Name[] availableQueryOperators = new Name[0];
+
+    /**
+     * TODO
+     */
+    private final boolean fullTextSearcheable = false;
+    /**
+     * TODO
+     */
+    private final boolean queryOrderable = false;
 
     /**
      * Default constructor.
@@ -208,16 +224,19 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             QPropertyDefinition other = (QPropertyDefinition) obj;
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
+                    && multiple == other.isMultiple()
+                    && fullTextSearcheable == other.isFullTextSearcheable()
+                    && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
-                    && multiple == other.isMultiple();
+                    && Arrays.equals(availableQueryOperators, other.getAvailableQueryOperators());
         }
         return false;
     }
 
     /**
      * Overwrites {@link QItemDefinitionImpl#hashCode()}.
-     * 
+     *
      * @return
      */
     public int hashCode() {
@@ -233,9 +252,19 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 sb.append(getName().toString());
             }
             sb.append('/');
-            sb.append(getRequiredType());
+            sb.append(requiredType);
             sb.append('/');
-            sb.append(isMultiple() ? 1 : 0);
+            sb.append(multiple ? 1 : 0);
+            sb.append('/');
+            sb.append(fullTextSearcheable ? 1 : 0);
+            sb.append('/');
+            sb.append(queryOrderable ? 1 : 0);
+            sb.append('/');
+            Set s = new HashSet(availableQueryOperators.length);
+            for (int i = 0; i < availableQueryOperators.length; i++) {
+                s.add(availableQueryOperators[i]);
+            }
+            sb.append(s.toString());
 
             hashCode = sb.toString().hashCode();
         }

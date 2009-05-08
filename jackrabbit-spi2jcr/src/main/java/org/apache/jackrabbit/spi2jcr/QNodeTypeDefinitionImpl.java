@@ -42,7 +42,7 @@ class QNodeTypeDefinitionImpl
      * <code>NodeType</code>.
      *
      * @param nt            the JCR node type.
-     * @param resolver
+     * @param resolver      the name and path resolver.
      * @param qValueFactory the QValue factory.
      *
      * @throws NameException   if <code>nt</code> contains an illegal
@@ -57,20 +57,29 @@ class QNodeTypeDefinitionImpl
                                    NamePathResolver resolver,
                                    QValueFactory qValueFactory)
             throws NamespaceException, RepositoryException, NameException {
+        // TODO: replace by code below as soon as implementation in jackrabbit-core is complete
         super(resolver.getQName(nt.getName()),
-                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver),
-                nt.isMixin(), nt.hasOrderableChildNodes(),
+                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver), null,
+                nt.isMixin(), nt.isAbstract(), false, nt.hasOrderableChildNodes(),
                 nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
                 getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
                 getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
+        /*
+        super(resolver.getQName(nt.getName()),
+                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver), null,
+                nt.isMixin(), nt.isAbstract(), nt.isQueryable(), nt.hasOrderableChildNodes(),
+                nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
+                getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
+                getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
+                */
     }
 
     /**
      * Returns the qualified names of the passed node types using the namespace
      * resolver to parse the names.
      *
-     * @param nt         the node types
-     * @param resolver
+     * @param nt the node types.
+     * @param resolver the name and path resolver.
      * @return the qualified names of the node types.
      * @throws IllegalNameException   if a node type returns an illegal name.
      * @throws NamespaceException if the name of a node type contains a

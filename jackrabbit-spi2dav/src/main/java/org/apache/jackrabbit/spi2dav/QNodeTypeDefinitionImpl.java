@@ -58,6 +58,12 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     private Set dependencies;
 
     /**
+     * TODO
+     */
+    private final boolean isAbstract = false;
+    private final boolean isQueryable = false;
+
+    /**
      * Default constructor.
      */
     public QNodeTypeDefinitionImpl(Element ntdElement, NamePathResolver resolver,
@@ -159,6 +165,22 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     }
 
     /**
+     * @see QNodeTypeDefinition#isAbstract()
+     */
+    public boolean isAbstract() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
+     * @see QNodeTypeDefinition#isQueryable()
+     */
+    public boolean isQueryable() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
      * @see QNodeTypeDefinition#hasOrderableChildNodes()
      */
     public boolean hasOrderableChildNodes() {
@@ -245,6 +267,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
                 && (primaryItemName == null ? other.getPrimaryItemName() == null : primaryItemName.equals(other.getPrimaryItemName()))
                 && Arrays.equals(supertypes, other.getSupertypes())
                 && mixin == other.isMixin()
+                && isAbstract == other.isAbstract()
+                && isQueryable == other.isQueryable()
                 && orderableChildNodes == other.hasOrderableChildNodes()
                 && Arrays.equals(propDefs, other.getPropertyDefs())
                 && Arrays.equals(nodeDefs, other.getChildNodeDefs());

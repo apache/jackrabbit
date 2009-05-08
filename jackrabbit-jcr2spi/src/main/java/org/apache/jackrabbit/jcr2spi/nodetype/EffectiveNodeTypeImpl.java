@@ -429,19 +429,55 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
          * don't know which one is applicable, we check all of them
          */
         QItemDefinition[] defs = getNamedItemDefs(name);
-        if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isMandatory()) {
-                    throw new ConstraintViolationException("can't remove mandatory item");
-                }
-                if (defs[i].isProtected()) {
-                    throw new ConstraintViolationException("can't remove protected item");
-                }
-            }
+        if (hasRemoveConstaint(defs)) {
+            throw new ConstraintViolationException("can't remove mandatory or protected item");
         }
     }
 
+    /**
+     * @inheritDoc
+     * @see EffectiveNodeType#hasRemoveNodeConstraint(Name)
+     */
+    public boolean hasRemoveNodeConstraint(Name nodeName) {
+        QNodeDefinition[] defs = getNamedQNodeDefinitions(nodeName);
+        return hasRemoveConstaint(defs);
+    }
+
+    /**
+     * @inheritDoc
+     * @see EffectiveNodeType#hasRemovePropertyConstraint(Name)
+     */
+    public boolean hasRemovePropertyConstraint(Name propertyName) {
+        QPropertyDefinition[] defs = getNamedQPropertyDefinitions(propertyName);
+        return hasRemoveConstaint(defs);
+    }
+
     //---------------------------------------------< impl. specific methods >---
+    /**
+     * Loop over the specified definitions and return <code>true</code> as soon
+     * as the first mandatory or protected definition is encountered.
+     *
+     * @param defs
+     * @return <code>true</code> if a mandatory or protected definition is present.
+     */
+    private static boolean hasRemoveConstaint(QItemDefinition[] defs) {
+        /**
+         * as there might be multiple definitions with the same name that may be
+         * applicable, return true as soon as the first mandatory or protected
+         * definition is encountered.
+         */
+        if (defs != null) {
+            for (int i = 0; i < defs.length; i++) {
+                if (defs[i].isMandatory()) {
+                    return true;
+                }
+                if (defs[i].isProtected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private QItemDefinition[] getNamedItemDefs() {
         if (namedItemDefs.size() == 0) {
