@@ -39,8 +39,8 @@ class LockInfoImpl extends org.apache.jackrabbit.spi.commons.LockInfoImpl {
      */
     private LockInfoImpl(Lock lock, IdFactoryImpl idFactory,
                          NamePathResolver resolver) throws RepositoryException {
-        super(lock.getLockToken(), lock.getLockOwner(),
-                lock.isDeep(), lock.isSessionScoped(),
+        super(lock.getLockToken(), lock.getLockOwner(), lock.isDeep(),
+                lock.isSessionScoped(), lock.getSecondsRemaining(), lock.isLockOwningSession(), 
                 idFactory.createNodeId(lock.getNode(), resolver));
     }
 
