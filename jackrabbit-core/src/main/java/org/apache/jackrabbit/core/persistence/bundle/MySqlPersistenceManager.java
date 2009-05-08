@@ -45,8 +45,8 @@ public class MySqlPersistenceManager extends BundleDbPersistenceManager {
         if (getDriver() == null) {
             setDriver("org.gjt.mm.mysql.Driver");
         }
-        if (getSchema() == null) {
-            setSchema("mysql");
+        if (getDatabaseType() == null) {
+            setDatabaseType("mysql");
         }
         super.init(context);
     }

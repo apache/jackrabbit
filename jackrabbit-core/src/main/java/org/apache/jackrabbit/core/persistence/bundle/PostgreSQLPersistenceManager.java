@@ -65,8 +65,8 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
         if (getDriver() == null) {
             setDriver("org.postgresql.Driver");
         }
-        if (getSchema() == null) {
-            setSchema("postgresql");
+        if (getDatabaseType() == null) {
+            setDatabaseType("postgresql");
         }
         super.init(context);
     }

@@ -63,7 +63,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
      */
     private static Logger log = LoggerFactory.getLogger(Oracle9PersistenceManager.class);
 
-    private Class blobClass;
+    private Class< ? > blobClass;
     private Integer duractionSessionConstant;
     private Integer modeReadWriteConstant;
 
@@ -197,7 +197,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Method open = blobClass.getMethod("open", new Class[]{Integer.TYPE});
         open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream = blobClass.getMethod("getBinaryOutputStream", new Class[0]);
-        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob, null);
+        OutputStream out = (OutputStream) getBinaryOutputStream.invoke(blob);
         try {
             IOUtils.copy(in, out);
         } finally {
@@ -208,7 +208,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             out.close();
         }
         Method close = blobClass.getMethod("close", new Class[0]);
-        close.invoke(blob, null);
+        close.invoke(blob);
         return (Blob) blob;
     }
 
@@ -218,10 +218,12 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
     protected void freeTemporaryBlob(Object blob) throws Exception {
         // blob.freeTemporary();
         Method freeTemporary = blobClass.getMethod("freeTemporary", new Class[0]);
-        freeTemporary.invoke(blob, null);
+        freeTemporary.invoke(blob);
     }
 
-    //--------------------------------------------------------< inner classes >
+    /**
+     * A blob store specially for Oracle 9.
+     */
     class OracleBLOBStore extends DbBlobStore {
 
         public OracleBLOBStore() throws SQLException {
