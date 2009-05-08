@@ -90,7 +90,7 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Item#isNode()
      */
     public boolean isNode() {
-	return false;
+        return false;
     }
 
     //-------------------------------------------------< Property interface >---
