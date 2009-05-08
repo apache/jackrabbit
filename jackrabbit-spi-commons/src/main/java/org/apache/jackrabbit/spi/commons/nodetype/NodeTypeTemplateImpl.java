@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
 import org.apache.commons.collections.list.TypedList;
+
 import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeDefinitionTemplate;
@@ -140,8 +141,12 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         return nodeDefinitionTemplates;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setQueryable(boolean queryable) {
-        // ignored, TODO JCR-2091
+        // TODO
+        throw new RuntimeException("Not implemented yet, see JCR-1591");
     }
 
     //---------------------------------------------------< NodeTypeDefinition >

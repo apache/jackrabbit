@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
 import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeType;

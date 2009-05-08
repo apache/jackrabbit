@@ -26,15 +26,15 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.core.nodetype.compact.ParseException;
-import javax.jcr.nodetype.NodeDefinitionTemplate;
+
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.nodetype.NodeTypeTemplate;
-import javax.jcr.nodetype.PropertyDefinitionTemplate;
+
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.Name;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -70,7 +70,7 @@ import java.util.Set;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
+public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements JackrabbitNodeTypeManager,
         Dumpable, NodeTypeRegistryListener {
 
     /**
@@ -509,82 +509,6 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * Returns an empty <code>NodeTypeTemplate</code> which can then be used to
-     * define a node type and passed to
-     * <code>NodeTypeManager.registerNodeType</code>.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
-     * implementation does not support node type registration.
-     * @return A <code>NodeTypeTemplate</code>.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public NodeTypeTemplate createNodeTypeTemplate()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeTypeTemplateImpl();
-    }
-
-    /**
-     * Returns a <code>NodeTypeTemplate</code> holding the specified node type
-     * definition. This template can then be altered and passed to
-     * <code>NodeTypeManager.registerNodeType</code>.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
-     * implementation does not support node type registration.
-     *
-     * @param ntd a <code>NodeTypeDefinition</code>.
-     * @return A <code>NodeTypeTemplate</code>.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeTypeTemplateImpl(ntd);
-    }
-
-    /**
-     * Returns an empty <code>NodeDefinitionTemplate</code> which can then be
-     * used to create a child node definition and attached to a
-     * <code>NodeTypeTemplate</code>.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
-     * implementation does not support node type registration.
-     *
-     * @return A <code>NodeDefinitionTemplate</code>.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public NodeDefinitionTemplate createNodeDefinitionTemplate()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new NodeDefinitionTemplateImpl(this);
-    }
-
-    /**
-     * Returns an empty <code>PropertyDefinitionTemplate</code> which can then
-     * be used to create a property definition and attached to a
-     * <code>NodeTypeTemplate</code>.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
-     * implementation does not support node type registration.
-     *
-     * @return A <code>PropertyDefinitionTemplate</code>.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public PropertyDefinitionTemplate createPropertyDefinitionTemplate()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
-        return new PropertyDefinitionTemplateImpl();
-    }
-
-    /**
      * Registers a new node type or updates an existing node type using the
      * specified definition and returns the resulting <code>NodeType</code>
      * object.
@@ -836,9 +760,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     }
                 }
                 // default primary type
-                //name = ndefs[i].getDefaultPrimaryTypeName();
-                // FIXME when JCR 2.0 API has been finalized
-                name = ((NodeDefinitionTemplateImpl) ndefs[i]).getDefaultPrimaryTypeName();
+                name = ndefs[i].getDefaultPrimaryTypeName();
                 if (name != null) {
                     try {
                         qndef.setDefaultPrimaryType(session.getQName(name));
@@ -849,9 +771,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     }
                 }
                 // required primary types
-                //names = ndefs[i].getRequiredPrimaryTypeNames();
-                // FIXME when JCR 2.0 API has been finalized
-                names = ((NodeDefinitionTemplateImpl) ndefs[i]).getRequiredPrimaryTypeNames();
+                names = ndefs[i].getRequiredPrimaryTypeNames();
                 qnames = new Name[names.length];
                 for (int j = 0; j < names.length; j++) {
                     try {

@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
-
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
  * A <code>PropertyDefinitionTemplateImpl</code> ...
@@ -84,16 +82,28 @@ class PropertyDefinitionTemplateImpl
         this.multiple = multiple;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setAvailablrQueryOperators(String[] operators) {
-        // ignored, TODO JCR-2091
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setFullTextSearchable(boolean searchable) {
-        // ignored, TODO JCR-2091
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setQueryOrderable(boolean orderable) {
-        // ignored, TODO JCR-2091
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 
     //---------------------------------------------------< PropertyDefinition >
@@ -125,16 +135,27 @@ class PropertyDefinitionTemplateImpl
         return multiple;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String[] getAvailableQueryOperators() {
-        // TODO: JCR-2091
-        return Operator.getAllQueryOperators();
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isFullTextSearchable() {
-        return true; // TODO: JCR-2091
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isQueryOrderable() {
-        return true; // TODO: JCR-2091
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
     }
 }

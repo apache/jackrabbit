@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
 import javax.jcr.nodetype.NodeDefinitionTemplate;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -38,11 +37,11 @@ class NodeDefinitionTemplateImpl
     /**
      * Package private constructor
      *
-     * @param ntMgr
+     * @param ntBase
      * @throws RepositoryException
      */
-    NodeDefinitionTemplateImpl(NodeTypeManagerImpl ntMgr) throws RepositoryException {
-        requiredPrimaryTypes = new NodeType[] {ntMgr.getNodeType(NameConstants.NT_BASE)};
+    NodeDefinitionTemplateImpl(NodeType ntBase) throws RepositoryException {
+        requiredPrimaryTypes = new NodeType[] {ntBase};
         requiredPrimaryTypeNames = new String[] {requiredPrimaryTypes[0].getName()};
     }
 
