@@ -73,7 +73,7 @@ public class NodePropBundle {
     /**
      * the mixintype names
      */
-    private Set mixinTypeNames;
+    private Set<Name> mixinTypeNames;
 
     /**
      * the nodedef id
@@ -88,7 +88,7 @@ public class NodePropBundle {
     /**
      * the properties
      */
-    private HashMap properties = new HashMap();
+    private HashMap<Name, PropertyEntry> properties = new HashMap<Name, PropertyEntry>();
 
     /**
      * flag that indicates if this bundle is new
@@ -114,7 +114,7 @@ public class NodePropBundle {
      * Shared set, consisting of the parent ids of this shareable node. This
      * entry is <code>null</code> if this node is not shareable.
      */
-    private Set sharedSet;
+    private Set<NodeId> sharedSet;
 
     /**
      * Creates a "new" bundle with the given id
@@ -151,11 +151,9 @@ public class NodePropBundle {
         nodeDefId = state.getDefinitionId();
         isReferenceable = state.hasPropertyName(NameConstants.JCR_UUID);
         modCount = state.getModCount();
-        List list = state.getChildNodeEntries();
-        Iterator iter = list.iterator();
+        List<org.apache.jackrabbit.core.state.ChildNodeEntry> list = state.getChildNodeEntries();
         childNodeEntries.clear();
-        while (iter.hasNext()) {
-            org.apache.jackrabbit.core.state.ChildNodeEntry cne = (org.apache.jackrabbit.core.state.ChildNodeEntry) iter.next();
+        for (org.apache.jackrabbit.core.state.ChildNodeEntry cne : list) {
             addChildNodeEntry(cne.getName(), cne.getId());
         }
         sharedSet = state.getSharedSet();
@@ -173,9 +171,7 @@ public class NodePropBundle {
         state.setMixinTypeNames(mixinTypeNames);
         state.setDefinitionId(nodeDefId);
         state.setModCount(modCount);
-        Iterator iter = childNodeEntries.iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry e = (ChildNodeEntry) iter.next();
+        for (ChildNodeEntry e : childNodeEntries) {
             state.addChildNodeEntry(e.getName(), e.getId());
         }
         state.setPropertyNames(properties.keySet());
@@ -189,9 +185,8 @@ public class NodePropBundle {
         if (isReferenceable) {
             state.addPropertyName(NameConstants.JCR_UUID);
         }
-        iter = sharedSet.iterator();
-        while (iter.hasNext()) {
-            state.addShare((NodeId) iter.next());
+        for (NodeId nodeId : sharedSet) {
+            state.addShare(nodeId);
         }
         return state;
     }
@@ -276,7 +271,7 @@ public class NodePropBundle {
      * Returns the mixin type names of this bundle.
      * @return the mixin type names of this bundle.
      */
-    public Set getMixinTypeNames() {
+    public Set<Name> getMixinTypeNames() {
         return mixinTypeNames;
     }
 
@@ -284,7 +279,7 @@ public class NodePropBundle {
      * Sets the mixin type names
      * @param mixinTypeNames the mixin type names
      */
-    public void setMixinTypeNames(Set mixinTypeNames) {
+    public void setMixinTypeNames(Set<Name> mixinTypeNames) {
         this.mixinTypeNames = mixinTypeNames;
     }
 
@@ -367,7 +362,7 @@ public class NodePropBundle {
      * @param state the property state
      */
     public void addProperty(PropertyState state) {
-        PropertyEntry old = (PropertyEntry) properties.put(state.getName(), new PropertyEntry(state));
+        PropertyEntry old = properties.put(state.getName(), new PropertyEntry(state));
         if (old != null) {
             old.destroy(binding.getBlobStore());
         }
@@ -390,7 +385,7 @@ public class NodePropBundle {
      * Returns a set of the property names.
      * @return a set of the property names.
      */
-    public Set getPropertyNames() {
+    public Set<Name> getPropertyNames() {
         return properties.keySet();
     }
 
@@ -398,7 +393,7 @@ public class NodePropBundle {
      * Returns a collection of property entries.
      * @return a collection of property entries.
      */
-    public Collection getPropertyEntries() {
+    public Collection<PropertyEntry> getPropertyEntries() {
         return properties.values();
     }
 
@@ -408,14 +403,14 @@ public class NodePropBundle {
      * @return the desired property entry or <code>null</code>
      */
     public PropertyEntry getPropertyEntry(Name name) {
-        return (PropertyEntry) properties.get(name);
+        return properties.get(name);
     }
 
     /**
      * Removes all property entries
      */
     public void removeAllProperties() {
-        Iterator iter = properties.keySet().iterator();
+        Iterator<Name> iter = properties.keySet().iterator();
         while (iter.hasNext()) {
             Name name = (Name) iter.next();
             removeProperty(name);
@@ -438,7 +433,7 @@ public class NodePropBundle {
      * Sets the shared set of this bundle.
      * @return the shared set of this bundle.
      */
-    public Set getSharedSet() {
+    public Set<NodeId> getSharedSet() {
         return sharedSet;
     }
 
@@ -446,7 +441,7 @@ public class NodePropBundle {
      * Sets the shared set.
      * @param sharedSet shared set
      */
-    public void setSharedSet(Set sharedSet) {
+    public void setSharedSet(Set<NodeId> sharedSet) {
         this.sharedSet = sharedSet;
     }
 
@@ -561,12 +556,12 @@ public class NodePropBundle {
         /**
          * the blob ids
          */
-        private String[] blobIds = null;
+        private String[] blobIds;
 
         /**
          * the mod count
          */
-        private short modCount = 0;
+        private short modCount;
 
         /**
          * Creates a new property entry with the given id.

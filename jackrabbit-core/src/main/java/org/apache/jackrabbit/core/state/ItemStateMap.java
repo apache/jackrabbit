@@ -25,7 +25,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,13 +39,13 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
     /**
      * the map backing this <code>ItemStateStore</code> implementation
      */
-    protected final Map map;
+    protected final Map<ItemId, ItemState> map;
 
     /**
      * Creates a new HashMap-backed <code>ItemStateStore</code> implementation.
      */
     public ItemStateMap() {
-        this(new HashMap());
+        this(new HashMap<ItemId, ItemState>());
     }
 
     /**
@@ -54,28 +53,19 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
      *
      * @param map <code>Map</code> implementation to be used as backing store.
      */
-    protected ItemStateMap(Map map) {
+    protected ItemStateMap(Map<ItemId, ItemState> map) {
         this.map = map;
     }
 
     //-------------------------------------------------------< ItemStateStore >
-    /**
-     * {@inheritDoc}
-     */
     public boolean contains(ItemId id) {
         return map.containsKey(id);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public ItemState get(ItemId id) {
-        return (ItemState) map.get(id);
+        return map.get(id);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void put(ItemState state) {
         ItemId id = state.getId();
         if (map.containsKey(id)) {
@@ -84,58 +74,35 @@ public class ItemStateMap implements ItemStateStore, Dumpable {
         map.put(id, state);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void remove(ItemId id) {
         map.remove(id);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void clear() {
         map.clear();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean isEmpty() {
         return map.isEmpty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int size() {
         return map.size();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Set keySet() {
+    public Set<ItemId> keySet() {
         return Collections.unmodifiableSet(map.keySet());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Collection values() {
+    public Collection<ItemState> values() {
         return Collections.unmodifiableCollection(map.values());
     }
 
     //-------------------------------------------------------------< Dumpable >
-    /**
-     * {@inheritDoc}
-     */
     public void dump(PrintStream ps) {
         ps.println("map entries:");
         ps.println();
-        Iterator iter = keySet().iterator();
-        while (iter.hasNext()) {
-            ItemId id = (ItemId) iter.next();
+        for (ItemId id : keySet()) {
             ItemState state = get(id);
             dumpItemState(id, state, ps);
         }

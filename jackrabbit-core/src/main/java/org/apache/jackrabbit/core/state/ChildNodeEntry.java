@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.NodeId;
  */
 public final class ChildNodeEntry {
 
-    private int hash = 0;
+    private int hash;
 
     private final Name name;
     private final int index; // 1-based index for same-name siblings

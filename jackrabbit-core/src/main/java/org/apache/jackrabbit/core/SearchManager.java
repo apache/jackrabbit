@@ -440,7 +440,7 @@ public class SearchManager implements SynchronousEventListener {
                 return iter.hasNext();
             }
 
-            public Object next() {
+            public NodeState next() {
                 return nextNodeState();
             }
 

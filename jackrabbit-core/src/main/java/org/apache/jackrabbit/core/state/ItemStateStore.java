@@ -93,7 +93,7 @@ public interface ItemStateStore {
      *
      * @return a set view of the keys contained in this store.
      */
-    Set keySet();
+    Set<ItemId> keySet();
 
     /**
      * Returns an unmodifiable collection view of the values (i.e.
@@ -101,5 +101,5 @@ public interface ItemStateStore {
      *
      * @return a collection view of the values contained in this store.
      */
-    Collection values();
+    Collection<ItemState> values();
 }
