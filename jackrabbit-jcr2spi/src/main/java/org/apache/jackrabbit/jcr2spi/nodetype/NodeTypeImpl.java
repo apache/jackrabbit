@@ -483,30 +483,51 @@ public class NodeTypeImpl implements NodeType {
         return false;
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#canRemoveNode(String)
+     */
     public boolean canRemoveNode(String nodeName) {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#canRemoveProperty(String)
+     */
     public boolean canRemoveProperty(String propertyName) {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#getDeclaredSubtypes()
+     */
     public NodeTypeIterator getDeclaredSubtypes() {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#getSubtypes()
+     */
     public NodeTypeIterator getSubtypes() {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#getDeclaredSupertypeNames()
+     */
     public String[] getDeclaredSupertypeNames() {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#isAbstract()
+     */
     public boolean isAbstract() {
         throw new UnsupportedOperationException("JCR-1591");
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeType#isQueryable()
+     */
     public boolean isQueryable() {
         throw new UnsupportedOperationException("JCR-1591");
     }
