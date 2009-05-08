@@ -39,6 +39,9 @@ public class Lexer {
 
     public static final String[] ORDERABLE = new String[] {"orderable", "ord", "o"};
     public static final String[] MIXIN = new String[]{"mixin", "mix", "m"};
+    public static final String[] ABSTRACT = new String[]{"abstract", "abs", "a"};
+    public static final String[] NOQUERY = new String[]{"noquery", "nq"};
+    public static final String[] PRIMARYITEM = new String[]{"primaryitem", "!"};
 
     public static final String[] PRIMARY = new String[]{"primary", "pri", "!"};
     public static final String[] AUTOCREATED = new String[]{"autocreated", "aut", "a"};
