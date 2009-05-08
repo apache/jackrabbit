@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
@@ -38,15 +39,12 @@ import javax.jcr.ValueFactory;
 import javax.jcr.NamespaceException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -57,7 +55,7 @@ import java.io.PrintStream;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryListener, Dumpable {
+public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeRegistryListener, Dumpable {
 
     /**
      * Logger instance for this class
@@ -357,38 +355,6 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
         } catch (NameException e) {
             return false;
         }
-    }
-    
-    /**
-     * @see javax.jcr.nodetype.NodeTypeManager#createNodeTypeTemplate()
-     */
-    public NodeTypeTemplate createNodeTypeTemplate()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
-    }
-
-    /**
-     * @see NodeTypeManager#createNodeTypeTemplate(javax.jcr.nodetype.NodeTypeDefinition)
-     */
-    public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeManager#createNodeDefinitionTemplate()
-     */
-    public NodeDefinitionTemplate createNodeDefinitionTemplate()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeTypeManager#createPropertyDefinitionTemplate()
-     */
-    public PropertyDefinitionTemplate createPropertyDefinitionTemplate()
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
     }
 
     /**
