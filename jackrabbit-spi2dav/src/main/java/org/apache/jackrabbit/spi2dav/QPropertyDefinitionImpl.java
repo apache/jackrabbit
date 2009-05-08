@@ -158,6 +158,30 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
 
     /**
      * {@inheritDoc}
+     */
+    public Name[] getAvailableQueryOperators() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isFullTextSearcheable() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isQueryOrderable() {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    }
+
+    /**
+     * {@inheritDoc}
      *
      * @return always <code>false</code>
      */
