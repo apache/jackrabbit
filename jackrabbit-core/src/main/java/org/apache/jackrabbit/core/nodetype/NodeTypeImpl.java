@@ -38,6 +38,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.value.ValueHelper;
+import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,6 +226,50 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
         }
 
         return (NodeType[]) inherited.toArray(new NodeType[inherited.size()]);
+    }
+
+    /**
+     * Returns the node types derived from this node type.
+     *
+     * @param directOnly if <code>true</code> only direct subtypes will be considered
+     *
+     * @return an <code>NodeTypeIterator</code>.
+     * @see #getSubtypes
+     * @see #getDeclaredSubtypes
+     */
+    public NodeTypeIterator getSubtypes(boolean directOnly) {
+        NodeTypeIterator iter;
+        try {
+            iter = ntMgr.getAllNodeTypes();
+        } catch (RepositoryException e) {
+            // should never get here
+            log.error("failed to retrieve registered node types", e);
+            return NodeTypeIteratorAdapter.EMPTY;
+        }
+
+        ArrayList<NodeType> result = new ArrayList<NodeType>();
+        String thisName = getName();
+        while (iter.hasNext()) {
+            NodeType nt = iter.nextNodeType();
+            if (!nt.getName().equals(thisName)) {
+                if (directOnly) {
+                    // direct subtypes only
+                    String[] names = nt.getDeclaredSupertypeNames();
+                    for (int i = 0; i < names.length; i++) {
+                        if (names[i].equals(thisName)) {
+                            result.add(nt);
+                            break;
+                        }
+                    }
+                } else {
+                    // direct and indirect subtypes
+                    if (nt.isNodeType(thisName)) {
+                        result.add(nt);
+                    }
+                }
+            }
+        }
+        return new NodeTypeIteratorAdapter(result);
     }
 
     //---------------------------------------------------< NodeTypeDefinition >
@@ -656,13 +701,28 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
         return false;
     }
 
+    /**
+     * Returns the <i>direct</i> subtypes of this node type in the node type inheritance hierarchy,
+     * that is, those which actually declared this node type in their list of supertypes.
+     *
+     * @see #getSubtypes
+     *
+     * @return an <code>NodeTypeIterator</code>.
+     * @since JCR 2.0
+     */
     public NodeTypeIterator getDeclaredSubtypes() {
-        // TODO 
-        throw new RuntimeException("Not implemented yet, see JCR-2090");
+        return getSubtypes(true);
     }
 
+    /**
+     * Returns all subtypes of this node type in the node type inheritance hierarchy.
+     *
+     * @see #getDeclaredSubtypes
+     *
+     * @return a <code>NodeTypeIterator</code>.
+     * @since JCR 2.0
+     */
     public NodeTypeIterator getSubtypes() {
-        // TODO 
-        throw new RuntimeException("Not implemented yet, see JCR-2090");
+        return getSubtypes(false);
     }
 }
