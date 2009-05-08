@@ -18,14 +18,17 @@ package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.NamespaceException;
 
 /**
  * <code>QPropertyDefinitionImpl</code> implements a qualified property
@@ -54,7 +57,9 @@ class QPropertyDefinitionImpl
                 propDef.getOnParentVersion(), propDef.isProtected(),
                 convertValues(propDef.getDefaultValues(), resolver, qValueFactory),
                 propDef.isMultiple(), propDef.getRequiredType(),
-                convertConstraints(propDef.getValueConstraints(), resolver, qValueFactory, propDef.getRequiredType()));
+                convertConstraints(propDef.getValueConstraints(), resolver, qValueFactory, propDef.getRequiredType()),
+                convertQueryOperators(propDef.getAvailableQueryOperators(), resolver),
+                propDef.isFullTextSearchable(), propDef.isQueryOrderable());
     }
 
     /**
@@ -109,5 +114,22 @@ class QPropertyDefinitionImpl
             }
         }
         return constraints;
+    }
+
+    /**
+     * Convert String jcr names to Name objects.
+     *
+     * @param aqos
+     * @param resolver
+     * @return
+     * @throws NamespaceException
+     * @throws IllegalNameException
+     */
+    private static Name[] convertQueryOperators(String[] aqos, NamePathResolver resolver) throws NamespaceException, IllegalNameException {
+        Name[] names = new Name[aqos.length];
+        for (int i = 0; i < aqos.length; i++) {
+            names[i] = resolver.getQName(aqos[i]);
+        }
+        return names;
     }
 }

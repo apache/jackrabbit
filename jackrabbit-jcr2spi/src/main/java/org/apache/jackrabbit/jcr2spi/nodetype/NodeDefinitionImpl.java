@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.NamespaceException;
 
 /**
  * This class implements the <code>NodeDefinition</code> interface.
@@ -100,12 +101,46 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
         return ((QNodeDefinition) itemDef).allowsSameNameSiblings();
     }
 
+    /**
+     * @see NodeDefinition#getDefaultPrimaryTypeName()
+     * @since JCR 2.0
+     */
     public String getDefaultPrimaryTypeName() {
-        throw new UnsupportedOperationException("JCR-1591");
+        Name ntName = ((QNodeDefinition) itemDef).getDefaultPrimaryType();
+        if (ntName == null) {
+            return null;
+        }
+        try {
+            return resolver.getJCRName(ntName);
+        } catch (NamespaceException e) {
+            // should never get here
+            log.error("invalid default node type " + ntName, e);
+            return null;
+        }
     }
 
+    /**
+     * @see NodeDefinition#getRequiredPrimaryTypeNames()
+     * @since JCR 2.0
+     */
     public String[] getRequiredPrimaryTypeNames() {
-        throw new UnsupportedOperationException("JCR-1591");
+        Name[] ntNames = ((QNodeDefinition) itemDef).getRequiredPrimaryTypes();
+        try {
+            if (ntNames == null || ntNames.length == 0) {
+                // return "nt:base"
+                return new String[] { resolver.getJCRName(NameConstants.NT_BASE) };
+            } else {
+                String[] jcrNames = new String[ntNames.length];
+                for (int i = 0; i < ntNames.length; i++) {
+                    jcrNames[i] = resolver.getJCRName(ntNames[i]);
+                }
+                return jcrNames;
+            }
+        } catch (NamespaceException e) {
+            // should never get here
+            log.error("required node type does not exist", e);
+            return new String[0];
+        }
     }
 }
 

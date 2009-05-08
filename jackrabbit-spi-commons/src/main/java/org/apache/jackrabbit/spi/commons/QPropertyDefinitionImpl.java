@@ -51,6 +51,21 @@ public class QPropertyDefinitionImpl
     private final boolean multiple;
 
     /**
+     * The 'multiple' flag
+     */
+    private final Name[] availableQueryOperators;
+
+    /**
+     * The 'fullTextSearcheable' flag
+     */
+    private final boolean fullTextSearcheable;
+
+    /**
+     * The 'queryOrderable' flag
+     */
+    private final boolean queryOrderable;
+
+    /**
      * Copy constructor.
      *
      * @param propDef some other property definition.
@@ -60,7 +75,10 @@ public class QPropertyDefinitionImpl
                 propDef.isAutoCreated(), propDef.isMandatory(),
                 propDef.getOnParentVersion(), propDef.isProtected(),
                 propDef.getDefaultValues(), propDef.isMultiple(),
-                propDef.getRequiredType(), propDef.getValueConstraints());
+                propDef.getRequiredType(), propDef.getValueConstraints(),
+                propDef.getAvailableQueryOperators(),
+                propDef.isFullTextSearcheable(),
+                propDef.isQueryOrderable());
     }
 
     /**
@@ -80,12 +98,50 @@ public class QPropertyDefinitionImpl
      *                          exist an empty array must be passed.
      * @throws NullPointerException if <code>valueConstraints</code> is
      *                              <code>null</code>.
+     * @deprecated Use {@link #QPropertyDefinitionImpl(Name, Name,
+                                   boolean, boolean, int, boolean, QValue[], boolean,
+                                   int, String[], Name[], boolean, boolean)} instead.
      */
     public QPropertyDefinitionImpl(Name name, Name declaringNodeType,
                                    boolean isAutoCreated, boolean isMandatory,
                                    int onParentVersion, boolean isProtected,
                                    QValue[] defaultValues, boolean isMultiple,
                                    int requiredType, String[] valueConstraints) {
+        this(name, declaringNodeType, isAutoCreated, isMandatory,
+                onParentVersion, isProtected, defaultValues, isMultiple,
+                requiredType, valueConstraints, null, false, false);
+    }
+
+    /**
+     * Creates a new serializable qualified property definition.
+     *
+     * @param name              the name of the child item.
+     * @param declaringNodeType the delaring node type
+     * @param isAutoCreated     if this item is auto created.
+     * @param isMandatory       if this is a mandatory item.
+     * @param onParentVersion   the on parent version behaviour.
+     * @param isProtected       if this item is protected.
+     * @param defaultValues     the default values or <code>null</code> if there
+     *                          are none.
+     * @param isMultiple        if this property is multi-valued.
+     * @param requiredType      the required type for this property.
+     * @param valueConstraints  the value constraints for this property. If none
+     *                          exist an empty array must be passed.
+     * @param availableQueryOperators
+     * @param isFullTextSearcheable
+     * @param isQueryOrderable
+     * @throws NullPointerException if <code>valueConstraints</code> is
+     *                              <code>null</code>.
+     * @since JCR 2.0
+     */
+    public QPropertyDefinitionImpl(Name name, Name declaringNodeType,
+                                   boolean isAutoCreated, boolean isMandatory,
+                                   int onParentVersion, boolean isProtected,
+                                   QValue[] defaultValues, boolean isMultiple,
+                                   int requiredType, String[] valueConstraints,
+                                   Name[] availableQueryOperators,
+                                   boolean isFullTextSearcheable,
+                                   boolean isQueryOrderable) {
         super(name, declaringNodeType, isAutoCreated, isMandatory,
                 onParentVersion, isProtected);
         if (valueConstraints == null) {
@@ -95,6 +151,9 @@ public class QPropertyDefinitionImpl
         this.multiple = isMultiple;
         this.requiredType = requiredType;
         this.valueConstraints = valueConstraints;
+        this.availableQueryOperators = availableQueryOperators;
+        this.fullTextSearcheable = isFullTextSearcheable;
+        this.queryOrderable = isQueryOrderable;
     }
 
     //------------------------------------------------< QPropertyDefinition >---
@@ -124,6 +183,27 @@ public class QPropertyDefinitionImpl
      */
     public boolean isMultiple() {
         return multiple;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Name[] getAvailableQueryOperators() {
+        return availableQueryOperators;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isFullTextSearcheable() {
+        return fullTextSearcheable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isQueryOrderable() {
+        return queryOrderable;
     }
 
     /**

@@ -19,14 +19,15 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.NamespaceException;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,17 +121,36 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
         return ((QPropertyDefinition) itemDef).isMultiple();
     }
 
+    /**
+     * @see javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators()
+     */
     public String[] getAvailableQueryOperators() {
-        // TODO: JCR-2091
-        return Operator.getAllQueryOperators();
+        Name[] names = ((QPropertyDefinition) itemDef).getAvailableQueryOperators();
+        String[] aqos = new String[names.length];
+        for (int i = 0; i < names.length; i++) {
+            try {
+                aqos[i] = resolver.getJCRName(names[i]);
+            } catch (NamespaceException e) {
+                // should not occure. fallback
+                log.warn(e.getMessage());
+                aqos[i] = names[i].toString();
+            }
+        }
+        return aqos;
     }
 
+    /**
+     * @see javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable()
+     */
     public boolean isFullTextSearchable() {
-        return true; // TODO: JCR-2091
+        return ((QPropertyDefinition) itemDef).isFullTextSearcheable();
     }
 
+    /**
+     * @see javax.jcr.nodetype.PropertyDefinition#isQueryOrderable()
+     */
     public boolean isQueryOrderable() {
-        return true; // TODO: JCR-2091
+        return ((QPropertyDefinition) itemDef).isQueryOrderable();
     }
 
 }
