@@ -56,6 +56,16 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     private final boolean isMixin;
 
     /**
+     * Indicates whether this is an abstract node type definition.
+     */
+    private final boolean isAbstract;
+
+    /**
+     * Indicates whether this is a queryable node type definition.
+     */
+    private final boolean isQueryable;
+
+    /**
      * Indicates whether this node type definition has orderable child nodes.
      */
     private final boolean hasOrderableChildNodes;
@@ -87,7 +97,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * @param nt the qualified node type definition.
      */
     public QNodeTypeDefinitionImpl(QNodeTypeDefinition nt) {
-        this(nt.getName(), nt.getSupertypes(), nt.isMixin(),
+        this(nt.getName(), nt.getSupertypes(), nt.getSupportedMixinTypes(),
+                nt.isMixin(), nt.isAbstract(), nt.isQueryable(),
                 nt.hasOrderableChildNodes(), nt.getPrimaryItemName(),
                 nt.getPropertyDefs(), nt.getChildNodeDefs());
     }
@@ -113,18 +124,16 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                                    Name primaryItemName,
                                    QPropertyDefinition[] declaredPropDefs,
                                    QNodeDefinition[] declaredNodeDefs) {
-        this.name = name;
-        this.supertypes = supertypes;
-        this.supportedMixins = null;
-        this.isMixin = isMixin;
-        this.hasOrderableChildNodes = hasOrderableChildNodes;
-        this.primaryItemName = primaryItemName;
-        this.propertyDefs = getSerializablePropertyDefs(declaredPropDefs);
-        this.childNodeDefs = getSerializableNodeDefs(declaredNodeDefs);
+        this(name, supertypes, null, isMixin, false, false,
+                hasOrderableChildNodes, primaryItemName,
+                getSerializablePropertyDefs(declaredPropDefs),
+                getSerializableNodeDefs(declaredNodeDefs));
     }
 
     /**
-     * Creates a new serializable qualified node type definition.
+     * Creates a new serializable qualified node type definition. Same as
+     * {@link #QNodeTypeDefinitionImpl(Name, Name[], Name[], boolean, boolean, boolean, boolean, Name, QPropertyDefinition[], QNodeDefinition[])}
+     * but using <code>false</code> for both {@link #isAbstract()} and {@link #isQueryable)}.
      *
      * @param name                   the name of the node type
      * @param supertypes             the names of the supertypes
@@ -136,6 +145,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      *                               <code>null</code>.
      * @param declaredPropDefs       the declared property definitions.
      * @param declaredNodeDefs       the declared child node definitions.
+     *
      */
     public QNodeTypeDefinitionImpl(Name name,
                                    Name[] supertypes,
@@ -145,10 +155,44 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
                                    Name primaryItemName,
                                    QPropertyDefinition[] declaredPropDefs,
                                    QNodeDefinition[] declaredNodeDefs) {
+        this(name, supertypes, supportedMixins, isMixin, false, false,
+                hasOrderableChildNodes, primaryItemName,
+                getSerializablePropertyDefs(declaredPropDefs),
+                getSerializableNodeDefs(declaredNodeDefs));
+    }
+
+    /**
+     * Creates a new serializable qualified node type definition.
+     *
+     * @param name                   the name of the node type
+     * @param supertypes             the names of the supertypes
+     * @param supportedMixins        the names of supported mixins (or <code>null</code>)
+     * @param isMixin                if this is a mixin node type
+     * @param isAbstract             if this is an abstract node type definition.
+     * @param isQueryable            if this is a queryable node type definition.
+     * @param hasOrderableChildNodes if this node type has orderable child
+     *                               nodes.
+     * @param primaryItemName        the name of the primary item, or
+     *                               <code>null</code>.
+     * @param declaredPropDefs       the declared property definitions.
+     * @param declaredNodeDefs       the declared child node definitions.
+     */
+    public QNodeTypeDefinitionImpl(Name name,
+                                   Name[] supertypes,
+                                   Name[] supportedMixins,
+                                   boolean isMixin,
+                                   boolean isAbstract,
+                                   boolean isQueryable,
+                                   boolean hasOrderableChildNodes,
+                                   Name primaryItemName,
+                                   QPropertyDefinition[] declaredPropDefs,
+                                   QNodeDefinition[] declaredNodeDefs) {
         this.name = name;
         this.supertypes = supertypes;
         this.supportedMixins = supportedMixins;
         this.isMixin = isMixin;
+        this.isAbstract = isAbstract;
+        this.isQueryable = isQueryable;
         this.hasOrderableChildNodes = hasOrderableChildNodes;
         this.primaryItemName = primaryItemName;
         this.propertyDefs = getSerializablePropertyDefs(declaredPropDefs);
@@ -176,6 +220,20 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      */
     public boolean isMixin() {
         return isMixin;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isAbstract() {
+        return isAbstract;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isQueryable() {
+        return isQueryable;
     }
 
     /**

@@ -104,6 +104,28 @@ public interface EffectiveNodeType {
     /**
      * @param name
      * @throws ConstraintViolationException
+     * @deprecated Use {@link #hasRemoveNodeConstraint(Name)} and
+     * {@link #hasRemovePropertyConstraint(Name)} respectively.
      */
     public void checkRemoveItemConstraints(Name name) throws ConstraintViolationException;
+
+    /**
+     * Returns <code>true</code> if a single node definition matching the
+     * specified <code>nodeName</code> is either mandatory or protected.
+     *
+     * @param nodeName
+     * @return <code>true</code> if a single node definition matching the
+     * specified <code>nodeName</code> is either mandatory or protected.
+     */
+    public boolean hasRemoveNodeConstraint(Name nodeName);
+
+    /**
+     * Returns <code>true</code> if a single property definition matching the
+     * specified <code>propertyName</code> is either mandatory or protected.
+     *
+     * @param propertyName
+     * @return <code>true</code> if a single property definition matching the
+     * specified <code>propertyName</code> is either mandatory or protected.
+     */
+    public boolean hasRemovePropertyConstraint(Name propertyName);
 }

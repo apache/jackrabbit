@@ -66,6 +66,22 @@ public interface QNodeTypeDefinition {
     public boolean isMixin();
 
     /**
+     * Returns <code>true</code> if the definition is abstract; <code>false</code> otherwise.
+     *
+     * @return <code>true</code> if the definition is abstract; <code>false</code> otherwise.
+     * @since JCR 2.0
+     */
+    public boolean isAbstract();
+
+    /**
+     * Returns <code>true</code> if the definition is queryable; <code>false</code> otherwise.
+     *
+     * @return <code>true</code> if the definition is queryable; <code>false</code> otherwise.
+     * @since JCR 2.0
+     */
+    public boolean isQueryable();
+
+    /**
      * Returns the value of the orderableChildNodes flag.
      *
      * @return true if nodes of this node type can have orderable child nodes; false otherwise.

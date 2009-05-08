@@ -21,6 +21,8 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <code>QPropertyDefinitionImpl</code> implements a qualified property
@@ -234,9 +236,12 @@ public class QPropertyDefinitionImpl
             QPropertyDefinition other = (QPropertyDefinition) obj;
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
+                    && multiple == other.isMultiple()
+                    && fullTextSearcheable == other.isFullTextSearcheable()
+                    && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
-                    && multiple == other.isMultiple();
+                    && Arrays.equals(availableQueryOperators, other.getAvailableQueryOperators());
         }
         return false;
     }
@@ -259,9 +264,20 @@ public class QPropertyDefinitionImpl
                 sb.append(getName().toString());
             }
             sb.append('/');
-            sb.append(getRequiredType());
+            sb.append(requiredType);
             sb.append('/');
-            sb.append(isMultiple() ? 1 : 0);
+            sb.append(multiple ? 1 : 0);
+            sb.append('/');
+            sb.append(fullTextSearcheable ? 1 : 0);
+            sb.append('/');
+            sb.append(queryOrderable ? 1 : 0);
+            sb.append('/');
+            Set<Name> s = new HashSet<Name>();
+            Name[] names = getAvailableQueryOperators();
+            for (int i = 0; i < names.length; i++) {
+                s.add(names[i]);
+            }
+            sb.append(s.toString());
 
             hashCode = sb.toString().hashCode();
         }
