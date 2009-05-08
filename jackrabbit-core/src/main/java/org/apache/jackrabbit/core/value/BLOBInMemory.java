@@ -171,7 +171,7 @@ public class BLOBInMemory extends BLOBFileValue {
      * {@inheritDoc}
      */
     public String toString() {
-        StringBuffer buff = new StringBuffer(PREFIX.length() + 2 * data.length);
+        StringBuilder buff = new StringBuilder(PREFIX.length() + 2 * data.length);
         buff.append(PREFIX);
         char[] hex = Constants.hexDigits;
         for (int i = 0; i < data.length; i++) {
