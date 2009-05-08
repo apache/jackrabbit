@@ -546,13 +546,12 @@ public class ItemStateValidator {
      */
     private void checkCollision(NodeState parentState, Name propertyName) throws ItemExistsException, RepositoryException {
         NodeEntry parentEntry = (NodeEntry) parentState.getHierarchyEntry();
-        // check for name collisions with existing child nodes
-        if (parentEntry.hasNodeEntry(propertyName)) {
-            String msg = "Child node with name '" + propertyName + "' already exists.";
-            log.debug(msg);
-            throw new RepositoryException(msg);
-        }
-        // check for name collisions with existing properties
+         // NOTE: check for name collisions with existing child node has been
+         // removed as with JSR 283 having same-named node and property can be
+         // allowed. thus delegate the correspoding validation to the underlying
+         // SPI implementation.
+
+        // check for name collisions with an existing property
         PropertyEntry pe = parentEntry.getPropertyEntry(propertyName);
         if (pe != null) {
             try {
@@ -575,13 +574,13 @@ public class ItemStateValidator {
      * @throws NoSuchNodeTypeException
      */
     private void checkCollision(NodeState parentState, Name nodeName, Name nodeTypeName) throws RepositoryException, ConstraintViolationException, NoSuchNodeTypeException {
-        if (parentState.hasPropertyName(nodeName)) {
-            // there's already a property with that name
-            throw new ItemExistsException("cannot add child node '"
-                + nodeName.getLocalName() + "' to " + safeGetJCRPath(parentState)
-                + ": colliding with same-named existing property");
+         // NOTE: check for name collisions with existing child property has been
+         // removed as with JSR 283 having same-named node and property may be
+         // allowed. thus delegate the correspoding validation to the underlying
+         // SPI implementation.
 
-        } else if (parentState.hasChildNodeEntry(nodeName, Path.INDEX_DEFAULT)) {
+         // check for conflict with existing same-name sibling node.
+         if (parentState.hasChildNodeEntry(nodeName, Path.INDEX_DEFAULT)) {
             // retrieve the existing node state that ev. conflicts with the new one.
             try {
                 NodeState conflictingState = parentState.getChildNodeState(nodeName, Path.INDEX_DEFAULT);
@@ -591,9 +590,9 @@ public class ItemStateValidator {
                 // check same-name sibling setting of both target and existing node
                 if (!(conflictDef.allowsSameNameSiblings() && newDef.allowsSameNameSiblings())) {
                     throw new ItemExistsException("Cannot add child node '"
-                        + nodeName.getLocalName() + "' to "
-                        + safeGetJCRPath(parentState)
-                        + ": colliding with same-named existing node.");
+                            + nodeName.getLocalName() + "' to "
+                            + safeGetJCRPath(parentState)
+                            + ": colliding with same-named existing node.");
                 }
             } catch (ItemNotFoundException e) {
                 // ignore: conflicting doesn't exist any more

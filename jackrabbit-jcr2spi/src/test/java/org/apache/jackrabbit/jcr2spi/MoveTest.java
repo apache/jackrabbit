@@ -27,6 +27,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Item;
 import javax.jcr.Property;
 import javax.jcr.ItemExistsException;
+import javax.jcr.Repository;
 
 /**
  * <code>MoveTest</code>...
@@ -232,10 +233,11 @@ public class MoveTest extends AbstractMoveTest {
     /**
      * Tries to move a node using <code>{@link javax.jcr.Session#move(String src, String dest)}
      * </code> to a location where a property already exists with same name.
-     * <br/> <br/>
-     * This should throw an <code>{@link javax.jcr.ItemExistsException}</code>.
+     * <br/>
+     * With JCR 1.0 this should throw an <code>{@link javax.jcr.ItemExistsException}</code>.
+     * With JCR 2.0 this must succeed.
      */
-    public void testMovePropertyExistsException() throws RepositoryException, NotExecutableException {
+    public void testMovePropertyExists() throws RepositoryException, NotExecutableException {
         // try to create a property with the name of the node to be moved
         // to the destination parent
         Property destProperty;
@@ -245,12 +247,18 @@ public class MoveTest extends AbstractMoveTest {
             throw new NotExecutableException("Cannot create property with name '" +nodeName2+ "' and value 'anyString' at move destination.");
         }
 
-        try {
-            // move the node
+        if ("1.0".equals(helper.getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
+            try {
+                // move the node
+                doMove(moveNode.getPath(), destProperty.getPath());
+                fail("Moving a node to a location where a property exists must throw ItemExistsException");
+            } catch (ItemExistsException e) {
+                // ok, works as expected
+            }
+        } else {
+            // move the node: same name property and node must be supported
+            // see Issue 725 
             doMove(moveNode.getPath(), destProperty.getPath());
-            fail("Moving a node to a location where a property exists must throw ItemExistsException");
-        } catch (ItemExistsException e) {
-            // ok, works as expected
         }
     }
 }
