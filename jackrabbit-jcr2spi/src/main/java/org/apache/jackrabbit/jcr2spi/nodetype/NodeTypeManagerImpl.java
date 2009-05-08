@@ -349,7 +349,14 @@ public class NodeTypeManagerImpl implements NodeTypeManager, NodeTypeRegistryLis
      * @see NodeTypeManager#hasNodeType(String)
      */
     public boolean hasNodeType(String name) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
+        try {
+            Name qName = resolver().getQName(name);
+            return hasNodeType(qName);
+        } catch (NamespaceException e) {
+            return false;
+        } catch (NameException e) {
+            return false;
+        }
     }
     
     /**
