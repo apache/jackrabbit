@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
  * <code>NodeStateIterator</code> extends the Iterator interface by the
  * respective NodeState methods.
  */
-public interface NodeStateIterator extends Iterator {
+public interface NodeStateIterator extends Iterator<NodeState> {
 
     /**
      * Returns the next node state of the iterator.

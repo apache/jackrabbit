@@ -39,7 +39,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.PropertyType;
@@ -105,7 +104,7 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setNodeDefId(NodeDefId.valueOf(in.readUTF()));
 
         // mixin types
-        Set mixinTypeNames = new HashSet();
+        Set<Name> mixinTypeNames = new HashSet<Name>();
         Name name = readIndexedQName(in);
         while (name != null) {
             mixinTypeNames.add(name);
@@ -146,7 +145,7 @@ public class BundleBinding extends ItemStateBinding {
         }
 
         // read shared set, since version 2.0
-        Set sharedSet = new HashSet();
+        Set<NodeId> sharedSet = new HashSet<NodeId>();
         if (version >= VERSION_2) {
             // shared set (list of parent uuids)
             NodeId parentId = readID(in);
@@ -278,16 +277,13 @@ public class BundleBinding extends ItemStateBinding {
         out.writeUTF(bundle.getNodeDefId().toString());
 
         // mixin types
-        Iterator iter = bundle.getMixinTypeNames().iterator();
-        while (iter.hasNext()) {
-            writeIndexedQName(out, (Name) iter.next());
+        for (Name name : bundle.getMixinTypeNames()) {
+            writeIndexedQName(out, name);
         }
         writeIndexedQName(out, null);
 
         // properties
-        iter = bundle.getPropertyNames().iterator();
-        while (iter.hasNext()) {
-            Name pName = (Name) iter.next();
+        for (Name pName : bundle.getPropertyNames()) {
             // skip redundant primaryType, mixinTypes and uuid properties
             if (pName.equals(NameConstants.JCR_PRIMARYTYPE)
                 || pName.equals(NameConstants.JCR_MIXINTYPES)
@@ -308,9 +304,7 @@ public class BundleBinding extends ItemStateBinding {
         out.writeBoolean(bundle.isReferenceable());
 
         // child nodes (list of uuid/name pairs)
-        iter = bundle.getChildNodeEntries().iterator();
-        while (iter.hasNext()) {
-            NodePropBundle.ChildNodeEntry entry = (NodePropBundle.ChildNodeEntry) iter.next();
+        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
             writeID(out, entry.getId());  // uuid
             writeQName(out, entry.getName());   // name
         }
@@ -320,9 +314,8 @@ public class BundleBinding extends ItemStateBinding {
         writeModCount(out, bundle.getModCount());
 
         // write shared set
-        iter = bundle.getSharedSet().iterator();
-        while (iter.hasNext()) {
-            writeID(out, (NodeId) iter.next());
+        for (NodeId nodeId: bundle.getSharedSet()) {
+            writeID(out, nodeId);
         }
         writeID(out, null);
 

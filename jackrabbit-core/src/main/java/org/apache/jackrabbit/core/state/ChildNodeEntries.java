@@ -40,7 +40,7 @@ import java.util.Map;
  * <code>ChildNodeEntries</code> also provides an unmodifiable
  * <code>List</code> view.
  */
-class ChildNodeEntries implements List, Cloneable {
+class ChildNodeEntries implements List<ChildNodeEntry>, Cloneable {
 
     /**
      * Insertion-ordered map of entries
@@ -68,17 +68,17 @@ class ChildNodeEntries implements List, Cloneable {
         return (ChildNodeEntry) entries.get(id);
     }
 
-    List get(Name nodeName) {
+    List<ChildNodeEntry> get(Name nodeName) {
         Object obj = nameMap.get(nodeName);
         if (obj == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         if (obj instanceof ArrayList) {
             // map entry is a list of siblings
-            return Collections.unmodifiableList((ArrayList) obj);
+            return Collections.unmodifiableList((ArrayList<ChildNodeEntry>) obj);
         } else {
             // map entry is a single child node entry
-            return Collections.singletonList(obj);
+            return Collections.singletonList((ChildNodeEntry) obj);
         }
     }
 
@@ -254,9 +254,9 @@ class ChildNodeEntries implements List, Cloneable {
      * @return a new list of those entries that do only exist in
      *         <code>this</code> but not in <code>other</code>
      */
-    List removeAll(ChildNodeEntries other) {
+    List<ChildNodeEntry> removeAll(ChildNodeEntries other) {
         if (entries.isEmpty()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         if (other.isEmpty()) {
             return this;
@@ -292,10 +292,10 @@ class ChildNodeEntries implements List, Cloneable {
      * @return a new list of those entries that do exist in
      *         <code>this</code> <i>and</i> in <code>other</code>
      */
-    List retainAll(ChildNodeEntries other) {
+    List<ChildNodeEntry> retainAll(ChildNodeEntries other) {
         if (entries.isEmpty()
                 || other.isEmpty()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         List result = new ArrayList();
@@ -333,8 +333,8 @@ class ChildNodeEntries implements List, Cloneable {
         return true;
     }
 
-    public Object get(int index) {
-        return entries.getValue(index);
+    public ChildNodeEntry get(int index) {
+        return (ChildNodeEntry) entries.getValue(index);
     }
 
     public int indexOf(Object o) {
@@ -354,7 +354,7 @@ class ChildNodeEntries implements List, Cloneable {
         return indexOf(o);
     }
 
-    public Iterator iterator() {
+    public Iterator<ChildNodeEntry> iterator() {
         return new EntriesIterator();
     }
 
@@ -407,11 +407,11 @@ class ChildNodeEntries implements List, Cloneable {
         return a;
     }
 
-    public void add(int index, Object element) {
+    public void add(int index, ChildNodeEntry element) {
         throw new UnsupportedOperationException();
     }
 
-    public boolean add(Object o) {
+    public boolean add(ChildNodeEntry o) {
         throw new UnsupportedOperationException();
     }
 
@@ -427,7 +427,7 @@ class ChildNodeEntries implements List, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public Object remove(int index) {
+    public ChildNodeEntry remove(int index) {
         throw new UnsupportedOperationException();
     }
 
@@ -443,7 +443,7 @@ class ChildNodeEntries implements List, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    public Object set(int index, Object element) {
+    public ChildNodeEntry set(int index, ChildNodeEntry element) {
         throw new UnsupportedOperationException();
     }
 

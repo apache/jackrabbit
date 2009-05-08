@@ -48,7 +48,7 @@ public class NodeReferences implements Serializable {
      * REFERENCE property can contain multiple references (if it's multi-valued)
      * to potentially the same target node.
      */
-    protected ArrayList references = new ArrayList();
+    protected ArrayList<PropertyId> references = new ArrayList<PropertyId>();
 
     /**
      * Package private constructor
@@ -90,7 +90,7 @@ public class NodeReferences implements Serializable {
     /**
      * @return the list of references
      */
-    public List getReferences() {
+    public List<PropertyId> getReferences() {
         return Collections.unmodifiableList(references);
     }
 
@@ -104,7 +104,7 @@ public class NodeReferences implements Serializable {
     /**
      * @param references
      */
-    public void addAllReferences(List references) {
+    public void addAllReferences(List<PropertyId> references) {
         this.references.addAll(references);
     }
 
