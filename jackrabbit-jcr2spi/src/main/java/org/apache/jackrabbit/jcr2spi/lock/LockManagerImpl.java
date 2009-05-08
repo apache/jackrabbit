@@ -412,7 +412,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         // store in the lock map. see below (LockImpl) for the conditions that
         // must be met in order a lock can be stored.
         LockImpl l = getLockFromMap(nState);
-        if (l != null) {
+        if (l != null && l.lockState.appliesToNodeState(nodeState)) {
             return l;
         }
 
