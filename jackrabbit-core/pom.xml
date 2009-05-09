@@ -91,7 +91,6 @@
                 org.apache.jackrabbit.test.api.ShareableNodeTest#testSharedNodePath
                 org.apache.jackrabbit.test.api.version.VersionHistoryTest#testInitialNumberOfLinearVersions
                 org.apache.jackrabbit.test.api.version.VersionHistoryTest#testInitiallyGetAllLinearVersionsContainsTheRootAndTheBaseVersion
-                org.apache.jackrabbit.test.api.nodetype.NodeTypeTest#testGetDeclaredSubtypes
               </value>
             </property>
           </systemProperties>
