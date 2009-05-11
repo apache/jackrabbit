@@ -39,12 +39,12 @@ public class LRUNodeIdCache {
     /**
      * the number of cache hits
      */
-    private long hits = 0;
+    private long hits;
 
     /**
      * the number of cache misses
      */
-    private long misses = 0;
+    private long misses;
 
     /**
      * the map of cached ids

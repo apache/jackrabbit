@@ -34,7 +34,7 @@ public class BundleCache {
     /**
      * the current memory usage of this cache
      */
-    private long curSize = 0;
+    private long curSize;
 
     /**
      * the maximum chache size
@@ -44,12 +44,12 @@ public class BundleCache {
     /**
      * the number of cache hits
      */
-    private long hits = 0;
+    private long hits;
 
     /**
      * the number of cache misses
      */
-    private long misses = 0;
+    private long misses;
 
     /**
      * a map of the cache entries

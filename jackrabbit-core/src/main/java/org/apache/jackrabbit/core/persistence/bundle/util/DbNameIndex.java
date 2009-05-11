@@ -48,8 +48,8 @@ public class DbNameIndex implements StringIndex {
     protected String nameInsertSQL;
 
     // caches
-    private final HashMap string2Index = new HashMap();
-    private final HashMap index2String = new HashMap();
+    private final HashMap<String, Integer> string2Index = new HashMap<String, Integer>();
+    private final HashMap<Integer, String> index2String = new HashMap<Integer, String>();
 
     /**
      * Creates a new index that is stored in a db.
@@ -90,14 +90,14 @@ public class DbNameIndex implements StringIndex {
      */
     public int stringToIndex(String string) {
         // check cache
-        Integer index = (Integer) string2Index.get(string);
+        Integer index = string2Index.get(string);
         if (index == null) {
             String dbString = string.length() == 0 ? " " : string;
             int idx = getIndex(dbString);
             if (idx == -1) {
                 idx = insertString(dbString);
             }
-            index = new Integer(idx);
+            index = Integer.valueOf(idx);
             string2Index.put(string, index);
             index2String.put(index, string);
             return idx;
@@ -111,8 +111,8 @@ public class DbNameIndex implements StringIndex {
      */
     public String indexToString(int idx) throws IllegalArgumentException {
         // check cache
-        Integer index = new Integer(idx);
-        String s = (String) index2String.get(index);
+        Integer index = Integer.valueOf(idx);
+        String s = index2String.get(index);
         if (s == null) {
             s = getString(idx);
             if (s.equals(" ")) {
@@ -196,7 +196,7 @@ public class DbNameIndex implements StringIndex {
         String result = null;
         try {
             Statement stmt = connectionManager.executeStmt(
-                    nameSelectSQL, new Object[] { new Integer(index) });
+                    nameSelectSQL, new Object[] { Integer.valueOf(index) });
             ResultSet rs = stmt.getResultSet();
             try {
                 if (rs.next()) {
