@@ -2638,16 +2638,6 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
-    public NodeIterator getNodes(String[] nameGlobs)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-2060");
-    }
-
-    public PropertyIterator getProperty(String[] nameGlobs)
-            throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-2060");
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -4596,14 +4586,54 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
+    /**
+     * @see javax.jcr.Node#getWeakReferences()
+     * @since JCR 2.0
+     */
     public PropertyIterator getWeakReferences() throws RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-2061");
     }
 
+    /**
+     * @see javax.jcr.Node#getWeakReferences(String)
+     * @since JCR 2.0
+     */
     public PropertyIterator getWeakReferences(String name) throws RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-2061");
+    }
+
+    /**
+     * @see javax.jcr.Node#getNodes(String[])
+     * @since JCR 2.0
+     */
+    public NodeIterator getNodes(String[] nameGlobs)
+            throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        ArrayList nodes = new ArrayList();
+        // traverse children using a special filtering 'collector'
+        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
+    }
+
+    /**
+     * @see javax.jcr.Node#getProperties(String[])
+     * @since JCR 2.0
+     */
+    // TODO rename method to 'getProperties' once JCR 2.0 api has been fixed
+    public PropertyIterator getProperty(String[]
+            nameGlobs)
+            throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        ArrayList props = new ArrayList();
+        // traverse children using a special filtering 'collector'
+        accept(new ChildrenCollectorFilter(nameGlobs, props, true, false, 1));
+        return new PropertyIteratorAdapter(props);
     }
 
     /**
