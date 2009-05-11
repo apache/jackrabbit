@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.NodeIdIterator;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -95,12 +96,23 @@ public class GarbageCollector {
      *
      * @param list the persistence managers
      */
-    public GarbageCollector(SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
+    public GarbageCollector(final SessionImpl session, IterablePersistenceManager[] list, final Session[] sessionList) {
         RepositoryImpl rep = (RepositoryImpl) session.getRepository();
         store = rep.getDataStore();
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
+        
+        // log out each session as soon as the main session logs out
+        session.addListener(new SessionListener() {
+            public void loggedOut(SessionImpl session) {
+                for (Session s: sessionList) {
+                    s.logout();
+                }
+            }
+            public void loggingOut(SessionImpl session) {
+            }
+        });
     }
 
     /**
