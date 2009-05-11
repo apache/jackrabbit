@@ -28,6 +28,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
@@ -476,7 +477,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 state.setMultiValued(false);
                 state.setValues(new InternalValue[]{InternalValue.create(bundle.getNodeTypeName())});
             } else if (id.getName().equals(NameConstants.JCR_MIXINTYPES)) {
-                Set mixins = bundle.getMixinTypeNames();
+                Set<Name> mixins = bundle.getMixinTypeNames();
                 state = createNew(id);
                 state.setType(PropertyType.NAME);
                 state.setDefinitionId(idJcrMixinTypes);
@@ -556,10 +557,10 @@ public abstract class AbstractBundlePersistenceManager implements
     private void storeInternal(ChangeLog changeLog)
             throws ItemStateException {
         // delete bundles
-        HashSet deleted = new HashSet();
-        Iterator iter = changeLog.deletedStates();
+        HashSet<ItemId> deleted = new HashSet<ItemId>();
+        Iterator<ItemState> iter = changeLog.deletedStates();
         while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+            ItemState state = iter.next();
             if (state.isNode()) {
                 NodePropBundle bundle = getBundle((NodeId) state.getId());
                 if (bundle == null) {
@@ -570,7 +571,7 @@ public abstract class AbstractBundlePersistenceManager implements
             }
         }
         // gather added node states
-        HashMap modified = new HashMap();
+        HashMap<ItemId, NodePropBundle> modified = new HashMap<ItemId, NodePropBundle>();
         iter = changeLog.addedStates();
         while (iter.hasNext()) {
             ItemState state = (ItemState) iter.next();
@@ -670,16 +671,14 @@ public abstract class AbstractBundlePersistenceManager implements
         }
 
         // now store all modified bundles
-        iter = modified.values().iterator();
-        while (iter.hasNext()) {
-            NodePropBundle bundle = (NodePropBundle) iter.next();
+        for (NodePropBundle bundle : modified.values()) {
             putBundle(bundle);
         }
 
         // store the refs
-        iter = changeLog.modifiedRefs();
-        while (iter.hasNext()) {
-            NodeReferences refs = (NodeReferences) iter.next();
+        Iterator<NodeReferences> itMod = changeLog.modifiedRefs();
+        while (itMod.hasNext()) {
+            NodeReferences refs = itMod.next();
             if (refs.hasReferences()) {
                 store(refs);
             } else {

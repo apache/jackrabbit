@@ -169,10 +169,10 @@ public class ItemStateBinding {
     public void writeState(DataOutputStream out, NodeReferences state)
             throws IOException {
         // references
-        Collection c = state.getReferences();
+        Collection<PropertyId> c = state.getReferences();
         out.writeInt(c.size() | (VERSION_CURRENT << 24)); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            PropertyId propId = (PropertyId) iter.next();
+        for (Iterator<PropertyId> iter = c.iterator(); iter.hasNext();) {
+            PropertyId propId = iter.next();
             writePropertyId(out, propId);
         }
     }
@@ -204,7 +204,7 @@ public class ItemStateBinding {
 
         // mixin types
         int count = in.readInt();   // count
-        Set set = new HashSet(count);
+        Set<Name> set = new HashSet<Name>(count);
         for (int i = 0; i < count; i++) {
             set.add(readQName(in)); // name
         }
@@ -254,33 +254,33 @@ public class ItemStateBinding {
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
         // mixin types
-        Collection c = state.getMixinTypeNames();
+        Collection<Name> c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            writeQName(out, (Name) iter.next());
+        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
+            writeQName(out, iter.next());
         }
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            Name pName = (Name) iter.next();
+        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
+            Name pName = iter.next();
             writeIndexedQName(out, pName);
         }
         // child nodes (list of name/uuid pairs)
-        c = state.getChildNodeEntries();
-        out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+        Collection<ChildNodeEntry> collChild = state.getChildNodeEntries();
+        out.writeInt(collChild.size()); // count
+        for (Iterator<ChildNodeEntry> iter = collChild.iterator(); iter.hasNext();) {
+            ChildNodeEntry entry = iter.next();
             writeQName(out, entry.getName());   // name
             writeID(out, entry.getId());  // uuid
         }
         writeModCount(out, state.getModCount());
         
         // shared set (list of parent uuids)
-        c = state.getSharedSet();
-        out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            writeID(out, (NodeId) iter.next());
+        Collection<NodeId> collShared = state.getSharedSet();
+        out.writeInt(collShared.size()); // count
+        for (Iterator<NodeId> iter = collShared.iterator(); iter.hasNext();) {
+            writeID(out, iter.next());
         }
     }
 

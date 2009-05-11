@@ -26,13 +26,10 @@ import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PathNotFoundException;
 import javax.security.auth.Subject;
@@ -56,7 +53,7 @@ class SystemSession extends SessionImpl {
     static SystemSession create(RepositoryImpl rep, WorkspaceConfig wspConfig)
             throws RepositoryException {
         // create subject with SystemPrincipal
-        Set principals = new HashSet();
+        Set<SystemPrincipal> principals = new HashSet<SystemPrincipal>();
         principals.add(new SystemPrincipal());
         Subject subject =
                 new Subject(true, principals, Collections.EMPTY_SET,
@@ -106,6 +103,9 @@ class SystemSession extends SessionImpl {
     }
 
     //--------------------------------------------------------< inner classes >
+    /**
+     * An access manager that grants access to everything.
+     */
     private class SystemAccessManager extends AbstractAccessControlManager implements AccessManager {
 
         private final PrivilegeRegistry privilegeRegistry;

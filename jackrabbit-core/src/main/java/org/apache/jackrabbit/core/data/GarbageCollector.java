@@ -32,7 +32,6 @@ import org.apache.jackrabbit.spi.Name;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -209,10 +208,8 @@ public class GarbageCollector {
                 }
                 try {
                     NodeState state = pm.load(id);
-                    Set propertyNames = state.getPropertyNames();
-                    for (Iterator nameIt = propertyNames.iterator(); nameIt
-                            .hasNext();) {
-                        Name name = (Name) nameIt.next();
+                    Set<Name> propertyNames = state.getPropertyNames();
+                    for (Name name : propertyNames) {
                         PropertyId pid = new PropertyId(id, name);
                         PropertyState ps = pm.load(pid);
                         if (ps.getType() == PropertyType.BINARY) {

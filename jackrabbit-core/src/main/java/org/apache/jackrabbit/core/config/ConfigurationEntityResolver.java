@@ -60,12 +60,12 @@ class ConfigurationEntityResolver implements EntityResolver {
     /**
      * Public identifiers.
      */
-    private final Map publicIds = new HashMap();
+    private final Map<String, String> publicIds = new HashMap<String, String>();
 
     /**
      * System identifiers.
      */
-    private final Map systemIds = new HashMap();
+    private final Map<String, String> systemIds = new HashMap<String, String>();
 
     /**
      * Creates the singleton instance of this class.
@@ -125,7 +125,7 @@ class ConfigurationEntityResolver implements EntityResolver {
             throws SAXException, IOException {
         String name;
 
-        name = (String) publicIds.get(publicId);
+        name = publicIds.get(publicId);
         if (name != null) {
             InputStream stream = getClass().getResourceAsStream(name);
             if (stream != null) {
@@ -133,7 +133,7 @@ class ConfigurationEntityResolver implements EntityResolver {
             }
         }
 
-        name = (String) systemIds.get(systemId);
+        name = systemIds.get(systemId);
         if (name != null) {
             InputStream stream = getClass().getResourceAsStream(name);
             if (stream != null) {

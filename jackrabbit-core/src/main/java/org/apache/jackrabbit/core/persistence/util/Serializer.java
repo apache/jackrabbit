@@ -86,9 +86,9 @@ public final class Serializer {
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
         // mixin types
-        Collection c = state.getMixinTypeNames();
+        Collection<Name> c = state.getMixinTypeNames();
         out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
+        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
             out.writeUTF(iter.next().toString());   // name
         }
         // modCount
@@ -96,14 +96,14 @@ public final class Serializer {
         // properties (names)
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
+        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
             Name propName = (Name) iter.next();
             out.writeUTF(propName.toString());   // name
         }
         // child nodes (list of name/uuid pairs)
-        c = state.getChildNodeEntries();
-        out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
+        Collection<ChildNodeEntry> collChildren = state.getChildNodeEntries();
+        out.writeInt(collChildren.size()); // count
+        for (Iterator<ChildNodeEntry> iter = collChildren.iterator(); iter.hasNext();) {
             ChildNodeEntry entry = (ChildNodeEntry) iter.next();
             out.writeUTF(entry.getName().toString());   // name
             out.write(entry.getId().getUUID().getRawBytes());    // uuid
@@ -137,9 +137,9 @@ public final class Serializer {
         state.setDefinitionId(NodeDefId.valueOf(s));
         // mixin types
         int count = in.readInt();   // count
-        Set set = new HashSet(count);
+        Set<Name> set = new HashSet<Name>(count);
         for (int i = 0; i < count; i++) {
-            set.add(NameFactoryImpl.getInstance().create(in.readUTF())); // name
+            set.add(NameFactoryImpl.getInstance().create(in.readUTF()));
         }
         if (set.size() > 0) {
             state.setMixinTypeNames(set);
@@ -327,10 +327,10 @@ public final class Serializer {
         DataOutputStream out = new DataOutputStream(stream);
 
         // references
-        Collection c = refs.getReferences();
+        Collection<PropertyId> c = refs.getReferences();
         out.writeInt(c.size()); // count
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            PropertyId propId = (PropertyId) iter.next();
+        for (Iterator<PropertyId> iter = c.iterator(); iter.hasNext();) {
+            PropertyId propId = iter.next();
             out.writeUTF(propId.toString());   // propertyId
         }
     }

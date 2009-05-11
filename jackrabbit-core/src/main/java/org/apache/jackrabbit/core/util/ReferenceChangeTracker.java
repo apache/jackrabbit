@@ -32,11 +32,11 @@ public class ReferenceChangeTracker {
     /**
      * mapping <original uuid> to <new uuid> of mix:referenceable nodes
      */
-    private final HashMap uuidMap = new HashMap();
+    private final HashMap<UUID, UUID> uuidMap = new HashMap<UUID, UUID>();
     /**
      * list of processed reference properties that might need correcting
      */
-    private final ArrayList references = new ArrayList();
+    private final ArrayList<Object> references = new ArrayList<Object>();
 
     /**
      * Creates a new instance.
@@ -82,7 +82,7 @@ public class ReferenceChangeTracker {
      * @see #mappedUUID(UUID, UUID)
      */
     public UUID getMappedUUID(UUID oldUUID) {
-        return (UUID) uuidMap.get(oldUUID);
+        return uuidMap.get(oldUUID);
     }
 
     /**
@@ -91,7 +91,7 @@ public class ReferenceChangeTracker {
      * @return an iterator over all processed reference properties
      * @see #processedReference(Object)
      */
-    public Iterator getProcessedReferences() {
+    public Iterator<Object> getProcessedReferences() {
         return references.iterator();
     }
 }

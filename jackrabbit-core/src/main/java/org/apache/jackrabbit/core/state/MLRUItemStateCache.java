@@ -47,10 +47,10 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
     private long maxMem;
 
     /** the number of writes */
-    private long numWrites = 0;
+    private long numWrites;
 
     /** the access count */
-    private long accessCount = 0;
+    private long accessCount;
 
     /** the cache access listeners */
     private CacheAccessListener accessListener;

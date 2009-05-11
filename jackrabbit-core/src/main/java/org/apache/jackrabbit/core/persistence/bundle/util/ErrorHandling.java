@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import java.util.HashSet;
-import java.util.Iterator;
 
 /**
  * ErrorHandling configuration abstraction class
@@ -36,7 +35,7 @@ public final class ErrorHandling {
     };
 
     /** the flags */
-    private final HashSet flags = new HashSet();
+    private final HashSet<String> flags = new HashSet<String>();
 
     /**
      * Creates a default error handling config.
@@ -73,9 +72,8 @@ public final class ErrorHandling {
      */
     public String toString() {
         StringBuffer ret = new StringBuffer("|");
-        Iterator iter = flags.iterator();
-        while (iter.hasNext()) {
-            ret.append(iter.next());
+        for (String flag : flags) {
+            ret.append(flag);
         }
         ret.append("|");
         return ret.toString();
