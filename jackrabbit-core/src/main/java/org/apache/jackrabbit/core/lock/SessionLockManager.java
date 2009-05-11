@@ -49,7 +49,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
 
     private final SessionImpl session;
     private final LockManager systemLockMgr;
-    private final Set lockTokens = new HashSet();
+    private final Set<String> lockTokens = new HashSet<String>();
 
     public SessionLockManager(SessionImpl session, LockManager systemLockMgr) throws RepositoryException {
         this.session = session;
