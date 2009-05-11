@@ -239,7 +239,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             return;
         }
 
-        final ArrayList list = new ArrayList();
+        final ArrayList<LockInfo> list = new ArrayList<LockInfo>();
 
         lockMap.traverse(new PathMap.ElementVisitor() {
             public void elementVisited(PathMap.Element element) {
@@ -414,7 +414,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * @return an array of <code>AbstractLockInfo</code>s
      */
     AbstractLockInfo[] getLockInfos(final SessionImpl session) {
-        final ArrayList infos = new ArrayList();
+        final ArrayList<LockInfo> infos = new ArrayList<LockInfo>();
         lockMap.traverse(new PathMap.ElementVisitor() {
             public void elementVisited(PathMap.Element element) {
                 LockInfo info = (LockInfo) element.get();
