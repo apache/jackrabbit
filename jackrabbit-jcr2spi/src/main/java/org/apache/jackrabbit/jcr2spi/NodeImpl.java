@@ -612,8 +612,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getWeakReferences()
      */
     public PropertyIterator getWeakReferences() throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        return getWeakReferences(null);
     }
 
     /**
