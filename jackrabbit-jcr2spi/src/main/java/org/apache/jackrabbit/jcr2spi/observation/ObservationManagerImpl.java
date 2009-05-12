@@ -167,12 +167,20 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         return new EventListenerIteratorAdapter(activeListeners.keySet());
     }
 
+    /**
+     * @see javax.jcr.observation.ObservationManager#getEventJournal()
+     */
     public EventJournal getEventJournal() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1849");
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
     }
 
+    /**
+     * @see javax.jcr.observation.ObservationManager#setUserData(String) 
+     */
     public void setUserData(String userData) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1904");
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
     }
 
     //-----------------------< InternalEventListener >--------------------------

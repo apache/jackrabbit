@@ -64,6 +64,7 @@ final class EventImpl implements Event {
         this.event = event;
     }
 
+    //--------------------------------------------------------------< Event >---
     /**
      * {@inheritDoc}
      */
@@ -85,6 +86,39 @@ final class EventImpl implements Event {
         return event.getUserID();
     }
 
+    /**
+     * @see javax.jcr.observation.Event#getIdentifier()
+     */
+    public String getIdentifier() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
+    }
+
+    /**
+     * @see javax.jcr.observation.Event#getInfo()
+     */
+    public Map getInfo() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
+    }
+
+    /**
+     * @see javax.jcr.observation.Event#getUserData()
+     */
+    public String getUserData() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
+    }
+
+    /**
+     * @see javax.jcr.observation.Event#getDate()
+     */
+    public long getDate() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
+    }
+
+    //-------------------------------------------------------------< Object >---
     /**
      * Returns a String representation of this <code>Event</code>.
      *
@@ -130,21 +164,4 @@ final class EventImpl implements Event {
             return "UnknownEventType";
         }
     }
-
-    public long getDate() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1839");
-    }
-
-    public String getIdentifier() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-2075");
-    }
-
-    public Map getInfo() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1904");
-    }
-
-    public String getUserData() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1904");
-    }
-
 }
