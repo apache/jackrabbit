@@ -90,11 +90,17 @@ public final class QValueValue implements Value {
         }
     }
 
+    /**
+     * @see javax.jcr.Value#getDecimal()
+     */
     public BigDecimal getDecimal() throws ValueFormatException, IllegalStateException, RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-1609");
     }
 
+    /**
+     * @see javax.jcr.Value#getBinary()
+     */
     public Binary getBinary() throws RepositoryException {
         // TODO
         throw new RuntimeException("Not implemented yet, see JCR-2056");
