@@ -346,18 +346,19 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see javax.jcr.Workspace#createWorkspace(String)
      */
     public void createWorkspace(String name) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
+        wspManager.createWorkspace(name, null);
     }
 
 
     /**
      * @see javax.jcr.Workspace#createWorkspace(String, String)
      */
-    public void createWorkspace(String name, String srcWorkspace)
-            throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    public void createWorkspace(String name, String srcWorkspace) throws RepositoryException {
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
+        wspManager.createWorkspace(name, srcWorkspace);
     }
 
 
@@ -365,8 +366,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see javax.jcr.Workspace#deleteWorkspace(String)
      */
     public void deleteWorkspace(String name) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
+        wspManager.deleteWorkspace(name);
     }
 
 

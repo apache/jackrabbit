@@ -657,6 +657,25 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getQNodeTypeDefinitions(SessionInfo, Name[])", new Object[]{unwrap(sessionInfo), nodetypeNames});
     }
 
+    public void createWorkspace(final SessionInfo sessionInfo, final String name, final String srcWorkspaceName) throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.createWorkspace(unwrap(sessionInfo), name, srcWorkspaceName);
+                return null;
+            }
+        }, "createWorkspace(SessionInfo, String, String)", new Object[]{unwrap(sessionInfo), name, srcWorkspaceName});
+    }
+
+    public void deleteWorkspace(final SessionInfo sessionInfo, final String name) throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.deleteWorkspace(unwrap(sessionInfo), name);
+                return null;
+            }
+        }, "deleteWorkspace(SessionInfo, String, String)", new Object[]{unwrap(sessionInfo), name});
+
+    }
+
     // -----------------------------------------------------< private  >---
 
     private static SessionInfo unwrap(SessionInfo sessionInfo) {

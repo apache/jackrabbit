@@ -1105,6 +1105,28 @@ public class RepositoryServiceImpl implements RepositoryService {
         return defs.iterator();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        Workspace wsp = sInfo.getSession().getWorkspace();
+        if (srcWorkspaceName == null) {
+            wsp.createWorkspace(name);
+        } else {
+            wsp.createWorkspace(name, srcWorkspaceName);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        Workspace wsp = sInfo.getSession().getWorkspace();
+        wsp.deleteWorkspace(name);
+    }
+
     //----------------------------< internal >----------------------------------
 
     private final class BatchImpl implements Batch {

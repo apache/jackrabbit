@@ -610,6 +610,7 @@ public interface RepositoryService {
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionManager#checkpoint(String)
+     * @since JCR 2.0
      */
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
@@ -700,25 +701,26 @@ public interface RepositoryService {
     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
-      * Merge the node identified by the given <code>NodeId</code> and its subtree
-      * with the corresponding node present in the workspace with the name of
-      * <code>srcWorkspaceName</code>.
-      *
-      * @param sessionInfo
-      * @param nodeId
-      * @param srcWorkspaceName
-      * @param bestEffort
-      * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
-      * received a merge result of "fail" in the course of this operation.
-      * @throws javax.jcr.NoSuchWorkspaceException
-      * @throws javax.jcr.AccessDeniedException
-      * @throws javax.jcr.MergeException
-      * @throws javax.jcr.lock.LockException
-      * @throws javax.jcr.InvalidItemStateException
-      * @throws javax.jcr.RepositoryException
-      * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
-      */
-     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+     * Merge the node identified by the given <code>NodeId</code> and its subtree
+     * with the corresponding node present in the workspace with the name of
+     * <code>srcWorkspaceName</code>.
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param srcWorkspaceName
+     * @param bestEffort
+     * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
+     * received a merge result of "fail" in the course of this operation.
+     * @throws javax.jcr.NoSuchWorkspaceException
+     * @throws javax.jcr.AccessDeniedException
+     * @throws javax.jcr.MergeException
+     * @throws javax.jcr.lock.LockException
+     * @throws javax.jcr.InvalidItemStateException
+     * @throws javax.jcr.RepositoryException
+     * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
+     * @since JCR 2.0
+     */
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * Resolve an existing merge conflict present with the node identified by
@@ -1053,4 +1055,39 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
     public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
+
+    //-----------------------------------------------< Workspace Management >---
+    /**
+     * Create a new workspace with the specified <code>name</code>. If
+     * <code>srcWorkspaceName</code> isn't <code>null</code> the content of
+     * that workspace is 'cloned' to the new workspace as inital content,
+     * otherwise an empty workspace will be created.
+     *
+     * @param sessionInfo
+     * @param name The name of the new workspace.
+     * @param srcWorkspaceName The name of the workspace from which the initial
+     * content of the new workspace will be 'cloned'.
+     * @throws AccessDeniedException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws NoSuchWorkspaceException
+     * @throws RepositoryException
+     * @see javax.jcr.Workspace#createWorkspace(String)
+     * @see javax.jcr.Workspace#createWorkspace(String, String)
+     * @since JCR 2.0
+     */
+    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException;
+
+    /**
+     * Deletes the workspace with the specified <code>name</code>.
+     *
+     * @param sessionInfo
+     * @param name  The name of the workspace to be deleted.
+     * @throws AccessDeniedException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws NoSuchWorkspaceException
+     * @throws RepositoryException
+     * @see javax.jcr.Workspace#deleteWorkspace(String)
+     * @since JCR 2.0
+     */
+    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException;
 }

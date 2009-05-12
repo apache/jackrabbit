@@ -388,6 +388,7 @@ public class WorkspaceManager
         throws UnsupportedRepositoryOperationException, RepositoryException {
         return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
+
     //--------------------------------------------------------------------------
 
     /**
@@ -481,6 +482,32 @@ public class WorkspaceManager
             t.start();
         }
         return t;
+    }
+
+    //-----------------------------------------------------< wsp management >---
+    /**
+     * Create a new workspace with the specified <code>name</code>. If
+     * <code>srcWorkspaceName</code> isn't <code>null</code> the content of
+     * that workspace is used as inital content, otherwise an empty workspace
+     * will be created.
+     *
+     * @param name The name of the workspace to be created.
+     * @param srcWorkspaceName The name of the workspace from which the initial
+     * content of the new workspace will be 'cloned'.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void createWorkspace(String name, String srcWorkspaceName) throws RepositoryException {
+        service.createWorkspace(sessionInfo, name, srcWorkspaceName);
+    }
+
+    /**
+     * Deletes the workspace with the specified <code>name</code>.
+     * 
+     * @param name
+     * @throws RepositoryException
+     */
+    void deleteWorkspace(String name) throws RepositoryException {
+        service.deleteWorkspace(sessionInfo, name);
     }
 
     //------------------------------------------< UpdatableItemStateManager >---
