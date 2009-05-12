@@ -362,6 +362,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate)
             throws RepositoryException {
+        // TODO
         throw new UnsupportedRepositoryOperationException("JCR-1591");
     }
 
@@ -370,6 +371,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public NodeTypeIterator registerNodeTypes(NodeTypeDefinition[] ntds, boolean allowUpdate)
             throws RepositoryException {
+        // TODO
         throw new UnsupportedRepositoryOperationException("JCR-1591");
     }
 
@@ -377,6 +379,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      * @see NodeTypeManager#unregisterNodeType(String)
      */
     public void unregisterNodeType(String name) throws RepositoryException {
+        // TODO
         throw new UnsupportedRepositoryOperationException("JCR-1591");
     }
 
@@ -384,6 +387,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      * @see NodeTypeManager#unregisterNodeTypes(String[])
      */
     public void unregisterNodeTypes(String[] names) throws RepositoryException {
+        // TODO
         throw new UnsupportedRepositoryOperationException("JCR-1591");
     }
 
