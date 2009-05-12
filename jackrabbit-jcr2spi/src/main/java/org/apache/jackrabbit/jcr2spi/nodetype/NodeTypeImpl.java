@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeType;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
@@ -41,7 +42,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import java.util.ArrayList;
 /**
  * <code>NodeTypeImpl</code> ...
  */
-public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
+public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeImpl.class);
 
@@ -72,6 +72,7 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
      */
     NodeTypeImpl(EffectiveNodeType ent, QNodeTypeDefinition ntd,
                  NodeTypeManagerImpl ntMgr, ManagerProvider mgrProvider) {
+        super(ntMgr);
         this.ent = ent;
         this.ntMgr = ntMgr;
         this.mgrProvider = mgrProvider;
@@ -353,22 +354,6 @@ public class NodeTypeImpl implements NodeType, NodeTypeDefinition {
             }
         }
         return supertypes;
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getDeclaredSubtypes()
-     */
-    public NodeTypeIterator getDeclaredSubtypes() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003: Add support for JCR 2.0. Implementation missing");
-    }
-
-    /**
-     * @see javax.jcr.nodetype.NodeType#getSubtypes()
-     */
-    public NodeTypeIterator getSubtypes() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003: Add support for JCR 2.0. Implementation missing");
     }
 
     /**
