@@ -230,7 +230,7 @@ public class QueryImpl implements Query {
      */
     public void bindValue(String varName, Value value) throws RepositoryException {
         //TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
     }
 
     /**
@@ -238,7 +238,7 @@ public class QueryImpl implements Query {
      */
     public void setLimit(long limit) {
         // TODO
-        throw new UnsupportedOperationException("JCR-1104");
+        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
     }
 
     /**
@@ -246,6 +246,6 @@ public class QueryImpl implements Query {
      */
     public void setOffset(long offset) {
         // TODO
-        throw new UnsupportedOperationException("JCR-1104");
+        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
     }
 }

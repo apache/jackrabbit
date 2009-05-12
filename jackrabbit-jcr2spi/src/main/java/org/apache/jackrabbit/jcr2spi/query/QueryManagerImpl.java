@@ -97,8 +97,12 @@ public class QueryManagerImpl implements QueryManager {
         return wspManager.getSupportedQueryLanguages();
     }
 
+    /**
+     * @see QueryManager#getQOMFactory()
+     */
     public QueryObjectModelFactory getQOMFactory() {
-        throw new UnsupportedOperationException("JCR-1104");
+        // TODO
+        throw new UnsupportedOperationException("JCR-2107: Implementation missing");        
     }
 
     //------------------------------------------------------------< private >---
