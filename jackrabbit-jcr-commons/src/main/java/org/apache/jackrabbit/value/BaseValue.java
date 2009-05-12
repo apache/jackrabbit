@@ -190,7 +190,7 @@ public abstract class BaseValue implements Value {
             // TODO: Is this the correct way to handle BigDecimal conversion
             return new BigDecimal(getInternalString());
         } catch (NumberFormatException e) {
-            throw new ValueFormatException("conversion to double failed", e);
+            throw new ValueFormatException("conversion to Decimal failed", e);
         }
     }
 
@@ -221,6 +221,7 @@ public abstract class BaseValue implements Value {
     public Binary getBinary()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
+        // TODO
         throw new UnsupportedRepositoryOperationException("JCR-2056");
     }
 
