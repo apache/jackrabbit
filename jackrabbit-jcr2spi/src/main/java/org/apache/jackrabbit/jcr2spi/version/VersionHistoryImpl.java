@@ -36,6 +36,7 @@ import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.VersionIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
 import org.apache.jackrabbit.jcr2spi.NodeImpl;
@@ -114,6 +115,42 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         return new LazyItemIterator(getItemManager(), new RangeIteratorAdapter(versionEntries));
     }
 
+    /**
+     * @see VersionHistory#getAllLinearVersions()
+     */
+    public VersionIterator getAllLinearVersions() throws RepositoryException {
+        checkStatus();
+
+        // TODO: improve and use lazy loading of versions as needed.
+        // TODO: change session.getNodeByUUID to Session.getNodeByIdentifier as soon as implemented
+
+        List versions = new ArrayList();
+        Version rootV = getRootVersion();
+        Node vn = session.getNodeByUUID(getVersionableUUID());
+        Version v = vn.getBaseVersion();
+        while (v != null && !rootV.isSame(v)) {
+            versions.add(0, v);
+            v = v.getLinearPredecessor();
+        }
+        versions.add(0, rootV);
+        
+        return new VersionIteratorAdapter(versions);
+    }
+
+    /**
+     * @see VersionHistory#getAllFrozenNodes()
+     */
+    public NodeIterator getAllFrozenNodes() throws RepositoryException {
+        return new FrozenNodeIteratorAdapter(getAllVersions());
+    }
+
+    /**
+     * @see VersionHistory#getAllLinearFrozenNodes()
+     */
+    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
+        return new FrozenNodeIteratorAdapter(getAllLinearVersions());
+    }
+    
     /**
      * @see VersionHistory#getVersion(String)
      */
@@ -230,30 +267,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         checkStatus();
         NodeState vState = getVersionState(versionName);
         session.getVersionStateManager().removeVersion((NodeState) getItemState(), vState);
-    }
-
-
-    /**
-     * @see VersionHistory#getAllFrozenNodes()
-     */
-    public NodeIterator getAllFrozenNodes() throws RepositoryException {
-        return new FrozenNodeIteratorAdapter(getAllVersions());
-    }
-
-    /**
-     * @see VersionHistory#getAllLinearFrozenNodes()
-     */
-    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {        
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see VersionHistory#getAllLinearVersions()
-     */
-    public VersionIterator getAllLinearVersions() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     /**
