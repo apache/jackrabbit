@@ -56,6 +56,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
+import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -902,6 +903,15 @@ public class WorkspaceManager
 
         /**
          * @inheritDoc
+         * @see OperationVisitor#visit(Checkpoint)
+         */
+        public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+            NodeId newId = service.checkpoint(sessionInfo, operation.getNodeId());
+            operation.setNewVersionId(newId);
+        }
+
+        /**
+         * @inheritDoc
          * @see OperationVisitor#visit(Restore)
          */
         public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
@@ -927,7 +937,7 @@ public class WorkspaceManager
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeId();
-            Iterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort());
+            Iterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort(), operation.isShallow());
             operation.setFailedIds(failed);
         }
 

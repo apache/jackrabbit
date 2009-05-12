@@ -43,6 +43,7 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
+import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
@@ -416,7 +417,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Clone)
+     * @see OperationVisitor#visit(Copy)
      */
     public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Copy cannot be handled by session ItemStateManager.");
@@ -424,7 +425,7 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Clone)
+     * @see OperationVisitor#visit(Checkout)
      */
     public void visit(Checkout operation) throws RepositoryException, UnsupportedRepositoryOperationException {
         throw new UnsupportedOperationException("Internal error: Checkout cannot be handled by session ItemStateManager.");
@@ -432,9 +433,17 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
 
     /**
      * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Clone)
+     * @see OperationVisitor#visit(Checkin)
      */
     public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
+        throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
+    }
+
+    /**
+     * @throws UnsupportedOperationException
+     * @see OperationVisitor#visit(Checkpoint)
+     */
+    public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
     }
 

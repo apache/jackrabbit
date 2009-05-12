@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
+
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.Version;
 import org.slf4j.Logger;

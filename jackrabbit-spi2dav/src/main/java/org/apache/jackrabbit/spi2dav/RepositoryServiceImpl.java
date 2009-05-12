@@ -1394,6 +1394,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
     }
 
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
     /**
      * @see RepositoryService#removeVersion(SessionInfo, NodeId, NodeId)
      */
@@ -1469,6 +1474,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         }
+    }
+
+    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
     /**

@@ -19,7 +19,6 @@ package org.apache.jackrabbit.jcr2spi.lock;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.SessionListener;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
-import org.apache.jackrabbit.jcr2spi.NodeImpl;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
@@ -69,7 +68,6 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     private final WorkspaceManager wspManager;
     private final ItemManager itemManager;
     private final CacheBehaviour cacheBehaviour;
-    private final PathResolver resolver;
 
     /**
      * Map holding all locks that where created by this <code>Session</code> upon
@@ -81,113 +79,13 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     private final Map lockMap;
 
     public LockManagerImpl(WorkspaceManager wspManager, ItemManager itemManager,
-                           CacheBehaviour cacheBehaviour, PathResolver pathResolver) {
+                           CacheBehaviour cacheBehaviour) {
         this.wspManager = wspManager;
         this.itemManager = itemManager;
         this.cacheBehaviour = cacheBehaviour;
-        this.resolver = pathResolver;
         // use hard references in order to make sure, that entries refering
         // to locks created by the current session are not removed.
         lockMap = new HashMap();
-    }
-
-    //--------------------------------------------------------< LockManager >---
-    /**
-     * @see javax.jcr.lock.LockManager#getLock(String)
-     */
-    public javax.jcr.lock.Lock getLock(String absPath) throws LockException, RepositoryException {
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return (javax.jcr.lock.Lock) n.getLock();
-    }
-
-    /**
-     * @see javax.jcr.lock.LockManager#isLocked(String)
-     */
-    public boolean isLocked(String absPath) throws RepositoryException {
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return n.isLocked();
-    }
-
-    /**
-     * @see javax.jcr.lock.LockManager#holdsLock(String)
-     */
-    public boolean holdsLock(String absPath) throws RepositoryException {
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return n.holdsLock();
-    }
-
-    /**
-     * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
-     */
-    public javax.jcr.lock.Lock lock(String absPath, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo) throws RepositoryException {
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        return (javax.jcr.lock.Lock) ((NodeImpl) n).lock(isDeep, isSessionScoped, timeoutHint, ownerInfo);
-    }
-
-    /**
-     * @see javax.jcr.lock.LockManager#unlock(String) 
-     */
-    public void unlock(String absPath) throws LockException, RepositoryException {
-        Node n = itemManager.getNode(resolver.getQPath(absPath));
-        n.unlock();
-    }
-
-    /**
-     * Returns the lock tokens present on the <code>SessionInfo</code> this
-     * manager has been created with.
-     *
-     * @see javax.jcr.lock.LockManager#getLockTokens()
-     */
-    public String[] getLockTokens() {
-        return wspManager.getLockTokens();
-    }
-
-    /**
-     * Delegates this call to {@link WorkspaceManager#addLockToken(String)}.
-     * If this succeeds this method will inform all locks stored in the local
-     * map in order to give them the chance to update their lock information.
-     *
-     * @see javax.jcr.lock.LockManager#addLockToken(String)
-     */
-    public void addLockToken(String lt) throws LockException, RepositoryException {
-        wspManager.addLockToken(lt);
-        notifyTokenAdded(lt);
-    }
-
-    /**
-     * If the lock addressed by the token is session-scoped, this method will
-     * throw a LockException, such as defined by JSR170 v.1.0.1 for
-     * {@link Session#removeLockToken(String)}.<br>Otherwise the call is
-     * delegated to {@link WorkspaceManager#removeLockToken(String)}.
-     * All locks stored in the local lock map are notified by the removed
-     * token in order have them updated their lock information.
-     *
-     * @see javax.jcr.lock.LockManager#removeLockToken(String)
-     */
-    public void removeLockToken(String lt) throws LockException, RepositoryException {
-        // JSR170 v. 1.0.1 defines that the token of a session-scoped lock may
-        // not be moved over to another session. thus removal ist not possible
-        // and the lock is always present in the lock map.
-        Iterator it = lockMap.values().iterator();
-        boolean found = false;
-        // loop over cached locks to determine if the token belongs to a session
-        // scoped lock, in which case the removal must fail immediately.
-        while (it.hasNext() && !found) {
-            LockImpl l = (LockImpl) it.next();
-            if (lt.equals(l.getLockToken())) {
-                // break as soon as the lock associated with the given token was found.
-                found = true;
-                if (l.isSessionScoped()) {
-                    throw new LockException("Cannot remove lock token associated with a session scoped lock.");
-                }
-            }
-        }
-
-        // remove lock token from sessionInfo. call will fail, if the session
-        // is not lock holder.
-        wspManager.removeLockToken(lt);
-        // inform about this lt being removed from this session
-        notifyTokenRemoved(lt);
     }
 
     //----------------< org.apache.jackrabbit.jcr2spi.lock.LockStateManager >---
@@ -285,6 +183,65 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
             // lock is present and token is null -> session is not lock-holder.
             throw new LockException("Node with id '" + nodeState + "' is locked.");
         } // else: state is not locked at all || session is lock-holder
+    }
+
+
+    /**
+     * Returns the lock tokens present on the <code>SessionInfo</code> this
+     * manager has been created with.
+     *
+     * @see LockStateManager#getLockTokens()
+     */
+    public String[] getLockTokens() {
+        return wspManager.getLockTokens();
+    }
+
+    /**
+     * Delegates this call to {@link WorkspaceManager#addLockToken(String)}.
+     * If this succeeds this method will inform all locks stored in the local
+     * map in order to give them the chance to update their lock information.
+     *
+     * @see LockStateManager#addLockToken(String)
+     */
+    public void addLockToken(String lt) throws LockException, RepositoryException {
+        wspManager.addLockToken(lt);
+        notifyTokenAdded(lt);
+    }
+
+    /**
+     * If the lock addressed by the token is session-scoped, this method will
+     * throw a LockException, such as defined by JSR170 v.1.0.1 for
+     * {@link Session#removeLockToken(String)}.<br>Otherwise the call is
+     * delegated to {@link WorkspaceManager#removeLockToken(String)}.
+     * All locks stored in the local lock map are notified by the removed
+     * token in order have them updated their lock information.
+     *
+     * @see LockStateManager#removeLockToken(String)
+     */
+    public void removeLockToken(String lt) throws LockException, RepositoryException {
+        // JSR170 v. 1.0.1 defines that the token of a session-scoped lock may
+        // not be moved over to another session. thus removal ist not possible
+        // and the lock is always present in the lock map.
+        Iterator it = lockMap.values().iterator();
+        boolean found = false;
+        // loop over cached locks to determine if the token belongs to a session
+        // scoped lock, in which case the removal must fail immediately.
+        while (it.hasNext() && !found) {
+            LockImpl l = (LockImpl) it.next();
+            if (lt.equals(l.getLockToken())) {
+                // break as soon as the lock associated with the given token was found.
+                found = true;
+                if (l.isSessionScoped()) {
+                    throw new LockException("Cannot remove lock token associated with a session scoped lock.");
+                }
+            }
+        }
+
+        // remove lock token from sessionInfo. call will fail, if the session
+        // is not lock holder.
+        wspManager.removeLockToken(lt);
+        // inform about this lt being removed from this session
+        notifyTokenRemoved(lt);
     }
 
     //----------------------------------------------------< SessionListener >---
