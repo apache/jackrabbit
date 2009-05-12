@@ -342,6 +342,15 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * @see javax.jcr.Node#setProperty(String, Binary)
+     */
+    public Property setProperty(String name, Binary value) throws RepositoryException {
+        // validation performed in subsequent method
+        Value v = (value == null ? null : session.getValueFactory().createValue(value));
+        return setProperty(name, v, PropertyType.BINARY);
+    }
+
+    /**
      * @see Node#setProperty(String, boolean)
      */
     public Property setProperty(String name, boolean value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
@@ -355,6 +364,15 @@ public class NodeImpl extends ItemImpl implements Node {
     public Property setProperty(String name, double value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
         // validation performed in subsequent method
         return setProperty(name, session.getValueFactory().createValue(value), PropertyType.DOUBLE);
+    }
+
+    /**
+     * @see javax.jcr.Node#setProperty(String, BigDecimal)
+     */
+    public Property setProperty(String name, BigDecimal value) throws RepositoryException {
+        // validation performed in subsequent method
+        Value v = (value == null ? null : session.getValueFactory().createValue(value));
+        return setProperty(name, v, PropertyType.DECIMAL);
     }
 
     /**
@@ -433,8 +451,19 @@ public class NodeImpl extends ItemImpl implements Node {
     public NodeIterator getNodes(String namePattern) throws RepositoryException {
         checkStatus();
         ArrayList nodes = new ArrayList();
-        // traverse children using a special filtering 'collector'
+        // traverse children using a special filtering item visitor
         accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
+    }
+
+    /**
+     * @see javax.jcr.Node#getNodes(String[])
+     */
+    public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
+        checkStatus();
+        List nodes = new ArrayList();
+        // traverse child nodes using a filtering item visitor
+        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
         return new NodeIteratorAdapter(nodes);
     }
 
@@ -480,8 +509,20 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyIterator getProperties(String namePattern) throws RepositoryException {
         checkStatus();
         ArrayList properties = new ArrayList();
-        // traverse children using a special filtering 'collector'
+        // traverse children using a filtering item visitor
         accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
+        return new PropertyIteratorAdapter(properties);
+    }
+
+    /**
+     * TODO: method name is wrong! should be getProperties (Issue 736 of the pfd)
+     * @see javax.jcr.Node#getProperty(String)
+     */
+    public PropertyIterator getProperty(String[] nameGlobs) throws RepositoryException {
+        checkStatus();
+        List properties = new ArrayList();
+        // traverse child properties using a filtering item visitor
+        accept(new ChildrenCollectorFilter(nameGlobs, properties, true, false, 1));
         return new PropertyIteratorAdapter(properties);
     }
 
@@ -517,6 +558,15 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
+     * @see Node#getIdentifier()
+     */
+    public String getIdentifier() throws RepositoryException {
+        checkStatus();
+        // TODO: check again and add SPI method to create Node-Identifier from String
+        return getNodeEntry().getId().toString();
+    }
+
+    /**
      * @see Node#getIndex()
      */
     public int getIndex() throws RepositoryException {
@@ -533,6 +583,45 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getReferences() throws RepositoryException {
         return getReferences(null);
+    }
+
+    /**
+     * @see javax.jcr.Node#getReferences(String)
+     */
+    public PropertyIterator getReferences(String name) throws RepositoryException {
+        checkStatus();
+        List refs = Arrays.asList(getNodeState().getNodeReferences());
+        if (name != null) {
+            // remove property ids that don't match the given name
+            Name qName = getQName(name);
+            refs = new ArrayList(refs);
+            for (Iterator iter = refs.iterator(); iter.hasNext();) {
+                PropertyId propId = (PropertyId) iter.next();
+                if (!propId.getName().equals(qName)) {
+                    refs.remove(propId);
+                }
+            }
+        } // else: name == null -> return all references
+
+        // create an property iterator for all or the matching property ids
+        // according to the specified name.
+        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
+    }
+
+    /**
+     * @see javax.jcr.Node#getWeakReferences()
+     */
+    public PropertyIterator getWeakReferences() throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+
+    /**
+     * @see javax.jcr.Node#getWeakReferences()
+     */
+    public PropertyIterator getWeakReferences(String name) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     /**
@@ -587,6 +676,14 @@ public class NodeImpl extends ItemImpl implements Node {
     public NodeType getPrimaryNodeType() throws RepositoryException {
         checkStatus();
         return session.getNodeTypeManager().getNodeType(primaryTypeName);
+    }
+
+    /**
+     * @see javax.jcr.Node#setPrimaryType(String)
+     */
+    public void setPrimaryType(String nodeTypeName) throws RepositoryException {
+        // TODO: implementation missing
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
     /**
@@ -1160,15 +1257,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // lock can be inherited from a parent > do not check for node being lockable.
         checkStatus();
         return session.getLockStateManager().isLocked(getNodeState());
-    }         
-
-    /**
-     * @see Node#getIdentifier()
-     */
-    public String getIdentifier() throws RepositoryException {
-        checkStatus();
-        // TODO: check again and add SPI method to create Node-Identifier from String
-        return getNodeEntry().getId().toString();
     }
 
     /**
@@ -1183,68 +1271,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getAllowedLifecycleTransistions()
      */
     public String[] getAllowedLifecycleTransistions() throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#getNodes(String[])
-     */
-    public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
-        checkStatus();
-        List nodes = new ArrayList();
-        // traverse child nodes using a filtering collector
-        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
-        return new NodeIteratorAdapter(nodes);
-    }
-
-    /**
-     * TODO: method name is wrong! should be getProperties (Issue 736 of the pfd)
-     * @see javax.jcr.Node#getProperty(String)
-     */
-    public PropertyIterator getProperty(String[] nameGlobs) throws RepositoryException {
-        checkStatus();
-        List properties = new ArrayList();
-        // traverse child properties using a filtering collector
-        accept(new ChildrenCollectorFilter(nameGlobs, properties, true, false, 1));
-        return new PropertyIteratorAdapter(properties);
-    }
-
-    /**
-     * @see javax.jcr.Node#getReferences(String)
-     */
-    public PropertyIterator getReferences(String name) throws RepositoryException {
-        checkStatus();
-        List refs = Arrays.asList(getNodeState().getNodeReferences());
-        if (name != null) {
-            // remove property ids that don't match the given name
-            Name qName = getQName(name);
-            refs = new ArrayList(refs);
-            for (Iterator iter = refs.iterator(); iter.hasNext();) {
-                PropertyId propId = (PropertyId) iter.next();
-                if (!propId.getName().equals(qName)) {
-                    refs.remove(propId);
-                }
-            }
-        } // else: name == null -> return all references
-
-        // create an property iterator for all or the matching property ids
-        // according to the specified name.
-        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
-    }
-
-    /**
-     * @see javax.jcr.Node#getWeakReferences()
-     */
-    public PropertyIterator getWeakReferences() throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#getWeakReferences()
-     */
-    public PropertyIterator getWeakReferences(String name) throws RepositoryException {
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -1269,30 +1295,6 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#removeSharedSet()
      */
     public void removeSharedSet() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#setPrimaryType(String)
-     */
-    public void setPrimaryType(String nodeTypeName) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#setProperty(String, Binary)
-     */
-    public Property setProperty(String name, Binary value) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#setProperty(String, BigDecimal)
-     */
-    public Property setProperty(String name, BigDecimal value) throws RepositoryException {
-        // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
