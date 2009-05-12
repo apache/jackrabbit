@@ -206,7 +206,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public String[] getVersionLabels(javax.jcr.version.Version version)
             throws VersionException, RepositoryException {
-        checkOwnVersion((Version) version);
+        checkOwnVersion(version);
         Name[] labels = ((VersionImpl) version).getInternalVersion().getLabels();
         String[] ret = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
@@ -232,7 +232,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      */
     public boolean hasVersionLabel(javax.jcr.version.Version version, String label)
             throws VersionException, RepositoryException {
-        checkOwnVersion((Version)version);
+        checkOwnVersion(version);
         try {
             Name qLabel = session.getQName(label);
             return ((VersionImpl) version).getInternalVersion().hasLabel(qLabel);
