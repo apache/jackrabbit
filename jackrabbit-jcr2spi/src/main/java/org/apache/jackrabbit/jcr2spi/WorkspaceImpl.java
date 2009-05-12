@@ -105,6 +105,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     private QueryManager qManager;
     private VersionManager versionManager;
 
+    private LockManager jcrLockManager;
+    private javax.jcr.version.VersionManager jcrVersionManager;
+
     public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
@@ -245,13 +248,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @see javax.jcr.Workspace#restore(Version[], boolean)
      */
     public void restore(Version[] versions, boolean removeExisting) throws ItemExistsException, UnsupportedRepositoryOperationException, VersionException, LockException, InvalidItemStateException, RepositoryException {
-        session.checkHasPendingChanges();
-
-        NodeState[] versionStates = new NodeState[versions.length];
-        for (int i = 0; i < versions.length; i++) {
-            versionStates[i] = session.getVersionState(versions[i]);
-        }
-        getVersionStateManager().restore(versionStates, removeExisting);
+        getVersionManager().restore(versions, removeExisting);
     }
 
     /**
@@ -379,16 +376,23 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public LockManager getLockManager() throws RepositoryException {
         session.checkIsAlive();
         session.checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
-        return getLockStateManager();
+        if (jcrLockManager == null) {
+            jcrLockManager = new JcrLockManager(session);
+        }
+        return jcrLockManager;
     }
 
     /**
      * @see javax.jcr.Workspace#getVersionManager()
      */
-    public javax.jcr.version.VersionManager getVersionManager()
+    public synchronized javax.jcr.version.VersionManager getVersionManager()
             throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        session.checkIsAlive();
+        session.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
+        if (jcrVersionManager == null) {
+            jcrVersionManager = new JcrVersionManager(session);
+        }
+        return jcrVersionManager;
     }
 
     //----------------------------------------------------< ManagerProvider >---
@@ -537,10 +541,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      *
      * @param wspManager
      * @param itemManager
-     * @return a new <code>LockManager</code> instance.
+     * @return a new <code>LockStateManager</code> instance.
      */
     protected LockStateManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
-        LockManagerImpl lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour(), getPathResolver());
+        LockManagerImpl lMgr = new LockManagerImpl(wspManager, itemManager, session.getCacheBehaviour());
         session.addListener(lMgr);
         return lMgr;
     }

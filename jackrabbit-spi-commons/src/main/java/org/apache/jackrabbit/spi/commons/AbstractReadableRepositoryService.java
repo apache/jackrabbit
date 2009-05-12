@@ -547,6 +547,14 @@ public abstract class AbstractReadableRepositoryService
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
+            throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
     public void removeVersion(SessionInfo sessionInfo,
                               NodeId versionHistoryId,
                               NodeId versionId)
@@ -580,6 +588,17 @@ public abstract class AbstractReadableRepositoryService
                           NodeId nodeId,
                           String srcWorkspaceName,
                           boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public Iterator merge(SessionInfo sessionInfo,
+                          NodeId nodeId,
+                          String srcWorkspaceName,
+                          boolean bestEffort,
+                          boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 

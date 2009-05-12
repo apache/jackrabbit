@@ -20,20 +20,11 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.PropertyType;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemValidator;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.security.authorization.Permission;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

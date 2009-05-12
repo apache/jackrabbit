@@ -799,6 +799,14 @@ public class NodeImpl extends ItemImpl implements Node {
         }
     }
 
+    Version checkpoint() throws RepositoryException {
+        checkIsVersionable();
+        checkHasPendingChanges();
+        checkIsLocked();
+        NodeEntry newVersion = session.getVersionStateManager().checkpoint(getNodeState());
+        return (Version) getItemManager().getItem(newVersion);
+    }
+    
     /**
      * @see Node#doneMerge(Version)
      */
@@ -881,6 +889,15 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#merge(String, boolean)
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, VersionException, LockException, InvalidItemStateException, RepositoryException {
+        return merge(srcWorkspace, bestEffort, false);
+    }
+
+
+    /**
+     * TODO: Issue 728 of the pfd... this method is a leftover and will be removed in the final version.
+     * -> change to package protected then
+     */
+    public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow) throws RepositoryException {
         checkIsWritable();
         checkSessionHasPendingChanges();
 
@@ -891,7 +908,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // make sure the workspace exists and is accessible for this session.
         session.checkAccessibleWorkspace(srcWorkspace);
 
-        Iterator failedIds = session.getVersionStateManager().merge(getNodeState(), srcWorkspace, bestEffort);
+        Iterator failedIds = session.getVersionStateManager().merge(getNodeState(), srcWorkspace, bestEffort, isShallow);
         return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), failedIds);
     }
 
@@ -1150,8 +1167,9 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#getIdentifier()
      */
     public String getIdentifier() throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+        // TODO: check again and add SPI method to create Node-Identifier from String
+        return getNodeEntry().getId().toString();
     }
 
     /**
@@ -1174,8 +1192,11 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getNodes(String[])
      */
     public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+        List nodes = new ArrayList();
+        // traverse child nodes using a filtering collector
+        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
     }
 
     /**
@@ -1183,22 +1204,17 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getProperty(String)
      */
     public PropertyIterator getProperty(String[] nameGlobs) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+        List properties = new ArrayList();
+        // traverse child properties using a filtering collector
+        accept(new ChildrenCollectorFilter(nameGlobs, properties, true, false, 1));
+        return new PropertyIteratorAdapter(properties);
     }
 
     /**
      * @see javax.jcr.Node#getReferences(String)
      */
     public PropertyIterator getReferences(String name) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
-     * @see javax.jcr.Node#getSharedSet()
-     */
-    public NodeIterator getSharedSet() throws RepositoryException {
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -1220,9 +1236,9 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * TODO: Issue 728 of the pfd... this method is a leftover and will be removed in the final version.
+     * @see javax.jcr.Node#getSharedSet()
      */
-    public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow) throws RepositoryException {
+    public NodeIterator getSharedSet() throws RepositoryException {
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -1420,6 +1436,28 @@ public class NodeImpl extends ItemImpl implements Node {
         List addedStates = ((AddNode) an).getAddedStates();
         ItemState nState = (ItemState) addedStates.get(0);
         return (Node) getItemManager().getItem(nState.getHierarchyEntry());
+    }
+
+    // TODO: protected due to usage within VersionImpl, VersionHistoryImpl (check for alternatives)
+    /**
+     *
+     * @param nodeName
+     * @param index
+     * @return
+     * @throws PathNotFoundException
+     * @throws RepositoryException
+     */
+    protected Node getNode(Name nodeName, int index) throws PathNotFoundException, RepositoryException {
+        checkStatus();
+        try {
+            NodeEntry nEntry = getNodeEntry().getNodeEntry(nodeName, index);
+            if (nEntry == null) {
+                throw new PathNotFoundException(LogUtil.saveGetJCRName(nodeName, session.getNameResolver()));
+            }
+            return (Node) getItemManager().getItem(nEntry);
+        } catch (AccessDeniedException e) {
+            throw new PathNotFoundException(LogUtil.saveGetJCRName(nodeName, session.getNameResolver()));
+        }
     }
 
     /**

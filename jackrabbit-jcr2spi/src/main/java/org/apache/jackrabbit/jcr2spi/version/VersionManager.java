@@ -62,6 +62,13 @@ public interface VersionManager {
 
     /**
      * @param nodeState
+     * @throws RepositoryException
+     * @see javax.jcr.version.VersionManager#checkpoint(String)
+     */
+    public NodeEntry checkpoint(NodeState nodeState) throws RepositoryException;
+
+    /**
+     * @param nodeState
      * @return
      * @throws RepositoryException
      * @see javax.jcr.Node#isCheckedOut()
@@ -157,6 +164,25 @@ public interface VersionManager {
      * @see javax.jcr.Node#merge(String, boolean)
      */
     public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+
+    /**
+     * @param nodeState
+     * @param workspaceName
+     * @param bestEffort
+     * @param isShallow
+     * @return An Iterator over <code>NodeId</code>s of all <code>Node</code>s
+     * that failed to be merged and need manual resolution by the user of the API.
+     * @throws NoSuchWorkspaceException
+     * @throws AccessDeniedException
+     * @throws MergeException
+     * @throws LockException
+     * @throws InvalidItemStateException
+     * @throws RepositoryException
+     * @see #resolveMergeConflict(NodeState,NodeState,boolean)
+     * @see javax.jcr.Node#merge(String, boolean)
+     */
+    public Iterator merge(NodeState nodeState, String workspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+
 
     /**
      * @param nodeState

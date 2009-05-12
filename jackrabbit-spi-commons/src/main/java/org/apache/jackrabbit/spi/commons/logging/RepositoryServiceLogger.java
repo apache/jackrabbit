@@ -22,6 +22,7 @@ import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
@@ -384,6 +385,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "checkout(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
+    public NodeId checkpoint(final SessionInfo sessionInfo, final NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (NodeId) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.checkpoint(unwrap(sessionInfo), nodeId);
+            }
+        }, "checkpoint(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
+    }
+
     public void removeVersion(final SessionInfo sessionInfo, final NodeId versionHistoryId,
             final NodeId versionId) throws RepositoryException {
 
@@ -428,6 +437,17 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return service.merge(unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort);
             }
         }, "merge(SessionInfo, NodeId, String, boolean)",
+                new Object[]{unwrap(sessionInfo), nodeId, srcWorkspaceName, Boolean.valueOf(bestEffort)});
+    }
+
+    public Iterator merge(final SessionInfo sessionInfo, final NodeId nodeId, final String srcWorkspaceName,
+            final boolean bestEffort, final boolean isShallow) throws RepositoryException {
+
+        return (Iterator) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.merge(unwrap(sessionInfo), nodeId, srcWorkspaceName, bestEffort, isShallow);
+            }
+        }, "merge(SessionInfo, NodeId, String, boolean, boolean)",
                 new Object[]{unwrap(sessionInfo), nodeId, srcWorkspaceName, Boolean.valueOf(bestEffort)});
     }
 

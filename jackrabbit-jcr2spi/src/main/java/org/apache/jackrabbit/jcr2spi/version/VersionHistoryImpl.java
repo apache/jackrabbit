@@ -35,6 +35,7 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.FrozenNodeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ItemLifeCycleListener;
 import org.apache.jackrabbit.jcr2spi.LazyItemIterator;
 import org.apache.jackrabbit.jcr2spi.NodeImpl;
@@ -78,8 +79,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionableUUID()
      */
     public String getVersionableUUID() throws RepositoryException {
-        checkStatus();
-        return getProperty(NameConstants.JCR_VERSIONABLEUUID).getString();
+        return getVersionableIdentifier();
     }
 
     /**
@@ -237,14 +237,13 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getAllFrozenNodes()
      */
     public NodeIterator getAllFrozenNodes() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        return new FrozenNodeIteratorAdapter(getAllVersions());
     }
 
     /**
      * @see VersionHistory#getAllLinearFrozenNodes()
      */
-    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
+    public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {        
         // TODO
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -261,8 +260,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @see VersionHistory#getVersionableIdentifier()
      */
     public String getVersionableIdentifier() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+        return getProperty(NameConstants.JCR_VERSIONABLEUUID).getString();
     }
     
     //---------------------------------------------------------------< Item >---

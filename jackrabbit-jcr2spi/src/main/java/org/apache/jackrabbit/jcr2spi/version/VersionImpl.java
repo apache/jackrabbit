@@ -79,6 +79,14 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
+     * @see Version#getLinearSuccessor()
+     */
+    public Version getLinearSuccessor() throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    }
+    
+    /**
      *
      * @return
      * @throws RepositoryException
@@ -89,27 +97,28 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     * @see Version#getFrozenNode()
-     */
-    public Node getFrozenNode() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
-    }
-
-    /**
      * @see Version#getLinearPredecessor()
      */
     public Version getLinearPredecessor() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        Value[] values = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
+        if (values != null && values.length > 0) {
+            Node n = session.getNodeByUUID(values[0].getString());
+            if (n instanceof Version) {
+                return (Version) n;
+            } else {
+                throw new RepositoryException("Version property contains invalid value not pointing to a 'Version'");
+            }
+        } else {
+            return null;
+        }
     }
 
     /**
-     * @see Version#getLinearSuccessor()
+     * @see Version#getFrozenNode()
      */
-    public Version getLinearSuccessor() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    public Node getFrozenNode() throws RepositoryException {
+        return getNode(NameConstants.JCR_FROZENNODE, 1);
+
     }
 
     //---------------------------------------------------------------< Item >---

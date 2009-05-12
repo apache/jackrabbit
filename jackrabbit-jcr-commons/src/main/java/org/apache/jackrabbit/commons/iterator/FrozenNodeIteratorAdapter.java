@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.version;
+package org.apache.jackrabbit.commons.iterator;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -22,7 +22,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionIterator;
 
 import javax.jcr.version.Version;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 
 /**
  * Implements a node iterator that takes a version iterator and returns the

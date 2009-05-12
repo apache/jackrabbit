@@ -601,6 +601,19 @@ public interface RepositoryService {
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
 
     /**
+     * Performs a checkpoint for the <code>Node</code> identified by the given
+     * <code>NodeId</code>.
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @throws javax.jcr.UnsupportedRepositoryOperationException
+     * @throws javax.jcr.lock.LockException
+     * @throws javax.jcr.RepositoryException
+     * @see javax.jcr.version.VersionManager#checkpoint(String)
+     */
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
      * Remove the version inditified by the specified <code>versionId</code>.
      *
      * @param sessionInfo
@@ -685,6 +698,27 @@ public interface RepositoryService {
      * @see javax.jcr.Node#merge(String, boolean)
      */
     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+
+    /**
+      * Merge the node identified by the given <code>NodeId</code> and its subtree
+      * with the corresponding node present in the workspace with the name of
+      * <code>srcWorkspaceName</code>.
+      *
+      * @param sessionInfo
+      * @param nodeId
+      * @param srcWorkspaceName
+      * @param bestEffort
+      * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
+      * received a merge result of "fail" in the course of this operation.
+      * @throws javax.jcr.NoSuchWorkspaceException
+      * @throws javax.jcr.AccessDeniedException
+      * @throws javax.jcr.MergeException
+      * @throws javax.jcr.lock.LockException
+      * @throws javax.jcr.InvalidItemStateException
+      * @throws javax.jcr.RepositoryException
+      * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
+      */
+     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * Resolve an existing merge conflict present with the node identified by

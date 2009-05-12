@@ -357,35 +357,7 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#checkPermission(String, String)
      */
     public void checkPermission(String absPath, String actions) throws AccessControlException, RepositoryException {
-        checkIsAlive();
-        // build the array of actions to be checked
-        String[] actionsArr = actions.split(",");
-
-        Path targetPath = getQPath(absPath);
-
-        boolean isGranted;
-        // The given abs-path may point to a non-existing item
-        if (itemManager.nodeExists(targetPath)) {
-            NodeState nState = getHierarchyManager().getNodeState(targetPath);
-            isGranted = getAccessManager().isGranted(nState, actionsArr);
-        } else if (itemManager.propertyExists(targetPath)) {
-            PropertyState pState = getHierarchyManager().getPropertyState(targetPath);
-            isGranted = getAccessManager().isGranted(pState, actionsArr);
-        } else {
-            NodeState parentState = null;
-            Path parentPath = targetPath;
-            while (parentState == null) {
-                parentPath = parentPath.getAncestor(1);
-                if (itemManager.nodeExists(parentPath)) {
-                    parentState = getHierarchyManager().getNodeState(parentPath);
-                }
-            }
-            // parentState is the nearest existing nodeState or the root state.
-            Path relPath = parentPath.computeRelativePath(targetPath);
-            isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
-        }
-
-        if (!isGranted) {
+        if (!hasPermission(absPath, actions)) {
             throw new AccessControlException("Access control violation: path = " + absPath + ", actions = " + actions);
         }
     }
@@ -569,10 +541,35 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#hasPermission(String, String)
      */
-    public boolean hasPermission(String absPath, String actions)
-            throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+    public boolean hasPermission(String absPath, String actions) throws RepositoryException {
+        checkIsAlive();
+        // build the array of actions to be checked
+        String[] actionsArr = actions.split(",");
+
+        Path targetPath = getQPath(absPath);
+
+        boolean isGranted;
+        // The given abs-path may point to a non-existing item
+        if (itemManager.nodeExists(targetPath)) {
+            NodeState nState = getHierarchyManager().getNodeState(targetPath);
+            isGranted = getAccessManager().isGranted(nState, actionsArr);
+        } else if (itemManager.propertyExists(targetPath)) {
+            PropertyState pState = getHierarchyManager().getPropertyState(targetPath);
+            isGranted = getAccessManager().isGranted(pState, actionsArr);
+        } else {
+            NodeState parentState = null;
+            Path parentPath = targetPath;
+            while (parentState == null) {
+                parentPath = parentPath.getAncestor(1);
+                if (itemManager.nodeExists(parentPath)) {
+                    parentState = getHierarchyManager().getNodeState(parentPath);
+                }
+            }
+            // parentState is the nearest existing nodeState or the root state.
+            Path relPath = parentPath.computeRelativePath(targetPath);
+            isGranted = getAccessManager().isGranted(parentState, relPath, actionsArr);
+        }
+        return isGranted;
     }
 
     /**
