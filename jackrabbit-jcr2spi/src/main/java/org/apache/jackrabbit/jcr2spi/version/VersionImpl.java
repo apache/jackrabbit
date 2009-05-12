@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
@@ -49,9 +50,6 @@ public class VersionImpl extends NodeImpl implements Version {
 
     //------------------------------------------------------------< Version >---
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see Version#getContainingHistory()
      */
     public VersionHistory getContainingHistory() throws RepositoryException {
@@ -59,9 +57,6 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see Version#getCreated()
      */
     public Calendar getCreated() throws RepositoryException {
@@ -69,9 +64,6 @@ public class VersionImpl extends NodeImpl implements Version {
     }
 
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see Version#getSuccessors()
      */
     public Version[] getSuccessors() throws RepositoryException {
@@ -82,14 +74,20 @@ public class VersionImpl extends NodeImpl implements Version {
      * @see Version#getLinearSuccessor()
      */
     public Version getLinearSuccessor() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        // TODO: improve.
+        VersionHistory vh = getContainingHistory();
+        for (VersionIterator it = vh.getAllLinearVersions(); it.hasNext();) {
+            Version v = it.nextVersion();
+            if (isSame(v.getLinearPredecessor())) {
+                return v;
+            }
+        }
+
+        // no linear successor found
+        return null;
     }
     
     /**
-     *
-     * @return
-     * @throws RepositoryException
      * @see Version#getPredecessors()
      */
     public Version[] getPredecessors() throws RepositoryException {
