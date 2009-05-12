@@ -1450,35 +1450,43 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw ExceptionConverter.generate(e);
         }
     }
+
     /**
      * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean)
      */
     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        try {
-            String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
-            Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
-            MergeInfo mInfo = new MergeInfo(mElem);
-
-            MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
-            execute(method, sessionInfo);
-
-            MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
-            List failedIds = new ArrayList(resps.length);
-            for (int i = 0; i < resps.length; i++) {
-                String href = resps[i].getHref();
-                failedIds.add(uriResolver.getNodeId(href, sessionInfo));
-            }
-            return failedIds.iterator();
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
-        }
+        return merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort, false);
     }
 
+    /**
+     * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean, boolean)
+     */
     public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        if (!isShallow) {
+            try {
+                String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
+                Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, bestEffort, false, domFactory);
+                MergeInfo mInfo = new MergeInfo(mElem);
+
+                MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
+                execute(method, sessionInfo);
+
+                MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
+                List failedIds = new ArrayList(resps.length);
+                for (int i = 0; i < resps.length; i++) {
+                    String href = resps[i].getHref();
+                    failedIds.add(uriResolver.getNodeId(href, sessionInfo));
+                }
+                return failedIds.iterator();
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (DavException e) {
+                throw ExceptionConverter.generate(e);
+            }
+        } else {
+            // TODO
+            throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        }
     }
 
     /**
@@ -2003,6 +2011,22 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // in order to avoid individual calls for every nodetype, retrieve
         // the complete set from the server (again).
         return getQNodeTypeDefinitions(sessionInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
     }
 
     /**

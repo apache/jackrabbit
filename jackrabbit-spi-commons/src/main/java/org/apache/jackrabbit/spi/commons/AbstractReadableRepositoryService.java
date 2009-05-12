@@ -75,8 +75,7 @@ import java.util.HashMap;
  * repository service implementation that only provide read access to the
  * underlying content.
  */
-public abstract class AbstractReadableRepositoryService
-        extends AbstractRepositoryService {
+public abstract class AbstractReadableRepositoryService extends AbstractRepositoryService {
 
     protected static final Set WRITE_ACTIONS = new HashSet(Arrays.asList(
             new String[]{"add_node", "set_property", "remove"}));
@@ -683,7 +682,7 @@ public abstract class AbstractReadableRepositoryService
         throw new UnsupportedRepositoryOperationException();
     }
 
-    //----------------------< namespace registry >------------------------------
+    //-------------------------------------------------< namespace registry >---
 
     /**
      * @throws UnsupportedRepositoryOperationException always.
@@ -702,6 +701,23 @@ public abstract class AbstractReadableRepositoryService
         throw new UnsupportedRepositoryOperationException();
     }
 
+    //-----------------------------------------------< Workspace Management >---
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+
+    }
+    
     //-------------------------------< query >----------------------------------
 
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws
