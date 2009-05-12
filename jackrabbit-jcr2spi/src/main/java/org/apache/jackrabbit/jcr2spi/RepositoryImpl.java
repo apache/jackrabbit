@@ -82,6 +82,9 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         return (String) descriptors.get(descriptorKey);
     }
 
+    /**
+     * @see Repository#getDescriptorValue(String)
+     */
     public Value getDescriptorValue(String key) {
         String value = getDescriptor(key);
         if (value != null) {
@@ -92,6 +95,9 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         }
     }
 
+    /**
+     * @see Repository#getDescriptorValues(String)
+     */
     public Value[] getDescriptorValues(String key) {
         Value value = getDescriptorValue(key);
         if (value != null) {
@@ -101,6 +107,9 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         }
     }
 
+    /**
+     * @see Repository#isSingleValueDescriptor(String)
+     */
     public boolean isSingleValueDescriptor(String key) {
         return descriptors.containsKey(key);
     }
