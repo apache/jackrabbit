@@ -77,6 +77,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -531,9 +532,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#getReferences()
      */
     public PropertyIterator getReferences() throws RepositoryException {
-        checkStatus();
-        List refs = Arrays.asList(getNodeState().getNodeReferences());
-        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
+        return getReferences(null);
     }
 
     /**
@@ -1215,8 +1214,23 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getReferences(String)
      */
     public PropertyIterator getReferences(String name) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+        List refs = Arrays.asList(getNodeState().getNodeReferences());
+        if (name != null) {
+            // remove property ids that don't match the given name
+            Name qName = getQName(name);
+            refs = new ArrayList(refs);
+            for (Iterator iter = refs.iterator(); iter.hasNext();) {
+                PropertyId propId = (PropertyId) iter.next();
+                if (!propId.getName().equals(qName)) {
+                    refs.remove(propId);
+                }
+            }
+        } // else: name == null -> return all references
+
+        // create an property iterator for all or the matching property ids
+        // according to the specified name.
+        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
     }
 
     /**
