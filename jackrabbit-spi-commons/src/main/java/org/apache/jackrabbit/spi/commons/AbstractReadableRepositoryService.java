@@ -56,6 +56,8 @@ import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NodeTypeExistsException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Iterator;
@@ -373,6 +375,20 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo,
                                                      PropertyId propertyId)
             throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 

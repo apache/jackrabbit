@@ -76,7 +76,7 @@ public interface QPropertyDefinition extends QItemDefinition {
      * @return <code>true</code> if this property definition is full text searchable.
      * @since JCR 2.0
      */
-    public boolean isFullTextSearcheable();
+    public boolean isFullTextSearchable();
 
     /**
      * Reports whether this property definition is query-orderable.

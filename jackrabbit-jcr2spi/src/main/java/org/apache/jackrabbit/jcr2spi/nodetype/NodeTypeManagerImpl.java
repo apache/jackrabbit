@@ -22,6 +22,9 @@ import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.PropertyDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
@@ -33,7 +36,6 @@ import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.NamespaceException;
@@ -45,10 +47,13 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeTypeExistsException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
 import java.io.PrintStream;
 
 /**
@@ -358,37 +363,38 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     }
 
     /**
-     * @see NodeTypeManager#registerNodeType(javax.jcr.nodetype.NodeTypeDefinition, boolean)
-     */
-    public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate)
-            throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
-    }
-
-    /**
      * @see NodeTypeManager#registerNodeTypes(javax.jcr.nodetype.NodeTypeDefinition[], boolean)
      */
     public NodeTypeIterator registerNodeTypes(NodeTypeDefinition[] ntds, boolean allowUpdate)
             throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
-    }
+        List<QNodeTypeDefinition> defs = new ArrayList<QNodeTypeDefinition>(ntds.length);
+        for (NodeTypeDefinition definition : ntds) {
+            QNodeTypeDefinition qdef = new QNodeTypeDefinitionImpl(definition, resolver(), mgrProvider.getQValueFactory());
+            if (!allowUpdate && hasNodeType(qdef.getName())) {
+                throw new NodeTypeExistsException("NodeType " + definition.getName() + " already exists.");
+            }
+            defs.add(qdef);
+        }
 
-    /**
-     * @see NodeTypeManager#unregisterNodeType(String)
-     */
-    public void unregisterNodeType(String name) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
+        getNodeTypeRegistry().registerNodeTypes(defs, allowUpdate);
+
+        List<NodeType> nts = new ArrayList<NodeType>();
+        for (Iterator<QNodeTypeDefinition> it = defs.iterator(); it.hasNext();) {
+            nts.add(getNodeType(it.next().getName()));
+        }
+        return new NodeTypeIteratorAdapter(nts);
+
     }
 
     /**
      * @see NodeTypeManager#unregisterNodeTypes(String[])
      */
     public void unregisterNodeTypes(String[] names) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-1591");
+        HashSet ntNames = new HashSet();
+        for (String name : names) {
+            ntNames.add(resolver().getQName(name));
+        }
+        getNodeTypeRegistry().unregisterNodeTypes(ntNames);
     }
 
     //-----------------------------------------------------------< Dumpable >---

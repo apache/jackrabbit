@@ -14,18 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.NamespaceException;
 
 /**
@@ -37,63 +38,32 @@ import javax.jcr.NamespaceException;
 public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefinition {
 
     /**
-     * Logger instance for this class
+     * logger instance
      */
-    private static Logger log = LoggerFactory.getLogger(NodeDefinitionImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(NodeDefinitionImpl.class);
 
     /**
-     * Package private constructor.
+     * Constructor to create a definition that is based on a template.
      *
-     * @param nodeDef    child node definition
-     * @param ntMgr      node type manager
+     * @param itemDef  item definition
      * @param resolver
      */
-    NodeDefinitionImpl(QNodeDefinition nodeDef, NodeTypeManagerImpl ntMgr,
-                       NamePathResolver resolver) {
-        super(nodeDef, ntMgr, resolver);
+    public NodeDefinitionImpl(QItemDefinition itemDef, NamePathResolver resolver) {
+        super(itemDef, resolver);
+    }
+
+    /**
+     * Constructor to create a definition that is based on an
+     * existing node type.
+     *
+     * @param itemDef  item definition
+     * @param resolver
+     */
+    public NodeDefinitionImpl(QItemDefinition itemDef, AbstractNodeTypeManager ntMgr, NamePathResolver resolver) {
+        super(itemDef, ntMgr, resolver);
     }
 
     //-------------------------------------------------------< NodeDefinition >
-    /**
-     * {@inheritDoc}
-     */
-    public NodeType getDefaultPrimaryType() {
-        Name ntName = ((QNodeDefinition) itemDef).getDefaultPrimaryType();
-        if (ntName == null) {
-            return null;
-        }
-        try {
-            return ntMgr.getNodeType(ntName);
-        } catch (NoSuchNodeTypeException e) {
-            // should never get here
-            log.error("invalid default node type " + ntName, e);
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public NodeType[] getRequiredPrimaryTypes() {
-        Name[] ntNames = ((QNodeDefinition) itemDef).getRequiredPrimaryTypes();
-        try {
-            if (ntNames == null || ntNames.length == 0) {
-                // return "nt:base"
-                return new NodeType[] { ntMgr.getNodeType(NameConstants.NT_BASE) };
-            } else {
-                NodeType[] nodeTypes = new NodeType[ntNames.length];
-                for (int i = 0; i < ntNames.length; i++) {
-                    nodeTypes[i] = ntMgr.getNodeType(ntNames[i]);
-                }
-                return nodeTypes;
-            }
-        } catch (NoSuchNodeTypeException e) {
-            // should never get here
-            log.error("required node type does not exist", e);
-            return new NodeType[0];
-        }
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -116,6 +86,54 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
             // should never get here
             log.error("invalid default node type " + ntName, e);
             return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeType getDefaultPrimaryType() {
+        if (ntMgr == null) {
+            // not attached to an existing node type
+            return null;
+        }
+        Name ntName = ((QNodeDefinition) itemDef).getDefaultPrimaryType();
+        if (ntName == null) {
+            return null;
+        }
+        try {
+            return ntMgr.getNodeType(ntName);
+        } catch (NoSuchNodeTypeException e) {
+            // should never get here
+            log.error("invalid default node type " + ntName, e);
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeType[] getRequiredPrimaryTypes() {
+        if (ntMgr == null) {
+            // not attached to an existing node type
+            return null;
+        }
+        Name[] ntNames = ((QNodeDefinition) itemDef).getRequiredPrimaryTypes();
+        try {
+            if (ntNames == null || ntNames.length == 0) {
+                // return "nt:base"
+                return new NodeType[] { ntMgr.getNodeType(NameConstants.NT_BASE) };
+            } else {
+                NodeType[] nodeTypes = new NodeType[ntNames.length];
+                for (int i = 0; i < ntNames.length; i++) {
+                    nodeTypes[i] = ntMgr.getNodeType(ntNames[i]);
+                }
+                return nodeTypes;
+            }
+        } catch (NoSuchNodeTypeException e) {
+            // should never get here
+            log.error("required node type does not exist", e);
+            return new NodeType[0];
         }
     }
 
@@ -143,4 +161,3 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
         }
     }
 }
-

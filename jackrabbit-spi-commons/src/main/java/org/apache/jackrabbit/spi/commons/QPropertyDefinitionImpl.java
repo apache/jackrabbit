@@ -60,7 +60,7 @@ public class QPropertyDefinitionImpl
     /**
      * The 'fullTextSearcheable' flag
      */
-    private final boolean fullTextSearcheable;
+    private final boolean fullTextSearchable;
 
     /**
      * The 'queryOrderable' flag
@@ -79,7 +79,7 @@ public class QPropertyDefinitionImpl
                 propDef.getDefaultValues(), propDef.isMultiple(),
                 propDef.getRequiredType(), propDef.getValueConstraints(),
                 propDef.getAvailableQueryOperators(),
-                propDef.isFullTextSearcheable(),
+                propDef.isFullTextSearchable(),
                 propDef.isQueryOrderable());
     }
 
@@ -130,7 +130,7 @@ public class QPropertyDefinitionImpl
      * @param valueConstraints  the value constraints for this property. If none
      *                          exist an empty array must be passed.
      * @param availableQueryOperators
-     * @param isFullTextSearcheable
+     * @param isFullTextSearchable
      * @param isQueryOrderable
      * @throws NullPointerException if <code>valueConstraints</code> is
      *                              <code>null</code>.
@@ -142,7 +142,7 @@ public class QPropertyDefinitionImpl
                                    QValue[] defaultValues, boolean isMultiple,
                                    int requiredType, String[] valueConstraints,
                                    Name[] availableQueryOperators,
-                                   boolean isFullTextSearcheable,
+                                   boolean isFullTextSearchable,
                                    boolean isQueryOrderable) {
         super(name, declaringNodeType, isAutoCreated, isMandatory,
                 onParentVersion, isProtected);
@@ -154,7 +154,7 @@ public class QPropertyDefinitionImpl
         this.requiredType = requiredType;
         this.valueConstraints = valueConstraints;
         this.availableQueryOperators = availableQueryOperators;
-        this.fullTextSearcheable = isFullTextSearcheable;
+        this.fullTextSearchable = isFullTextSearchable;
         this.queryOrderable = isQueryOrderable;
     }
 
@@ -197,8 +197,8 @@ public class QPropertyDefinitionImpl
     /**
      * {@inheritDoc}
      */
-    public boolean isFullTextSearcheable() {
-        return fullTextSearcheable;
+    public boolean isFullTextSearchable() {
+        return fullTextSearchable;
     }
 
     /**
@@ -237,7 +237,7 @@ public class QPropertyDefinitionImpl
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
                     && multiple == other.isMultiple()
-                    && fullTextSearcheable == other.isFullTextSearcheable()
+                    && fullTextSearchable == other.isFullTextSearchable()
                     && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
@@ -268,7 +268,7 @@ public class QPropertyDefinitionImpl
             sb.append('/');
             sb.append(multiple ? 1 : 0);
             sb.append('/');
-            sb.append(fullTextSearcheable ? 1 : 0);
+            sb.append(fullTextSearchable ? 1 : 0);
             sb.append('/');
             sb.append(queryOrderable ? 1 : 0);
             sb.append('/');

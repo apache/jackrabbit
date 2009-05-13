@@ -23,6 +23,9 @@ import java.util.Map;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.EventBundle;
@@ -45,6 +48,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 /**
  * Log wrapper for a {@link RepositoryService}.
@@ -655,6 +659,24 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return service.getQNodeTypeDefinitions(unwrap(sessionInfo), nodetypeNames);
             }
         }, "getQNodeTypeDefinitions(SessionInfo, Name[])", new Object[]{unwrap(sessionInfo), nodetypeNames});
+    }
+
+    public void registerNodeTypes(final SessionInfo sessionInfo, final QNodeTypeDefinition[] nodeTypeDefinitions, final boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.registerNodeTypes(unwrap(sessionInfo), nodeTypeDefinitions, allowUpdate);
+                return null;
+            }
+        }, "registerNodeTypes(SessionInfo, QNodeTypeDefinition[], boolean)", new Object[]{unwrap(sessionInfo), nodeTypeDefinitions, allowUpdate});
+    }
+
+    public void unregisterNodeTypes(final SessionInfo sessionInfo, final Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.unregisterNodeTypes(unwrap(sessionInfo), nodeTypeNames);
+                return null;
+            }
+        }, "unregisterNodeTypes(SessionInfo, Name[])", new Object[]{unwrap(sessionInfo), nodeTypeNames});
     }
 
     public void createWorkspace(final SessionInfo sessionInfo, final String name, final String srcWorkspaceName) throws RepositoryException {

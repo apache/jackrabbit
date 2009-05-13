@@ -171,6 +171,8 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 import javax.xml.parsers.DocumentBuilder;
@@ -2011,6 +2013,22 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // in order to avoid individual calls for every nodetype, retrieve
         // the complete set from the server (again).
         return getQNodeTypeDefinitions(sessionInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
     }
 
     /**

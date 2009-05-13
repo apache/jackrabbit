@@ -38,7 +38,9 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -94,6 +96,9 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -1103,6 +1108,34 @@ public class RepositoryServiceImpl implements RepositoryService {
             }
         }
         return defs.iterator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
+
+        NodeTypeDefinition[] defs = new NodeTypeDefinition[nodeTypeDefinitions.length];
+        for (int i = 0; i < nodeTypeDefinitions.length; i++) {
+            defs[i] = new NodeTypeDefinitionImpl(nodeTypeDefinitions[i], sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory()) {
+            };
+        }
+        ntMgr.registerNodeTypes(defs, allowUpdate);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        NodeTypeManager ntMgr = sInfo.getSession().getWorkspace().getNodeTypeManager();
+        String[] names = new String[nodeTypeNames.length];
+        for (int i = 0; i < nodeTypeNames.length; i++) {
+            names[i] = sInfo.getNamePathResolver().getJCRName(nodeTypeNames[i]);
+        }
+        ntMgr.unregisterNodeTypes(names);
     }
 
     /**

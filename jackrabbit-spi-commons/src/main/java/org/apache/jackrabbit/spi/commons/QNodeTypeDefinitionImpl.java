@@ -21,9 +21,19 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 import javax.jcr.PropertyType;
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.nodetype.NodeDefinition;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Collections;
@@ -200,6 +210,27 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
+     * Createa a new <code>QNodeTypeDefinitionImpl</code> from a JCR
+     * NodeType definition.
+     *
+     * @param def
+     * @param resolver
+     * @param qValueFactory
+     * @throws RepositoryException
+     */
+    public QNodeTypeDefinitionImpl(NodeTypeDefinition def,
+                                   NamePathResolver resolver,
+                                   QValueFactory qValueFactory) throws RepositoryException {
+        this(resolver.getQName(def.getName()),
+                getNames(def.getDeclaredSupertypeNames(), resolver), null, def.isMixin(),
+                def.isAbstract(), def.isQueryable(), def.hasOrderableChildNodes(),
+                resolver.getQName(def.getPrimaryItemName()),
+                createQPropertyDefinitions(def.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
+                createQNodeDefinitions(def.getDeclaredChildNodeDefinitions(), resolver));
+    }
+
+    //------------------------------------------------< QNodeTypeDefinition >---
+    /**
      * {@inheritDoc}
      */
     public Name getName() {
@@ -365,5 +396,53 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
             }
         }
         return serDefs;
+    }
+
+    private static Name[] getNames(String[] jcrNames, NamePathResolver resolver) throws NamespaceException, IllegalNameException {
+        Name[] names = new Name[jcrNames.length];
+        for (int i = 0; i < jcrNames.length; i++) {
+            names[i] = resolver.getQName(jcrNames[i]);
+        }
+        return names;
+    }
+
+    private static QPropertyDefinition[] createQPropertyDefinitions(PropertyDefinition[] pds,
+                                                                    NamePathResolver resolver,
+                                                                    QValueFactory qValueFactory) throws RepositoryException {
+        QPropertyDefinition[] declaredPropDefs = new QPropertyDefinition[pds.length];
+        for (int i = 0; i < pds.length; i++) {
+            PropertyDefinition propDef = pds[i];
+            Name name = resolver.getQName(propDef.getName());
+            Name declName = resolver.getQName(propDef.getDeclaringNodeType().getName());
+            QValue[] defVls = ValueFormat.getQValues(propDef.getDefaultValues(), resolver, qValueFactory);
+
+            declaredPropDefs[i] = new QPropertyDefinitionImpl(
+                    name, declName, propDef.isAutoCreated(), propDef.isMandatory(),
+                    propDef.getOnParentVersion(), propDef.isProtected(),
+                    defVls, propDef.isMultiple(),
+                    propDef.getRequiredType(), propDef.getValueConstraints(),
+                    getNames(propDef.getAvailableQueryOperators(), resolver),
+                    propDef.isFullTextSearchable(),
+                    propDef.isQueryOrderable());
+        }
+        return declaredPropDefs;
+    }
+
+    private static QNodeDefinition[] createQNodeDefinitions(NodeDefinition[] nds, NamePathResolver resolver) throws RepositoryException {
+        QNodeDefinition[] declaredNodeDefs = new QNodeDefinition[nds.length];
+        for (int i = 0; i < nds.length; i++) {
+            NodeDefinition nodeDef = nds[i];
+            Name name = resolver.getQName(nodeDef.getName());
+            Name declName = resolver.getQName(nodeDef.getDeclaringNodeType().getName());
+            Name defaultPrimaryType = resolver.getQName(nodeDef.getDefaultPrimaryTypeName());
+            Name[] requiredPrimaryTypes = getNames(nodeDef.getRequiredPrimaryTypeNames(), resolver);
+
+            declaredNodeDefs[i] = new QNodeDefinitionImpl(
+                    name, declName, nodeDef.isAutoCreated(), nodeDef.isMandatory(),
+                    nodeDef.getOnParentVersion(), nodeDef.isProtected(),
+                    defaultPrimaryType, requiredPrimaryTypes,
+                    nodeDef.allowsSameNameSiblings());
+        }
+        return declaredNodeDefs;
     }
 }

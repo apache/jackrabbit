@@ -112,6 +112,30 @@ public interface NodeTypeConstants {
     /** Name of the <code>sameNameSiblings</code> attribute. */
     String SAMENAMESIBLINGS_ATTRIBUTE = "sameNameSiblings";
 
+    /**
+     * Name of the availableQueryOperators element.
+     * @since JCR 2.0
+     */
+    String AVAILABLE_QUERY_OPERATORS_ELEMENT = "availableQueryOperators";
+
+    /**
+     * Name of the availableQueryOperator element.
+     * @since JCR 2.0
+     */
+    String AVAILABLE_QUERY_OPERATOR_ELEMENT = "availableQueryOperator";
+
+    /**
+     * Name of the fullTextSearchable attribute.
+     * @since JCR 2.0
+     */
+    String FULL_TEXT_SEARCHABLE_ATTRIBUTE = "fullTextSearchable";
+
+    /**
+     * Name of the queryOrderable attribute.
+     * @since JCR 2.0
+     */
+    String QUERY_ORDERABLE_ATTRIBUTE = "queryOrderable";
+
     //----------< attr. not defined by copied from o.a.j.core.n.x.Constants >---
     /**
      * Name of the declaring nodetype. This value is not needed during

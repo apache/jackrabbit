@@ -62,19 +62,9 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      */
     private final boolean multiple;
 
-    /**
-     * TODO
-     */
-    private final Name[] availableQueryOperators = new Name[0];
-
-    /**
-     * TODO
-     */
-    private final boolean fullTextSearcheable = false;
-    /**
-     * TODO
-     */
-    private final boolean queryOrderable = false;
+    private final Name[] availableQueryOperators;
+    private final boolean fullTextSearcheable;
+    private final boolean queryOrderable;
 
     /**
      * Default constructor.
@@ -96,6 +86,17 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             multiple = Boolean.valueOf(pdefElement.getAttribute(MULTIPLE_ATTRIBUTE)).booleanValue();
         } else {
             multiple = false;
+        }
+
+        if (pdefElement.hasAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)) {
+            fullTextSearcheable = Boolean.valueOf(pdefElement.getAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE)).booleanValue();
+        } else {
+            fullTextSearcheable = false;
+        }
+        if (pdefElement.hasAttribute(QUERY_ORDERABLE_ATTRIBUTE)) {
+            queryOrderable = Boolean.valueOf(pdefElement.getAttribute(QUERY_ORDERABLE_ATTRIBUTE)).booleanValue();
+        } else {
+            queryOrderable = false;
         }
 
         Element child = DomUtil.getChildElement(pdefElement, DEFAULTVALUES_ELEMENT, null);
@@ -141,6 +142,20 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             }
             valueConstraints = (String[]) vc.toArray(new String[vc.size()]);
         }
+
+        child = DomUtil.getChildElement(pdefElement, AVAILABLE_QUERY_OPERATORS_ELEMENT, null);
+        if (child == null) {
+            availableQueryOperators = new Name[0];
+        } else {
+            List names = new ArrayList();
+            ElementIterator it = DomUtil.getChildren(child, AVAILABLE_QUERY_OPERATOR_ELEMENT, null);
+            while (it.hasNext()) {
+                String str = DomUtil.getText(it.nextElement());
+                Name n = resolver.getQName(str);
+                names.add(n);
+            }
+            availableQueryOperators = (Name[]) names.toArray(new Name[names.size()]);
+        }
     }
     
     //------------------------------------------------< QPropertyDefinition >---
@@ -176,24 +191,21 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      * {@inheritDoc}
      */
     public Name[] getAvailableQueryOperators() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+        return availableQueryOperators;
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean isFullTextSearcheable() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+    public boolean isFullTextSearchable() {
+        return fullTextSearcheable;
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isQueryOrderable() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+        return queryOrderable;
     }
 
     /**
@@ -225,7 +237,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             return super.equals(obj)
                     && requiredType == other.getRequiredType()
                     && multiple == other.isMultiple()
-                    && fullTextSearcheable == other.isFullTextSearcheable()
+                    && fullTextSearcheable == other.isFullTextSearchable()
                     && queryOrderable == other.isQueryOrderable()
                     && Arrays.equals(valueConstraints, other.getValueConstraints())
                     && Arrays.equals(defaultValues, other.getDefaultValues())
