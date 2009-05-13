@@ -45,6 +45,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -231,6 +232,8 @@ public class CompactNodeTypeDefReader {
             NodeTypeDef ntd = new NodeTypeDef();
             ntd.setOrderableChildNodes(false);
             ntd.setMixin(false);
+            ntd.setAbstract(false);
+            ntd.setQueryable(true);
             ntd.setPrimaryItemName(null);
             doNodeTypeName(ntd);
             doSuperTypes(ntd);
@@ -333,7 +336,7 @@ public class CompactNodeTypeDefReader {
                 ntd.setAbstract(true);
             } else if (currentTokenEquals(Lexer.NOQUERY)) {
                 nextToken();
-                // ntd.setNoQuery(true);
+                ntd.setQueryable(false);
             } else if (currentTokenEquals(Lexer.PRIMARYITEM)) {
                 nextToken();
                 ntd.setPrimaryItemName(toQName(currentToken));
@@ -366,6 +369,18 @@ public class CompactNodeTypeDefReader {
                 pdi.setProtected(false);
                 pdi.setRequiredType(PropertyType.STRING);
                 pdi.setValueConstraints(null);
+
+                pdi.setFullTextSearchable(true);
+                pdi.setQueryOrderable(true);
+                pdi.setAvailableQueryOperators(new String[]{
+                        QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                        QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
+                        QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+                        QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
+                        QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
+                        QueryObjectModelConstants.JCR_OPERATOR_LIKE,
+                        QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
+                });
 
                 nextToken();
                 doPropertyDefinition(pdi, ntd);
@@ -448,6 +463,12 @@ public class CompactNodeTypeDefReader {
             pdi.setRequiredType(PropertyType.PATH);
         } else if (currentTokenEquals(Lexer.REFERENCE)) {
             pdi.setRequiredType(PropertyType.REFERENCE);
+        } else if (currentTokenEquals(Lexer.WEAKREFERENCE)) {
+            pdi.setRequiredType(PropertyType.WEAKREFERENCE);
+        } else if (currentTokenEquals(Lexer.URI)) {
+            pdi.setRequiredType(PropertyType.URI);
+        } else if (currentTokenEquals(Lexer.DECIMAL)) {
+            pdi.setRequiredType(PropertyType.DECIMAL);
         } else if (currentTokenEquals(Lexer.UNDEFINED)) {
             pdi.setRequiredType(PropertyType.UNDEFINED);
         } else {
@@ -500,9 +521,57 @@ public class CompactNodeTypeDefReader {
                 pdi.setOnParentVersion(OnParentVersionAction.IGNORE);
             } else if (currentTokenEquals(Lexer.ABORT)) {
                 pdi.setOnParentVersion(OnParentVersionAction.ABORT);
+            } else if (currentTokenEquals(Lexer.NOFULLTEXT)) {
+                pdi.setFullTextSearchable(false);
+            } else if (currentTokenEquals(Lexer.NOQUERYORDER)) {
+                pdi.setQueryOrderable(false);
+            } else if (currentTokenEquals(Lexer.QUERYOPS)) {
+                doPropertyQueryOperators(pdi);
             }
             nextToken();
         }
+    }
+
+    /**
+     * processes the property value constraints
+     *
+     * @param pdi
+     * @throws ParseException
+     */
+    private void doPropertyQueryOperators(PropDefImpl pdi) throws ParseException {
+        if (!currentTokenEquals(Lexer.QUERYOPS)) {
+            return;
+        }
+        nextToken();
+        if (!currentTokenEquals(Lexer.SINGLE_QUOTE)) {
+            lexer.fail("Missing \' delimiter for beginning of query operators list");
+        }
+        List queryOps = new ArrayList();
+        do {
+            nextToken();
+            if (currentTokenEquals(Lexer.QUEROPS_EQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
+            } else if (currentTokenEquals(Lexer.QUEROPS_NOTEQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
+            } else if (currentTokenEquals(Lexer.QUEROPS_LESSTHAN)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
+            } else if (currentTokenEquals(Lexer.QUEROPS_LESSTHANOREQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+            } else if (currentTokenEquals(Lexer.QUEROPS_GREATERTHAN)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
+            } else if (currentTokenEquals(Lexer.QUEROPS_GREATERTHANOREQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+            } else if (currentTokenEquals(Lexer.QUEROPS_LIKE)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
+            } else if (currentTokenEquals(Lexer.SINGLE_QUOTE)) {
+                nextToken();
+                break;
+            } else {
+                lexer.fail("'" + currentToken + "' is not a valid query operator");
+            }
+            nextToken();
+        } while (currentTokenEquals(Lexer.LIST_DELIMITER));
+        pdi.setAvailableQueryOperators((String[]) queryOps.toArray(new String[queryOps.size()]));
     }
 
     /**

@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import java.io.StreamTokenizer;
 import java.io.Reader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Lexer
@@ -48,6 +51,9 @@ public class Lexer {
     public static final String[] MANDATORY = new String[]{"mandatory", "man", "m"};
     public static final String[] PROTECTED = new String[]{"protected", "pro", "p"};
     public static final String[] MULTIPLE = new String[]{"multiple", "mul", "*"};
+    public static final String[] QUERYOPS = new String[]{"queryops", "qop"};
+    public static final String[] NOFULLTEXT = new String[]{"nofulltext", "nof"};
+    public static final String[] NOQUERYORDER = new String[]{"noqueryorder", "nqord"};
 
     public static final String[] COPY = new String[]{"copy", "Copy", "COPY"};
     public static final String[] VERSION = new String[]{"version", "Version", "VERSION"};
@@ -56,17 +62,33 @@ public class Lexer {
     public static final String[] IGNORE = new String[]{"ignore", "Ignore", "IGNORE"};
     public static final String[] ABORT = new String[]{"abort", "Abort", "ABORT"};
 
-    public static final String[] ATTRIBUTE = new String[]{"primary", "pri", "!",
-                                                          "autocreated", "aut", "a",
-                                                          "mandatory", "man", "m",
-                                                          "protected", "pro", "p",
-                                                          "multiple", "mul", "*",
-                                                          "copy", "Copy", "COPY",
-                                                          "version", "Version", "VERSION",
-                                                          "initialize", "Initialize", "INITIALIZE",
-                                                          "compute", "Compute", "COMPUTE",
-                                                          "ignore", "Ignore", "IGNORE",
-                                                          "abort", "Abort", "ABORT"};
+    public static final String[] ATTRIBUTE;
+    static {
+        ArrayList<String> attr = new ArrayList<String>();
+        attr.addAll(Arrays.asList(PRIMARY));
+        attr.addAll(Arrays.asList(AUTOCREATED));
+        attr.addAll(Arrays.asList(MANDATORY));
+        attr.addAll(Arrays.asList(PROTECTED));
+        attr.addAll(Arrays.asList(MULTIPLE));
+        attr.addAll(Arrays.asList(QUERYOPS));
+        attr.addAll(Arrays.asList(NOFULLTEXT));
+        attr.addAll(Arrays.asList(NOQUERYORDER));
+        attr.addAll(Arrays.asList(COPY));
+        attr.addAll(Arrays.asList(VERSION));
+        attr.addAll(Arrays.asList(INITIALIZE));
+        attr.addAll(Arrays.asList(COMPUTE));
+        attr.addAll(Arrays.asList(IGNORE));
+        attr.addAll(Arrays.asList(ABORT));
+        ATTRIBUTE = attr.toArray(new String[attr.size()]);
+    }
+
+    public static final String QUEROPS_EQUAL = "=";
+    public static final String QUEROPS_NOTEQUAL = "<>";
+    public static final String QUEROPS_LESSTHAN = "<";
+    public static final String QUEROPS_LESSTHANOREQUAL = "<=";
+    public static final String QUEROPS_GREATERTHAN = ">";
+    public static final String QUEROPS_GREATERTHANOREQUAL = ">=";
+    public static final String QUEROPS_LIKE = "LIKE";
 
     public static final String[] STRING = {"string", "String", "STRING"};
     public static final String[] BINARY = {"binary", "Binary", "BINARY"};
@@ -77,6 +99,9 @@ public class Lexer {
     public static final String[] NAME = {"name", "Name", "NAME"};
     public static final String[] PATH = {"path", "Path", "PATH"};
     public static final String[] REFERENCE = {"reference", "Reference", "REFERENCE"};
+    public static final String[] WEAKREFERENCE = {"weakreference", "WeakReference", "WEAKREFERENCE"};
+    public static final String[] URI = {"uri", "Uri", "URI"};
+    public static final String[] DECIMAL = {"decimal", "Decimal", "DECIMAL"};
 
     public static final String[] UNDEFINED = new String[]{"undefined", "Undefined", "UNDEFINED", "*"};
 
