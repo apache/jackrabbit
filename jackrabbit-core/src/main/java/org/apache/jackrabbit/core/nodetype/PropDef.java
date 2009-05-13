@@ -63,4 +63,26 @@ public interface PropDef extends ItemDef {
      * @return the 'multiple' flag.
      */
     boolean isMultiple();
+
+    /**
+     * Returns the array of available query operators.
+     *
+     * @return the array of query operators.
+     */
+    String[] getAvailableQueryOperators();
+
+    /**
+     * Reports whether this property is full-text searchable.
+     *
+     * @return the 'fullTextSearchable' flag.
+     */
+    boolean isFullTextSearchable();
+
+    /**
+     * Reports whether this property is query-orderable.
+     *
+     * @return the 'queryOrderable' flag.
+     */
+    boolean isQueryOrderable();
+
 }

@@ -298,8 +298,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     }
 
     public boolean isQueryable() {
-        // TODO 
-        throw new RuntimeException("Not implemented yet, see JCR-1591");
+        return ntd.isQueryable();
     }
 
     /**

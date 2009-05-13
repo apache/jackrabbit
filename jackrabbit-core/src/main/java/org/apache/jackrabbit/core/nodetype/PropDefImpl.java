@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.PropertyType;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import java.util.Arrays;
 
 /**
@@ -54,6 +55,30 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      * reset on every attribute change.
      */
     private PropDefId id = null;
+
+    /*
+     * The 'fulltext searchable' flag.
+     */
+    private boolean fullTextSearchable = true;
+
+    /*
+     * The 'query orderable' flag.
+     */
+    private boolean queryOrderable = true;
+
+    /*
+     * The 'query operators.
+     */
+    private String[] queryOperators = new String[]{
+            QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
+            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+            QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
+            QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
+            QueryObjectModelConstants.JCR_OPERATOR_LIKE,
+            QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
+    };
+
 
     /**
      * Default constructor.
@@ -111,6 +136,43 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         this.multiple = multiple;
+    }
+
+    /**
+     * Sets the 'fulltext searchable' flag.
+     *
+     * @param fullTextSearchable
+     */
+    public void setFullTextSearchable(boolean fullTextSearchable) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        this.fullTextSearchable = fullTextSearchable;
+    }
+
+    /**
+     * Sets the 'fulltext searchable' flag.
+     *
+     * @param queryOrderable
+     */
+    public void setQueryOrderable(boolean queryOrderable) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        this.queryOrderable = queryOrderable;
+    }
+
+    /**
+     * Sets the 'available' query operators.
+     *
+     * @param queryOperators
+     */
+    public void setAvailableQueryOperators(String[] queryOperators) {
+        // reset id field in order to force lazy recomputation of identifier
+        id = null;
+        if (queryOperators != null) {
+            this.queryOperators = queryOperators;
+        } else {
+            this.queryOperators = new String[0];
+        }
     }
 
     //------------------------------------------------< ItemDefImpl overrides >
@@ -221,6 +283,27 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public String[] getAvailableQueryOperators() {
+        return queryOperators;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isFullTextSearchable() {
+        return fullTextSearchable;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isQueryOrderable() {
+        return queryOrderable;
+    }
+
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * Compares two property definitions for equality. Returns <code>true</code>
@@ -242,7 +325,10 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
                     && requiredType == other.requiredType
                     && Arrays.equals(valueConstraints, other.valueConstraints)
                     && Arrays.equals(defaultValues, other.defaultValues)
-                    && multiple == other.multiple;
+                    && multiple == other.multiple
+                    && Arrays.equals(queryOperators, other.queryOperators)
+                    && queryOrderable == other.queryOrderable
+                    && fullTextSearchable == other.fullTextSearchable;
         }
         return false;
     }
