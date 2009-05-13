@@ -23,7 +23,6 @@ import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,17 +120,24 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
         return ((PropDef) itemDef).isMultiple();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String[] getAvailableQueryOperators() {
-        // TODO: JCR-2091
-        return Operator.getAllQueryOperators();
+        return ((PropDef) itemDef).getAvailableQueryOperators();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isFullTextSearchable() {
-        return true; // TODO: JCR-2091
+        return ((PropDef) itemDef).isFullTextSearchable();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean isQueryOrderable() {
-        return true; // TODO: JCR-2091
+        return ((PropDef) itemDef).isQueryOrderable();
     }
-
 }

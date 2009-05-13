@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.nodetype;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
@@ -32,12 +33,26 @@ class PropertyDefinitionTemplateImpl
     private String[] constraints;
     private Value[] defaultValues;
     private boolean multiple;
+    private boolean fullTextSearchable;
+    private boolean queryOrderable;
+    private String[] queryOperators;
 
     /**
      * Package private constructor
      */
     PropertyDefinitionTemplateImpl() {
         type = PropertyType.STRING;
+        fullTextSearchable = true;
+        queryOrderable = true;
+        queryOperators = new String[]{
+                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
+                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
+                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
+                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
+        };
     }
 
     /**
@@ -51,6 +66,9 @@ class PropertyDefinitionTemplateImpl
         constraints = def.getValueConstraints();
         defaultValues = def.getDefaultValues();
         multiple = def.isMultiple();
+        fullTextSearchable = def.isFullTextSearchable();
+        queryOrderable = def.isQueryOrderable();
+        queryOperators = def.getAvailableQueryOperators();
     }
 
     //-------------------------------------------< PropertyDefinitionTemplate >
@@ -86,24 +104,21 @@ class PropertyDefinitionTemplateImpl
      * {@inheritDoc}
      */
     public void setAvailablrQueryOperators(String[] operators) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        queryOperators = operators;
     }
 
     /**
      * {@inheritDoc}
      */
     public void setFullTextSearchable(boolean searchable) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        fullTextSearchable = searchable;
     }
 
     /**
      * {@inheritDoc}
      */
     public void setQueryOrderable(boolean orderable) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        queryOrderable = orderable;
     }
 
     //---------------------------------------------------< PropertyDefinition >
@@ -139,23 +154,20 @@ class PropertyDefinitionTemplateImpl
      * {@inheritDoc}
      */
     public String[] getAvailableQueryOperators() {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        return queryOperators;
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isFullTextSearchable() {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        return fullTextSearchable;
     }
 
     /**
      * {@inheritDoc}
      */
     public boolean isQueryOrderable() {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1591");
+        return queryOrderable;
     }
 }

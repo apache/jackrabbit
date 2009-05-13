@@ -43,6 +43,7 @@ public class NodeTypeDef implements Cloneable {
 
     private boolean mixin;
     private boolean orderableChildNodes;
+    private boolean queryable;
 
     private boolean abstractStatus;
     private Name primaryItemName;
@@ -64,6 +65,7 @@ public class NodeTypeDef implements Cloneable {
         mixin = false;
         orderableChildNodes = false;
         abstractStatus = false;
+        queryable = true;
     }
 
     /**
@@ -181,6 +183,15 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
+     * Sets the 'queryable' flag.
+     *
+     * @param queryable flag
+     */
+    public void setQueryable(boolean queryable) {
+        this.queryable = queryable;
+    }
+
+    /**
      * Sets the name of the primary item (one of the child items of the node's
      * of this node type)
      *
@@ -269,6 +280,15 @@ public class NodeTypeDef implements Cloneable {
     }
 
     /**
+     * Returns the value of the 'queryable' flag.
+     *
+     * @return true if this node type is queryable; false otherwise.
+     */
+    public boolean isQueryable() {
+        return queryable;
+    }
+
+    /**
      * Returns the name of the primary item (one of the child items of the
      * node's of this node type) or <code>null</code> if not set.
      *
@@ -315,6 +335,7 @@ public class NodeTypeDef implements Cloneable {
         clone.mixin = mixin;
         clone.orderableChildNodes = orderableChildNodes;
         clone.abstractStatus = abstractStatus;
+        clone.queryable = queryable;
         clone.nodeDefs = (HashSet) nodeDefs.clone();
         clone.propDefs = (HashSet) propDefs.clone();
         return clone;
@@ -332,6 +353,7 @@ public class NodeTypeDef implements Cloneable {
                     && mixin == other.mixin
                     && orderableChildNodes == other.orderableChildNodes
                     && abstractStatus == other.abstractStatus
+                    && queryable == other.queryable
                     && propDefs.equals(other.propDefs)
                     && nodeDefs.equals(other.nodeDefs);
         }

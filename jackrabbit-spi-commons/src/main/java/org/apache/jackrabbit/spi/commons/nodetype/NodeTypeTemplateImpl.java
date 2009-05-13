@@ -37,6 +37,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     private String[] superTypeNames;
     private String primaryItemName;
     private boolean abstractStatus;
+    private boolean queryable;
     private boolean mixin;
     private boolean orderableChildNodes;
     private List nodeDefinitionTemplates;
@@ -46,6 +47,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * Package private constructor
      */
     NodeTypeTemplateImpl() {
+        queryable = true;
     }
 
     /**
@@ -59,6 +61,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         primaryItemName = def.getPrimaryItemName();
         abstractStatus = def.isAbstract();
         mixin = def.isMixin();
+        queryable = def.isQueryable();
         orderableChildNodes = def.hasOrderableChildNodes();
         NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
         if (nodeDefs != null) {
@@ -145,8 +148,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      * {@inheritDoc}
      */
     public void setQueryable(boolean queryable) {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1591");
+        this.queryable = queryable;
     }
 
     //---------------------------------------------------< NodeTypeDefinition >
@@ -179,8 +181,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     }
 
     public boolean isQueryable() {
-        // TODO 
-        throw new RuntimeException("Not implemented yet, see JCR-1591");
+        return queryable;
     }
 
     /**

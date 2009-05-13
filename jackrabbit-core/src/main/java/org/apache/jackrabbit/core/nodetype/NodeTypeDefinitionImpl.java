@@ -110,15 +110,28 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
     }
 
     /**
+     * Returns <code>true</code> if the node type is queryable, meaning that
+     * the available-query-operators, full-text-searchable
+     * and query-orderable attributes of its property definitions take effect. See
+     * {@link javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators()},
+     * {@link javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable()} and
+     * {@link javax.jcr.nodetype.PropertyDefinition#isQueryOrderable()}.
+     * <p>
+     * If a node type is declared non-queryable then these attributes of its property
+     * definitions have no effect.
+     *
+     * @since JCR 2.0
+     * @return a <code>boolean</code>
+     */
+    public boolean isQueryable() {
+        return ntd.isQueryable();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public boolean isMixin() {
         return ntd.isMixin();
-    }
-
-    public boolean isQueryable() {
-        // TODO 
-        throw new RuntimeException("Not implemented yet, see JCR-1591");
     }
 
     /**
