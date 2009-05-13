@@ -37,34 +37,34 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
     private final boolean allowsSameNameSiblings;
 
     private NodeDefinitionImpl(NodeDefinition definition) {
-	super(definition);
+        super(definition);
 
-	requiredPrimaryTypes = definition.getRequiredPrimaryTypes();
-	defaultPrimaryType = definition.getDefaultPrimaryType();
-	allowsSameNameSiblings = definition.allowsSameNameSiblings();
+        requiredPrimaryTypes = definition.getRequiredPrimaryTypes();
+        defaultPrimaryType = definition.getDefaultPrimaryType();
+        allowsSameNameSiblings = definition.allowsSameNameSiblings();
     }
 
     public static NodeDefinitionImpl create(NodeDefinition definition) {
-	if (definition instanceof NodeDefinitionImpl) {
-	    return (NodeDefinitionImpl) definition;
-	} else {
-	    return new NodeDefinitionImpl(definition);
-	}
+        if (definition instanceof NodeDefinitionImpl) {
+            return (NodeDefinitionImpl) definition;
+        } else {
+            return new NodeDefinitionImpl(definition);
+        }
     }
 
-    //--------------------------------------------------< NodeDef interface >---
+    //-----------------------------------------------------< NodeDefinition >---
     /**
      * @see javax.jcr.nodetype.NodeDefinition#getRequiredPrimaryTypes()
      */
     public NodeType[] getRequiredPrimaryTypes() {
-	return requiredPrimaryTypes;
+        return requiredPrimaryTypes;
     }
 
     /**
      * @see javax.jcr.nodetype.NodeDefinition#getDefaultPrimaryType()
      */
     public NodeType getDefaultPrimaryType() {
-	return defaultPrimaryType;
+        return defaultPrimaryType;
     }
 
     /**
@@ -74,12 +74,22 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
         return allowsSameNameSiblings;
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeDefinition#getDefaultPrimaryTypeName()
+     */
     public String getDefaultPrimaryTypeName() {
-        throw new UnsupportedOperationException("JCR-1591");
+        return defaultPrimaryType.getName();
     }
 
+    /**
+     * @see javax.jcr.nodetype.NodeDefinition#getRequiredPrimaryTypeNames()
+     */
     public String[] getRequiredPrimaryTypeNames() {
-        throw new UnsupportedOperationException("JCR-1591");
+        String[] names = new String[requiredPrimaryTypes.length];
+        for (int i = 0; i < requiredPrimaryTypes.length; i++) {
+            names[i] = requiredPrimaryTypes[i].getName();
+        }
+        return names;
     }
 
     //-------------------------------------< implementation specific method >---
@@ -100,12 +110,12 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
         // reqPrimaryTypes: minimal set is nt:base.
         NodeType[] nts = getRequiredPrimaryTypes();
         Element reqPrimaryTypes = document.createElement(REQUIREDPRIMARYTYPES_ELEMENT);
-	for (int i = 0; i < nts.length; i++) {
+        for (int i = 0; i < nts.length; i++) {
             Element rptElem = document.createElement(REQUIREDPRIMARYTYPE_ELEMENT);
             DomUtil.setText(rptElem, nts[i].getName());
-	    reqPrimaryTypes.appendChild(rptElem);
+            reqPrimaryTypes.appendChild(rptElem);
 
-	}
+        }
         elem.appendChild(reqPrimaryTypes);
         return elem;
     }
@@ -116,7 +126,7 @@ public final class NodeDefinitionImpl extends ItemDefinitionImpl implements Node
      * @return always returns {@link #CHILDNODEDEFINITION_ELEMENT}.
      */
     String getElementName() {
-	return CHILDNODEDEFINITION_ELEMENT;
+        return CHILDNODEDEFINITION_ELEMENT;
     }
 
 }

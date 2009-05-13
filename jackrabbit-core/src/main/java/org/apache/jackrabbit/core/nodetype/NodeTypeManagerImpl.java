@@ -509,46 +509,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * Registers a new node type or updates an existing node type using the
-     * specified definition and returns the resulting <code>NodeType</code>
-     * object.
-     * <p/>
-     * Typically, the object passed to this method will be a
-     * <code>NodeTypeTemplate</code> (a subclass of
-     * <code>NodeTypeDefinition</code>) acquired from
-     * <code>NodeTypeManager.createNodeTypeTemplate</code> and then filled-in
-     * with definition information.
-     * <p/>
-     * Throws an <code>InvalidNodeTypeDefinitionException</code> if the
-     * <code>NodeTypeDefinition</code> is invalid.
-     * <p/>
-     * Throws a <code>NodeTypeExistsException</code> if <code>allowUpdate</code>
-     * is <code>false</code> and the <code>NodeTypeDefinition</code> specifies a
-     * node type name that is already registered.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if this
-     * implementation does not support node type registration.
-     *
-     * @param ntd an <code>NodeTypeDefinition</code>.
-     * @param allowUpdate a boolean
-     * @return the registered node type
-     * @throws InvalidNodeTypeDefinitionException if the
-     *  <code>NodeTypeDefinition</code> is invalid.
-     * @throws NodeTypeExistsException if <code>allowUpdate</code> is
-     *  <code>false</code> and the <code>NodeTypeDefinition</code> specifies a
-     *  node type name that is already registered.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate)
-            throws RepositoryException {
-        NodeTypeDefinition[] ntds = new NodeTypeDefinition[] { ntd };
-        return registerNodeTypes(ntds, allowUpdate).nextNodeType();
-    }
-
-    /**
      * Registers or updates the specified <code>Collection</code> of
      * <code>NodeTypeDefinition</code> objects. This method is used to register
      * or update a set of node types with mutual dependencies. Returns an
@@ -626,26 +586,6 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         } catch (InvalidNodeTypeDefException e) {
             throw new InvalidNodeTypeDefinitionException(e.getMessage(), e);
         }
-    }
-
-    /**
-     * Unregisters the specified node type.
-     * <p/>
-     * Throws a <code>NoSuchNodeTypeException</code> if no registered node type
-     * exists with the specified name.
-     *
-     * @param name a <code>String</code>.
-     * @throws UnsupportedRepositoryOperationException if this implementation
-     *  does not support node type registration.
-     * @throws NoSuchNodeTypeException if no registered node type exists with
-     *  the specified name.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
-     */
-    public void unregisterNodeType(String name)
-            throws UnsupportedRepositoryOperationException,
-            NoSuchNodeTypeException, RepositoryException {
-        unregisterNodeTypes(new String[] {name});
     }
 
     /**

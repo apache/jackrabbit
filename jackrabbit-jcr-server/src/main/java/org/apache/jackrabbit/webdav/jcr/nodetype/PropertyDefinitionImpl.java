@@ -38,22 +38,28 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
     private final String[] valueConstraints;
     private final Value[] defaultValues;
     private final boolean isMultiple;
+    private final String[] availableQueryOperators;
+    private final boolean isFullTextSearchable;
+    private final boolean isQueryOrderable;
 
     private PropertyDefinitionImpl(PropertyDefinition definition) {
-	super(definition);
+        super(definition);
 
-	type = definition.getRequiredType();
-	valueConstraints = definition.getValueConstraints();
-	defaultValues = definition.getDefaultValues();
-	isMultiple = definition.isMultiple();
+        type = definition.getRequiredType();
+        valueConstraints = definition.getValueConstraints();
+        defaultValues = definition.getDefaultValues();
+        isMultiple = definition.isMultiple();
+        availableQueryOperators = definition.getAvailableQueryOperators();
+        isFullTextSearchable = definition.isFullTextSearchable();
+        isQueryOrderable = definition.isQueryOrderable();
     }
 
     public static PropertyDefinitionImpl create(PropertyDefinition definition) {
-	if (definition instanceof PropertyDefinitionImpl) {
-	    return (PropertyDefinitionImpl)definition;
-	} else {
-	    return new PropertyDefinitionImpl(definition);
-	}
+        if (definition instanceof PropertyDefinitionImpl) {
+            return (PropertyDefinitionImpl)definition;
+        } else {
+            return new PropertyDefinitionImpl(definition);
+        }
     }
 
     //----------------------------------------< PropertyDefintion interface >---
@@ -61,40 +67,49 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * @see PropertyDefinition#getRequiredType()
      */
     public int getRequiredType() {
-	return type;
+        return type;
     }
 
     /**
      * @see PropertyDefinition#getValueConstraints()
      */
     public String[] getValueConstraints() {
-	return valueConstraints;
+        return valueConstraints;
     }
 
     /**
      * @see PropertyDefinition#getDefaultValues()
      */
     public Value[] getDefaultValues() {
-	return defaultValues;
+        return defaultValues;
     }
 
     /**
      * @see PropertyDefinition#isMultiple()
      */
     public boolean isMultiple() {
-	return isMultiple;
+        return isMultiple;
     }
 
+    /**
+     * @see PropertyDefinition#getAvailableQueryOperators()
+     */
     public String[] getAvailableQueryOperators() {
-        throw new UnsupportedOperationException("JCR-2091");
+        return availableQueryOperators;
     }
 
+    /**
+     * @see PropertyDefinition#isFullTextSearchable()
+     */
     public boolean isFullTextSearchable() {
-        throw new UnsupportedOperationException("JCR-2091");
+        return isFullTextSearchable;
     }
 
+    /**
+     * @see PropertyDefinition#isQueryOrderable()
+     */
     public boolean isQueryOrderable() {
-        throw new UnsupportedOperationException("JCR-2091");
+        return isQueryOrderable;
     }
 
     //-------------------------------------< implementation specific method >---
@@ -105,10 +120,14 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * @param document
      */
     public Element toXml(Document document) {
-	Element elem = super.toXml(document);
+        Element elem = super.toXml(document);
 
         elem.setAttribute(MULTIPLE_ATTRIBUTE, Boolean.toString(isMultiple()));
         elem.setAttribute(REQUIREDTYPE_ATTRIBUTE, PropertyType.nameFromValue(getRequiredType()));
+
+        // JCR 2.0 extensions
+        elem.setAttribute(FULL_TEXT_SEARCHABLE_ATTRIBUTE, Boolean.toString(isFullTextSearchable()));
+        elem.setAttribute(QUERY_ORDERABLE_ATTRIBUTE, Boolean.toString(isQueryOrderable()));
 
         // default values may be 'null'
         Value[] values = getDefaultValues();
@@ -136,6 +155,15 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
         }
         elem.appendChild(constrElem);
 
+        // JCR 2.0 extension
+        Element qopElem = document.createElement(AVAILABLE_QUERY_OPERATORS_ELEMENT);
+        String[] qops = getAvailableQueryOperators();
+        for (int i = 0; i < qops.length; i++) {
+            Element opElem = document.createElement(AVAILABLE_QUERY_OPERATOR_ELEMENT);
+            DomUtil.setText(opElem, qops[i]);
+            qopElem.appendChild(opElem);
+        }
+
         return elem;
     }
 
@@ -145,7 +173,6 @@ public final class PropertyDefinitionImpl extends ItemDefinitionImpl implements 
      * @return always returns {@link #PROPERTYDEFINITION_ELEMENT}
      */
     String getElementName() {
-	return PROPERTYDEFINITION_ELEMENT;
+        return PROPERTYDEFINITION_ELEMENT;
     }
-
 }

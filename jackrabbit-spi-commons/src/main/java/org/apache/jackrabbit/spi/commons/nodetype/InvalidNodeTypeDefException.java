@@ -16,12 +16,14 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 
 /**
- * The <code>NodeTypeConflictException</code> ...
+ * The <code>InvalidNodeTypeDefException</code> ...
+ *
+ * @deprecated As of JCR 2.0. Use {@link javax.jcr.nodetype.InvalidNodeTypeDefinitionException} instead.
  */
-public class InvalidNodeTypeDefException extends RepositoryException {
+public class InvalidNodeTypeDefException extends InvalidNodeTypeDefinitionException {
 
     /**
      * Constructs a new instance of this class with the specified detail

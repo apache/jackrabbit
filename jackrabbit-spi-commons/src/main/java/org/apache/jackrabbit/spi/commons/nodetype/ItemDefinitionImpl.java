@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -22,13 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.nodetype.ItemDefinition;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.NamespaceException;
 
 /**
  * This class implements the <code>ItemDefinition</code> interface.
- * All method calls are delegated to the wrapped {@link QItemDefinition},
+ * All method calls are delegated to the wrapped {@link org.apache.jackrabbit.spi.QItemDefinition},
  * performing the translation from <code>Name</code>s to JCR names
  * (and vice versa) where necessary.
  */
@@ -45,14 +45,14 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected static final String ANY_NAME = "*";
 
     /**
-     * The node type manager of this session.
-     */
-    protected final NodeTypeManagerImpl ntMgr;
-
-    /**
      * The namespace resolver used to translate qualified names to JCR names.
      */
     protected final NamePathResolver resolver;
+
+        /**
+     * The node type manager of this session.
+     */
+    protected final AbstractNodeTypeManager ntMgr;
 
     /**
      * The wrapped item definition.
@@ -60,30 +60,46 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected final QItemDefinition itemDef;
 
     /**
-     * Package private constructor
+     * Package private constructor to create a definition that is based on
+     * a template.
      *
      * @param itemDef    item definition
-     * @param ntMgr      node type manager
      * @param resolver
      */
-    ItemDefinitionImpl(QItemDefinition itemDef, NodeTypeManagerImpl ntMgr,
-                       NamePathResolver resolver) {
-        this.itemDef = itemDef;
-        this.ntMgr = ntMgr;
-        this.resolver = resolver;
+    ItemDefinitionImpl(QItemDefinition itemDef, NamePathResolver resolver) {
+        this(itemDef, null, resolver);
     }
 
-    //-------------------------------------------------------< ItemDefinition >
+    /**
+     * Package private constructor to create a definition that is based on
+     * an existing node type.
+     *
+     * @param itemDef
+     * @param ntMgr
+     * @param resolver
+     */
+    ItemDefinitionImpl(QItemDefinition itemDef, AbstractNodeTypeManager ntMgr, NamePathResolver resolver) {
+        this.itemDef = itemDef;
+        this.resolver = resolver;
+        this.ntMgr = ntMgr;
+    }
+
+    //-----------------------------------------------------< ItemDefinition >---
     /**
      * {@inheritDoc}
      */
     public NodeType getDeclaringNodeType() {
-        try {
-            return ntMgr.getNodeType(itemDef.getDeclaringNodeType());
-        } catch (NoSuchNodeTypeException e) {
-            // should never get here
-            log.error("declaring node type does not exist", e);
+        if (ntMgr == null) {
+            // only a template
             return null;
+        } else {
+            try {
+                return ntMgr.getNodeType(itemDef.getDeclaringNodeType());
+            } catch (NoSuchNodeTypeException e) {
+                // should never get here
+                log.error("declaring node type does not exist", e);
+                return null;
+            }
         }
     }
 
@@ -153,4 +169,3 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
         return itemDef.hashCode();
     }
 }
-

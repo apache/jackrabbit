@@ -25,7 +25,6 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QItemDefinition;
-import org.apache.jackrabbit.spi.commons.nodetype.InvalidNodeTypeDefException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.PrintStream;
 import java.util.Collection;
@@ -155,63 +156,47 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         return registeredNTDefs.containsKey(nodeTypeName);
     }
 
-   /**
-     * @see NodeTypeRegistry#registerNodeType(QNodeTypeDefinition)
-     */
-    public synchronized EffectiveNodeType registerNodeType(QNodeTypeDefinition ntDef)
-            throws InvalidNodeTypeDefException, RepositoryException {
-        // validate the new nodetype definition
-        EffectiveNodeType ent = validator.validateNodeTypeDef(ntDef, registeredNTDefs);
-
-        // persist new node type definition
-        storage.registerNodeTypes(new QNodeTypeDefinition[] {ntDef});
-
-        // update internal caches
-        internalRegister(ntDef, ent);
-
-        // notify listeners
-        notifyRegistered(ntDef.getName());
-        return ent;
-    }
-
     /**
-     * @see NodeTypeRegistry#registerNodeTypes(Collection)
+     * @see NodeTypeRegistry#registerNodeTypes(Collection, boolean)
      */
-    public synchronized void registerNodeTypes(Collection ntDefs)
-            throws InvalidNodeTypeDefException, RepositoryException {
+    public synchronized void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs, boolean allowUpdate) throws NodeTypeExistsException, InvalidNodeTypeDefinitionException, RepositoryException {
+        List<Name> added = new ArrayList<Name>();
+        List<Name> modified = new ArrayList<Name>();
+        for (QNodeTypeDefinition def : ntDefs) {
+            Name name = def.getName();
+            if (isRegistered(name)) {
+                modified.add(name);
+            } else {
+                added.add(name);
+            }
+        }
 
         // validate new nodetype definitions
         Map defMap = validator.validateNodeTypeDefs(ntDefs, registeredNTDefs);
-        storage.registerNodeTypes((QNodeTypeDefinition[])ntDefs.toArray(new QNodeTypeDefinition[ntDefs.size()]));
+        storage.registerNodeTypes(ntDefs.toArray(new QNodeTypeDefinition[ntDefs.size()]), allowUpdate);
 
-        // update internal cache
+        // update internal cache:
+        // unregister modified node type definition
+        internalUnregister(modified);
+        // register all new and modified definition
         internalRegister(defMap);
 
         // notify listeners
-        for (Iterator iter = ntDefs.iterator(); iter.hasNext();) {
-            Name ntName = ((QNodeTypeDefinition)iter.next()).getName();
+        for (Name ntName : added) {
             notifyRegistered(ntName);
         }
-    }
-
-    /**
-     * @see NodeTypeRegistry#unregisterNodeType(Name)
-     */
-    public void unregisterNodeType(Name nodeTypeName) throws NoSuchNodeTypeException, RepositoryException {
-        HashSet ntNames = new HashSet();
-        ntNames.add(nodeTypeName);
-        unregisterNodeTypes(ntNames);
+        for (Name ntName : modified) {
+            notifyReRegistered(ntName);
+        }
     }
 
     /**
      * @see NodeTypeRegistry#unregisterNodeTypes(Collection)
      */
-    public synchronized void unregisterNodeTypes(Collection nodeTypeNames)
+    public synchronized void unregisterNodeTypes(Collection<Name> nodeTypeNames)
             throws NoSuchNodeTypeException, RepositoryException {
         // do some preliminary checks
-        for (Iterator iter = nodeTypeNames.iterator(); iter.hasNext();) {
-            Name ntName = (Name) iter.next();
-
+        for (Name ntName : nodeTypeNames) {
             // Best effort check for node types other than those to be
             // unregistered that depend on the given node types
             Set dependents = registeredNTDefs.getDependentNodeTypes(ntName);
@@ -229,7 +214,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
 
         // persist removal of node type definitions
         // NOTE: conflict with existing content not asserted on client
-        storage.unregisterNodeTypes((Name[]) nodeTypeNames.toArray(new Name[nodeTypeNames.size()]));
+        storage.unregisterNodeTypes(nodeTypeNames.toArray(new Name[nodeTypeNames.size()]));
 
 
         // all preconditions are met, node types can now safely be unregistered
@@ -240,32 +225,6 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             Name ntName = (Name) iter.next();
             notifyUnregistered(ntName);
         }
-    }
-
-    /**
-     * @see NodeTypeRegistry#reregisterNodeType(QNodeTypeDefinition)
-     */
-    public synchronized EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd)
-            throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
-            RepositoryException {
-        Name name = ntd.getName();
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        /* validate new node type definition */
-        EffectiveNodeType ent = validator.validateNodeTypeDef(ntd, registeredNTDefs);
-
-        // first call reregistering on storage
-        storage.reregisterNodeTypes(new QNodeTypeDefinition[]{ntd});
-
-        // unregister old node type definition
-        internalUnregister(name);
-        // register new definition
-        internalRegister(ntd, ent);
-
-        // notify listeners
-        notifyReRegistered(name);
-        return ent;
     }
 
     /**
@@ -675,9 +634,8 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
     }
 
-    private void internalUnregister(Collection ntNames) {
-        for (Iterator iter = ntNames.iterator(); iter.hasNext();) {
-            Name name = (Name) iter.next();
+    private void internalUnregister(Collection<Name> ntNames) {
+        for (Name name : ntNames) {
             internalUnregister(name);
         }
     }

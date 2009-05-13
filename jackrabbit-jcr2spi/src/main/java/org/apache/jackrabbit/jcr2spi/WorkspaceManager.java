@@ -441,14 +441,11 @@ public class WorkspaceManager
             public Iterator getDefinitions(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
                 return service.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
             }
-            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
-                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
-            }
-            public void reregisterNodeTypes(QNodeTypeDefinition[] nodeTypeDefs) throws NoSuchNodeTypeException, RepositoryException {
-                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+            public void registerNodeTypes(QNodeTypeDefinition[] nodeTypeDefs, boolean allowUpdate) throws RepositoryException {
+                service.registerNodeTypes(sessionInfo, nodeTypeDefs, allowUpdate);
             }
             public void unregisterNodeTypes(Name[] nodeTypeNames) throws NoSuchNodeTypeException, RepositoryException {
-                throw new UnsupportedOperationException("NodeType registration not yet defined by the SPI");
+                service.unregisterNodeTypes(sessionInfo, nodeTypeNames);
             }
         };
         NodeTypeCache ntCache = NodeTypeCache.getInstance(service, sessionInfo.getUserID());

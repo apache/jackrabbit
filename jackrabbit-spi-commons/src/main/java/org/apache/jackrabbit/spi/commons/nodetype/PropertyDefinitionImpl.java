@@ -14,23 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.jcr2spi.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFactory;
-import javax.jcr.NamespaceException;
-import javax.jcr.nodetype.PropertyDefinition;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.spi.commons.nodetype.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.Value;
+import javax.jcr.RepositoryException;
+import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -41,9 +39,9 @@ import org.slf4j.LoggerFactory;
 public class PropertyDefinitionImpl extends ItemDefinitionImpl implements PropertyDefinition {
 
     /**
-     * Logger instance for this class
+     * logger instance
      */
-    private static Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(PropertyDefinitionImpl.class);
 
     private final ValueFactory valueFactory;
 
@@ -51,16 +49,30 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * Package private constructor
      *
      * @param propDef    property definition
-     * @param ntMgr      node type manager
      * @param resolver
+     * @param valueFactory
      */
-    PropertyDefinitionImpl(QPropertyDefinition propDef, NodeTypeManagerImpl ntMgr,
-                           NamePathResolver resolver, ValueFactory valueFactory) {
+    public PropertyDefinitionImpl(QPropertyDefinition propDef, NamePathResolver resolver,
+                                  ValueFactory valueFactory) {
+        this(propDef, null, resolver, valueFactory);
+    }
+
+    /**
+     *
+     * @param propDef
+     * @param ntMgr
+     * @param resolver
+     * @param valueFactory
+     */
+    public PropertyDefinitionImpl(QPropertyDefinition propDef,
+                                  AbstractNodeTypeManager ntMgr,
+                                  NamePathResolver resolver,
+                                  ValueFactory valueFactory) {
         super(propDef, ntMgr, resolver);
         this.valueFactory = valueFactory;
     }
 
-    //---------------------------------------------------< PropertyDefinition >
+    //-------------------------------------------------< PropertyDefinition >---
     /**
      * {@inheritDoc}
      */
@@ -143,7 +155,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * @see javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable()
      */
     public boolean isFullTextSearchable() {
-        return ((QPropertyDefinition) itemDef).isFullTextSearcheable();
+        return ((QPropertyDefinition) itemDef).isFullTextSearchable();
     }
 
     /**
@@ -152,5 +164,4 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
     public boolean isQueryOrderable() {
         return ((QPropertyDefinition) itemDef).isQueryOrderable();
     }
-
 }

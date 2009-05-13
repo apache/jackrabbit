@@ -38,6 +38,8 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -1055,6 +1057,41 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
     public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
+
+    /**
+     * Registers the node types with the specified <code>QNodeTypeDefinition</code>s.
+     * If <code>allowUpdate</code> is <code>true</code> this method may also be
+     * used to reregister existing node types with a modified definition, otherwise
+     * this method will fail with <code>NodeTypeExistsException</code> if any of
+     * the specified definition has the name of an already registered node type.
+     *
+     * @param sessionInfo
+     * @param nodeTypeDefinitions
+     * @param allowUpdate
+     * @throws InvalidNodeTypeDefinitionException If any of the specified definitions
+     * is invalid.
+     * @throws NodeTypeExistsException If any of the specified definitions has the
+     * name of an already registered node type and <code>allowUpdate</code> is <code>false</code>.
+     * @throws UnsupportedRepositoryOperationException If registering node types
+     * is not supported.
+     * @throws RepositoryException If another error occurs.
+     * @see javax.jcr.nodetype.NodeTypeManager#registerNodeTypes(javax.jcr.nodetype.NodeTypeDefinition[], boolean)
+     */
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Unregisters the node types with the specified <code>names</code>.
+     * 
+     * @param sessionInfo
+     * @param nodeTypeNames
+     * @throws UnsupportedRepositoryOperationException If unregistering node types
+     * is not supported.
+     * @throws NoSuchNodeTypeException If any of the specified names has no
+     * corresponding registered node type.
+     * @throws RepositoryException If another error occurs.
+     * @see javax.jcr.nodetype.NodeTypeManager#unregisterNodeTypes(String[])
+     */
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException;
 
     //-----------------------------------------------< Workspace Management >---
     /**
