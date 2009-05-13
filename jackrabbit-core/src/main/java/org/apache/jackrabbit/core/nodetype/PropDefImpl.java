@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 import javax.jcr.PropertyType;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -69,15 +70,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /*
      * The 'query operators.
      */
-    private String[] queryOperators = new String[]{
-            QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-            QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-            QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-            QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-            QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-            QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
-    };
+    private String[] queryOperators = Operator.getAllQueryOperators();
 
 
     /**

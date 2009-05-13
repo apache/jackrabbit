@@ -19,13 +19,12 @@ package org.apache.jackrabbit.core.nodetype.compact;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -35,9 +34,11 @@ import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.Lexer;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 /**
  * Prints node type defs in a compact notation
@@ -194,15 +195,26 @@ public class CompactNodeTypeDefWriter {
      * write options
      */
     private void writeOptions(NodeTypeDef ntd) throws IOException {
+        List<String> options = new ArrayList<String>();
+        if (ntd.isAbstract()) {
+            options.add(Lexer.ABSTRACT[0]);
+        }
         if (ntd.hasOrderableChildNodes()) {
-            out.write("\n" + INDENT);
-            out.write("orderable");
-            if (ntd.isMixin()) {
-                out.write(" mixin");
+            options.add(Lexer.ORDERABLE[0]);
+        }
+        if (ntd.isMixin()) {
+            options.add(Lexer.MIXIN[0]);
+        }
+        if (!ntd.isQueryable()) {
+            options.add(Lexer.NOQUERY[0]);
+        }
+        for (int i = 0; i < options.size(); i++) {
+            if (i == 0) {
+                out.write("\n" + INDENT);
+            } else {
+                out.write(" ");
             }
-        } else if (ntd.isMixin()) {
-            out.write("\n" + INDENT);
-            out.write("mixin");
+            out.write(options.get(i));
         }
     }
 
@@ -263,6 +275,43 @@ public class CompactNodeTypeDefWriter {
             out.write(" ");
             out.write(OnParentVersionAction.nameFromValue(pd.getOnParentVersion()).toLowerCase());
         }
+
+        if (!pd.isFullTextSearchable()) {
+            out.write(" nofulltext");
+        }
+        if (!pd.isQueryOrderable()) {
+            out.write(" noqueryorder");
+        }
+        String[] qops = pd.getAvailableQueryOperators();
+        if (qops != null && qops.length > 0) {
+            List ops = Arrays.asList(qops);
+            List defaultOps = Arrays.asList(Operator.getAllQueryOperators());
+            if (!ops.containsAll(defaultOps)) {
+                out.write(" queryops '");
+                for (int i = 0; i < qops.length; i++) {
+                    if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_EQUAL);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_NOTEQUAL);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN)) {
+                        out.write(Lexer.QUEROPS_GREATERTHAN);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_GREATERTHANOREQUAL);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN)) {
+                        out.write(Lexer.QUEROPS_LESSTHAN);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_LESSTHANOREQUAL);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LIKE)) {
+                        out.write(Lexer.QUEROPS_LIKE);
+                    }
+                    if (i < qops.length - 1) {
+                        out.write("' ");
+                    }
+                }
+                out.write("'");
+            }
+        }
+        
         writeValueConstraints(pd.getValueConstraints());
     }
 
