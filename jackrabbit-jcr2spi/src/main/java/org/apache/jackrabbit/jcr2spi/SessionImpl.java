@@ -479,8 +479,8 @@ public class SessionImpl extends AbstractSession
     /**
      * @see Session#getAccessControlManager()
      */
-    public AccessControlManager getAccessControlManager()
-            throws RepositoryException {
+    public AccessControlManager getAccessControlManager() throws RepositoryException {
+        // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
 
