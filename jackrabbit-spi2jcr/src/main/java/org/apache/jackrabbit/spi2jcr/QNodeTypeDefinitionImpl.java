@@ -57,21 +57,12 @@ class QNodeTypeDefinitionImpl
                                    NamePathResolver resolver,
                                    QValueFactory qValueFactory)
             throws NamespaceException, RepositoryException, NameException {
-        // TODO: replace by code below as soon as implementation in jackrabbit-core is complete
-        super(resolver.getQName(nt.getName()),
-                getNodeTypeNames(nt.getDeclaredSupertypes(), resolver), null,
-                nt.isMixin(), nt.isAbstract(), false, nt.hasOrderableChildNodes(),
-                nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
-                getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
-                getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
-        /*
         super(resolver.getQName(nt.getName()),
                 getNodeTypeNames(nt.getDeclaredSupertypes(), resolver), null,
                 nt.isMixin(), nt.isAbstract(), nt.isQueryable(), nt.hasOrderableChildNodes(),
                 nt.getPrimaryItemName() != null ? resolver.getQName(nt.getPrimaryItemName()) : null,
                 getQPropertyDefinitions(nt.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
                 getQNodeDefinitions(nt.getDeclaredChildNodeDefinitions(), resolver));
-                */
     }
 
     /**
