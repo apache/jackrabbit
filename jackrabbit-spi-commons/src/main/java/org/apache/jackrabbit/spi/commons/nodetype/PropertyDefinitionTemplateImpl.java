@@ -16,9 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
@@ -44,15 +45,7 @@ class PropertyDefinitionTemplateImpl
         type = PropertyType.STRING;
         fullTextSearchable = true;
         queryOrderable = true;
-        queryOperators = new String[]{
-                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN,
-                QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO,
-                QueryObjectModelConstants.JCR_OPERATOR_LIKE,
-                QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO
-        };
+        queryOperators = Operator.getAllQueryOperators();
     }
 
     /**
