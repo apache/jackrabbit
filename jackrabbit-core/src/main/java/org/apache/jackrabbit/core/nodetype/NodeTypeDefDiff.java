@@ -132,7 +132,14 @@ public class NodeTypeDefDiff {
                 type = tmpType;
             }
 
+            // check abstract flag (MAJOR modification)
+            tmpType = abstractFlagDiff();
+            if (tmpType > type) {
+                type = tmpType;
+            }
+
             // no need to check orderableChildNodes flag (TRIVIAL modification)
+            // no need to check queryable flag (TRIVIAL modification)
 
             // check property definitions
             tmpType = buildPropDefDiffs();
@@ -214,6 +221,13 @@ public class NodeTypeDefDiff {
      */
     public int mixinFlagDiff() {
         return oldDef.isMixin() != newDef.isMixin() ? MAJOR : NONE;
+    }
+
+    /**
+     * @return
+     */
+    public int abstractFlagDiff() {
+        return oldDef.isAbstract() && !newDef.isAbstract() ? MAJOR : NONE;
     }
 
     /**
@@ -535,6 +549,8 @@ public class NodeTypeDefDiff {
                 }
 
                 // no need to check defaultValues (TRIVIAL change)
+                // no need to check availableQueryOperators (TRIVIAL change)
+                // no need to check queryOrderable (TRIVIAL change)
 
                 if (type == TRIVIAL) {
                     int t1 = getOldDef().getRequiredType();

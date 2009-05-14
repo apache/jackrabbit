@@ -32,6 +32,11 @@
   orderable
   - * (undefined) multiple
   - * (undefined)
+  + * (nt:base) = nt:unstructured sns version
+[nt:unstructured]
+  orderable
+  - * (undefined) multiple
+  - * (undefined)
   + * (nt:base) = nt:unstructured multiple version
 
 [mix:referenceable]

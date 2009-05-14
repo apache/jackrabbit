@@ -21,26 +21,36 @@
            xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
   <nodeType name="test:emptyNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""/>
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
+            isAbstract="true" isQueryable="false"/>
 
   <nodeType name="test:mixinNodeType"
-            isMixin="true" hasOrderableChildNodes="false" primaryItemName=""/>
+            isMixin="true" hasOrderableChildNodes="false" primaryItemName=""
+            isAbstract="false" isQueryable="true"/>
 
   <nodeType name="test:orderedNodeType"
-            isMixin="false" hasOrderableChildNodes="true" primaryItemName=""/>
+            isMixin="false" hasOrderableChildNodes="true" primaryItemName=""
+            isAbstract="false" isQueryable="true"/>
 
   <nodeType name="test:itemNodeType"
             isMixin="false" hasOrderableChildNodes="false"
-            primaryItemName="test:emptyItem">
+            primaryItemName="test:emptyItem"
+            isAbstract="false" isQueryable="true">
     <propertyDefinition name="*"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
+                 availableQueryOperators="OP_EQ OP_NE OP_LT OP_LE OP_GT OP_GE"/>
     <propertyDefinition name="test:emptyItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"/>
+                 onParentVersion="IGNORE" protected="false" multiple="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
+                 availableQueryOperators="OP_EQ OP_NE OP_LT OP_LE OP_GT OP_GE"/>
     <propertyDefinition name="test:autoCreatedItem"
                  requiredType="String" autoCreated="true" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false">
+                 onParentVersion="IGNORE" protected="false" multiple="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
+                 availableQueryOperators="OP_EQ OP_NE OP_LIKE">
       <defaultValues>
         <defaultValue>"defvalue"</defaultValue>
       </defaultValues>
@@ -48,34 +58,44 @@
 
     <propertyDefinition name="test:mandatoryItem"
                  requiredType="undefined" autoCreated="false" mandatory="true"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="test:copyItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="COPY" protected="false" multiple="false"/>
     <propertyDefinition name="test:versionItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="VERSION" protected="false" multiple="false"/>
     <propertyDefinition name="test:initializeItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="INITIALIZE" protected="false" multiple="false"/>
     <propertyDefinition name="test:computeItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="COMPUTE" protected="false" multiple="false"/>
     <propertyDefinition name="test:abortItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="ABORT" protected="false" multiple="false"/>
     <propertyDefinition name="test:protectedItem"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="true" multiple="false"/>
   </nodeType>
 
   <nodeType name="test:propertyNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
+            isAbstract="false" isQueryable="true">
     <propertyDefinition name="test:emptyProperty"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false"/>
     <propertyDefinition name="test:binaryProperty"
                  requiredType="Binary" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>[0,)</valueConstraint>
@@ -83,6 +103,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:booleanProperty"
                  requiredType="Boolean" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>true</valueConstraint>
@@ -94,6 +115,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:dateProperty"
                  requiredType="Date" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="true" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>
@@ -106,6 +128,8 @@
     </propertyDefinition>
     <propertyDefinition name="test:doubleProperty"
                  requiredType="Double" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
+                 availableQueryOperators="OP_EQ OP_NE OP_GT OP_GE OP_LT OP_LE"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>[,0.0)</valueConstraint>
@@ -118,6 +142,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:longProperty"
                  requiredType="Long" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>(-10,0]</valueConstraint>
@@ -130,6 +155,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:nameProperty"
                  requiredType="Name" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>test:testName</valueConstraint>
@@ -140,6 +166,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:pathProperty"
                  requiredType="Path" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>/test:testPath</valueConstraint>
@@ -147,6 +174,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:referenceProperty"
                  requiredType="Reference" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="false">
       <valueConstraints>
         <valueConstraint>nt:base</valueConstraint>
@@ -154,6 +182,7 @@
     </propertyDefinition>
     <propertyDefinition name="test:stringProperty"
                  requiredType="String" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="true">
       <valueConstraints>
         <valueConstraint>bananas?</valueConstraint>
@@ -165,11 +194,13 @@
     </propertyDefinition>
     <propertyDefinition name="test:multipleProperty"
                  requiredType="undefined" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
                  onParentVersion="IGNORE" protected="false" multiple="true"/>
   </nodeType>
 
   <nodeType name="test:childNodeType"
-            isMixin="false" hasOrderableChildNodes="false" primaryItemName="">
+            isMixin="false" hasOrderableChildNodes="false" primaryItemName=""
+            isAbstract="false" isQueryable="true">
     <childNodeDefinition name="test:emptyNode"
                   defaultPrimaryType="" sameNameSiblings="false"
                   autoCreated="false" mandatory="false"

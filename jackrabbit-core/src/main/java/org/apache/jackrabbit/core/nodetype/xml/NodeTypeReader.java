@@ -38,6 +38,7 @@ import org.apache.jackrabbit.value.ValueFactoryImpl;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
 import java.io.InputStream;
@@ -145,6 +146,12 @@ public class NodeTypeReader {
         type.setOrderableChildNodes(Boolean.valueOf(
                 walker.getAttribute(Constants.HASORDERABLECHILDNODES_ATTRIBUTE))
                 .booleanValue());
+        type.setAbstract(Boolean.valueOf(
+                walker.getAttribute(Constants.ISABSTRACT_ATTRIBUTE))
+                .booleanValue());
+        type.setQueryable(Boolean.valueOf(
+                walker.getAttribute(Constants.ISQUERYABLE_ATTRIBUTE))
+                .booleanValue());
         String primaryItemName =
             walker.getAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE);
         if (primaryItemName != null && primaryItemName.length() > 0) {
@@ -220,6 +227,39 @@ public class NodeTypeReader {
         def.setMultiple(Boolean.valueOf(
                 walker.getAttribute(Constants.MULTIPLE_ATTRIBUTE))
                 .booleanValue());
+        def.setFullTextSearchable(Boolean.valueOf(
+                walker.getAttribute(Constants.ISFULLTEXTSEARCHABLE_ATTRIBUTE))
+                .booleanValue());
+        def.setQueryOrderable(Boolean.valueOf(
+                walker.getAttribute(Constants.ISQUERYORDERABLE_ATTRIBUTE))
+                .booleanValue());
+        String s = walker.getAttribute(Constants.AVAILABLEQUERYOPERATORS_ATTRIBUTE);
+        if (s != null && s.length() > 0) {
+            String[] ops = s.split(" ");
+            List queryOps = new ArrayList();
+            for (int i = 0; i < ops.length; i++) {
+                String op = ops[i].trim();
+                if (op.equals(Constants.EQ_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
+                } else if (op.equals(Constants.NE_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
+                } else if (op.equals(Constants.LT_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
+                } else if (op.equals(Constants.LE_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+                } else if (op.equals(Constants.GT_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
+                } else if (op.equals(Constants.GE_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+                } else if (op.equals(Constants.LIKE_ENTITY)) {
+                    queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
+                } else {
+                    throw new InvalidNodeTypeDefException("'" + op + "' is not a valid query operator");
+                }
+            }
+            def.setAvailableQueryOperators((String[]) queryOps.toArray(new String[queryOps.size()]));
+
+        }
         def.setRequiredType(PropertyType.valueFromName(
                 walker.getAttribute(Constants.REQUIREDTYPE_ATTRIBUTE)));
 
