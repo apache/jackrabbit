@@ -562,8 +562,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public String getIdentifier() throws RepositoryException {
         checkStatus();
-        // TODO: check again and add SPI method to create Node-Identifier from String
-        return getNodeEntry().getId().toString();
+        return session.getIdFactory().toJcrIdentifier(getNodeEntry().getId());
     }
 
     /**

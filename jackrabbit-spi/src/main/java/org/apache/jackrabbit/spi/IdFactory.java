@@ -68,5 +68,22 @@ public interface IdFactory {
      * @see ItemId ItemId for a description of the uniqueID defined by the SPI
      * item identifiers.
      */
-    public NodeId createNodeId(String uniqueID);
+    public NodeId createNodeId(String uniqueID);    
+
+    /**
+     * Returns the JCR string representation of the given <code>nodeId</code>.
+     *
+     * @return a JCR node identifier string.
+     * @see #fromJcrIdentifier(String)
+     */
+    public String toJcrIdentifier(NodeId nodeId);
+
+    /**
+     * Create a new <code>NodeId</code> from the given JCR string representation.
+     *
+     * @param jcrIdentifier
+     * @return a new <code>NodeId</code>.
+     * @see #toJcrIdentifier(NodeId)
+     */
+    public NodeId fromJcrIdentifier(String jcrIdentifier);
 }

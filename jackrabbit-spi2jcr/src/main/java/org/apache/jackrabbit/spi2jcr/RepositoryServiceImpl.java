@@ -1490,7 +1490,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Session session = sessionInfo.getSession();
         StringBuffer path = new StringBuffer();
         if (id.getUniqueID() != null) {
-            path.append(session.getNodeByUUID(id.getUniqueID()).getPath());
+            path.append(session.getNodeByIdentifier(id.getUniqueID()).getPath());
         } else {
             path.append("/");
         }
@@ -1522,6 +1522,10 @@ public class RepositoryServiceImpl implements RepositoryService {
             // if the parent of an batch operation is not available, this indicates
             // that it has been destroyed by another session.
             throw new InvalidItemStateException(e);
+        } catch (ItemNotFoundException e) {
+            // if the parent of an batch operation is not available, this indicates
+            // that it has been destroyed by another session.
+            throw new InvalidItemStateException(e);
         }
     }
 
@@ -1529,7 +1533,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
-            n = session.getNodeByUUID(id.getUniqueID());
+            n = session.getNodeByIdentifier(id.getUniqueID());
         } else {
             n = session.getRootNode();
         }
@@ -1554,7 +1558,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         Session session = sessionInfo.getSession();
         Node n;
         if (id.getUniqueID() != null) {
-            n = session.getNodeByUUID(id.getUniqueID());
+            n = session.getNodeByIdentifier(id.getUniqueID());
         } else {
             n = session.getRootNode();
         }
