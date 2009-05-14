@@ -336,8 +336,10 @@ public class PropertyDefTest extends AbstractJCRTest {
                     for (int j = 0; j < values.length; j++) {
 
                         if (!def.isMultiple()) {
-                            assertEquals("Single-valued properties must not " +
-                                    "have more than one default value.",
+                            assertEquals(
+                                    "Single-valued property "
+                                    + type.getName() +"/" + def.getName()
+                                    + " must not have more than one default value.",
                                     1, values.length);
                         }
                     }
