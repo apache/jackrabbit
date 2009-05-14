@@ -184,7 +184,7 @@
     </propertyDefinition>
     <propertyDefinition name="testns1:stringProperty"
                  requiredType="String" autoCreated="false" mandatory="false"
-                 onParentVersion="IGNORE" protected="false" multiple="false"
+                 onParentVersion="IGNORE" protected="false" multiple="true"
                  isFullTextSearchable="false" isQueryOrderable="false">
       <valueConstraints>
         <valueConstraint>bananas?</valueConstraint>
