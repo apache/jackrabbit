@@ -31,8 +31,10 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 import javax.jcr.PropertyType;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -82,6 +84,9 @@ public class CompactNodeTypeDefTest extends TestCase {
         pd.setProtected(true);
         pd.setMultiple(true);
         pd.setOnParentVersion(OnParentVersionAction.VERSION);
+        pd.setFullTextSearchable(false);
+        pd.setQueryOrderable(false);
+        pd.setAvailableQueryOperators(new String[]{QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO});
         pd.setDefaultValues(defaultValues);
         pd.setValueConstraints(valueConstraints);
         pd.setDeclaringNodeType(NODE_TYPE_NAME);
@@ -102,6 +107,8 @@ public class CompactNodeTypeDefTest extends TestCase {
         modelNodeTypeDef.setSupertypes(SUPERTYPES);
         modelNodeTypeDef.setOrderableChildNodes(true);
         modelNodeTypeDef.setMixin(true);
+        modelNodeTypeDef.setAbstract(true);
+        modelNodeTypeDef.setQueryable(false);
         modelNodeTypeDef.setPrimaryItemName(PROPERTY_NAME);
         modelNodeTypeDef.setPropertyDefs(new PropDef[]{pd});
         modelNodeTypeDef.setChildNodeDefs(new NodeDef[]{nd});

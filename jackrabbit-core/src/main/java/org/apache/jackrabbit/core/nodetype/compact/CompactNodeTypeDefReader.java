@@ -536,34 +536,29 @@ public class CompactNodeTypeDefReader {
             return;
         }
         nextToken();
-        if (!currentTokenEquals(Lexer.SINGLE_QUOTE)) {
-            lexer.fail("Missing \' delimiter for beginning of query operators list");
-        }
+
+        String[] ops = currentToken.split(",");
         List queryOps = new ArrayList();
-        do {
-            nextToken();
-            if (currentTokenEquals(Lexer.QUEROPS_EQUAL)) {
+        for (int i = 0; i < ops.length; i++) {
+            String s = ops[i].trim();
+            if (s.equals(Lexer.QUEROPS_EQUAL)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
-            } else if (currentTokenEquals(Lexer.QUEROPS_NOTEQUAL)) {
+            } else if (s.equals(Lexer.QUEROPS_NOTEQUAL)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
-            } else if (currentTokenEquals(Lexer.QUEROPS_LESSTHAN)) {
+            } else if (s.equals(Lexer.QUEROPS_LESSTHAN)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
-            } else if (currentTokenEquals(Lexer.QUEROPS_LESSTHANOREQUAL)) {
+            } else if (s.equals(Lexer.QUEROPS_LESSTHANOREQUAL)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
-            } else if (currentTokenEquals(Lexer.QUEROPS_GREATERTHAN)) {
+            } else if (s.equals(Lexer.QUEROPS_GREATERTHAN)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
-            } else if (currentTokenEquals(Lexer.QUEROPS_GREATERTHANOREQUAL)) {
+            } else if (s.equals(Lexer.QUEROPS_GREATERTHANOREQUAL)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
-            } else if (currentTokenEquals(Lexer.QUEROPS_LIKE)) {
+            } else if (s.equals(Lexer.QUEROPS_LIKE)) {
                 queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
-            } else if (currentTokenEquals(Lexer.SINGLE_QUOTE)) {
-                nextToken();
-                break;
             } else {
-                lexer.fail("'" + currentToken + "' is not a valid query operator");
+                lexer.fail("'" + s + "' is not a valid query operator");
             }
-            nextToken();
-        } while (currentTokenEquals(Lexer.LIST_DELIMITER));
+        }
         pdi.setAvailableQueryOperators((String[]) queryOps.toArray(new String[queryOps.size()]));
     }
 

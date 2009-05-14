@@ -305,7 +305,7 @@ public class CompactNodeTypeDefWriter {
                         out.write(Lexer.QUEROPS_LIKE);
                     }
                     if (i < qops.length - 1) {
-                        out.write("' ");
+                        out.write(", ");
                     }
                 }
                 out.write("'");
