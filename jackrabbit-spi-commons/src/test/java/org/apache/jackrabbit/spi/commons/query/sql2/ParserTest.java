@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.query.sql2;
 
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
@@ -64,8 +65,12 @@ public class ParserTest extends TestCase {
     }
 
     private LineNumberReader openScript(String name) {
-        return new LineNumberReader(new InputStreamReader(getClass()
-                .getResourceAsStream(name)));
+        try {
+            return new LineNumberReader(new InputStreamReader(
+                    getClass().getResourceAsStream(name), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("UTF-8 not supported", e);
+        }
     }
 
     public void testParseScript() throws Exception {
