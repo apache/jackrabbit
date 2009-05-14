@@ -77,6 +77,7 @@
                 org.apache.jackrabbit.test.api.observation.GetUserDataTest
                 org.apache.jackrabbit.test.api.observation.NodeMovedTest
                 org.apache.jackrabbit.test.api.observation.NodeReorderTest
+                org.apache.jackrabbit.test.api.observation.EventJournalTest
               </value>
             </property>
           </systemProperties>
