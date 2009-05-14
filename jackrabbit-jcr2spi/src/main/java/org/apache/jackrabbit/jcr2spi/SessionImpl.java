@@ -502,8 +502,7 @@ public class SessionImpl extends AbstractSession
      * @see Session#getNodeByIdentifier(String)
      */
     public Node getNodeByIdentifier(String id) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        return getNodeById(getIdFactory().fromJcrIdentifier(id));
     }
 
     /**
@@ -985,7 +984,7 @@ public class SessionImpl extends AbstractSession
          */
         public Path getPath(String identifier) throws MalformedPathException {
             try {
-                NodeId id = getIdFactory().createNodeId(identifier);
+                NodeId id = getIdFactory().fromJcrIdentifier(identifier);
                 return getHierarchyManager().getNodeEntry(id).getPath();
             } catch (RepositoryException e) {
                 throw new MalformedPathException("Invalid identifier '" + identifier + "'.");
@@ -997,7 +996,7 @@ public class SessionImpl extends AbstractSession
          */
         public void checkFormat(String identifier) throws MalformedPathException {
             try {
-                NodeId id = getIdFactory().createNodeId(identifier);
+                NodeId id = getIdFactory().fromJcrIdentifier(identifier);
             } catch (Exception e) {
                 throw new MalformedPathException("Invalid identifier '" + identifier + "'.");
             }
