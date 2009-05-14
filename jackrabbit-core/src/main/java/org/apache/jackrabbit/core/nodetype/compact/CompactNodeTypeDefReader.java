@@ -61,77 +61,98 @@ import java.util.Iterator;
  * <p/>
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
- * cnd ::= ns_mapping* node_type_def+
+ *   Cnd ::= {NamespaceMapping | NodeTypeDef}
  *
- * ns_mapping ::= "&lt;" prefix "=" namespace "&gt;"
+ *   NamespaceMapping ::= '<' Prefix '=' Uri '>'
+ *   Prefix ::= String
+ *   Uri ::= String
  *
- * prefix ::= string
+ *   NodeTypeDef ::= NodeTypeName [Supertypes]
+ *                   [NodeTypeAttribute {NodeTypeAttribute}]
+ *                   {PropertyDef | ChildNodeDef}
  *
- * namespace ::= string
+ *   NodeTypeName ::= '[' String ']'
  *
- * node_type_def ::= node_type_name [super_types] [options] {property_def | node_def}
+ *   Supertypes ::= '>' (StringList | '?')
  *
- * node_type_name ::= "[" string "]"
+ *   Option ::= Orderable | Mixin | Abstract | NoQuery | PrimaryItem
  *
- * super_types ::= "&gt;" string_list
- *
- * options ::= orderable_opt | mixin_opt | orderable_opt mixin_opt | mixin_opt orderable_opt
- *
- * orderable_opt ::= "orderable" | "ord" | "o"
- *
- * mixin_opt ::= "mixin" | "mix" | "m"
- *
- * property_def ::= "-" property_name [property_type_decl] [default_values] [attributes] [value_constraints]
- *
- * property_name ::= string
- *
- * property_type_decl ::= "(" property_type ")"
- *
- * property_type ::= "STRING" | "String |"string" |
- *                   "BINARY" | "Binary" | "binary" |
- *                   "LONG" | "Long" | "long" |
- *                   "DOUBLE" | "Double" | "double" |
- *                   "BOOLEAN" | "Boolean" | "boolean" |
- *                   "DATE" | "Date" | "date" |
- *                   "NAME | "Name | "name |
- *                   "PATH" | "Path" | "path" |
- *                   "REFERENCE" | "Reference" | "reference" |
- *                   "UNDEFINED" | "Undefined" | "undefined" | "*"
+ *   Orderable ::= ('orderable' | 'ord' | 'o') ['?']
  *
  *
- * default_values ::= "=" string_list
+ *   Mixin ::= ('mixin' | 'mix' | 'm') ['?']
  *
- * value_constraints ::= "&lt;" string_list
+ *   Abstract ::= ('abstract' | 'abs' | 'a') ['?']
  *
- * node_def ::= "+" node_name [required_types] [default_type] [attributes]
+ *   NoQuery ::= ('noquery' | 'nq') ['?']
  *
- * node_name ::= string
+ *   PrimaryItem ::= ('primaryitem'| '!')(String | '?')
  *
- * required_types ::= "(" string_list ")"
+ *   PropertyDef ::= PropertyName [PropertyType] [DefaultValues]
+ *                   [PropertyAttribute {PropertyAttribute}]
+ *                   [ValueConstraints]
  *
- * default_type ::= "=" string
+ *   PropertyName ::= '-' String
  *
- * attributes ::= "primary" | "pri" | "!" |
- *                "autocreated" | "aut" | "a" |
- *                "mandatory" | "man" | "m" |
- *                "protected" | "pro" | "p" |
- *                "multiple" | "mul" | "*" |
- *                "COPY" | "Copy" | "copy" |
- *                "VERSION" | "Version" | "version" |
- *                "INITIALIZE" | "Initialize" | "initialize" |
- *                "COMPUTE" | "Compute" | "compute" |
- *                "IGNORE" | "Ignore" | "ignore" |
- *                "ABORT" | "Abort" | "abort"
+ *   PropertyType ::= '(' ('STRING' | 'BINARY' | 'LONG' | 'DOUBLE' |
+ *                         'BOOLEAN' | 'DATE' | 'NAME' | 'PATH' |
+ *                         'REFERENCE' | 'WEAKREFERENCE' |
+ *                         'DECIMAL' | 'URI' | 'UNDEFINED' | '*' |
+ *                         '?') ')'
  *
- * string_list ::= string {"," string}
+ *   DefaultValues ::= '=' (StringList | '?')
  *
- * string ::= quoted_string | unquoted_string
+ *   ValueConstraints ::= '<' (StringList | '?')
  *
- * quoted_string :: = "'" unquoted_string "'"
+ *   ChildNodeDef ::= NodeName [RequiredTypes] [DefaultType]
+ *                    [NodeAttribute {NodeAttribute}]
  *
- * unquoted_string ::= [A-Za-z0-9:_]+
+ *   NodeName ::= '+' String
+ *
+ *   RequiredTypes ::= '(' (String_list | '?') ')'
+ *
+ *   DefaultType ::= '=' (String | '?')
+ *
+ *   PropertyAttribute ::= Autocreated | Mandatory | Protected |
+ *                         Opv | Multiple | QueryOps | NoFullText |
+ *                         NoQueryOrder
+ *
+ *   NodeAttribute ::= Autocreated | Mandatory | Protected |
+ *                     Opv | Sns
+ *
+ *   Autocreated ::= ('autocreated' | 'aut' | 'a' )['?']
+ *
+ *   Mandatory ::= ('mandatory' | 'man' | 'm') ['?']
+ *
+ *   Protected ::= ('protected' | 'pro' | 'p') ['?']
+ *
+ *   Opv ::= 'COPY' | 'VERSION' | 'INITIALIZE' | 'COMPUTE' |
+ *          'IGNORE' | 'ABORT' | ('OPV' '?')
+ *
+ *   Multiple ::= ('multiple' | 'mul' | '*') ['?']
+ *
+ *   QueryOps ::= ('queryops' | 'qop')
+ *               (( ''' Operator { ',' Operator} ''' ) | '?')
+ *   Operator ::= '=' | '<>' | '<' | '<=' | '>' | '>=' | 'LIKE'
+ *
+ *   NoFullText ::= ('nofulltext' | 'nof') ['?']
+ *
+ *   NoQueryOrder ::= ('noqueryorder' | 'nqord') ['?']
+ *
+ *   Sns ::= ('sns' | '*') ['?']
+ *
+ *   StringList ::= String {',' String}
+ *   String ::= QuotedString | UnquotedString
+ *
+ *   QuotedString ::= SingleQuotedString | DoubleQuotedString
+ *
+ *   SingleQuotedString ::= ''' UnquotedString '''
+ *
+ *   DoubleQuotedString ::= '"' UnquotedString '"'
+ *   UnquotedString ::= XmlChar {XmlChar}
  * </pre>
  */
+
 public class CompactNodeTypeDefReader {
 
     /**

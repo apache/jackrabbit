@@ -25,16 +25,20 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * Node type definition writer. This class is used to write the
@@ -125,6 +129,10 @@ public final class NodeTypeWriter {
         builder.setAttribute(
                 Constants.ISMIXIN_ATTRIBUTE, def.isMixin());
         builder.setAttribute(
+                Constants.ISQUERYABLE_ATTRIBUTE, def.isQueryable());
+        builder.setAttribute(
+                Constants.ISABSTRACT_ATTRIBUTE, def.isAbstract());
+        builder.setAttribute(
                 Constants.HASORDERABLECHILDNODES_ATTRIBUTE,
                 def.hasOrderableChildNodes());
 
@@ -192,6 +200,42 @@ public final class NodeTypeWriter {
                 OnParentVersionAction.nameFromValue(def.getOnParentVersion()));
         builder.setAttribute(
                 Constants.MULTIPLE_ATTRIBUTE, def.isMultiple());
+        builder.setAttribute(
+                Constants.ISFULLTEXTSEARCHABLE_ATTRIBUTE, def.isFullTextSearchable());
+        builder.setAttribute(
+                Constants.ISQUERYORDERABLE_ATTRIBUTE, def.isQueryOrderable());
+        // TODO do properly...
+        String[] qops = def.getAvailableQueryOperators();
+        if (qops != null && qops.length > 0) {
+            List ops = Arrays.asList(qops);
+            List defaultOps = Arrays.asList(Operator.getAllQueryOperators());
+            if (!ops.containsAll(defaultOps)) {
+                StringBuffer sb = new StringBuffer();
+                for (int i = 0; i < qops.length; i++) {
+                    if (i > 0) {
+                        sb.append(' ');
+                    }
+                    if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO)) {
+                        sb.append(Constants.EQ_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO)) {
+                        sb.append(Constants.NE_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN)) {
+                        sb.append(Constants.GT_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
+                        sb.append(Constants.GE_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN)) {
+                        sb.append(Constants.LT_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
+                        sb.append(Constants.LE_ENTITY);
+                    } else if (qops[i].equals(QueryObjectModelConstants.JCR_OPERATOR_LIKE)) {
+                        sb.append(Constants.LIKE_ENTITY);
+                    }
+                }
+                builder.setAttribute(
+                        Constants.AVAILABLEQUERYOPERATORS_ATTRIBUTE, sb.toString());
+            }
+        }
+
         builder.setAttribute(
                 Constants.REQUIREDTYPE_ATTRIBUTE,
                 PropertyType.nameFromValue(def.getRequiredType()));
