@@ -57,11 +57,8 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
     private final QNodeDefinition[] nodeDefs;
     private Set dependencies;
 
-    /**
-     * TODO
-     */
-    private final boolean isAbstract = false;
-    private final boolean isQueryable = false;
+    private final boolean isAbstract;
+    private final boolean isQueryable;
 
     /**
      * Default constructor.
@@ -105,6 +102,16 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             orderableChildNodes = Boolean.valueOf(ntdElement.getAttribute(HASORDERABLECHILDNODES_ATTRIBUTE)).booleanValue();
         } else {
             orderableChildNodes = false;
+        }
+        if (ntdElement.hasAttribute(ISABSTRACT_ATTRIBUTE)) {
+            isAbstract = Boolean.valueOf(ntdElement.getAttribute(ISABSTRACT_ATTRIBUTE)).booleanValue();
+        } else {
+            isAbstract = false;
+        }
+        if (ntdElement.hasAttribute(ISQUERYABLE_ATTRIBUTE)) {
+            isQueryable = Boolean.valueOf(ntdElement.getAttribute(ISQUERYABLE_ATTRIBUTE)).booleanValue();
+        } else {
+            isQueryable = false;
         }
 
         // nodeDefinitions
@@ -168,16 +175,14 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
      * @see QNodeTypeDefinition#isAbstract()
      */
     public boolean isAbstract() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+        return isAbstract;
     }
 
     /**
      * @see QNodeTypeDefinition#isQueryable()
      */
     public boolean isQueryable() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003 Add support for JCR 2.0. Implementation missing");
+        return isQueryable;
     }
 
     /**

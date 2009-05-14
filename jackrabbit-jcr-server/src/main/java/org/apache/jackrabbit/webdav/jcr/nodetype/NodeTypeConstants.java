@@ -26,7 +26,6 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * @see javax.jcr.nodetype.NodeType
  */
 public interface NodeTypeConstants {
-    //todo: intercaps only for consistency with jackrabbit... webdav rfcs never use intercaps.
 
     public static final Namespace NAMESPACE = ItemResourceConstants.NAMESPACE;
 
@@ -57,6 +56,18 @@ public interface NodeTypeConstants {
 
     /** Name of the <code>hasOrderableChildNodes</code> attribute. */
     String HASORDERABLECHILDNODES_ATTRIBUTE = "hasOrderableChildNodes";
+
+    /**
+     * Name of the <code>isAbstract</code> attribute.
+     * @since JCR 2.0
+     */
+    String ISABSTRACT_ATTRIBUTE = "isAbstract";
+
+    /**
+     * Name of the <code>isQueryable</code> attribute.
+     * @since JCR 2.0
+     */
+    String ISQUERYABLE_ATTRIBUTE = "isQueryable";
 
     /** Name of the primary item name attribute. */
     String PRIMARYITEMNAME_ATTRIBUTE = "primaryItemName";
