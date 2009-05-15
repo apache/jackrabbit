@@ -83,7 +83,7 @@ public class AbstractVersionTest extends AbstractJCRTest {
         }
         try {
             nonVersionableNode = testRootNode.addNode(nodeName3, nonVersionableNodeType.getName());
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (RepositoryException e) {
             fail("Failed to create non-versionable test node." + e.getMessage());
         }
@@ -98,7 +98,7 @@ public class AbstractVersionTest extends AbstractJCRTest {
         // remove versionable nodes
         try {
             versionableNode.remove();
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());
         } finally {

@@ -49,7 +49,7 @@ public class CopyTest extends AbstractVersionTest {
         try {
             String dstPath = getProperty("destination");
             superuser.getNode(dstPath).remove();
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (Exception e) {
             log.println("Exception in tearDown: " + e.toString());
         } finally {
