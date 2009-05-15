@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test.api.version;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionManager;
 
 /**
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}.
@@ -33,18 +34,22 @@ public class FrozenNodeTest extends AbstractVersionTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        versionableNode.checkout();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        versionManager.checkout(path);
     }
 
     /**
      * @throws RepositoryException
      */
     public void testFrozenNodeUUUID() throws RepositoryException {
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode);
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode();
         String puuid = n.getProperty(jcrUUID).getValue().getString();
-        String nuuid = n.getUUID();
-        assertEquals("jcr:uuid needs to be equal to the getUUID() return value.", nuuid, puuid);
+        String nuuid = n.getIdentifier();
+        assertEquals("jcr:uuid needs to be equal to the getIdentifier() return value.", nuuid, puuid);
     }
 
     /**
@@ -52,23 +57,30 @@ public class FrozenNodeTest extends AbstractVersionTest {
      */
     public void testFrozenChildNodeUUUID() throws RepositoryException {
         versionableNode.addNode("child");
-        versionableNode.save();
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode).getNode("child");
+        versionableNode.getSession().save();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode().getNode("child");
         String puuid = n.getProperty(jcrUUID).getValue().getString();
-        String nuuid = n.getUUID();
-        assertEquals("jcr:uuid needs to be equal to the getUUID() return value.", nuuid, puuid);
+        String nuuid = n.getIdentifier();
+        assertEquals("jcr:uuid needs to be equal to the getIdentifier() return value.", nuuid, puuid);
     }
 
     /**
      * @throws RepositoryException
      */
     public void testFrozenUUUID() throws RepositoryException {
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode);
+        // make versionable node referenceable
+        versionableNode.addMixin(mixReferenceable);
+        versionableNode.getSession().save();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode();
         String fuuid = n.getProperty(jcrFrozenUuid).getValue().getString();
-        String ruuid = versionableNode.getUUID();
-        assertEquals("jcr:frozenUuid needs to be equal to the getUUID() return value.", ruuid, fuuid);
+        String ruuid = versionableNode.getIdentifier();
+        assertEquals("jcr:frozenUuid needs to be equal to the getIdentifier() return value.", ruuid, fuuid);
     }
 
     /**
@@ -76,12 +88,15 @@ public class FrozenNodeTest extends AbstractVersionTest {
      */
     public void testFrozenChildUUUID() throws RepositoryException {
         Node n1 = versionableNode.addNode("child");
-        versionableNode.save();
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode).getNode("child");
+        n1.addMixin(mixReferenceable);
+        versionableNode.getSession().save();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode().getNode("child");
         String fuuid = n.getProperty(jcrFrozenUuid).getValue().getString();
-        String ruuid = n1.getUUID();
-        assertEquals("jcr:frozenUuid needs to be equal to the getUUID() return value.", ruuid, fuuid);
+        String ruuid = n1.getIdentifier();
+        assertEquals("jcr:frozenUuid needs to be equal to the getIdentifier() return value.", ruuid, fuuid);
     }
 
 
@@ -89,8 +104,10 @@ public class FrozenNodeTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testFrozenNodeNodeType() throws RepositoryException {
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode);
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode();
         String puuid = n.getProperty(jcrPrimaryType).getValue().getString();
         String nuuid = n.getPrimaryNodeType().getName();
         assertEquals("jcr:primaryType needs to be equal to the getPrimaryNodeType() return value.", nuuid, puuid);
@@ -101,9 +118,11 @@ public class FrozenNodeTest extends AbstractVersionTest {
      */
     public void testFrozenChildNodeNodeType() throws RepositoryException {
         versionableNode.addNode("child");
-        versionableNode.save();
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode).getNode("child");
+        versionableNode.getSession().save();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode().getNode("child");
         String puuid = n.getProperty(jcrPrimaryType).getValue().getString();
         String nuuid = n.getPrimaryNodeType().getName();
         assertEquals("jcr:primaryType needs to be equal to the getPrimaryNodeType() return value.", nuuid, puuid);
@@ -113,8 +132,10 @@ public class FrozenNodeTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testFrozenNodeType() throws RepositoryException {
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode);
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode();
         String fuuid = n.getProperty("jcr:frozenPrimaryType").getValue().getString();
         String ruuid = versionableNode.getPrimaryNodeType().getName();
         assertEquals("jcr:frozenPrimaryType needs to be equal to the getPrimaryNodeType() return value.", ruuid, fuuid);
@@ -125,9 +146,11 @@ public class FrozenNodeTest extends AbstractVersionTest {
      */
     public void testFrozenChildNodeType() throws RepositoryException {
         Node n1 = versionableNode.addNode("child");
-        versionableNode.save();
-        Version v = versionableNode.checkin();
-        Node n = v.getNode(jcrFrozenNode).getNode("child");
+        versionableNode.getSession().save();
+        VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
+        String path = versionableNode.getPath();
+        Version v = versionManager.checkin(path);
+        Node n = v.getFrozenNode().getNode("child");
         String fuuid = n.getProperty("jcr:frozenPrimaryType").getValue().getString();
         String ruuid = n1.getPrimaryNodeType().getName();
         assertEquals("jcr:frozenPrimaryType needs to be equal to the getPrimaryNodeType() return value.", ruuid, fuuid);
