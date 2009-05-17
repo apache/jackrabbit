@@ -16,54 +16,17 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.commons.AbstractSession;
-import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.data.GarbageCollector;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.api.JackrabbitSession;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.retention.RetentionManager;
-import org.apache.jackrabbit.core.security.authentication.AuthContext;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.version.VersionManager;
-import org.apache.jackrabbit.core.version.VersionManagerImpl;
-import org.apache.jackrabbit.core.xml.ImportHandler;
-import org.apache.jackrabbit.core.xml.SessionImporter;
-import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.uuid.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.InputSource;
+import java.io.File;
+import java.io.PrintStream;
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -84,53 +47,71 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
+import javax.jcr.retention.RetentionManager;
+import javax.jcr.security.AccessControlManager;
 import javax.jcr.version.VersionException;
 import javax.security.auth.Subject;
-import java.io.File;
-import java.io.PrintStream;
-import java.security.AccessControlException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.Arrays;
+
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.AbstractSession;
+import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.data.GarbageCollector;
+import org.apache.jackrabbit.core.lock.LockManager;
+import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.SessionItemStateManager;
+import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.core.version.VersionManager;
+import org.apache.jackrabbit.core.version.VersionManagerImpl;
+import org.apache.jackrabbit.core.xml.ImportHandler;
+import org.apache.jackrabbit.core.xml.SessionImporter;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.uuid.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 
 /**
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements javax.jcr.Session, JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
+        implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
-
-    /**
-     * @deprecated Use {@link javax.jcr.Session#ACTION_READ} instead.
-     */
-    public static final String READ_ACTION = javax.jcr.Session.ACTION_READ;
-
-    /**
-     * @deprecated Use {@link javax.jcr.Session#ACTION_REMOVE} instead.
-     */
-    public static final String REMOVE_ACTION = javax.jcr.Session.ACTION_REMOVE;
-
-    /**
-     * @deprecated Use {@link javax.jcr.Session#ACTION_ADD_NODE} instead.
-     */
-    public static final String ADD_NODE_ACTION = javax.jcr.Session.ACTION_ADD_NODE;
-
-    /**
-     * @deprecated Use {@link javax.jcr.Session#ACTION_SET_PROPERTY} instead.
-     */
-    public static final String SET_PROPERTY_ACTION = javax.jcr.Session.ACTION_SET_PROPERTY;
 
     /**
      * flag indicating whether this session is alive
@@ -161,7 +142,8 @@ public class SessionImpl extends AbstractSession
     /**
      * the attributes of this session
      */
-    protected final HashMap attributes = new HashMap();
+    protected final Map<String, Object> attributes =
+        new HashMap<String, Object>();
 
     /**
      * the node type manager
@@ -206,7 +188,8 @@ public class SessionImpl extends AbstractSession
     /**
      * Listeners (weak references)
      */
-    protected final Map listeners = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    protected final Map<SessionListener, SessionListener> listeners =
+        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * value factory
@@ -573,18 +556,17 @@ public class SessionImpl extends AbstractSession
      */
     protected String[] getWorkspaceNames() throws RepositoryException {
         // filter workspaces according to access rights
-        ArrayList list = new ArrayList();
-        String[] names = rep.getWorkspaceNames();
-        for (int i = 0; i < names.length; i++) {
+        List<String> names = new ArrayList<String>();
+        for (String name : rep.getWorkspaceNames()) {
             try {
-                if (getAccessManager().canAccess(names[i])) {
-                    list.add(names[i]);
+                if (getAccessManager().canAccess(name)) {
+                    names.add(name);
                 }
-            } catch (NoSuchWorkspaceException nswe) {
-                // should never happen, ignore...
+            } catch (NoSuchWorkspaceException e) {
+                log.warn("Workspace disappeared unexpectedly: " + name, e);
             }
         }
-        return (String[]) list.toArray(new String[list.size()]);
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -625,12 +607,11 @@ public class SessionImpl extends AbstractSession
      */
     protected void notifyLoggingOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la =
-                (SessionListener[]) listeners.values().toArray(
-                        new SessionListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].loggingOut(this);
+        List<SessionListener> copy =
+            new ArrayList<SessionListener>(listeners.values());
+        for (SessionListener listener : copy) {
+            if (listener != null) {
+                listener.loggingOut(this);
             }
         }
     }
@@ -640,12 +621,11 @@ public class SessionImpl extends AbstractSession
      */
     protected void notifyLoggedOut() {
         // copy listeners to array to avoid ConcurrentModificationException
-        SessionListener[] la =
-                (SessionListener[]) listeners.values().toArray(
-                        new SessionListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].loggedOut(this);
+        List<SessionListener> copy =
+            new ArrayList<SessionListener>(listeners.values());
+        for (SessionListener listener : copy) {
+            if (listener != null) {
+                listener.loggedOut(this);
             }
         }
     }
@@ -1166,11 +1146,9 @@ public class SessionImpl extends AbstractSession
             ObservationManager manager = getWorkspace().getObservationManager();
             // Use a copy to avoid modifying the set of registered listeners
             // while iterating over it
-            Collection listeners =
+            Collection<EventListener> listeners =
                 IteratorUtils.toList(manager.getRegisteredEventListeners());
-            Iterator iterator = listeners.iterator();
-            while (iterator.hasNext()) {
-                EventListener listener = (EventListener) iterator.next();
+            for (EventListener listener : listeners) {
                 try {
                     manager.removeEventListener(listener);
                 } catch (RepositoryException e) {
@@ -1490,7 +1468,7 @@ public class SessionImpl extends AbstractSession
             throw new RepositoryException("Absolute path expected. Was:" + absPath);
         }
 
-        Set s = new HashSet(Arrays.asList(actions.split(",")));
+        Set<String> s = new HashSet<String>(Arrays.asList(actions.split(",")));
         int permissions = 0;
         if (s.remove(ACTION_READ)) {
             permissions |= Permission.READ;
@@ -1514,11 +1492,7 @@ public class SessionImpl extends AbstractSession
             }
         }
         if (!s.isEmpty()) {
-            StringBuffer sb = new StringBuffer();
-            for (Iterator it = s.iterator(); it.hasNext();) {
-                sb.append(it.next());
-            }
-            throw new IllegalArgumentException("Unknown actions: " + sb.toString());
+            throw new IllegalArgumentException("Unknown actions: " + s);
         }
         try {
             return getAccessManager().isGranted(path, permissions);
