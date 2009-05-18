@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 import javax.jcr.lock.LockException;
 import java.util.Map;
 import java.util.HashMap;
@@ -263,16 +264,66 @@ class XAEnvironment {
 
     /**
      * Add lock token to this environment.
+     * @param session 
      * @param lt lock token
+     * @throws RepositoryException 
      */
-    public void addLockToken(String lt) {
+    public void addLockToken(SessionImpl session, String lt) throws RepositoryException {
+        try {
+            LockToken lockToken = LockToken.parse(lt);
+            NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.getId());
+            AbstractLockInfo info = getLockInfo(node);
+            if (info != null) {
+                if (info.getLockHolder() == null) {
+                    info.setLockHolder(session);
+                } else {
+                    String msg = "Cannot add lock token: lock already held by other session.";
+                    log.warn(msg);
+                    throw new LockException(msg);
+                }
+            }
+            // inform SessionLockManager
+            getSessionLockManager(session).lockTokenAdded(lt);
+        } catch (IllegalArgumentException e) {
+            String msg = "Bad lock token: " + e.getMessage();
+            log.warn(msg);
+            throw new LockException(msg);
+        }
     }
 
     /**
      * Remove lock token from this environment.
+     * @param session 
      * @param lt lock token
+     * @throws RepositoryException 
      */
-    public void removeLockToken(String lt) {
+    public void removeLockToken(SessionImpl session, String lt) throws RepositoryException {
+        try {
+            LockToken lockToken = LockToken.parse(lt);
+
+            NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.getId());
+            AbstractLockInfo info = getLockInfo(node);
+            if (info != null) {
+                if (session == info.getLockHolder()) {
+                    info.setLockHolder(null);
+                } else {
+                    String msg = "Cannot remove lock token: lock held by other session.";
+                    log.warn(msg);
+                    throw new LockException(msg);
+                }
+            }
+            // inform SessionLockManager
+            getSessionLockManager(session).lockTokenRemoved(lt);
+        } catch (IllegalArgumentException e) {
+            String msg = "Bad lock token: " + e.getMessage();
+            log.warn(msg);
+            throw new LockException(msg);
+        }
+    }
+
+    static SessionLockManager getSessionLockManager(SessionImpl session) throws RepositoryException {
+        Workspace wsp = (Workspace) session.getWorkspace();
+        return (SessionLockManager) wsp.getLockManager();
     }
 
     /**
@@ -437,7 +488,12 @@ class XAEnvironment {
             if (isUnlock) {
                 lockMgr.internalUnlock(node);
             } else {
-                lockMgr.internalLock(node, deep, sessionScoped, getSecondsRemaining(), lockOwner);
+                AbstractLockInfo internalLock = lockMgr.internalLock(node, deep, sessionScoped, getSecondsRemaining(), lockOwner);
+                AbstractLockInfo xaEnvLock = getLockInfo(node);
+                // Check if the lockToken has been removed in the transaction ...
+                if (xaEnvLock != null && xaEnvLock.getLockHolder() == null) {
+                    internalLock.setLockHolder(null);
+                }
             }
         }
 
