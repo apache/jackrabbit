@@ -33,7 +33,7 @@ formal validation because of the namespace declarations.
         primaryItemName CDATA #REQUIRED
     >
     <!ELEMENT supertypes (supertype+)>
-    <!ELEMENT supertype (CDATA)>
+    <!ELEMENT supertype (#PCDATA)>
 
     <!ELEMENT propertyDefinition (valueConstraints?|defaultValues?)>
     <!ATTLIST propertyDefinition
@@ -57,9 +57,9 @@ formal validation because of the namespace declarations.
     <!ENTITY OP_LE "{http://www.jcp.org/jcr/1.0}operatorLessThanOrEqualTo">
     <!ENTITY OP_LIKE "{http://www.jcp.org/jcr/1.0}operatorLike">
     <!ELEMENT valueConstraints (valueConstraint+)>
-    <!ELEMENT valueConstraint (CDATA)>
+    <!ELEMENT valueConstraint (#PCDATA)>
     <!ELEMENT defaultValues (defaultValue+)>
-    <!ELEMENT defaultValue (CDATA)>
+    <!ELEMENT defaultValue (#PCDATA)>
 
     <!ELEMENT childNodeDefinition (requiredPrimaryTypes)>
     <!ATTLIST childNodeDefinition
@@ -72,4 +72,4 @@ formal validation because of the namespace declarations.
         sameNameSiblings (true|false) #REQUIRED
     >
     <!ELEMENT requiredPrimaryTypes (requiredPrimaryType+)>
-    <!ELEMENT requiredPrimaryType (CDATA)>
+    <!ELEMENT requiredPrimaryType (#PCDATA)>
