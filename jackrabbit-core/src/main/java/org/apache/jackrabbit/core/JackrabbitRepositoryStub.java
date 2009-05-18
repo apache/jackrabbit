@@ -26,9 +26,8 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -137,30 +136,12 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                     dir = new File("target", "repository").getPath();
                 }
 
-                new File(dir).mkdirs();
-
                 String xml = settings.getProperty(PROP_REPOSITORY_CONFIG);
                 if (xml == null) {
                     xml = new File(dir, "repository.xml").getPath();
                 }
 
-                if (!new File(xml).exists()) {
-                    InputStream input = getResource("repository.xml");
-                    try {
-                        OutputStream output = new FileOutputStream(xml);
-                        try {
-                            IOUtils.copy(input, output);
-                        } finally {
-                            output.close();
-                        }
-                    } finally {
-                        input.close();
-                    }
-                }
-
-                RepositoryConfig config = RepositoryConfig.create(xml, dir);
-                repository = RepositoryImpl.create(config);
-
+                repository = createRepository(dir, xml);
                 Session session = repository.login(superuser);
                 try {
                     prepareTestContent(session);
@@ -177,12 +158,34 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         return repository;
     }
 
+    protected Repository createRepository(String dir, String xml)
+            throws Exception {
+        new File(dir).mkdirs();
+
+        if (!new File(xml).exists()) {
+            InputStream input = getResource("repository.xml");
+            try {
+                OutputStream output = new FileOutputStream(xml);
+                try {
+                    IOUtils.copy(input, output);
+                } finally {
+                    output.close();
+                }
+            } finally {
+                input.close();
+            }
+        }
+
+        RepositoryConfig config = RepositoryConfig.create(xml, dir);
+        return RepositoryImpl.create(config);
+    }
+
     private void prepareTestContent(Session session)
             throws RepositoryException, IOException {
         JackrabbitWorkspace workspace =
             (JackrabbitWorkspace) session.getWorkspace();
-        Set workspaces = new HashSet(
-                Arrays.asList(workspace.getAccessibleWorkspaceNames()));
+        Collection<String> workspaces =
+            Arrays.asList(workspace.getAccessibleWorkspaceNames());
         if (!workspaces.contains("test")) {
             workspace.createWorkspace("test");
         }
