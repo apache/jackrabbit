@@ -24,8 +24,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -39,13 +37,46 @@ import org.apache.jackrabbit.core.persistence.PersistenceCopier;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Tool for backing up or migrating the entire contents (workspaces,
+ * version histories, namespaces, node types, etc.) of a repository to
+ * a new repository. The target repository (if it exists) is overwritten.
+ *
+ * @since Apache Jackrabbit 1.6
+ */
 public class RepositoryCopier {
 
-    private final RepositoryImpl source;
+    /**
+     * Logger instance
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(RepositoryCopier.class);
 
-    private final RepositoryImpl target;
+    /**
+     * Source repository configuration
+     */
+    private final RepositoryConfig sourceConfig;
 
+    /**
+     * Target repository configuration
+     */
+    private final RepositoryConfig targetConfig;
+
+    /**
+     * Creates a tool for copying the full contents of the source repository.
+     * The given source repository directory is expected to contain the
+     * repository configuration as a <code>repository.xml</code> file.
+     * The target repository directory must not already exist. It will be
+     * automatically created with default repository configuration.
+     *
+     * @param source source repository directory
+     * @param target target repository directory
+     * @throws RepositoryException if the repositories can not be accessed
+     * @throws IOException if the target directory can not be initialized
+     */
     public RepositoryCopier(File source, File target)
             throws RepositoryException, IOException {
         if (!source.isDirectory()) {
@@ -77,79 +108,110 @@ public class RepositoryCopier {
             output.close();
         }
 
-        this.source = RepositoryImpl.create(
-                RepositoryConfig.create(sx.getPath(), source.getPath()));
-        this.target = RepositoryImpl.create(
-                RepositoryConfig.create(tx.getPath(), target.getPath()));
+        sourceConfig = RepositoryConfig.create(sx.getPath(), source.getPath());
+        targetConfig = RepositoryConfig.create(tx.getPath(), target.getPath());
     }
 
+    /**
+     * Creates a tool for copying the full contents of the source repository
+     * to the given target repository. Any existing content in the target
+     * repository will be overwritten.
+     *
+     * @param source source repository configuration
+     * @param target target repository configuration
+     * @throws RepositoryException if the repositories can not be accessed
+     */
     public RepositoryCopier(RepositoryConfig source, RepositoryConfig target)
             throws RepositoryException {
-        this.source = RepositoryImpl.create(source);
-        this.target = RepositoryImpl.create(target);
+        sourceConfig = source;
+        targetConfig = target;
     }
 
-    public void copy() throws Exception {
-        System.out.println(
-                "Copying repository " + source.getConfig().getHomeDir());
-        copyNamespaces();
-        copyNodeTypes();
-        copyVersionStore();
-        copyWorkspaces();
+    /**
+     * Copies the full content from the source to the target repository.
+     * Note that both the source and the target repository must be closed
+     * during the copy operation as this method requires exclusive access
+     * to the repositories.
+     *
+     * @throws RepositoryException if the copy operation fails
+     */
+    public void copy() throws RepositoryException {
+        logger.info(
+                "Copying repository content from {} to {}",
+                sourceConfig.getHomeDir(), targetConfig.getHomeDir());
 
-        target.shutdown();
-        source.shutdown();
-
-        System.out.println("  Done.");
+        RepositoryImpl source = RepositoryImpl.create(sourceConfig);
+        try {
+            RepositoryImpl target = RepositoryImpl.create(targetConfig);
+            try {
+                copyNamespaces(
+                        source.getNamespaceRegistry(),
+                        target.getNamespaceRegistry());
+                copyNodeTypes(
+                        source.getNodeTypeRegistry(),
+                        target.getNodeTypeRegistry());
+                copyVersionStore(
+                        source.getVersionManagerImpl(),
+                        target.getVersionManagerImpl());
+                copyWorkspaces(source, target);
+            } catch (InvalidNodeTypeDefException e) {
+                throw new RepositoryException("Failed to copy node types", e);
+            } catch (ItemStateException e) {
+                throw new RepositoryException("Failed to copy item states", e);
+            } finally {
+                target.shutdown();
+            }
+        } finally {
+            source.shutdown();
+        }
     }
 
-    private void copyNamespaces() throws RepositoryException {
-        NamespaceRegistry sourceRegistry = source.getNamespaceRegistry();
-        NamespaceRegistry targetRegistry = target.getNamespaceRegistry();
-        Set<String> existing = new HashSet<String>(Arrays.asList(
-                targetRegistry.getURIs()));
-        for (String uri : sourceRegistry.getURIs()) {
+    private void copyNamespaces(
+            NamespaceRegistry source, NamespaceRegistry target)
+            throws RepositoryException {
+        logger.info("Copying registered namespaces");
+
+        Collection<String> existing = Arrays.asList(target.getURIs());
+        for (String uri : source.getURIs()) {
             if (!existing.contains(uri)) {
                 // TODO: what if the prefix is already taken?
-                targetRegistry.registerNamespace(
-                        sourceRegistry.getPrefix(uri), uri);
+                target.registerNamespace(source.getPrefix(uri), uri);
             }
         }
     }
 
-    private void copyNodeTypes()
+    private void copyNodeTypes(NodeTypeRegistry source, NodeTypeRegistry target)
             throws RepositoryException, InvalidNodeTypeDefException {
-        NodeTypeRegistry sourceRegistry = source.getNodeTypeRegistry();
-        NodeTypeRegistry targetRegistry = target.getNodeTypeRegistry();
-        Set<Name> existing = new HashSet<Name>(Arrays.asList(
-                targetRegistry.getRegisteredNodeTypes()));
+        logger.info("Copying registered node types");
+
+        Collection<Name> existing =
+            Arrays.asList(target.getRegisteredNodeTypes());
         Collection<NodeTypeDef> register = new ArrayList<NodeTypeDef>();
-        for (Name name : sourceRegistry.getRegisteredNodeTypes()) {
+        for (Name name : source.getRegisteredNodeTypes()) {
             // TODO: what about modified node types?
             if (!existing.contains(name)) {
-                register.add(sourceRegistry.getNodeTypeDef(name));
+                register.add(source.getNodeTypeDef(name));
             }
         }
-        targetRegistry.registerNodeTypes(register);
+        target.registerNodeTypes(register);
     }
 
-    private void copyVersionStore()
+    private void copyVersionStore(
+            VersionManagerImpl source, VersionManagerImpl target)
             throws RepositoryException, ItemStateException {
-        System.out.println("  Copying version histories...");
-        VersionManagerImpl sourceManager = source.getVersionManagerImpl();
-        VersionManagerImpl targetManager = target.getVersionManagerImpl();
+        logger.info("Copying version histories");
+
         PersistenceCopier copier = new PersistenceCopier(
-                sourceManager.getPersistenceManager(),
-                targetManager.getPersistenceManager());
+                source.getPersistenceManager(),
+                target.getPersistenceManager());
         copier.copy(RepositoryImpl.VERSION_STORAGE_NODE_ID);
     }
 
-    private void copyWorkspaces()
+    private void copyWorkspaces(RepositoryImpl source, RepositoryImpl target)
             throws RepositoryException, ItemStateException {
-        Set<String> existing = new HashSet<String>(Arrays.asList(
-                target.getWorkspaceNames()));
+        Collection<String> existing = Arrays.asList(target.getWorkspaceNames());
         for (String name : source.getWorkspaceNames()) {
-            System.out.println("  Copying workspace " + name + "...");
+            logger.info("Copying workspace {}" , name);
 
             if (!existing.contains(name)) {
                 target.createWorkspace(name);
