@@ -24,6 +24,8 @@ import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
@@ -139,7 +141,15 @@ public class PersistenceCopier {
             }
         }
 
-        // TODO: Copy node references?
+        // Copy all node references
+        NodeReferencesId refsId = new NodeReferencesId(sourceNode.getNodeId());
+        if (source.exists(refsId)) {
+            changes.modified(source.load(refsId));
+        } else if (target.exists(refsId)) {
+            NodeReferences references = target.load(refsId);
+            references.clearAllReferences();
+            changes.modified(references);
+        }
 
         // Persist the copied states
         target.store(changes);
