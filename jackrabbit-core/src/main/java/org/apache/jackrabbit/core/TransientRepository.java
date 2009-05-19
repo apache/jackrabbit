@@ -19,10 +19,8 @@ package org.apache.jackrabbit.core;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,6 +31,7 @@ import javax.jcr.Value;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.slf4j.Logger;
@@ -45,8 +44,8 @@ import org.slf4j.LoggerFactory;
  * when no longer used, this class can be used to avoid having to explicitly
  * shut down the repository.
  */
-public class TransientRepository
-        implements javax.jcr.Repository, JackrabbitRepository, SessionListener {
+public class TransientRepository extends AbstractRepository
+        implements JackrabbitRepository, SessionListener {
 
     /**
      * The logger instance used to log the repository and session lifecycles.
@@ -111,7 +110,8 @@ public class TransientRepository
      * repository instance is automatically shut down until a new session
      * is opened.
      */
-    private final Map sessions = new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
+    private final Map<Session, Session> sessions =
+        new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     /**
      * The static repository descriptors. The default {@link RepositoryImpl}
@@ -271,15 +271,15 @@ public class TransientRepository
      * descriptor keys are returned.
      *
      * @return descriptor keys
-     * @see Repository#getDescriptorKeys()
      */
     public synchronized String[] getDescriptorKeys() {
         if (repository != null) {
             return repository.getDescriptorKeys();
         } else {
-            List keys = Collections.list(descriptors.propertyNames());
-            Collections.sort(keys);
-            return (String[]) keys.toArray(new String[keys.size()]);
+            String[] keys = Collections.list(
+                    descriptors.propertyNames()).toArray(new String[0]);
+            Arrays.sort(keys);
+            return keys;
         }
     }
 
@@ -300,6 +300,33 @@ public class TransientRepository
         }
     }
 
+    public Value getDescriptorValue(String key) {
+        if (repository != null) {
+            return repository.getDescriptorValue(key);
+        } else {
+            throw new UnsupportedOperationException(
+                    "not implemented yet - see JCR-2062");
+        }
+    }
+
+    public Value[] getDescriptorValues(String key) {
+        if (repository != null) {
+            return repository.getDescriptorValues(key);
+        } else {
+            throw new UnsupportedOperationException(
+                    "not implemented yet - see JCR-2062");
+        }
+    }
+
+    public boolean isSingleValueDescriptor(String key) {
+        if (repository != null) {
+            return repository.isSingleValueDescriptor(key);
+        } else {
+            throw new UnsupportedOperationException(
+                    "not implemented yet - see JCR-2062");
+        }
+    }
+
     /**
      * Logs in to the content repository. Initializes the underlying repository
      * instance if needed. The opened session is added to the set of open
@@ -312,7 +339,8 @@ public class TransientRepository
      * @throws RepositoryException if the session could not be created
      * @see Repository#login(Credentials,String)
      */
-    public synchronized Session login(Credentials credentials, String workspaceName)
+    public synchronized Session login(
+            Credentials credentials, String workspaceName)
             throws RepositoryException {
         // Start the repository if this is the first login
         if (sessions.isEmpty()) {
@@ -321,7 +349,8 @@ public class TransientRepository
 
         try {
             logger.debug("Opening a new session");
-            SessionImpl session = (SessionImpl) repository.login(credentials, workspaceName);
+            SessionImpl session = (SessionImpl) repository.login(
+                    credentials, workspaceName);
             sessions.put(session, session);
             session.addListener(this);
             logger.info("Session opened");
@@ -336,61 +365,6 @@ public class TransientRepository
         }
     }
 
-    /**
-     * Calls {@link #login(Credentials, String)} with a <code>null</code>
-     * workspace name.
-     *
-     * @param credentials login credentials
-     * @return new session
-     * @throws RepositoryException if the session could not be created
-     * @see Repository#login(Credentials)
-     */
-    public Session login(Credentials credentials) throws RepositoryException {
-        return login(credentials, null);
-    }
-
-    /**
-     * Calls {@link #login(Credentials, String)} with <code>null</code> login
-     * credentials.
-     *
-     * @param workspaceName workspace name
-     * @return new session
-     * @throws RepositoryException if the session could not be created
-     * @see Repository#login(String)
-     */
-    public Session login(String workspaceName) throws RepositoryException {
-        return login(null, workspaceName);
-    }
-
-    /**
-     * Calls {@link #login(Credentials, String)} with <code>null</code> login
-     * credentials and a <code>null</code> workspace name.
-     *
-     * @return new session
-     * @throws RepositoryException if the session could not be created
-     * @see Repository#login(Credentials)
-     */
-    public Session login() throws RepositoryException {
-        return login(null, null);
-    }
-
-
-    public Value getDescriptorValue(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
-    }
-
-    public Value[] getDescriptorValues(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
-    }
-
-    public boolean isSingleValueDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
-    }
-
-    public boolean isStandardDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
-    }
-
     //--------------------------------------------------<JackrabbitRepository>
 
     /**
@@ -400,9 +374,8 @@ public class TransientRepository
      * @see Session#logout()
      */
     public synchronized void shutdown() {
-        Iterator iterator = new HashSet(sessions.keySet()).iterator();
-        while (iterator.hasNext()) {
-            Session session = (Session) iterator.next();
+        Session[] copy = sessions.keySet().toArray(new Session[0]);
+        for (Session session : copy) {
             session.logout();
         }
     }
@@ -436,4 +409,5 @@ public class TransientRepository
      */
     public void loggingOut(SessionImpl session) {
     }
+
 }
