@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import junit.framework.TestCase;
+ import junit.framework.TestCase;
 import org.xml.sax.InputSource;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.ClosedInputStream;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -34,54 +34,58 @@ import java.net.URISyntaxException;
  */
 public class RepositoryConfigTest extends TestCase {
 
-    private static final String REPOSITORY_XML = "target/repository_for_test.xml";
-    private static final String REPOSITORY_HOME = "target/repository_for_test";
+    private static final File DIR =
+        new File("target", "RepositoryConfigTest");
 
-    private static void deleteAll(File file) {
-        if (file.exists()) {
-            if (file.isDirectory()) {
-                File[] children = file.listFiles();
-                for (int i = 0; i < children.length; i++) {
-                    deleteAll(children[i]);
-                }
-            }
-            file.delete();
-        }
-    }
+    private static final File XML =
+        new File(DIR, "repository.xml");
+
+    private RepositoryConfig config;
 
     /**
      * Sets up the test case by creating the repository home directory
      * and copying the repository configuration file in place.
      */
     protected void setUp() throws Exception {
-        // Create the repository directory
-        File home = new File(REPOSITORY_HOME);
-        home.mkdirs();
-
-        // Copy the repository configuration file in place
-        ClassLoader loader = getClass().getClassLoader();
-        InputStream input = loader.getResourceAsStream("org/apache/jackrabbit/core/repository.xml");
-        try {
-            OutputStream output = new FileOutputStream(REPOSITORY_XML);
-            try {
-                int n;
-                byte[] buffer = new byte[1024];
-                while ((n = input.read(buffer)) != -1) {
-                    output.write(buffer, 0, n);
-                }
-            } finally {
-                output.close();
-            }
-        } finally {
-            input.close();
-        }
+        config = RepositoryConfig.install(DIR);
     }
 
     protected void tearDown() {
-        File home = new File(REPOSITORY_HOME);
-        deleteAll(home);
-        File config = new File(REPOSITORY_XML);
-        config.delete();
+        FileUtils.deleteQuietly(DIR);
+    }
+
+    public void testCreateWithRepositoryDirectory() {
+        try {
+            RepositoryConfig.create(DIR);
+        } catch (ConfigurationException e) {
+            fail("Valid repository directory");
+        }
+
+        try {
+            RepositoryConfig.create(new File(DIR, "invalid-repo-dir"));
+            fail("Invalid repository directory");
+        } catch (ConfigurationException e) {
+        }
+    }
+
+    public void testCreateWithRepositoryConfigAndDirectory() {
+        try {
+            RepositoryConfig.create(XML, DIR);
+        } catch (ConfigurationException e) {
+            fail("Valid repository configuration and directory");
+        }
+
+        try {
+            RepositoryConfig.create(XML, new File(DIR, "invalid-repo-dir"));
+            fail("Invalid repository directory");
+        } catch (ConfigurationException e) {
+        }
+
+        try {
+            RepositoryConfig.create(new File(DIR, "invalid.xml"), DIR);
+            fail("Invalid repository configuration");
+        } catch (ConfigurationException e) {
+        }
     }
 
     /**
@@ -89,12 +93,15 @@ public class RepositoryConfigTest extends TestCase {
      */
     public void testRepositoryConfigCreateWithFileName() {
         try {
-            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
+            RepositoryConfig.create(XML.getPath(), DIR.getPath());
         } catch (ConfigurationException e) {
             fail("Valid configuration file name");
         }
+
         try {
-            RepositoryConfig.create("invalid-config-file", REPOSITORY_HOME);
+            RepositoryConfig.create(
+                    new File(DIR, "invalid-config-file.xml").getPath(),
+                    DIR.getPath());
             fail("Invalid configuration file name");
         } catch (ConfigurationException e) {
         }
@@ -105,14 +112,23 @@ public class RepositoryConfigTest extends TestCase {
      */
     public void testRepositoryConfigCreateWithURI() throws URISyntaxException {
         try {
-            URI uri = new File(REPOSITORY_XML).toURI();
-            RepositoryConfig.create(uri, REPOSITORY_HOME);
+            RepositoryConfig.create(XML.toURI(), DIR.getPath());
         } catch (ConfigurationException e) {
             fail("Valid configuration URI");
         }
+
         try {
-            URI uri = new URI("invalid://config/uri");
-            RepositoryConfig.create(uri, REPOSITORY_HOME);
+            RepositoryConfig.create(
+                    new File(DIR, "invalid-config-file.xml").toURI(),
+                    DIR.getPath());
+            fail("Invalid configuration URI");
+        } catch (ConfigurationException e) {
+        }
+
+        try {
+            RepositoryConfig.create(
+                    new URI("invalid://config/uri"),
+                    DIR.getPath());
             fail("Invalid configuration URI");
         } catch (ConfigurationException e) {
         }
@@ -122,25 +138,33 @@ public class RepositoryConfigTest extends TestCase {
      * Tests that an input stream can be used for the configuration.
      */
     public void testRepositoryConfigCreateWithInputStream() throws IOException {
-        InputStream input = new FileInputStream(REPOSITORY_XML);
+        InputStream input = new FileInputStream(XML);
         try {
-            RepositoryConfig.create(input, REPOSITORY_HOME);
+            RepositoryConfig.create(input, DIR.getPath());
         } catch (ConfigurationException e) {
             fail("Valid configuration input stream");
         } finally {
             input.close();
         }
-        input = new InputStream() {
-            public int read() throws IOException {
-                throw new IOException("invalid input stream");
-            }
-        };
+
         try {
-            RepositoryConfig.create(input, REPOSITORY_HOME);
+            RepositoryConfig.create(
+                    new InputStream() {
+                        public int read() throws IOException {
+                            throw new IOException("invalid input stream");
+                        }
+                    },
+                    DIR.getPath());
             fail("Invalid configuration input stream");
         } catch (ConfigurationException e) {
-        } finally {
-            input.close();
+        }
+
+        try {
+            RepositoryConfig.create(
+                    new ClosedInputStream(),
+                    DIR.getPath());
+            fail("Invalid configuration input stream");
+        } catch (ConfigurationException e) {
         }
     }
 
@@ -149,16 +173,16 @@ public class RepositoryConfigTest extends TestCase {
      */
     public void testRepositoryConfigCreateWithInputSource() throws IOException {
         try {
-            URI uri = new File(REPOSITORY_XML).toURI();
-            InputSource source = new InputSource(uri.toString());
-            RepositoryConfig.create(source, REPOSITORY_HOME);
+            InputSource source = new InputSource(XML.toURI().toString());
+            RepositoryConfig.create(source, DIR.getPath());
         } catch (ConfigurationException e) {
             fail("Valid configuration input source with file URI");
         }
-        InputStream stream = new FileInputStream(REPOSITORY_XML);
+
+        InputStream stream = new FileInputStream(XML);
         try {
             InputSource source = new InputSource(stream);
-            RepositoryConfig.create(source, REPOSITORY_HOME);
+            RepositoryConfig.create(source, DIR.getPath());
         } catch (ConfigurationException e) {
             fail("Valid configuration input source with input stream");
         } finally {
@@ -170,18 +194,16 @@ public class RepositoryConfigTest extends TestCase {
      * Test that the repository configuration file is correctly parsed.
      */
     public void testRepositoryConfig() throws Exception {
-        RepositoryConfig config =
-            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-        assertEquals(REPOSITORY_HOME, config.getHomeDir());
+        assertEquals(DIR.getPath(), config.getHomeDir());
         assertEquals("default", config.getDefaultWorkspaceName());
         assertEquals(
-                new File(REPOSITORY_HOME, "workspaces").getPath(),
+                new File(DIR, "workspaces").getPath(),
                 new File(config.getWorkspacesConfigRootDir()).getPath());
-        assertEquals("Jackrabbit", config.getAppName());
         assertEquals("Jackrabbit", config.getSecurityConfig().getAppName());
 
         // SecurityManagerConfig
-        SecurityManagerConfig smc = config.getSecurityConfig().getSecurityManagerConfig();
+        SecurityManagerConfig smc =
+            config.getSecurityConfig().getSecurityManagerConfig();
         assertEquals(
                 "org.apache.jackrabbit.core.security.simple.SimpleSecurityManager",
                 smc.getClassName());
@@ -195,33 +217,30 @@ public class RepositoryConfigTest extends TestCase {
         }
 
         // AccessManagerConfig
-        AccessManagerConfig amc = config.getAccessManagerConfig();
-        amc = config.getSecurityConfig().getAccessManagerConfig();
+        AccessManagerConfig amc =
+            config.getSecurityConfig().getAccessManagerConfig();
         assertEquals(
                 "org.apache.jackrabbit.core.security.simple.SimpleAccessManager",
                 amc.getClassName());
         assertTrue(amc.getParameters().isEmpty());
 
         VersioningConfig vc = config.getVersioningConfig();
-        assertEquals(new File(REPOSITORY_HOME, "version"), vc.getHomeDir());
+        assertEquals(new File(DIR, "version"), vc.getHomeDir());
         assertEquals(
                 "org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager",
                 vc.getPersistenceManagerConfig().getClassName());
     }
 
     public void testInit() throws Exception {
-        RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-        File workspaces_dir = new File(REPOSITORY_HOME, "workspaces");
+        File workspaces_dir = new File(DIR, "workspaces");
         File workspace_dir = new File(workspaces_dir, "default");
         File workspace_xml = new File(workspace_dir, "workspace.xml");
         assertTrue("Default workspace is created", workspace_xml.exists());
     }
 
     public void testCreateWorkspaceConfig() throws Exception {
-        RepositoryConfig config =
-            RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-        config.createWorkspaceConfig("test-workspace", (StringBuffer)null);
-        File workspaces_dir = new File(REPOSITORY_HOME, "workspaces");
+        config.createWorkspaceConfig("test-workspace", (StringBuffer) null);
+        File workspaces_dir = new File(DIR, "workspaces");
         File workspace_dir = new File(workspaces_dir, "test-workspace");
         File workspace_xml = new File(workspace_dir, "workspace.xml");
         assertTrue(workspace_xml.exists());
@@ -229,9 +248,7 @@ public class RepositoryConfigTest extends TestCase {
 
     public void testCreateDuplicateWorkspaceConfig() throws Exception {
         try {
-            RepositoryConfig config =
-                RepositoryConfig.create(REPOSITORY_XML, REPOSITORY_HOME);
-            config.createWorkspaceConfig("default", (StringBuffer)null);
+            config.createWorkspaceConfig("default", (StringBuffer) null);
             fail("No exception thrown when creating a duplicate workspace");
         } catch (ConfigurationException e) {
             // test passed
@@ -247,10 +264,11 @@ public class RepositoryConfigTest extends TestCase {
 
         InputStream in = getClass().getResourceAsStream(
                 "/org/apache/jackrabbit/core/cluster/repository.xml");
-        RepositoryConfig config = RepositoryConfig.create(in, REPOSITORY_HOME);
+        RepositoryConfig config = RepositoryConfig.create(in, DIR.getPath());
 
         ClusterConfig clusterConfig = config.getClusterConfig();
         assertEquals(id, clusterConfig.getId());
         assertEquals(syncDelay, clusterConfig.getSyncDelay());
     }
+
 }
