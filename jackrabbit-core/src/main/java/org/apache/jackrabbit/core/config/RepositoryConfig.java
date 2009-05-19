@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.config;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.IOUtils; 
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreFactory;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -41,10 +42,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -71,8 +74,114 @@ public class RepositoryConfig implements FileSystemFactory, DataStoreFactory {
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(RepositoryConfig.class);
 
+    /** Name of the default repository configuration file. */
+    private static final String REPOSITORY_XML = "repository.xml";
+
     /** Name of the workspace configuration file. */
     private static final String WORKSPACE_XML = "workspace.xml";
+
+    /**
+     * Returns the configuration of a repository in a given repository
+     * directory. The repository configuration is read from a "repository.xml"
+     * file inside the repository directory.
+     * <p>
+     * The directory is created if it does not exist. If the repository
+     * configuration file does not exist, then it is created using the
+     * default Jackrabbit configuration settings.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param dir repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig install(File dir)
+            throws IOException, ConfigurationException {
+        return install(new File(dir, REPOSITORY_XML), dir);
+    }
+
+    /**
+     * Returns the configuration of a repository with the given configuration
+     * file and repository home directory.
+     * <p>
+     * The directory is created if it does not exist. If the repository
+     * configuration file does not exist, then it is created using the
+     * default Jackrabbit configuration settings.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param dir repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig install(File xml, File dir)
+            throws IOException, ConfigurationException {
+        if (!dir.exists()) {
+            log.info("Creating repository directory {}", dir);
+            dir.mkdirs();
+        }
+
+        if (!xml.exists()) {
+            log.info("Installing default repository configuration to {}", xml);
+            OutputStream output = new FileOutputStream(xml);
+            try {
+                InputStream input =
+                    RepositoryImpl.class.getResourceAsStream(REPOSITORY_XML);
+                try {
+                    IOUtils.copy(input, output);
+                } finally {
+                   input.close();
+                }
+            } finally {
+                output.close();
+            }
+        }
+
+        return create(xml, dir);
+    }
+
+    /**
+     * Returns the configuration of a repository in a given repository
+     * directory. The repository configuration is read from a "repository.xml"
+     * file inside the repository directory.
+     * <p>
+     * An exception is thrown if the directory does not exist or if
+     * the repository configuration file can not be read. 
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param dir repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig create(File dir)
+            throws ConfigurationException {
+        return create(new File(dir, REPOSITORY_XML), dir);
+    }
+
+    /**
+     * Returns the configuration of a repository with the given configuration
+     * file and repository home directory.
+     * <p>
+     * An exception is thrown if the directory does not exist or if
+     * the repository configuration file can not be read. 
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param dir repository home directory
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig create(File xml, File dir)
+            throws ConfigurationException {
+        if (!dir.isDirectory()) {
+            throw new ConfigurationException(
+                    "Repository directory " + dir + " does not exist");
+        }
+
+        if (!xml.isFile()) {
+            throw new ConfigurationException(
+                    "Repository configuration file " + xml + " does not exist");
+        }
+
+        return create(new InputSource(xml.toURI().toString()), dir.getPath());
+    }
 
     /**
      * Convenience method that wraps the configuration file name into an
