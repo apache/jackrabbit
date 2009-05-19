@@ -1420,21 +1420,19 @@ public class RepositoryImpl extends AbstractRepository
     }
 
     public Value getDescriptorValue(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        throw new UnsupportedOperationException(
+                "not implemented yet - see JCR-2062");
     }
 
     public Value[] getDescriptorValues(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        throw new UnsupportedOperationException(
+                "not implemented yet - see JCR-2062");
     }
 
     public boolean isSingleValueDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
+        throw new UnsupportedOperationException(
+                "not implemented yet - see JCR-2062");
     }
-
-    public boolean isStandardDescriptor(String key) {
-        throw new RuntimeException("not implemented yet - see JCR-2062");
-    }
-
 
     //------------------------------------------------------< SessionListener >
     /**
