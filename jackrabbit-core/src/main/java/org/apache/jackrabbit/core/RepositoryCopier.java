@@ -17,10 +17,7 @@
 package org.apache.jackrabbit.core;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +25,7 @@ import java.util.Collection;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -69,47 +66,17 @@ public class RepositoryCopier {
      * Creates a tool for copying the full contents of the source repository.
      * The given source repository directory is expected to contain the
      * repository configuration as a <code>repository.xml</code> file.
-     * The target repository directory must not already exist. It will be
+     * The target repository directory should not already exist. It will be
      * automatically created with default repository configuration.
      *
      * @param source source repository directory
      * @param target target repository directory
      * @throws RepositoryException if the repositories can not be accessed
-     * @throws IOException if the target directory can not be initialized
+     * @throws IOException if the target repository can not be initialized
      */
     public RepositoryCopier(File source, File target)
             throws RepositoryException, IOException {
-        if (!source.isDirectory()) {
-            throw new RepositoryException("Not a directory: " + source);
-        }
-
-        File sx = new File(source, "repository.xml");
-        if (!sx.isFile()) {
-            throw new RepositoryException(
-                    "Not a repository directory: " + source);
-        }
-
-        if (target.exists()) {
-            throw new RepositoryException("Target directory exists: " + target);
-        }
-        target.mkdirs();
-
-        File tx = new File(target, "repository.xml");
-        OutputStream output = new FileOutputStream(tx);
-        try {
-            InputStream input =
-                RepositoryImpl.class.getResourceAsStream("repository.xml");
-            try {
-                IOUtils.copy(input, output);
-            } finally {
-                input.close();
-            }
-        } finally {
-            output.close();
-        }
-
-        sourceConfig = RepositoryConfig.create(sx.getPath(), source.getPath());
-        targetConfig = RepositoryConfig.create(tx.getPath(), target.getPath());
+        this(RepositoryConfig.create(source), RepositoryConfig.install(target));
     }
 
     /**
@@ -160,6 +127,18 @@ public class RepositoryCopier {
                 throw new RepositoryException("Failed to copy item states", e);
             } finally {
                 target.shutdown();
+            }
+
+            // Remove index directories to force re-indexing on next startup
+            // TODO: There should be a cleaner way to do this
+            File targetDir = new File(targetConfig.getHomeDir());
+            File repoDir = new File(targetDir, "repository");
+            FileUtils.deleteQuietly(new File(repoDir, "index"));
+            File[] workspaces = new File(targetDir, "workspaces").listFiles();
+            if (workspaces != null) {
+                for (File workspace : workspaces) {
+                    FileUtils.deleteQuietly(new File(workspace, "index"));
+                }
             }
         } finally {
             source.shutdown();
