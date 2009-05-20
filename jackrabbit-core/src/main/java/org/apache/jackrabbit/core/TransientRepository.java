@@ -17,10 +17,8 @@
 package org.apache.jackrabbit.core;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,7 +32,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -56,11 +53,6 @@ public class TransientRepository
      */
     private static final Logger logger =
         LoggerFactory.getLogger(TransientRepository.class);
-
-    /**
-     * Resource path of the default repository configuration file.
-     */
-    private static final String DEFAULT_REPOSITORY_XML = "repository.xml";
 
     /**
      * Name of the repository configuration file property.
@@ -92,7 +84,7 @@ public class TransientRepository
     public interface RepositoryFactory {
 
         /**
-         * Creates and intializes a repository instance. The returned instance
+         * Creates and initializes a repository instance. The returned instance
          * will be used and finally shut down by the caller of this method.
          *
          * @return initialized repository instance
@@ -133,9 +125,8 @@ public class TransientRepository
      * factory to initialize the underlying repository instances.
      *
      * @param factory repository factory
-     * @throws IOException if the static repository descriptors cannot be loaded
      */
-    public TransientRepository(RepositoryFactory factory) throws IOException {
+    public TransientRepository(RepositoryFactory factory) {
         this.factory = factory;
         this.repository = null;
         this.descriptors = new Properties();
@@ -143,12 +134,16 @@ public class TransientRepository
         // FIXME: The current RepositoryImpl class does not allow static
         // access to the repository descriptors, so we need to load them
         // directly from the underlying property file.
-        InputStream in =
-            RepositoryImpl.class.getResourceAsStream("repository.properties");
         try {
-            descriptors.load(in);
-        } finally {
-            in.close();
+            InputStream in = RepositoryImpl.class.getResourceAsStream(
+                    "repository.properties");
+            try {
+                descriptors.load(in);
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            logger.warn("Unable to load static repository descriptors", e);
         }
     }
 
@@ -187,6 +182,32 @@ public class TransientRepository
     /**
      * Creates a transient repository proxy that will use the given repository
      * configuration file and home directory paths to initialize the underlying
+     * repository instances.
+     *
+     * @see #TransientRepository(File, File)
+     * @param config repository configuration file
+     * @param home repository home directory
+     * @throws IOException if the static repository descriptors cannot be loaded
+     */
+    public TransientRepository(String config, String home) {
+        this(new File(config), new File(home));
+    }
+
+    /**
+     * Creates a transient repository proxy based on the given repository
+     * home directory and the repository configuration file "repository.xml"
+     * contained in that directory.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @param dir repository home directory
+     */
+    public TransientRepository(File dir) {
+        this(new File(dir, "repository.xml"), dir);
+    }
+
+    /**
+     * Creates a transient repository proxy that will use the given repository
+     * configuration file and home directory paths to initialize the underlying
      * repository instances. The repository configuration file is reloaded
      * whenever the repository is restarted, so it is safe to modify the
      * configuration when all sessions have been closed.
@@ -198,48 +219,22 @@ public class TransientRepository
      * session starts. This is a convenience feature designed to reduce the
      * need for manual configuration.
      *
-     * @param config repository configuration file
-     * @param home repository home directory
-     * @throws IOException if the static repository descriptors cannot be loaded
+     * @since Apache Jackrabbit 1.6
+     * @param xml repository configuration file
+     * @param dir repository home directory
      */
-    public TransientRepository(final String config, final String home)
-            throws IOException {
+    public TransientRepository(final File xml, final File dir) {
         this(new RepositoryFactory() {
             public RepositoryImpl getRepository() throws RepositoryException {
                 try {
-                    // Make sure that the repository configuration file exists
-                    File configFile = new File(config);
-                    if (!configFile.exists()) {
-                        logger.info("Copying default configuration to " + config);
-                        OutputStream output = new FileOutputStream(configFile);
-                        try {
-                            InputStream input =
-                                TransientRepository.class.getResourceAsStream(
-                                        DEFAULT_REPOSITORY_XML);
-                            try {
-                                IOUtils.copy(input, output);
-                            } finally {
-                               input.close();
-                            }
-                        } finally {
-                            output.close();
-                        }
-                    }
-                    // Make sure that the repository home directory exists
-                    File homeDir = new File(home);
-                    if (!homeDir.exists()) {
-                        logger.info("Creating repository home directory " + home);
-                        homeDir.mkdirs();
-                    }
-                    // Load the configuration and create the repository
-                    RepositoryConfig rc = RepositoryConfig.create(config, home);
-                    return RepositoryImpl.create(rc);
+                    return RepositoryImpl.create(
+                            RepositoryConfig.install(xml, dir));
                 } catch (IOException e) {
                     throw new RepositoryException(
                             "Automatic repository configuration failed", e);
                 } catch (ConfigurationException e) {
                     throw new RepositoryException(
-                            "Invalid repository configuration: " + config, e);
+                            "Invalid repository configuration file: " + xml, e);
                 }
             }
         });

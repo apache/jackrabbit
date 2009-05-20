@@ -19,7 +19,6 @@ package org.apache.jackrabbit.standalone;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.BindException;
 import java.net.URL;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,6 +27,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.RepositoryCopier;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
@@ -70,6 +71,8 @@ public class Main {
         options.addOption("?", "help", false, "print this message");
         options.addOption("n", "notice", false, "print copyright notices");
         options.addOption("l", "license", false, "print license information");
+        options.addOption(
+                "b", "backup", false, "create a backup of the repository");
 
         options.addOption("q", "quiet", false, "disable console output");
         options.addOption("d", "debug", false, "enable debug logging");
@@ -79,6 +82,12 @@ public class Main {
         options.addOption("f", "file", true, "location of this jar file");
         options.addOption("r", "repo", true, "repository directory (jackrabbit)");
         options.addOption("c", "conf", true, "repository configuration file");
+        options.addOption(
+                "R", "backup-repo", true,
+                "backup repository directory (jackrabbit-backupN)");
+        options.addOption(
+                "C", "backup-conf", true,
+                "backup repository configuration file");
 
         command = new GnuParser().parse(options, args);
     }
@@ -118,30 +127,69 @@ public class Main {
             message("Writing log messages to " + log);
             prepareServerLog(log);
 
-            message("Starting the server...");
-            prepareWebapp(file, repository, tmp);
-            accessLog.setHandler(webapp);
-            prepareAccessLog(log);
-            server.setHandler(accessLog);
-            prepareConnector();
-            server.addConnector(connector);
-            prepareShutdown();
+            if (command.hasOption("backup")) {
+                backup(repository);
+            } else {
+                message("Starting the server...");
+                prepareWebapp(file, repository, tmp);
+                accessLog.setHandler(webapp);
+                prepareAccessLog(log);
+                server.setHandler(accessLog);
+                prepareConnector();
+                server.addConnector(connector);
+                prepareShutdown();
 
-            try {
-                server.start();
+                try {
+                    server.start();
 
-                String host = connector.getHost();
-                if (host == null) {
-                    host = "localhost";
+                    String host = connector.getHost();
+                    if (host == null) {
+                        host = "localhost";
+                    }
+                    message("Apache Jackrabbit is now running at "
+                            +"http://" + host + ":" + connector.getPort() + "/");
+                } catch (Throwable t) {
+                    System.err.println(
+                            "Unable to start the server: " + t.getMessage());
+                    System.exit(1);
                 }
-                message("Apache Jackrabbit is now running at "
-                        +"http://" + host + ":" + connector.getPort() + "/");
-            } catch (Throwable t) {
-                System.err.println(
-                        "Unable to start the server: " + t.getMessage());
-                System.exit(1);
             }
         }
+    }
+
+    private void backup(File sourceDir) throws Exception {
+        RepositoryConfig source;
+        if (command.hasOption("conf")) {
+            source = RepositoryConfig.create(
+                    new File(command.getOptionValue("conf")), sourceDir);
+        } else {
+            source = RepositoryConfig.create(sourceDir);
+        }
+
+        File targetDir;
+        if (command.hasOption("backup-repo")) {
+            targetDir = new File(command.getOptionValue("backup-repo"));
+        } else {
+            int i = 1;
+            do {
+                targetDir = new File("jackrabbit-backup" + i++);
+            } while (targetDir.exists());
+        }
+
+        RepositoryConfig target;
+        if (command.hasOption("backup-conf")) {
+            target = RepositoryConfig.install(
+                    new File(command.getOptionValue("backup-conf")), targetDir);
+        } else {
+            target = RepositoryConfig.install(targetDir);
+        }
+
+        message("Creating a repository copy in " + targetDir);
+
+        RepositoryCopier copier = new RepositoryCopier(source, target);
+        copier.copy();
+
+        message("The repository has been successfully copied.");
     }
 
     private void prepareServerLog(File log)
