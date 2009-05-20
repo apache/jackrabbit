@@ -29,11 +29,13 @@ import java.io.IOException;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p/>
- * Configuration requirements:<br/> The node at {@link #testRoot} must allow a
+ * <p>
+ * Configuration requirements:
+ * <p>
+ * The node at {@link #testRoot} must allow a
  * child node of type {@link #testNodeType} with name {@link #nodeName1}. The
  * node type {@link #testNodeType} must define a single value binary property
- * with name {@link #propertyName1}. <br>As a special case, if the specified node
+ * with name {@link #propertyName1}. As a special case, if the specified node
  * type automatically adds a jcr:content child node of type nt:resource, and
  * <code>propertyName1</code> is specified as "jcr:data", that binary property
  * is used instead.

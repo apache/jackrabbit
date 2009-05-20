@@ -30,8 +30,9 @@ import java.util.ArrayList;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p/>
- * Configuration requirements:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The node at {@link #testRoot} must allow a child node of type
  * {@link #testNodeType} with name {@link #nodeName1}. The node type
  * {@link #testNodeType} must define a single value string property with

@@ -199,7 +199,7 @@ public class AddNodeTest extends AbstractJCRTest {
     /**
      * Creates a new node using {@link Node#addNode(String, String)}, then tries
      * to call {@link javax.jcr.Node#save()} on the new node.
-     * <br/><br/>
+     * <p>
      * This should throw an {@link RepositoryException}.
      */
     public void testAddNodeRepositoryExceptionSaveOnNewNode() throws RepositoryException {

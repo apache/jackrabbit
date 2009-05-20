@@ -24,8 +24,9 @@ import javax.jcr.RepositoryException;
 
 /**
  * Test cases for {@link Item#isNew()} on a node.
- * <p/>
- * Configuration requirements:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The node at {@link #testRoot} must allow a child node of type
  * {@link #testNodeType} with name {@link #nodeName1}.
  *

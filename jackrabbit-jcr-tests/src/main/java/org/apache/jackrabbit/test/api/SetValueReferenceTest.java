@@ -27,8 +27,10 @@ import javax.jcr.PathNotFoundException;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
- * <p/>
- * Configuration requirements:<br/> The node at {@link #testRoot} must allow a
+ * <p>
+ * Configuration requirements:
+ * <p>
+ * The node at {@link #testRoot} must allow a
  * child node of type {@link #testNodeType} with name {@link #nodeName1}. The
  * node type {@link #testNodeType} must define a single value reference property
  * with name {@link #propertyName1}. The node type {@link #testNodeType} must

@@ -37,7 +37,7 @@ import java.util.NoSuchElementException;
 /**
  * Tests the 'read' methods specified in the {@link javax.jcr.Node} interface on
  * a level 1 repository.
- * <p/>
+ * <p>
  * Most tests require at least one child node under the root node, otherwise a
  * {@link org.apache.jackrabbit.test.NotExecutableException} is thrown.
  *

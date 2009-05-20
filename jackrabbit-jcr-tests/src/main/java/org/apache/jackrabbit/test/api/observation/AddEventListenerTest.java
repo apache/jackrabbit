@@ -25,13 +25,14 @@ import javax.jcr.Session;
 
 /**
  * Tests the options for addEventListener().
- * <p/>
- * Configuration requirements are:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1} and
  * {@link #nodeName2}. Furthermore {@link #testNodeType} must allow to add
  * child nodes of the same type ({@link #testNodeType}).
- * <p/>
+ * <p>
  * Certain test require that {@link #testNodeType} is mix:referenceable or
  * allows to add that mixin. If the repository does not support mix:referenceable
  * a {@link org.apache.jackrabbit.test.NotExecutableException} is thrown

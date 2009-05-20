@@ -25,8 +25,9 @@ import javax.jcr.Node;
 
 /**
  * Test cases for {@link Item#isModified()} on a property.
- * <p/>
- * Configuration requirements:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The node at {@link #testRoot} must allow a child node of type
  * {@link #testNodeType} with name {@link #nodeName1}. The node type must
  * support a non-mandatory string property with name {@link #propertyName1}.

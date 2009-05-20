@@ -21,7 +21,7 @@ import javax.jcr.query.Query;
 /**
  * This test searches for all nodes of a specific node type and orders them by
  * the property with name configured as {@link #propertyName1}.
- * <p/>
+ * <p>
  * The default workspace must at least contain two nodes of type {@link #testNodeType}
  * with String properties named {@link #propertyName1} containing
  * distinct values.
@@ -55,7 +55,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
 
     /**
      * Test if sort order <i>ascending</i> is respected.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderByAscending() throws Exception {
@@ -65,7 +65,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
 
     /**
      * Test if sort order <i>descending</i> is respected.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderByDescending() throws Exception {
@@ -75,7 +75,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
 
     /**
      * Test if default sort order is <i>ascending</i>
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderBy() throws Exception {

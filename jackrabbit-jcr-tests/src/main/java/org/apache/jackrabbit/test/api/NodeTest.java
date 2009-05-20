@@ -78,8 +78,9 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Calls {@link javax.jcr.Node#getCorrespondingNodePath(String )} with a non
-     * existing workspace. <br/><br/> This should throw an {@link
-     * javax.jcr.NoSuchWorkspaceException }.
+     * existing workspace.
+     * <p>
+     * This should throw an {@link javax.jcr.NoSuchWorkspaceException }.
      */
     public void testGetCorrespondingNodePathNoSuchWorkspaceException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -162,8 +163,10 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries calling {@link javax.jcr.Node#update(String)} after node has
-     * changed in first workspace but not been saved yet. <br/><br/> This should
-     * throw and {@link javax.jcr.InvalidItemStateException}. <br/><br/>
+     * changed in first workspace but not been saved yet.
+     * <p>
+     * This should throw an {@link javax.jcr.InvalidItemStateException}.
+     * <p>
      * Prerequisites: <ul> <li><code>javax.jcr.tck.propertyname1</code> name of
      * a String property that can be modified in <code>javax.jcr.tck.nodetype</code>
      * for testing</li> </ul>
@@ -205,8 +208,9 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to use {@link javax.jcr.Node#update(String)} with an invalid
-     * workspace. <br/><br/> This should throw an {@link
-     * javax.jcr.NoSuchWorkspaceException}.
+     * workspace.
+     * <p>
+     * This should throw an {@link javax.jcr.NoSuchWorkspaceException}.
      */
     public void testUpdateNoSuchWorkspaceException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -229,7 +233,8 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Calls {@link javax.jcr.Node#update(String)} for a node that only exists
      * in current workspace. <br><br> In that case nothing should happen.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.propertyname1</code>
+     * <p>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.propertyname1</code>
      * name of a String property that can be modified in
      * <code>javax.jcr.tck.nodetype</code> for testing</li> </ul>
      */
@@ -258,9 +263,12 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Checks if {@link javax.jcr.Node#update(String)} works properly by
      * creating the same node in two workspaces one with a child node the other
-     * with a property set. <br/><br/> Calling <code>update()</code> on the node
+     * with a property set.
+     * <p>
+     * Calling <code>update()</code> on the node
      * with properties, should remove the properties and add the child node.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * <p>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must allow children of same nodetype. <li><code>javax.jcr.tck.propertyname1</code>
      * name of a String property that can be modified in
      * <code>javax.jcr.tck.nodetype</code> for testing</li> </ul>
@@ -305,8 +313,8 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Tries to add a node using {@link javax.jcr.Node#addNode(String)} where
      * node type can not be determined by parent (<code>nt:base</code> is used
-     * as parent nodetype). <br/><br/> This should throw a {@link
-     * javax.jcr.nodetype.ConstraintViolationException}.
+     * as parent nodetype). 
+     * <p>This should throw a {@link javax.jcr.nodetype.ConstraintViolationException}.
      */
     public void testAddNodeConstraintViolationExceptionUndefinedNodeType() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -325,9 +333,11 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to add a node using {@link javax.jcr.Node#addNode(String)} as a
-     * child of a property.<br/> <br/> This should throw an {@link
-     * javax.jcr.nodetype.ConstraintViolationException}.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.propertyname1</code>
+     * child of a property.
+     * <p>
+     * This should throw an {@link javax.jcr.nodetype.ConstraintViolationException}.
+     * <p>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.propertyname1</code>
      * name of a String property that can be set in <code>javax.jcr.tck.nodetype</code>
      * for testing</li> </ul>
      */
@@ -353,8 +363,11 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Tries to create a node using {@link javax.jcr.Node#addNode(String,
      * String)}  at a location where there is already a node with same name and
-     * the parent does not allow same name siblings. <br/><br/> This should
-     * throw an {@link javax.jcr.ItemExistsException }. <br/><br> Prerequisites:
+     * the parent does not allow same name siblings. 
+     * <p>
+     * This should throw an {@link javax.jcr.ItemExistsException}.
+     * <p>
+     * Prerequisites:
      * <ul> <li><code>javax.jcr.tck.NodeTest.testAddNodeItemExistsException.nodetype<code>
      * node type that does not allow same name siblings and allows to add child
      * nodes of the same type.</li> </ul>
@@ -384,8 +397,9 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to add a node using {@link javax.jcr.Node#addNode(String)} to a non
-     * existing destination node. <br/><br/> This should throw an {@link
-     * javax.jcr.PathNotFoundException}.
+     * existing destination node.
+     * <p>
+     * This should throw an {@link javax.jcr.PathNotFoundException}.
      */
     public void testAddNodePathNotFoundException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -402,8 +416,8 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Adds a new node using {@link javax.jcr.Node#addNode(String)} with an
-     * index for the new name. <br/><br/> This should throw an {@link
-     * RepositoryException}.
+     * index for the new name.
+     * <p>This should throw an {@link RepositoryException}.
      */
     public void testAddNodeRepositoryExceptionRelPathIndex() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -420,8 +434,9 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Creates a new node using {@link Node#addNode(String)}, then tries to call
-     * {@link javax.jcr.Node#save()} on the newly node. <br/><br/> This should
-     * throw an {@link RepositoryException}.
+     * {@link javax.jcr.Node#save()} on the newly node.
+     * <p>
+     * This should throw an {@link RepositoryException}.
      */
     public void testAddNodeRepositoryExceptionSaveOnNewNode() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -490,8 +505,11 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Creates a node with a mandatory child node using {@link
      * Node#addNode(String, String)}, saves on parent node then tries to delete
-     * the mandatory child node. <br/><br/> This should throw a {@link
-     * ConstraintViolationException}. <br/><br/>Prerequisites: <ul>
+     * the mandatory child node.
+     * <p>
+     * This should throw a {@link ConstraintViolationException}.
+     * <p>
+     * Prerequisites: <ul>
      * <li><code>javax.jcr.tck.NodeTest.testRemoveMandatoryNode.nodetype2</code>
      * a node type that has a mandatory child node</li> <li><code>javax.jcr.tck.NodeTest.testRemoveMandatoryNode.nodetype3</code>
      * nodetype of the mandatory child node</li> <li><code>javax.jcr.tck.NodeTest.testRemoveMandatoryNode.nodename3</code>
@@ -524,8 +542,9 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Removes a node using {@link javax.jcr.Node#remove()} with session 1,
-     * afterwards it tries the same with session 2. <br/><br/> This should throw
-     * an {@link InvalidItemStateException}.
+     * afterwards it tries the same with session 2. 
+     * <p>
+     * This should throw an {@link InvalidItemStateException}.
      */
     public void testRemoveInvalidItemStateException() throws RepositoryException {
 
@@ -620,7 +639,7 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Tests if <code>Node.remove()</code> does not throw a
      * <code>LockException</code> if <code>Node</code> is locked.
-     * <p/>
+     * <p>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code> and locks the node
      * with the superuser session. Then the test removes
@@ -668,7 +687,7 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Tests if <code>Node.remove()</code> throws a <code>LockException</code>
      * if the parent node of <code>Node</code> is locked.
-     * <p/>
+     * <p>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code>, adds a child node
      * <code>nodeName2</code> and locks it with the superuser session. Then the
@@ -725,7 +744,8 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tests object identity, meaning two nodes objects accuired through the
-     * same session must have the same properties and states. <br/><br/>
+     * same session must have the same properties and states.
+     * <p>
      * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code> must allow
      * children of same node type</li> <li><code>javax.jcr.tck.propertyname1</code>
      * name of a String property that can be set in <code>javax.jcr.tck.nodetype</code>
@@ -841,7 +861,8 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to call {@link Node#refresh(boolean)}  on a deleted node.
-     * <br/><br/> This should throw an {@link InvalidItemStateException}.
+     * <p>
+     * This should throw an {@link InvalidItemStateException}.
      */
     public void testRefreshInvalidItemStateException() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -866,7 +887,8 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Checks if {@link javax.jcr.Node#refresh(boolean refresh)} works properly
-     * with <code>refresh</code> set to <code>false</code>.<br/> <br/>
+     * with <code>refresh</code> set to <code>false</code>.
+     * <p>
      * Procedure: <ul> <li>Creates two nodes with session 1</li> <li>Modifies
      * node 1 with session 1 by adding a child node</li> <li>Get node 2 with
      * session 2</li> <li>Modifies node 2 with session 2 by adding a child
@@ -874,7 +896,8 @@ public class NodeTest extends AbstractJCRTest {
      * javax.jcr.Node#save()}</li> <li>calls <code>Node.refresh(false)</code>
      * on root node in session 1</li> </ul> Session 1 changes should be cleared
      * and session 2 changes should now be visible to session 1.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * <p>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must accept children of same nodetype</li> </ul>
      */
     public void testRefreshBooleanFalse() throws RepositoryException {
@@ -922,14 +945,17 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Checks if {@link javax.jcr.Node#refresh(boolean refresh)} works properly
-     * with <code>refresh</code> set to <code>true</code>.<br/> <br/>
+     * with <code>refresh</code> set to <code>true</code>.
+     * <p>
      * Procedure: <ul> <li>Creates two nodes with session 1</li> <li>Modifies
      * node 1 with session 1 by adding a child node</li> <li>Get node 2 with
      * session 2</li> <li>Modifies node 2 with session 2 by adding a child
      * node</li> <li>saves session 2 changes using {@link
      * javax.jcr.Node#save()}</li> <li>calls <code>Node.refresh(true)</code> on
      * root node in session 1</li> </ul> Session 1 changes and session 2
-     * changes now be visible to session 1. <br/><br/>Prerequisites: <ul>
+     * changes now be visible to session 1.
+     * <p>
+     * Prerequisites: <ul>
      * <li><code>javax.jcr.tck.nodetype</code> must accept children of same
      * nodetype</li> </ul>
      */
@@ -979,12 +1005,15 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * Tries to save a node using {@link javax.jcr.Node#save()} that was already
-     * deleted by an other session.<br/> <br/> Procedure: <ul> <li>Creates a new
+     * deleted by an other session.
+     * <p>
+     * Procedure: <ul> <li>Creates a new
      * node with session 1, saves it, adds a child node.</li> <li>Access new
      * node with session 2,deletes the node, saves it.</li> <li>Session 1 tries
      * to save modifications using <code>Node.save()</code> on root node .</li>
      * </ul> This should throw an {@link javax.jcr.InvalidItemStateException}.
-     * <br/><br/>Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
+     * <p>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code>
      * must accept children of same nodetype</li> </ul>
      */
     public void testSaveInvalidStateException() throws RepositoryException {
@@ -1026,7 +1055,7 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Tries to create and save a node using {@link javax.jcr.Node#save()} with
      * an mandatory property that is not set on saving time.
-     * <p/>
+     * <p>
      * Prerequisites: <ul> <li><code>javax.jcr.tck.Node.testSaveContstraintViolationException.nodetype2</code>
      * must reference a nodetype that has at least one property that is
      * mandatory but not autocreated</li> </ul>

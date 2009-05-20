@@ -27,8 +27,9 @@ import javax.jcr.observation.Event;
 
 /**
  * Test cases for {@link javax.jcr.observation.Event#PROPERTY_CHANGED} events.
- * <p/>
- * Configuration requirements are:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1} and
  * {@link #nodeName2}.
@@ -106,7 +107,7 @@ public class PropertyChangedTest extends AbstractObservationTest {
      * </ul>
      * is triggered if a property is transiently removed and set again with
      * the same name but different type and then saved.
-     * <p/>
+     * <p>
      * If the node type {@link #testNodeType} does not suppport a property with
      * name {@link #propertyName1} of type {@link PropertyType#UNDEFINED} a
      * {@link NotExecutableException} is thrown.

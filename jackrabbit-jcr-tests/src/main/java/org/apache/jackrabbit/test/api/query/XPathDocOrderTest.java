@@ -29,10 +29,10 @@ import javax.jcr.query.QueryResult;
  * check the repository descriptor {@link javax.jcr.Repository#QUERY_XPATH_DOC_ORDER}
  * first and throw a {@link org.apache.jackrabbit.test.NotExecutableException}
  * if the descriptor is not present.
- * <p/>
+ * <p>
  * This is a level 1 test, therefore does not write content to the workspace.
  * The tests require the following content in the default workspace:
- * <p/>
+ * <p>
  * At least three nodes under the {@link #testRoot}.
  *
  * @test
@@ -49,7 +49,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
 
     /**
      * Tests the <code>position()</code> function.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderPositionFunction() throws Exception {
@@ -66,7 +66,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
     /**
      * Tests if position index and document order on child axis returns the
      * correct node.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderPositionIndex() throws Exception {
@@ -82,7 +82,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
 
     /**
      * Tests the <code>last()</code> function.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderLastFunction() throws Exception {
@@ -98,7 +98,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
 
     /**
      * Tests the <code>first()</code> function.
-     * <p/>
+     * <p>
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderFirstFunction() throws Exception {
