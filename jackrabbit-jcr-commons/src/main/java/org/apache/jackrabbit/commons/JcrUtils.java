@@ -26,6 +26,7 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 
 import org.apache.jackrabbit.commons.iterator.NodeIterable;
+import org.apache.jackrabbit.commons.iterator.PropertyIterable;
 
 /**
  * Collection of static utility methods for use with the JCR API.
@@ -105,176 +106,121 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the properties of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperties()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getProperties()} on the given node and returns the
+     * resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
+     * for use in a Java 5 for-each loop.
      *
+     * @see PropertyIterable
      * @param node node
      * @return properties of the node
+     * @throws RepositoryException
+     *         if the {@link Node#getProperties()} call fails
      */
-    public static Iterable<Property> getProperties(final Node node) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getProperties();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access properties of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getProperties(Node node)
+            throws RepositoryException {
+        return new PropertyIterable(node.getProperties());
     }
 
     /**
-     * Returns matching properties of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperties(String)} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getProperties(String)} on the given node with the
+     * given name pattern and returns the resulting {@link PropertyIterator}
+     * as an {@link Iterable<Property>} instance for use in a Java 5
+     * for-each loop.
      *
+     * @see PropertyIterable
      * @param node node
      * @param pattern property name pattern
      * @return matching properties of the node
+     * @throws RepositoryException
+     *         if the {@link Node#getProperties(String)} call fails
      */
-    public static Iterable<Property> getProperties(
-            final Node node, final String pattern) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getProperties(pattern);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access properties of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getProperties(Node node, String pattern)
+            throws RepositoryException {
+        return new PropertyIterable(node.getProperties(pattern));
     }
 
     /**
-     * Returns matching properties of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperty(String[])} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getProperty(String[])} on the given node with the
+     * given name globs and returns the resulting {@link PropertyIterator}
+     * as an {@link Iterable<Property>} instance for use in a Java 5
+     * for-each loop.
      *
+     * @see PropertyIterable
      * @param node node
-     * @param globs property name globs
+     * @param pattern property name globs
      * @return matching properties of the node
+     * @throws RepositoryException
+     *         if the {@link Node#getProperty(String[])} call fails
      */
-    public static Iterable<Property> getProperties(
-            final Node node, final String[] globs) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    // TODO: method name will be changed in JCR 2.0
-                    return node.getProperty(globs);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access properties of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getProperties(Node node, String[] globs)
+            throws RepositoryException {
+        return new PropertyIterable(node.getProperty(globs));
     }
 
     /**
-     * Returns the references that point to the given node as an
-     * {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getReferences()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getReferences()} on the given node and returns the
+     * resulting {@link PropertyIterator} as an {@link Iterable<Property>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see PropertyIterable
      * @param node reference target
      * @return references that point to the given node
+     * @throws RepositoryException
+     *         if the {@link Node#getReferences()} call fails
      */
-    public static Iterable<Property> getReferences(final Node node) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getReferences();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access references of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getReferences(Node node)
+            throws RepositoryException {
+        return new PropertyIterable(node.getReferences());
     }
 
     /**
-     * Returns specifically named references that point to the given node as
-     * an {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getReferences(String)} method call.
-     * Potential {@link RepositoryException}s are converted to
-     * {@link RuntimeException}s.
+     * Calls {@link Node#getReferences(String)} on the given node and returns
+     * the resulting {@link PropertyIterator} as an {@link Iterable<Property>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see PropertyIterable
      * @param node reference target
      * @param name reference property name
      * @return references with the given name that point to the given node
+     * @throws RepositoryException
+     *         if the {@link Node#getReferences(String)} call fails
      */
-    public static Iterable<Property> getReferences(
-            final Node node, final String name) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getReferences(name);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access references of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getReferences(Node node, String name)
+            throws RepositoryException {
+        return new PropertyIterable(node.getReferences(name));
     }
 
     /**
-     * Returns the weak references that point to the given node as an
-     * {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getWeakReferences()} method call.
-     * Potential {@link RepositoryException}s are converted to
-     * {@link RuntimeException}s.
+     * Calls {@link Node#getWeakReferences()} on the given node and returns the
+     * resulting {@link PropertyIterator} as an {@link Iterable<Property>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see PropertyIterable
      * @param node reference target
      * @return weak references that point to the given node
+     * @throws RepositoryException
+     *         if the {@link Node#getWeakReferences()} call fails
      */
-    public static Iterable<Property> getWeakReferences(final Node node) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getWeakReferences();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access references of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getWeakReferences(Node node)
+            throws RepositoryException {
+        return new PropertyIterable(node.getWeakReferences());
     }
 
     /**
-     * Returns specifically named weak references that point to the given node
-     * as an {@link Iterable} for use in a Java 5 for-each loop. The return
-     * value encapsulates the {@link Node#getWeakReferences(String)} method
-     * call. Potential {@link RepositoryException}s are converted to
-     * {@link RuntimeException}s.
+     * Calls {@link Node#getReferences(String)} on the given node and returns
+     * the resulting {@link PropertyIterator} as an {@link Iterable<Property>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see PropertyIterable
      * @param node reference target
      * @param name reference property name
      * @return weak references with the given name that point to the given node
+     * @throws RepositoryException
+     *         if the {@link Node#getWeakReferences(String)} call fails
      */
-    public static Iterable<Property> getWeakReferences(
-            final Node node, final String name) {
-        return new Iterable<Property>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Property> iterator() {
-                try {
-                    return node.getWeakReferences(name);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access references of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Property> getWeakReferences(Node node, String name)
+            throws RepositoryException {
+        return new PropertyIterable(node.getWeakReferences(name));
     }
 
     /**
