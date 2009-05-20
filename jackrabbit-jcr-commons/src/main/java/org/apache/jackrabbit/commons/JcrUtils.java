@@ -21,6 +21,8 @@ import java.util.Iterator;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
 /**
  * Collection of static utility methods for use with the JCR API.
@@ -299,6 +301,52 @@ public class JcrUtils {
                 } catch (RepositoryException e) {
                     throw new RuntimeException(
                             "Unable to access references of " + node, e);
+                }
+            }
+        };
+    }
+
+    /**
+     * Returns the nodes in the given query result as an {@link Iterable}
+     * for use in a Java 5 for-each loop. The return value encapsulates
+     * the {@link QueryResult#getNodes()} method call. Potential
+     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     *
+     * @param result query result
+     * @return nodes in the query result
+     */
+    public static Iterable<Node> getNodes(final QueryResult result) {
+        return new Iterable<Node>() {
+            @SuppressWarnings("unchecked")
+            public Iterator<Node> iterator() {
+                try {
+                    return result.getNodes();
+                } catch (RepositoryException e) {
+                    throw new RuntimeException(
+                            "Unable to access nodes in " + result, e);
+                }
+            }
+        };
+    }
+
+    /**
+     * Returns the rows in the given query result as an {@link Iterable}
+     * for use in a Java 5 for-each loop. The return value encapsulates
+     * the {@link QueryResult#getRows()} method call. Potential
+     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     *
+     * @param result query result
+     * @return rows in the query result
+     */
+    public static Iterable<Row> getRows(final QueryResult result) {
+        return new Iterable<Row>() {
+            @SuppressWarnings("unchecked")
+            public Iterator<Row> iterator() {
+                try {
+                    return result.getRows();
+                } catch (RepositoryException e) {
+                    throw new RuntimeException(
+                            "Unable to access rows in " + result, e);
                 }
             }
         };
