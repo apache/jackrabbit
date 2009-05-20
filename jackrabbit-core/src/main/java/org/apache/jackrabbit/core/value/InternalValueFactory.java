@@ -37,6 +37,8 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.FileInputStream;
 import java.util.Calendar;
+import java.math.BigDecimal;
+import java.net.URI;
 
 /**
  * <code>InternalValueFactory</code>...
@@ -76,18 +78,27 @@ public final class InternalValueFactory extends AbstractQValueFactory {
                     return InternalValue.create(Double.parseDouble(value));
                 case PropertyType.LONG:
                     return InternalValue.create(Long.parseLong(value));
+                case PropertyType.DECIMAL:
+                    return InternalValue.create(new BigDecimal(value));
                 case PropertyType.PATH:
                     return InternalValue.create(PathFactoryImpl.getInstance().create(value));
                 case PropertyType.NAME:
                     return InternalValue.create(NameFactoryImpl.getInstance().create(value));
                 case PropertyType.STRING:
                     return InternalValue.create(value);
+                case PropertyType.URI:
+                    return InternalValue.create(URI.create(value));
                 case PropertyType.REFERENCE:
                     return InternalValue.create(new UUID(value));
+                case PropertyType.WEAKREFERENCE:
+                    return InternalValue.create(new UUID(value), true);
                 case PropertyType.BINARY:
                     return InternalValue.create(value.getBytes("UTF-8"));
                 // default: invalid type specified -> see below.
             }
+        } catch (NumberFormatException ex) {
+            // given String value cannot be converted to Decimal
+            throw new ValueFormatException(ex);
         } catch (IllegalArgumentException ex) {
             // given String value cannot be converted to Long/Double/Path/Name
             throw new ValueFormatException(ex);

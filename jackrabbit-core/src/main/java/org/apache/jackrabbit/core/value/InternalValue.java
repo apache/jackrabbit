@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.StringValue;
+import org.apache.jackrabbit.value.URIValue;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -49,6 +50,9 @@ import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.math.BigDecimal;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -64,6 +68,8 @@ import java.util.Calendar;
  * <tr>BOOLEAN<td></td><td>Boolean</td></tr>
  * <tr>NAME<td></td><td>Name</td></tr>
  * <tr>PATH<td></td><td>Path</td></tr>
+ * <tr>URI<td></td><td>URI</td></tr>
+ * <tr>DECIMAL<td></td><td>BigDecimal</td></tr>
  * <tr>BINARY<td></td><td>BLOBFileValue</td></tr>
  * <tr>REFERENCE<td></td><td>UUID</td></tr>
  * </table>
@@ -152,10 +158,20 @@ public class InternalValue extends AbstractQValue {
                 return create(value.getDate());
             case PropertyType.DOUBLE:
                 return create(value.getDouble());
+            case PropertyType.DECIMAL:
+                return create(value.getDecimal());
             case PropertyType.LONG:
                 return create(value.getLong());
             case PropertyType.REFERENCE:
                 return create(new UUID(value.getString()));
+            case PropertyType.WEAKREFERENCE:
+                return create(new UUID(value.getString()), true);
+            case PropertyType.URI:
+                try {
+                    return create(new URI(value.getString()));
+                } catch (URISyntaxException e) {
+                    throw new ValueFormatException(e.getMessage());
+                }
             case PropertyType.NAME:
                 try {
                     if (value instanceof QValueValue) {
@@ -222,6 +238,22 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue create(Calendar value) {
+        return new InternalValue(value);
+    }
+
+    /**
+     * @param value
+     * @return the created value
+     */
+    public static InternalValue create(BigDecimal value) {
+        return new InternalValue(value);
+    }
+
+    /**
+     * @param value
+     * @return the created value
+     */
+    public static InternalValue create(URI value) {
         return new InternalValue(value);
     }
 
@@ -376,7 +408,16 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue create(UUID value) {
-        return new InternalValue(value);
+        return create(value, false);
+    }
+
+    /**
+     * @param value
+     * @param weak
+     * @return the created value
+     */
+    public static InternalValue create(UUID value, boolean weak) {
+        return new InternalValue(value, weak);
     }
 
     //----------------------------------------------------< conversions, etc. >
@@ -409,8 +450,14 @@ public class InternalValue extends AbstractQValue {
                     return vf.createValue(((Double) val).doubleValue());
                 case PropertyType.LONG:
                     return vf.createValue(((Long) val).longValue());
+                case PropertyType.DECIMAL:
+                    return vf.createValue((BigDecimal) val);
                 case PropertyType.REFERENCE:
                     return vf.createValue(val.toString(), PropertyType.REFERENCE);
+                case PropertyType.WEAKREFERENCE:
+                    return vf.createValue(val.toString(), PropertyType.WEAKREFERENCE);
+                case PropertyType.URI:
+                    return new URIValue((URI) val);
                 case PropertyType.PATH:
                     return vf.createValue(resolver.getJCRPath((Path) val), PropertyType.PATH);
                 case PropertyType.NAME:
@@ -507,12 +554,18 @@ public class InternalValue extends AbstractQValue {
                 return create(Double.parseDouble(s));
             case PropertyType.LONG:
                 return create(Long.parseLong(s));
+            case PropertyType.DECIMAL:
+                return create(new BigDecimal(s));
             case PropertyType.REFERENCE:
                 return create(new UUID(s));
+            case PropertyType.WEAKREFERENCE:
+                return create(new UUID(s), true);
             case PropertyType.PATH:
                 return create(PathFactoryImpl.getInstance().create(s));
             case PropertyType.NAME:
                 return create(NameFactoryImpl.getInstance().create(s));
+            case PropertyType.URI:
+                return create(URI.create(s));
             case PropertyType.STRING:
                 return create(s);
 
@@ -564,6 +617,14 @@ public class InternalValue extends AbstractQValue {
         super(Boolean.valueOf(value));
     }
 
+    private InternalValue(URI value) {
+        super(value, PropertyType.URI);
+    }
+
+    private InternalValue(BigDecimal value) {
+        super(value, PropertyType.DECIMAL);
+    }
+
     private InternalValue(BLOBFileValue value) {
         super(value, PropertyType.BINARY);
     }
@@ -574,6 +635,10 @@ public class InternalValue extends AbstractQValue {
 
     private InternalValue(UUID value) {
         super(value, PropertyType.REFERENCE);
+    }
+
+    private InternalValue(UUID value, boolean weak) {
+        super(value, weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
     }
 
     /**

@@ -195,6 +195,9 @@ public class PropertyImpl extends ItemImpl implements Property {
             case PropertyType.DATE:
             case PropertyType.REFERENCE:
             case PropertyType.BOOLEAN:
+            case PropertyType.DECIMAL:
+            case PropertyType.URI:
+            case PropertyType.WEAKREFERENCE:
                 return value.toString().length();
 
             case PropertyType.NAME:

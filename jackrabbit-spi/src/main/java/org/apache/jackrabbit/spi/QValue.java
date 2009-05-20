@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi;
 
 import java.io.InputStream;
 import java.util.Calendar;
+import java.math.BigDecimal;
+import java.net.URI;
 
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -76,7 +78,7 @@ public interface QValue {
     public String getString() throws RepositoryException;
 
     /**
-     * Returns a <code>InputStream</code> representation of this <code>QValue</code>
+     * Returns an <code>InputStream</code> representation of this <code>QValue</code>
      * object.
      *
      * @return A stream representation of this value.
@@ -91,6 +93,14 @@ public interface QValue {
      * @throws RepositoryException if an error occurs.
      */
     public Calendar getCalendar() throws RepositoryException;
+
+    /**
+     * Returns a <code>BigDecimal</code> representation of this value.
+     *
+     * @return A <code>BigDecimal</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public BigDecimal getDecimal() throws RepositoryException;
 
     /**
      * Returns a <code>double</code> representation of this value.
@@ -132,6 +142,14 @@ public interface QValue {
      * @throws RepositoryException if an error occurs.
      */
     public Path getPath() throws RepositoryException;
+
+    /**
+     * Returns an <code>URI</code> representation of this value.
+     *
+     * @return A <code>URI</code> representation of this value.
+     * @throws RepositoryException if an error occurs.
+     */
+    public URI getURI() throws RepositoryException;
 
     /**
      * Frees temporarily allocated resources such as temporary file, buffer, etc.

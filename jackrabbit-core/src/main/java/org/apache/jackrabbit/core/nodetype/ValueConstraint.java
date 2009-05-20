@@ -87,6 +87,7 @@ public abstract class ValueConstraint {
         }
         switch (type) {
             case PropertyType.STRING:
+            case PropertyType.URI:
                 return new StringConstraint(definition);
 
             case PropertyType.BOOLEAN:
@@ -100,6 +101,7 @@ public abstract class ValueConstraint {
 
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
                 return new NumericConstraint(definition);
 
             case PropertyType.NAME:
@@ -108,6 +110,7 @@ public abstract class ValueConstraint {
             case PropertyType.PATH:
                 return new PathConstraint(definition, resolver);
 
+            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
                 return new ReferenceConstraint(definition, resolver);
 
@@ -301,13 +304,13 @@ class NumericConstraint extends ValueConstraint {
     void check(double number) throws ConstraintViolationException {
         if (lowerLimit != null) {
             if (lowerInclusive) {
-                if (number < lowerLimit.doubleValue()) {
+                if (number < lowerLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
                             + definition + "'");
                 }
             } else {
-                if (number <= lowerLimit.doubleValue()) {
+                if (number <= lowerLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
                             + definition + "'");
@@ -316,13 +319,13 @@ class NumericConstraint extends ValueConstraint {
         }
         if (upperLimit != null) {
             if (upperInclusive) {
-                if (number > upperLimit.doubleValue()) {
+                if (number > upperLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
                             + definition + "'");
                 }
             } else {
-                if (number >= upperLimit.doubleValue()) {
+                if (number >= upperLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
                             + definition + "'");
@@ -342,6 +345,10 @@ class NumericConstraint extends ValueConstraint {
                 return;
 
             case PropertyType.DOUBLE:
+                check(value.getDouble());
+                return;
+
+            case PropertyType.DECIMAL:
                 check(value.getDouble());
                 return;
 

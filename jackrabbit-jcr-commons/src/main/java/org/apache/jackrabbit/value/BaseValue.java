@@ -37,12 +37,15 @@ import java.util.Calendar;
  * @see StringValue
  * @see LongValue
  * @see DoubleValue
+ * @see DecimalValue
  * @see BooleanValue
  * @see DateValue
  * @see BinaryValue
  * @see NameValue
  * @see PathValue
+ * @see URIValue
  * @see ReferenceValue
+ * @see WeakReferenceValue
  */
 public abstract class BaseValue implements Value {
 
@@ -187,7 +190,6 @@ public abstract class BaseValue implements Value {
         setValueConsumed();
 
         try {
-            // TODO: Is this the correct way to handle BigDecimal conversion
             return new BigDecimal(getInternalString());
         } catch (NumberFormatException e) {
             throw new ValueFormatException("conversion to Decimal failed", e);
