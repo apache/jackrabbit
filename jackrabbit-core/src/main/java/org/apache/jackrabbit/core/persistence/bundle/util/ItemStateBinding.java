@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.math.BigDecimal;
 
 /**
  * This Class implements relatively efficient serialization methods for item
@@ -312,6 +313,37 @@ public class ItemStateBinding {
         } else {
             out.writeBoolean(true);
             out.write(UUID.fromString(uuid).getRawBytes());
+        }
+    }
+
+    /**
+     * Deserializes a BigDecimal
+     * @param in the input stream
+     * @return the decimal
+     * @throws IOException in an I/O error occurs.
+     */
+    public BigDecimal readDecimal(DataInputStream in) throws IOException {
+        if (in.readBoolean()) {
+            // TODO more efficient serialization format
+            return new BigDecimal(in.readUTF());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Serializes a BigDecimal
+     * @param out the output stream
+     * @param decimal the decimal number
+     * @throws IOException in an I/O error occurs.
+     */
+    public void writeDecimal(DataOutputStream out, BigDecimal decimal) throws IOException {
+        if (decimal == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            // TODO more efficient serialization format
+            out.writeUTF(decimal.toString());
         }
     }
 

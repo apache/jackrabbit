@@ -28,6 +28,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.math.BigDecimal;
+import java.net.URI;
 
 /**
  * <code>AbstractQValue</code>...
@@ -143,6 +145,28 @@ public abstract class AbstractQValue implements QValue {
         this(value, PropertyType.PATH);
     }
 
+    /**
+     * Create a new <code>AbstractQValue</code>.
+     *
+     * @param value
+     * @throws IllegalArgumentException if the passed <code>value</code>
+     * is <code>null</code>.
+     */
+    protected AbstractQValue(BigDecimal value) {
+        this(value, PropertyType.DECIMAL);
+    }
+
+    /**
+     * Create a new <code>AbstractQValue</code>.
+     *
+     * @param value
+     * @throws IllegalArgumentException if the passed <code>value</code>
+     * is <code>null</code>.
+     */
+    protected AbstractQValue(URI value) {
+        this(value, PropertyType.URI);
+    }
+
     //---------------------------------------------------------< QValue >---
     /**
      * @see QValue#getType()
@@ -187,12 +211,46 @@ public abstract class AbstractQValue implements QValue {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
             cal.setTimeInMillis(((Long) val).longValue());
             return cal;
+        } else if (type == PropertyType.DECIMAL) {
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+            cal.setTimeInMillis(((BigDecimal) val).longValue());
+            return cal;
         } else {
             Calendar cal = ISO8601.parse(getString());
             if (cal == null) {
                 throw new ValueFormatException("not a date string: " + getString());
             } else {
                 return cal;
+            }
+        }
+    }
+
+    /**
+     * @see QValue#getDecimal()
+     */
+    public BigDecimal getDecimal() throws RepositoryException {
+        if (type == PropertyType.DECIMAL) {
+            return (BigDecimal) val;
+        } else {
+            try {
+                return new BigDecimal(getString());
+            } catch (NumberFormatException e) {
+                throw new ValueFormatException("not a valid decimal string: " + getString(), e);
+            }
+        }
+    }
+
+    /**
+     * @see QValue#getURI()
+     */
+    public URI getURI() throws RepositoryException {
+        if (type == PropertyType.URI) {
+            return (URI) val;
+        } else {
+            try {
+                return URI.create(getString());
+            } catch (IllegalArgumentException e) {
+                throw new ValueFormatException("not a valid uri: " + getString(), e);
             }
         }
     }
@@ -205,6 +263,8 @@ public abstract class AbstractQValue implements QValue {
             return ((Double) val).doubleValue();
         } else if (type == PropertyType.DATE) {
             return ((Calendar) val).getTimeInMillis();
+        } else if (type == PropertyType.DECIMAL) {
+            return ((BigDecimal) val).doubleValue();
         } else {
             try {
                 return Double.parseDouble(getString());
@@ -222,6 +282,8 @@ public abstract class AbstractQValue implements QValue {
             return ((Long) val).longValue();
         } else if (type == PropertyType.DOUBLE) {
             return ((Double) val).longValue();
+        } else if (type == PropertyType.DECIMAL) {
+            return ((BigDecimal) val).longValue();
         } else if (type == PropertyType.DATE) {
             return ((Calendar) val).getTimeInMillis();
         } else {

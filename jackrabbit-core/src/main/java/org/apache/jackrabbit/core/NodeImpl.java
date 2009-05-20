@@ -47,6 +47,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
@@ -1690,16 +1692,6 @@ public class NodeImpl extends ItemImpl implements Node {
             throw re;
         }
         return prop;
-    }
-
-    public Property setProperty(String name, BigDecimal value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1609");
-    }
-
-    public Property setProperty(String name, Binary value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1609");
     }
 
     /**
@@ -4536,16 +4528,14 @@ public class NodeImpl extends ItemImpl implements Node {
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * @see javax.jcr.Node#getIdentifier()
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public String getIdentifier() throws RepositoryException {
         return ((NodeId) id).toString();
     }
 
     /**
-     * @see javax.jcr.Node#getReferences(String)
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public PropertyIterator getReferences(String name)
             throws RepositoryException {
@@ -4587,26 +4577,55 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see javax.jcr.Node#getWeakReferences()
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public PropertyIterator getWeakReferences() throws RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2061");
+        return getWeakReferences(null);
     }
 
     /**
-     * @see javax.jcr.Node#getWeakReferences(String)
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public PropertyIterator getWeakReferences(String name) throws RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2061");
+        // check state of this instance
+        sanityCheck();
+
+        try {
+            Query q = session.getWorkspace().getQueryManager().createQuery(
+                    "//*[jcr:contains[., '" + data.getId() + "']",
+                    Query.XPATH);
+            QueryResult result = q.execute();
+            ArrayList l = new ArrayList<Property>();
+            for (NodeIterator nit = result.getNodes(); nit.hasNext(); ) {
+                Node n = nit.nextNode();
+                for (PropertyIterator pit = n.getProperties(); pit.hasNext(); ) {
+                    Property p = pit.nextProperty();
+                    if (p.getType() == PropertyType.WEAKREFERENCE
+                            && p.getString().equals(getIdentifier())) {
+                        if (name != null) {
+                            if (name.equals(p.getName())) {
+                                l.add(p);
+                            }
+                        } else {
+                            l.add(p);
+                        }
+                    }
+                }
+            }
+            if (l.isEmpty()) {
+                return PropertyIteratorAdapter.EMPTY;
+            } else {
+                return new PropertyIteratorAdapter(l);
+            }
+        } catch (RepositoryException e) {
+            String msg = "Unable to retrieve WEAKREFERENCE properties that refer to " + id;
+            log.debug(msg);
+            throw new RepositoryException(msg, e);
+        }
     }
 
     /**
-     * @see javax.jcr.Node#getNodes(String[])
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public NodeIterator getNodes(String[] nameGlobs)
             throws RepositoryException {
@@ -4620,8 +4639,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see javax.jcr.Node#getProperties(String[])
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     // TODO rename method to 'getProperties' once JCR 2.0 api has been fixed
     public PropertyIterator getProperty(String[]
@@ -4637,8 +4655,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * @see javax.jcr.Node#setPrimaryType(String) 
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public void setPrimaryType(String nodeTypeName)
             throws NoSuchNodeTypeException, VersionException,
@@ -4843,6 +4860,62 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Property setProperty(String name, BigDecimal value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check pre-conditions for setting property
+        checkSetProperty();
+
+        BitSet status = new BitSet();
+        PropertyImpl prop = getOrCreateProperty(
+                name, PropertyType.DECIMAL, false, false, status);
+        try {
+            prop.setValue(value);
+        } catch (RepositoryException re) {
+            if (status.get(CREATED)) {
+                // setting value failed, get rid of newly created property
+                removeChildProperty(name);
+            }
+            // rethrow
+            throw re;
+        }
+        return prop;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Property setProperty(String name, Binary value)
+            throws ValueFormatException, VersionException, LockException,
+            ConstraintViolationException, RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        // check pre-conditions for setting property
+        checkSetProperty();
+
+        BitSet status = new BitSet();
+        PropertyImpl prop = getOrCreateProperty(
+                name, PropertyType.BINARY, false, false, status);
+        try {
+            prop.setValue(value);
+        } catch (RepositoryException re) {
+            if (status.get(CREATED)) {
+                // setting value failed, get rid of newly created property
+                removeChildProperty(name);
+            }
+            // rethrow
+            throw re;
+        }
+        return prop;
     }
 
     // TODO: JCR-1565 JSR 283 lifecycle management

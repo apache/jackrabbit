@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
+import java.math.BigDecimal;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -383,6 +384,9 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.DOUBLE:
                     val = InternalValue.create(in.readDouble());
                     break;
+                case PropertyType.DECIMAL:
+                    val = InternalValue.create(readDecimal(in));
+                    break;
                 case PropertyType.LONG:
                     val = InternalValue.create(in.readLong());
                     break;
@@ -392,6 +396,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.NAME:
                     val = InternalValue.create(readQName(in));
                     break;
+                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     val = InternalValue.create(readUUID(in));
                     break;
@@ -505,6 +510,15 @@ public class BundleBinding extends ItemStateBinding {
                         return false;
                     }
                     break;
+                case PropertyType.DECIMAL:
+                    try {
+                        BigDecimal d = readDecimal(in);
+                        log.debug("  decimal: " + d);
+                    } catch (IOException e) {
+                        log.error("Error while reading decimal value: " + e);
+                        return false;
+                    }
+                    break;
                 case PropertyType.LONG:
                     try {
                         double l = in.readLong();
@@ -532,6 +546,7 @@ public class BundleBinding extends ItemStateBinding {
                         return false;
                     }
                     break;
+                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     try {
                         UUID uuid = readUUID(in);
@@ -673,6 +688,14 @@ public class BundleBinding extends ItemStateBinding {
                         throw new IOException("Unexpected error while writing DOUBLE value.");
                     }
                     break;
+                case PropertyType.DECIMAL:
+                    try {
+                        writeDecimal(out, val.getDecimal());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing DECIMAL value.");
+                    }
+                    break;
                 case PropertyType.LONG:
                     try {
                         out.writeLong(val.getLong());
@@ -692,6 +715,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.NAME:
                     writeQName(out, val.getQName());
                     break;
+                case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     writeUUID(out, val.getUUID());
                     break;

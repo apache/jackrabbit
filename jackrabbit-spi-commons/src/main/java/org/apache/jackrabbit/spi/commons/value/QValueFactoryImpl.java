@@ -41,6 +41,9 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * <code>QValueFactoryImpl</code>...
@@ -580,6 +583,28 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
          */
         public Path getPath() throws RepositoryException {
             throw new UnsupportedOperationException();
+        }
+
+        /**
+         * @see QValue#getDecimal()
+         */
+        public BigDecimal getDecimal() throws RepositoryException {
+            try {
+                return new BigDecimal(getString());
+            } catch (NumberFormatException ex) {
+                throw new ValueFormatException(ex);
+            }
+        }
+
+        /**
+         * @see QValue#getURI()
+         */
+        public URI getURI() throws RepositoryException {
+            try {
+                return new URI(getString());
+            } catch (URISyntaxException ex) {
+                throw new ValueFormatException(ex);
+            }
         }
 
         /**

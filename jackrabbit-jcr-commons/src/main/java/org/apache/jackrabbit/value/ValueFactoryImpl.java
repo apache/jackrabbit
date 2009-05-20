@@ -92,7 +92,7 @@ public class ValueFactoryImpl implements ValueFactory {
      * {@inheritDoc}
      */
     public Value createValue(Node value) throws RepositoryException {
-        return new ReferenceValue(value);
+        return createValue(value, false);
     }
 
     /**
@@ -121,6 +121,9 @@ public class ValueFactoryImpl implements ValueFactory {
             case PropertyType.LONG:
                 val = LongValue.valueOf(value);
                 break;
+            case PropertyType.DECIMAL:
+                val = DecimalValue.valueOf(value);
+                break;
             case PropertyType.DATE:
                 val = DateValue.valueOf(value);
                 break;
@@ -130,8 +133,14 @@ public class ValueFactoryImpl implements ValueFactory {
             case PropertyType.PATH:
                 val = PathValue.valueOf(value);
                 break;
+            case PropertyType.URI:
+                val = URIValue.valueOf(value);
+                break;
             case PropertyType.REFERENCE:
                 val = ReferenceValue.valueOf(value);
+                break;
+            case PropertyType.WEAKREFERENCE:
+                val = WeakReferenceValue.valueOf(value);
                 break;
             case PropertyType.BINARY:
                 val = new BinaryValue(value);
@@ -150,13 +159,23 @@ public class ValueFactoryImpl implements ValueFactory {
         throw new UnsupportedOperationException("JCR-2056");
     }
 
-    public Value createValue(BigDecimal arg0) {
-        throw new UnsupportedOperationException("JCR-1609");
+    /**
+     * {@inheritDoc}
+     */
+    public Value createValue(BigDecimal value) {
+        return new DecimalValue(value);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Value createValue(Node node, boolean weak)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1609");
+        if (weak) {
+            return new WeakReferenceValue(node);
+        } else {
+            return new ReferenceValue(node);
+        }
     }
 
 }

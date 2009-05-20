@@ -502,9 +502,15 @@ public class ValueHelper {
                     newVal = factory.createValue(srcValue.getLong());
                     break;
 
+                case PropertyType.DECIMAL:
+                    newVal = factory.createValue(srcValue.getDecimal());
+                    break;
+
                 case PropertyType.PATH:
                 case PropertyType.NAME:
                 case PropertyType.REFERENCE:
+                case PropertyType.WEAKREFERENCE:
+                case PropertyType.URI:
                     newVal = factory.createValue(srcValue.getString(), srcValue.getType());
                     break;
 
