@@ -4590,9 +4590,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        // TODO tweak query implemention in order to support WEAKREFERENCE reverse lookup 
         try {
             Query q = session.getWorkspace().getQueryManager().createQuery(
-                    "//*[jcr:contains[., '" + data.getId() + "']",
+                    "//*[jcr:contains(., '" + data.getId() + "')]",
                     Query.XPATH);
             QueryResult result = q.execute();
             ArrayList l = new ArrayList<Property>();

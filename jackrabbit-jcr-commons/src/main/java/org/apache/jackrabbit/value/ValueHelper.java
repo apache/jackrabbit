@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.FilterInputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
+import java.net.URI;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -245,7 +246,7 @@ public class ValueHelper {
     /**
      * Converts the given value to a value of the specified target type.
      * The conversion is performed according to the rules described in
-     * "6.2.6 Property Type Conversion" in the JSR 170 specification.
+     * "3.6.4 Property Type Conversion" in the JSR 283 specification.
      *
      * @param srcValue
      * @param targetType
@@ -336,6 +337,17 @@ public class ValueHelper {
                 }
                 break;
 
+            case PropertyType.DECIMAL:
+                // convert to DECIMAL
+                try {
+                    val = factory.createValue(srcValue.getDecimal());
+                } catch (RepositoryException re) {
+                    throw new ValueFormatException("conversion failed: "
+                            + PropertyType.nameFromValue(srcType) + " to "
+                            + PropertyType.nameFromValue(targetType), re);
+                }
+                break;
+
             case PropertyType.PATH:
                 // convert to PATH
                 switch (srcType) {
@@ -360,11 +372,35 @@ public class ValueHelper {
                         val = factory.createValue(path, targetType);
                         break;
 
+                    case PropertyType.URI:
+                        URI uri;
+                        try {
+                            uri = URI.create(srcValue.getString());
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to PATH value",
+                                    re);
+                        }
+                        if (uri.isAbsolute()) {
+                            // uri contains scheme...
+                            throw new ValueFormatException("failed to convert URI value to PATH value");
+                        }
+                        String p = uri.getPath();
+
+                        if (p.startsWith("./")) {
+                            p = p.substring(2);
+                        }
+
+                        val = factory.createValue(p, targetType);
+                        break;
+
                     case PropertyType.BOOLEAN:
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
+                    case PropertyType.DECIMAL:
                     case PropertyType.LONG:
                     case PropertyType.REFERENCE:
+                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
@@ -401,8 +437,10 @@ public class ValueHelper {
                     case PropertyType.BOOLEAN:
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
+                    case PropertyType.DECIMAL:
                     case PropertyType.LONG:
                     case PropertyType.REFERENCE:
+                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
@@ -422,6 +460,7 @@ public class ValueHelper {
 
                     case PropertyType.BINARY:
                     case PropertyType.STRING:
+                    case PropertyType.WEAKREFERENCE:
                         // try conversion via string
                         String uuid;
                         try {
@@ -438,8 +477,115 @@ public class ValueHelper {
                     case PropertyType.DATE:
                     case PropertyType.DOUBLE:
                     case PropertyType.LONG:
+                    case PropertyType.DECIMAL:
                     case PropertyType.PATH:
                     case PropertyType.NAME:
+                        throw new ValueFormatException("conversion failed: "
+                                + PropertyType.nameFromValue(srcType) + " to "
+                                + PropertyType.nameFromValue(targetType));
+
+                    default:
+                        throw new IllegalArgumentException("not a valid type constant: " + srcType);
+                }
+                break;
+
+            case PropertyType.WEAKREFERENCE:
+                // convert to WEAKREFERENCE
+                switch (srcType) {
+                    case PropertyType.WEAKREFERENCE:
+                        // no conversion needed, return original value
+                        // (redundant code, just here for the sake of clarity)
+                        return srcValue;
+
+                    case PropertyType.BINARY:
+                    case PropertyType.STRING:
+                    case PropertyType.REFERENCE:
+                        // try conversion via string
+                        String uuid;
+                        try {
+                            // get string value
+                            uuid = srcValue.getString();
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to WEAKREFERENCE value", re);
+                        }
+                        val = factory.createValue(uuid, targetType);
+                        break;
+
+                    case PropertyType.BOOLEAN:
+                    case PropertyType.DATE:
+                    case PropertyType.DOUBLE:
+                    case PropertyType.LONG:
+                    case PropertyType.DECIMAL:
+                    case PropertyType.PATH:
+                    case PropertyType.NAME:
+                        throw new ValueFormatException("conversion failed: "
+                                + PropertyType.nameFromValue(srcType) + " to "
+                                + PropertyType.nameFromValue(targetType));
+
+                    default:
+                        throw new IllegalArgumentException("not a valid type constant: " + srcType);
+                }
+                break;
+
+            case PropertyType.URI:
+                // convert to URI
+                switch (srcType) {
+                    case PropertyType.URI:
+                        // no conversion needed, return original value
+                        // (redundant code, just here for the sake of clarity)
+                        return srcValue;
+
+                    case PropertyType.BINARY:
+                    case PropertyType.STRING:
+                        // try conversion via string
+                        String uuid;
+                        try {
+                            // get string value
+                            uuid = srcValue.getString();
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to URI value", re);
+                        }
+                        val = factory.createValue(uuid, targetType);
+                        break;
+
+                    case PropertyType.NAME:
+                        String name;
+                        try {
+                            // get string value
+                            name = srcValue.getString();
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to URI value", re);
+                        }
+                        // prefix name with "./" (jsr 283 spec 3.6.4.8)
+                        val = factory.createValue("./" + name, targetType);
+                        break;
+
+                    case PropertyType.PATH:
+                        String path;
+                        try {
+                            // get string value
+                            path = srcValue.getString();
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to URI value", re);
+                        }
+                        if (!path.startsWith("/")) {
+                            // prefix non-absolute path with "./" (jsr 283 spec 3.6.4.9)
+                            path = "./" + path;
+                        }
+                        val = factory.createValue(path, targetType);
+                        break;
+
+                    case PropertyType.BOOLEAN:
+                    case PropertyType.DATE:
+                    case PropertyType.DOUBLE:
+                    case PropertyType.LONG:
+                    case PropertyType.DECIMAL:
+                    case PropertyType.REFERENCE:
+                    case PropertyType.WEAKREFERENCE:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
                                 + PropertyType.nameFromValue(targetType));
