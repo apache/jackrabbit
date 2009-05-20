@@ -86,7 +86,7 @@ public class JcrUtils {
     /**
      * Returns matching child nodes of the given node as an {@link Iterable}
      * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getNodes(String))} method call. Potential
+     * the {@link Node#getNodes(String)} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node parent node
@@ -111,7 +111,7 @@ public class JcrUtils {
     /**
      * Returns matching child nodes of the given node as an {@link Iterable}
      * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getNodes(String[]))} method call. Potential
+     * the {@link Node#getNodes(String[])} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node parent node
@@ -136,7 +136,7 @@ public class JcrUtils {
     /**
      * Returns the properties of the given node as an {@link Iterable}
      * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperties())} method call. Potential
+     * the {@link Node#getProperties()} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node node
@@ -159,7 +159,7 @@ public class JcrUtils {
     /**
      * Returns matching properties of the given node as an {@link Iterable}
      * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperties(String))} method call. Potential
+     * the {@link Node#getProperties(String)} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node node
@@ -184,7 +184,7 @@ public class JcrUtils {
     /**
      * Returns matching properties of the given node as an {@link Iterable}
      * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getProperty(String[]))} method call. Potential
+     * the {@link Node#getProperty(String[])} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node node
@@ -210,7 +210,7 @@ public class JcrUtils {
     /**
      * Returns the references that point to the given node as an
      * {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getReferences())} method call. Potential
+     * encapsulates the {@link Node#getReferences()} method call. Potential
      * {@link RepositoryException}s are converted to {@link RuntimeException}s.
      *
      * @param node reference target
@@ -259,7 +259,7 @@ public class JcrUtils {
     /**
      * Returns the weak references that point to the given node as an
      * {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getWeakReferences())} method call.
+     * encapsulates the {@link Node#getWeakReferences()} method call.
      * Potential {@link RepositoryException}s are converted to
      * {@link RuntimeException}s.
      *
