@@ -205,7 +205,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      */
     public void lockTokenAdded(SessionImpl session, String lt) throws RepositoryException {
         if (isInXA()) {
-            xaEnv.addLockToken(lt);
+            xaEnv.addLockToken(session, lt);
         } else {
             lockMgr.lockTokenAdded(session, lt);
         }
@@ -216,7 +216,7 @@ public class XALockManager implements LockManager, InternalXAResource {
      */
     public void lockTokenRemoved(SessionImpl session, String lt) throws RepositoryException {
         if (isInXA()) {
-            xaEnv.removeLockToken(lt);
+            xaEnv.removeLockToken(session, lt);
         } else {
             lockMgr.lockTokenRemoved(session, lt);
         }
