@@ -29,6 +29,7 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
 import javax.transaction.UserTransaction;
 import javax.transaction.RollbackException;
 import java.util.StringTokenizer;
@@ -787,6 +788,48 @@ public class XATest extends AbstractJCRTest {
     }
 
     /**
+     * Test locking and unlocking behavior in transaction
+     * @throws Exception
+     */
+    public void testLockUnlockCommit() throws Exception {
+        Session other = helper.getSuperuserSession();
+        try {
+            // add node that is both lockable and referenceable, save
+            Node n = testRootNode.addNode(nodeName1);
+            n.addMixin(mixLockable);
+            n.addMixin(mixReferenceable);
+            testRootNode.save();
+
+            // reference node in second session
+            Node nOther = other.getNodeByUUID(n.getUUID());
+
+            // verify node is not locked in either session
+            assertFalse("Node not locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
+
+            // get user transaction object, start and lock node
+            UserTransaction utx = new UserTransactionImpl(superuser);
+            utx.begin();
+            n.lock(false, true);
+
+            // verify node is locked in first session only
+            assertTrue("Node locked in session 1", n.isLocked());
+            assertFalse("Node not locked in session 2", nOther.isLocked());
+
+            n.unlock();
+            // commit in first session
+            utx.commit();
+
+            // verify node is locked in both sessions
+            assertFalse("Node locked in session 1", n.isLocked());
+            assertFalse("Node locked in session 2", nOther.isLocked());
+        } finally {
+            // logout
+            other.logout();
+        }
+    }
+
+    /**
      * Test locking a node in one session. Verify that node is not locked
      * in session after rollback.
      * @throws Exception
@@ -920,7 +963,78 @@ public class XATest extends AbstractJCRTest {
         assertTrue(nOther2.isLocked());
         
         utx.commit();
+    
+    }
 
+    /**
+     * Test add and remove lock tokens in a transaction 
+     * @throws Exception
+     */
+    public void testAddRemoveLockToken() throws Exception {
+        // create new node and lock it
+        UserTransaction utx = new UserTransactionImpl(superuser);
+        utx.begin();
+
+        // add node that is both lockable and referenceable, save
+        Node rootNode = superuser.getRootNode(); 
+        Node n = rootNode.addNode(nodeName1);
+        n.addMixin(mixLockable);
+        n.addMixin(mixReferenceable);
+        rootNode.save();
+
+        String uuid = n.getUUID();
+        
+        // lock this new node
+        Lock lock = n.lock(true, false);
+        String lockToken = lock.getLockToken();
+        
+        // assert: session must get a non-null lock token
+        assertNotNull("session must get a non-null lock token", lockToken);
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
+
+        superuser.removeLockToken(lockToken);
+        assertNull("session must get a null lock token", lock.getLockToken());
+        
+        // commit
+        utx.commit();
+        
+        // refresh Lock Info
+        lock = n.getLock();
+
+        assertNull("session must get a null lock token", lock.getLockToken());
+
+        Session other = helper.getSuperuserSession();
+        // start new Transaction and try to add lock token
+        utx = new UserTransactionImpl(other);
+        utx.begin();
+        
+        Node otherNode = other.getNodeByUUID(uuid); 
+        assertTrue("Node not locked", otherNode.isLocked());
+        try {
+            otherNode.setProperty(propertyName1, "foo");
+            fail("Lock exception should be thrown");
+        } catch (LockException e) {
+            // expected
+        }
+        
+        // add lock token
+        other.addLockToken(lockToken);
+        
+        // refresh Lock Info
+        lock = otherNode.getLock();
+
+        // assert: session must hold lock token
+        assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));        
+        
+        otherNode.unlock();
+        
+        assertFalse("Node is locked", otherNode.isLocked());
+        
+        otherNode.setProperty(propertyName1, "foo");
+        other.save();
+        utx.commit();
     }
 
     /**
@@ -1628,4 +1742,18 @@ public class XATest extends AbstractJCRTest {
 
         utx.commit();
     }
+    
+    /**
+     * Return a flag indicating whether the indicated session contains
+     * a specific lock token
+     */
+    private boolean containsLockToken(Session session, String lockToken) {
+        String[] lt = session.getLockTokens();
+        for (int i = 0; i < lt.length; i++) {
+            if (lt[i].equals(lockToken)) {
+                return true;
+            }
+        }
+        return false;
+    }    
 }
