@@ -2321,4 +2321,9 @@ public class RepositoryImpl extends AbstractRepository
             return RepositoryImpl.this.getDataStore();
         }
     }
+
+    VersionManagerImpl getVersionManagerImpl() {
+        return vMgr;
+    }
+
 }
