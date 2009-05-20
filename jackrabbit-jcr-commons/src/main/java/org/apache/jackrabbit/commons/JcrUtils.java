@@ -45,7 +45,7 @@ public class JcrUtils {
      * @return nodes in the shared set
      */
     public static Iterable<Node> getSharedSet(final Node node) {
-        return new Iterable<Node>(){
+        return new Iterable<Node>() {
             @SuppressWarnings("unchecked")
             public Iterator<Node> iterator() {
                 try {
@@ -68,7 +68,7 @@ public class JcrUtils {
      * @return child nodes
      */
     public static Iterable<Node> getChildNodes(final Node node) {
-        return new Iterable<Node>(){
+        return new Iterable<Node>() {
             @SuppressWarnings("unchecked")
             public Iterator<Node> iterator() {
                 try {
@@ -93,7 +93,7 @@ public class JcrUtils {
      */
     public static Iterable<Node> getChildNodes(
             final Node node, final String pattern) {
-        return new Iterable<Node>(){
+        return new Iterable<Node>() {
             @SuppressWarnings("unchecked")
             public Iterator<Node> iterator() {
                 try {
@@ -118,7 +118,7 @@ public class JcrUtils {
      */
     public static Iterable<Node> getChildNodes(
             final Node node, final String[] globs) {
-        return new Iterable<Node>(){
+        return new Iterable<Node>() {
             @SuppressWarnings("unchecked")
             public Iterator<Node> iterator() {
                 try {
@@ -141,7 +141,7 @@ public class JcrUtils {
      * @return properties of the node
      */
     public static Iterable<Property> getProperties(final Node node) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -166,7 +166,7 @@ public class JcrUtils {
      */
     public static Iterable<Property> getProperties(
             final Node node, final String pattern) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -191,7 +191,7 @@ public class JcrUtils {
      */
     public static Iterable<Property> getProperties(
             final Node node, final String[] globs) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -215,7 +215,7 @@ public class JcrUtils {
      * @return references that point to the given node
      */
     public static Iterable<Property> getReferences(final Node node) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -241,7 +241,7 @@ public class JcrUtils {
      */
     public static Iterable<Property> getReferences(
             final Node node, final String name) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -265,7 +265,7 @@ public class JcrUtils {
      * @return weak references that point to the given node
      */
     public static Iterable<Property> getWeakReferences(final Node node) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
@@ -291,7 +291,7 @@ public class JcrUtils {
      */
     public static Iterable<Property> getWeakReferences(
             final Node node, final String name) {
-        return new Iterable<Property>(){
+        return new Iterable<Property>() {
             @SuppressWarnings("unchecked")
             public Iterator<Property> iterator() {
                 try {
