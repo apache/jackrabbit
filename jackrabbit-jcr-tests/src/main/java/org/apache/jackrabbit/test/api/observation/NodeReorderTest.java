@@ -29,7 +29,7 @@ import javax.jcr.observation.Event;
 /**
  * Tests if {@link javax.jcr.Node#orderBefore(String, String)} operations trigger
  * the appropriate observation events.
- * <p/>
+ * <p>
  * @tck.config testroot must allow orderable child nodes of type
  * <code>nodetype</code>, otherwise the test cases throw a
  * {@link NotExecutableException}. Some tests are only executed if the node

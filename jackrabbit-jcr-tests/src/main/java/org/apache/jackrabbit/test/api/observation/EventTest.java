@@ -22,8 +22,9 @@ import javax.jcr.Node;
 
 /**
  * Tests methods on the {@link javax.jcr.observation.Event} interface.
- * <p/>
- * Configuration requirements are:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child node that is created will be named {@link #nodeName1}.
  *

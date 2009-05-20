@@ -92,8 +92,8 @@ public class SessionUUIDTest extends AbstractJCRTest {
 
     /**
      * Moves a referencable node using {@link javax.jcr.Session#move(String, String)} with one session and
-     * saves afterward changes made with a second session to the moved node using {@link Session#save()}.<br/>
-     * <br/>
+     * saves afterward changes made with a second session to the moved node using {@link Session#save()}.
+     * <p>
      * Procedure:
      * <ul>
      * <li>Creates node 1 and node 2 with session 1</li>

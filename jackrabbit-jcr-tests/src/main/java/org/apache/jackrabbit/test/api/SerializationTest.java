@@ -51,7 +51,7 @@ import java.io.StringReader;
 /**
  * <code>SerializationTest</code> contains the test cases for the method
  * <code>Workspace.exportSysView()</code> and <code>Session.importSysView()</code>.
- * <p/>
+ * <p>
  * This class exports and re-imports the repository. The tests check for
  * differences between the original and the re-imported repository.
  *

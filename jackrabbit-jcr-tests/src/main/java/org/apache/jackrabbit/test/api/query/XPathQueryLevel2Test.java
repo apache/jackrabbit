@@ -35,7 +35,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
     /**
      * Test if the optional jcr:score property for full-text search is
      * supported.
-     * <p/>
+     * <p>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testScoreColumn() throws Exception {
@@ -48,7 +48,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test full-text search of the repository.<br>
-     * <p/>
+     * <p>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testFullTextSearch() throws Exception {
@@ -73,7 +73,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test range evauluation of Query.<br>
-     * <p/>
+     * <p>
      * For configuration description see {@link #setUpRangeTest()}.
      */
     public void testRange() throws Exception {
@@ -89,7 +89,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test multi-value support of search.<br>
-     * <p/>
+     * <p>
      * For configuration description see {@link #setUpMultiValueTest()}.
      */
     public void testMultiValueSearch() throws Exception {
@@ -105,7 +105,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 
     /**
      * Test if the jcr:path pseudo property is contained in result.
-     * <p/>
+     * <p>
      * For configuration description see {@link #setUpFullTextTest()}.
      */
     public void testPathColumn() throws Exception {

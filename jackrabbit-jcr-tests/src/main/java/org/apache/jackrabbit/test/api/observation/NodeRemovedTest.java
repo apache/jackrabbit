@@ -22,8 +22,9 @@ import javax.jcr.observation.Event;
 
 /**
  * Test cases for {@link javax.jcr.observation.Event#NODE_REMOVED} events.
- * <p/>
- * Configuration requirements are:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child nodes that are created will be named {@link #nodeName1} and
  * {@link #nodeName2}. Furthermore {@link #testNodeType} must allow to add

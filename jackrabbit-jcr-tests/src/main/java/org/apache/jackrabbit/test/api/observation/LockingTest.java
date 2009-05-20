@@ -25,8 +25,9 @@ import java.util.ArrayList;
 /**
  * Tests if locking a node triggers property added events for jcr:lockOwner
  * and jcr:lockIsDeep.
- * <p/>
- * Configuration requirements are:<br/>
+ * <p>
+ * Configuration requirements:
+ * <p>
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child node that is created will be named {@link #nodeName1}. The node
  * type {@link #testNodeType} must either have mix:lockable as one of its

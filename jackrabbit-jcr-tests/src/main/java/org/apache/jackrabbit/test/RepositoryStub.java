@@ -35,7 +35,7 @@ import javax.jcr.SimpleCredentials;
 /**
  * The <code>RepositoryStub</code> is the entry point to the JCR Repository
  * for the TCK Test harness.
- * <p/>
+ * <p>
  * Implementors of the JCR specification need to provide an implementation
  * for the abstract methods defined in this class.
  */
@@ -154,7 +154,7 @@ public abstract class RepositoryStub {
     /**
      * Creates and/or returns the configured <code>RepositryStub</code>
      * implementation.
-     * <p/>
+     * <p>
      * The property file is located in the following sequence:
      * <ol>
      * <li>If the system property <code>-Djavax.jcr.tck.properties</code> is
@@ -242,7 +242,7 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p/>
+     * <p>
      * The <code>Credentials</code> returned has 'superuser' rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the whole Content Repository.
@@ -257,12 +257,12 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p/>
+     * <p>
      * The <code>Credentials</code> returned has read/write rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login(Credentials)}
      * has read write access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p/>
+     * <p>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the
@@ -275,12 +275,12 @@ public abstract class RepositoryStub {
     /**
      * Returns a <code>Credentials</code> object, that can be used to login
      * to the <code>Repository</code> returned by {@link #getRepository}.
-     * <p/>
+     * <p>
      * The <code>Credentials</code> returned must have read-only rights. That
      * is, the <code>Session</code> object returned by {@link Repository#login()}
      * has read-only access to the <code>Node</code> configured in the
      * JCR TCK Interview.
-     * <p/>
+     * <p>
      * For details, see: JCR TCK User Guide.
      *
      * @return a <code>Credentials</code> object, that allows to login to the

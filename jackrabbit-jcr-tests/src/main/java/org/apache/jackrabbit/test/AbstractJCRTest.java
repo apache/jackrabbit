@@ -490,7 +490,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * Returns the value of the configuration property with specified
      * <code>name</code>. If the property does not exist <code>defaultValue</code> is
      * returned.
-     * <p/>
+     * <p>
      * Configuration properties are defined in the file:
      * <code>repositoryStubImpl.properties</code>.
      *

@@ -130,7 +130,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
     /**
      * Tests if <code>Node.removeMixin(String mixinName)</code> throws a
      * <code>LockException</code> if <code>Node</code> is locked.
-     * <p/>
+     * <p>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code>, adds a mixin and
      * then locks the node with the superuser session. Then the test tries to
@@ -196,7 +196,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
     /**
      * Tests if <code>Node.removeMixin(String mixinName)</code> throws a
      * <code>VersionException</code> if <code>Node</code> is checked-in
-     * <p/>
+     * <p>
      * The test creates a node <code>nodeName1</code> of type
      * <code>testNodeType</code> under <code>testRoot</code>, adds a mixin and
      * then checks it in. Then the test tries to remove the added.
