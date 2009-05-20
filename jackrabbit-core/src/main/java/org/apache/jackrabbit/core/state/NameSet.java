@@ -226,6 +226,26 @@ final class NameSet implements Set, Cloneable {
         throw new UnsupportedOperationException();
     }
 
+    //--------------------------------------------------< equals and hashCode >
+
+    /**
+     * {@inheritDoc}
+     */
+    public int hashCode() {
+        return names.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean equals(Object obj) {
+        if (obj instanceof NameSet) {
+            NameSet other = (NameSet) obj;
+            return this.names.equals(other.names);
+        }
+        return false;
+    }
+
     //----------------------------------------------------< Cloneable support >
 
     /**
