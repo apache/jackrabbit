@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.commons;
 
-import java.util.Iterator;
-
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.commons.iterator.NodeIterable;
 import org.apache.jackrabbit.commons.iterator.PropertyIterable;
+import org.apache.jackrabbit.commons.iterator.RowIterable;
 
 /**
  * Collection of static utility methods for use with the JCR API.
@@ -224,49 +225,35 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the nodes in the given query result as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link QueryResult#getNodes()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link QueryResult#getNodes()} on the given query result and
+     * returns the resulting {@link NodeIterator} as an {@link Iterable<Node>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see NodeIterable
      * @param result query result
      * @return nodes in the query result
+     * @throws RepositoryException
+     *         if the {@link QueryResult#getNodes()} call fails
      */
-    public static Iterable<Node> getNodes(final QueryResult result) {
-        return new Iterable<Node>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Node> iterator() {
-                try {
-                    return result.getNodes();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access nodes in " + result, e);
-                }
-            }
-        };
+    public static Iterable<Node> getNodes(QueryResult result)
+            throws RepositoryException {
+        return new NodeIterable(result.getNodes());
     }
 
     /**
-     * Returns the rows in the given query result as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link QueryResult#getRows()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link QueryResult#getRows()} on the given query result and
+     * returns the resulting {@link RowIterator} as an {@link Iterable<Row>}
+     * instance for use in a Java 5 for-each loop.
      *
+     * @see RowIterable
      * @param result query result
      * @return rows in the query result
+     * @throws RepositoryException
+     *         if the {@link QueryResult#getRows()} call fails
      */
-    public static Iterable<Row> getRows(final QueryResult result) {
-        return new Iterable<Row>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Row> iterator() {
-                try {
-                    return result.getRows();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access rows in " + result, e);
-                }
-            }
-        };
+    public static Iterable<Row> getRows(QueryResult result)
+            throws RepositoryException {
+        return new RowIterable(result.getRows());
     }
 
 }
