@@ -19,10 +19,13 @@ package org.apache.jackrabbit.commons;
 import java.util.Iterator;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+
+import org.apache.jackrabbit.commons.iterator.NodeIterable;
 
 /**
  * Collection of static utility methods for use with the JCR API.
@@ -38,99 +41,67 @@ public class JcrUtils {
     }
 
     /**
-     * Returns the nodes in the shared set of the given node as an
-     * {@link Iterable} for use in a Java 5 for-each loop. The return value
-     * encapsulates the {@link Node#getSharedSet()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getSharedSet()} on the given node and returns
+     * the resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
+     * for use in a Java 5 for-each loop.
      *
+     * @see NodeIterable
      * @param node shared node
      * @return nodes in the shared set
+     * @throws RepositoryException if the {@link Node#getSharedSet()} call fails
      */
-    public static Iterable<Node> getSharedSet(final Node node) {
-        return new Iterable<Node>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Node> iterator() {
-                try {
-                    return node.getSharedSet();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access child nodes of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Node> getSharedSet(Node node)
+            throws RepositoryException {
+        return new NodeIterable(node.getSharedSet());
     }
 
     /**
-     * Returns the child nodes of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getNodes()} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getNodes()} on the given node and returns the
+     * resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
+     * for use in a Java 5 for-each loop.
      *
+     * @see NodeIterable
      * @param node parent node
      * @return child nodes
+     * @throws RepositoryException if the {@link Node#getNodes()} call fails
      */
-    public static Iterable<Node> getChildNodes(final Node node) {
-        return new Iterable<Node>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Node> iterator() {
-                try {
-                    return node.getNodes();
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access child nodes of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Node> getChildNodes(Node node)
+            throws RepositoryException {
+        return new NodeIterable(node.getNodes());
     }
 
     /**
-     * Returns matching child nodes of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getNodes(String)} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getNodes(String)} on the given node with the given
+     * name pattern and returns the resulting {@link NodeIterator} as an
+     * {@link Iterable<Node>} instance for use in a Java 5 for-each loop.
      *
+     * @see NodeIterable
      * @param node parent node
      * @param pattern node name pattern
      * @return matching child nodes
+     * @throws RepositoryException
+     *         if the {@link Node#getNodes(String)} call fails
      */
-    public static Iterable<Node> getChildNodes(
-            final Node node, final String pattern) {
-        return new Iterable<Node>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Node> iterator() {
-                try {
-                    return node.getNodes(pattern);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access child nodes of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Node> getChildNodes(Node node, String pattern)
+            throws RepositoryException {
+        return new NodeIterable(node.getNodes(pattern));
     }
 
     /**
-     * Returns matching child nodes of the given node as an {@link Iterable}
-     * for use in a Java 5 for-each loop. The return value encapsulates
-     * the {@link Node#getNodes(String[])} method call. Potential
-     * {@link RepositoryException}s are converted to {@link RuntimeException}s.
+     * Calls {@link Node#getNodes(String[])} on the given node with the given
+     * name globs and returns the resulting {@link NodeIterator} as an
+     * {@link Iterable<Node>} instance for use in a Java 5 for-each loop.
      *
+     * @see NodeIterable
      * @param node parent node
-     * @param globs node name globs
+     * @param pattern node name pattern
      * @return matching child nodes
+     * @throws RepositoryException
+     *         if the {@link Node#getNodes(String[])} call fails
      */
-    public static Iterable<Node> getChildNodes(
-            final Node node, final String[] globs) {
-        return new Iterable<Node>() {
-            @SuppressWarnings("unchecked")
-            public Iterator<Node> iterator() {
-                try {
-                    return node.getNodes(globs);
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(
-                            "Unable to access child nodes of " + node, e);
-                }
-            }
-        };
+    public static Iterable<Node> getChildNodes(Node node, String[] globs)
+            throws RepositoryException {
+        return new NodeIterable(node.getNodes(globs));
     }
 
     /**
