@@ -155,10 +155,9 @@ public class TransientRepository
      * are not found, then the default values "<code>repository.xml</code>"
      * and "<code>repository</code>" are used.
      *
-     * @throws IOException if the static repository descriptors cannot be loaded
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
-    public TransientRepository()
-            throws IOException {
+    public TransientRepository() throws IOException {
         this(System.getProperty(CONF_PROPERTY, CONF_DEFAULT),
              System.getProperty(HOME_PROPERTY, HOME_DEFAULT));
     }
@@ -168,7 +167,7 @@ public class TransientRepository
      * configuration to initialize the underlying repository instance.
      *
      * @param config repository configuration
-     * @throws IOException if the static repository descriptors cannot be loaded
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
     public TransientRepository(final RepositoryConfig config)
             throws IOException {
@@ -187,9 +186,10 @@ public class TransientRepository
      * @see #TransientRepository(File, File)
      * @param config repository configuration file
      * @param home repository home directory
-     * @throws IOException if the static repository descriptors cannot be loaded
+     * @throws IOException not thrown, to be removed in Jackrabbit 2.0
      */
-    public TransientRepository(String config, String home) {
+    public TransientRepository(String config, String home)
+            throws IOException {
         this(new File(config), new File(home));
     }
 
