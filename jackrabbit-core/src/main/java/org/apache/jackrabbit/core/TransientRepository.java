@@ -154,11 +154,8 @@ public class TransientRepository extends AbstractRepository
      * <code>org.apache.jackrabbit.repository.home</code>. If these properties
      * are not found, then the default values "<code>repository.xml</code>"
      * and "<code>repository</code>" are used.
-     *
-     * @throws IOException if the static repository descriptors cannot be loaded
      */
-    public TransientRepository()
-            throws IOException {
+    public TransientRepository() {
         this(System.getProperty(CONF_PROPERTY, CONF_DEFAULT),
              System.getProperty(HOME_PROPERTY, HOME_DEFAULT));
     }
@@ -168,10 +165,8 @@ public class TransientRepository extends AbstractRepository
      * configuration to initialize the underlying repository instance.
      *
      * @param config repository configuration
-     * @throws IOException if the static repository descriptors cannot be loaded
      */
-    public TransientRepository(final RepositoryConfig config)
-            throws IOException {
+    public TransientRepository(final RepositoryConfig config) {
         this(new RepositoryFactory() {
             public RepositoryImpl getRepository() throws RepositoryException {
                 return RepositoryImpl.create(config);
@@ -187,7 +182,6 @@ public class TransientRepository extends AbstractRepository
      * @see #TransientRepository(File, File)
      * @param config repository configuration file
      * @param home repository home directory
-     * @throws IOException if the static repository descriptors cannot be loaded
      */
     public TransientRepository(String config, String home) {
         this(new File(config), new File(home));
