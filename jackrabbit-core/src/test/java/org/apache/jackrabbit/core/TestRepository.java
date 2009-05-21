@@ -96,9 +96,6 @@ public class TestRepository {
         } catch (ConfigurationException e) {
             throw new RepositoryException(
                     "Error in test repository configuration", e);
-        } catch (IOException e) {
-            throw new RepositoryException(
-                    "Error in test repository initialization", e);
         }
     }
 
