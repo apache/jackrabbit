@@ -400,7 +400,9 @@ public class MultiIndex {
      *               indicate that a node could not be indexed successfully.
      * @throws IOException if an error occurs while updating the index.
      */
-    synchronized void update(Collection remove, Collection add) throws IOException {
+    synchronized void update(
+            Collection<UUID> remove, Collection<Document> add)
+            throws IOException {
         // make sure a reader is available during long updates
         if (add.size() > handler.getBufferSize()) {
             getIndexReader().release();
@@ -414,13 +416,14 @@ public class MultiIndex {
             executeAndLog(new Start(transactionId));
 
             boolean flush = false;
-            for (Iterator it = remove.iterator(); it.hasNext(); ) {
-                executeAndLog(new DeleteNode(transactionId, (UUID) it.next()));
+
+            for (UUID uuid : remove) {
+                executeAndLog(new DeleteNode(transactionId, uuid));
             }
-            for (Iterator it = add.iterator(); it.hasNext(); ) {
-                Document doc = (Document) it.next();
-                if (doc != null) {
-                    executeAndLog(new AddNode(transactionId, doc));
+
+            for (Document document : add) {
+                if (document != null) {
+                    executeAndLog(new AddNode(transactionId, document));
                     // commit volatile index if needed
                     flush |= checkVolatileCommit();
                 }
@@ -448,7 +451,8 @@ public class MultiIndex {
      *                     index.
      */
     void addDocument(Document doc) throws IOException {
-        update(Collections.EMPTY_LIST, Arrays.asList(new Document[]{doc}));
+        Collection<UUID> empty = Collections.emptyList();
+        update(empty, Collections.singleton(doc));
     }
 
     /**
@@ -458,7 +462,8 @@ public class MultiIndex {
      * @throws IOException if an error occurs while deleting the document.
      */
     void removeDocument(UUID uuid) throws IOException {
-        update(Arrays.asList(new UUID[]{uuid}), Collections.EMPTY_LIST);
+        Collection<Document> empty = Collections.emptyList();
+        update(Collections.singleton(uuid), empty);
     }
 
     /**
@@ -1183,11 +1188,10 @@ public class MultiIndex {
      *                           the indexing queue to the index.
      */
     private void checkIndexingQueue(boolean transactionPresent) {
-        Document[] docs = indexingQueue.getFinishedDocuments();
-        Map finished = new HashMap();
-        for (int i = 0; i < docs.length; i++) {
-            String uuid = docs[i].get(FieldNames.UUID);
-            finished.put(UUID.fromString(uuid), docs[i]);
+        Map<UUID, Document> finished = new HashMap<UUID, Document>();
+        for (Document document : indexingQueue.getFinishedDocuments()) {
+            UUID uuid = UUID.fromString(document.get(FieldNames.UUID));
+            finished.put(uuid, document);
         }
 
         // now update index with the remaining ones if there are any
@@ -1196,18 +1200,17 @@ public class MultiIndex {
                     new Long(finished.size()));
 
             // remove documents from the queue
-            for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
-                indexingQueue.removeDocument(it.next().toString());
+            for (UUID uuid : finished.keySet()) {
+                indexingQueue.removeDocument(uuid.toString());
             }
 
             try {
                 if (transactionPresent) {
-                    for (Iterator it = finished.keySet().iterator(); it.hasNext(); ) {
-                        executeAndLog(new DeleteNode(getTransactionId(), (UUID) it.next()));
+                    for (UUID uuid : finished.keySet()) {
+                        executeAndLog(new DeleteNode(getTransactionId(), uuid));
                     }
-                    for (Iterator it = finished.values().iterator(); it.hasNext(); ) {
-                        executeAndLog(new AddNode(
-                                getTransactionId(), (Document) it.next()));
+                    for (Document document : finished.values()) {
+                        executeAndLog(new AddNode(getTransactionId(), document));
                     }
                 } else {
                     update(finished.keySet(), finished.values());
