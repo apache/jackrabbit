@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test.api.version;
 import javax.jcr.MergeException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionManager;
 
 /**
  * <code>MergeCheckedoutSubNodeTest</code> contains tests dealing with
@@ -41,7 +42,8 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
 
         nodeToMerge = testRootNodeW2.getNode(nodeName1);
         // node has to be checked out while merging
-        nodeToMerge.checkout();
+        VersionManager versionManager = nodeToMerge.getSession().getWorkspace().getVersionManager();
+        versionManager.checkout(nodeToMerge.getPath());
     }
 
     protected void tearDown() throws Exception {
@@ -74,6 +76,31 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
     }
 
     /**
+     * VersionManager.merge(): If V' of a versionable subnode N' in the source workspace
+     * is a successor of V (the base version of a subnode N in this workspace),
+     * calling merge must fail.
+     */
+    public void testFailIfCorrespondingNodeIsSuccessorJcr2() throws RepositoryException {
+        // make V' of a subnode N' in source workspace be a successor version of
+        // the base version of the corresponding subnode.
+        Node n = testRootNode.getNode(nodeName1 + "/" + nodeName2);
+        VersionManager versionManager = n.getSession().getWorkspace().getVersionManager();
+        String path = n.getPath();
+        versionManager.checkout(path);
+        versionManager.checkin(path);
+        versionManager.checkout(path);
+
+        try {
+            // merge, besteffort set to false to stop at the first failure
+            nodeToMerge.getSession().getWorkspace().getVersionManager().merge(nodeToMerge.getPath(), workspace.getName(), false);
+            fail("Merging a checkedout node if the version V' of the corresponding node is a successor of this node's base version must fail.");
+
+        } catch (MergeException e) {
+            // success
+        }
+    }
+
+    /**
      * Node.merge(): If V' of a versionable subnode N' in the source workspace
      * is a predeccessor of V or V' identical to V (the base version of a
      * subnode N in this workspace), calling merge must be leave.
@@ -97,6 +124,30 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
     }
 
     /**
+     * VersionManager.merge(): If V' of a versionable subnode N' in the source workspace
+     * is a predeccessor of V or V' identical to V (the base version of a
+     * subnode N in this workspace), calling merge must be leave.
+     */
+    public void testLeaveIfCorrespondingNodeIsPredeccessorJcr2() throws RepositoryException {
+        // make V' of a subnode N' in source workspace be a predeccessor version of
+        // the base version of the corresponding subnode.
+        Node n = testRootNodeW2.getNode(nodeName1 + "/" + nodeName2);
+        VersionManager versionManager = n.getSession().getWorkspace().getVersionManager();
+        String path = n.getPath();
+        versionManager.checkout(path);
+        n.setProperty(propertyName1, CHANGED_STRING);
+        testRootNodeW2.getSession().save();
+        versionManager.checkin(path);
+        versionManager.checkout(path);
+
+        // merge, besteffort set to false to stop at the first failure
+        nodeToMerge.getSession().getWorkspace().getVersionManager().merge(nodeToMerge.getPath(), workspace.getName(), false);
+
+        // check if subnode has status "leave"
+        assertTrue(n.getProperty(propertyName1).getString().equals(CHANGED_STRING));
+    }
+
+    /**
      * initialize a two-step-hierarchy on default and second workspace
      */
     protected void initNodes() throws RepositoryException {
@@ -111,7 +162,7 @@ public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
         subNvNode.setProperty(propertyName1, subNvNode.getName());
 
         // save default workspace
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         log.println("test nodes created successfully on " + workspace.getName());
 

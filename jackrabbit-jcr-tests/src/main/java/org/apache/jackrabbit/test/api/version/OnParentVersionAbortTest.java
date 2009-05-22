@@ -21,6 +21,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionManager;
 
 /**
  * <code>OnParentVersionAbortTest</code> tests the OnParentVersion {@link OnParentVersionAction#ABORT ABORT}
@@ -54,6 +55,23 @@ public class OnParentVersionAbortTest extends AbstractOnParentVersionTest {
     }
 
     /**
+     * Test the restore of a OnParentVersion-ABORT property
+     *
+     * @throws javax.jcr.RepositoryException
+     */
+    public void testRestorePropJcr2() throws RepositoryException {
+        try {
+            VersionManager versionManager = p.getSession().getWorkspace().getVersionManager();
+            String path = p.getParent().getPath();
+            versionManager.checkout(path);
+            versionManager.checkin(path);
+            fail("On checkin of N which has a property with OnParentVersion ABORT defined, an UnsupportedRepositoryOperationException must be thrown.");
+        } catch (VersionException e) {
+            // success
+        }
+    }
+
+    /**
      * Test the restore of a OnParentVersion-ABORT node
      *
      * @throws RepositoryException
@@ -65,6 +83,24 @@ public class OnParentVersionAbortTest extends AbstractOnParentVersionTest {
         testRootNode.save();
         try {
             versionableNode.checkin();
+            fail("On checkin of N which has a child node with OnParentVersion ABORT defined, an UnsupportedRepositoryOperationException must be thrown.");
+        } catch (VersionException e) {
+            // success
+        }
+    }
+
+    /**
+     * Test the restore of a OnParentVersion-ABORT node
+     *
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     */
+    public void testRestoreNodeJcr2() throws RepositoryException, NotExecutableException {
+        // create child node with OPV-ABORT behaviour
+        addChildNode(OPVAction);
+        testRootNode.getSession().save();
+        try {
+            versionableNode.getSession().getWorkspace().getVersionManager().checkin(versionableNode.getPath());
             fail("On checkin of N which has a child node with OnParentVersion ABORT defined, an UnsupportedRepositoryOperationException must be thrown.");
         } catch (VersionException e) {
             // success
