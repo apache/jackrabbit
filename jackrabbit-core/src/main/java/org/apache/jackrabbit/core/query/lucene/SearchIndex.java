@@ -93,26 +93,32 @@ import java.util.Collection;
  */
 public class SearchIndex extends AbstractQueryHandler {
 
-    public static final List VALID_SYSTEM_INDEX_NODE_TYPE_NAMES
-        = Collections.unmodifiableList(Arrays.asList(new Name[]{
-            NameConstants.NT_CHILDNODEDEFINITION,
-            NameConstants.NT_FROZENNODE,
-            NameConstants.NT_NODETYPE,
-            NameConstants.NT_PROPERTYDEFINITION,
-            NameConstants.NT_VERSION,
-            NameConstants.NT_VERSIONEDCHILD,
-            NameConstants.NT_VERSIONHISTORY,
-            NameConstants.NT_VERSIONLABELS,
-            NameConstants.REP_NODETYPES,
-            NameConstants.REP_SYSTEM,
-            NameConstants.REP_VERSIONSTORAGE,
-            // Supertypes
-            NameConstants.NT_BASE,
-            NameConstants.MIX_REFERENCEABLE
-        }));
-
-    private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY = new DefaultQueryNodeFactory(
-            VALID_SYSTEM_INDEX_NODE_TYPE_NAMES);
+    /**
+     * Valid node type names under /jcr:system. Used to determine if a
+     * query needs to be executed also against the /jcr:system tree.
+     */
+    public static final Collection<Name> VALID_SYSTEM_INDEX_NODE_TYPE_NAMES =
+        Collections.unmodifiableCollection(Arrays.asList(
+                NameConstants.NT_CHILDNODEDEFINITION,
+                NameConstants.NT_FROZENNODE,
+                NameConstants.NT_NODETYPE,
+                NameConstants.NT_PROPERTYDEFINITION,
+                NameConstants.NT_VERSION,
+                NameConstants.NT_VERSIONEDCHILD,
+                NameConstants.NT_VERSIONHISTORY,
+                NameConstants.NT_VERSIONLABELS,
+                NameConstants.REP_NODETYPES,
+                NameConstants.REP_SYSTEM,
+                NameConstants.REP_VERSIONSTORAGE,
+                // Supertypes
+                NameConstants.NT_BASE,
+                NameConstants.MIX_REFERENCEABLE));
+        
+    /**
+     * Default query node factory.
+     */
+    private static final DefaultQueryNodeFactory DEFAULT_QUERY_NODE_FACTORY =
+        new DefaultQueryNodeFactory(VALID_SYSTEM_INDEX_NODE_TYPE_NAMES);
 
     /** The logger instance for this class */
     private static final Logger log = LoggerFactory.getLogger(SearchIndex.class);
