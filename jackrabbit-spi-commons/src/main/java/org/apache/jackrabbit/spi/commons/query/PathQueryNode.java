@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.jcr.RepositoryException;
 
@@ -34,9 +34,10 @@ public class PathQueryNode extends NAryQueryNode {
     private boolean absolute = false;
 
     /**
-     * List of valid node type names under /jcr:system
+     * Valid node type names under /jcr:system. Used to determine if a
+     * query needs to be executed also against the /jcr:system tree.
      */
-    private final List validJcrSystemNodeTypeNames;
+    private final Collection<Name> validJcrSystemNodeTypeNames;
 
     /**
      * Empty step node array.
@@ -45,21 +46,23 @@ public class PathQueryNode extends NAryQueryNode {
 
     /**
      * Creates a relative <code>PathQueryNode</code> with no location steps and
-     * the list of node types under /jcr:system.
+     * the collection of node types under /jcr:system.
      *
      * @param parent the parent query node.
+     * @param validJcrSystemNodeTypeNames valid node types under /jcr:system
      */
-    protected PathQueryNode(QueryNode parent, List validJcrSystemNodeTypeNames) {
+    protected PathQueryNode(
+            QueryNode parent, Collection<Name> validJcrSystemNodeTypeNames) {
         super(parent);
         this.validJcrSystemNodeTypeNames = validJcrSystemNodeTypeNames;
     }
 
     /**
-     * Returns a list of valid node types under /jcr:system. List&lt;Name>.
+     * Returns the collection of valid node types under /jcr:system.
      *
-     * @return a list of valid node types under /jcr:system.
+     * @return valid node types under /jcr:system.
      */
-    public List getValidJcrSystemNodeTypeNames() {
+    public Collection<Name> getValidJcrSystemNodeTypeNames() {
         return validJcrSystemNodeTypeNames;
     }
 

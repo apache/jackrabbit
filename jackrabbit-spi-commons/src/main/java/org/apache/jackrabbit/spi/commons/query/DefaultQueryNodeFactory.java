@@ -16,26 +16,26 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.jackrabbit.spi.Name;
 
 /**
- * Default implementetation of a {@link QueryNodeFactory}.
+ * Default implementation of a {@link QueryNodeFactory}.
  */
 public class DefaultQueryNodeFactory implements QueryNodeFactory {
 
     /**
-     * List of valid node type names under /jcr:system
+     * Valid node type names under /jcr:system
      */
-    private final List validJcrSystemNodeTypeNames;
+    private final Collection<Name> validJcrSystemNodeTypeNames;
 
     /**
      * Creates a DefaultQueryNodeFactory with the given node types under
      * /jcr:system .
      */
-    public DefaultQueryNodeFactory(List validJcrSystemNodeTypeNames) {
-        super();
+    public DefaultQueryNodeFactory(
+            Collection<Name> validJcrSystemNodeTypeNames) {
         this.validJcrSystemNodeTypeNames = validJcrSystemNodeTypeNames;
     }
 
