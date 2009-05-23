@@ -22,6 +22,7 @@ import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.math.BigDecimal;
 
 /**
  * A <code>URIValue</code> provides an implementation
@@ -161,5 +162,16 @@ public class URIValue extends BaseValue {
         setValueConsumed();
 
         throw new ValueFormatException("conversion to double failed: inconvertible types");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
     }
 }
