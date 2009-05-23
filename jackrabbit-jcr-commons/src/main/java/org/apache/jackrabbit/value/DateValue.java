@@ -22,6 +22,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
+import java.math.BigDecimal;
 
 /**
  * A <code>DateValue</code> provides an implementation
@@ -187,6 +188,21 @@ public class DateValue extends BaseValue {
                 return ms;
             }
             throw new ValueFormatException("conversion from date to double failed: inconvertible types");
+        } else {
+            throw new ValueFormatException("empty value");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        if (date != null) {
+            return new BigDecimal(date.getTimeInMillis());
         } else {
             throw new ValueFormatException("empty value");
         }

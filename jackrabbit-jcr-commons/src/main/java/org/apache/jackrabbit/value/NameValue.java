@@ -26,6 +26,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
+import java.math.BigDecimal;
 
 /**
  * A <code>NameValue</code> provides an implementation
@@ -211,5 +212,16 @@ public class NameValue extends BaseValue {
         setValueConsumed();
 
         throw new ValueFormatException("conversion to double failed: inconvertible types");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        throw new ValueFormatException("conversion to Decimal failed: inconvertible types");
     }
 }

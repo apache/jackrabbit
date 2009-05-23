@@ -21,6 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.Date;
+import java.math.BigDecimal;
 
 /**
  * A <code>LongValue</code> provides an implementation
@@ -174,6 +175,21 @@ public class LongValue extends BaseValue {
 
         if (lNumber != null) {
             return lNumber.doubleValue();
+        } else {
+            throw new ValueFormatException("empty value");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        if (lNumber != null) {
+            return new BigDecimal(lNumber.longValue());
         } else {
             throw new ValueFormatException("empty value");
         }

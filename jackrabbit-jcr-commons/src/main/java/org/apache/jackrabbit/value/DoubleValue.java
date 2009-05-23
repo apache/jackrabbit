@@ -21,6 +21,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
 import java.util.Date;
+import java.math.BigDecimal;
 
 /**
  * A <code>DoubleValue</code> provides an implementation
@@ -174,6 +175,21 @@ public class DoubleValue extends BaseValue {
 
         if (dblNumber != null) {
             return dblNumber.doubleValue();
+        } else {
+            throw new ValueFormatException("empty value");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public BigDecimal getDecimal()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+        setValueConsumed();
+
+        if (dblNumber != null) {
+            return new BigDecimal(dblNumber.doubleValue());
         } else {
             throw new ValueFormatException("empty value");
         }
