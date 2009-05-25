@@ -19,8 +19,8 @@ package org.apache.jackrabbit.value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Binary;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -33,8 +33,7 @@ public class BinaryValue extends BaseValue {
 
     public static final int TYPE = PropertyType.BINARY;
 
-    // those fields are mutually exclusive, i.e. only one can be non-null
-    private byte[] streamData = null;
+    private Binary bin = null;
     private String text = null;
 
     /**
@@ -48,23 +47,37 @@ public class BinaryValue extends BaseValue {
     }
 
     /**
+     * Constructs a <code>BinaryValue</code> object based on a <code>Binary</code>.
+     *
+     * @param bin the bytes this <code>BinaryValue</code> should represent
+     */
+    public BinaryValue(Binary bin) {
+        super(TYPE);
+        this.bin = bin;
+    }
+
+    /**
      * Constructs a <code>BinaryValue</code> object based on a stream.
      *
      * @param stream the stream this <code>BinaryValue</code> should represent
      */
     public BinaryValue(InputStream stream) {
         super(TYPE);
-        this.stream = stream;
+        try {
+            bin = new BinaryImpl(stream);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("specified stream cannot be read", e);
+        }
     }
 
     /**
-     * Constructs a <code>BinaryValue</code> object based on a stream.
+     * Constructs a <code>BinaryValue</code> object based on a byte array.
      *
-     * @param data the stream this <code>BinaryValue</code> should represent
+     * @param data the bytes this <code>BinaryValue</code> should represent
      */
     public BinaryValue(byte[] data) {
         super(TYPE);
-        streamData = data;
+        bin = new BinaryImpl(data);
     }
 
     /**
@@ -85,18 +98,11 @@ public class BinaryValue extends BaseValue {
         if (obj instanceof BinaryValue) {
             BinaryValue other = (BinaryValue) obj;
             if (text == other.text && stream == other.stream
-                    && streamData == other.streamData) {
+                    && bin == other.bin) {
                 return true;
             }
-            // stream, streamData and text are mutually exclusive,
-            // i.e. only one of them can be non-null
-            if (stream != null) {
-                return stream.equals(other.stream);
-            } else if (streamData != null) {
-                return streamData.equals(other.streamData);
-            } else {
-                return text.equals(other.text);
-            }
+            return (text != null && text.equals(other.text))
+                    || (bin != null && bin.equals(other.bin));
         }
         return false;
     }
@@ -124,46 +130,20 @@ public class BinaryValue extends BaseValue {
     public String getInternalString()
             throws ValueFormatException, RepositoryException {
         // build text value if necessary
-        if (streamData != null) {
+        if (text == null) {
             try {
-                text = new String(streamData, DEFAULT_ENCODING);
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(DEFAULT_ENCODING
-                        + " not supported on this platform", e);
-            }
-            streamData = null;
-        } else if (stream != null) {
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = stream.read(buffer)) > 0) {
-                    out.write(buffer, 0, read);
-                }
-                byte[] data = out.toByteArray();
-                text = new String(data, DEFAULT_ENCODING);
+                byte[] bytes = new byte[(int) bin.getSize()];
+                bin.read(bytes, 0);
+                text = new String(bytes, DEFAULT_ENCODING);
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(DEFAULT_ENCODING
                         + " not supported on this platform", e);
             } catch (IOException e) {
-                throw new RepositoryException("conversion from stream to string failed", e);
-            } finally {
-                try {
-                    if (stream != null) {
-                        stream.close();
-                    }
-                } catch (IOException e) {
-                    // ignore
-                }
+                throw new RepositoryException("failed to retrieve binary data", e);
             }
-            stream = null;
         }
 
-        if (text != null) {
-            return text;
-        } else {
-            throw new ValueFormatException("empty value");
-        }
+        return text;
     }
 
     //----------------------------------------------------------------< Value >
@@ -174,20 +154,36 @@ public class BinaryValue extends BaseValue {
             throws IllegalStateException, RepositoryException {
         setStreamConsumed();
 
-        // build stream value if necessary
-        if (streamData != null) {
-            stream = new ByteArrayInputStream(streamData);
-            streamData = null;
-        } else if (text != null) {
+        if (bin != null) {
+            return bin.getStream();
+        } else {
             try {
-                stream = new ByteArrayInputStream(text.getBytes(DEFAULT_ENCODING));
+                return new ByteArrayInputStream(text.getBytes(DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(DEFAULT_ENCODING
                         + " not supported on this platform", e);
             }
-            text = null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Binary getBinary()
+            throws ValueFormatException, IllegalStateException,
+            RepositoryException {
+
+        if (bin == null) {
+            try {
+                bin = new BinaryImpl(new ByteArrayInputStream(text.getBytes(DEFAULT_ENCODING)));
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(DEFAULT_ENCODING
+                        + " not supported on this platform", e);
+            } catch (IOException e) {
+                throw new RepositoryException("failed to retrieve binary data", e);
+            }
         }
 
-        return super.getStream();
+        return bin;
     }
 }
