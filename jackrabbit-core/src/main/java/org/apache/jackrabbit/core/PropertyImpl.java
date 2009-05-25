@@ -754,10 +754,16 @@ public class PropertyImpl extends ItemImpl implements Property {
         internalSetValue(internalValues, reqType);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public long getLength() throws RepositoryException {
         return getLength(internalGetValue());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public long[] getLengths() throws RepositoryException {
         InternalValue[] values = internalGetValues();
         long[] lengths = new long[values.length];
@@ -777,8 +783,21 @@ public class PropertyImpl extends ItemImpl implements Property {
         return data.getPropertyDefinition();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public int getType() throws RepositoryException {
         return getPropertyState().getType();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isMultiple() throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
+        return data.getPropertyDefinition().isMultiple();
     }
 
     //-----------------------------------------------------------------< Item >

@@ -26,6 +26,7 @@ import javax.jcr.ValueFormatException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
@@ -223,8 +224,15 @@ public abstract class BaseValue implements Value {
     public Binary getBinary()
             throws ValueFormatException, IllegalStateException,
             RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2056");
+        try {
+            // convert via string
+            return new BinaryImpl(new ByteArrayInputStream(getInternalString().getBytes(DEFAULT_ENCODING)));
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException(DEFAULT_ENCODING
+                    + " not supported on this platform", e);
+        } catch (IOException e) {
+            throw new RepositoryException("failed to create Binary instance", e);
+        }
     }
 
     /**
