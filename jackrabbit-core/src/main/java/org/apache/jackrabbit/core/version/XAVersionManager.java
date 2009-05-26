@@ -370,9 +370,22 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    protected boolean hasItemReferences(InternalVersionItem item)
+    protected boolean hasItemReferences(NodeId id)
             throws RepositoryException {
-        return session.getNodeById(item.getId()).getReferences().hasNext();
+        return session.getNodeById(id).getReferences().hasNext();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected NodeStateEx getNodeStateEx(NodeId parentNodeId)
+            throws RepositoryException {
+        try {
+            NodeState state = (NodeState) stateMgr.getItemState(parentNodeId);
+            return new NodeStateEx(stateMgr, ntReg, state, null);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**

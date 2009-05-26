@@ -375,7 +375,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throw new VersionException(msg);
         }
         // check if any references (from outside the version storage) exist on this version
-        if (vMgr.hasItemReferences(v)) {
+        if (vMgr.hasItemReferences(v.getId())) {
             throw new ReferentialIntegrityException("Unable to remove version. At least once referenced.");
         }
 
@@ -396,8 +396,25 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         nameCache.remove(versionName);
         vMgr.versionDestroyed(v);
 
-        // store changes
-        node.store();
+        // Check if this was the last version in addition to the root version
+        if (!vMgr.hasItemReferences(node.getNodeId())) {
+            log.debug("Current version history has no references");
+            NodeStateEx[] childNodes = node.getChildNodes();
+
+            // Check if there is only root version and version labels nodes
+            if (childNodes.length == 2) {
+                log.debug("Removing orphan version history as it contains only two children");
+                NodeStateEx parentNode = vMgr.getNodeStateEx(node.getParentId());
+                // Remove version history node
+                parentNode.removeNode(node.getName());
+                // store changes for this node and his children
+                parentNode.store();
+            }
+        } else {
+            log.debug("Current version history has at least one reference");
+            // store changes
+            node.store();
+        }
 
         // now also remove from labelCache
         for (int i = 0; i < labels.length; i++) {
