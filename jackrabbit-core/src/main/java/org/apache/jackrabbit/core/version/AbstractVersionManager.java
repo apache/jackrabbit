@@ -40,8 +40,8 @@ import javax.jcr.version.VersionException;
 /**
  * Base implementation of the {@link VersionManager} interface.
  * <p/>
- * All read operations must aquire the read lock before reading, all write
- * operations must aquire the write lock.
+ * All read operations must acquire the read lock before reading, all write
+ * operations must acquire the write lock.
  */
 abstract class AbstractVersionManager implements VersionManager {
 
@@ -291,7 +291,7 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
      * <p/>
-     * Please note, that the overridden method must aquire the readlock before
+     * Please note, that the overridden method must acquire the readlock before
      * reading the state manager.
      *
      * @param id the id of the item
@@ -312,18 +312,31 @@ abstract class AbstractVersionManager implements VersionManager {
 
     /**
      * Checks if there are item references (from outside the version storage)
-     * that reference the given version item. Subclass responsiblity.
+     * that reference the given node. Subclass responsibility.
      * <p/>
-     * Please note, that the overridden method must aquire the readlock before
+     * Please note, that the overridden method must acquire the readlock before
      * reading the state manager.
      *
-     * @param item version item
+     * @param id the id of the node
      * @return <code>true</code> if there are item references from outside the
      *         version storage; <code>false</code> otherwise.
      * @throws RepositoryException if an error occurs while reading from the
      *                             repository.
      */
-    protected abstract boolean hasItemReferences(InternalVersionItem item)
+    protected abstract boolean hasItemReferences(NodeId id)
+            throws RepositoryException;
+
+    /**
+     * Returns the node with the given persistent id. Subclass responsibility.
+     * <p/>
+     * Please note, that the overridden method must acquire the readlock before
+     * reading the state manager.
+     *
+     * @param id the id of the node
+     * @throws RepositoryException if an error occurs while reading from the
+     *                             repository.
+     */
+    protected abstract NodeStateEx getNodeStateEx(NodeId id)
             throws RepositoryException;
 
     /**
