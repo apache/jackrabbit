@@ -484,7 +484,7 @@ public class InternalValue extends AbstractQValue {
     }
 
     public UUID getUUID() {
-        assert val != null && type == PropertyType.REFERENCE;
+        assert val != null && (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE);
         return (UUID) val;
     }
 

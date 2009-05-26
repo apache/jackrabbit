@@ -42,6 +42,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(VersionLabelTest.class);
         suite.addTestSuite(CheckoutTest.class);
         suite.addTestSuite(CheckinTest.class);
+        suite.addTestSuite(CopyTest.class);
         suite.addTestSuite(VersionGraphTest.class);
         suite.addTestSuite(RemoveVersionTest.class);
         suite.addTestSuite(RestoreTest.class);

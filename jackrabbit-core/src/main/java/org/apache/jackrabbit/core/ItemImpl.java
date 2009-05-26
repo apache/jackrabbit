@@ -736,7 +736,7 @@ public abstract class ItemImpl implements Item {
                          * otherwise create a new version history
                          */
                         VersionHistoryInfo history =
-                            vMgr.getVersionHistory(session, nodeState);
+                            vMgr.getVersionHistory(session, nodeState, null);
                         InternalValue historyId = InternalValue.create(
                                 history.getVersionHistoryId().getUUID());
                         InternalValue versionId = InternalValue.create(
@@ -758,7 +758,7 @@ public abstract class ItemImpl implements Item {
                     // version history, since simple versioning does not
                     // expose it's reference in a property
                     VersionManager vMgr = session.getVersionManager();
-                    vMgr.getVersionHistory(session, nodeState);
+                    vMgr.getVersionHistory(session, nodeState, null);
 
                     // create isCheckedOutProperty if not already exists
                     NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());

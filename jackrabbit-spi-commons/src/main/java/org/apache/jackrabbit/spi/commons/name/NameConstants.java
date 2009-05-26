@@ -214,6 +214,11 @@ public class NameConstants {
      */
     public static final Name JCR_VERSIONABLEUUID = FACTORY.create(Name.NS_JCR_URI, "versionableUuid");
 
+    /**
+     * jcr:copiedFrom
+     */
+    public static final Name JCR_COPIEDFROM = FACTORY.create(Name.NS_JCR_URI, "copiedFrom");
+
     //--------------------------------< node type related item name constants >
 
     /**

@@ -79,7 +79,7 @@
 [nt:versionHistory] > nt:base, mix:referenceable
   - jcr:versionableUuid (string) mandatory autocreated protected abort
     /** @since 2.0 */
-    // - jcr:copiedFrom (weakreference) protected abort < 'nt:version'
+  - jcr:copiedFrom (weakreference) protected abort < 'nt:version'
   + jcr:rootVersion (nt:version) = nt:version mandatory autocreated protected abort
   + jcr:versionLabels (nt:versionLabels) = nt:versionLabels mandatory autocreated protected abort
   + * (nt:version) = nt:version protected abort

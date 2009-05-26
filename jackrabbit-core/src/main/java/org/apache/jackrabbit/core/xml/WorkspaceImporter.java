@@ -315,7 +315,7 @@ public class WorkspaceImporter implements Importer {
              * otherwise create a new version history
              */
             VersionHistoryInfo history =
-                versionManager.getVersionHistory(session, node);
+                versionManager.getVersionHistory(session, node, null);
             InternalValue historyId = InternalValue.create(
                     history.getVersionHistoryId().getUUID());
             InternalValue versionId = InternalValue.create(
