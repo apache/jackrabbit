@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.version;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -134,6 +136,57 @@ public class RemoveOrphanVersionHistoryTest extends AbstractJCRTest {
             fail("Orphan version history must have been removed from the other workspace");
         } catch (ItemNotFoundException e) {
             // Expected
+        }
+    }
+
+    /**
+     * Test that an emptied version history that is still being referenced
+     * from another workspace does not get removed.
+     *
+     * @throws RepositoryException if an error occurs.
+     */
+    public void testEmptyNonOrphanVersionHistory() throws RepositoryException {
+        Session session = testRootNode.getSession();
+
+        // Create versionable test node
+        Node node = testRootNode.addNode(nodeName1);
+        node.addMixin(mixVersionable);
+        session.save();
+
+        VersionHistory history = node.getVersionHistory();
+        String uuid = history.getUUID();
+
+        // Create version 1.0
+        Version v10 = node.checkin();
+
+        // Remove the test node
+        node.checkout();
+        node.remove();
+        session.save();
+
+        Session otherSession = helper.getReadWriteSession(workspaceName);
+        try {
+            // create a reference to the version history in another workspace
+            Node otherRoot = otherSession.getRootNode();
+            Property reference = otherRoot.setProperty(
+                    "RemoveOrphanVersionTest", uuid, PropertyType.REFERENCE);
+            otherSession.save();
+
+            // Now remove the contents of the version history
+            history.removeVersion(v10.getName());
+
+            // Check that the version history still exists!
+            try {
+                session.getNodeByUUID(uuid);
+            } catch (ItemNotFoundException e) {
+                fail("Referenced empty version history must note be removed");
+            }
+
+            // Cleanup
+            reference.remove();
+            otherSession.save();
+        } finally {
+            otherSession.logout();
         }
     }
 
