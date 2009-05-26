@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -66,12 +65,13 @@ class ConsistencyCheck {
     /**
      * All the document UUIDs within the index.
      */
-    private Set documentUUIDs;
+    private Set<UUID> documentUUIDs;
 
     /**
      * List of all errors.
      */
-    private final List errors = new ArrayList();
+    private final List<ConsistencyCheckError> errors =
+        new ArrayList<ConsistencyCheckError>();
 
     /**
      * Private constructor.
@@ -109,8 +109,7 @@ class ConsistencyCheck {
             return;
         }
         int notRepairable = 0;
-        for (Iterator it = errors.iterator(); it.hasNext();) {
-            ConsistencyCheckError error = (ConsistencyCheckError) it.next();
+        for (ConsistencyCheckError error : errors) {
             try {
                 if (error.repairable()) {
                     error.repair();
@@ -139,8 +138,8 @@ class ConsistencyCheck {
      * Returns the errors detected by the consistency check.
      * @return the errors detected by the consistency check.
      */
-    List getErrors() {
-        return new ArrayList(errors);
+    List<ConsistencyCheckError> getErrors() {
+        return new ArrayList<ConsistencyCheckError>(errors);
     }
 
     /**
@@ -149,9 +148,9 @@ class ConsistencyCheck {
      */
     private void run() throws IOException {
         // UUIDs of multiple nodes in the index
-        Set multipleEntries = new HashSet();
+        Set<UUID> multipleEntries = new HashSet<UUID>();
         // collect all documents UUIDs
-        documentUUIDs = new HashSet();
+        documentUUIDs = new HashSet<UUID>();
         CachingMultiIndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
@@ -177,8 +176,8 @@ class ConsistencyCheck {
         }
 
         // create multiple entries errors
-        for (Iterator it = multipleEntries.iterator(); it.hasNext();) {
-            errors.add(new MultipleEntries((UUID) it.next()));
+        for (UUID uuid : multipleEntries) {
+            errors.add(new MultipleEntries(uuid));
         }
 
         reader = index.getIndexReader();
@@ -226,7 +225,7 @@ class ConsistencyCheck {
         // remember as fallback
         String uuid = node.getNodeId().toString();
         StringBuffer path = new StringBuffer();
-        List elements = new ArrayList();
+        List<ChildNodeEntry> elements = new ArrayList<ChildNodeEntry>();
         try {
             while (node.getParentId() != null) {
                 NodeId parentId = node.getParentId();

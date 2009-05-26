@@ -97,7 +97,7 @@ public class MultiIndex {
     /**
      * Names of index directories that can be deleted.
      */
-    private final Set deletable = new HashSet();
+    private final Set<String> deletable = new HashSet<String>();
 
     /**
      * List of open persistent indexes. This list may also contain an open
@@ -105,7 +105,8 @@ public class MultiIndex {
      * registered with indexNames and <b>must not</b> be used in regular index
      * operations (delete node, etc.)!
      */
-    private final List indexes = new ArrayList();
+    private final List<PersistentIndex> indexes =
+        new ArrayList<PersistentIndex>();
 
     /**
      * The internal namespace mappings of the query manager.
@@ -191,9 +192,9 @@ public class MultiIndex {
     private IndexingQueue indexingQueue;
 
     /**
-     * Set&lt;NodeId> of uuids that should not be indexed.
+     * Identifiers of nodes that should not be indexed.
      */
-    private final Set excludedIDs;
+    private final Set<NodeId> excludedIDs;
 
     /**
      * The next transaction id.
@@ -219,18 +220,17 @@ public class MultiIndex {
      * Creates a new MultiIndex.
      *
      * @param handler the search handler
-     * @param excludedIDs   Set&lt;NodeId> that contains uuids that should not
-     *                      be indexed nor further traversed.
+     * @param excludedIDs identifiers of nodes that should
+     *                    neither be indexed nor further traversed
      * @throws IOException if an error occurs
      */
-    MultiIndex(SearchIndex handler,
-               Set excludedIDs) throws IOException {
+    MultiIndex(SearchIndex handler, Set<NodeId> excludedIDs) throws IOException {
         this.directoryManager = handler.getDirectoryManager();
         this.indexDir = directoryManager.getDirectory(".");
         this.handler = handler;
         this.cache = new DocNumberCache(handler.getCacheSize());
         this.redoLog = new RedoLog(indexDir);
-        this.excludedIDs = new HashSet(excludedIDs);
+        this.excludedIDs = new HashSet<NodeId>(excludedIDs);
         this.nsMappings = handler.getNamespaceMappings();
 
         if (indexNames.exists(indexDir)) {
@@ -522,34 +522,33 @@ public class MultiIndex {
      * @return the <code>IndexReaders</code>.
      * @throws IOException if an error occurs acquiring the index readers.
      */
-    synchronized IndexReader[] getIndexReaders(String[] indexNames, IndexListener listener)
-            throws IOException {
-        Set names = new HashSet(Arrays.asList(indexNames));
-        Map indexReaders = new HashMap();
+    synchronized IndexReader[] getIndexReaders(
+            String[] indexNames, IndexListener listener) throws IOException {
+        Set<String> names = new HashSet<String>(Arrays.asList(indexNames));
+        Map<ReadOnlyIndexReader, PersistentIndex> indexReaders =
+            new HashMap<ReadOnlyIndexReader, PersistentIndex>();
 
         try {
-            for (Iterator it = indexes.iterator(); it.hasNext();) {
-                PersistentIndex index = (PersistentIndex) it.next();
+            for (PersistentIndex index : indexes) {
                 if (names.contains(index.getName())) {
                     indexReaders.put(index.getReadOnlyIndexReader(listener), index);
                 }
             }
         } catch (IOException e) {
             // release readers obtained so far
-            for (Iterator it = indexReaders.entrySet().iterator(); it.hasNext();) {
-                Map.Entry entry = (Map.Entry) it.next();
-                ReadOnlyIndexReader reader = (ReadOnlyIndexReader) entry.getKey();
+            for (Map.Entry<ReadOnlyIndexReader, PersistentIndex> entry
+                    : indexReaders.entrySet()) {
                 try {
-                    reader.release();
+                    entry.getKey().release();
                 } catch (IOException ex) {
                     log.warn("Exception releasing index reader: " + ex);
                 }
-                ((PersistentIndex) entry.getValue()).resetListener();
+                entry.getValue().resetListener();
             }
             throw e;
         }
 
-        return (IndexReader[]) indexReaders.keySet().toArray(new IndexReader[indexReaders.size()]);
+        return indexReaders.keySet().toArray(new IndexReader[indexReaders.size()]);
     }
 
     /**
@@ -564,8 +563,7 @@ public class MultiIndex {
     synchronized PersistentIndex getOrCreateIndex(String indexName)
             throws IOException {
         // check existing
-        for (Iterator it = indexes.iterator(); it.hasNext();) {
-            PersistentIndex idx = (PersistentIndex) it.next();
+        for (PersistentIndex idx : indexes) {
             if (idx.getName().equals(indexName)) {
                 return idx;
             }
@@ -601,8 +599,7 @@ public class MultiIndex {
      */
     synchronized boolean hasIndex(String indexName) throws IOException {
         // check existing
-        for (Iterator it = indexes.iterator(); it.hasNext();) {
-            PersistentIndex idx = (PersistentIndex) it.next();
+        for (PersistentIndex idx : indexes) {
             if (idx.getName().equals(indexName)) {
                 return true;
             }
@@ -625,7 +622,7 @@ public class MultiIndex {
      */
     void replaceIndexes(String[] obsoleteIndexes,
                         PersistentIndex index,
-                        Collection deleted)
+                        Collection<Term> deleted)
             throws IOException {
 
         if (handler.isInitializeHierarchyCache()) {
@@ -646,10 +643,9 @@ public class MultiIndex {
                     executeAndLog(new Start(Action.INTERNAL_TRANS_REPL_INDEXES));
                 }
                 // delete obsolete indexes
-                Set names = new HashSet(Arrays.asList(obsoleteIndexes));
-                for (Iterator it = names.iterator(); it.hasNext();) {
+                Set<String> names = new HashSet<String>(Arrays.asList(obsoleteIndexes));
+                for (String indexName : names) {
                     // do not try to delete indexes that are already gone
-                    String indexName = (String) it.next();
                     if (indexNames.contains(indexName)) {
                         executeAndLog(new DeleteIndex(getTransactionId(), indexName));
                     }
@@ -662,8 +658,7 @@ public class MultiIndex {
                 executeAndLog(new AddIndex(getTransactionId(), index.getName()));
 
                 // delete documents in index
-                for (Iterator it = deleted.iterator(); it.hasNext();) {
-                    Term id = (Term) it.next();
+                for (Term id : deleted) {
                     index.removeDocument(id);
                 }
                 index.commit();
@@ -725,7 +720,8 @@ public class MultiIndex {
             // some other read thread might have created the reader in the
             // meantime -> check again
             if (multiReader == null) {
-                List readerList = new ArrayList();
+                List<ReadOnlyIndexReader> readerList =
+                    new ArrayList<ReadOnlyIndexReader>();
                 for (int i = 0; i < indexes.size(); i++) {
                     PersistentIndex pIdx = (PersistentIndex) indexes.get(i);
                     if (indexNames.contains(pIdx.getName())) {
@@ -734,7 +730,7 @@ public class MultiIndex {
                 }
                 readerList.add(volatileIndex.getReadOnlyIndexReader());
                 ReadOnlyIndexReader[] readers =
-                        (ReadOnlyIndexReader[]) readerList.toArray(new ReadOnlyIndexReader[readerList.size()]);
+                    readerList.toArray(new ReadOnlyIndexReader[readerList.size()]);
                 multiReader = new CachingMultiIndexReader(readers, cache);
             }
             multiReader.acquire();
@@ -1082,9 +1078,7 @@ public class MultiIndex {
             checkIndexingQueue(true);
         }
         checkVolatileCommit();
-        List children = node.getChildNodeEntries();
-        for (Iterator it = children.iterator(); it.hasNext();) {
-            ChildNodeEntry child = (ChildNodeEntry) it.next();
+        for (ChildNodeEntry child : node.getChildNodeEntries()) {
             Path childPath = PATH_FACTORY.create(path, child.getName(),
                     child.getIndex(), false);
             NodeState childState = null;
@@ -1106,8 +1100,8 @@ public class MultiIndex {
      */
     private void attemptDelete() {
         synchronized (deletable) {
-            for (Iterator it = deletable.iterator(); it.hasNext(); ) {
-                String indexName = (String) it.next();
+            for (Iterator<String> it = deletable.iterator(); it.hasNext(); ) {
+                String indexName = it.next();
                 if (directoryManager.delete(indexName)) {
                     it.remove();
                 } else {
@@ -1770,8 +1764,7 @@ public class MultiIndex {
          */
         public void execute(MultiIndex index) throws IOException {
             // get index if it exists
-            for (Iterator it = index.indexes.iterator(); it.hasNext();) {
-                PersistentIndex idx = (PersistentIndex) it.next();
+            for (PersistentIndex idx : index.indexes) {
                 if (idx.getName().equals(indexName)) {
                     idx.close();
                     index.deleteIndex(idx);
