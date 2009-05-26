@@ -73,7 +73,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.File;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -344,7 +343,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The excerpt provider class. Implements {@link ExcerptProvider}.
      */
-    private Class excerptProviderClass = DefaultHTMLExcerpt.class;
+    private Class<?> excerptProviderClass = DefaultHTMLExcerpt.class;
 
     /**
      * The path to the indexing configuration file.
@@ -366,12 +365,12 @@ public class SearchIndex extends AbstractQueryHandler {
      * The indexing configuration class.
      * Implements {@link IndexingConfiguration}.
      */
-    private Class indexingConfigurationClass = IndexingConfigurationImpl.class;
+    private Class<?> indexingConfigurationClass = IndexingConfigurationImpl.class;
 
     /**
      * The class that implements {@link SynonymProvider}.
      */
-    private Class synonymProviderClass;
+    private Class<?> synonymProviderClass;
 
     /**
      * The currently set synonym provider.
@@ -402,7 +401,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * The class that implements {@link SpellChecker}.
      */
-    private Class spellCheckerClass;
+    private Class<?> spellCheckerClass;
 
     /**
      * The spell checker for this query handler or <code>null</code> if none is
@@ -467,7 +466,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throw new IOException("SearchIndex requires 'path' parameter in configuration!");
         }
 
-        Set excludedIDs = new HashSet();
+        Set<NodeId> excludedIDs = new HashSet<NodeId>();
         if (context.getExcludedNodeId() != null) {
             excludedIDs.add(context.getExcludedNodeId());
         }
@@ -522,12 +521,11 @@ public class SearchIndex extends AbstractQueryHandler {
                 if (autoRepair) {
                     check.repair(true);
                 } else {
-                    List errors = check.getErrors();
+                    List<ConsistencyCheckError> errors = check.getErrors();
                     if (errors.size() == 0) {
                         log.info("No errors detected.");
                     }
-                    for (Iterator it = errors.iterator(); it.hasNext();) {
-                        ConsistencyCheckError err = (ConsistencyCheckError) it.next();
+                    for (ConsistencyCheckError err : errors) {
                         log.info(err.toString());
                     }
                 }
@@ -976,7 +974,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected SortField[] createSortFields(Path[] orderProps,
                                            boolean[] orderSpecs) {
-        List sortFields = new ArrayList();
+        List<SortField> sortFields = new ArrayList<SortField>();
         for (int i = 0; i < orderProps.length; i++) {
             if (orderProps[i].getLength() == 1
                     && NameConstants.JCR_SCORE.equals(orderProps[i].getNameElement().getName())) {
@@ -989,7 +987,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
             }
         }
-        return (SortField[]) sortFields.toArray(new SortField[sortFields.size()]);
+        return sortFields.toArray(new SortField[sortFields.size()]);
     }
 
     /**
@@ -1100,7 +1098,7 @@ public class SearchIndex extends AbstractQueryHandler {
     protected DirectoryManager createDirectoryManager()
             throws IOException {
         try {
-            Class clazz = Class.forName(directoryManagerClass);
+            Class<?> clazz = Class.forName(directoryManagerClass);
             if (!DirectoryManager.class.isAssignableFrom(clazz)) {
                 throw new IOException(directoryManagerClass +
                         " is not a DirectoryManager implementation");
@@ -1582,7 +1580,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setAnalyzer(String analyzerClassName) {
         try {
-            Class analyzerClass = Class.forName(analyzerClassName);
+            Class<?> analyzerClass = Class.forName(analyzerClassName);
             analyzer.setDefaultAnalyzer((Analyzer) analyzerClass.newInstance());
         } catch (Exception e) {
             log.warn("Invalid Analyzer class: " + analyzerClassName, e);
@@ -1877,7 +1875,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setExcerptProviderClass(String className) {
         try {
-            Class clazz = Class.forName(className);
+            Class<?> clazz = Class.forName(className);
             if (ExcerptProvider.class.isAssignableFrom(clazz)) {
                 excerptProviderClass = clazz;
             } else {
@@ -1922,7 +1920,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setIndexingConfigurationClass(String className) {
         try {
-            Class clazz = Class.forName(className);
+            Class<?> clazz = Class.forName(className);
             if (IndexingConfiguration.class.isAssignableFrom(clazz)) {
                 indexingConfigurationClass = clazz;
             } else {
@@ -1952,7 +1950,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSynonymProviderClass(String className) {
         try {
-            Class clazz = Class.forName(className);
+            Class<?> clazz = Class.forName(className);
             if (SynonymProvider.class.isAssignableFrom(clazz)) {
                 synonymProviderClass = clazz;
             } else {
@@ -1986,7 +1984,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSpellCheckerClass(String className) {
         try {
-            Class clazz = Class.forName(className);
+            Class<?> clazz = Class.forName(className);
             if (SpellChecker.class.isAssignableFrom(clazz)) {
                 spellCheckerClass = clazz;
             } else {
@@ -2055,7 +2053,7 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setSimilarityClass(String className) {
         try {
-            Class similarityClass = Class.forName(className);
+            Class<?> similarityClass = Class.forName(className);
             similarity = (Similarity) similarityClass.newInstance();
         } catch (Exception e) {
             log.warn("Invalid Similarity class: " + className, e);
