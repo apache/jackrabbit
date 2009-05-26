@@ -85,7 +85,7 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * Items that have been modified and are part of the XA environment.
      */
-    private Map xaItems;
+    private Map<NodeId, InternalVersionItem> xaItems;
 
     /**
      * flag that indicates if the version manager was locked during prepare
@@ -99,6 +99,12 @@ public class XAVersionManager extends AbstractVersionManager
 
     /**
      * Creates a new instance of this class.
+     *
+     * @param vMgr the underlying version manager
+     * @param ntReg node type registry
+     * @param session the session
+     * @param cacheFactory cache factory
+     * @throws RepositoryException if a an error occurs
      */
     public XAVersionManager(VersionManagerImpl vMgr, NodeTypeRegistry ntReg,
                             SessionImpl session, ItemStateCacheFactory cacheFactory)
@@ -140,11 +146,13 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    protected VersionHistoryInfo createVersionHistory(Session session, NodeState node)
+    protected VersionHistoryInfo createVersionHistory(Session session,
+                                                      NodeState node,
+                                                      NodeId copiedFrom)
             throws RepositoryException {
 
         if (isInXA()) {
-            NodeStateEx state = createVersionHistory(node);
+            NodeStateEx state = createVersionHistory(node, copiedFrom);
             InternalVersionHistory history =
                 new InternalVersionHistoryImpl(vMgr, state);
             xaItems.put(state.getNodeId(), history);
@@ -153,7 +161,7 @@ public class XAVersionManager extends AbstractVersionManager
                     state.getNodeId(),
                     state.getState().getChildNodeEntry(root, 1).getId());
         }
-        return vMgr.createVersionHistory(session, node);
+        return vMgr.createVersionHistory(session, node, copiedFrom);
     }
 
     /**
@@ -349,7 +357,7 @@ public class XAVersionManager extends AbstractVersionManager
      protected InternalVersionItem getItem(NodeId id) throws RepositoryException {
         InternalVersionItem item = null;
         if (xaItems != null) {
-            item = (InternalVersionItem) xaItems.get(id);
+            item = xaItems.get(id);
         }
         if (item == null) {
             item = vMgr.getItem(id);
@@ -424,12 +432,12 @@ public class XAVersionManager extends AbstractVersionManager
             // also put 'successor' and 'predecessor' version items to xaItem sets
             InternalVersion v = history.getVersion(name);
             InternalVersion[] vs = v.getSuccessors();
-            for (int i = 0; i < vs.length; i++) {
-                xaItems.put(vs[i].getId(), vs[i]);
+            for (InternalVersion v1 : vs) {
+                xaItems.put(v1.getId(), v1);
             }
             vs = v.getPredecessors();
-            for (int i = 0; i < vs.length; i++) {
-                xaItems.put(vs[i].getId(), vs[i]);
+            for (InternalVersion v1 : vs) {
+                xaItems.put(v1.getId(), v1);
             }
         }
         super.removeVersion(history, name);
@@ -475,14 +483,15 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     public void associate(TransactionContext tx) {
         ((XAItemStateManager) stateMgr).associate(tx);
 
-        Map xaItems = null;
+        Map<NodeId, InternalVersionItem> xaItems = null;
         if (tx != null) {
-            xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
+            xaItems = (Map<NodeId, InternalVersionItem>) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
             if (xaItems == null) {
-                xaItems = new HashMap();
+                xaItems = new HashMap<NodeId, InternalVersionItem>();
                 tx.setAttribute(ITEMS_ATTRIBUTE_NAME, xaItems);
             }
         }
@@ -616,6 +625,7 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * Return a flag indicating whether this version manager is currently
      * associated with an XA transaction.
+     * @return <code>true</code> if the version manager is in a transaction
      */
     private boolean isInXA() {
         return xaItems != null;
@@ -625,6 +635,9 @@ public class XAVersionManager extends AbstractVersionManager
      * Make a local copy of an internal version item. This will recreate the
      * (global) version item with state information from our own state
      * manager.
+     * @param history source
+     * @return the new copy
+     * @throws RepositoryException if an error occurs
      */
     private InternalVersionHistoryImpl makeLocalCopy(InternalVersionHistoryImpl history)
             throws RepositoryException {
@@ -643,6 +656,8 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * Return a flag indicating whether an internal version item belongs to
      * a different XA environment.
+     * @param item the item to check
+     * @return <code>true</code> if in a different env
      */
     boolean differentXAEnv(InternalVersionItemImpl item) {
         if (item.getVersionManager() == this) {

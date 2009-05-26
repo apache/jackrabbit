@@ -20,13 +20,11 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 /**
  * Implementation of the {@link javax.jcr.version.VersionManager}.
@@ -35,11 +33,6 @@ import org.slf4j.Logger;
  * that implement the internal version manager, and name this VersionManagerImpl.
  */
 public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
-
-    /**
-     * default logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImpl.class);
 
     /**
      * workspace session
@@ -58,7 +51,7 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
      * {@inheritDoc}
      */
     public Version checkin(String absPath) throws RepositoryException {
-        return (Version) session.getNode(absPath).checkin();
+        return session.getNode(absPath).checkin();
     }
 
     /**
@@ -75,7 +68,7 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
         // this is not quite correct, since the entire checkpoint operation
         // should be atomic
         Node node = session.getNode(absPath);
-        Version v = (Version) node.checkin();
+        Version v = node.checkin();
         node.checkout();
         return v;
     }
@@ -92,7 +85,7 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
      */
     public VersionHistory getVersionHistory(String absPath)
             throws RepositoryException {
-        return (VersionHistory) session.getNode(absPath).getVersionHistory();
+        return session.getNode(absPath).getVersionHistory();
     }
 
     /**
@@ -100,7 +93,7 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
      */
     public Version getBaseVersion(String absPath)
             throws RepositoryException {
-        return (Version) session.getNode(absPath).getBaseVersion();
+        return session.getNode(absPath).getBaseVersion();
     }
 
     /**

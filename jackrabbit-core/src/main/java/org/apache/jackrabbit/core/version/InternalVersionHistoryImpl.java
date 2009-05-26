@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Implements a <code>InternalVersionHistory</code>
@@ -61,7 +62,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * key = version label (String)
      * value = version name
      */
-    private HashMap labelCache = new HashMap();
+    private Map<Name, Name> labelCache = new HashMap<Name, Name>();
 
     /**
      * the root version of this history
@@ -73,19 +74,19 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * key = version name
      * value = version id (NodeId)
      */
-    private LinkedHashMap/*<Name, NodeId>*/ nameCache = new LinkedHashMap/*<Name, NodeId>*/();
+    private Map<Name, NodeId> nameCache = new LinkedHashMap<Name, NodeId>();
 
     /**
      * the hashmap of all versions
      * key = version id (NodeId)
      * value = version
      */
-    private HashMap/*<NodeId, InternalVersion>*/ versionCache = new HashMap/*<NodeId, InternalVersion>*/();
+    private Map<NodeId, InternalVersion> versionCache = new HashMap<NodeId, InternalVersion>();
 
     /**
      * Temporary version cache, used on a refresh.
      */
-    private HashMap/*<NodeId, InternalVersion>*/ tempVersionCache = new HashMap/*<NodeId, InternalVersion>*/();
+    private Map<NodeId, InternalVersion> tempVersionCache = new HashMap<NodeId, InternalVersion>();
 
     /**
      * the node that holds the label nodes
@@ -136,8 +137,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // init label cache
         try {
             PropertyState[] labels = labelNode.getProperties();
-            for (int i = 0; i < labels.length; i++) {
-                PropertyState pState = labels[i];
+            for (PropertyState pState : labels) {
                 if (pState.getType() == PropertyType.REFERENCE) {
                     Name labelName = pState.getName();
                     UUID ref = pState.getValues()[0].getUUID();
@@ -159,8 +159,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // get version entries
         ChildNodeEntry[] children = (ChildNodeEntry[])
             node.getState().getChildNodeEntries().toArray();
-        for (int i = 0; i < children.length; i++) {
-            ChildNodeEntry child = children[i];
+        for (ChildNodeEntry child : children) {
             if (child.getName().equals(NameConstants.JCR_VERSIONLABELS)) {
                 continue;
             }
@@ -169,9 +168,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // fix legacy
         if (rootVersion.getSuccessors().length == 0) {
-            Iterator iter = nameCache.keySet().iterator();
-            while (iter.hasNext()) {
-                Name versionName = (Name) iter.next();
+            for (Name versionName : nameCache.keySet()) {
                 InternalVersionImpl v = createVersionInstance(versionName);
                 v.legacyResolveSuccessors();
             }
@@ -188,9 +185,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         init();
 
         // invalidate all versions that are not referenced any more
-        Iterator iter = tempVersionCache.values().iterator();
-        while (iter.hasNext()) {
-            InternalVersionImpl v = (InternalVersionImpl) iter.next();
+        for (Object o : tempVersionCache.values()) {
+            InternalVersionImpl v = (InternalVersionImpl) o;
             v.invalidate();
         }
         tempVersionCache.clear();
@@ -210,10 +206,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             vMgr.versionCreated(v);
 
             // add labels
-            Iterator iter = labelCache.keySet().iterator();
-            while (iter.hasNext()) {
-                Name labelName = (Name) iter.next();
-                Name versionName = (Name) labelCache.get(labelName);
+            for (Name labelName: labelCache.keySet()) {
+                Name versionName = labelCache.get(labelName);
                 if (v.getName().equals(versionName)) {
                     v.internalAddLabel(labelName);
                 }
@@ -265,12 +259,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(Name versionName) throws VersionException {
-        NodeId versionId = (NodeId) nameCache.get(versionName);
+        NodeId versionId = nameCache.get(versionName);
         if (versionId == null) {
             throw new VersionException("Version " + versionName + " does not exist.");
         }
 
-        InternalVersion v = (InternalVersion) versionCache.get(versionId);
+        InternalVersion v = versionCache.get(versionId);
         if (v == null) {
             v = createVersionInstance(versionName);
         }
@@ -288,11 +282,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersion(NodeId id) {
-        InternalVersion v = (InternalVersion) versionCache.get(id);
+        InternalVersion v = versionCache.get(id);
         if (v == null) {
-            Iterator iter = nameCache.keySet().iterator();
-            while (iter.hasNext()) {
-                Name versionName = (Name) iter.next();
+            for (Name versionName : nameCache.keySet()) {
                 if (nameCache.get(versionName).equals(id)) {
                     v = createVersionInstance(versionName);
                     break;
@@ -306,13 +298,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public InternalVersion getVersionByLabel(Name label) {
-        Name versionName = (Name) labelCache.get(label);
+        Name versionName = labelCache.get(label);
         if (versionName == null) {
             return null;
         }
 
-        NodeId id = (NodeId) nameCache.get(versionName);
-        InternalVersion v = (InternalVersion) versionCache.get(id);
+        NodeId id = nameCache.get(versionName);
+        InternalVersion v = versionCache.get(id);
         if (v == null) {
             v = createVersionInstance(versionName);
         }
@@ -323,7 +315,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public Name[] getVersionNames() {
-        return (Name[]) nameCache.keySet().toArray(new Name[nameCache.size()]);
+        return nameCache.keySet().toArray(new Name[nameCache.size()]);
     }
     
     /**
@@ -344,7 +336,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * {@inheritDoc}
      */
     public Name[] getVersionLabels() {
-        return (Name[]) labelCache.keySet().toArray(new Name[labelCache.size()]);
+        return labelCache.keySet().toArray(new Name[labelCache.size()]);
     }
 
     /**
@@ -381,9 +373,9 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // unregister from labels
         Name[] labels = v.internalGetLabels();
-        for (int i = 0; i < labels.length; i++) {
-            v.internalRemoveLabel(labels[i]);
-            labelNode.removeProperty(labels[i]);
+        for (Name label : labels) {
+            v.internalRemoveLabel(label);
+            labelNode.removeProperty(label);
         }
         // detach from the version graph
         v.internalDetach();
@@ -417,8 +409,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         // now also remove from labelCache
-        for (int i = 0; i < labels.length; i++) {
-            labelCache.remove(labels[i]);
+        for (Name label : labels) {
+            labelCache.remove(label);
         }
     }
 
@@ -443,7 +435,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         if (versionName != null && version == null) {
             throw new VersionException("Version " + versionName + " does not exist in this version history.");
         }
-        Name prevName = (Name) labelCache.get(label);
+        Name prevName = labelCache.get(label);
         InternalVersionImpl prev = null;
         if (prevName == null) {
             if (version == null) {
@@ -558,12 +550,13 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @param parent parent node
      * @param name history name
      * @param nodeState node state
+     * @param copiedFrom the id of the base version
      * @return new node state
      * @throws RepositoryException if an error occurs
      */
     static NodeStateEx create(
             AbstractVersionManager vMgr, NodeStateEx parent, Name name,
-            NodeState nodeState) throws RepositoryException {
+            NodeState nodeState, NodeId copiedFrom) throws RepositoryException {
 
         // create history node
         NodeId historyId = new NodeId(UUID.randomUUID());
@@ -576,6 +569,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // create label node
         pNode.addNode(NameConstants.JCR_VERSIONLABELS, NameConstants.NT_VERSIONLABELS, null, false);
 
+        // initialize the 'jcr:copiedFrom' property
+        if (copiedFrom != null) {
+            pNode.setPropertyValue(NameConstants.JCR_COPIEDFROM, InternalValue.create(copiedFrom.getUUID(), true));
+        }
+        
         // create root version
         NodeId versionId = new NodeId(UUID.randomUUID());
         NodeStateEx vNode = pNode.addNode(NameConstants.JCR_ROOTVERSION, NameConstants.NT_VERSION, versionId, true);

@@ -14,16 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test.api.version.simple;
+package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
+import javax.jcr.version.Version;
+
+import org.apache.jackrabbit.test.api.version.simple.AbstractVersionTest;
 
 /**
- * <code>CopyTest</code> checks if simple versionable nodes are copied correctly:
+ * <code>CopyTest</code> checks if full versionable nodes are copied correctly:
  *
  * 15.1.4 Copying Versionable Nodes and Version Lineage
  * Under both simple and full versioning, when an existing versionable node N is
@@ -33,10 +36,15 @@ import javax.jcr.version.VersionManager;
  * - A copy of N, call it M, is created, as usual.
  * - A new, empty, version history for M, call it HM, is also created.
  *
+ * Under full versioning:
+ * - The properties jcr:versionHistory, jcr:baseVersion and
+ *   jcr:predecessors of M are not copied from N but are initialized as usual.
+ * - The jcr:copiedFrom property of HM is set to point to the base version of N.
+ *
  * @test
  * @sources CopyTest.java
- * @executeClass javax.jcr.version.simple.CopyTest
- * @keywords simple-versioning
+ * @executeClass javax.jcr.version.CopyTest
+ * @keywords versioning
  */
 public class CopyTest extends AbstractVersionTest {
 
@@ -66,9 +74,7 @@ public class CopyTest extends AbstractVersionTest {
 
         // check versionable
         Node v = superuser.getNode(dstPath);
-        assertTrue("Copied Node.isNodeType(mix:simpleVersionable) must return true.",
-                v.isNodeType(mixSimpleVersionable));
-        assertFalse("Copied Node.isNodeType(mix:versionable) must return false.",
+        assertTrue("Copied Node.isNodeType(mix:cersionable) must return true.",
                 v.isNodeType(mixVersionable));
 
         // check different version history
@@ -78,5 +84,12 @@ public class CopyTest extends AbstractVersionTest {
 
         // check if 1 version
         assertEquals("Copied node must have 1 version.", 1, getNumberOfVersions(vh2));
+
+        // check if jcr:copiedFrom is set correctly
+        assertTrue("Version history of desination must have a jcr:copiedFrom property", vh2.hasProperty(jcrCopiedFrom));
+
+        Node ref = vh2.getProperty(jcrCopiedFrom).getNode();
+        Version base = vMgr.getBaseVersion(srcPath);
+        assertTrue("jcr:copiedFrom must point to the base version of the original.", ref.isSame(base));
     }
 }

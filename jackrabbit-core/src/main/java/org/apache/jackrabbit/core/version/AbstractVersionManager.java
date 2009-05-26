@@ -137,6 +137,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
     /**
      * Acquires the write lock on this version manager.
+     * @return returns the write lock
      */
     protected WriteLock acquireWriteLock() {
         while (true) {
@@ -150,6 +151,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
     /**
      * acquires the read lock on this version manager.
+     * @return returns the read lock
      */
     protected ReadLock acquireReadLock() {
         while (true) {
@@ -246,7 +248,8 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * {@inheritDoc}
      */
-    public VersionHistoryInfo getVersionHistory(Session session, NodeState node)
+    public VersionHistoryInfo getVersionHistory(Session session, NodeState node,
+                                                NodeId copiedFrom)
             throws RepositoryException {
         VersionHistoryInfo info = null;
 
@@ -268,7 +271,7 @@ abstract class AbstractVersionManager implements VersionManager {
         }
 
         if (info == null) {
-            info = createVersionHistory(session, node);
+            info = createVersionHistory(session, node, copiedFrom);
         }
 
         return info;
@@ -279,14 +282,17 @@ abstract class AbstractVersionManager implements VersionManager {
      * a new 'mix:versionable' node or when adding the 'mix:versionable' mixin
      * to a node.
      *
-     * @param session
-     * @param node NodeState
+     * @param session repository session
+     * @param node versionable node state
+     * @param copiedFrom node id for the jcr:copiedFrom property
      * @return identifier of the new version history node
-     * @throws RepositoryException
-     * @see #getVersionHistory(Session, NodeState)
+     * @throws RepositoryException if an error occurrs
+     * @see #getVersionHistory(Session, NodeState, NodeId)
      */
-    protected abstract VersionHistoryInfo createVersionHistory(
-            Session session, NodeState node) throws RepositoryException;
+    protected abstract VersionHistoryInfo createVersionHistory(Session session,
+                                                               NodeState node,
+                                                               NodeId copiedFrom)
+            throws RepositoryException;
 
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
@@ -343,10 +349,11 @@ abstract class AbstractVersionManager implements VersionManager {
      * Creates a new Version History.
      *
      * @param node the node for which the version history is to be initialized
+     * @param copiedFrom node id for the jcr:copiedFrom parameter
      * @return the identifiers of the newly created version history and root version
-     * @throws javax.jcr.RepositoryException
+     * @throws RepositoryException if an error occurs
      */
-    NodeStateEx createVersionHistory(NodeState node)
+    NodeStateEx createVersionHistory(NodeState node, NodeId copiedFrom)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
@@ -361,7 +368,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
             // create new history node in the persistent state
             NodeStateEx history =
-                InternalVersionHistoryImpl.create(this, parent, name, node);
+                InternalVersionHistoryImpl.create(this, parent, name, node, copiedFrom);
 
             // end update
             operation.save();
@@ -497,8 +504,8 @@ abstract class AbstractVersionManager implements VersionManager {
         } else {
             // 1. search a predecessor, suitable for generating the new name
             Value[] values = node.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-            for (int i = 0; i < values.length; i++) {
-                InternalVersion pred = history.getVersion(NodeId.valueOf(values[i].getString()));
+            for (Value value: values) {
+                InternalVersion pred = history.getVersion(NodeId.valueOf(value.getString()));
                 if (best == null
                         || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
                     best = pred;
@@ -590,7 +597,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * Invoked by the internal version item itself, when it's underlying
      * persistence state was discarded.
      *
-     * @param item
+     * @param item item that was discarded
      */
     protected void itemDiscarded(InternalVersionItem item) {
     }

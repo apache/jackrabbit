@@ -49,11 +49,13 @@ public interface VersionManager {
      * is versionable.
      *
      * @param session workspace session
-     * @param node node whose version history should be returned
+     * @param vNode node whose version history should be returned
+     * @param copiedFrom the node id for the jcr:copiedFrom property use for copied nodes
      * @return identifiers of the version history and root version nodes
      * @throws RepositoryException if an error occurs
      */
-    VersionHistoryInfo getVersionHistory(Session session, NodeState node)
+    VersionHistoryInfo getVersionHistory(Session session, NodeState vNode, 
+                                         NodeId copiedFrom)
             throws RepositoryException;
 
     /**

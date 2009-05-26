@@ -200,6 +200,9 @@ public class PropertyDefTest extends AbstractJCRTest {
                     case PropertyType.REFERENCE:
                     case PropertyType.BOOLEAN:
                     case PropertyType.UNDEFINED:
+                    case PropertyType.WEAKREFERENCE:
+                    case PropertyType.DECIMAL:
+                    case PropertyType.URI:
                         // success
                         break;
                     default:

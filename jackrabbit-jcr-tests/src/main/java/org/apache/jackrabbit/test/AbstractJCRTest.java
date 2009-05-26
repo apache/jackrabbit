@@ -104,6 +104,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String jcrVersionHistory;
 
     /**
+     * JCR Name jcr:copiedFrom using the namespace resolver of the current session.
+     */
+    protected String jcrCopiedFrom;
+
+    /**
      * JCR Name jcr:frozenNode using the namespace resolver of the current session.
      */
     protected String jcrFrozenNode;
@@ -329,6 +334,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         jcrSuccessors = superuser.getNamespacePrefix(NS_JCR_URI) + ":successors";
         jcrCreated = superuser.getNamespacePrefix(NS_JCR_URI) + ":created";
         jcrVersionHistory = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionHistory";
+        jcrCopiedFrom = superuser.getNamespacePrefix(NS_JCR_URI) + ":copiedFrom";
         jcrFrozenNode = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenNode";
         jcrFrozenUuid = superuser.getNamespacePrefix(NS_JCR_URI) + ":frozenUuid";
         jcrRootVersion = superuser.getNamespacePrefix(NS_JCR_URI) + ":rootVersion";

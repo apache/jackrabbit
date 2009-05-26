@@ -44,7 +44,7 @@ class VersionIteratorImpl implements VersionIterator {
     /**
      * the id's of the versions to return
      */
-    private LinkedList/*<NodeId>*/ versions = new LinkedList/*<NodeId>*/();
+    private LinkedList<NodeId> versions = new LinkedList<NodeId>();
 
     /**
      * the current position
@@ -99,7 +99,7 @@ class VersionIteratorImpl implements VersionIterator {
         if (versions.isEmpty()) {
             throw new NoSuchElementException();
         }
-        NodeId id = (NodeId) versions.removeFirst();
+        NodeId id = versions.removeFirst();
         pos++;
 
         try {
@@ -162,10 +162,10 @@ class VersionIteratorImpl implements VersionIterator {
      * @param root the root version
      */
     private synchronized void initVersions(InternalVersion root) {
-        LinkedList workQueue = new LinkedList();
+        LinkedList<InternalVersion> workQueue = new LinkedList<InternalVersion>();
         workQueue.add(root);
         while (!workQueue.isEmpty()) {
-            InternalVersion currentVersion = (InternalVersion) workQueue.removeFirst();
+            InternalVersion currentVersion = workQueue.removeFirst();
             NodeId id = currentVersion.getId();
             if (!versions.contains(id)) {
                 versions.add(id);

@@ -1809,6 +1809,20 @@ public class BatchedItemOperations extends ItemValidator {
                 // add new child node entry to new node
                 newState.addChildNodeEntry(entry.getName(), newChildState.getNodeId());
             }
+            // init version history if needed
+            VersionHistoryInfo history = null;
+            if (versionable && flag == COPY) {
+                NodeId copiedFrom = null;
+                if (fullVersionable) {
+                    // base version of copied versionable node is reference value of
+                    // the histories jcr:copiedFrom property
+                    PropertyId propId = new PropertyId(srcState.getNodeId(), NameConstants.JCR_BASEVERSION);
+                    PropertyState prop = (PropertyState) srcStateMgr.getItemState(propId);
+                    copiedFrom = new NodeId(prop.getValues()[0].getUUID());
+                }
+                VersionManager manager = session.getVersionManager();
+                history = manager.getVersionHistory(session, newState, copiedFrom);
+            }
             // copy properties
             iter = srcState.getPropertyNames().iterator();
             while (iter.hasNext()) {
@@ -1838,26 +1852,16 @@ public class BatchedItemOperations extends ItemValidator {
                 PropertyState newChildState =
                         copyPropertyState(srcChildState, id, propName);
 
-                if (versionable && flag == COPY) {
-                    /**
-                     * a versionable node is being copied:
-                     * copied properties declared by mix:versionable need to be
-                     * adjusted accordingly.
-                     */
-                    VersionManager manager = session.getVersionManager();
+                if (history != null) {
                     if (fullVersionable) {
                         if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                             // jcr:versionHistory
-                            VersionHistoryInfo history =
-                                manager.getVersionHistory(session, newState);
                             InternalValue value = InternalValue.create(
                                     history.getVersionHistoryId().getUUID());
                             newChildState.setValues(new InternalValue[] { value });
                         } else if (propName.equals(NameConstants.JCR_BASEVERSION)
                                 || propName.equals(NameConstants.JCR_PREDECESSORS)) {
                             // jcr:baseVersion or jcr:predecessors
-                            VersionHistoryInfo history =
-                                manager.getVersionHistory(session, newState);
                             InternalValue value = InternalValue.create(
                                     history.getRootVersionId().getUUID());
                             newChildState.setValues(new InternalValue[] { value });
@@ -1871,7 +1875,6 @@ public class BatchedItemOperations extends ItemValidator {
                         if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                             // jcr:isCheckedOut
                             newChildState.setValues(new InternalValue[]{InternalValue.create(true)});
-                            manager.getVersionHistory(session, newState);
                         }
                     }
                 }
