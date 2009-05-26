@@ -411,14 +411,19 @@ public class VersionManagerImpl extends AbstractVersionManager implements ItemSt
     /**
      * {@inheritDoc}
      */
-    protected boolean hasItemReferences(InternalVersionItem item)
+    protected boolean hasItemReferences(NodeId id)
+            throws RepositoryException {
+        return stateMgr.hasNodeReferences(new NodeReferencesId(id));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected NodeStateEx getNodeStateEx(NodeId parentNodeId)
             throws RepositoryException {
         try {
-            NodeReferences refs = stateMgr.getNodeReferences(
-                    new NodeReferencesId(item.getId()));
-            return refs.hasReferences();
-        } catch (NoSuchItemStateException e) {
-            return false;
+            NodeState state = (NodeState) stateMgr.getItemState(parentNodeId);
+            return new NodeStateEx(stateMgr, ntReg, state, null);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
