@@ -874,7 +874,7 @@ public class XATest extends AbstractJCRTest {
      * Test locking a new node inside a transaction.
      * @throws Exception
      */
-    public void xxxtestLockNewNode() throws Exception {
+    public void testLockNewNode() throws Exception {
         // get user transaction object, start
         UserTransaction utx = new UserTransactionImpl(superuser);
         utx.begin();
@@ -887,9 +887,27 @@ public class XATest extends AbstractJCRTest {
 
         // lock this new node
         n.lock(false, true);
+        assertTrue("Node locked in transaction", n.isLocked());
 
         // commit
         utx.commit();
+        
+        // Check if it is locked in other session
+        Session other = helper.getSuperuserSession();
+        Node nOther = other.getNodeByUUID(n.getUUID());        
+        assertTrue(nOther.isLocked());
+
+        // Check if it is also locked in other transaction
+        Session other2 = helper.getSuperuserSession();
+        // start new Transaction and try to add locktoken
+        utx = new UserTransactionImpl(other2);
+        utx.begin();
+        
+        Node nOther2 = other2.getNodeByUUID(n.getUUID());        
+        assertTrue(nOther2.isLocked());
+        
+        utx.commit();
+
     }
 
     /**
