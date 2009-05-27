@@ -90,7 +90,7 @@ public abstract class ValueConstraint {
      */
     abstract void check(QValue value) throws ConstraintViolationException, RepositoryException;
 
-    //-----------------------------------------< java.lang.Object overrides >---
+    //---------------------------------------------------< java.lang.Object >---
     public boolean equals(Object other) {
         if (other == this) {
             return true;
@@ -130,6 +130,7 @@ public abstract class ValueConstraint {
         switch (type) {
             // constraints which are not qName senstive
             case PropertyType.STRING:
+            case PropertyType.URI:
                 return new StringConstraint(qualifiedDefinition);
 
             case PropertyType.BOOLEAN:
@@ -143,6 +144,7 @@ public abstract class ValueConstraint {
 
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
                 return new NumericConstraint(qualifiedDefinition);
 
             // qName sensitive constraints: create from qualified string
@@ -152,8 +154,8 @@ public abstract class ValueConstraint {
             case PropertyType.PATH:
                 return PathConstraint.create(qualifiedDefinition);
 
-            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
                 return ReferenceConstraint.create(qualifiedDefinition);
 
             default:
@@ -178,6 +180,7 @@ public abstract class ValueConstraint {
         }
         switch (type) {
             case PropertyType.STRING:
+            case PropertyType.URI:
                 return new StringConstraint(definition);
 
             case PropertyType.BOOLEAN:
@@ -191,6 +194,7 @@ public abstract class ValueConstraint {
 
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
                 return new NumericConstraint(definition);
 
             case PropertyType.NAME:
@@ -199,8 +203,8 @@ public abstract class ValueConstraint {
             case PropertyType.PATH:
                 return PathConstraint.create(definition, resolver);
 
-            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
                 return ReferenceConstraint.create(definition, resolver);
 
             default:
