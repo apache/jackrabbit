@@ -109,7 +109,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * {@inheritDoc}
      */
     public String[] getValueConstraints() {
-        QPropertyDefinition pd = (QPropertyDefinition)itemDef;
+        QPropertyDefinition pd = (QPropertyDefinition) itemDef;
         String[] constraints = pd.getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             return new String[0];
