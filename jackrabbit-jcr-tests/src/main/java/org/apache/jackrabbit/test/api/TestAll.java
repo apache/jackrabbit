@@ -112,6 +112,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeCanAddMixinTest.class);
         suite.addTestSuite(NodeRemoveMixinTest.class);
 
+        suite.addTestSuite(NodeSetPrimaryTypeTest.class);
+
         suite.addTestSuite(WorkspaceCloneReferenceableTest.class);
         suite.addTestSuite(WorkspaceCloneSameNameSibsTest.class);
         suite.addTestSuite(WorkspaceCloneTest.class);
