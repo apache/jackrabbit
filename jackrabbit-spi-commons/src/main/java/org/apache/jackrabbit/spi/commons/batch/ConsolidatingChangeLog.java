@@ -103,14 +103,16 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
         addOperation(CancelableOperations.remove(itemId));
     }
 
-    public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId)
-            throws RepositoryException {
-
+    public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException {
         addOperation(CancelableOperations.reorderNodes(parentId, srcNodeId, beforeNodeId));
     }
 
     public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException {
         addOperation(CancelableOperations.setMixins(nodeId, mixinNodeTypeNames));
+    }
+
+    public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
+        addOperation(CancelableOperations.setPrimaryType(nodeId, primaryNodeTypeName));
     }
 
     public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
@@ -325,8 +327,7 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return new AddNode(parentId, nodeName, nodetypeName, uuid);
         }
 
-        // -----------------------------------------------------< AddProperty >---
-
+        // ---------------------------------------------------< AddProperty >---
         /**
          * <code>AddProperty</code> operations might cancel with
          * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and
@@ -421,8 +422,7 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return new AddProperty(parentId, propertyName, values);
         }
 
-        // -----------------------------------------------------< Move >---
-
+        // ----------------------------------------------------------< Move >---
         /**
          * An <code>Move</code> operation never cancels another operation and is never
          * cancelled by any other operation.
@@ -454,8 +454,7 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return new Move(srcNodeId, destParentNodeId, destName);
         }
 
-        // -----------------------------------------------------< Remove >---
-
+        // --------------------------------------------------------< Remove >---
         /**
          * An <code>Remove</code> operation never cancels another operation and is never
          * cancelled by any other operation.
@@ -485,8 +484,7 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return new Remove(itemId);
         }
 
-        // -----------------------------------------------------< Reorder Nodes >---
-
+        // -------------------------------------------------< Reorder Nodes >---
         /**
          * A <code>ReorderNodes</code> operation might cancel with
          * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and
@@ -549,7 +547,6 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
         }
 
         // -----------------------------------------------------< SetMixins >---
-
         /**
          * A <code>SetMixins</code> operation might cancel with
          * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and
@@ -601,7 +598,7 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
         }
 
         /**
-         * Factory method for creating a {@link SetMixins SetMixins} operation.
+         * Factory method for creating a {@link SetMixins} operation.
          *
          * @see Batch#setMixins(NodeId, Name[])
          * @param nodeId
@@ -612,8 +609,65 @@ public class ConsolidatingChangeLog extends ChangeLogImpl {
             return new SetMixins(nodeId, mixinNodeTypeNames);
         }
 
-        // -----------------------------------------------------< SetValue >---
+        // -----------------------------------------------------< SetMixins >---
+        /**
+         * A <code>SetPrimaryType</code> operation might cancel with
+         * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and
+         * {@link ConsolidatingChangeLog.CancelableOperations.SetPrimaryType SetPrimaryType} operations.
+         */
+        public static class SetPrimaryType extends Operations.SetPrimaryType implements CancelableOperation {
 
+            public SetPrimaryType(NodeId nodeId, Name primaryTypeName) {
+                super(nodeId, primaryTypeName);
+            }
+
+            /**
+             * @return
+             * <ul>
+             * <li>{@link ConsolidatingChangeLog.CancelableOperation#CANCEL_THIS CANCEL_THIS} if
+             *   <code>other</code> is an instance of
+             *   {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and has an node higher up
+             *   the hierarchy or this node as target. Or if <code>other</code> is an instance of
+             *   {@link ConsolidatingChangeLog.CancelableOperations.SetMixins SetMixins} which has this node
+             *   as target and has the same <code>mixinNodeTypeNames</code>.</li>
+             * <li>{@link ConsolidatingChangeLog.CancelableOperation#CANCEL_NONE CANCEL_NONE} otherwise.</li>
+             * </ul>
+             */
+            public int cancel(CancelableOperation other) throws RepositoryException {
+                if (other instanceof Remove) {
+                    Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
+                    Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    return thisPath.isDescendantOf(otherPath) || thisPath.equals(otherPath)
+                        ? CANCEL_THIS
+                        : CANCEL_NONE;
+                }
+                if (other instanceof SetPrimaryType) {
+                    SetPrimaryType setPrimaryType = (SetPrimaryType) other;
+                    if (primaryTypeName.equals(setPrimaryType.primaryTypeName)) {
+                        Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
+                        Path otherPath = ConsolidatingChangeLog.getPath(setPrimaryType.nodeId);
+                        if (thisPath.equals(otherPath)) {
+                            return CANCEL_THIS;
+                        }
+                    }
+                }
+                return CANCEL_NONE;
+            }
+        }
+
+        /**
+         * Factory method for creating a {@link SetPrimaryType} operation.
+         *
+         * @see Batch#setPrimaryType(NodeId, Name)
+         * @param nodeId
+         * @param primaryTypeName
+         * @return
+         */
+        public static CancelableOperation setPrimaryType(NodeId nodeId, Name primaryTypeName) {
+            return new SetPrimaryType(nodeId, primaryTypeName);
+        }
+
+        // ------------------------------------------------------< SetValue >---
         /**
          * A <code>SetValue</code> operation might cancel with
          * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} and

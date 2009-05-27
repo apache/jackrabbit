@@ -66,6 +66,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -93,15 +94,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
     private static Logger log = LoggerFactory.getLogger(NodeImpl.class);
 
-    private Name primaryTypeName;
-
     protected NodeImpl(SessionImpl session, NodeState state, ItemLifeCycleListener[] listeners) {
         super(session, state, listeners);
         Name nodeTypeName = state.getNodeTypeName();
         // make sure the nodetype name is valid
-        if (session.getNodeTypeManager().hasNodeType(nodeTypeName)) {
-            primaryTypeName = nodeTypeName;
-        } else {
+        if (!session.getNodeTypeManager().hasNodeType(nodeTypeName)) {
             // should not occur. Since nodetypes are defined by the 'server'
             // its not possible to determine a fallback nodetype that is
             // always available.
@@ -673,15 +670,36 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeType getPrimaryNodeType() throws RepositoryException {
         checkStatus();
-        return session.getNodeTypeManager().getNodeType(primaryTypeName);
+        return session.getNodeTypeManager().getNodeType(getPrimaryNodeTypeName());
     }
 
     /**
      * @see javax.jcr.Node#setPrimaryType(String)
      */
     public void setPrimaryType(String nodeTypeName) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        checkStatus();
+
+        if (getNodeState().isRoot()) {
+            String msg = "The primary type of the root node may not be changed.";
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+
+        Name ntName = getQName(nodeTypeName);
+        if (ntName.equals(getPrimaryNodeTypeName())) {
+            log.debug("Changing the primary type has no effect: '" + nodeTypeName + "' already is the primary node type.");
+            return;
+        }
+
+        NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+        NodeType nt = ntMgr.getNodeType(ntName);
+        if (nt.isMixin() || nt.isAbstract()) {
+            throw new ConstraintViolationException("Cannot change the primary type: '" + nodeTypeName + "' is a mixin type or abstract.");
+        }
+        
+        // perform the operation
+        Operation op = SetPrimaryType.create(getNodeState(), ntName);
+        session.getSessionItemStateManager().execute(op);
     }
 
     /**
@@ -703,7 +721,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
         checkStatus();
         // try shortcut first (avoids parsing of name)
-        if (session.getNameResolver().getJCRName(primaryTypeName).equals(nodeTypeName)) {
+        if (session.getNameResolver().getJCRName(getPrimaryNodeTypeName()).equals(nodeTypeName)) {
             return true;
         }
         // parse to Name and check against effective nodetype
@@ -823,7 +841,7 @@ public class NodeImpl extends ItemImpl implements Node {
     private EffectiveNodeType getRemainingENT(List remainingMixins)
             throws ConstraintViolationException, NoSuchNodeTypeException {
         Name[] allRemaining = (Name[]) remainingMixins.toArray(new Name[remainingMixins.size() + 1]);
-        allRemaining[remainingMixins.size()] = primaryTypeName;
+        allRemaining[remainingMixins.size()] = getPrimaryNodeTypeName();
         return session.getEffectiveNodeTypeProvider().getEffectiveNodeType(allRemaining);
     }
 
@@ -1294,7 +1312,7 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     boolean isNodeType(Name qName) throws RepositoryException {
         // first do trivial checks without using type hierarchy
-        if (qName.equals(primaryTypeName)) {
+        if (qName.equals(getPrimaryNodeTypeName())) {
             return true;
         }
         // check if contained in mixin types
@@ -1597,7 +1615,7 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(mixin.getName() + ": not a mixin node type");
             return false;
         }
-        NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
+        NodeTypeImpl primaryType = ntMgr.getNodeType(getPrimaryNodeTypeName());
         if (primaryType.isNodeType(mixinName)) {
             log.debug(mixin.getName() + ": already contained in primary node type");
             return false;
@@ -1610,7 +1628,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check if the base type supports adding this mixin
         if (!entExisting.supportsMixin(mixinName)) {
-            log.debug(mixin.getName() + ": not supported on node type " + primaryTypeName);
+            log.debug(mixin.getName() + ": not supported on node type " + getPrimaryNodeTypeName());
             return false;
         }
 
@@ -1795,5 +1813,12 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                 boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
         return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState().getAllNodeTypeNames(), propertyName, type, multiValued);
+    }
+
+    /**
+     * @return the primary node type name.
+     */
+    private Name getPrimaryNodeTypeName() {
+        return getNodeState().getNodeTypeName();
     }
 }

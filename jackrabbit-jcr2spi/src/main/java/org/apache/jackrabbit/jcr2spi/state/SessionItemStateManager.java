@@ -20,6 +20,7 @@ import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.TransientOperationVisitor;
 import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
@@ -56,6 +58,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -364,6 +367,37 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
     }
 
     /**
+     * @see OperationVisitor#visit(SetPrimaryType)
+     */
+    public void visit(SetPrimaryType operation) throws ConstraintViolationException, RepositoryException {
+        // NOTE: nodestate is only modified upon save of the changes!
+        Name primaryName = operation.getPrimaryTypeName();
+        NodeState nState = operation.getNodeState();
+        NodeEntry nEntry = nState.getNodeEntry();
+
+        // detect obvious node type conflicts
+
+        EffectiveNodeTypeProvider entProvider = mgrProvider.getEffectiveNodeTypeProvider();
+
+        // try to build new effective node type (will throw in case of conflicts)
+        Name[] mixins = nState.getMixinTypeNames();
+        List<Name> all = new ArrayList<Name>(Arrays.asList(mixins));
+        all.add(primaryName);
+        EffectiveNodeType entAll = entProvider.getEffectiveNodeType(all.toArray(new Name[all.size()]));
+
+        // modify the value of the jcr:primaryType property entry without
+        // changing the node state itself
+        PropertyEntry pEntry = nEntry.getPropertyEntry(NameConstants.JCR_PRIMARYTYPE);
+        PropertyState pState = pEntry.getPropertyState();
+        int options = ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_LOCK;
+        setPropertyStateValue(pState, getQValues(new Name[] {primaryName}, qValueFactory), PropertyType.NAME, options);
+
+        // mark the affected node state modified and remember the operation
+        nState.markModified();
+        transientStateMgr.addOperation(operation);
+    }
+
+    /**
      * @inheritDoc
      * @see OperationVisitor#visit(SetPropertyValue)
      */
@@ -436,7 +470,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
             // try default primary type from definition
             nodeTypeName = definition.getDefaultPrimaryType();
             if (nodeTypeName == null) {
-                String msg = "an applicable node type could not be determined for " + nodeName;
+                String msg = "No applicable node type could be determined for " + nodeName;
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             }

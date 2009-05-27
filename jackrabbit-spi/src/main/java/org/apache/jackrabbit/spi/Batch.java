@@ -253,6 +253,16 @@ public interface Batch {
     public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException;
 
     /**
+     * Change the primary type of the node identified by the given <code>nodeId</code>.
+     *
+     * @param nodeId NodeId identifying the node to be modified.
+     * @param primaryNodeTypeName
+     * @throws RepositoryException
+     * @see javax.jcr.Node#setPrimaryType(String)
+     */
+    public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException;
+
+    /**
      * Move the node identified by the given <code>srcNodeId</code> to the
      * new parent identified by <code>destParentNodeId</code> and change its
      * name to <code>destName</code>.

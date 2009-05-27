@@ -42,6 +42,11 @@ public interface OperationVisitor {
 
     public void visit(SetMixin operation) throws RepositoryException;
 
+    /**
+     * @since JCR 2.0
+     */
+    public void visit(SetPrimaryType operation) throws RepositoryException;
+
     public void visit(SetPropertyValue operation) throws RepositoryException;
 
     public void visit(ReorderNodes operation) throws RepositoryException;
@@ -58,6 +63,9 @@ public interface OperationVisitor {
 
     public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException;
 
+    /**
+     * @since JCR 2.0
+     */
     public void visit(Checkpoint operation) throws RepositoryException;
 
     public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException;
@@ -80,9 +88,18 @@ public interface OperationVisitor {
 
     public void visit(WorkspaceImport operation) throws RepositoryException;
 
+    /**
+     * @since JCR 2.0
+     */
     public void visit(CreateActivity operation) throws RepositoryException;
 
+    /**
+     * @since JCR 2.0
+     */
     public void visit(RemoveActivity operation) throws RepositoryException;
 
+    /**
+     * @since JCR 2.0
+     */
     public void visit(CreateConfiguration operation) throws RepositoryException;
 }

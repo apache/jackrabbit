@@ -1438,6 +1438,16 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        public void setPrimaryType(final NodeId nodeId, final Name primaryNodeTypeName) throws RepositoryException {
+            executeGuarded(new Callable() {
+                public Object run() throws RepositoryException {
+                    Node n = getNode(nodeId, sInfo);
+                    n.setPrimaryType(getJcrName(primaryNodeTypeName));
+                    return null;
+                }
+            });
+        }
+
         public void move(final NodeId srcNodeId,
                          final NodeId destParentNodeId,
                          final Name destName) throws RepositoryException {

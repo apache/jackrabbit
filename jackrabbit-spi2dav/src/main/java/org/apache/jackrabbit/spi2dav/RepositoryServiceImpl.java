@@ -2431,6 +2431,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
+        public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
+            checkConsumed();
+            try {
+                DavPropertySet setProperties = new DavPropertySet();
+                setProperties.add(new NodeTypeProperty(ItemResourceConstants.JCR_PRIMARYNODETYPE, new String[] {resolver.getJCRName(primaryNodeTypeName)}, false));
+
+                String uri = getItemUri(nodeId, sessionInfo);
+                PropPatchMethod method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
+
+                methods.add(method);
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            }
+        }
+
         /**
          * @see Batch#move(NodeId, NodeId, Name)
          */

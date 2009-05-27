@@ -47,7 +47,7 @@ public class NodeState extends ItemState {
     /**
      * the name of this node's primary type
      */
-    private final Name nodeTypeName;
+    private Name nodeTypeName;
 
     /**
      * Definition of this node state
@@ -131,6 +131,11 @@ public class NodeState extends ItemState {
             }
             synchronized (another) {
                 NodeState nState = (NodeState) another;
+
+                if (!nodeTypeName.equals(nState.nodeTypeName)) {
+                    nodeTypeName = nState.nodeTypeName;
+                    modified = true;
+                }
 
                 if (nState.definition != null && !nState.definition.equals(definition)) {
                     definition = nState.definition;

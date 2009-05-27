@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,12 +80,16 @@ public class ChangeLog {
      * states to EXISTING.
      */
     public void persisted() throws RepositoryException {
-        List changedMixins = new ArrayList();
+        List<NodeState> changedMixins = new ArrayList<NodeState>();
+        List<NodeState> changedPrimaryTypes = new ArrayList<NodeState>();
+
         Operation[] ops = (Operation[]) operations.toArray(new Operation[operations.size()]);
         for (int i = 0; i < ops.length; i++) {
             ops[i].persisted();
             if (ops[i] instanceof SetMixin) {
                 changedMixins.add(((SetMixin) ops[i]).getNodeState());
+            } else if (ops[i] instanceof SetPrimaryType) {
+                changedPrimaryTypes.add(((SetPrimaryType) ops[i]).getNodeState());
             }
         }
         // process all remaining states that were not covered by the
@@ -96,10 +101,16 @@ public class ChangeLog {
             switch (state.getStatus()) {
                 case Status.EXISTING_MODIFIED:
                     state.setStatus(Status.EXISTING);
-                    if (state.isNode() && changedMixins.contains(state)) {
-                        // mixin changed for a node -> force reloading upon next
-                        // access in order to be aware of modified uniqueID.
-                        he.invalidate(false);
+                    if (state.isNode()) {
+                        if (changedPrimaryTypes.contains(state)) {
+                            // primary type changed for a node -> force reloading upon next
+                            // access in order to be aware of modified definition etc...
+                            he.invalidate(true);
+                        } else if (changedMixins.contains(state)) {
+                            // mixin changed for a node -> force reloading upon next
+                            // access in order to be aware of modified uniqueID.
+                            he.invalidate(false);
+                        }
                     }
                     break;
                 case Status.EXISTING_REMOVED:
