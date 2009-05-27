@@ -56,6 +56,7 @@ class StringConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.STRING:
+            case PropertyType.URI:
                 String text = value.getString();
                 Matcher matcher = pattern.matcher(text);
                 if (!matcher.matches()) {
@@ -64,7 +65,7 @@ class StringConstraint extends ValueConstraint {
                 return;
 
             default:
-                String msg = "STRING constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
+                String msg = "String constraint can not be applied to value of type: " + PropertyType.nameFromValue(value.getType());
                 log.debug(msg);
                 throw new RepositoryException(msg);
         }
