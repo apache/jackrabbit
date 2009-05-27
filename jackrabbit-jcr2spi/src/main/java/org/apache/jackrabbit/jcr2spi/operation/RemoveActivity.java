@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
-import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,30 +28,27 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
-import java.util.Iterator;
 
 /**
  * <code>RemoveVersion</code>...
  */
-public class RemoveVersion extends Remove {
+public class RemoveActivity extends Remove {
 
-    private static Logger log = LoggerFactory.getLogger(RemoveVersion.class);
+    private static Logger log = LoggerFactory.getLogger(RemoveActivity.class);
 
-    private NodeEntry versionableEntry = null;
+    private final PropertyId[] refs;
+    private final HierarchyManager hMgr;
 
-    private RemoveVersion(ItemState removeState, NodeState parent, VersionManager mgr)
+    private RemoveActivity(NodeState removeActivity, HierarchyManager hierarchyMgr)
             throws RepositoryException {
-        super(removeState, parent);
-        try {
-            versionableEntry = mgr.getVersionableNodeEntry((NodeState) removeState);
-        } catch (RepositoryException e) {
-            log.warn("Failed to retrieve the hierarchy entry of the versionable node.", e);
-        }
+        super(removeActivity, removeActivity.getParent());
+        refs = removeActivity.getNodeReferences();
+        hMgr = hierarchyMgr;
     }
 
     //----------------------------------------------------------< Operation >---
     /**
-     * @see Operation#accept(OperationVisitor)
+     * @see org.apache.jackrabbit.jcr2spi.operation.Operation#accept(org.apache.jackrabbit.jcr2spi.operation.OperationVisitor)
      */
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         assert status == STATUS_PENDING;
@@ -63,24 +59,22 @@ public class RemoveVersion extends Remove {
      * Invalidates the <code>NodeState</code> that has been updated and all
      * its decendants. Second, the parent state gets invalidated.
      *
-     * @see Operation#persisted()
+     * @see org.apache.jackrabbit.jcr2spi.operation.Operation#persisted()
      */
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        // invaliate the versionable node as well (version related properties)
-        if (versionableEntry != null) {
-            Iterator propEntries = versionableEntry.getPropertyEntries();
-            while (propEntries.hasNext()) {
-                PropertyEntry pe = (PropertyEntry) propEntries.next();
-                pe.invalidate(false);
+        
+        // invalidate all references to the removed activity
+        for (int i = 0; i < refs.length; i++) {
+            HierarchyEntry entry = hMgr.lookup(refs[i]);
+            if (entry != null) {
+                entry.invalidate(false);
             }
-            versionableEntry.invalidate(false);
         }
 
-        // invalidate the versionhistory entry and all its children
-        // in order to have the v-graph recalculated
-        parent.getNodeEntry().invalidate(true);
+        // invalidate the activities parent
+        parent.getNodeEntry().invalidate(false);
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -89,9 +83,9 @@ public class RemoveVersion extends Remove {
     }
 
     //------------------------------------------------------------< Factory >---
-    public static Operation create(NodeState versionState, NodeState vhState, VersionManager mgr)
+    public static Operation create(NodeState activityState, HierarchyManager hierarchyMgr)
             throws RepositoryException {
-        RemoveVersion rm = new RemoveVersion(versionState, vhState, mgr);
+        RemoveActivity rm = new RemoveActivity(activityState, hierarchyMgr);
         return rm;
     }
 }

@@ -57,6 +57,9 @@ import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
+import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
+import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -961,7 +964,12 @@ public class WorkspaceManager
          */
         public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
             NodeId nId = operation.getNodeId();
-            Iterator failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort(), operation.isShallow());
+            Iterator failed;
+            if (operation.isActivityMerge()) {
+                failed = service.mergeActivity(sessionInfo, nId);
+            } else {
+                failed = service.merge(sessionInfo, nId, operation.getSourceWorkspaceName(), operation.bestEffort(), operation.isShallow());
+            }
             operation.setFailedIds(failed);
         }
 
@@ -1037,6 +1045,29 @@ public class WorkspaceManager
          */
         public void visit(WorkspaceImport operation) throws RepositoryException {
             service.importXml(sessionInfo, operation.getNodeId(), operation.getXmlStream(), operation.getUuidBehaviour());
+        }
+
+        /**
+         * @see OperationVisitor#visit(CreateActivity)
+         */
+        public void visit(CreateActivity operation) throws RepositoryException {
+            NodeId activityId = service.createActivity(sessionInfo, operation.getTitle());
+            operation.setNewActivityId(activityId);
+        }
+
+        /**
+         * @see OperationVisitor#visit(RemoveActivity)
+         */
+        public void visit(RemoveActivity operation) throws RepositoryException {
+            service.removeActivity(sessionInfo, (NodeId) operation.getRemoveId());
+        }
+
+        /**
+         * @see OperationVisitor#visit(CreateConfiguration)
+         */
+        public void visit(CreateConfiguration operation) throws RepositoryException {
+            NodeId configId = service.createConfiguration(sessionInfo, operation.getNodeId(), operation.getBaselineId());
+            operation.setNewConfigurationId(configId);
         }
     }
 

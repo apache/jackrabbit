@@ -1547,6 +1547,38 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#createActivity(SessionInfo, String)
+     */
+    public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
+     * @see RepositoryService#removeActivity(SessionInfo, NodeId)
+     */
+    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
+     * @see RepositoryService#mergeActivity(SessionInfo, NodeId)
+     */
+    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
+     * @see RepositoryService#createConfiguration(SessionInfo, NodeId, NodeId)
+     */
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        // TODO
+        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
      * @see RepositoryService#getSupportedQueryLanguages(SessionInfo)
      */
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException {

@@ -74,15 +74,19 @@ public class Merge extends AbstractOperation {
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        try {
-            NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
-            if (vhe != null) {
-                vhe.invalidate(true);
+        if (isActivityMerge()) {
+            // TODO invalidate
+        } else {
+            try {
+                NodeEntry vhe = mgr.getVersionHistoryEntry(nodeState);
+                if (vhe != null) {
+                    vhe.invalidate(true);
+                }
+            } catch (RepositoryException e) {
+                log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
             }
-        } catch (RepositoryException e) {
-            log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
+            nodeState.getHierarchyEntry().invalidate(true);
         }
-        nodeState.getHierarchyEntry().invalidate(true);
     }
 
     //----------------------------------------< Access Operation Parameters >---
@@ -100,6 +104,10 @@ public class Merge extends AbstractOperation {
 
     public boolean isShallow() {
         return isShallow;
+    }
+
+    public boolean isActivityMerge() {
+        return srcWorkspaceName == null;
     }
 
     public void setFailedIds(Iterator failedIds) {

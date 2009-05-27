@@ -579,13 +579,13 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
+     * @return <code>NodeId</code> of newly created version
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.InvalidItemStateException
      * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#checkin()
-     * @return <code>NodeId</code> of newly created version
      */
     public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException;
 
@@ -608,8 +608,8 @@ public interface RepositoryService {
      *
      * @param sessionInfo
      * @param nodeId
+     * @return <code>NodeId</code> of newly created version
      * @throws javax.jcr.UnsupportedRepositoryOperationException
-     * @throws javax.jcr.lock.LockException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.version.VersionManager#checkpoint(String)
      * @since JCR 2.0
@@ -780,6 +780,54 @@ public interface RepositoryService {
      * @see javax.jcr.version.VersionHistory#removeVersionLabel(String)
      */
     public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException;
+
+    /**
+     * Create a new activity.
+     *
+     * @param sessionInfo
+     * @param title
+     * @return the <code>NodeId</code> of the new activity node.
+     * @throws javax.jcr.UnsupportedRepositoryOperationException
+     * @throws javax.jcr.RepositoryException
+     * @see javax.jcr.version.VersionManager#createActivity(String)
+     * @since JCR 2.0
+     */
+    public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Removes the activity identified by the specified <code>activityId</code>.
+     *
+     * @param sessionInfo
+     * @param activityId
+     * @throws javax.jcr.UnsupportedRepositoryOperationException
+     * @throws javax.jcr.RepositoryException
+     * @see javax.jcr.version.VersionManager#removeActivity(String)
+     * @since JCR 2.0
+     */
+    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Merges the activity identified by the given <code>activityId</code> into
+     * the workspace the specified <code>sessionInfo</code> has been created for.
+     *
+     * @param sessionInfo
+     * @param activityId
+     * @return an <code>Iterator</code> over the {@link NodeId}s of all nodes that
+     * received a merge result of "fail" in the course of this operation.
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param baselineId   @return  @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     * @see javax.jcr.version.VersionManager#createConfiguration(String, Version)
+     */
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException;
 
     //----------------------------------------------------------< Searching >---
     /**

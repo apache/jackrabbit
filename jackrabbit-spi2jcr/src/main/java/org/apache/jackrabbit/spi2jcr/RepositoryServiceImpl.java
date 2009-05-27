@@ -791,8 +791,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         return (Iterator) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                Node n = getNode(nodeId, sInfo);
-                NodeIterator it = n.merge(srcWorkspaceName, bestEffort);
+                String nodePath = getNodePath(nodeId, sInfo);
+                NodeIterator it = getVersionManager(sInfo).merge(nodePath, srcWorkspaceName, bestEffort);
                 List ids = new ArrayList();
                 while (it.hasNext()) {
                     ids.add(idFactory.createNodeId(it.nextNode(),
@@ -815,8 +815,8 @@ public class RepositoryServiceImpl implements RepositoryService {
         final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         return (Iterator) executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
-                VersionManager vMgr = sInfo.getSession().getWorkspace().getVersionManager();
-                NodeIterator it = vMgr.merge(getNodePath(nodeId, sInfo), srcWorkspaceName, bestEffort, isShallow);
+                String nodePath = getNodePath(nodeId, sInfo);
+                NodeIterator it = getVersionManager(sInfo).merge(nodePath, srcWorkspaceName, bestEffort, isShallow);
                 List ids = new ArrayList();
                 while (it.hasNext()) {
                     ids.add(idFactory.createNodeId(it.nextNode(),
@@ -919,6 +919,68 @@ public class RepositoryServiceImpl implements RepositoryService {
                 return null;
             }
         }, sInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId createActivity(SessionInfo sessionInfo, final String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        final VersionManager vMgr = getVersionManager(sInfo);
+        Node activity = (Node) executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                return vMgr.createActivity(title);
+            }
+        }, getSessionInfoImpl(sessionInfo));
+        return idFactory.createNodeId(activity, sInfo.getNamePathResolver());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void removeActivity(SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        final VersionManager vMgr = getVersionManager(sInfo);
+        Node activity = (Node) executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                // TODO: uncomment as soon as removeActivity method is fixed in jsr 283
+                // return vMgr.removeActivity(getNode(activityId, sInfo));
+                throw new UnsupportedOperationException("Impl missing... waiting for updated jsr 283 jar.");
+            }
+        }, getSessionInfoImpl(sessionInfo));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator mergeActivity(SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        return (Iterator) executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                Node node = getNode(activityId, sInfo);
+                NodeIterator it = getVersionManager(sInfo).merge(node);
+                List ids = new ArrayList();
+                while (it.hasNext()) {
+                    ids.add(idFactory.createNodeId(it.nextNode(),
+                            sInfo.getNamePathResolver()));
+                }
+                return ids.iterator();
+            }
+        }, sInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeId createConfiguration(SessionInfo sessionInfo, final NodeId nodeId, final NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        final VersionManager vMgr = getVersionManager(sInfo);
+        Node configuration = (Node) executeWithLocalEvents(new Callable() {
+            public Object run() throws RepositoryException {
+                return vMgr.createConfiguration(getNodePath(nodeId, sInfo), (Version) getNode(baselineId, sInfo));
+            }
+        }, getSessionInfoImpl(sessionInfo));
+        return idFactory.createNodeId(configuration, sInfo.getNamePathResolver());
     }
 
     /**
@@ -1568,6 +1630,10 @@ public class RepositoryServiceImpl implements RepositoryService {
             jcrPath = jcrPath.substring(1, jcrPath.length());
         }
         return n.getProperty(jcrPath);
+    }
+
+    private VersionManager getVersionManager(SessionInfoImpl sessionInfo) throws RepositoryException {
+        return sessionInfo.getSession().getWorkspace().getVersionManager();
     }
 
     private Query createQuery(Session session,

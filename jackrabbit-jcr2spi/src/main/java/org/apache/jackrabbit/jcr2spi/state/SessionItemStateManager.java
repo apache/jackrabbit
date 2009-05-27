@@ -16,72 +16,53 @@
  */
 package org.apache.jackrabbit.jcr2spi.state;
 
-import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
-import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
-import org.apache.jackrabbit.jcr2spi.operation.Operation;
-import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
-import org.apache.jackrabbit.jcr2spi.operation.AddNode;
-import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
-import org.apache.jackrabbit.jcr2spi.operation.Clone;
-import org.apache.jackrabbit.jcr2spi.operation.Copy;
-import org.apache.jackrabbit.jcr2spi.operation.Move;
-import org.apache.jackrabbit.jcr2spi.operation.Remove;
-import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
-import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
-import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
-import org.apache.jackrabbit.jcr2spi.operation.Checkout;
-import org.apache.jackrabbit.jcr2spi.operation.Checkin;
-import org.apache.jackrabbit.jcr2spi.operation.Update;
-import org.apache.jackrabbit.jcr2spi.operation.Restore;
-import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
-import org.apache.jackrabbit.jcr2spi.operation.Merge;
-import org.apache.jackrabbit.jcr2spi.operation.LockOperation;
-import org.apache.jackrabbit.jcr2spi.operation.LockRefresh;
-import org.apache.jackrabbit.jcr2spi.operation.LockRelease;
-import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
-import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
-import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
-import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
+import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
-import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
+import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
+import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.Move;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
+import org.apache.jackrabbit.jcr2spi.operation.Remove;
+import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
+import org.apache.jackrabbit.jcr2spi.operation.TransientOperationVisitor;
+import org.apache.jackrabbit.jcr2spi.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Session;
-import javax.jcr.MergeException;
-import javax.jcr.version.VersionException;
+import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.lock.LockException;
+import javax.jcr.version.VersionException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.io.InputStream;
 
 /**
  * <code>SessionItemStateManager</code> ...
  */
-public class SessionItemStateManager implements UpdatableItemStateManager, OperationVisitor {
+public class SessionItemStateManager extends TransientOperationVisitor implements UpdatableItemStateManager {
 
     private static Logger log = LoggerFactory.getLogger(SessionItemStateManager.class);
 
@@ -405,134 +386,6 @@ public class SessionItemStateManager implements UpdatableItemStateManager, Opera
         parent.reorderChildNodeEntries(operation.getInsertNode(), operation.getBeforeNode());
         // remember the operation
         transientStateMgr.addOperation(operation);
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Clone)
-     */
-    public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Clone cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Copy)
-     */
-    public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Copy cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Checkout)
-     */
-    public void visit(Checkout operation) throws RepositoryException, UnsupportedRepositoryOperationException {
-        throw new UnsupportedOperationException("Internal error: Checkout cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Checkin)
-     */
-    public void visit(Checkin operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Checkpoint)
-     */
-    public void visit(Checkpoint operation) throws UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Checkin cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Update)
-     */
-    public void visit(Update operation) throws NoSuchWorkspaceException, AccessDeniedException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Restore)
-     */
-    public void visit(Restore operation) throws VersionException, PathNotFoundException, ItemExistsException, UnsupportedRepositoryOperationException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Restore cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(Merge)
-     */
-    public void visit(Merge operation) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Merge cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(ResolveMergeConflict)
-     */
-    public void visit(ResolveMergeConflict operation) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Update cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(LockOperation)
-     */
-    public void visit(LockOperation operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: Lock cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(LockRefresh)
-     */
-    public void visit(LockRefresh operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: LockRefresh cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(LockRelease)
-     */
-    public void visit(LockRelease operation) throws AccessDeniedException, InvalidItemStateException, UnsupportedRepositoryOperationException, LockException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: LockRelease cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(AddLabel)
-     */
-    public void visit(AddLabel operation) throws VersionException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: AddLabel cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(RemoveLabel)
-     */
-    public void visit(RemoveLabel operation) throws VersionException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: RemoveLabel cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(RemoveVersion)
-     */
-    public void visit(RemoveVersion operation) throws VersionException, AccessDeniedException, ReferentialIntegrityException, RepositoryException {
-        throw new UnsupportedOperationException("Internal error: RemoveVersion cannot be handled by session ItemStateManager.");
-    }
-
-    /**
-     * @throws UnsupportedOperationException
-     * @see OperationVisitor#visit(WorkspaceImport)
-     */
-    public void visit(WorkspaceImport operation) throws RepositoryException {
-        throw new UnsupportedOperationException("Internal error: WorkspaceImport cannot be handled by session ItemStateManager.");
     }
 
     //--------------------------------------------< Internal State Handling >---

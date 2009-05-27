@@ -491,6 +491,40 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 new Object[]{unwrap(sessionInfo), versionHistoryId, versionId, label});
     }
 
+    public NodeId createActivity(final SessionInfo sessionInfo, final String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (NodeId) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.createActivity(unwrap(sessionInfo), title);
+            }
+        }, "createActivity(SessionInfo, String)", new Object[]{unwrap(sessionInfo), title});
+    }
+
+    public void removeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                service.removeActivity(unwrap(sessionInfo), activityId);
+                return null;
+            }
+        }, "removeActivity(SessionInfo, NodeId)",
+                new Object[]{unwrap(sessionInfo), activityId});
+    }
+
+    public Iterator mergeActivity(final SessionInfo sessionInfo, final NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (Iterator) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.mergeActivity(unwrap(sessionInfo), activityId);
+            }
+        }, "mergeActivity(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), activityId});
+    }
+
+    public NodeId createConfiguration(final SessionInfo sessionInfo, final NodeId nodeId, final NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        return (NodeId) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.createConfiguration(unwrap(sessionInfo), nodeId, baselineId);
+            }
+        }, "createConfiguration(SessionInfo, NodeId, NodeId)", new Object[]{unwrap(sessionInfo), nodeId, baselineId});
+    }
+
     public String[] getSupportedQueryLanguages(final SessionInfo sessionInfo) throws RepositoryException {
         return (String[]) execute(new Callable() {
             public Object call() throws RepositoryException {
