@@ -14,31 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype.constraint;
 
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.spi.QValue;
 
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.PropertyType;
 
 /**
- * <code>DateConstraintTest</code>...
+ * <code>NameConstraintTest</code>...
  */
-public class ReferenceConstraintTest extends ValueConstraintTest {
+public class NameConstraintTest extends ValueConstraintTest {
 
-    private static Logger log = LoggerFactory.getLogger(ReferenceConstraintTest.class);
+    private static Logger log = LoggerFactory.getLogger(NameConstraintTest.class);
 
     protected int getType() {
-        return PropertyType.REFERENCE;
+        return PropertyType.NAME;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
+    protected String[] getInvalidQualifiedDefinitions() {
         return new String[] {"12345", "", "abc"};
     }
 
@@ -55,16 +51,12 @@ public class ReferenceConstraintTest extends ValueConstraintTest {
     }
 
     protected QValue[] createNonMatchingValues() throws RepositoryException {
-        // TODO: reference constraints are not checked property -> not executable
-        throw new ConstraintViolationException();
+        QValue v = valueFactory.create(resolver.getQName("xyz"));
+        return new QValue[] {v, v, v};
     }
 
     protected QValue createOtherValueType() throws RepositoryException {
-        return valueFactory.create(23.56);
-    }
-
-    public void testCheckNonMatchingValue() throws RepositoryException {
-        // not executable
+        return valueFactory.create(resolver.getQPath("xyz"));
     }
 
     // TODO: add more

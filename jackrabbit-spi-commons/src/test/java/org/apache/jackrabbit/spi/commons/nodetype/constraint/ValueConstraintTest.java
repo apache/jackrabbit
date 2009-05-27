@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype.constraint;
 
 import junit.framework.TestCase;
 import org.apache.jackrabbit.spi.QValue;
@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
