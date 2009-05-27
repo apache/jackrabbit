@@ -72,7 +72,7 @@ public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
      */
     public int hashCode() {
         int hash1 = workspace != null ? workspace.hashCode() : 0;
-        int hash2 = creds != null ? creds.hashCode() : 0;
+        int hash2 = creds != null ? computeCredsHashCode(creds) : 0;
         return hash1 ^ hash2;
     }
 
@@ -169,5 +169,34 @@ public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
         }
 
         return map;
+    }
+
+    /**
+     * Returns Credentials instance hash code. Handles instances of
+     * SimpleCredentials in a special way.
+     */
+    private int computeCredsHashCode(Credentials c) {
+        if (c instanceof SimpleCredentials) {
+            return computeSimpleCredsHashCode((SimpleCredentials) c);
+        }
+        return c.hashCode();
+    }
+
+    /**
+     * Computes hash code of a SimpleCredentials instance. Ignores its own
+     * hashCode() method because it's not overridden in SimpleCredentials.
+     */
+    private int computeSimpleCredsHashCode(SimpleCredentials c) {
+        String userID = c.getUserID();
+        char[] password = c.getPassword();
+        Map m = getAttributeMap(c);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((userID == null) ? 0 : userID.hashCode());
+        for (int i = 0; i < password.length; i++) {
+            result = prime * result + password[i];
+        }
+        result = prime * result + ((m == null) ? 0 : m.hashCode());
+        return result;
     }
 }
