@@ -4684,8 +4684,11 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        if (ntMgr.getNodeType(ntName).isMixin()) {
-            throw new RepositoryException(nodeTypeName + ": not a primary node type");
+        NodeType nt = ntMgr.getNodeType(ntName);
+        if (nt.isMixin()) {
+            throw new ConstraintViolationException(nodeTypeName + ": not a primary node type.");
+        } else if (nt.isAbstract()) {
+            throw new ConstraintViolationException(nodeTypeName + ": is an abstract node type.");
         }
 
         // build effective node type of new primary type & existing mixin's
