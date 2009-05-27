@@ -4594,6 +4594,7 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             Query q = session.getWorkspace().getQueryManager().createQuery(
                     "//*[jcr:contains(., '" + data.getId() + "')]",
+                    //"//*[@*='" + data.getId() + "']",
                     Query.XPATH);
             QueryResult result = q.execute();
             ArrayList l = new ArrayList<Property>();

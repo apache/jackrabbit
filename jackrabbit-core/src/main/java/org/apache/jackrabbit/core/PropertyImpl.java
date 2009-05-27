@@ -557,19 +557,19 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     public BigDecimal getDecimal() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1609");
+        return getValue().getDecimal();
     }
 
     public void setValue(BigDecimal value) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-1609");
+        setValue(session.getValueFactory().createValue(value));
     }
 
     public Binary getBinary() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-2056");
+        return getValue().getBinary();
     }
 
     public void setValue(Binary value) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("JCR-2056");
+        setValue(session.getValueFactory().createValue(value));
     }
 
     public void setValue(Calendar value) throws RepositoryException {

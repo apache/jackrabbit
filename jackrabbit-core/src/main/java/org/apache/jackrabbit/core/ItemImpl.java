@@ -506,12 +506,18 @@ public abstract class ItemImpl implements Item {
                          * be checked)
                          */
                         if (constraints.length > 0
-                                && propDef.getRequiredType() == PropertyType.REFERENCE) {
+                                && (propDef.getRequiredType() == PropertyType.REFERENCE
+                                    || propDef.getRequiredType() == PropertyType.WEAKREFERENCE)) {
                             for (int i = 0; i < values.length; i++) {
                                 boolean satisfied = false;
                                 String constraintViolationMsg = null;
                                 try {
                                     UUID targetUUID = values[i].getUUID();
+                                    if (propDef.getRequiredType() == PropertyType.WEAKREFERENCE
+                                        && !itemMgr.itemExists(new NodeId(targetUUID))) {
+                                        // target of weakref doesn;t exist, skip
+                                        continue;
+                                    }
                                     Node targetNode = session.getNodeByUUID(targetUUID);
                                     /**
                                      * constraints are OR-ed, i.e. at least one
@@ -519,7 +525,7 @@ public abstract class ItemImpl implements Item {
                                      */
                                     for (int j = 0; j < constraints.length; j++) {
                                         /**
-                                         * a REFERENCE value constraint specifies
+                                         * a [WEAK]REFERENCE value constraint specifies
                                          * the name of the required node type of
                                          * the target node
                                          */
@@ -547,7 +553,9 @@ public abstract class ItemImpl implements Item {
                                     }
                                 } catch (RepositoryException re) {
                                     String msg = itemMgr.safeGetJCRPath(propId)
-                                            + ": failed to check REFERENCE value constraint";
+                                            + ": failed to check "
+                                            + ((propDef.getRequiredType() == PropertyType.REFERENCE) ? "REFERENCE" : "WEAKREFERENCE")
+                                            + " value constraint";
                                     log.debug(msg);
                                     throw new ConstraintViolationException(msg, re);
                                 }

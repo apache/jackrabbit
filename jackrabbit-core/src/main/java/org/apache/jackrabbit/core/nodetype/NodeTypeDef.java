@@ -104,8 +104,9 @@ public class NodeTypeDef implements Cloneable {
             // property definitions
             for (Iterator iter = propDefs.iterator(); iter.hasNext();) {
                 PropDef pd = (PropDef) iter.next();
-                // REFERENCE value constraints
-                if (pd.getRequiredType() == PropertyType.REFERENCE) {
+                // [WEAK]REFERENCE value constraints
+                if (pd.getRequiredType() == PropertyType.REFERENCE
+                        || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
                     ValueConstraint[] ca = pd.getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {

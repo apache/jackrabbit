@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
@@ -152,14 +153,17 @@ public class Util {
                 return new Double(value.getDouble());
             case PropertyType.LONG:
                 return new Long(value.getLong());
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
             case PropertyType.NAME:
                 return value.getName().toString();
             case PropertyType.PATH:
                 return value.getPath().toString();
+            case PropertyType.URI:
+            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
-            // TODO: JSR 283 adds new property types
             default:
                 return null;
         }
@@ -187,8 +191,12 @@ public class Util {
                 return new Double(value.getDouble());
             case PropertyType.LONG:
                 return new Long(value.getLong());
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
             case PropertyType.NAME:
             case PropertyType.PATH:
+            case PropertyType.URI:
+            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
@@ -263,13 +271,17 @@ public class Util {
             case PropertyType.LONG:
                 c2 = new Long(v2.getLong());
                 break;
+            case PropertyType.DECIMAL:
+                c2 = v2.getDecimal();
+                break;
             case PropertyType.NAME:
             case PropertyType.PATH:
             case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+            case PropertyType.URI:
             case PropertyType.STRING:
                 c2 = v2.getString();
                 break;
-                // TODO: JSR 283 now node types
             default:
                 throw new RepositoryException("Unsupported type: "
                         + PropertyType.nameFromValue(v2.getType()));

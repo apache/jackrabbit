@@ -259,12 +259,12 @@ public class ConstraintBuilder {
                     break;
                 case PropertyType.DATE:
                 case PropertyType.DOUBLE:
-                    // TODO case PropertyType.DECIMAL:
+                    // TODO case PropertyType.DECIMAL: // JCR-1609
                 case PropertyType.LONG:
                 case PropertyType.BOOLEAN:
                 case PropertyType.REFERENCE:
-                // TODO case PropertyType.WEAKREFERENCE:
-                // TODO case PropertyType.URI
+                // TODO case PropertyType.WEAKREFERENCE: // JCR-1609
+                // TODO case PropertyType.URI // JCR-1609
                     throw new InvalidQueryException(staticValue.getString() +
                             " cannot be converted into a NAME value");
             }
