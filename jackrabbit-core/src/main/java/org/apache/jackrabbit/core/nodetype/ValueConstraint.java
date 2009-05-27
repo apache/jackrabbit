@@ -698,20 +698,24 @@ class ReferenceConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.REFERENCE:
-                // @todo check REFERENCE value constraint (requires a session)
+            case PropertyType.WEAKREFERENCE:
+                // @todo check [WEAK]REFERENCE value constraint (requires a session)
 /*
                 UUID targetUUID = (UUID) value.internalValue();
+                if (value.getType() == PropertyType.WEAKREFERENCE && !session.itemExists(new NodeId(targetUUID))) {
+                    return;
+                }
                 NodeImpl targetNode = (NodeImpl) session.getNodeByUUID(targetUUID.toString());
                 if (!targetNode.isNodeType(ntName)) {
                     throw new ConstraintViolationException("the node with uuid "
                             + targetUUID + " does not satisfy the constraint '" + definition + "'");
                 }
 */
-                log.info("validation of REFERENCE constraint is not yet implemented");
+                log.info("validation of [WEAK]REFERENCE constraint is not yet implemented");
                 return;
 
             default:
-                String msg = "REFERENCE constraint can not be applied to value of type: "
+                String msg = "[WEAK]REFERENCE constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
                 log.debug(msg);
                 throw new RepositoryException(msg);

@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
+import java.net.URI;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -321,12 +322,22 @@ public class NodeIndexer {
                 break;
             case PropertyType.REFERENCE:
                 if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, value.getUUID());
+                    addReferenceValue(doc, fieldName, value.getUUID(), false);
+                }
+                break;
+            case PropertyType.WEAKREFERENCE:
+                if (isIndexed(name)) {
+                    addReferenceValue(doc, fieldName, value.getUUID(), true);
                 }
                 break;
             case PropertyType.PATH:
                 if (isIndexed(name)) {
                     addPathValue(doc, fieldName, value.getPath());
+                }
+                break;
+            case PropertyType.URI:
+                if (isIndexed(name)) {
+                    addURIValue(doc, fieldName, value.getURI());
                 }
                 break;
             case PropertyType.STRING:
@@ -351,8 +362,11 @@ public class NodeIndexer {
                     addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
+            // TODO support indexing of BigDecimal (JCR-1609: new Property Types)
+            case PropertyType.DECIMAL:
+
             default:
-                throw new IllegalArgumentException("illegal internal value type");
+                throw new IllegalArgumentException("illegal internal value type: " + value.getType());
         }
 
         // add length
@@ -549,12 +563,13 @@ public class NodeIndexer {
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
+     * @param weak          Flag indicating whether it's a WEAKREFERENCE (true) or a REFERENCE (flase)
      */
-    protected void addReferenceValue(Document doc, String fieldName, Object internalValue) {
+    protected void addReferenceValue(Document doc, String fieldName, Object internalValue, boolean weak) {
         UUID value = (UUID) internalValue;
         String uuid = value.toString();
         doc.add(createFieldWithoutNorms(fieldName, uuid,
-                PropertyType.REFERENCE));
+                weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE));
         doc.add(new Field(FieldNames.PROPERTIES,
                 FieldNames.createNamedValue(fieldName, uuid),
                 Field.Store.YES, Field.Index.NO, Field.TermVector.NO));
@@ -579,6 +594,19 @@ public class NodeIndexer {
         }
         doc.add(createFieldWithoutNorms(fieldName, pathString,
                 PropertyType.PATH));
+    }
+
+    /**
+     * Adds the uri value to the document as the named field.
+     *
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addURIValue(Document doc, String fieldName, Object internalValue) {
+        URI uri = (URI) internalValue;
+        doc.add(createFieldWithoutNorms(fieldName, uri.toString(),
+                PropertyType.URI));
     }
 
     /**

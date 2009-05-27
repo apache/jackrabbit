@@ -1576,13 +1576,16 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                  * the specified node type must be registered, with one notable
                  * exception: the node type just being registered
                  */
-                if (pd.getRequiredType() == PropertyType.REFERENCE) {
+                if (pd.getRequiredType() == PropertyType.REFERENCE
+                        || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
                     for (int j = 0; j < constraints.length; j++) {
                         ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
                         Name ntName = rc.getNodeTypeName();
                         if (!name.equals(ntName) && !ntdCache.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()
-                                    + "] invalid REFERENCE value constraint '"
+                                    + "] invalid "
+                                    + (pd.getRequiredType() == PropertyType.REFERENCE ? "REFERENCE" : "WEAKREFERENCE") 
+                                    + " value constraint '"
                                     + ntName + "' (unknown node type)";
                             log.debug(msg);
                             throw new InvalidNodeTypeDefException(msg);
