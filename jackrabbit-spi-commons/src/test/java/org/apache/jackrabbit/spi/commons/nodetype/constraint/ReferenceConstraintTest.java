@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.nodetype;
+package org.apache.jackrabbit.spi.commons.nodetype.constraint;
 
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -22,47 +22,49 @@ import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 /**
- * <code>PathConstraintTest</code>...
+ * <code>DateConstraintTest</code>...
  */
-public class PathConstraintTest extends ValueConstraintTest {
+public class ReferenceConstraintTest extends ValueConstraintTest {
 
-    private static Logger log = LoggerFactory.getLogger(PathConstraintTest.class);
+    private static Logger log = LoggerFactory.getLogger(ReferenceConstraintTest.class);
 
     protected int getType() {
-        return PropertyType.PATH;
+        return PropertyType.REFERENCE;
     }
 
     protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
-        return new String[] {"12345", "*"};
+        return new String[] {"12345", "", "abc"};
     }
 
     protected String[] getDefinitions() throws RepositoryException {
-        return new String[] {"/abc/*", "/", "abc/*", "/*", "/abc/def"};
+        return new String[] {"12345", "abc", "jcr:abc"};
     }
 
     protected String[] getQualifiedDefinitions() throws RepositoryException {
         return new String[] {
-                resolver.getQPath("/abc").getString() + "/*",
-                resolver.getQPath("/").getString(),
-                resolver.getQPath("abc").getString() + "/*",
-                resolver.getQPath("/").getString() + "*",
-                resolver.getQPath("/abc/def").getString()};
+                resolver.getQName("12345").toString(),
+                resolver.getQName("abc").toString(),
+                resolver.getQName("jcr:abc").toString()
+        };
     }
 
     protected QValue[] createNonMatchingValues() throws RepositoryException {
-        QValue root = valueFactory.create(resolver.getQPath("/"));
-        QValue abs = valueFactory.create(resolver.getQPath("/uvw/xyz"));
-        QValue rel = valueFactory.create(resolver.getQPath("uvw/xyz"));
-        return new QValue[] {abs,abs,rel,root,abs};
+        // TODO: reference constraints are not checked property -> not executable
+        throw new ConstraintViolationException();
     }
 
     protected QValue createOtherValueType() throws RepositoryException {
-        return valueFactory.create(23);
+        return valueFactory.create(23.56);
+    }
+
+    public void testCheckNonMatchingValue() throws RepositoryException {
+        // not executable
     }
 
     // TODO: add more
