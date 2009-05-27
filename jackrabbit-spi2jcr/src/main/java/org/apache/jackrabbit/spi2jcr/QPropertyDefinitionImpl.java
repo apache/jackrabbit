@@ -105,9 +105,10 @@ class QPropertyDefinitionImpl
                                                int requiredType)
             throws RepositoryException {
         if (requiredType == PropertyType.REFERENCE
+                || requiredType == PropertyType.WEAKREFERENCE
                 || requiredType == PropertyType.NAME
                 || requiredType == PropertyType.PATH) {
-            int type = requiredType == PropertyType.REFERENCE ? PropertyType.NAME : requiredType;
+            int type = ((requiredType == PropertyType.REFERENCE || requiredType == PropertyType.WEAKREFERENCE) ? PropertyType.NAME : requiredType);
             for (int i = 0; i < constraints.length; i++) {
                 constraints[i] = ValueFormat.getQValue(
                         constraints[i], type, resolver, factory).getString();
