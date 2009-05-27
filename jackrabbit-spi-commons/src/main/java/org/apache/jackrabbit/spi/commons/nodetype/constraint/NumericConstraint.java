@@ -145,6 +145,10 @@ class NumericConstraint extends ValueConstraint {
                 check(value.getDouble());
                 return;
 
+            case PropertyType.DECIMAL:
+                check(value.getDouble());
+                return;
+
             case PropertyType.BINARY:
                 long length = value.getLength();
                 if (length != -1) {
