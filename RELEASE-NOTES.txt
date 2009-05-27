@@ -21,8 +21,8 @@ Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
 notable changes in this release are:
 
   * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on the PFD version of the JCR 2.0 API. Note that not all of the new
-    JCR 2.0 features are yet fully functional. We expect to achieve
+    on the PFD version of the JCR 2.0 API. See below for a status listing
+    of the issues related to JCR 2.0 changes. We expect to achieve full
     feature-completeness in time for the final Jackrabbit 2.0 release.
 
   * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
@@ -38,6 +38,54 @@ For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
 
     https://issues.apache.org/jira/browse/JCR
+
+JCR 2.0 feature completeness
+----------------------------
+
+The following 36 top level JCR 2.0 implementation issues are being tracked in
+the Jackrabbit issue tracker. Most of them have already been partially
+implemented, but the issue will only be marked as resolved once no more
+related work is needed.
+
+Open (25 issues)
+  [JCR-1564] JSR 283 namespace handling
+  [JCR-1565] JSR 283 lifecycle management
+  [JCR-1588] JSR 283: Access Control
+  [JCR-1589] JSR 283: Retention & Hold Management
+  [JCR-1590] JSR 283: Locking
+  [JCR-1591] JSR 283: NodeType Management
+  [JCR-1592] JSR 283: Baselines & Activities
+  [JCR-1608] JSR 283: Workspace Management
+  [JCR-1609] JSR 283: new Property Types
+  [JCR-1712] JSR 283: JCR Names
+  [JCR-1947] JSR 283: Node Type Attribute Subtyping Rules
+  [JCR-1974] JSR 283: Evaluate Capabilities
+  [JCR-2028] JSR 283: JCR Path
+  [JCR-2056] JSR 283: Binary interfaces
+  [JCR-2058] JSR 283: VersionManager and new versioning methods
+  [JCR-2060] JSR 283: Access Nodes and Properties by Array of "NameGlob"
+  [JCR-2061] JSR 283: References and Dereferencing of Property Values
+  [JCR-2062] JSR 283: Repository Compliance
+  [JCR-2076] JSR 283: Joins
+  [JCR-2085] test case (TCK) maintenance for JCR 2.0
+  [JCR-2086] JSR 283: Implementation of EventIterator.getDate
+  [JCR-2091] Searchability settings in PropertyDefinition
+  [JCR-2092] make spi query code compatible with JCR 2.0
+  [JCR-2116] JSR 283: Built-In Node Types
+  [JCR-2117] JSR 283: adopt CND syntax changes
+
+Resolved (11 issues)
+  [JCR-1593] JSR 283: Simple versioning
+  [JCR-1834] JSR 283: Create RepositoryFactory implementation
+  [JCR-1839] JSR 283: Introduce Event.getDate()
+  [JCR-1849] JSR 283: EventJournal
+  [JCR-1904] JSR 283: Event user data
+  [JCR-2053] JSR 283: Shareable nodes support in query
+  [JCR-2059] JSR 283: Access Property/Node from Session
+  [JCR-2074] JSR 283: New Event Types
+  [JCR-2075] JSR 283: Identifier based event filtering
+  [JCR-2090] JSR 283: new methods on NodeType
+  [JCR-2093] Implement QueryObjectModelFactory.fullTextSearch() in ...
 
 Release Contents
 ----------------
