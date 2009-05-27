@@ -87,12 +87,13 @@ class ReferenceConstraint extends ValueConstraint {
         }
         switch (value.getType()) {
             case PropertyType.REFERENCE:
-                // TODO check REFERENCE value constraint (requires a session)
-                log.warn("validation of REFERENCE constraint is not yet implemented");
+            case PropertyType.WEAKREFERENCE:
+                // TODO check value constraint (requires a session)
+                log.warn("validation of reference constraint is not yet implemented");
                 return;
 
             default:
-                String msg = "REFERENCE constraint can not be applied to value of type: "
+                String msg = "Reference constraint can not be applied to value of type: "
                         + PropertyType.nameFromValue(value.getType());
                 log.debug(msg);
                 throw new RepositoryException(msg);
