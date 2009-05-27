@@ -51,7 +51,7 @@ import java.util.Arrays;
 public class TestAll extends TestCase {
 
     /** The dummy test namespace. */
-    private static final String TEST_NAMESPACE = "test-namespace";
+    private static final String TEST_NAMESPACE = "http://www.apache.org/jackrabbit/test";
 
     /** Name of the include test node type definition file. */
     private static final String TEST_NODETYPES =
@@ -486,7 +486,7 @@ public class TestAll extends TestCase {
         assertEquals("referenceProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("referenceProperty valueConstraints[0]",
-                "test:testType",
+                "nt:base",
                 (def.getValueConstraints())[0].getDefinition());
         assertEquals("referenceProperty defaultValues",
                 0, def.getDefaultValues().length);
@@ -544,7 +544,7 @@ public class TestAll extends TestCase {
     public void testDefaultTypeNode() {
         NodeDef def = getChildNode("childNodeType", "defaultTypeNode");
         assertEquals("defaultTypeNode defaultPrimaryType",
-                FACTORY.create(TEST_NAMESPACE, "testType"),
+                FACTORY.create(Name.NS_NT_URI, "base"),
                 def.getDefaultPrimaryType());
     }
 
@@ -556,9 +556,9 @@ public class TestAll extends TestCase {
         Name[] types = def.getRequiredPrimaryTypes();
         Arrays.sort(types);
         assertEquals("requiredTypeNode requiredPrimaryTypes[0]",
-                FACTORY.create(TEST_NAMESPACE, "baseType"), types[0]);
+                FACTORY.create(Name.NS_NT_URI, "base"), types[0]);
         assertEquals("requiredTypeNode requiredPrimaryTypes[1]",
-                FACTORY.create(TEST_NAMESPACE, "testType"), types[1]);
+                FACTORY.create(Name.NS_NT_URI, "unstructured"), types[1]);
     }
 
     /**
