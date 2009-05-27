@@ -43,6 +43,7 @@ import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
@@ -587,7 +588,18 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             for (int i = 0; i < mixinNodeTypeNames.length; i++) {
                 vs[i] = getQValueFactory(sessionInfo).create(mixinNodeTypeNames[i]);
             }
-            addProperty(nodeId, resolver.getQName(JcrConstants.JCR_MIXINTYPES), vs);
+            addProperty(nodeId, NameConstants.JCR_MIXINTYPES, vs);
+        }
+
+        /**
+         * @inheritDoc
+         */
+        public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
+            assertMethod();
+
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            QValue qv = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
+            setValue(getIdFactory().createPropertyId(nodeId, NameConstants.JCR_PRIMARYTYPE), qv);
         }
 
         /**

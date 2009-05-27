@@ -60,6 +60,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
 import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
 import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
 import org.apache.jackrabbit.jcr2spi.observation.InternalEventListener;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
@@ -885,6 +886,14 @@ public class WorkspaceManager
          */
         public void visit(SetMixin operation) throws RepositoryException {
             batch.setMixins(operation.getNodeId(), operation.getMixinNames());
+        }
+
+        /**
+         * @inheritDoc
+         * @see OperationVisitor#visit(SetPrimaryType)
+         */
+        public void visit(SetPrimaryType operation) throws RepositoryException {
+            batch.setPrimaryType(operation.getNodeId(), operation.getPrimaryTypeName());
         }
 
         /**

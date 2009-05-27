@@ -41,6 +41,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
@@ -278,6 +279,8 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             complete((AddProperty) operation);
         } else if (operation instanceof SetMixin) {
             complete((SetMixin) operation);
+        } else if (operation instanceof SetPrimaryType) {
+            complete((SetPrimaryType) operation);
         } else if (operation instanceof Remove) {
             complete((Remove) operation);
         } else if (operation instanceof ReorderNodes) {
@@ -1489,7 +1492,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 break;
             case Operation.STATUS_UNDO:
                 if (!rmEntry.denotesNode()) {
-                    Name propName = ((PropertyEntry) rmEntry).getName();
+                    Name propName = rmEntry.getName();
                     if (propertiesInAttic.containsKey(propName)) {
                         properties.add((PropertyEntry) propertiesInAttic.remove(propName));
                     } // else: propEntry has never been moved to the attic (see 'addPropertyEntry')
@@ -1512,6 +1515,30 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 case Operation.STATUS_PERSISTED:
                     Name[] mixins = StateUtility.getMixinNames(pState);
                     getNodeState().setMixinTypeNames(mixins);
+                    if (pState.getStatus() == Status.NEW || pState.getStatus() == Status.EXISTING_MODIFIED) {
+                        pState.setStatus(Status.EXISTING);
+                    }
+                    break;
+                case Operation.STATUS_UNDO:
+                    pe.revert();
+                    break;
+                default: // ignore
+            }
+        } // else: no such prop-Entry (should not occur)
+    }
+
+    private void complete(SetPrimaryType operation) throws RepositoryException {
+        if (operation.getNodeState().getHierarchyEntry() != this) {
+            throw new IllegalArgumentException();
+        }
+        PropertyEntry pe = getPropertyEntry(NameConstants.JCR_PRIMARYTYPE);
+        if (pe != null) {
+            PropertyState pState = pe.getPropertyState();
+            switch (operation.getStatus()) {
+                case Operation.STATUS_PERSISTED:
+                    // NOTE: invalidation of this node entry is performed by
+                    // ChangeLog.persisted...
+                    // TODO: check if correct
                     if (pState.getStatus() == Status.NEW || pState.getStatus() == Status.EXISTING_MODIFIED) {
                         pState.setStatus(Status.EXISTING);
                     }
