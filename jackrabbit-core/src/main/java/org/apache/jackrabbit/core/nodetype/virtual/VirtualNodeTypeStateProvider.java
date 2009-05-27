@@ -219,7 +219,16 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
         pState.setPropertyValue(
                 NameConstants.JCR_REQUIREDTYPE,
                 InternalValue.create(PropertyType.nameFromValue(propDef.getRequiredType()).toUpperCase()));
-        pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, PropertyType.STRING, propDef.getDefaultValues());
+        InternalValue[] defVals = propDef.getDefaultValues();
+        // retrieve the property type from the first default value present with
+        // the property definition. in case no default values are defined,
+        // fallback to PropertyType.STRING in order to avoid creating a property
+        // with type UNDEFINED which is illegal.
+        int defValsType = PropertyType.STRING;
+        if (defVals != null && defVals.length > 0) {
+            defValsType = defVals[0].getType();
+        }
+        pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, defValsType, defVals);
         ValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
         for (int i = 0; i < vc.length; i++) {
