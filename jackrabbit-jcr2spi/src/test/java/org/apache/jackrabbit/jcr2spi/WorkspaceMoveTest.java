@@ -42,7 +42,9 @@ public class WorkspaceMoveTest extends MoveTest {
      * with same name.
      * <br/> <br/>
      * With JCR 1.0 this should throw an <code>{@link javax.jcr.ItemExistsException}</code>.
-     * With JCR 2.0 this must succeed.
+     * With JCR 2.0 the support for same-named property and node is optional and
+     * the expected behaviour depends on the
+     * {@link Repository#OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED} descriptor.
      */
     public void testMovePropertyExists() throws RepositoryException, NotExecutableException {
         // try to create a property with the name of the node to be moved
@@ -55,6 +57,7 @@ public class WorkspaceMoveTest extends MoveTest {
             throw new NotExecutableException("Cannot create property with name '" +nodeName2+ "' and value 'anyString' at move destination.");
         }
 
+        // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor
         if ("1.0".equals(helper.getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
             try {
                 // move the node
@@ -79,6 +82,7 @@ public class WorkspaceMoveTest extends MoveTest {
             throw new NotExecutableException("Cannot create property with name '" +nodeName2+ "' and value 'anyString' at move destination.");
         }
 
+        // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor        
         // workspace-move the node (must succeed)
         doMove(moveNode.getPath(), destProperty.getPath());
          if ("1.0".equals(helper.getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
