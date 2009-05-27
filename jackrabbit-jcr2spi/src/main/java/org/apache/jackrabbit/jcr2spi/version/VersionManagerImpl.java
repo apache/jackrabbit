@@ -29,6 +29,9 @@ import org.apache.jackrabbit.jcr2spi.operation.AddLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveLabel;
 import org.apache.jackrabbit.jcr2spi.operation.RemoveVersion;
 import org.apache.jackrabbit.jcr2spi.operation.Checkpoint;
+import org.apache.jackrabbit.jcr2spi.operation.CreateActivity;
+import org.apache.jackrabbit.jcr2spi.operation.CreateConfiguration;
+import org.apache.jackrabbit.jcr2spi.operation.RemoveActivity;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,7 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.MergeException;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.version.VersionException;
 
@@ -195,6 +199,29 @@ public class VersionManagerImpl implements VersionManager {
         }
         Operation op = ResolveMergeConflict.create(nodeState, mergeFailedIds, predecessorIds, done);
         workspaceManager.execute(op);
+    }
+
+    public NodeEntry createConfiguration(NodeState nodeState, NodeState baselineState) throws UnsupportedRepositoryOperationException, RepositoryException {
+        CreateConfiguration op = CreateConfiguration.create(nodeState, baselineState, this);
+        workspaceManager.execute(op);
+        return workspaceManager.getHierarchyManager().getNodeEntry(op.getNewConfigurationId());
+    }
+
+    public NodeEntry createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+        CreateActivity op = CreateActivity.create(title, this);
+        workspaceManager.execute(op);
+        return workspaceManager.getHierarchyManager().getNodeEntry(op.getNewActivityId());
+    }
+
+    public void removeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
+        Operation op = RemoveActivity.create(activityState, workspaceManager.getHierarchyManager());
+        workspaceManager.execute(op);
+    }
+
+    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException {
+        Merge op = Merge.create(activityState, null, false, false, this);
+        workspaceManager.execute(op);
+        return op.getFailedIds();
     }
 
     public NodeEntry getVersionableNodeEntry(NodeState versionState) throws RepositoryException {

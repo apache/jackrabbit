@@ -649,6 +649,36 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         throw new UnsupportedRepositoryOperationException();
     }
 
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
     //-----------------------------< observation >------------------------------
 
     /**

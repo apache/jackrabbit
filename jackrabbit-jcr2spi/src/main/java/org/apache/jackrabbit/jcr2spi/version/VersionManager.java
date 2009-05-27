@@ -199,6 +199,42 @@ public interface VersionManager {
 
     /**
      *
+     * @param nodeState
+     * @param baselineState
+     * @return
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public NodeEntry createConfiguration(NodeState nodeState, NodeState baselineState) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     *
+     * @param title
+     * @return
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public NodeEntry createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     *
+     * @param activityState
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public void removeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * 
+     * @param activityState
+     * @return
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    public Iterator mergeActivity(NodeState activityState) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     *
      * @param versionState
      * @return
      */

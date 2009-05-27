@@ -20,7 +20,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
@@ -37,6 +39,7 @@ import javax.jcr.MergeException;
 import javax.jcr.Node;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
+import java.util.Iterator;
 
 /**
  * <code>VersionManagerImpl</code>...
@@ -166,9 +169,19 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
      */
     public NodeIterator merge(String absPath, String srcWorkspace, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        // TODO: improve
         NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
-        return n.merge(srcWorkspace, bestEffort, isShallow);
+        n.checkIsWritable();
+        session.checkHasPendingChanges();
+
+        // if same workspace, ignore
+        if (session.getWorkspace().getName().equals(srcWorkspace)) {
+            return NodeIteratorAdapter.EMPTY;
+        }
+        // make sure the workspace exists and is accessible for this session.
+        session.checkAccessibleWorkspace(srcWorkspace);
+        
+        Iterator failedIds = session.getVersionStateManager().merge((NodeState) n.getItemState(), srcWorkspace, bestEffort, isShallow);
+        return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
 
     /**
@@ -191,8 +204,10 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#createConfiguration(String, Version)
      */
     public Node createConfiguration(String absPath, Version baseline) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        // TODO: add validation
+        NodeImpl n = (NodeImpl) itemManager.getNode(resolver.getQPath(absPath));
+        NodeEntry entry = vMgr.createConfiguration((NodeState) n.getItemState(), (NodeState) ((NodeImpl) baseline).getItemState());
+        return (Node) itemManager.getItem(entry);
     }
 
     /**
@@ -215,15 +230,17 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#createActivity(String)
      */
     public Node createActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        // TODO: add validation
+        NodeEntry entry = vMgr.createActivity(title);
+        return (Node) itemManager.getItem(entry);
     }
 
     /**
      * @see javax.jcr.version.VersionManager#removeActivity(String)
      */
     public Node removeActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
+        // TODO uncomment as soon as jsr 283 is fixed
+        // vMgr.removeActivity((NodeState) ((NodeImpl) activityNode).getItemState());       
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
@@ -231,7 +248,8 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * @see javax.jcr.version.VersionManager#merge(Node)
      */
     public NodeIterator merge(Node activityNode) throws VersionException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
-        // TODO
-       throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
+        // TODO: add validation
+        Iterator failedIds = vMgr.mergeActivity((NodeState) ((NodeImpl) activityNode).getItemState());
+        return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
 }

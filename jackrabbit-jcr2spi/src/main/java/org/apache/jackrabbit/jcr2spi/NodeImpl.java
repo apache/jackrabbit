@@ -983,7 +983,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see Node#merge(String, boolean)
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, VersionException, LockException, InvalidItemStateException, RepositoryException {
-        return merge(srcWorkspace, bestEffort, false);
+        return session.getWorkspace().getVersionManager().merge(getPath(), srcWorkspace, bestEffort);
     }
 
 
@@ -992,18 +992,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * -> change to package protected then
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow) throws RepositoryException {
-        checkIsWritable();
-        checkSessionHasPendingChanges();
-
-        // if same workspace, ignore
-        if (session.getWorkspace().getName().equals(srcWorkspace)) {
-            return NodeIteratorAdapter.EMPTY;
-        }
-        // make sure the workspace exists and is accessible for this session.
-        session.checkAccessibleWorkspace(srcWorkspace);
-
-        Iterator failedIds = session.getVersionStateManager().merge(getNodeState(), srcWorkspace, bestEffort, isShallow);
-        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), failedIds);
+        return session.getWorkspace().getVersionManager().merge(getPath(), srcWorkspace, bestEffort, isShallow);
     }
 
     /**
