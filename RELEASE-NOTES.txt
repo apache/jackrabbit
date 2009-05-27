@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.5
+Release Notes -- Apache Jackrabbit -- Version 1.5.6
 
 Introduction
 ------------
@@ -10,10 +10,9 @@ content, full text search, versioning, transactions, observation, and
 more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
-Apache Jackrabbit 1.5.5 is a bug fix release that fixes issues reported
-against previous releases. The jackrabbit-jcr2spi component contains also
-some other improvements over previous releases. This release is fully
-compatible with the earlier 1.5.x releases.
+Apache Jackrabbit 1.5.6 is a bug fix release that fixes issues reported
+against previous releases. This release is fully compatible with the
+earlier 1.5.x releases.
 
 See below for a full listing of fixes included in this release.
 
@@ -21,60 +20,21 @@ Changes in this release
 -----------------------
 
 All the fixes in this release are listed below per affected component.
-The modified components have had their version numbers upgraded to 1.5.5;
+The modified components have had their version numbers upgraded to 1.5.6;
 other components are still at their previous 1.5.x versions.
-
-jackrabbit-jcr-commons
-
-Bug fixes
-  [JCR-1976] Text.unescape() should should preserve 'unicode' characters
-  [JCR-1996] Handle date values in the far future or prevent these from ...
-  [JCR-1997] Performance fix, when deserializing large jcr:binary in ...
-  [JCR-2017] System view export truncates carriage return
 
 jackrabbit-core
 
 Bug fixes
-  [JCR-1117] Bundle cache is not rolled back when the storage of a ...
-  [JCR-1216] Unreferenced sessions should get garbage collected
-  [JCR-1996] Handle date values in the far future or prevent these from ...
-  [JCR-2007] Importing strings with special characters fails
-  [JCR-2020] Overlapping index aggregates not updated
-  [JCR-2035] IndexingQueue not checked on initial index creation
-  [JCR-2048] Workspace is shut down while creating initial index
-  [JCR-2036] Set_property permission not checked when saving a new node
-  [JCR-2057] When creating multiple repository instances pointing to the ...
-  [JCR-2063] FileDataStore: garbage collection can delete files that are ...
-  [JCR-2071] IndexMerger throws null pointer exception without stacktrace
-  [JCR-2080] DataStore: garbage collection can fail when using workspace ...
+  [JCR-1633] When node is created and locked in same transaction, ...
+  [JCR-1964] VirtualNodeTypeStateProvider creates PropertyState with type ...
+  [JCR-1969] Invalid node type definitions with test_nodetypes.xml
+  [JCR-2081] NameSet does not implement equals(Object) and hashCode() methods
 
-jackrabbit-webdav
+jackrabbit-jcr-server
 
 Bug fixes
-  [JCR-2009] Large file download over webdav causes exception
-
-jackrabbit-spi-commons
-
-Bug fixes
-  [JCR-2052] XPath QueryFormat may produce malformed XPath statement
-
-jackrabbit-jcr2spi
-
-Bug fixes
-  [JCR-1886] jcr2spi: Unprocessed ItemInfos call to RepositoryService#...
-  [JCR-2014] Jcr2Spi: Warning upon reloading property values
-  [JCR-2016] ChildNodeEntriesImpl.update logs incorrect errors
-
-Improvements
-  [JCR-1870] jcr2spi: reloading of invalidated nodes doesn't benefit from ...
-  [JCR-1871] jcr2spi: use jcr names and path for log and exception message
-  [JCR-1891] jcr2spi: use Soft refs for hierarchy
-  [JCR-1906] Make observation polling time configurable
-  [JCR-1963] Determination of property state difference should skip binary ...
-  [JCR-1966] [PATCH] Remove Stutter in NodeState
-  [JCR-1967] Impossible comparison in NodeTypeImpl
-  [JCR-2038] Lower log level in o.a.j.jcr2spi.query.NodeIteratorImpl
-  [JCR-2039] Add log information when node/property type determination fails
+  [JCR-2070] jcr-server should respect child node definition of jcr:content
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
@@ -85,25 +45,22 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Angela Schreiber      Greg Schueler         Martijn Hendriks
-    Bart van der Schans   Henryk Paluch         Michael Dürig
-    Chris Schmidt         Jukka Zitting         Sébastien Launay
-    Dave Brosius          Julian Reschke        Stefan Guggisberg
-    Frank van Lankvelt    Marcel Reutegger      Thomas Müller
-    Grégory Joseph
+    Alexander Klimetschek  Damon A. Brown        Marcel Reutegger
+    Angela Schreiber       Frank van Lankvelt    Michael Dürig
+    Claus Köll             Jukka Zitting         Roman Puchkovskiy
 
 Thank you to everyone involved!
 
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.5-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.6-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.5-src.jar
-    cd jackrabbit-1.5.5
+    jar xf jackrabbit-1.5.6-src.jar
+    cd jackrabbit-1.5.6
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
