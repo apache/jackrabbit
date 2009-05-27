@@ -198,6 +198,7 @@ public abstract class ValueConstraint {
             case PropertyType.PATH:
                 return PathConstraint.create(definition, resolver);
 
+            case PropertyType.WEAKREFERENCE:
             case PropertyType.REFERENCE:
                 return ReferenceConstraint.create(definition, resolver);
 
