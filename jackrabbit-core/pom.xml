@@ -34,7 +34,7 @@
   </parent>
   <artifactId>jackrabbit-core</artifactId>
   <name>Jackrabbit Core</name>
-  <version>1.5.6-SNAPSHOT</version>
+  <version>1.5.6</version>
   <description>Jackrabbit content repository implementation</description>
 
   <build>
