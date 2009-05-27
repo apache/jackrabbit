@@ -73,6 +73,9 @@ public final class JCARepositoryHandle extends ProxyRepository
                     mcf, new JCAConnectionRequestInfo(creds, workspace));
         } catch (ResourceException e) {
             Throwable cause = e.getCause();
+            if (cause == null) {
+                cause = e.getLinkedException();
+            }
             if (cause instanceof LoginException) {
                 throw (LoginException) cause;
             } else if (cause instanceof NoSuchWorkspaceException) {
