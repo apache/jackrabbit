@@ -10,19 +10,19 @@ observation, and more. Typical applications that use content
 repositories include content management, document management,
 and records management systems.
 
-Version 1.0 of the JCR API was specified by the Java Specification
-Request 170 (JSR 170, http://jcp.org/en/jsr/detail?id=170) and work
-on the JCR version 2.0 is ongoing in JSR 283.
+Jackrabbit is currently based on the Proposed Final Draft (PFD) version
+of the JCR 2.0 API defined by the Java Specification Request 283
+(JSR 283, http://jcp.org/en/jsr/detail?id=283). Version 1.0 of the
+JCR API was specified by JSR 170.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
 Building Jackrabbit
 ===================
 
-Jackrabbit currently depends on the Proposed Final Draft (PFD) version of
-the JCR 2.0 API jar file from JSR 283. To build Jackrabbit, you need to
-download the PFD from http://jcp.org/en/jsr/detail?id=283 and install the
-contained jcr-2.0.jar file to your local Maven repository.
+To build Jackrabbit, you first need to download the PFD version of the
+JCR 2.0 specification from http://jcp.org/en/jsr/detail?id=283 and install
+the contained jcr-2.0.jar file to your local Maven repository.
 
 Use the following command to install the required JCR API jar with metadata
 included in the jcr-2.0-pfd.xml file in this directory:
@@ -30,8 +30,7 @@ included in the jcr-2.0-pfd.xml file in this directory:
     mvn install:install-file \
         -Dfile=/path/to/lib/jcr-2.0.jar -DpomFile=jcr-2.0-pfd.xml    
 
-Once you've installed the JCR 2.0 (PFD) API jar, you can build Jackrabbit
-with the following command:
+Once you've installed the jar, you can build Jackrabbit like this:
 
     mvn clean install
 
@@ -93,3 +92,4 @@ Credits
 
 See http://jackrabbit.apache.org/jackrabbit-team.html for the list of 
 Jackrabbit committers and main contributors.
+
