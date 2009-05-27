@@ -633,10 +633,6 @@ public class InternalValue extends AbstractQValue {
         super(value);
     }
 
-    private InternalValue(UUID value) {
-        super(value, PropertyType.REFERENCE);
-    }
-
     private InternalValue(UUID value, boolean weak) {
         super(value, weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
     }
