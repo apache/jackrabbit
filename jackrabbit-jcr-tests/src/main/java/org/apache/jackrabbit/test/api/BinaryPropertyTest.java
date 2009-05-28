@@ -438,7 +438,7 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
             int k = 0;
             for (int b; (b = in.read()) != -1; k++) {
                 assertEquals("Value.getStream().read() and Value.getBinary().read() " +
-                        "return different values.", b, content[k]);
+                        "return different values.", (byte) b, content[k]);
             }
             assertEquals("unexpected content length", k, content.length);
         } finally {
