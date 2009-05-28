@@ -16,17 +16,64 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.apache.poi.hsmf.MAPIMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Text extractor for Microsoft Outlook messages.
  */
-public class MsOutlookTextExtractor extends DefaultTextExtractor {
+public class MsOutlookTextExtractor extends AbstractTextExtractor {
 
-    private static String[] TYPES = new String[] {
-        "application/vnd.ms-outlook"
-    };
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsOutlookTextExtractor.class);
 
-    public String[] getContentTypes() {
-        return TYPES;
+    /**
+     * Force loading of dependent class.
+     */
+    static {
+        MAPIMessage.class.getName();
+    }
+
+    /**
+     * Creates a new <code>MsOutlookTextExtractor</code> instance.
+     */
+    public MsOutlookTextExtractor() {
+        super(new String[]{"application/vnd.ms-outlook"});
+    }
+
+    //-------------------------------------------------------< TextExtractor >
+
+    /**
+     * {@inheritDoc}
+     * Returns an empty reader if an error occured extracting text from
+     * the outlook message.
+     */
+    public Reader extractText(InputStream stream,
+                              String type,
+                              String encoding) throws IOException {
+        try {
+        	MAPIMessage message = new MAPIMessage(stream);
+        	StringBuffer buffer = new StringBuffer();
+        	buffer.append(message.getDisplayFrom()).append('\n');
+        	buffer.append(message.getDisplayTo()).append('\n');
+        	buffer.append(message.getSubject()).append('\n');
+        	buffer.append(message.getTextBody());
+            return new StringReader(buffer.toString());
+        } catch (Exception e) {
+            logger.warn("Failed to extract Message content", e);
+            return new StringReader("");
+        } finally {
+            stream.close();
+        }
     }
 
 }

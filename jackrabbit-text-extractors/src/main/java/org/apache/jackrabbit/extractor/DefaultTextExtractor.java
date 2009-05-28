@@ -16,75 +16,19 @@
  */
 package org.apache.jackrabbit.extractor;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.Set;
-
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.ParsingReader;
-
 /**
- * Default text extractor based on Apache Tika.
+ * Composite text extractor that by default contains the standard
+ * text extractors found in this package.
  */
-public class DefaultTextExtractor implements TextExtractor {
+public class DefaultTextExtractor extends CompositeTextExtractor {
 
     /**
-     * Auto-detecting parser.
+     * Creates the default text extractor by adding instances of the standard
+     * text extractors as components.
      */
-    private static final Parser PARSER;
-
-    /**
-     * Supported content types.
-     */
-    private static final String[] TYPES;
-
-    static {
-        // The default Tika configuration refers to Apache POI libraries that
-        // are compiled for Java 5, and can thus not be loaded in Java 1.4.
-        // This makes it impossible to load the default Tika configuration
-        // (see TIKA-217 for background), and so we need to use the following
-        // workaround to instantiate the Tika AutoDetectParser without the
-        // POI classes (and thus support for MS Office formats) when running
-        // on Java 1.4.
-        AutoDetectParser parser;
-        if ("1.4".equals(System.getProperty("java.specification.version"))) {
-            InputStream stream =
-                DefaultTextExtractor.class.getResourceAsStream("tika-config-jdk14.xml");
-            try {
-                try {
-                    parser = new AutoDetectParser(new TikaConfig(stream));
-                } finally {
-                    stream.close();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(
-                        "Unable to load Tika configuration", e);
-            }
-        } else {
-            parser = new AutoDetectParser();
-        }
-        PARSER = parser;
-
-        Set types = parser.getParsers().keySet();
-        TYPES = (String[]) types.toArray(new String[types.size()]);
-    }
-
-    public String[] getContentTypes() {
-        return TYPES;
-    }
-
-    public Reader extractText(InputStream stream, String type, String encoding)
-            throws IOException {
-        Metadata metadata = new Metadata();
-        if (type != null && type.trim().length() > 0) {
-            metadata.set(Metadata.CONTENT_TYPE, type.trim());
-        }
-        // TODO: This creates a background thread. Is that a problem?
-        return new ParsingReader(PARSER, stream, metadata);
+    public DefaultTextExtractor() {
+        addTextExtractor(new PlainTextExtractor());
+        addTextExtractor(new XMLTextExtractor());
     }
 
 }

@@ -62,10 +62,19 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.tika</groupId>
-      <artifactId>tika</artifactId>
-      <version>0.3</version>
-      <classifier>jdk14</classifier>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>3.5-beta5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-scratchpad</artifactId>
+      <version>3.5-beta5</version>
+    </dependency>
+    <dependency>
+      <groupId>pdfbox</groupId>
+      <artifactId>pdfbox</artifactId>
+      <version>0.7.3</version>
       <exclusions>
         <exclusion>
           <groupId>bouncycastle</groupId>
@@ -78,9 +87,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.3.04</version>
+      <groupId>net.sourceforge.nekohtml</groupId>
+      <artifactId>nekohtml</artifactId>
+      <version>1.9.7</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

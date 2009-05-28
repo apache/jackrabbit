@@ -16,18 +16,58 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.poi.hwpf.extractor.WordExtractor;
+
+import java.io.Reader;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.StringReader;
+
 /**
  * Text extractor for Microsoft Word documents.
  */
-public class MsWordTextExtractor extends DefaultTextExtractor {
+public class MsWordTextExtractor extends AbstractTextExtractor {
 
-    private static String[] TYPES = new String[] {
-        "application/vnd.ms-word",
-        "application/msword"
-    };
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsWordTextExtractor.class);
 
-    public String[] getContentTypes() {
-        return TYPES;
+    /**
+     * Force loading of dependent class.
+     */
+    static {
+        WordExtractor.class.getName();
+    }
+
+    /**
+     * Creates a new <code>MsWordTextExtractor</code> instance.
+     */
+    public MsWordTextExtractor() {
+        super(new String[]{"application/vnd.ms-word", "application/msword"});
+    }
+
+    //-------------------------------------------------------< TextExtractor >
+
+    /**
+     * {@inheritDoc}
+     * Returns an empty reader if an error occured extracting text from
+     * the word document.
+     */
+    public Reader extractText(InputStream stream,
+                              String type,
+                              String encoding) throws IOException {
+        try {
+            return new StringReader(new WordExtractor(stream).getText());
+        } catch (Exception e) {
+            logger.warn("Failed to extract Word text content", e);
+            return new StringReader("");
+        } finally {
+            stream.close();
+        }
     }
 
 }
