@@ -598,8 +598,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             assertMethod();
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            QValue qv = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
-            setValue(getIdFactory().createPropertyId(nodeId, NameConstants.JCR_PRIMARYTYPE), qv);
+            QValue v = getQValueFactory(sessionInfo).create(primaryNodeTypeName);
+            addProperty(nodeId, NameConstants.JCR_PRIMARYTYPE, v);
         }
 
         /**
