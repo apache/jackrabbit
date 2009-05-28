@@ -70,6 +70,12 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.value.BinaryValueTest#testBinaryValueEquals
+                org.apache.jackrabbit.test.api.BinaryPropertyTest#testSameStreamJcr2
+                org.apache.jackrabbit.test.api.BinaryPropertyTest#testValueJcr2
+                org.apache.jackrabbit.test.api.BinaryPropertyTest#testGetLengthJcr2
+                org.apache.jackrabbit.test.api.BinaryPropertyTest#testRandomAccess
+                org.apache.jackrabbit.test.api.SetValueBinaryTest#testBinarySessionJcr2
+                org.apache.jackrabbit.test.api.SetValueBinaryTest#testBinaryParentJcr2
                 org.apache.jackrabbit.test.api.lock.LockManagerTest
                 org.apache.jackrabbit.test.api.observation.GetDateTest
                 org.apache.jackrabbit.test.api.observation.GetIdentifierTest
