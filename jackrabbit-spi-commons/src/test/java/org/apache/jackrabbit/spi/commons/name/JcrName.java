@@ -39,6 +39,17 @@ public final class JcrName {
         list.add(new JcrName("...", "", "..."));
         list.add(new JcrName(".a.", "", ".a."));
 
+        // valid names since jcr 2.0
+        list.add(new JcrName("a'", "", "a'"));                   // single quote
+        list.add(new JcrName("'a", "", "'a"));
+        list.add(new JcrName("ab'c", "", "ab'c"));
+        list.add(new JcrName("prefix:ab'c", "prefix", "ab'c"));
+
+        list.add(new JcrName("a\"", "", "a\""));                 // double quote
+        list.add(new JcrName("\"a", "", "\"a"));
+        list.add(new JcrName("ab\"c", "", "ab\"c"));
+        list.add(new JcrName("prefix:ab\"c", "prefix", "ab\"c"));       
+
         // expanded names
         list.add(new JcrName("{}a", "", "a"));
         list.add(new JcrName("{}name", "", "name"));
@@ -60,11 +71,22 @@ public final class JcrName {
         list.add(new JcrName("prefix:name "));
         list.add(new JcrName("pre fix:name"));
         list.add(new JcrName("prefix :name"));
+
         list.add(new JcrName("name/name"));
+
         list.add(new JcrName("name[name"));
         list.add(new JcrName("name]name"));
+        list.add(new JcrName("name[]"));
+        list.add(new JcrName("name[123]"));
+
         list.add(new JcrName("name*name"));
+
         list.add(new JcrName("prefix:name:name"));
+
+        list.add(new JcrName("name|name"));
+        list.add(new JcrName("|name"));
+        list.add(new JcrName("name|"));
+        list.add(new JcrName("prefix:name|name"));
     }
 
     private static JcrName[] tests = (JcrName[]) list.toArray(new JcrName[list.size()]);

@@ -94,7 +94,7 @@ public class NameParser {
                     throw new IllegalNameException("'" + c + "' not valid name start");
                 }
                 trailingSpaces = true;
-            } else if (Character.isWhitespace(c) || c == '[' || c == ']' || c == '*' || c == '\'' || c == '\"') {
+            } else if (Character.isWhitespace(c) || c == '[' || c == ']' || c == '*' || c == '|') {
                 throw new IllegalNameException("'" + c + "' not allowed in name");
             } else if (c == '/') {
                 if (state == STATE_URI_START) {

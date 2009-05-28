@@ -401,10 +401,8 @@ public class PathParser {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. Whitespace not a allowed in name.");
                     }
                 case '*':
-                case '\'':
-                case '\"':
+                case '|':
                     if (state != STATE_IDENTIFIER) {
-                        // TODO for JCR 2.0 remove limitation of ' and "
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
                     }
                 case '{':
