@@ -2431,6 +2431,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
+        /**
+         * @see Batch#setPrimaryType(NodeId, Name)
+         */
         public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
             checkConsumed();
             try {
