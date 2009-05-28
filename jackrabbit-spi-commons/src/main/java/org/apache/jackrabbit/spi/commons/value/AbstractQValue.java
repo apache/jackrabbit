@@ -66,13 +66,14 @@ public abstract class AbstractQValue implements QValue {
      * @param value
      * @param type
      * @throws IllegalArgumentException if the passed <code>value</code>
-     * is <code>null</code> or if the <code>type</code> is neither STRING nor REFERENCE.
+     * is <code>null</code> or if the <code>type</code> is neither STRING nor
+     * REFERENCE/WEAKREFERENCE.
      */
     protected AbstractQValue(String value, int type) {
         if (value == null) {
             throw new IllegalArgumentException("null value");
         }
-        if (!(type == PropertyType.STRING || type == PropertyType.REFERENCE)) {
+        if (!(type == PropertyType.STRING || type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE)) {
             throw new IllegalArgumentException();
         }
         val = value;
