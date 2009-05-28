@@ -933,10 +933,7 @@ public class Parser {
         }
         checkLiterals(false);
         
-        // TODO createValue(BigDecimal) is not yet implemented
-        // currentValue = valueFactory.createValue(bd);
-        currentValue = valueFactory.createValue(bd.doubleValue());
-        
+        currentValue = valueFactory.createValue(bd);
         currentTokenType = VALUE;
     }
 
