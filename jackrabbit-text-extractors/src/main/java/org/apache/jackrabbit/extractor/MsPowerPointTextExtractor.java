@@ -16,19 +16,64 @@
  */
 package org.apache.jackrabbit.extractor;
 
+import org.apache.poi.poifs.eventfilesystem.POIFSReader;
+import org.apache.poi.hslf.extractor.PowerPointExtractor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.Reader;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.StringReader;
+
 /**
  * Text extractor for Microsoft PowerPoint presentations.
  */
-public class MsPowerPointTextExtractor extends DefaultTextExtractor {
+public class MsPowerPointTextExtractor extends AbstractTextExtractor {
 
-    private static String[] TYPES = new String[] {
-        "application/vnd.ms-powerpoint",
-        "application/mspowerpoint",
-        "application/powerpoint"
-    };
+    /**
+     * Logger instance.
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MsPowerPointTextExtractor.class);
 
-    public String[] getContentTypes() {
-        return TYPES;
+    /**
+     * Force loading of dependent class.
+     */
+    static {
+        POIFSReader.class.getName();
     }
 
+    /**
+     * Creates a new <code>MsPowerPointTextExtractor</code> instance.
+     */
+    public MsPowerPointTextExtractor() {
+        super(new String[]{
+                "application/vnd.ms-powerpoint",
+                "application/mspowerpoint",
+                "application/powerpoint"
+        });
+    }
+
+    //-------------------------------------------------------< TextExtractor >
+
+    /**
+     * {@inheritDoc}
+     */
+    public Reader extractText(InputStream stream,
+                              String type,
+                              String encoding) throws IOException {
+        try {
+            PowerPointExtractor extractor = new PowerPointExtractor(stream);
+            return new StringReader(extractor.getText(true, true));
+        } catch (RuntimeException e) {
+            logger.warn("Failed to extract PowerPoint text content", e);
+            return new StringReader("");
+        } finally {
+            try {
+                stream.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
 }
