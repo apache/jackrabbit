@@ -61,12 +61,18 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
             if (!nt.isAbstract()) {
                 try {
                     node.setPrimaryType(ntName);
+                    // property value must be adjusted immediately
+                    assertEquals("The value of the jcr:primaryType property must change upon setPrimaryType.", ntName, node.getProperty(jcrPrimaryType).getString());
+
+                    // save changes -> reflected upon Node.getPrimaryNodeType and Property.getValue
                     superuser.save();
 
                     assertEquals("Node.getPrimaryNodeType must reflect the changes made.", ntName, node.getPrimaryNodeType().getName());
+                    assertEquals("The value of the jcr:primaryType property must change upon setPrimaryType.", ntName, node.getProperty(jcrPrimaryType).getString());
 
                     otherSession = helper.getReadOnlySession();
                     assertEquals("Node.getPrimaryNodeType must reflect the changes made.", ntName, otherSession.getNode(node.getPath()).getPrimaryNodeType().getName());
+                    assertEquals("The value of the jcr:primaryType property must change upon setPrimaryType.", ntName, otherSession.getNode(node.getPath()).getProperty(jcrPrimaryType).getString());
 
                     // was successful
                     return;
@@ -82,6 +88,36 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
                 }
             }
         }
+    }
+
+    /**
+     * Passing the current primary type to {@link Node#setPrimaryType(String)}
+     * must always succeed.
+     * 
+     * @throws RepositoryException
+     */
+    public void testSetCurrentType() throws RepositoryException {
+        Session session = testRootNode.getSession();
+
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        superuser.save();
+
+        node.setPrimaryType(testNodeType);
+        superuser.save();
+    }
+
+    /**
+     * Passing the current primary type to {@link Node#setPrimaryType(String)}
+     * to a new node must always succeed.
+     *
+     * @throws RepositoryException
+     */
+    public void testSetCurrentTypeOnNew() throws RepositoryException {
+        Session session = testRootNode.getSession();
+        
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        node.setPrimaryType(testNodeType);
+        superuser.save();
     }
 
     /**
@@ -101,6 +137,8 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
 
         try {
             node.setPrimaryType(nonExistingMixinName);
+            // ev. only detected upon save
+            superuser.save();
             fail("Node.setPrimaryType(String) must throw a NoSuchNodeTypeException if no nodetype exists with the given name.");
         } catch (NoSuchNodeTypeException e) {
             // success
