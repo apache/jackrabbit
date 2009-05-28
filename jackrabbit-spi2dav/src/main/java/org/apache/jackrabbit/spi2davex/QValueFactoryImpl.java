@@ -143,9 +143,9 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
                 case PropertyType.DECIMAL:
+                    return new QValueImpl(new BigDecimal(value));
                 case PropertyType.URI:
-                    // TODO implement
-                    throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
+                    return new QValueImpl(URI.create(value));
             }
         } catch (IllegalArgumentException ex) {
             // given String value cannot be converted to Long/Double/Path/Name
@@ -194,25 +194,20 @@ class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(URI)
      */
     public QValue create(URI value) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
+        return new QValueImpl(value);
     }
 
     /**
      * @see QValueFactory#create(BigDecimal)
      */
     public QValue create(BigDecimal value) {
-        // TODO implement
-        throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
+        return new QValueImpl(value);
     }
 
     /**
      * @see QValueFactory#create(Name)
      */
     public QValue create(Name value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
         return new QValueImpl(value);
     }
 
@@ -220,9 +215,6 @@ class QValueFactoryImpl extends AbstractQValueFactory {
      * @see QValueFactory#create(Path)
      */
     public QValue create(Path value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Cannot create QValue from null value.");
-        }
         return new QValueImpl(value);
     }
 
@@ -295,6 +287,14 @@ class QValueFactoryImpl extends AbstractQValueFactory {
             super(value);
         }
 
+        protected QValueImpl(BigDecimal value) {
+            super(value);
+        }
+
+        protected QValueImpl(URI value) {
+            super(value);
+        }
+
         //---------------------------------------------------------< QValue >---
         /**
          * @see QValue#getString()
@@ -316,6 +316,27 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         /**
+         * @see org.apache.jackrabbit.spi.QValue#getDecimal()
+         */
+        public BigDecimal getDecimal() throws RepositoryException {
+            if (val instanceof BigDecimal) {
+                return (BigDecimal) val;
+            } else if (val instanceof Double) {
+                return new BigDecimal((Double) val);
+            } else if (val instanceof Long) {
+                return new BigDecimal((Long) val);
+            } else if (val instanceof Calendar) {
+                return new BigDecimal(((Calendar) val).getTimeInMillis());
+            } else {
+                try {
+                    return new BigDecimal(getString());
+                } catch (NumberFormatException e) {
+                    throw new ValueFormatException("not a valid decimal string: " + getString(), e);
+                }
+            }
+        }
+
+        /**
          * @see QValue#getCalendar()
          */
         public Calendar getCalendar() throws RepositoryException {
@@ -328,6 +349,10 @@ class QValueFactoryImpl extends AbstractQValueFactory {
             } else if (val instanceof Long) {
                 Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
                 cal.setTimeInMillis(((Long) val).longValue());
+                return cal;
+            } else if (val instanceof BigDecimal) {
+                Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
+                cal.setTimeInMillis(((BigDecimal) val).longValue());
                 return cal;
             } else {
                 String str = getString();
@@ -354,6 +379,8 @@ class QValueFactoryImpl extends AbstractQValueFactory {
         public double getDouble() throws RepositoryException {
             if (val instanceof Double) {
                 return ((Double) val).doubleValue();
+            } else if (val instanceof BigDecimal) {
+                return ((BigDecimal) val).doubleValue();
             } else if (val instanceof Calendar) {
                 return ((Calendar) val).getTimeInMillis();
             } else {
@@ -380,6 +407,8 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 return ((Long) val).longValue();
             } else if (val instanceof Double) {
                 return ((Double) val).longValue();
+            } else if (val instanceof BigDecimal) {
+                return ((BigDecimal) val).longValue();
             } else if (val instanceof Calendar) {
                 return ((Calendar) val).getTimeInMillis();
             } else {
