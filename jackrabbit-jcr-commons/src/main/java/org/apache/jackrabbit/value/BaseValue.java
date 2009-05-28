@@ -20,7 +20,6 @@ import org.apache.jackrabbit.util.ISO8601;
 
 import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import java.io.ByteArrayInputStream;
