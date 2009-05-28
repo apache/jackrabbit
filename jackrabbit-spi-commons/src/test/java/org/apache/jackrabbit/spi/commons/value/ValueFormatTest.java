@@ -36,8 +36,12 @@ import junit.framework.TestCase;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFactory;
+import javax.jcr.Value;
 import java.util.List;
 import java.util.ArrayList;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * <code>ValueFormatTest</code>...
@@ -90,4 +94,35 @@ public class ValueFormatTest extends TestCase {
         }
     }
 
+    public void testDecimal() throws RepositoryException {
+        BigDecimal bd = new BigDecimal(Double.MIN_VALUE);
+
+        Value v = vFactory.createValue(bd);
+        QValue qv = qvFactory.create(bd);
+
+        assertEquals(v, ValueFormat.getJCRValue(qv, resolver, vFactory));
+        assertEquals(qv, ValueFormat.getQValue(v, resolver, qvFactory));
+    }
+
+    public void testURI() throws RepositoryException, URISyntaxException {
+        URI uri = new URI("http://jackrabbit.apache.org");
+
+        Value v = vFactory.createValue("http://jackrabbit.apache.org", PropertyType.URI);
+        QValue qv = qvFactory.create(uri);
+
+        assertEquals(v, ValueFormat.getJCRValue(qv, resolver, vFactory));
+        assertEquals(qv, ValueFormat.getQValue(v, resolver, qvFactory));
+        assertEquals(qv, ValueFormat.getQValue("http://jackrabbit.apache.org", PropertyType.URI, resolver, qvFactory));
+    }
+
+    public void testWeakReferences() throws RepositoryException {
+        String reference = UUID.randomUUID().toString();
+
+        Value v = vFactory.createValue(reference, PropertyType.WEAKREFERENCE);
+        QValue qv = qvFactory.create(reference, PropertyType.WEAKREFERENCE);
+
+        assertEquals(v, ValueFormat.getJCRValue(qv, resolver, vFactory));
+        assertEquals(qv, ValueFormat.getQValue(v, resolver, qvFactory));
+        assertEquals(qv, ValueFormat.getQValue(reference, PropertyType.WEAKREFERENCE, resolver, qvFactory));        
+    }
 }
