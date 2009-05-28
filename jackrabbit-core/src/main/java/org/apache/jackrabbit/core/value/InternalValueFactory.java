@@ -133,6 +133,14 @@ public final class InternalValueFactory extends AbstractQValueFactory {
         return InternalValue.create(value);
     }
 
+    public QValue create(URI value) throws RepositoryException {
+        return InternalValue.create(value);
+    }
+
+    public QValue create(BigDecimal value) throws RepositoryException {
+        return InternalValue.create(value);
+    }
+
     public QValue create(byte[] value) throws RepositoryException {
         return InternalValue.create(value);
     }

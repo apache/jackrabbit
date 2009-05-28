@@ -94,8 +94,16 @@ public final class QValueValue implements Value {
      * @see javax.jcr.Value#getDecimal()
      */
     public BigDecimal getDecimal() throws ValueFormatException, IllegalStateException, RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1609");
+        setValueConsumed();
+        switch (getType()) {
+            case PropertyType.DECIMAL:
+            case PropertyType.DOUBLE:
+            case PropertyType.LONG:
+            case PropertyType.DATE:
+                return qvalue.getDecimal();
+            default:
+                throw new ValueFormatException("incompatible type " + PropertyType.nameFromValue(qvalue.getType()));
+        }
     }
 
     /**

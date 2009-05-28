@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.math.BigDecimal;
+import java.net.URI;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -97,6 +99,21 @@ public interface QValueFactory {
      */
     public QValue create(Path value) throws RepositoryException;
 
+    /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#DECIMAL}.
+     *
+     * @param value A non-null <code>BigDecimal</code>.
+     * @return a new <code>QValue</code>.
+     */
+    public QValue create(BigDecimal value) throws RepositoryException;
+
+    /**
+     * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#URI}.
+     *
+     * @param value A non-null <code>URI</code>.
+     * @return a new <code>QValue</code>.
+     */
+    public QValue create(URI value) throws RepositoryException;
 
     /**
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#BINARY}.

@@ -137,9 +137,14 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                     return new QValueImpl(NAME_FACTORY.create(value));
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
+                case PropertyType.WEAKREFERENCE:
                     return new QValueImpl(value, type);
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
+                case PropertyType.DECIMAL:
+                case PropertyType.URI:
+                    // TODO implement
+                    throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
             }
         } catch (IllegalArgumentException ex) {
             // given String value cannot be converted to Long/Double/Path/Name
@@ -182,6 +187,22 @@ class QValueFactoryImpl extends AbstractQValueFactory {
      */
     public QValue create(boolean value) throws RepositoryException {
         return (value) ? QValueImpl.TRUE : QValueImpl.FALSE;
+    }
+
+    /**
+     * @see QValueFactory#create(URI)
+     */
+    public QValue create(URI value) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
+    }
+
+    /**
+     * @see QValueFactory#create(BigDecimal)
+     */
+    public QValue create(BigDecimal value) {
+        // TODO implement
+        throw new UnsupportedOperationException("Not implemented yet, see JCR-1609: new Property Types");
     }
 
     /**
