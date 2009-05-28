@@ -246,8 +246,10 @@ public class ConstraintBuilder {
         public Object visit(NodeNameImpl node, Object data) throws Exception {
             Value staticValue = (Value) data;
             switch (staticValue.getType()) {
+                // STRING, PATH and URI may be convertable to a NAME -> check
                 case PropertyType.STRING:
                 case PropertyType.PATH:
+                case PropertyType.URI:
                     // make sure static value is valid NAME
                     try {
                             vf.createValue(staticValue.getString(), PropertyType.NAME);
@@ -257,14 +259,14 @@ public class ConstraintBuilder {
                                 " cannot be converted into STRING");
                     }
                     break;
+                // the following types cannot be converted to NAME
                 case PropertyType.DATE:
                 case PropertyType.DOUBLE:
-                    // TODO case PropertyType.DECIMAL: // JCR-1609
+                case PropertyType.DECIMAL:
                 case PropertyType.LONG:
                 case PropertyType.BOOLEAN:
                 case PropertyType.REFERENCE:
-                // TODO case PropertyType.WEAKREFERENCE: // JCR-1609
-                // TODO case PropertyType.URI // JCR-1609
+                case PropertyType.WEAKREFERENCE:
                     throw new InvalidQueryException(staticValue.getString() +
                             " cannot be converted into a NAME value");
             }
