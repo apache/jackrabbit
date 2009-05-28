@@ -226,8 +226,9 @@ public class DefaultItemCollection extends AbstractItemResource
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        if (property.getName().equals(JCR_MIXINNODETYPES)) {
-            Node n = (Node)item;
+        DavPropertyName propName = property.getName();
+        if (JCR_MIXINNODETYPES.equals(propName)) {
+            Node n = (Node) item;
             try {
                 NodeType[] existingMixin = n.getMixinNodeTypes();
                 NodeTypeProperty mix = new NodeTypeProperty(property);
@@ -252,8 +253,23 @@ public class DefaultItemCollection extends AbstractItemResource
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
+        } else if (JCR_PRIMARYNODETYPE.equals(propName)) {
+            Node n = (Node) item;
+            try {
+                NodeTypeProperty ntProp = new NodeTypeProperty(property);
+                Set names = ntProp.getNodeTypeNames();
+                if (names.size() == 1) {
+                    String ntName = names.iterator().next().toString();
+                    n.setPrimaryType(ntName);
+                } else {
+                    // only a single node type can be primary node type.
+                    throw new DavException(DavServletResponse.SC_BAD_REQUEST);
+                }
+            } catch (RepositoryException e) {
+                throw new JcrDavException(e);
+            }
         } else {
-            // all props except for mixinnodetypes are read-only
+            // all props except for mixinnodetypes and primaryType are read-only
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
     }
