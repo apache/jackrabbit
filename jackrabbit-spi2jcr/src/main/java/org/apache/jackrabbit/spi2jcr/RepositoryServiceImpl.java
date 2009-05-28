@@ -79,6 +79,7 @@ import javax.jcr.Value;
 import javax.jcr.ItemVisitor;
 import javax.jcr.ValueFactory;
 import javax.jcr.GuestCredentials;
+import javax.jcr.PropertyIterator;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
@@ -407,6 +408,27 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException(e);
         }
         return childInfos.iterator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        Node node = getNode(nodeId, sInfo);
+        String jcrName = (propertyName == null) ? null : sInfo.getNamePathResolver().getJCRName(propertyName);
+
+        List<PropertyId> ids = new ArrayList<PropertyId>();
+        PropertyIterator it;
+        if (weakReferences) {
+            it = node.getWeakReferences(jcrName);
+        } else {
+            it = node.getReferences(jcrName);
+        }
+        while (it.hasNext()) {
+            ids.add(idFactory.createPropertyId(it.nextProperty(), sInfo.getNamePathResolver()));
+        }
+        return ids.iterator();
     }
 
     /**

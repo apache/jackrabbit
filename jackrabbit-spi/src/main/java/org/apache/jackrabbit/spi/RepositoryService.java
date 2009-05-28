@@ -305,6 +305,30 @@ public interface RepositoryService {
     public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
+     * Returns the {@link PropertyId Id}s of the properties that are referencing
+     * the node identified by the given <code>nodeId</code>. If
+     * <code>weakReferences</code> is <code>true</code> the ids of
+     * {@link javax.jcr.PropertyType#WEAKREFERENCE WEAKREFERENCE} properties are
+     * returned, otherwise the property must be of type {@link javax.jcr.PropertyType#REFERENCE REFERENCE}.
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @param propertyName name filter of referring properties to be returned;
+     * if <code>null</code> then all references are returned.
+     * @param weakReferences If <code>true</code> the properties must be of type
+     * {@link javax.jcr.PropertyType#WEAKREFERENCE}, otherwise of type
+     * {@link javax.jcr.PropertyType#REFERENCE}.
+     * @return An Iterator of {@link PropertyId Id}s of the properties that are
+     * referencing the node identified by the given <code>nodeId</code> or an
+     * empty iterator if the node is not eferenceable or no references exist.
+     * @throws ItemNotFoundException
+     * @throws RepositoryException
+     * @see PropertyInfo#getId()
+     * @since JCR 2.0
+     */
+    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException;
+
+    /**
      * Returns the <code>PropertyInfo</code> for the <code>Property</code>
      * identified by the given id.
      *

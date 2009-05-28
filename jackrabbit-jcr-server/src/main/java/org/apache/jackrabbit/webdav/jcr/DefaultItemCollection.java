@@ -898,6 +898,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
                 properties.add(new DefaultDavProperty(JCR_INDEX, new Integer(n.getIndex()), true));
                 addHrefProperty(JCR_REFERENCES, n.getReferences(), true);
+                addHrefProperty(JCR_WEAK_REFERENCES, n.getWeakReferences(), true);
                 if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
                     properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
                 }

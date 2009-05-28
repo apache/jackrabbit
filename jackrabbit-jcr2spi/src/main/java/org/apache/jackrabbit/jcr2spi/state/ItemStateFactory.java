@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.state;
 
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 
@@ -113,9 +114,12 @@ public interface ItemStateFactory {
      * the given node.
      *
      * @param nodeState reference target
+     * @param propertyName
+     * @param weak Boolean flag indicating whether weak references should be
+     * returned or not.
      * @return reference property identifiers
      */
-    public PropertyId[] getNodeReferences(NodeState nodeState);
+    public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak);
 
     /**
      * Adds the given <code>ItemStateCreationListener</code>.

@@ -28,6 +28,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionException;
+import java.util.Iterator;
 
 /**
  * <code>RemoveVersion</code>...
@@ -36,13 +37,13 @@ public class RemoveActivity extends Remove {
 
     private static Logger log = LoggerFactory.getLogger(RemoveActivity.class);
 
-    private final PropertyId[] refs;
+    private final Iterator<PropertyId> refs;
     private final HierarchyManager hMgr;
 
     private RemoveActivity(NodeState removeActivity, HierarchyManager hierarchyMgr)
             throws RepositoryException {
         super(removeActivity, removeActivity.getParent());
-        refs = removeActivity.getNodeReferences();
+        refs = removeActivity.getNodeReferences(null, false);
         hMgr = hierarchyMgr;
     }
 
@@ -66,8 +67,8 @@ public class RemoveActivity extends Remove {
         status = STATUS_PERSISTED;
         
         // invalidate all references to the removed activity
-        for (int i = 0; i < refs.length; i++) {
-            HierarchyEntry entry = hMgr.lookup(refs[i]);
+        while (refs.hasNext()) {
+            HierarchyEntry entry = hMgr.lookup(refs.next());
             if (entry != null) {
                 entry.invalidate(false);
             }

@@ -985,6 +985,68 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#getReferences(SessionInfo, NodeId, Name, boolean)
+     */
+    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException {
+        // set of properties to be retrieved
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        if (weakReferences) {
+            nameSet.add(ItemResourceConstants.JCR_WEAK_REFERENCES);
+        } else {
+            nameSet.add(ItemResourceConstants.JCR_REFERENCES);
+        }
+
+        DavMethodBase method = null;
+        try {
+            String uri = getItemUri(nodeId, sessionInfo);
+            method = new PropFindMethod(uri, nameSet, DEPTH_0);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length < 1) {
+                throw new ItemNotFoundException("Unable to retrieve the node with id " + saveGetIdString(nodeId, sessionInfo));
+            }
+
+            List<PropertyId> refIds = new ArrayList<PropertyId>();
+            for (int i = 0; i < responses.length; i++) {
+                if (isSameResource(uri, responses[i])) {
+                    MultiStatusResponse resp = responses[i];
+                    DavPropertySet props = resp.getProperties(DavServletResponse.SC_OK);
+                    DavProperty p;
+                    if (weakReferences) {
+                        p = props.get(ItemResourceConstants.JCR_WEAK_REFERENCES);
+                    } else {
+                        p = props.get(ItemResourceConstants.JCR_REFERENCES);
+                    }
+
+                    if (p == null) {
+                        return Collections.EMPTY_LIST.iterator();
+                    } else {
+                        HrefProperty hp = new HrefProperty(p);
+                        for (Iterator it = hp.getHrefs().iterator(); it.hasNext();) {
+                            String propHref = it.next().toString();
+                            PropertyId propId = uriResolver.getPropertyId(propHref, sessionInfo);
+                            if (propertyName == null || propertyName.equals(propId.getName())) {
+                                refIds.add(propId);
+                            }
+                        }
+                    }
+                }
+            }
+            return refIds.iterator();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
+    /**
      * @see RepositoryService#getPropertyInfo(SessionInfo, PropertyId)
      */
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {

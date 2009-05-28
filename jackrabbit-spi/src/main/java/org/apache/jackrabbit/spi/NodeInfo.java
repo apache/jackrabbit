@@ -61,10 +61,14 @@ public interface NodeInfo extends ItemInfo {
     public Name[] getMixins();
 
     /**
+     * Return the {@link PropertyId Id}s of the properties that are referencing the
+     * node based on this info object.
+     * 
      * @return {@link PropertyId Id}s of the properties that are referencing the
      * node based on this info object or an empty array if the node is not
      * referenceable or no references exist.
      * @see PropertyInfo#getId()
+     * @deprecated Use {@link RepositoryService#getReferences(SessionInfo, NodeId, boolean)} instead.
      */
     public PropertyId[] getReferences();
 
