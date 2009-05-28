@@ -30,6 +30,9 @@ import java.io.OutputStream;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -51,8 +54,9 @@ import org.apache.jackrabbit.uuid.UUID;
  */
 public class QValueTest extends TestCase {
 
-    private final Calendar CALENDAR = Calendar.getInstance();
+    private final Calendar CALENDAR = Calendar.getInstance();            
     private static final String REFERENCE = UUID.randomUUID().toString();
+    private static final String URI_STRING = "http://jackrabbit.apache.org";
     private static final Path ROOT_PATH = PathFactoryImpl.getInstance().getRootPath();
 
     private static final QValueFactory factory = QValueFactoryImpl.getInstance();
@@ -106,6 +110,62 @@ public class QValueTest extends TestCase {
         } catch (ValueFormatException e) {
             // ok
         }
+    }
+
+    //------------------------------------------------------------< DECIMAL >---
+    public void testNullDecimalValue() throws IOException, RepositoryException {
+        try {
+            factory.create(null, PropertyType.DECIMAL);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+    }
+
+    public void testCreateInvalidDecimalValue() throws RepositoryException {
+        try {
+            factory.create("any", PropertyType.DECIMAL);
+            fail("'any' cannot be converted to a valid decimal value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testGetDecimalOnBooleanValue() throws RepositoryException {
+        try {
+            QValue v = factory.create(true);
+            v.getDecimal();
+            fail("'true' cannot be converted to a valid decimal value.");
+        } catch (ValueFormatException e) {
+            // ok
+        }
+    }
+
+    public void testGetDecimal() throws RepositoryException {
+        BigDecimal bd1 = new BigDecimal(Long.MAX_VALUE);
+        BigDecimal bd2 = new BigDecimal(Double.MIN_VALUE);
+
+        assertEquals(bd1, factory.create(bd1).getDecimal());
+        assertEquals(bd2, factory.create(bd2).getDecimal());
+
+        assertEquals(bd1, factory.create(Long.MAX_VALUE).getDecimal());
+        assertEquals(bd2, factory.create(Double.MIN_VALUE).getDecimal());
+    }
+
+    public void testGetDoubleOnDecimal() throws RepositoryException {
+        BigDecimal bd1 = new BigDecimal(Long.MAX_VALUE);
+        BigDecimal bd2 = new BigDecimal(Double.MIN_VALUE);
+
+        assertEquals(bd1.doubleValue(), factory.create(bd1).getDouble());
+        assertEquals(bd2.doubleValue(), factory.create(bd2).getDouble());
+    }
+
+    public void testGetLongOnDecimal() throws RepositoryException {
+        BigDecimal bd1 = new BigDecimal(Long.MAX_VALUE);
+        BigDecimal bd2 = new BigDecimal(Double.MIN_VALUE);
+
+        assertEquals(bd1.longValue(), factory.create(bd1).getLong());
+        assertEquals(bd2.longValue(), factory.create(bd2).getLong());
     }
 
     //------------------------------------------------------------< BOOLEAN >---
@@ -239,6 +299,65 @@ public class QValueTest extends TestCase {
         assertFalse(v.equals(v2));
     }
 
+    //------------------------------------------------------< WEAKREFERENCE >---
+
+    public void testNullWeakReferenceValue() throws IOException, RepositoryException {
+        try {
+            factory.create(null, PropertyType.WEAKREFERENCE);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+    }
+
+    public void testWeakReferenceValueType() throws RepositoryException {
+        QValue v = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
+        assertTrue("Type of a date value must be PropertyType.WEAKREFERENCE.", v.getType() == PropertyType.WEAKREFERENCE);
+    }
+
+    public void testWeakReferenceValueEquality() throws RepositoryException {
+        QValue v = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
+        QValue otherV = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
+        assertEquals("Qualified ref values created from the same string must be equal.", v, otherV);
+    }
+
+    public void testEqualityDifferentTypes2() throws RepositoryException {
+        QValue v = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
+        QValue v2 = factory.create(REFERENCE, PropertyType.STRING);
+        assertFalse(v.equals(v2));
+    }
+
+    //----------------------------------------------------------------< URI >---
+
+    public void testNullUriValue() throws IOException, RepositoryException {
+        try {
+            factory.create(null, PropertyType.URI);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+    }
+
+    public void testUriValueType() throws RepositoryException, URISyntaxException {
+        QValue v = factory.create(URI_STRING, PropertyType.URI);
+        assertTrue("Type of a date value must be PropertyType.URI.", v.getType() == PropertyType.URI);
+    }
+
+    public void testUriValueEquality() throws RepositoryException, URISyntaxException {
+        QValue v = factory.create(URI_STRING, PropertyType.URI);
+        QValue otherV = factory.create(URI_STRING, PropertyType.URI);
+        assertEquals("Qualified uri values created from the same string must be equal.", v, otherV);
+
+        URI uri = new URI(URI_STRING);
+        v = factory.create(uri);
+        assertEquals("Qualified uri values created from the same string must be equal.", v, otherV);
+    }
+
+    public void testEqualityDifferentTypes3() throws RepositoryException {
+        QValue v = factory.create(URI_STRING, PropertyType.URI);
+        QValue v2 = factory.create(URI_STRING, PropertyType.STRING);
+        assertFalse(v.equals(v2));
+    }
 
     //---------------------------------------------------------------< Name >---
 
