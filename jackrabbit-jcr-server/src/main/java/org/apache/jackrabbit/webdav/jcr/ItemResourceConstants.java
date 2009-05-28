@@ -128,6 +128,10 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_MIXINNODETYPES = DavPropertyName.create("mixinnodetypes", NAMESPACE);
     public static final DavPropertyName JCR_INDEX = DavPropertyName.create("index", NAMESPACE);
     public static final DavPropertyName JCR_REFERENCES = DavPropertyName.create("references", NAMESPACE);
+    /**
+     * @since JCR 2.0
+     */
+    public static final DavPropertyName JCR_WEAK_REFERENCES = DavPropertyName.create("weakreferences", NAMESPACE);
     public static final DavPropertyName JCR_UUID = DavPropertyName.create("uuid", NAMESPACE);
     public static final DavPropertyName JCR_PRIMARYITEM = DavPropertyName.create("primaryitem", NAMESPACE);
 

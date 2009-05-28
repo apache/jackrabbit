@@ -222,6 +222,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getChildInfos(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), parentId});
     }
 
+    public Iterator<PropertyId> getReferences(final SessionInfo sessionInfo, final NodeId nodeId, final Name propertyName, final boolean weakReferences) throws RepositoryException {
+        return (Iterator) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getReferences(unwrap(sessionInfo), nodeId, propertyName, weakReferences);
+            }
+        }, "getReferences(SessionInfo, NodeId, Name, boolean)", new Object[]{unwrap(sessionInfo), nodeId, propertyName, weakReferences});
+    }
+
     public PropertyInfo getPropertyInfo(final SessionInfo sessionInfo, final PropertyId propertyId)
             throws RepositoryException {
 

@@ -585,23 +585,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getReferences(String)
      */
     public PropertyIterator getReferences(String name) throws RepositoryException {
-        checkStatus();
-        List refs = Arrays.asList(getNodeState().getNodeReferences());
-        if (name != null) {
-            // remove property ids that don't match the given name
-            Name qName = getQName(name);
-            refs = new ArrayList(refs);
-            for (Iterator iter = refs.iterator(); iter.hasNext();) {
-                PropertyId propId = (PropertyId) iter.next();
-                if (!propId.getName().equals(qName)) {
-                    refs.remove(propId);
-                }
-            }
-        } // else: name == null -> return all references
-
-        // create an property iterator for all or the matching property ids
-        // according to the specified name.
-        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), refs.iterator());
+        return getReferences(name, false);
     }
 
     /**
@@ -615,8 +599,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getWeakReferences()
      */
     public PropertyIterator getWeakReferences(String name) throws RepositoryException {
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        return getReferences(name, true);
     }
 
     /**
@@ -1605,6 +1588,34 @@ public class NodeImpl extends ItemImpl implements Node {
         return qName;
     }
 
+    /**
+     * @return the primary node type name.
+     */
+    private Name getPrimaryNodeTypeName() {
+        return getNodeState().getNodeTypeName();
+    }
+
+    /**
+     * 
+     * @param name
+     * @param weak
+     * @return
+     * @throws RepositoryException
+     */
+    private LazyItemIterator getReferences(String name, boolean weak) throws RepositoryException {
+        checkStatus();
+        Name propName = (name == null) ? null : getQName(name);
+        Iterator<PropertyId> itr = getNodeState().getNodeReferences(propName, weak);
+        return new LazyItemIterator(getItemManager(), session.getHierarchyManager(), itr);
+    }
+
+    /**
+     *
+     * @param mixinName
+     * @return
+     * @throws NoSuchNodeTypeException
+     * @throws ConstraintViolationException
+     */
     private boolean canAddMixin(Name mixinName) throws NoSuchNodeTypeException,
         ConstraintViolationException {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
@@ -1813,12 +1824,5 @@ public class NodeImpl extends ItemImpl implements Node {
                                                                 boolean multiValued)
             throws ConstraintViolationException, RepositoryException {
         return session.getItemDefinitionProvider().getQPropertyDefinition(getNodeState().getAllNodeTypeNames(), propertyName, type, multiValued);
-    }
-
-    /**
-     * @return the primary node type name.
-     */
-    private Name getPrimaryNodeTypeName() {
-        return getNodeState().getNodeTypeName();
     }
 }

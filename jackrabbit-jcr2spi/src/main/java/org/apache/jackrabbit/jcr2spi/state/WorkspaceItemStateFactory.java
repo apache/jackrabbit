@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Collections;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -158,26 +159,24 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
     /**
      * @inheritDoc
-     * @see ItemStateFactory#getNodeReferences(NodeState)
-     * @param nodeState
+     * @see ItemStateFactory#getNodeReferences(NodeState,org.apache.jackrabbit.spi.Name,boolean)
      */
-    public PropertyId[] getNodeReferences(NodeState nodeState) {
+    public Iterator<PropertyId> getNodeReferences(NodeState nodeState, Name propertyName, boolean weak) {
         NodeEntry entry = nodeState.getNodeEntry();
         // shortcut
         if (entry.getUniqueID() == null
                 || !entry.hasPropertyEntry(NameConstants.JCR_UUID)) {
             // for sure not referenceable
-            return new PropertyId[0];
+            return Collections.EMPTY_SET.iterator();
         }
 
         // nodestate has a unique ID and is potentially mix:referenceable
         // => try to retrieve references
         try {
-            NodeInfo nInfo = service.getNodeInfo(sessionInfo, entry.getWorkspaceId());
-            return nInfo.getReferences();
+            return service.getReferences(sessionInfo, entry.getWorkspaceId(), propertyName, weak);
         } catch (RepositoryException e) {
             log.debug("Unable to determine references to {}", nodeState);
-            return new PropertyId[0];
+            return Collections.EMPTY_SET.iterator();
         }
     }
 
