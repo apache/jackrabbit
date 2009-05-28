@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
 import java.net.URI;
+import java.math.BigDecimal;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -362,8 +363,12 @@ public class NodeIndexer {
                     addNameValue(doc, fieldName, value.getQName());
                 }
                 break;
-            // TODO support indexing of BigDecimal (JCR-1609: new Property Types)
             case PropertyType.DECIMAL:
+                if (isIndexed(name)) {
+                    addDecimalValue(doc, fieldName, value.getDecimal());
+                }
+                break;
+
 
             default:
                 throw new IllegalArgumentException("illegal internal value type: " + value.getType());
@@ -553,6 +558,21 @@ public class NodeIndexer {
         long longVal = ((Long) internalValue).longValue();
         doc.add(createFieldWithoutNorms(fieldName, LongField.longToString(longVal),
                 PropertyType.LONG));
+    }
+
+    /**
+     * Adds the long value to the document as the named field. The long
+     * value is converted to an indexable string value using the {@link LongField}
+     * class.
+     *
+     * @param doc           The document to which to add the field
+     * @param fieldName     The name of the field to add
+     * @param internalValue The value for the field to add to the document.
+     */
+    protected void addDecimalValue(Document doc, String fieldName, Object internalValue) {
+        BigDecimal decVal = (BigDecimal) internalValue;
+        doc.add(createFieldWithoutNorms(fieldName, DecimalField.decimalToString(decVal),
+                PropertyType.DECIMAL));
     }
 
     /**

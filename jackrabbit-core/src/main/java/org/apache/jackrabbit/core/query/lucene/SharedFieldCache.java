@@ -270,6 +270,8 @@ public class SharedFieldCache {
                 return new Long(LongField.stringToLong(value));
             case PropertyType.DOUBLE:
                 return new Double(DoubleField.stringToDouble(value));
+            case PropertyType.DECIMAL:
+                return DecimalField.stringToDecimal(value);
             default:
                 return value;
         }
