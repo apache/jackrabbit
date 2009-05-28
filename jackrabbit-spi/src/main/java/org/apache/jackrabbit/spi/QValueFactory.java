@@ -139,7 +139,7 @@ public interface QValueFactory {
      * Create a new <code>QValue</code> with type {@link javax.jcr.PropertyType#BINARY}.
      *
      * @param value
-     * @return a new binarly <code>QValue</code>.
+     * @return a new binary <code>QValue</code>.
      * @throws IOException
      */
     public QValue create(File value) throws RepositoryException, IOException;

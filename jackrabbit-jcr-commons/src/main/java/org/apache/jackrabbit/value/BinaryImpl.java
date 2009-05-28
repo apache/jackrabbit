@@ -149,9 +149,13 @@ public class BinaryImpl implements Binary {
             return raf.read(b);
         } else {
             // this instance is backed by an in-memory buffer
-            int length = buffer.length - (int) position;
-            System.arraycopy(buffer, (int) position, b, 0, length);
-            return length;
+            int length = Math.min(b.length, buffer.length - (int) position);
+            if (length > 0) {
+                System.arraycopy(buffer, (int) position, b, 0, length);
+                return length;
+            } else {
+                return -1;
+            }
         }
     }
 

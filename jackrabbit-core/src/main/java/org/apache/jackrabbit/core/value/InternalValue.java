@@ -42,6 +42,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
+import javax.jcr.Binary;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -754,6 +755,22 @@ public class InternalValue extends AbstractQValue {
             try {
                 // convert via string
                 return new ByteArrayInputStream(getString().getBytes(InternalValueFactory.DEFAULT_ENCODING));
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(InternalValueFactory.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.jackrabbit.spi.QValue#getBinary()
+     */
+    public Binary getBinary() throws RepositoryException {
+        if (type == PropertyType.BINARY) {
+            return (BLOBFileValue) val;
+        } else {
+            try {
+                // convert via string
+                return new BLOBValue(getString().getBytes(InternalValueFactory.DEFAULT_ENCODING));
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(InternalValueFactory.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
             }

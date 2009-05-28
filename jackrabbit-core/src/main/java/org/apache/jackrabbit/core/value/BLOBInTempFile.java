@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 import javax.jcr.RepositoryException;
 
@@ -187,4 +188,12 @@ public class BLOBInTempFile extends BLOBFileValue {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public int read(byte[] b, long position) throws IOException, RepositoryException {
+        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        raf.seek(position);
+        return raf.read(b);
+    }
 }
