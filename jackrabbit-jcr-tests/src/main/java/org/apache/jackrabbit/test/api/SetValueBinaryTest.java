@@ -19,13 +19,15 @@ package org.apache.jackrabbit.test.api;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-import javax.jcr.Property;
-import javax.jcr.Value;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+
+import javax.jcr.Binary;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 /**
  * Tests the various {@link Property#setValue(Value)} methods.
@@ -113,6 +115,21 @@ public class SetValueBinaryTest extends AbstractJCRTest {
     }
 
     /**
+     * Test the persistence of a property modified with an BinaryValue parameter
+     * and saved from the Session
+     */
+    public void testBinarySessionJcr2() throws RepositoryException, IOException {
+        property1.setValue(value);
+        superuser.save();
+        InputStream in = property1.getValue().getBinary().getStream();
+        try {
+            compareStream(data, in);
+        } finally {
+            in.close();
+        }
+    }
+
+    /**
      * Test the persistence of a property modified with an input stream
      * parameter and saved from the parent Node
      */
@@ -125,6 +142,23 @@ public class SetValueBinaryTest extends AbstractJCRTest {
             in.close();
         }
         in = property1.getValue().getStream();
+        try {
+            compareStream(data, in);
+        } finally {
+            in.close();
+        }
+    }
+
+    /**
+     * Test the persistence of a property modified with an input stream
+     * parameter and saved from the parent Node
+     */
+    public void testBinaryParentJcr2() throws RepositoryException, IOException {
+        Binary bin = value.getBinary();
+        property1.setValue(bin);
+        node.save();
+        bin = property1.getValue().getBinary();
+        InputStream in = bin.getStream();
         try {
             compareStream(data, in);
         } finally {
