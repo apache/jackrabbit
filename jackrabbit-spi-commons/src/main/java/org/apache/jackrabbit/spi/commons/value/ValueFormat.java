@@ -50,6 +50,7 @@ public class ValueFormat {
         } else if (jcrValue instanceof QValueValue) {
             return ((QValueValue)jcrValue).getQValue();
         } else if (jcrValue.getType() == PropertyType.BINARY) {
+            // TODO: jsr 283 binary property conversion
             try {
                 return factory.create(jcrValue.getStream());
             } catch (IOException e) {
@@ -61,6 +62,8 @@ public class ValueFormat {
             return factory.create(jcrValue.getDouble());
         } else if (jcrValue.getType() == PropertyType.LONG) {
             return factory.create(jcrValue.getLong());
+        } else if (jcrValue.getType() == PropertyType.DECIMAL) {
+            return factory.create(jcrValue.getDecimal());
         } else {
             return getQValue(jcrValue.getString(), jcrValue.getType(), resolver, factory);
         }
@@ -107,8 +110,11 @@ public class ValueFormat {
             case PropertyType.BOOLEAN:
             case PropertyType.DOUBLE:
             case PropertyType.LONG:
+            case PropertyType.DECIMAL:
             case PropertyType.DATE:
             case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+            case PropertyType.URI:
                 qValue = factory.create(jcrValue, propertyType);
                 break;
             case PropertyType.BINARY:
@@ -146,6 +152,8 @@ public class ValueFormat {
             switch (propertyType) {
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
+                case PropertyType.WEAKREFERENCE:
+                case PropertyType.URI:
                     jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
                     break;
                 case PropertyType.PATH:
@@ -160,6 +168,7 @@ public class ValueFormat {
                     jcrValue = factory.createValue(qualifiedValue.getBoolean());
                     break;
                 case PropertyType.BINARY:
+                    // TODO: jsr 283 binary handling
                     jcrValue = factory.createValue(qualifiedValue.getStream());
                     break;
                 case PropertyType.DATE:
@@ -170,6 +179,9 @@ public class ValueFormat {
                     break;
                 case PropertyType.LONG:
                     jcrValue = factory.createValue(qualifiedValue.getLong());
+                    break;
+                case PropertyType.DECIMAL:
+                    jcrValue = factory.createValue(qualifiedValue.getDecimal());
                     break;
                 default:
                     throw new RepositoryException("illegal internal value type");
