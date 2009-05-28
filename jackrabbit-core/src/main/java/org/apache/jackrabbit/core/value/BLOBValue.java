@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 
 import javax.jcr.RepositoryException;
@@ -345,8 +346,14 @@ public class BLOBValue extends BLOBFileValue {
     /**
      * {@inheritDoc}
      */
-    public InputStream getStream()
-            throws IllegalStateException, RepositoryException {
+    public boolean isSmall() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InputStream getStream() throws RepositoryException {
         // always return a 'fresh' stream
         if (file != null) {
             // this instance is backed by a 'real' file
@@ -372,8 +379,34 @@ public class BLOBValue extends BLOBFileValue {
     /**
      * {@inheritDoc}
      */
-    public boolean isSmall() {
-        return false;
+    public int read(byte[] b, long position) throws IOException, RepositoryException {
+        if (file != null) {
+            // this instance is backed by a temp file
+            RandomAccessFile raf = new RandomAccessFile(file, "r");
+            raf.seek(position);
+            return raf.read(b);
+        } else if (fsResource != null) {
+            // this instance is backed by a resource in the virtual file system
+            InputStream in;
+            try {
+                in = fsResource.getInputStream();
+            } catch (FileSystemException fse) {
+                throw new RepositoryException(fsResource.getPath()
+                        + ": the specified resource does not exist", fse);
+            }
+            in.skip(position);
+            return in.read(b);
+        } else {
+            // this instance is backed by an in-memory buffer
+            int length = Math.min(b.length, buffer.length - (int) position);
+            if (length > 0) {
+                System.arraycopy(buffer, (int) position, b, 0, length);
+                return length;
+            } else {
+                return -1;
+            }
+        }
     }
+
 
 }

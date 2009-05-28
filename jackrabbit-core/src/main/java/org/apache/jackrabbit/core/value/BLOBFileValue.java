@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Binary;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
@@ -37,14 +38,7 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
  * This interface is for Jackrabbit-internal use only. Applications should
  * use <code>javax.jcr.ValueFactory</code> to create binary values.
  */
-public abstract class BLOBFileValue {
-
-    /**
-     * Returns an InputStream representation of this value.
-     *
-     * @return An InputStream representation of this value.
-     */
-    public abstract InputStream getStream() throws RepositoryException;
+public abstract class BLOBFileValue implements Binary {
 
     /**
      * Returns a String representation of this value.
@@ -163,4 +157,25 @@ public abstract class BLOBFileValue {
         return null;
     }
 
+    //-----------------------------------------------------< javax.jcr.Binary >
+    /**
+     * {@inheritDoc}
+     */
+    public abstract InputStream getStream() throws RepositoryException;
+
+    /**
+     * {@inheritDoc}
+     */
+    public int read(byte[] b, long position) throws IOException, RepositoryException {
+        InputStream in = getStream();
+        in.skip(position);
+        return in.read(b);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getSize() throws RepositoryException {
+        return getLength();
+    }
 }

@@ -24,6 +24,7 @@ import java.net.URI;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Binary;
 
 /**
  * <code>QValue</code> is the qualified SPI representation of a
@@ -87,6 +88,15 @@ public interface QValue {
      * @throws RepositoryException
      */
     public InputStream getStream() throws RepositoryException;
+
+    /**
+     * Returns a <code>Binary</code> representation of this <code>QValue</code>
+     * object.
+     *
+     * @return A <code>Binary</code> representation of this value.
+     * @throws RepositoryException
+     */
+    public Binary getBinary() throws RepositoryException;
 
     /**
      * Returns a <code>Calendar</code> representation of this value.

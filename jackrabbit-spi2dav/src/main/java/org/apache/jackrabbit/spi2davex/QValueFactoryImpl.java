@@ -40,6 +40,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Binary;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -399,6 +400,29 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 }
             }
         }
+
+        /**
+         * @see QValue#getBinary()
+         */
+        public Binary getBinary() throws RepositoryException {
+            // TODO FIXME consolidate Binary implementations
+            return new Binary() {
+                public InputStream getStream() throws RepositoryException {
+                    return QValueImpl.this.getStream();
+                }
+
+                public int read(byte[] b, long position) throws IOException, RepositoryException {
+                    InputStream in = getStream();
+                    in.skip(position);
+                    return in.read(b);
+                }
+
+                public long getSize() throws RepositoryException {
+                    return getLength();
+                }
+            };
+        }
+
     }
 
     //--------------------------------------------------------< Inner Class >---
@@ -788,6 +812,29 @@ class QValueFactoryImpl extends AbstractQValueFactory {
             } catch (URISyntaxException ex) {
                 throw new ValueFormatException(ex);
             }
+        }
+
+        /**
+         * @see QValue#getBinary()
+         */
+        public Binary getBinary() throws RepositoryException {
+            // TODO FIXME consolidate Binary implementations
+            // TODO optimize
+            return new Binary() {
+                public InputStream getStream() throws RepositoryException {
+                    return BinaryQValue.this.getStream();
+                }
+
+                public int read(byte[] b, long position) throws IOException, RepositoryException {
+                    InputStream in = getStream();
+                    in.skip(position);
+                    return in.read(b);
+                }
+
+                public long getSize() throws RepositoryException {
+                    return getLength();
+                }
+            };
         }
 
         /**

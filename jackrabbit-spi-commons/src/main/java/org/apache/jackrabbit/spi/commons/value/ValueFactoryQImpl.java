@@ -200,13 +200,24 @@ public class ValueFactoryQImpl implements ValueFactory {
     }
 
     public Binary createBinary(InputStream stream) throws RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2056");
+        // TODO review/optimize/refactor
+        try {
+            QValue qvalue = qfactory.create(stream);
+            return qvalue.getBinary();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } catch (RepositoryException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public Value createValue(Binary value) {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2056");
+        // TODO review/optimize/refactor
+        try {
+            return createValue(value.getStream());
+        } catch (RepositoryException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public Value createValue(BigDecimal value) {

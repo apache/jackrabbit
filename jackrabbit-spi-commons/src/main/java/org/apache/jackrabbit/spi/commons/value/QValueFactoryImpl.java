@@ -26,6 +26,7 @@ import org.apache.jackrabbit.util.TransientFileFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Binary;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,6 +40,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.math.BigDecimal;
@@ -276,6 +278,28 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         /**
+         * @see QValue#getBinary()
+         */
+        public Binary getBinary() throws RepositoryException {
+            // TODO FIXME consolidate Binary implementations
+            return new Binary() {
+                public InputStream getStream() throws RepositoryException {
+                    return QValueImpl.this.getStream();
+                }
+
+                public int read(byte[] b, long position) throws IOException, RepositoryException {
+                    InputStream in = getStream();
+                    in.skip(position);
+                    return in.read(b);
+                }
+
+                public long getSize() throws RepositoryException {
+                    return getLength();
+                }
+            };
+        }
+
+        /**
          * @see QValue#getStream()
          */
         public InputStream getStream() throws RepositoryException {
@@ -343,7 +367,7 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
      * state, i.e. the <code>getStream()</code> method always returns a fresh
      * <code>InputStream</code> instance.
      */
-    private static class BinaryQValue implements QValue, Serializable {
+    private static class BinaryQValue implements QValue, Binary, Serializable {
         /**
          * empty array
          */
@@ -608,7 +632,7 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
          * @see QValue#getBoolean()
          */
         public boolean getBoolean() throws RepositoryException {
-            return Boolean.valueOf(getString()).booleanValue();
+            return Boolean.valueOf(getString());
         }
 
         /**
@@ -638,6 +662,13 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
             } catch (URISyntaxException ex) {
                 throw new ValueFormatException(ex);
             }
+        }
+
+        /**
+         * @see QValue#getBinary()
+         */
+        public Binary getBinary() throws RepositoryException {
+            return this;
         }
 
         /**
@@ -743,6 +774,35 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                 } catch (IOException ignore) {
                 }
             }
+        }
+
+        //-----------------------------< javx.jcr.Binary >----------------------
+        /**
+         * {@inheritDoc}
+         */
+        public int read(byte[] b, long position) throws IOException, RepositoryException {
+            if (file != null) {
+                // this instance is backed by a temp file
+                RandomAccessFile raf = new RandomAccessFile(file, "r");
+                raf.seek(position);
+                return raf.read(b);
+            } else {
+                // this instance is backed by an in-memory buffer
+                int length = Math.min(b.length, buffer.length - (int) position);
+                if (length > 0) {
+                    System.arraycopy(buffer, (int) position, b, 0, length);
+                    return length;
+                } else {
+                    return -1;
+                }
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public long getSize() throws RepositoryException {
+            return getLength();
         }
 
         //-----------------------------< Serializable >-------------------------
