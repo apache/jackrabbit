@@ -209,7 +209,7 @@ public abstract class AbstractQValue implements QValue {
             return cal;
         } else if (type == PropertyType.LONG) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
-            cal.setTimeInMillis(((Long) val).longValue());
+            cal.setTimeInMillis((Long) val);
             return cal;
         } else if (type == PropertyType.DECIMAL) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
@@ -231,6 +231,12 @@ public abstract class AbstractQValue implements QValue {
     public BigDecimal getDecimal() throws RepositoryException {
         if (type == PropertyType.DECIMAL) {
             return (BigDecimal) val;
+        } else if (type == PropertyType.DOUBLE) {
+            return new BigDecimal((Double) val);
+        } else if (type == PropertyType.LONG) {
+            return new BigDecimal((Long) val);
+        } else if (type == PropertyType.DATE) {
+            return new BigDecimal(((Calendar) val).getTimeInMillis());
         } else {
             try {
                 return new BigDecimal(getString());
@@ -260,7 +266,9 @@ public abstract class AbstractQValue implements QValue {
      */
     public double getDouble() throws RepositoryException {
         if (type == PropertyType.DOUBLE) {
-            return ((Double) val).doubleValue();
+            return (Double) val;
+        } else if (type == PropertyType.LONG) {
+            return ((Long) val).doubleValue();
         } else if (type == PropertyType.DATE) {
             return ((Calendar) val).getTimeInMillis();
         } else if (type == PropertyType.DECIMAL) {
@@ -279,7 +287,7 @@ public abstract class AbstractQValue implements QValue {
      */
     public long getLong() throws RepositoryException {
         if (type == PropertyType.LONG) {
-            return ((Long) val).longValue();
+            return (Long) val;
         } else if (type == PropertyType.DOUBLE) {
             return ((Double) val).longValue();
         } else if (type == PropertyType.DECIMAL) {

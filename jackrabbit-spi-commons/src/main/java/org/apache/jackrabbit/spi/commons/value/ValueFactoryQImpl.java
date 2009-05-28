@@ -165,8 +165,7 @@ public class ValueFactoryQImpl implements ValueFactory {
      * {@inheritDoc}
      */
     public Value createValue(Node value) throws RepositoryException {
-        QValue qvalue = qfactory.create(value.getUUID(), PropertyType.REFERENCE);
-        return new QValueValue(qvalue, resolver);
+        return createValue(value, false);
     }
 
     /**
@@ -211,12 +210,16 @@ public class ValueFactoryQImpl implements ValueFactory {
     }
 
     public Value createValue(BigDecimal value) {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1609");
+        try {
+            QValue qvalue = qfactory.create(value);
+            return new QValueValue(qvalue, resolver);
+        } catch (RepositoryException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public Value createValue(Node value, boolean weak) throws RepositoryException {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-1609");
+        QValue qvalue = qfactory.create(value.getUUID(), weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
+        return new QValueValue(qvalue, resolver);
     }
 }

@@ -85,12 +85,17 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                     return new QValueImpl(Double.valueOf(value));
                 case PropertyType.LONG:
                     return new QValueImpl(Long.valueOf(value));
+                case PropertyType.DECIMAL:
+                    return new QValueImpl(new BigDecimal(value));
+                case PropertyType.URI:
+                    return new QValueImpl(URI.create(value));
                 case PropertyType.PATH:
                     return new QValueImpl(PATH_FACTORY.create(value));
                 case PropertyType.NAME:
                     return new QValueImpl(NAME_FACTORY.create(value));
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
+                case PropertyType.WEAKREFERENCE:
                     return new QValueImpl(value, type);
                 case PropertyType.BINARY:
                     return new BinaryQValue(value.getBytes(DEFAULT_ENCODING));
@@ -164,6 +169,26 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
     }
 
     /**
+     * @see QValueFactory#create(URI)
+     */
+    public QValue create(URI value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
+        return new QValueImpl(value);
+    }
+
+    /**
+     * @see QValueFactory#create(URI)
+     */
+    public QValue create(BigDecimal value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Cannot create QValue from null value.");
+        }
+        return new QValueImpl(value);
+    }
+
+    /**
      * @see QValueFactory#create(byte[])
      */
     public QValue create(byte[] value) {
@@ -222,6 +247,10 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
             super(value);
         }
 
+        private QValueImpl(BigDecimal value) {
+            super(value);
+        }
+
         private QValueImpl(Boolean value) {
             super(value);
         }
@@ -231,6 +260,10 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
         }
 
         private QValueImpl(Path value) {
+            super(value);
+        }
+
+        private QValueImpl(URI value) {
             super(value);
         }
 
