@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Search tests");
 
         suite.addTestSuite(IndexingQueueTest.class);
+        suite.addTestSuite(DecimalConvertTest.class);
 
         return suite;
     }
