@@ -200,7 +200,6 @@ public class Util {
             case PropertyType.REFERENCE:
             case PropertyType.STRING:
                 return value.getString();
-                // TODO: JSR 283 now node types
             default:
                 throw new RepositoryException("Unsupported type: "
                         + PropertyType.nameFromValue(value.getType()));

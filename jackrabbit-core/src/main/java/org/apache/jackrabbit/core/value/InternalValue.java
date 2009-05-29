@@ -442,13 +442,13 @@ public class InternalValue extends AbstractQValue {
         } else {
             switch (type) {
                 case PropertyType.BINARY:
-                    return vf.createValue(((BLOBFileValue) val).getStream());
+                    return vf.createValue((BLOBFileValue) val);
                 case PropertyType.BOOLEAN:
-                    return vf.createValue(((Boolean) val).booleanValue());
+                    return vf.createValue((Boolean) val);
                 case PropertyType.DATE:
                     return vf.createValue((Calendar) val);
                 case PropertyType.DOUBLE:
-                    return vf.createValue(((Double) val).doubleValue());
+                    return vf.createValue((Double) val);
                 case PropertyType.LONG:
                     return vf.createValue(((Long) val).longValue());
                 case PropertyType.DECIMAL:
@@ -458,13 +458,15 @@ public class InternalValue extends AbstractQValue {
                 case PropertyType.WEAKREFERENCE:
                     return vf.createValue(val.toString(), PropertyType.WEAKREFERENCE);
                 case PropertyType.URI:
-                    return new URIValue((URI) val);
+                    //return new URIValue((URI) val);
+                    return vf.createValue(val.toString(),  PropertyType.URI);
                 case PropertyType.PATH:
                     return vf.createValue(resolver.getJCRPath((Path) val), PropertyType.PATH);
                 case PropertyType.NAME:
                     return vf.createValue(resolver.getJCRName((Name) val), PropertyType.NAME);
                 case PropertyType.STRING:
-                    return new StringValue((String) val);
+                    //return new StringValue((String) val);
+                    return vf.createValue((String) val);
                 default:
                     throw new RepositoryException("illegal internal value type");
             }
