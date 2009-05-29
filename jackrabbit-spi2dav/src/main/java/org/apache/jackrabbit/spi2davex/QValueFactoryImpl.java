@@ -198,7 +198,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
     }
 
     /**
-     * @see QValueFactory#create(BigDecimal)
+     * @see QValueFactory#create(URI)
      */
     public QValue create(BigDecimal value) {
         return new QValueImpl(value);
@@ -442,8 +442,12 @@ class QValueFactoryImpl extends AbstractQValueFactory {
 
                 public int read(byte[] b, long position) throws IOException, RepositoryException {
                     InputStream in = getStream();
-                    in.skip(position);
-                    return in.read(b);
+                    try {
+                        in.skip(position);
+                        return in.read(b);
+                    } finally {
+                        in.close();
+                    }
                 }
 
                 public long getSize() throws RepositoryException {
@@ -856,8 +860,12 @@ class QValueFactoryImpl extends AbstractQValueFactory {
 
                 public int read(byte[] b, long position) throws IOException, RepositoryException {
                     InputStream in = getStream();
-                    in.skip(position);
-                    return in.read(b);
+                    try {
+                        in.skip(position);
+                        return in.read(b);
+                    } finally {
+                        in.close();
+                    }
                 }
 
                 public long getSize() throws RepositoryException {

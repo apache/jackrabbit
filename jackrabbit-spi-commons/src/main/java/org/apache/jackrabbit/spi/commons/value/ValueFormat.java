@@ -52,6 +52,7 @@ public class ValueFormat {
         } else if (jcrValue.getType() == PropertyType.BINARY) {
             // TODO: jsr 283 binary property conversion
             try {
+                //return factory.create(jcrValue.getBinary());
                 return factory.create(jcrValue.getStream());
             } catch (IOException e) {
                 throw new RepositoryException(e);
@@ -168,8 +169,7 @@ public class ValueFormat {
                     jcrValue = factory.createValue(qualifiedValue.getBoolean());
                     break;
                 case PropertyType.BINARY:
-                    // TODO: jsr 283 binary handling
-                    jcrValue = factory.createValue(qualifiedValue.getStream());
+                    jcrValue = factory.createValue(qualifiedValue.getBinary());
                     break;
                 case PropertyType.DATE:
                     jcrValue = factory.createValue(qualifiedValue.getCalendar());

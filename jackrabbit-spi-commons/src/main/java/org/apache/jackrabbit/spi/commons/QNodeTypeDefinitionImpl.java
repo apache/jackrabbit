@@ -326,8 +326,9 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
             }
             // property definitions
             for (int i = 0; i < propertyDefs.length; i++) {
-                // REFERENCE value constraints
-                if (propertyDefs[i].getRequiredType() == PropertyType.REFERENCE) {
+                // [WEAK]REFERENCE value constraints
+                if (propertyDefs[i].getRequiredType() == PropertyType.REFERENCE
+                        || propertyDefs[i].getRequiredType() == PropertyType.WEAKREFERENCE) {
                     String[] ca = propertyDefs[i].getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {

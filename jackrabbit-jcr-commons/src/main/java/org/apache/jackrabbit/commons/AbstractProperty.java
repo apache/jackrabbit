@@ -218,7 +218,8 @@ public abstract class AbstractProperty extends AbstractItem
     public Node getNode() throws RepositoryException {
         Session session = getSession();
         Value value = getValue();
-        if (value.getType() != PropertyType.REFERENCE) {
+        if (value.getType() != PropertyType.REFERENCE
+                && value.getType() != PropertyType.WEAKREFERENCE) {
             value = session.getValueFactory().createValue(
                     value.getString(), PropertyType.REFERENCE);
         }

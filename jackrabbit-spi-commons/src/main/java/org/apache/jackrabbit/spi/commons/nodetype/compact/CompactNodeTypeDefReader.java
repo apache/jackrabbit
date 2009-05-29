@@ -415,6 +415,8 @@ public class CompactNodeTypeDefReader {
             pd.setRequiredType(PropertyType.BINARY);
         } else if (currentTokenEquals(Lexer.LONG)) {
             pd.setRequiredType(PropertyType.LONG);
+        } else if (currentTokenEquals(Lexer.DECIMAL)) {
+            pd.setRequiredType(PropertyType.DECIMAL);
         } else if (currentTokenEquals(Lexer.DOUBLE)) {
             pd.setRequiredType(PropertyType.DOUBLE);
         } else if (currentTokenEquals(Lexer.BOOLEAN)) {
@@ -425,8 +427,12 @@ public class CompactNodeTypeDefReader {
             pd.setRequiredType(PropertyType.NAME);
         } else if (currentTokenEquals(Lexer.PATH)) {
             pd.setRequiredType(PropertyType.PATH);
+        } else if (currentTokenEquals(Lexer.URI)) {
+            pd.setRequiredType(PropertyType.URI);
         } else if (currentTokenEquals(Lexer.REFERENCE)) {
             pd.setRequiredType(PropertyType.REFERENCE);
+        } else if (currentTokenEquals(Lexer.WEAKREFERENCE)) {
+            pd.setRequiredType(PropertyType.WEAKREFERENCE);
         } else if (currentTokenEquals(Lexer.UNDEFINED)) {
             pd.setRequiredType(PropertyType.UNDEFINED);
         } else {

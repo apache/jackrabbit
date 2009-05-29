@@ -383,8 +383,12 @@ public class BLOBValue extends BLOBFileValue {
         if (file != null) {
             // this instance is backed by a temp file
             RandomAccessFile raf = new RandomAccessFile(file, "r");
-            raf.seek(position);
-            return raf.read(b);
+            try {
+                raf.seek(position);
+                return raf.read(b);
+            } finally {
+                raf.close();
+            }
         } else if (fsResource != null) {
             // this instance is backed by a resource in the virtual file system
             InputStream in;
