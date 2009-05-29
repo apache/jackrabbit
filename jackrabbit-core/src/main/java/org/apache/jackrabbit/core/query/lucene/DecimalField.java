@@ -21,32 +21,29 @@ import java.math.BigInteger;
 
 /**
  * The <code>DecimalField</code> class is a utility to convert
- * <code>java.math.BigDecimal</code> values into <code>String</code> 
+ * <code>java.math.BigDecimal</code> values to <code>String</code> 
  * values that are lexicographically sortable according to the decimal value.
  * <p>
- * The string format only uses the digits '0' to '9' (except the last character 
- * for negative values) and contains the following elements:
+ * The string format uses the characters '0' to '9' and consists of:
  * <pre>
- * { signum of value + 2 (1 character; decimal) } 
- * { signum of exponent + 2 (1 character; decimal) } 
- * { length of exponent - 1 (1 character; decimal) } 
- * { unsigned exponent (decimal) } 
- * { unsigned value (decimal) }
- * { 'n' if negated }
+ * { value signum +2 }
+ * { exponent signum +2 }
+ * { exponent length -1 }
+ * { exponent value }
+ * { value (-1 if inverted) }
  * </pre>
- * If the signum is zero, then the value is zero and that's it. The same goes
- * for the exponent: it is only encoded if the signum of the exponent is not 0.
- * If the signum is -1, the rest of the string is "negated" character by
- * character as follows: '0' is converted to '9', '1' to '8', and so on. The
- * same applies to the exponent.
+ * Only the signum is encoded if the value is zero. The exponent is not
+ * encoded if zero. Negative values are "inverted" character by character
+ * ('0' -> 9, '1' -> '8', and so on). The same applies to the exponent.
  * <p>
  * Examples: 
- * Decimal 0: String "2"
- * Decimal 2: String "322": Signum 1; exponent 0; value 2)
- * Decimal 123: String "3302123": Signum 1; exponent 2 which is
- *      encoded as signum 3, length 1, value 2; value 123).
- * Decimal -1: String "178n": Signum -1, the rest is negated;
- *      exponent 0 ("2" negated); value 1 ("1" negated).
+ * 0 => "2"
+ * 2 => "322" (signum 1; exponent 0; value 2)
+ * 120 => "330212" (signum 1; exponent signum 1, length 1, value 2; value 12).
+ * -1 => "179" (signum -1, rest inverted; exponent 0; value 1 (-1, inverted).
+ * <p>
+ * Values between BigDecimal(BigInteger.ONE, Integer.MIN_VALUE) and 
+ * BigDecimal(BigInteger.ONE, Integer.MAX_VALUE) are supported.
  */
 public class DecimalField {
     
@@ -57,12 +54,9 @@ public class DecimalField {
      * @return the String
      */
     public static String decimalToString(BigDecimal value) {
-        // sign (1: negative, 2: zero, 3: positive)
         switch (value.signum()) {
         case -1:
-            // without the 'n', the string representation of -101
-            // is larger than the string representation of -100
-            return "1" + negate(positiveDecimalToString(value.negate())) + "n";
+            return "1" + invert(positiveDecimalToString(value.negate()), 1);
         case 0:
             return "2";
         default:
@@ -77,68 +71,50 @@ public class DecimalField {
      * @return the BigDecimal
      */
     public static BigDecimal stringToDecimal(String value) {
-        int signum = value.charAt(0) - '2';
-        if (signum == 0) {
+        int sig = value.charAt(0) - '2';
+        if (sig == 0) {
             return BigDecimal.ZERO;
-        } else if (signum < 0) {
-            value = negate(value).substring(0, value.length() - 1);
+        } else if (sig < 0) {
+            value = invert(value, 1);
         }
-        int expSignum = value.charAt(1) - '2';
-        long exp;
-        if (expSignum == 0) {
+        long expSig = value.charAt(1) - '2', exp;
+        if (expSig == 0) {
             exp = 0;
             value = value.substring(2);
         } else {
-            String e = value.substring(2, 3);
-            if (expSignum < 0) {
-                e = negate(e);
+            int expSize = value.charAt(2) - '0' + 1;
+            if (expSig < 0) {
+                expSize = 11 - expSize;
             }
-            int expSize = e.charAt(0) - '0' + 1;
-            e = value.substring(3, 3 + expSize);
-            if (expSignum < 0) {
-                e = negate(e);
-            }
-            exp = Long.parseLong(e);
-            if (expSignum < 0) {
-                exp = -exp;
-            }
+            String e = value.substring(3, 3 + expSize);
+            exp = expSig * Long.parseLong(expSig < 0 ? invert(e, 0) : e);
             value = value.substring(3 + expSize);
         }
+        BigInteger x = new BigInteger(value);
         int scale = (int) (value.length() - exp - 1);
-        BigInteger unscaled = new BigInteger(value.substring(0));
-        if (signum < 0) {
-            unscaled = unscaled.negate();
-        }
-        return new BigDecimal(unscaled, scale);
+        return new BigDecimal(sig < 0 ? x.negate() : x, scale);
     }
     
     private static String positiveDecimalToString(BigDecimal value) {
         StringBuilder buff = new StringBuilder();
-        int precision = value.precision();
-        int scale = value.scale();
-        long exp = precision - scale - 1;
+        long exp = value.precision() - value.scale() - 1;
         // exponent signum and size
         if (exp == 0) {
             buff.append('2');
         } else {
-            // exponent
             String e = String.valueOf(Math.abs(exp));
             // exponent size is prepended
             e = String.valueOf(e.length() - 1) + e;
             // exponent signum
             if (exp > 0) {
-                buff.append('3');
+                buff.append('3').append(e);
             } else {
-                buff.append('1');
-                // the exponent is negated
-                e = negate(e);
+                buff.append('1').append(invert(e, 0));
             }
-            buff.append(e);
         }
-        // the unscaled value
         String s = value.unscaledValue().toString();
-        int max = s.length() - 1;
         // remove trailing 0s
+        int max = s.length() - 1;
         while (s.charAt(max) == '0') {
             max--;
         }
@@ -146,17 +122,18 @@ public class DecimalField {
     }
 
     /**
-     * "Negate" a number digit by digit (0 becomes 9, 9 becomes 0, and so on).
+     * "Invert" a number digit by digit (0 becomes 9, 9 becomes 0, and so on).
      * 
      * @param s the original string
+     * @param incLast how much to increment the last character
      * @return the negated string
      */
-    private static String negate(String s) {
-        // negate character by character
+    private static String invert(String s, int incLast) {
         char[] chars = s.toCharArray();
         for (int i = 0; i < chars.length; i++) {
             chars[i] = (char) ('9' - chars[i] + '0');
         }
+        chars[chars.length - 1] += incLast;
         return String.valueOf(chars);
     }
 
