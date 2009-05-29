@@ -1004,6 +1004,16 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         log.debug("Unable to coerce '" + literal + "' into a LONG: " + e.toString());
                     }
                     break;
+                case PropertyType.DECIMAL:
+                    // try to parse decimal
+                    try {
+                        BigDecimal d = new BigDecimal(literal);
+                        values.add(DecimalField.decimalToString(d));
+                        log.debug("Coerced " + literal + " into DECIMAL.");
+                    } catch (NumberFormatException e) {
+                        log.debug("Unable to coerce '" + literal + "' into a DECIMAL: " + e.toString());
+                    }
+                    break;
                 case PropertyType.STRING:
                     values.add(literal);
                     log.debug("Using literal " + literal + " as is.");
