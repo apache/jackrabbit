@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.math.BigDecimal;
+import java.net.URI;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -1014,6 +1015,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         log.debug("Unable to coerce '" + literal + "' into a DECIMAL: " + e.toString());
                     }
                     break;
+                case PropertyType.URI:
+                    // fall through... TODO: correct?
                 case PropertyType.STRING:
                     values.add(literal);
                     log.debug("Using literal " + literal + " as is.");

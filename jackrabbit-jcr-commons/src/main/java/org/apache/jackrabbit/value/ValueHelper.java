@@ -285,7 +285,7 @@ public class ValueHelper {
             case PropertyType.BINARY:
                 // convert to BINARY
                 try {
-                    val = factory.createValue(srcValue.getStream());
+                    val = factory.createValue(srcValue.getBinary());
                 } catch (RepositoryException re) {
                     throw new ValueFormatException("conversion failed: "
                             + PropertyType.nameFromValue(srcType) + " to "
@@ -369,6 +369,8 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to PATH value",
                                     re);
                         }
+                        // the following call will throw ValueFormatException
+                        // if p is not a valid PATH
                         val = factory.createValue(path, targetType);
                         break;
 
@@ -391,6 +393,8 @@ public class ValueHelper {
                             p = p.substring(2);
                         }
 
+                        // the following call will throw ValueFormatException
+                        // if p is not a valid PATH
                         val = factory.createValue(p, targetType);
                         break;
 
@@ -431,7 +435,33 @@ public class ValueHelper {
                             throw new ValueFormatException("failed to convert source value to NAME value",
                                     re);
                         }
+                        // the following call will throw ValueFormatException
+                        // if p is not a valid NAME
                         val = factory.createValue(name, targetType);
+                        break;
+
+                    case PropertyType.URI:
+                        URI uri;
+                        try {
+                            uri = URI.create(srcValue.getString());
+                        } catch (RepositoryException re) {
+                            // should never happen
+                            throw new ValueFormatException("failed to convert source value to NAME value",
+                                    re);
+                        }
+                        if (uri.isAbsolute()) {
+                            // uri contains scheme...
+                            throw new ValueFormatException("failed to convert URI value to NAME value");
+                        }
+                        String p = uri.getPath();
+
+                        if (p.startsWith("./")) {
+                            p = p.substring(2);
+                        }
+
+                        // the following call will throw ValueFormatException
+                        // if p is not a valid NAME
+                        val = factory.createValue(p, targetType);
                         break;
 
                     case PropertyType.BOOLEAN:
@@ -479,6 +509,7 @@ public class ValueHelper {
                     case PropertyType.LONG:
                     case PropertyType.DECIMAL:
                     case PropertyType.PATH:
+                    case PropertyType.URI:
                     case PropertyType.NAME:
                         throw new ValueFormatException("conversion failed: "
                                 + PropertyType.nameFromValue(srcType) + " to "
@@ -517,6 +548,7 @@ public class ValueHelper {
                     case PropertyType.DOUBLE:
                     case PropertyType.LONG:
                     case PropertyType.DECIMAL:
+                    case PropertyType.URI:
                     case PropertyType.PATH:
                     case PropertyType.NAME:
                         throw new ValueFormatException("conversion failed: "
