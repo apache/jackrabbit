@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ReferenceValue;
+import org.apache.jackrabbit.value.WeakReferenceValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -282,7 +283,8 @@ public class SessionImporter implements Importer {
         while (iter.hasNext()) {
             Property prop = (Property) iter.next();
             // being paranoid...
-            if (prop.getType() != PropertyType.REFERENCE) {
+            if (prop.getType() != PropertyType.REFERENCE
+                    && prop.getType() != PropertyType.WEAKREFERENCE) {
                 continue;
             }
             if (prop.getDefinition().isMultiple()) {
@@ -293,7 +295,9 @@ public class SessionImporter implements Importer {
                     UUID original = UUID.fromString(val.getString());
                     UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
-                        newVals[i] = new ReferenceValue(session.getNodeByUUID(adjusted));
+                        newVals[i] = session.getValueFactory().createValue(
+                                session.getNodeByUUID(adjusted),
+                                prop.getType() != PropertyType.REFERENCE);
                     } else {
                         // reference doesn't need adjusting, just copy old value
                         newVals[i] = val;

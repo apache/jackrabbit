@@ -145,8 +145,12 @@ public class BinaryImpl implements Binary {
         if (tmpFile != null) {
             // this instance is backed by a temp file
             RandomAccessFile raf = new RandomAccessFile(tmpFile, "r");
-            raf.seek(position);
-            return raf.read(b);
+            try {
+                raf.seek(position);
+                return raf.read(b);
+            } finally {
+                raf.close();
+            }
         } else {
             // this instance is backed by an in-memory buffer
             int length = Math.min(b.length, buffer.length - (int) position);

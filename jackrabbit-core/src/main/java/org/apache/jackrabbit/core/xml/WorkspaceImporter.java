@@ -598,7 +598,8 @@ public class WorkspaceImporter implements Importer {
             while (iter.hasNext()) {
                 PropertyState prop = (PropertyState) iter.next();
                 // being paranoid...
-                if (prop.getType() != PropertyType.REFERENCE) {
+                if (prop.getType() != PropertyType.REFERENCE
+                    && prop.getType() != PropertyType.WEAKREFERENCE) {
                     continue;
                 }
                 boolean modified = false;
@@ -609,7 +610,9 @@ public class WorkspaceImporter implements Importer {
                     UUID original = val.getUUID();
                     UUID adjusted = refTracker.getMappedUUID(original);
                     if (adjusted != null) {
-                        newVals[i] = InternalValue.create(adjusted);
+                        newVals[i] = InternalValue.create(
+                                adjusted,
+                                prop.getType() != PropertyType.REFERENCE);
                         modified = true;
                     } else {
                         // reference doesn't need adjusting, just copy old value

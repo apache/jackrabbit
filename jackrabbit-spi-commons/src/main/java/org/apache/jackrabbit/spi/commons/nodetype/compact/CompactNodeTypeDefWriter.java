@@ -322,9 +322,14 @@ public class CompactNodeTypeDefWriter {
     }
 
     private String convertConstraint(String vc, int type) {
-        if (type == PropertyType.REFERENCE || type == PropertyType.NAME || type == PropertyType.PATH) {
-            if (type == PropertyType.REFERENCE)
+        if (type == PropertyType.REFERENCE
+                || type == PropertyType.WEAKREFERENCE
+                || type == PropertyType.NAME
+                || type == PropertyType.PATH) {
+            if (type == PropertyType.REFERENCE
+                    || type == PropertyType.WEAKREFERENCE) {
                 type = PropertyType.NAME;
+            }
 
             try {
                 QValue qv = QValueFactoryImpl.getInstance().create(vc, type);

@@ -193,7 +193,11 @@ public class BLOBInTempFile extends BLOBFileValue {
      */
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         RandomAccessFile raf = new RandomAccessFile(file, "r");
-        raf.seek(position);
-        return raf.read(b);
+        try {
+            raf.seek(position);
+            return raf.read(b);
+        } finally {
+            raf.close();
+        }
     }
 }

@@ -438,7 +438,8 @@ public class BatchedItemOperations extends ItemValidator {
         while (iter.hasNext()) {
             PropertyState prop = (PropertyState) iter.next();
             // being paranoid...
-            if (prop.getType() != PropertyType.REFERENCE) {
+            if (prop.getType() != PropertyType.REFERENCE
+                    && prop.getType() != PropertyType.WEAKREFERENCE) {
                 continue;
             }
             boolean modified = false;
@@ -1879,7 +1880,8 @@ public class BatchedItemOperations extends ItemValidator {
                     }
                 }
 
-                if (newChildState.getType() == PropertyType.REFERENCE) {
+                if (newChildState.getType() == PropertyType.REFERENCE
+                        || newChildState.getType() == PropertyType.WEAKREFERENCE) {
                     refTracker.processedReference(newChildState);
                 }
                 // store new property

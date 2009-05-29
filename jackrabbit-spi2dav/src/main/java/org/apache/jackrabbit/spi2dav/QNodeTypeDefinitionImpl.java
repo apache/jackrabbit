@@ -240,8 +240,9 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, NodeTypeCon
             }
             // property definitions
             for (int i = 0; i < propDefs.length; i++) {
-                // REFERENCE value constraints
-                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE) {
+                // [WEAK]REFERENCE value constraints
+                if (propDefs[i].getRequiredType() == PropertyType.REFERENCE
+                        || propDefs[i].getRequiredType() == PropertyType.WEAKREFERENCE) {
                     String[] ca = propDefs[i].getValueConstraints();
                     if (ca != null) {
                         for (int j = 0; j < ca.length; j++) {

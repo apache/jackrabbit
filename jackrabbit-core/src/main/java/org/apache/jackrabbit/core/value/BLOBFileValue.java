@@ -168,8 +168,12 @@ public abstract class BLOBFileValue implements Binary {
      */
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         InputStream in = getStream();
-        in.skip(position);
-        return in.read(b);
+        try {
+            in.skip(position);
+            return in.read(b);
+        } finally {
+            in.close();
+        }
     }
 
     /**

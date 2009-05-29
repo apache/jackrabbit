@@ -153,7 +153,8 @@ public class PropInfo {
             // can only be multi-valued (n == 0 || n > 1)
             node.setProperty(name, va, type);
         }
-        if (type == PropertyType.REFERENCE) {
+        if (type == PropertyType.REFERENCE
+                || type == PropertyType.WEAKREFERENCE) {
             // store reference for later resolution
             refTracker.processedReference(node.getProperty(name));
         }
@@ -215,7 +216,8 @@ public class PropInfo {
         // make sure property is valid according to its definition
         itemOps.validate(prop);
 
-        if (prop.getType() == PropertyType.REFERENCE) {
+        if (prop.getType() == PropertyType.REFERENCE
+                || prop.getType() == PropertyType.WEAKREFERENCE) {
             // store reference for later resolution
             refTracker.processedReference(prop);
         }

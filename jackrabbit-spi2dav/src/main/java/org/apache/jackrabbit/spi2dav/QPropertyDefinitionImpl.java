@@ -131,7 +131,8 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
             List vc = new ArrayList();
             ElementIterator it = DomUtil.getChildren(child, VALUECONSTRAINT_ELEMENT, null);
             while (it.hasNext()) {
-                int constType = (requiredType == PropertyType.REFERENCE) ?  PropertyType.NAME : requiredType;
+                int constType = (requiredType == PropertyType.REFERENCE
+                        || requiredType == PropertyType.WEAKREFERENCE) ?  PropertyType.NAME : requiredType;
                 String qValue = DomUtil.getText(it.nextElement());
                 // in case of name and path constraint, the value must be
                 // converted to be in qualified format
