@@ -32,7 +32,7 @@ public class DecimalConvertTest extends JUnitTest {
     public void testCommon() {
         // System.out.println(DecimalField.decimalToString(new BigDecimal(0)));
         // System.out.println(DecimalField.decimalToString(new BigDecimal(2)));
-        // System.out.println(DecimalField.decimalToString(new BigDecimal(123)));
+        // System.out.println(DecimalField.decimalToString(new BigDecimal(120)));
         // System.out.println(DecimalField.decimalToString(new BigDecimal(-1)));
         
         ArrayList<BigDecimal> list = new ArrayList<BigDecimal>();
@@ -62,6 +62,8 @@ public class DecimalConvertTest extends JUnitTest {
         list.add(BigDecimal.ZERO);
         list.add(BigDecimal.ONE);
         list.add(BigDecimal.TEN);
+        list.add(new BigDecimal(BigInteger.ONE, Integer.MAX_VALUE));
+        list.add(new BigDecimal(BigInteger.ONE, Integer.MIN_VALUE));
         Random random = new Random(1);
         // a few regular values
         for (int i = 0; i < 10000; i++) {
@@ -103,7 +105,9 @@ public class DecimalConvertTest extends JUnitTest {
                 }
             }
             BigDecimal test = DecimalField.stringToDecimal(s);
-            assertEquals(d + "<>" + test, test.compareTo(d), 0);
+            if (test.compareTo(d) != 0) {
+                assertEquals(d + "<>" + test.toPlainString(), 0, test.compareTo(d));
+            }
             lastDecimal = d;
             lastString = s;
         }
