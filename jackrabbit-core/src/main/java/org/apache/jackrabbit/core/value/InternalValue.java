@@ -619,11 +619,11 @@ public class InternalValue extends AbstractQValue {
     }
 
     private InternalValue(URI value) {
-        super(value, PropertyType.URI);
+        super(value);
     }
 
     private InternalValue(BigDecimal value) {
-        super(value, PropertyType.DECIMAL);
+        super(value);
     }
 
     private InternalValue(BLOBFileValue value) {
