@@ -758,12 +758,18 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new RepositoryException(msg, e);
         }
 
+        Name nodeTypeName = null;
+        if (nodeType != null) {
+            nodeTypeName = nodeType.getQName();
+            if (nodeType.isMixin()) {
+                throw new ConstraintViolationException(session.getJCRName(nodeTypeName) + ": not a primary node type.");
+            }
+            if (nodeType.isAbstract()) {
+                throw new ConstraintViolationException(session.getJCRName(nodeTypeName)  + ": is an abstract node type.");
+            }
+        }
         NodeDefinitionImpl def;
         try {
-            Name nodeTypeName = null;
-            if (nodeType != null) {
-                nodeTypeName = nodeType.getQName();
-            }
             def = getApplicableChildNodeDefinition(nodeName, nodeTypeName);
         } catch (RepositoryException re) {
             String msg = "no definition found in parent node's node type for new node";
@@ -2075,10 +2081,6 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         NodeTypeImpl nt = (NodeTypeImpl) session.getNodeTypeManager().getNodeType(nodeTypeName);
-        if (nt.isMixin()) {
-            throw new RepositoryException(nodeTypeName + ": not a primary node type");
-        }
-
         return internalAddNode(relPath, nt);
     }
 

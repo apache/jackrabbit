@@ -20,6 +20,7 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -406,13 +407,19 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     /**
      * @inheritDoc
-     * @see EffectiveNodeType#checkAddNodeConstraints(Name, ItemDefinitionProvider)
+     * @see EffectiveNodeType#checkAddNodeConstraints(org.apache.jackrabbit.spi.Name,QNodeTypeDefinition, ItemDefinitionProvider)
      */
-    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException {
-        QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeName);
+        if (nodeTypeDefinition.isAbstract()) {
+            throw new ConstraintViolationException(name + " is abstract  be used as primary node type.");
+        }
+        if (nodeTypeDefinition.isMixin()) {
+            throw new ConstraintViolationException(name + " is abstract and cannot be used as primary node type.");
+        }
+        QNodeDefinition nd = definitionProvider.getQNodeDefinition(this, name, nodeTypeDefinition.getName());
         if (nd.isProtected()) {
-            throw new ConstraintViolationException(name + " is protected");
+            throw new ConstraintViolationException(name + " is protected.");
         }
         if (nd.isAutoCreated()) {
             throw new ConstraintViolationException(name + " is auto-created and can not be manually added");

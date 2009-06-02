@@ -652,6 +652,15 @@ public class EffectiveNodeType implements Cloneable {
     public void checkAddNodeConstraints(Name name, Name nodeTypeName,
                                         NodeTypeRegistry ntReg)
             throws ConstraintViolationException, NoSuchNodeTypeException {
+        if (nodeTypeName != null) {
+            NodeTypeDef ntDef = ntReg.getNodeTypeDef(nodeTypeName);
+            if (ntDef.isAbstract()) {
+                throw new ConstraintViolationException(nodeTypeName + " is abstract.");
+            }
+            if (ntDef.isMixin()) {
+                throw new ConstraintViolationException(nodeTypeName + " is mixin.");
+            }
+        }
         NodeDef nd = getApplicableChildNodeDef(name, nodeTypeName, ntReg);
         if (nd.isProtected()) {
             throw new ConstraintViolationException(name + " is protected");

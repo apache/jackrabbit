@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.nodetype;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -93,12 +94,10 @@ public interface EffectiveNodeType {
 
     /**
      * @param name
-     * @param nodeTypeName
-     * @param definitionProvider
-     * @throws ConstraintViolationException
-     * @throws NoSuchNodeTypeException
+     * @param nodeTypeDefinition
+     *@param definitionProvider  @throws ConstraintViolationException  @throws NoSuchNodeTypeException
      */
-    public void checkAddNodeConstraints(Name name, Name nodeTypeName, ItemDefinitionProvider definitionProvider)
+    public void checkAddNodeConstraints(Name name, QNodeTypeDefinition nodeTypeDefinition, ItemDefinitionProvider definitionProvider)
             throws ConstraintViolationException, NoSuchNodeTypeException;
 
     /**

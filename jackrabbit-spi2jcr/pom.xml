@@ -84,7 +84,6 @@
                 org.apache.jackrabbit.test.api.observation.NodeMovedTest
                 org.apache.jackrabbit.test.api.observation.NodeReorderTest
                 org.apache.jackrabbit.test.api.observation.EventJournalTest
-                org.apache.jackrabbit.test.api.version.RestoreTest#testRestoreNameJcr2
               </value>
             </property>
           </systemProperties>
