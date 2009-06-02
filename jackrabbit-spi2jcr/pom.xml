@@ -69,7 +69,6 @@
               <value>
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
-                org.apache.jackrabbit.test.api.lock.LockManagerTest
                 org.apache.jackrabbit.test.api.observation.GetDateTest
                 org.apache.jackrabbit.test.api.observation.GetIdentifierTest
                 org.apache.jackrabbit.test.api.observation.GetInfoTest

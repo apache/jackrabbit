@@ -93,7 +93,7 @@ public class JcrLockManager implements LockManager {
      *
      * @see javax.jcr.lock.LockManager#getLockTokens()
      */
-    public String[] getLockTokens() {
+    public String[] getLockTokens() throws RepositoryException {
         return lockStateMgr.getLockTokens();
     }
 

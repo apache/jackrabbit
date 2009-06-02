@@ -463,7 +463,12 @@ public class SessionImpl extends AbstractSession
      * @see javax.jcr.Session#getLockTokens()
      */
     public String[] getLockTokens() {
-        return getLockStateManager().getLockTokens();
+        try {
+            return getLockStateManager().getLockTokens();
+        } catch (RepositoryException e) {
+            log.warn("Unable to retrieve lock tokens for this session. (" + e.getMessage() + ")");            
+            return new String[0];
+        }
     }
 
     /**
