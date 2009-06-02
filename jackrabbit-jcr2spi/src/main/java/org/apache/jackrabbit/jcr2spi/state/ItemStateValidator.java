@@ -28,6 +28,7 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -383,7 +384,8 @@ public class ItemStateValidator {
             // make sure there's an applicable definition for new child node
             Name[] ntNames = parentState.getAllNodeTypeNames();
             EffectiveNodeType entParent = mgrProvider.getEffectiveNodeTypeProvider().getEffectiveNodeType(ntNames);
-            entParent.checkAddNodeConstraints(nodeName, nodeTypeName, mgrProvider.getItemDefinitionProvider());
+            QNodeTypeDefinition def = mgrProvider.getNodeTypeDefinitionProvider().getNodeTypeDefinition(nodeTypeName);
+            entParent.checkAddNodeConstraints(nodeName, def, mgrProvider.getItemDefinitionProvider());
         }
         // collisions
         if ((options & CHECK_COLLISION) == CHECK_COLLISION) {

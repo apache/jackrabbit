@@ -112,7 +112,8 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         node.addMixin(mixinName);
         testRootNode.save();
 
-        String notAssignedMixin = NodeMixinUtil.getAddableMixinName(session, node);
+
+        String notAssignedMixin = NodeMixinUtil.getNotAssignedMixinName(session, node);
         if (notAssignedMixin == null) {
             throw new NotExecutableException("No testable mixin node type found");
         }

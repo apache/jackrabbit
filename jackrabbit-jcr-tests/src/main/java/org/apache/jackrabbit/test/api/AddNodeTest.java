@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -24,6 +25,9 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.Session;
 
 /**
@@ -88,6 +92,49 @@ public class AddNodeTest extends AbstractJCRTest {
             fail("Expected NoSuchNodeTypeException.");
         } catch (NoSuchNodeTypeException e) {
             // correct.
+        }
+    }
+
+    /**
+     * Tests if addNode() throws a ConstraintViolationException in case
+     * of an abstract node type.
+     */
+    public void testAbstractNodeType() throws RepositoryException {
+        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeIterator nts = ntMgr.getPrimaryNodeTypes();
+        while (nts.hasNext()) {
+            NodeType nt = nts.nextNodeType();
+            if (nt.isAbstract()) {
+                try {
+                    testRootNode.addNode(nodeName1, nt.getName());
+                    superuser.save();
+                    fail("Expected ConstraintViolationException.");
+                } catch (ConstraintViolationException e) {
+                    // correct.
+                } finally {
+                    superuser.refresh(false);
+                }
+            }
+        }
+    }
+
+    /**
+     * Tests if addNode() throws a ConstraintViolationException in case
+     * of an mixin node type.
+     */
+    public void testMixinNodeType() throws RepositoryException, NotExecutableException {
+        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeIterator nts = ntMgr.getMixinNodeTypes();
+        if (nts.hasNext()) {
+            try {
+                testRootNode.addNode(nodeName1, nts.nextNodeType().getName());
+                superuser.save();
+                fail("Expected ConstraintViolationException.");
+            } catch (ConstraintViolationException e) {
+                // correct.
+            }
+        } else {
+            throw new NotExecutableException("no mixins.");
         }
     }
 

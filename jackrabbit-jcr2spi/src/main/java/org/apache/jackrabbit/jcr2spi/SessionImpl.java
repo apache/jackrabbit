@@ -62,6 +62,7 @@ import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
@@ -750,6 +751,13 @@ public class SessionImpl extends AbstractSession
      */
     public ItemDefinitionProvider getItemDefinitionProvider() {
         return workspace.getItemDefinitionProvider();
+    }
+
+    /**
+     * @see ManagerProvider#getNodeTypeDefinitionProvider()
+     */
+    public NodeTypeDefinitionProvider getNodeTypeDefinitionProvider() {
+        return ntManager;
     }
 
     /**

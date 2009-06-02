@@ -60,7 +60,7 @@ import java.io.PrintStream;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeRegistryListener, Dumpable {
+public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeDefinitionProvider, NodeTypeRegistryListener, Dumpable {
 
     /**
      * Logger instance for this class
@@ -207,7 +207,16 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     NodeTypeRegistry getNodeTypeRegistry() {
         return ntReg;
     }
-    
+
+    //-----------------------------------------< NodeTypeDefinitionProvider >---
+    /**
+     * @see NodeTypeDefinitionProvider#getNodeTypeDefinition(org.apache.jackrabbit.spi.Name) 
+     */
+    public QNodeTypeDefinition getNodeTypeDefinition(Name ntName) throws NoSuchNodeTypeException, RepositoryException {
+        NodeTypeImpl nt = getNodeType(ntName);
+        return nt.getDefinition();
+    }
+
     //-------------------------------------------< NodeTypeRegistryListener >---
     /**
      * {@inheritDoc}

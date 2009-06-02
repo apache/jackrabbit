@@ -25,6 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
 
 /**
  * <code>NodeCanAddMixinTest</code> contains the test cases for the method
@@ -143,6 +144,55 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
                     "NoSuchNodeTypeException if mixinName is an unknown mixin type");
         } catch (NoSuchNodeTypeException e) {
             // success
+        }
+    }
+
+       /**
+     * Test if adding the same mixin twice would be allowed.
+     *
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     * @since JCR 2.0
+     */
+    public void testAddMixinTwice() throws RepositoryException, NotExecutableException {
+        Session session = testRootNode.getSession();
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
+
+        if (mixinName == null) {
+            throw new NotExecutableException("No testable mixin node type found");
+        }
+
+        assertTrue(node.canAddMixin(mixinName));
+        node.addMixin(mixinName);
+        // adding again must be possible (though it has no effect)
+        assertTrue(node.canAddMixin(mixinName));
+
+        session.save();
+
+        // adding again must be possible (though it has no effect)
+        assertTrue(node.canAddMixin(mixinName));
+    }
+
+    /**
+     * Test if an inherited mixin could be added.
+     *
+     * @throws RepositoryException
+     * @since JCR 2.0
+     */
+    public void testAddInheritedMixin() throws RepositoryException {
+        Session session = testRootNode.getSession();
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        session.save();
+
+        NodeType nt = node.getPrimaryNodeType();
+        NodeType[] superTypes = nt.getSupertypes();
+        for (int i = 0; i < superTypes.length; i++) {
+            if (superTypes[i].isMixin()) {
+                String mixinName = superTypes[i].getName();
+                // adding again must be possible (though it has no effect)
+                assertTrue(node.canAddMixin(mixinName));
+            }
         }
     }
 

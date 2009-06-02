@@ -129,7 +129,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     private QPropertyDefinition getApplicablePropDef(Name propertyName, int type, boolean multiValued)
             throws RepositoryException {
-        return definitionProvider().getQPropertyDefinition(getQName(), propertyName, type, multiValued);
+        return definitionProvider().getQPropertyDefinition(ntd.getName(), propertyName, type, multiValued);
     }
 
     /**
@@ -148,12 +148,12 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * Returns the 'internal', i.e. the fully qualified name.
+     * Returns the node type definition.
      *
-     * @return the qualified name
+     * @return the qualified definition
      */
-    private Name getQName() {
-        return ntd.getName();
+    QNodeTypeDefinition getDefinition() {
+        return ntd;
     }
 
     /**
@@ -493,8 +493,9 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      */
     public boolean canAddChildNode(String childNodeName, String nodeTypeName) {
         try {
-            ent.checkAddNodeConstraints(resolver().getQName(childNodeName),
-                resolver().getQName(nodeTypeName), definitionProvider());
+            Name ntName = resolver().getQName(nodeTypeName);
+            QNodeTypeDefinition def = ntMgr.getNodeTypeDefinition(ntName);
+            ent.checkAddNodeConstraints(resolver().getQName(childNodeName), def, definitionProvider());
             return true;
         } catch (NameException be) {
             // implementation specific exception, fall through

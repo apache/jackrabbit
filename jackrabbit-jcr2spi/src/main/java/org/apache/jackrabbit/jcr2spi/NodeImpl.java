@@ -722,7 +722,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // get mixin types present in the jcr:mixintypes property without
         // modifying the NodeState.
         List mixinValue = getMixinTypes();
-        if (!mixinValue.contains(mixinQName)) {
+        if (!mixinValue.contains(mixinQName) && !isNodeType(mixinQName)) {
             if (!canAddMixin(mixinQName)) {
                 throw new ConstraintViolationException("Cannot add '" + mixinName + "' mixin type.");
             }
@@ -1626,11 +1626,6 @@ public class NodeImpl extends ItemImpl implements Node {
             log.error(mixin.getName() + ": not a mixin node type");
             return false;
         }
-        NodeTypeImpl primaryType = ntMgr.getNodeType(getPrimaryNodeTypeName());
-        if (primaryType.isNodeType(mixinName)) {
-            log.debug(mixin.getName() + ": already contained in primary node type");
-            return false;
-        }
 
         // get list of existing nodetypes
         Name[] existingNts = getNodeState().getNodeTypeNames();
@@ -1640,12 +1635,6 @@ public class NodeImpl extends ItemImpl implements Node {
         // check if the base type supports adding this mixin
         if (!entExisting.supportsMixin(mixinName)) {
             log.debug(mixin.getName() + ": not supported on node type " + getPrimaryNodeTypeName());
-            return false;
-        }
-
-        // check if adding new mixin conflicts with existing nodetypes
-        if (entExisting.includesNodeType(mixinName)) {
-            log.debug(mixin.getName() + ": already contained in mixin types");
             return false;
         }
 

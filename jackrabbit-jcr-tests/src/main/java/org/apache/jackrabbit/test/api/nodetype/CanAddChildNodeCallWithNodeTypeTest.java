@@ -24,6 +24,7 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeIterator;
 
 /**
  * Tests <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
@@ -123,6 +124,65 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
                 nodeType.canAddChildNode(childNodeName, illegalType));
     }
 
+    /**
+     * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
+     * returns false if <code>nodeTypeName</code> represents a mixin.
+     */
+    public void testCanAddMixinType()
+            throws NotExecutableException, RepositoryException {
+
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, false, false);
+
+        if (nodeDef == null) {
+            throw new NotExecutableException("No testable node type found.");
+        }
+
+        NodeType nodeType = nodeDef.getDeclaringNodeType();
+        String childNodeName = nodeDef.getName();
+        String mixinName;
+        NodeTypeIterator it = manager.getMixinNodeTypes();
+        if (it.hasNext()) {
+            mixinName = it.nextNodeType().getName();
+        } else {
+            throw new NotExecutableException("No mixin type found.");
+        }
+
+        assertFalse("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
+                "must return false if nodeTypeName represents a mixin type.",
+                nodeType.canAddChildNode(childNodeName, mixinName));
+    }
+
+    /**
+     * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
+     * returns false if <code>nodeTypeName</code> represents an abstract node type.
+     */
+    public void testCanAddAbstractType()
+    throws NotExecutableException, RepositoryException {
+
+        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, false, false);
+
+        if (nodeDef == null) {
+            throw new NotExecutableException("No testable node type found.");
+        }
+
+        NodeType nodeType = nodeDef.getDeclaringNodeType();
+        String childNodeName = nodeDef.getName();
+        String abstractName = null;
+        NodeTypeIterator it = manager.getPrimaryNodeTypes();
+        while (it.hasNext() && abstractName == null) {
+            NodeType nt = it.nextNodeType();
+            if (nt.isAbstract()) {
+                abstractName = nt.getName();
+            }
+        }
+        if (abstractName == null) {
+            throw new NotExecutableException("No abstract type found.");
+        }
+
+        assertFalse("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
+                "must return false if nodeTypeName represents an abstract node type.",
+                nodeType.canAddChildNode(childNodeName, abstractName));
+    }
     /**
      * Tests if <code>NodeType.canAddChildNode(String childNodeName, String nodeTypeName)</code>
      * returns false if <code>childNodeName</code> does not match the <code>NodeDef</code>.

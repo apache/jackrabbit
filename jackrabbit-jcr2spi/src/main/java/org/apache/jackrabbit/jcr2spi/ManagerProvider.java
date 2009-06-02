@@ -23,6 +23,7 @@ import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
+import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeDefinitionProvider;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
@@ -66,6 +67,8 @@ public interface ManagerProvider {
     public VersionManager getVersionStateManager();
 
     public ItemDefinitionProvider getItemDefinitionProvider();
+
+    public NodeTypeDefinitionProvider getNodeTypeDefinitionProvider();
 
     public EffectiveNodeTypeProvider getEffectiveNodeTypeProvider();
 

@@ -103,6 +103,60 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         }
     }
 
+    /**
+     * Test if adding the same mixin twice works as expected.
+     * 
+     * @throws RepositoryException
+     * @throws NotExecutableException
+     * @since JCR 2.0
+     */
+    public void testAddMixinTwice() throws RepositoryException, NotExecutableException {
+        Session session = testRootNode.getSession();
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
+
+        if (mixinName == null) {
+            throw new NotExecutableException("No testable mixin node type found");
+        }
+
+        node.addMixin(mixinName);
+        // adding again must succeed
+        node.addMixin(mixinName);
+
+        session.save();
+        
+        node.addMixin(mixinName);
+        assertFalse(node.isModified());
+    }
+
+    /**
+     * Test if adding an inherited mixin type has no effect.
+     * 
+     * @throws RepositoryException
+     * @since JCR 2.0
+     */
+    public void testAddInheritedMixin() throws RepositoryException, NotExecutableException {
+        Session session = testRootNode.getSession();
+        Node node = testRootNode.addNode(nodeName1, testNodeType);
+        session.save();
+
+        String inheritedMixin = null;
+
+        NodeType nt = node.getPrimaryNodeType();
+        NodeType[] superTypes = nt.getSupertypes();
+        for (int i = 0; i < superTypes.length && inheritedMixin == null; i++) {
+            if (superTypes[i].isMixin()) {
+                inheritedMixin = superTypes[i].getName();
+            }
+        }
+
+        if (inheritedMixin != null) {
+            node.addMixin(inheritedMixin);
+            assertFalse(node.isModified());
+        } else {
+            throw new NotExecutableException("Primary node type does not have a mixin supertype");
+        }
+    }
 
     /**
      * Tests if <code>Node.addMixin(String mixinName)</code> throws a
