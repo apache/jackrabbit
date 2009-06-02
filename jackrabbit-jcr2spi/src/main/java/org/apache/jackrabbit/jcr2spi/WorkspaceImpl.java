@@ -582,8 +582,9 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * Create the <code>ObservationManager</code>. May be overridden by subclasses.
      *
      * @return a new <code>ObservationManager</code> instance
+     * @throws RepositoryException
      */
-    protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) {
-        return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
+    protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) throws RepositoryException {
+        return new ObservationManagerImpl(wspManager, resolver, ntRegistry, session.getValueFactory());
     }
 }

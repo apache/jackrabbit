@@ -37,6 +37,7 @@ public class EventImpl
                 null, // TODO not available from XML_EVENT element
                 null, // TODO not available from XML_EVENT element
                 DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID, NAMESPACE));
+        // TODO: extend jcr-server to deliver jsr 283 event information
     }
 
     //--------------------------------------------------------------------------
@@ -52,6 +53,10 @@ public class EventImpl
                 return Event.PROPERTY_CHANGED;
             case javax.jcr.observation.Event.PROPERTY_REMOVED:
                 return Event.PROPERTY_REMOVED;
+            case javax.jcr.observation.Event.NODE_MOVED:
+                return Event.NODE_MOVED;
+            case javax.jcr.observation.Event.PERSIST:
+                return Event.PERSIST;
             default:
                 throw new IllegalArgumentException("Invalid event type: " + jcrEventType);
         }

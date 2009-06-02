@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
 import javax.jcr.observation.EventJournal;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
@@ -58,9 +59,16 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
     private final WorkspaceManager wspManager;
 
     /**
-     * The session this observation manager belongs to.
+     * The name and path resolver associated with the session this observation
+     * manager belongs to.
      */
     private final NamePathResolver resolver;
+
+    /**
+     * The ValueFactory associated with the session this observation
+     * manager belongs to.
+     */
+    private final ValueFactory valueFactory;
 
     /**
      * The <code>NodeTypeRegistry</code> of the session.
@@ -82,12 +90,14 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      * @param wspManager the WorkspaceManager.
      * @param resolver
      * @param ntRegistry The <code>NodeTypeRegistry</code> of the session.
+     * @param valueFactory
      */
     public ObservationManagerImpl(WorkspaceManager wspManager, NamePathResolver resolver,
-                                  NodeTypeRegistry ntRegistry) {
+                                  NodeTypeRegistry ntRegistry, ValueFactory valueFactory) {
         this.wspManager = wspManager;
         this.resolver = resolver;
         this.ntRegistry = ntRegistry;
+        this.valueFactory = valueFactory;
     }
 
     /**
@@ -179,8 +189,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
      * @see javax.jcr.observation.ObservationManager#setUserData(String) 
      */
     public void setUserData(String userData) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2108");
+        wspManager.setUserData(userData);
     }
 
     //-----------------------< InternalEventListener >--------------------------
@@ -205,7 +214,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
             Map.Entry entry = (Map.Entry) it.next();
             EventListener listener = (EventListener) entry.getKey();
             EventFilter filter = (EventFilter) entry.getValue();
-            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, resolver);
+            FilteredEventIterator eventIter = new FilteredEventIterator(eventBundle, filter, resolver, valueFactory, wspManager.getIdFactory());
             if (eventIter.hasNext()) {
                 try {
                     listener.onEvent(eventIter);

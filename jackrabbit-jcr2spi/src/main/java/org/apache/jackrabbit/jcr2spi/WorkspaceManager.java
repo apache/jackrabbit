@@ -390,6 +390,14 @@ public class WorkspaceManager
         return service.createEventFilter(sessionInfo, eventTypes, path, isDeep, uuids, nodeTypes, noLocal);
     }
 
+    /**
+     *
+     * @param userData
+     * @throws RepositoryException
+     */
+    public void setUserData(String userData) throws RepositoryException {
+        sessionInfo.setUserData(userData);
+    }
     //--------------------------------------------------------------------------
 
     /**

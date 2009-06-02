@@ -88,5 +88,14 @@ public class SessionInfoLogger extends AbstractLogger implements SessionInfo {
         }, "removeLockToken(String)", new Object[]{lockToken});
     }
 
+    public void setUserData(final String userData) throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                sessionInfo.setUserData(userData);
+                return null;
+            }
+        }, "setUserData(String)", new Object[]{userData});
+    }
+
 
 }

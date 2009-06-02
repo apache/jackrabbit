@@ -22,9 +22,11 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
+import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,16 @@ class FilteredEventIterator implements EventIterator {
     private final NamePathResolver resolver;
 
     /**
+     * The value factory of the session that created this event iterator.
+     */
+    private final ValueFactory valueFactory;
+
+    /**
+     * The IdFactory
+     */
+    private final IdFactory idFactory;
+
+    /**
      * The next {@link javax.jcr.observation.Event} in this iterator
      */
     private Event next;
@@ -75,16 +87,22 @@ class FilteredEventIterator implements EventIterator {
      * @param events     the {@link org.apache.jackrabbit.spi.Event}s as a
      *                   bundle.
      * @param filter     only event that pass the filter will be dispatched to
-     *                   the event listener.
+ *                   the event listener.
      * @param resolver
+     * @param valueFactory
+     * @param idFactory
      */
     public FilteredEventIterator(EventBundle events,
                                  EventFilter filter,
-                                 NamePathResolver resolver) {
+                                 NamePathResolver resolver,
+                                 ValueFactory valueFactory,
+                                 IdFactory idFactory) {
         this.actualEvents = events.getEvents();
         this.filter = filter;
         this.isLocal = events.isLocal();
         this.resolver = resolver;
+        this.valueFactory = valueFactory;
+        this.idFactory = idFactory;
         fetchNext();
     }
 
@@ -170,7 +188,7 @@ class FilteredEventIterator implements EventIterator {
         next = null;
         while (next == null && actualEvents.hasNext()) {
             event = (org.apache.jackrabbit.spi.Event) actualEvents.next();
-            next = filter.accept(event, isLocal) ? new EventImpl(resolver, event) : null;
+            next = filter.accept(event, isLocal) ? new EventImpl(event, resolver, valueFactory, idFactory) : null;
         }
     }
 }

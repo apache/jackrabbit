@@ -39,7 +39,6 @@ public class GetIdentifierTest extends AbstractObservationTest {
 
     public void testNodeMoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
-        String id = n.getIdentifier();
         testRootNode.save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
@@ -47,21 +46,21 @@ public class GetIdentifierTest extends AbstractObservationTest {
             }
         }, Event.NODE_MOVED);
         String path = testRootNode.getNode(nodeName2).getPath();
-        assertEquals(id, getEventByPath(events, path).getIdentifier());
+        assertEquals(n.getIdentifier(), getEventByPath(events, path).getIdentifier());
     }
 
     public void testNodeRemoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
         String path = n.getPath();
-        String id = n.getIdentifier();
         testRootNode.save();
+        String identifier = n.getIdentifier();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 n.remove();
                 testRootNode.save();
             }
         }, Event.NODE_REMOVED);
-        assertEquals(id, getEventByPath(events, path).getIdentifier());
+        assertEquals(identifier, getEventByPath(events, path).getIdentifier());
     }
 
     public void testPropertyAdded() throws RepositoryException {
@@ -91,7 +90,6 @@ public class GetIdentifierTest extends AbstractObservationTest {
 
     public void testPropertyRemoved() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        String id = n.getIdentifier();
         final Property prop = n.setProperty(propertyName1, "test");
         String propPath = prop.getPath();
         testRootNode.save();
@@ -101,6 +99,6 @@ public class GetIdentifierTest extends AbstractObservationTest {
                 testRootNode.save();
             }
         }, Event.PROPERTY_REMOVED);
-        assertEquals(id, getEventByPath(events, propPath).getIdentifier());
+        assertEquals(n.getIdentifier(), getEventByPath(events, propPath).getIdentifier());
     }
 }

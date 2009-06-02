@@ -87,4 +87,13 @@ public interface SessionInfo {
      * @throws RepositoryException If another error occurs.
      */
     public void removeLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException;
+
+    /**
+     * Sets the user data used for {@link org.apache.jackrabbit.spi.Event#getUserData()}.
+     *
+     * @param userData
+     * @throws RepositoryException
+     * @see javax.jcr.observation.ObservationManager#setUserData(String)
+     */
+    public void setUserData(String userData) throws RepositoryException;
 }
