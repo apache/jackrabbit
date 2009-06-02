@@ -22,9 +22,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.observation.Event;
 
-import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
-import org.apache.jackrabbit.test.api.observation.EventResult;
-
 /**
  * Tests if {@link javax.jcr.Session#move} operations trigger the appropriate
  * observation events.
