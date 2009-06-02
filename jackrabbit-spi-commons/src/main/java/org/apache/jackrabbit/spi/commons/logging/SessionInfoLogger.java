@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi.commons.logging;
 
 import org.apache.jackrabbit.spi.SessionInfo;
 
+import javax.jcr.RepositoryException;
+
 /**
  * Log wrapper for a {@link SessionInfo}.
  */
@@ -60,26 +62,26 @@ public class SessionInfoLogger extends AbstractLogger implements SessionInfo {
         }, "getWorkspaceName()", new Object[]{});
     }
 
-    public String[] getLockTokens() {
-        return (String[]) execute(new SafeCallable() {
-            public Object call() {
+    public String[] getLockTokens() throws RepositoryException {
+        return (String[]) execute(new Callable() {
+            public Object call() throws RepositoryException {
                 return sessionInfo.getLockTokens();
             }
         }, "getLockTokens()", new Object[]{});
     }
 
-    public void addLockToken(final String lockToken) {
-        execute(new SafeCallable() {
-            public Object call() {
+    public void addLockToken(final String lockToken) throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
                 sessionInfo.addLockToken(lockToken);
                 return null;
             }
         }, "addLockToken(String)", new Object[]{lockToken});
     }
 
-    public void removeLockToken(final String lockToken) {
-        execute(new SafeCallable() {
-            public Object call() {
+    public void removeLockToken(final String lockToken) throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
                 sessionInfo.removeLockToken(lockToken);
                 return null;
             }

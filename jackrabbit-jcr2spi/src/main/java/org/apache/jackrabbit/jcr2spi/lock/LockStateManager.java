@@ -114,7 +114,7 @@ public interface LockStateManager {
      * @return The lock tokens associated with the <code>Session</code> this
      * lock manager has been created for.
      */
-    public String[] getLockTokens();
+    public String[] getLockTokens() throws RepositoryException;
 
     /**
      * Invoked by a session to inform that a lock token has been added.

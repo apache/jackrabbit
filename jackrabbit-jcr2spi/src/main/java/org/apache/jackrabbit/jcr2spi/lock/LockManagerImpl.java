@@ -33,7 +33,6 @@ import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +41,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import java.util.HashMap;
@@ -192,7 +192,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      *
      * @see LockStateManager#getLockTokens()
      */
-    public String[] getLockTokens() {
+    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
         return wspManager.getLockTokens();
     }
 

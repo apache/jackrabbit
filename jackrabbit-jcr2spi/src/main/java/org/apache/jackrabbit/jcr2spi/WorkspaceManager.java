@@ -100,7 +100,6 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.MergeException;
-import javax.jcr.Session;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
@@ -211,15 +210,15 @@ public class WorkspaceManager
         return service.getWorkspaceNames(sessionInfo);
     }
 
-    public IdFactory getIdFactory() throws RepositoryException {
+    public IdFactory getIdFactory() {
         return idFactory;
     }
 
-    public NameFactory getNameFactory() throws RepositoryException {
+    public NameFactory getNameFactory() {
         return nameFactory;
     }
 
-    public PathFactory getPathFactory() throws RepositoryException {
+    public PathFactory getPathFactory()  {
         return pathFactory;
     }
 
@@ -231,44 +230,42 @@ public class WorkspaceManager
         return service.getLockInfo(sessionInfo, nodeId);
     }
 
-    public String[] getLockTokens() {
+    /**
+     * Returns the lock tokens present with the <code>SessionInfo</code>.
+     *
+     * @return lock tokens present with the <code>SessionInfo</code>.
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     * @see org.apache.jackrabbit.spi.SessionInfo#getLockTokens() 
+     */
+    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
         return sessionInfo.getLockTokens();
     }
 
     /**
-     * This method always succeeds.
-     * This is not compliant to the requirements for {@link Session#addLockToken(String)}
-     * as defined by JSR170, which defines that at most one single <code>Session</code>
-     * may contain the same lock token. However, with SPI it is not possible
-     * to determine, whether another session holds the lock, nor can the client
-     * determine, which lock this token belongs to. The latter would be
-     * necessary in order to build the 'Lock' object properly.
+     * This method succeeds if the lock tokens could be added to the
+     * <code>SessionInfo</code>.
      *
      * @param lt
+     * @throws UnsupportedRepositoryOperationException
      * @throws LockException
      * @throws RepositoryException
+     * @see SessionInfo#addLockToken(String)
      */
-    public void addLockToken(String lt) throws LockException, RepositoryException {
+    public void addLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         sessionInfo.addLockToken(lt);
-        /*
-        // TODO: JSR170 defines that a token can be present with one session only.
-        //       however, we cannot find out about another session holding the lock.
-        //       and neither knows the server, which session is holding a lock token.
-        */
     }
 
     /**
-     * Tries to remove the given token from the <code>SessionInfo</code>. If the
-     * SessionInfo does not contains the specified token, this method returns
-     * silently.<br>
-     * Note, that any restriction regarding removal of lock tokens must be asserted
-     * before this method is called.
+     * Tries to remove the given token from the <code>SessionInfo</code>.
      *
      * @param lt
+     * @throws UnsupportedRepositoryOperationException
      * @throws LockException
      * @throws RepositoryException
+     * @see SessionInfo#removeLockToken(String)
      */
-    public void removeLockToken(String lt) throws LockException, RepositoryException {
+    public void removeLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         String[] tokems = sessionInfo.getLockTokens();
         for (int i = 0; i < tokems.length; i++) {
             if (tokems[i].equals(lt)) {
@@ -278,7 +275,7 @@ public class WorkspaceManager
         }
         // sessionInfo doesn't contain the given lock token and is therefore
         // not the lock holder
-        throw new RepositoryException("Unable to remove locktoken '" + lt + "' from Session.");
+        throw new LockException("Unable to remove locktoken '" + lt + "' from Session.");
     }
 
     /**

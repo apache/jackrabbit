@@ -35,6 +35,8 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.lock.LockException;
 import java.io.ObjectInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ObjectOutputStream;
@@ -225,21 +227,21 @@ class SessionInfoImpl implements SessionInfo {
     /**
      * @inheritDoc
      */
-    public String[] getLockTokens() {
-        return session.getLockTokens();
+    public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
+        return session.getWorkspace().getLockManager().getLockTokens();
     }
 
     /**
      * @inheritDoc
      */
-    public void addLockToken(String lockToken) {
-        session.addLockToken(lockToken);
+    public void addLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        session.getWorkspace().getLockManager().addLockToken(lockToken);
     }
 
     /**
      * @inheritDoc
      */
-    public void removeLockToken(String lockToken) {
-        session.removeLockToken(lockToken);
+    public void removeLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+        session.getWorkspace().getLockManager().removeLockToken(lockToken);
     }
 }
