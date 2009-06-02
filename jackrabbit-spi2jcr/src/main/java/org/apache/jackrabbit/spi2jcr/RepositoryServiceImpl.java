@@ -1064,7 +1064,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public Subscription createSubscription(SessionInfo sessionInfo,
                                            EventFilter[] filters)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        return getSessionInfoImpl(sessionInfo).createSubscription(idFactory, filters);
+        return getSessionInfoImpl(sessionInfo).createSubscription(idFactory, qValueFactory, filters);
     }
 
     /**

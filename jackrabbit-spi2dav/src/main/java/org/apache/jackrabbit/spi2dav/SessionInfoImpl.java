@@ -16,20 +16,18 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * <code>SessionInfoImpl</code>...
  */
-public class SessionInfoImpl implements SessionInfo {
+public class SessionInfoImpl extends org.apache.jackrabbit.spi.commons.SessionInfoImpl {
 
     private final CredentialsWrapper credentials;
-    private final String workspaceName;
-    private final Set lockTokens = new HashSet();
     private final Set sessionScopedTokens = new HashSet();
 
     private String lastBatchId;
@@ -37,7 +35,8 @@ public class SessionInfoImpl implements SessionInfo {
 
     SessionInfoImpl(CredentialsWrapper creds, String workspaceName) {
         this.credentials = creds;
-        this.workspaceName = workspaceName;
+
+        super.setWorkspacename(workspaceName);
     }
 
     //--------------------------------------------------------< SessionInfo >---
@@ -46,34 +45,6 @@ public class SessionInfoImpl implements SessionInfo {
      */
     public String getUserID() {
         return credentials.getUserId();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String getWorkspaceName() {
-        return workspaceName;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public String[] getLockTokens() {
-        return (String[]) lockTokens.toArray(new String[lockTokens.size()]);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void addLockToken(String lockToken) {
-        lockTokens.add(lockToken);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void removeLockToken(String lockToken) {
-        lockTokens.remove(lockToken);
     }
 
     //--------------------------------------------------------------------------
@@ -119,7 +90,7 @@ public class SessionInfoImpl implements SessionInfo {
      * JCR API for they belong to session-scoped locks.
      */
     String[] getAllLockTokens() {
-        Set s = new HashSet(lockTokens);
+        Set s = new HashSet(Arrays.asList(getLockTokens()));
         s.addAll(sessionScopedTokens);
         return (String[]) s.toArray(new String[s.size()]);
     }
@@ -128,7 +99,7 @@ public class SessionInfoImpl implements SessionInfo {
         if (sessionScoped) {
             sessionScopedTokens.add(token);
         } else {
-            lockTokens.add(token);
+            super.addLockToken(token);
         }
     }
 
@@ -136,7 +107,7 @@ public class SessionInfoImpl implements SessionInfo {
         if (sessionScoped) {
             sessionScopedTokens.remove(token);
         } else {
-            lockTokens.remove(token);
+            super.removeLockToken(token);
         }
     }
 }

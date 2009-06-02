@@ -17,13 +17,22 @@
 package org.apache.jackrabbit.jcr2spi.observation;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.ItemId;
+import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.PropertyId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
 import javax.jcr.observation.Event;
 
 /**
@@ -43,6 +52,16 @@ final class EventImpl implements Event {
     private final NamePathResolver resolver;
 
     /**
+     * The value factory of the session that created this event iterator.
+     */
+    private final ValueFactory valueFactory;
+
+    /**
+     * The IdFactory
+     */
+    private final IdFactory idFactory;
+    
+    /**
      * The underlying SPI event.
      */
     private final org.apache.jackrabbit.spi.Event event;
@@ -56,12 +75,17 @@ final class EventImpl implements Event {
      * Creates a new {@link javax.jcr.observation.Event} instance based on an
      * {@link org.apache.jackrabbit.spi.Event SPI Event}.
      *
-     * @param resolver
      * @param event   the underlying SPI <code>Event</code>.
+     * @param resolver
+     * @param valueFactory
+     * @param idFactory
      */
-    EventImpl(NamePathResolver resolver, org.apache.jackrabbit.spi.Event event) {
-        this.resolver = resolver;
+    EventImpl(org.apache.jackrabbit.spi.Event event,
+              NamePathResolver resolver, ValueFactory valueFactory, IdFactory idFactory) {
         this.event = event;
+        this.resolver = resolver;
+        this.valueFactory = valueFactory;
+        this.idFactory = idFactory;
     }
 
     //--------------------------------------------------------------< Event >---
@@ -90,32 +114,45 @@ final class EventImpl implements Event {
      * @see javax.jcr.observation.Event#getIdentifier()
      */
     public String getIdentifier() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2108");
+        ItemId itemId = event.getItemId();
+        if (itemId == null) {
+            return null;
+        } else {
+            NodeId nodeId = (itemId.denotesNode()) ? (NodeId) itemId : ((PropertyId) itemId).getParentId();
+            return idFactory.toJcrIdentifier(nodeId);
+        }
     }
 
     /**
      * @see javax.jcr.observation.Event#getInfo()
      */
     public Map getInfo() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2108");
+        Map<String, String> jcrInfo = new HashMap();
+        Map<Name, QValue> infos = event.getInfo();
+        for (Iterator<Name> it = event.getInfo().keySet().iterator(); it.hasNext(); ) {
+            Name key = it.next();
+            QValue value = infos.get(key);
+            String strValue = null;
+            if (value != null) {
+                strValue = ValueFormat.getJCRValue(value, resolver, valueFactory).getString();
+            }
+            jcrInfo.put(resolver.getJCRName(key), strValue);
+        }
+        return jcrInfo;
     }
 
     /**
      * @see javax.jcr.observation.Event#getUserData()
      */
     public String getUserData() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2108");
+        return event.getUserData();
     }
 
     /**
      * @see javax.jcr.observation.Event#getDate()
      */
     public long getDate() throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("JCR-2108");
+        return event.getDate();
     }
 
     //-------------------------------------------------------------< Object >---
@@ -160,6 +197,10 @@ final class EventImpl implements Event {
             return "PropertyChanged";
         } else if (eventType == Event.PROPERTY_REMOVED) {
             return "PropertyRemoved";
+        } else if (eventType == Event.NODE_MOVED) {
+            return "NodeMoved";
+        } else if (eventType == Event.PERSIST) {
+            return "Persist";
         } else {
             return "UnknownEventType";
         }

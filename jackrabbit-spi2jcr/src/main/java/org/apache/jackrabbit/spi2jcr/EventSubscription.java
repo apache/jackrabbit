@@ -25,6 +25,8 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
@@ -41,12 +43,15 @@ import javax.jcr.Node;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>EventSubscription</code> listens for JCR events and creates SPI event
@@ -66,11 +71,15 @@ class EventSubscription implements Subscription, EventListener {
             | javax.jcr.observation.Event.NODE_REMOVED
             | javax.jcr.observation.Event.PROPERTY_ADDED
             | javax.jcr.observation.Event.PROPERTY_CHANGED
-            | javax.jcr.observation.Event.PROPERTY_REMOVED;
+            | javax.jcr.observation.Event.PROPERTY_REMOVED
+            | javax.jcr.observation.Event.NODE_MOVED
+            | javax.jcr.observation.Event.PERSIST;
 
     private final List eventBundles = new ArrayList();
 
     private final IdFactory idFactory;
+
+    private final QValueFactory qValueFactory;
 
     private final SessionInfoImpl sessionInfo;
 
@@ -93,6 +102,7 @@ class EventSubscription implements Subscription, EventListener {
      * Creates a new subscription for the passed session.
      *
      * @param idFactory   the id factory.
+     * @param qValueFactory
      * @param sessionInfo the session info.
      * @param filters     the filters that should be applied to the generated
      *                    events.
@@ -100,9 +110,11 @@ class EventSubscription implements Subscription, EventListener {
      *                             registered with the session.
      */
     EventSubscription(IdFactory idFactory,
+                      QValueFactory qValueFactory,
                       SessionInfoImpl sessionInfo,
                       EventFilter[] filters) throws RepositoryException {
         this.idFactory = idFactory;
+        this.qValueFactory = qValueFactory;
         this.sessionInfo = sessionInfo;
         this.resolver = sessionInfo.getNamePathResolver();
         setFilters(filters);
@@ -228,23 +240,40 @@ class EventSubscription implements Subscription, EventListener {
                 javax.jcr.observation.Event e = events.nextEvent();
                 Path p = resolver.getQPath(e.getPath());
                 Path parent = p.getAncestor(1);
+                int type = e.getType();
+
                 NodeId parentId = idFactory.createNodeId((String) null, parent);
-                ItemId itemId = null;
+                String identifier = e.getIdentifier();
+                ItemId itemId;
                 Node node = null;
-                switch (e.getType()) {
-                    case Event.NODE_ADDED:
+                if (identifier != null) {
+                    itemId = idFactory.fromJcrIdentifier(e.getIdentifier());
+                    try {
                         node = session.getItem(e.getPath()).getParent();
-                    case Event.NODE_REMOVED:
-                        itemId = idFactory.createNodeId((String) null, p);
-                        break;
-                    case Event.PROPERTY_ADDED:
-                    case Event.PROPERTY_CHANGED:
-                        node = session.getItem(e.getPath()).getParent();
-                    case Event.PROPERTY_REMOVED:
-                        itemId = idFactory.createPropertyId(parentId,
-                                p.getNameElement().getName());
-                        break;
+                    } catch (RepositoryException re) {
+                        // ignore. TODO improve
+                    }
+                } else {
+                    switch (type) {
+                        case Event.NODE_ADDED:
+                        case Event.NODE_MOVED:
+                            node = session.getItem(e.getPath()).getParent();
+                        case Event.NODE_REMOVED:
+                            itemId = idFactory.createNodeId((String) null, p);
+                            break;
+                        case Event.PROPERTY_ADDED:
+                        case Event.PROPERTY_CHANGED:
+                            node = session.getItem(e.getPath()).getParent();
+                        case Event.PROPERTY_REMOVED:
+                            itemId = idFactory.createPropertyId(parentId,
+                                    p.getNameElement().getName());
+                            break;
+                        case Event.PERSIST:
+                        default:
+                            itemId = null;
+                    }
                 }
+
                 Name nodeTypeName = null;
                 Name[] mixinTypes = new Name[0];
                 if (node != null) {
@@ -256,8 +285,18 @@ class EventSubscription implements Subscription, EventListener {
                     nodeTypeName = resolver.getQName(node.getPrimaryNodeType().getName());
                     mixinTypes = getNodeTypeNames(node.getMixinNodeTypes(), resolver);
                 }
+                Map<Name, QValue> info = new HashMap();
+                Map jcrInfo = e.getInfo();
+                for (Iterator it = jcrInfo.keySet().iterator(); it.hasNext();) {
+                    String key = it.next().toString();
+                    Name name = resolver.getQName(key);
+                    // TODO: review again. how to determine value type?
+                    QValue v = qValueFactory.create(jcrInfo.get(key).toString(), PropertyType.STRING);
+                    info.put(name, v);
+
+                }
                 Event spiEvent = new EventImpl(e.getType(), p, itemId, parentId,
-                        nodeTypeName, mixinTypes, e.getUserID());
+                        nodeTypeName, mixinTypes, e.getUserID(), e.getUserData(), e.getDate(), info);
                 spiEvents.add(spiEvent);
             } catch (Exception ex) {
                 log.warn("Unable to create SPI Event: " + ex);

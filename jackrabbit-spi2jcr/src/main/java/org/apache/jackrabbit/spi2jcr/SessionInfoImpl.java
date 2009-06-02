@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
@@ -153,15 +154,16 @@ class SessionInfoImpl implements SessionInfo {
      * Creates a subscriptions for this session info.
      *
      * @param idFactory the id factory.
+     * @param qValueFactory
      * @param filters the initial list of filters.
      * @return a subscription.
      * @throws RepositoryException
      */
-    Subscription createSubscription(IdFactory idFactory, EventFilter[] filters)
+    Subscription createSubscription(IdFactory idFactory, QValueFactory qValueFactory, EventFilter[] filters)
             throws RepositoryException {
         synchronized (subscriptionChange) {
             List tmp = new ArrayList(subscriptions);
-            EventSubscription s = new EventSubscription(idFactory, this, filters);
+            EventSubscription s = new EventSubscription(idFactory, qValueFactory, this, filters);
             tmp.add(s);
             subscriptions = Collections.unmodifiableList(tmp);
             return s;
@@ -243,5 +245,9 @@ class SessionInfoImpl implements SessionInfo {
      */
     public void removeLockToken(String lockToken) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
         session.getWorkspace().getLockManager().removeLockToken(lockToken);
+    }
+
+    public void setUserData(String userData) throws RepositoryException {
+        session.getWorkspace().getObservationManager().setUserData(userData);
     }
 }
