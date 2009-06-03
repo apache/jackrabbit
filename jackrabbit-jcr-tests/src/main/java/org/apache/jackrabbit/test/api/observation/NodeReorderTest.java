@@ -19,8 +19,6 @@ package org.apache.jackrabbit.test.api.observation;
 import java.util.Map;
 
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.observation.AbstractObservationTest;
-import org.apache.jackrabbit.test.api.observation.EventResult;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
