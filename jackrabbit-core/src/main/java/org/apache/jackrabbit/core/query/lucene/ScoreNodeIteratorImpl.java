@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.Collection;
 import java.util.Arrays;
 
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;

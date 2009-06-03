@@ -28,8 +28,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.value.StringValue;
-import org.apache.jackrabbit.value.URIValue;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -458,14 +456,12 @@ public class InternalValue extends AbstractQValue {
                 case PropertyType.WEAKREFERENCE:
                     return vf.createValue(val.toString(), PropertyType.WEAKREFERENCE);
                 case PropertyType.URI:
-                    //return new URIValue((URI) val);
                     return vf.createValue(val.toString(),  PropertyType.URI);
                 case PropertyType.PATH:
                     return vf.createValue(resolver.getJCRPath((Path) val), PropertyType.PATH);
                 case PropertyType.NAME:
                     return vf.createValue(resolver.getJCRName((Name) val), PropertyType.NAME);
                 case PropertyType.STRING:
-                    //return new StringValue((String) val);
                     return vf.createValue((String) val);
                 default:
                     throw new RepositoryException("illegal internal value type");

@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.io.IOException;
-import java.math.BigDecimal;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;

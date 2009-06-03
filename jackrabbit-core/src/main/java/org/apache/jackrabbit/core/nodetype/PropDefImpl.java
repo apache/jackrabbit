@@ -21,7 +21,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 
 import javax.jcr.PropertyType;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import java.util.Arrays;
 
 /**
