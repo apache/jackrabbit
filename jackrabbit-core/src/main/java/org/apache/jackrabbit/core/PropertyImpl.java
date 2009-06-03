@@ -42,7 +42,6 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -186,34 +185,18 @@ public class PropertyImpl extends ItemImpl implements Property {
      * @see javax.jcr.Property#getLengths()
      */
     protected long getLength(InternalValue value) throws RepositoryException {
-        // TODO maybe move method to InternalValue
+        long length;
         switch (value.getType()) {
-            case PropertyType.STRING:
-            case PropertyType.LONG:
-            case PropertyType.DOUBLE:
-            case PropertyType.DATE:
-            case PropertyType.REFERENCE:
-            case PropertyType.BOOLEAN:
-            case PropertyType.DECIMAL:
-            case PropertyType.URI:
-            case PropertyType.WEAKREFERENCE:
-                return value.toString().length();
-
             case PropertyType.NAME:
-                Name name = value.getQName();
-                return session.getJCRName(name).length();
-
             case PropertyType.PATH:
-                Path path = value.getPath();
-                return session.getJCRPath(path).length();
-
-            case PropertyType.BINARY:
-                BLOBFileValue blob = value.getBLOBFileValue();
-                return blob.getLength();
-
+                Value jcrValue = ValueFormat.getJCRValue(value, session, session.getValueFactory());
+                length = jcrValue.getString().length();
+                break;
             default:
-                return -1;
+                length = value.getLength();
+                break;
         }
+        return length;
     }
 
     /**
