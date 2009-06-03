@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.io.IOException;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
