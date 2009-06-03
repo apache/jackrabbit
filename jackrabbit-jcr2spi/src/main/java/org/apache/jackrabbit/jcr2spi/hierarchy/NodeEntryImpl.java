@@ -970,6 +970,13 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                     }
                 } // else: existing entry but state not yet built -> ignore event
                 break;
+            case Event.NODE_MOVED:
+                // TODO: implementation missing
+                throw new UnsupportedOperationException("Implementation missing");
+                //break;
+            case Event.PERSIST:
+                // TODO: implementation missing
+                throw new UnsupportedOperationException("Implementation missing");
             default:
                 // ILLEGAL
                 throw new IllegalArgumentException("Illegal event type " + childEvent.getType() + " for NodeState.");

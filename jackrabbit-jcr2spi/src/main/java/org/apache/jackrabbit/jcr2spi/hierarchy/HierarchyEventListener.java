@@ -106,6 +106,9 @@ public class HierarchyEventListener implements InternalEventListener {
             log.debug("Empty event bundle");
             return;
         }
+
+        // TODO: handle new 283 event types and clean add/remove that is also present as move-event.
+
         // collect set of removed node ids
         Set removedEvents = new HashSet();
         // separately collect the add events
@@ -173,25 +176,37 @@ public class HierarchyEventListener implements InternalEventListener {
 
             NodeId parentId = event.getParentId();
             NodeEntry parent = (parentId != null) ? (NodeEntry) hierarchyMgr.lookup(parentId) : null;
-            if (type == Event.NODE_REMOVED || type == Event.PROPERTY_REMOVED) {
-                // notify parent about removal if its child-entry.
-                // - if parent is 'null' (i.e. not yet loaded) the child-entry does
-                //   not exist either -> no need to inform child-entry
-                // - if parent got removed with the same event-bundle
-                //   only remove the parent an skip this event.
-                if (parent != null && !removedEvents.contains(parentId)) {
-                    parent.refresh(event);
-                }
-            } else if (type == Event.PROPERTY_CHANGED) {
-                // notify parent in case jcr:mixintypes or jcr:uuid was changed.
-                // if parent is 'null' (i.e. not yet loaded) the prop-entry does
-                // not exist either -> no need to inform propEntry
-                if (parent != null) {
-                    parent.refresh(event);
-                }
-            } else {
-                // should never occur
-                throw new IllegalArgumentException("Invalid event type: " + event.getType());
+            switch (type) {
+                case Event.NODE_REMOVED:
+                case Event.PROPERTY_REMOVED:
+                    // notify parent about removal if its child-entry.
+                    // - if parent is 'null' (i.e. not yet loaded) the child-entry does
+                    //   not exist either -> no need to inform child-entry
+                    // - if parent got removed with the same event-bundle
+                    //   only remove the parent an skip this event.
+                    if (parent != null && !removedEvents.contains(parentId)) {
+                        parent.refresh(event);
+                    }
+                    break;
+                case Event.PROPERTY_CHANGED:
+                    // notify parent in case jcr:mixintypes or jcr:uuid was changed.
+                    // if parent is 'null' (i.e. not yet loaded) the prop-entry does
+                    // not exist either -> no need to inform propEntry
+                    if (parent != null) {
+                        parent.refresh(event);
+                    }
+                    break;
+                case Event.NODE_MOVED:
+                    // TODO: implementation missing
+                    throw new UnsupportedOperationException("Implementation missing");
+                    //break;
+                case Event.PERSIST:
+                    // TODO: implementation missing
+                    throw new UnsupportedOperationException("Implementation missing");
+                    //break;
+                default:
+                    // should never occur
+                    throw new IllegalArgumentException("Invalid event type: " + event.getType());
             }
         }
     }
