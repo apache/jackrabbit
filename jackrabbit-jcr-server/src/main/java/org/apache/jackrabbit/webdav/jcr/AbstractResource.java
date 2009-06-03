@@ -736,7 +736,13 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      */
     class EListener implements EventListener {
 
-        private static final int ALL_EVENTS = Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED;
+        private static final int ALL_EVENTS = Event.NODE_ADDED
+                | Event.NODE_REMOVED
+                | Event.PROPERTY_ADDED
+                | Event.PROPERTY_CHANGED
+                | Event.PROPERTY_REMOVED
+                | Event.NODE_MOVED
+                | Event.PERSIST;
 
         private final DavPropertyNameSet propNameSet;
         private MultiStatus ms;
