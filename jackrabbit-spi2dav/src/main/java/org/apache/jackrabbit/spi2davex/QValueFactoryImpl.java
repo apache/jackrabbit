@@ -23,9 +23,9 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
@@ -41,6 +41,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.Binary;
+import javax.jcr.ValueFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -70,6 +71,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
 
     private final NamePathResolver resolver;
     private final ValueLoader loader;
+    private final ValueFactory vf;
 
     public QValueFactoryImpl() {
         this(null, null);
@@ -78,6 +80,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
     QValueFactoryImpl(NamePathResolver resolver, ValueLoader loader) {
         this.resolver = resolver;
         this.loader = loader;
+        vf = new ValueFactoryQImpl(this, resolver);
     }
 
     /**
@@ -1072,7 +1075,7 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                     Document doc = db.parse(in);
                     Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
                     DavProperty p = DefaultDavProperty.createFromXml(prop);
-                    ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, ValueFactoryImpl.getInstance());
+                    ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, vf);
 
                     Value[] jcrVs = vp.getJcrValues();
                     init(jcrVs[index].getStream(), true);
