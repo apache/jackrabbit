@@ -16,18 +16,25 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
 import org.apache.jackrabbit.core.query.lucene.constraint.ConstraintBuilder;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
@@ -35,6 +42,7 @@ import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -106,10 +114,25 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         }
 
 
-        ColumnImpl[] columns = qomTree.getColumns();
-        Name[] selectProps = new Name[columns.length];
-        for (int i = 0; i < columns.length; i++) {
-            selectProps[i] = columns[i].getPropertyQName();
+        List<ColumnImpl> columns = new ArrayList<ColumnImpl>();
+        // expand columns without name
+        for (ColumnImpl column : qomTree.getColumns()) {
+            if (column.getColumnName() == null) {
+                QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
+                NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
+                SelectorImpl selector = qomTree.getSelector(column.getSelectorQName());
+                NodeTypeImpl nt = ntMgr.getNodeType(selector.getNodeTypeQName());
+                for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
+                    PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) pd;
+                    if (!propDef.definesResidual() && !propDef.isMultiple()) {
+                        String sn = selector.getSelectorName();
+                        String pn = propDef.getName();
+                        columns.add((ColumnImpl) qomFactory.column(sn, pn, sn + "." + pn));
+                    }
+                }
+            } else {
+                columns.add(column);
+            }
         }
         OrderingImpl[] orderings = qomTree.getOrderings();
         // TODO: there are many kinds of DynamicOperand that can be ordered by
@@ -130,7 +153,8 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
         return new MultiColumnQueryResult(index, itemMgr,
                 session, session.getAccessManager(),
                 // TODO: spell suggestion missing
-                this, query, null, selectProps, orderProps, orderSpecs,
+                this, query, null, columns.toArray(new ColumnImpl[columns.size()]),
+                orderProps, orderSpecs,
                 getRespectDocumentOrder(), offset, limit);
     }
 

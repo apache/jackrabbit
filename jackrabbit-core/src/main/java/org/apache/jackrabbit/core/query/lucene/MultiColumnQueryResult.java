@@ -23,8 +23,8 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 
 /**
  * <code>MultiColumnQueryResult</code> implements a query result that executes
@@ -44,14 +44,14 @@ public class MultiColumnQueryResult extends QueryResultImpl {
                                   AbstractQueryImpl queryImpl,
                                   MultiColumnQuery query,
                                   SpellSuggestion spellSuggestion,
-                                  Name[] selectProps,
+                                  ColumnImpl[] columns,
                                   Path[] orderProps,
                                   boolean[] orderSpecs,
                                   boolean documentOrder,
                                   long offset,
                                   long limit) throws RepositoryException {
         super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
-                selectProps, orderProps, orderSpecs, documentOrder, offset, limit);
+                columns, orderProps, orderSpecs, documentOrder, offset, limit);
         this.query = query;
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
