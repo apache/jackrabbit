@@ -52,22 +52,6 @@ public class ValueHelper {
     }
 
     /**
-     * Same as {@link #convert(String, int, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValue
-     * @param targetType
-     * @throws ValueFormatException
-     * @throws IllegalArgumentException
-     * @deprecated Use {@link #convert(String, int, ValueFactory)} instead.
-     * @see #convert(Value, int, ValueFactory)
-     */
-    public static Value convert(String srcValue, int targetType)
-            throws ValueFormatException, IllegalArgumentException {
-        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
-    }
-
-    /**
      * @param srcValue
      * @param targetType
      * @param factory
@@ -85,21 +69,6 @@ public class ValueHelper {
     }
 
     /**
-     * Same as {@link #convert(InputStream, int, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValue
-     * @param targetType
-     * @throws ValueFormatException
-     * @throws IllegalArgumentException
-     * @deprecated Use {@link #convert(InputStream, int, ValueFactory)} instead.
-     */
-    public static Value convert(InputStream srcValue, int targetType)
-            throws ValueFormatException, IllegalArgumentException {
-        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
-    }
-
-    /**
      * @param srcValue
      * @param targetType
      * @param factory
@@ -113,22 +82,6 @@ public class ValueHelper {
         } else {
             return convert(factory.createValue(srcValue), targetType, factory);
         }
-    }
-
-    /**
-     * Same as {@link #convert(String[], int, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValues
-     * @param targetType
-     * @throws ValueFormatException
-     * @throws IllegalArgumentException
-     * @deprecated Use {@link #convert(String[], int, ValueFactory)} instead.
-     * @see #convert(Value, int, ValueFactory)
-     */
-    public static Value[] convert(String[] srcValues, int targetType)
-            throws ValueFormatException, IllegalArgumentException {
-        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -174,22 +127,6 @@ public class ValueHelper {
     }
 
     /**
-     * Same as {@link #convert(Value[], int, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValues
-     * @param targetType
-     * @throws ValueFormatException
-     * @throws IllegalArgumentException
-     * @deprecated Use {@link #convert(Value[], int, ValueFactory)} instead.
-     * @see #convert(Value, int, ValueFactory)
-     */
-    public static Value[] convert(Value[] srcValues, int targetType)
-        throws ValueFormatException, IllegalArgumentException {
-        return convert(srcValues, targetType, ValueFactoryImpl.getInstance());
-    }
-
-    /**
      * @param srcValues
      * @param targetType
      * @param factory
@@ -223,24 +160,6 @@ public class ValueHelper {
             newValues[i] = convert(srcValues[i], targetType, factory);
         }
         return newValues;
-    }
-
-    /**
-     * Same as {@link #convert(Value, int, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-
-     * @param srcValue
-     * @param targetType
-     * @throws ValueFormatException
-     * @throws IllegalStateException
-     * @throws IllegalArgumentException
-     * @deprecated Use {@link #convert(Value, int, ValueFactory)} instead.
-     * @see #convert(Value, int, ValueFactory)
-     */
-    public static Value convert(Value srcValue, int targetType)
-        throws ValueFormatException, IllegalStateException,
-        IllegalArgumentException {
-        return convert(srcValue, targetType, ValueFactoryImpl.getInstance());
     }
 
     /**
@@ -635,17 +554,6 @@ public class ValueHelper {
     }
 
     /**
-     * Same as {@link #copy(Value, ValueFactory)} using <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValue
-     * @throws IllegalStateException
-     * @deprecated Use {@link #copy(Value, ValueFactory)} instead.
-     */
-    public static Value copy(Value srcValue) throws IllegalStateException {
-        return copy(srcValue, ValueFactoryImpl.getInstance());
-    }
-
-    /**
      *
      * @param srcValue
      * @param factory
@@ -703,17 +611,6 @@ public class ValueHelper {
     }
 
     /**
-     * Same as {@link #copy(Value[], ValueFactory)} using <code>ValueFactoryImpl</code>.
-     *
-     * @param srcValues
-     * @throws IllegalStateException
-     * @deprecated Use {@link #copy(Value[], ValueFactory)} instead.
-     */
-    public static Value[] copy(Value[] srcValues) throws IllegalStateException {
-        return copy(srcValues, ValueFactoryImpl.getInstance());
-    }
-
-    /**
      * @param srcValues
      * @param factory
      * @throws IllegalStateException
@@ -757,15 +654,6 @@ public class ValueHelper {
     }
 
     /**
-     * @deprecated use {@link #serialize(Value, boolean, boolean, Writer)} instead
-     */
-    public static void serialize(Value value, boolean encodeBlanks,
-        Writer writer)
-        throws IllegalStateException, IOException, RepositoryException {
-        serialize(value, encodeBlanks, false, writer);
-    }
-
-      /**
      * Outputs the serialized value to a <code>Writer</code>. The serialization
      * format is the same as used by Document & System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
@@ -818,30 +706,6 @@ public class ValueHelper {
 
     /**
      * Deserializes the given string to a <code>Value</code> of the given type.
-     * Same as {@link #deserialize(String, int, boolean, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param value        string to be deserialized
-     * @param type         type of value
-     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
-     *                     character sequences will be decoded to single space
-     *                     characters each.
-     * @return the deserialized <code>Value</code>
-     * @throws ValueFormatException if the string data is not of the required
-     *                              format
-     * @throws RepositoryException  if an error occured during the
-     *                              deserialization.
-     * @deprecated Use {@link #deserialize(String, int, boolean, ValueFactory)}
-     * instead.
-     */
-    public static Value deserialize(String value, int type,
-                                    boolean decodeBlanks)
-            throws ValueFormatException, RepositoryException {
-        return deserialize(value, type, decodeBlanks, ValueFactoryImpl.getInstance());
-    }
-
-    /**
-     * Deserializes the given string to a <code>Value</code> of the given type.
      *
      * @param value        string to be deserialized
      * @param type         type of value
@@ -882,33 +746,6 @@ public class ValueHelper {
             }
             return convert(value, type, factory);
         }
-    }
-
-    /**
-     * Deserializes the string data read from the given reader to a
-     * <code>Value</code> of the given type. Same as
-     * {@link #deserialize(Reader, int, boolean, ValueFactory)} using
-     * <code>ValueFactoryImpl</code>.
-     *
-     * @param reader       reader for the string data to be deserialized
-     * @param type         type of value
-     * @param decodeBlanks if <code>true</code> <code>"_x0020_"</code>
-     *                     character sequences will be decoded to single space
-     *                     characters each.
-     * @return the deserialized <code>Value</code>
-     * @throws IOException          if an i/o error occured during the
-     *                              serialization
-     * @throws ValueFormatException if the string data is not of the required
-     *                              format
-     * @throws RepositoryException  if an error occured during the
-     *                              deserialization.
-     * @deprecated Use {@link #deserialize(Reader, int, boolean, ValueFactory)}
-     * instead.
-     */
-    public static Value deserialize(Reader reader, int type,
-                                    boolean decodeBlanks)
-            throws IOException, ValueFormatException, RepositoryException {
-        return deserialize(reader, type, decodeBlanks, ValueFactoryImpl.getInstance());
     }
 
     /**
