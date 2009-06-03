@@ -31,7 +31,8 @@ import org.apache.jackrabbit.spi.commons.conversion.DummyNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 
 /**
  * This class runs function tests on the JCR-SQL2 parser.
@@ -57,9 +58,8 @@ public class ParserTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        ValueFactory vf = ValueFactoryImpl.getInstance();
-        NamePathResolver resolver = new DefaultNamePathResolver(
-                new DummyNamespaceResolver());
+        NamePathResolver resolver = new DefaultNamePathResolver(new DummyNamespaceResolver());        
+        ValueFactory vf = new ValueFactoryQImpl(QValueFactoryImpl.getInstance(), resolver);
         QueryObjectModelFactoryImpl factory = new QOMF(resolver, vf);
         parser = new Parser(factory, vf);
     }

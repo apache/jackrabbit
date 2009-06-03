@@ -30,7 +30,10 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefDiff;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+
+import javax.jcr.ValueFactory;
 
 public class CompactNodeTypeDefTest extends TestCase {
 
@@ -49,7 +52,8 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         // Put imported node type def back into CND form with CND writer
         StringWriter sw = new StringWriter();
-        CompactNodeTypeDefWriter.write(ntdList1, nsm, resolver, ValueFactoryImpl.getInstance(), sw);
+        ValueFactory vf = new ValueFactoryQImpl(QValueFactoryImpl.getInstance(), resolver);
+        CompactNodeTypeDefWriter.write(ntdList1, nsm, resolver, vf, sw);
 
         // Rerun the reader on the product of the writer
         cndReader = new CompactNodeTypeDefReader(new StringReader(sw.toString()), TEST_FILE,
