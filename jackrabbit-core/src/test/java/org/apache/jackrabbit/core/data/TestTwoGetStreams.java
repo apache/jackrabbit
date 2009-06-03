@@ -21,7 +21,6 @@ import java.io.InputStream;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.api.JackrabbitValue;
