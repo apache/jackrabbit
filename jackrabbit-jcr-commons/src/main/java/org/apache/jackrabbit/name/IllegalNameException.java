@@ -19,9 +19,7 @@ package org.apache.jackrabbit.name;
 /**
  * Thrown when an illegal JCR name string is encountered. This exception is
  * thrown when attempting to parse a JCR name string that does not match the
- * JCR name syntax, or is otherwise not a legal name. Note that an
- * {@link UnknownPrefixException} is thrown if the prefix of the JCR name
- * string is syntactically valid but not bound to any namespace.
+ * JCR name syntax, or is otherwise not a legal name.
  * <p>
  * See the section 4.6 of the JCR 1.0 specification for details of the
  * JCR name syntax.
