@@ -60,21 +60,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * <code>QueryObjectModelFactoryImpl</code> implements the query object model
  * factory from JSR 283.
  */
 public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFactory {
-
-    private static final Set<String> VALID_ORDERS = new HashSet<String>();
-
-    static {
-        VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_ASCENDING);
-        VALID_ORDERS.add(QueryObjectModelConstants.JCR_ORDER_DESCENDING);
-    }
 
     /**
      * The name and path resolver for this QOM factory.
@@ -151,8 +141,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                                         Column[] columns)
             throws InvalidQueryException, RepositoryException {
         if (source == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("source must not be null");
+            throw new InvalidQueryException("source must not be null");
         }
         if (!(source instanceof SourceImpl)) {
             throw new RepositoryException("Unknown Source implementation");
@@ -378,8 +367,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public And and(Constraint constraint1, Constraint constraint2)
             throws InvalidQueryException, RepositoryException {
         if (constraint1 == null || constraint2 == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("Constraints must not be null");
+            throw new InvalidQueryException("Constraints must not be null");
         }
         if (constraint1 instanceof ConstraintImpl
                 && constraint2 instanceof ConstraintImpl) {
@@ -404,8 +392,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Or or(Constraint constraint1, Constraint constraint2)
             throws InvalidQueryException, RepositoryException {
         if (constraint1 == null || constraint2 == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("Constraints must not be null");
+            throw new InvalidQueryException("Constraints must not be null");
         }
         if (constraint1 instanceof ConstraintImpl
                 && constraint2 instanceof ConstraintImpl) {
@@ -851,8 +838,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public BindVariableValue bindVariable(String bindVariableName)
             throws InvalidQueryException, RepositoryException {
         if (bindVariableName == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("bindVariableName must not be null");
+            throw new InvalidQueryException("bindVariableName must not be null");
         }
         try {
             return new BindVariableValueImpl(
@@ -873,8 +859,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Literal literal(Value value)
             throws InvalidQueryException, RepositoryException {
         if (value == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("value must not be null");
+            throw new InvalidQueryException("value must not be null");
         }
         return new LiteralImpl(resolver, value);
     }
@@ -940,7 +925,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        return new ColumnImpl(resolver, null, propName, propName);
+        return new ColumnImpl(resolver, null, propName, propertyName);
     }
 
     /**
@@ -961,8 +946,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     public Column column(String propertyName, String columnName)                  // CM
             throws InvalidQueryException, RepositoryException {
         if (propertyName == null && columnName != null) {
-            // TODO: correct exception?
-            throw new RepositoryException(
+            throw new InvalidQueryException(
                     "columnName must be null if propertyName is null");
         }
         Name propName = null;
@@ -973,15 +957,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        Name colName = null;
-        if (columnName != null) {
-            try {
-                colName = resolver.getQName(columnName);
-            } catch (NameException e) {
-                throw new InvalidQueryException(e.getMessage());
-            }
-        }
-        return new ColumnImpl(resolver, null, propName, colName);
+        return new ColumnImpl(resolver, null, propName, columnName);
     }
 
     /**
@@ -1003,8 +979,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                          String propertyName,
                          String columnName) throws InvalidQueryException, RepositoryException {
         if (propertyName == null && columnName != null) {
-            // TODO: correct exception?
-            throw new RepositoryException(
+            throw new InvalidQueryException(
                     "columnName must be null if propertyName is null");
         }
         Name propName = null;
@@ -1015,16 +990,8 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
                 throw new InvalidQueryException(e.getMessage());
             }
         }
-        Name colName = null;
-        if (columnName != null) {
-            try {
-                colName = resolver.getQName(columnName);
-            } catch (NameException e) {
-                throw new InvalidQueryException(e.getMessage());
-            }
-        }
         return new ColumnImpl(resolver, checkSelectorName(selectorName),
-                propName, colName);
+                propName, columnName);
     }
 
     //------------------------------< internal >--------------------------------
@@ -1032,8 +999,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkSelectorName(String selectorName)
             throws RepositoryException {
         if (selectorName == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("selectorName must not be null");
+            throw new InvalidQueryException("selectorName must not be null");
         }
         try {
             return resolver.getQName(selectorName);
@@ -1045,8 +1011,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkNodeTypeName(String nodeTypeName)
             throws RepositoryException {
         if (nodeTypeName == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("nodeTypeName must not be null");
+            throw new InvalidQueryException("nodeTypeName must not be null");
         }
         try {
             return resolver.getQName(nodeTypeName);
@@ -1057,8 +1022,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
 
     private Path checkPath(String path) throws RepositoryException {
         if (path == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("path must not be null");
+            throw new InvalidQueryException("path must not be null");
         }
         try {
             return resolver.getQPath(path);
@@ -1070,8 +1034,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private Name checkPropertyName(String propertyName)
             throws RepositoryException {
         if (propertyName == null) {
-            // TODO: correct exception?
-            throw new RepositoryException("propertyName must not be null");
+            throw new InvalidQueryException("propertyName must not be null");
         }
         try {
             return resolver.getQName(propertyName);
@@ -1083,8 +1046,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     private StaticOperand checkFullTextSearchExpression(StaticOperand fullTextSearchExpression)
             throws RepositoryException {
         if (fullTextSearchExpression == null) {
-            // TODO: correct exception?
-            throw new RepositoryException(
+            throw new InvalidQueryException(
                     "fullTextSearchExpression must not be null");
         }
         return fullTextSearchExpression;

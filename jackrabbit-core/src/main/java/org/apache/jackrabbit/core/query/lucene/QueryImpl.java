@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -42,6 +42,7 @@ import org.apache.jackrabbit.spi.commons.query.OrderQueryNode;
 import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,21 +132,27 @@ public class QueryImpl extends AbstractQueryImpl {
         return new SingleColumnQueryResult(index, itemMgr,
                 session, session.getAccessManager(),
                 this, query, new SpellSuggestion(index.getSpellChecker(), root),
-                getSelectProperties(), orderProperties, ascSpecs,
+                getColumns(), orderProperties, ascSpecs,
                 getRespectDocumentOrder(), offset, limit);
     }
 
     /**
-     * Returns the select properties for this query.
+     * Returns the columns for this query.
      *
-     * @return array of select property names.
+     * @return array of columns.
      * @throws RepositoryException if an error occurs.
      */
-    protected Name[] getSelectProperties() throws RepositoryException {
-        // get select properties
-        List selectProps = new ArrayList();
-        selectProps.addAll(Arrays.asList(root.getSelectProperties()));
-        if (selectProps.size() == 0) {
+    protected ColumnImpl[] getColumns() throws RepositoryException {
+        QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
+        // get columns
+        Map<Name, ColumnImpl> columns = new LinkedHashMap<Name, ColumnImpl>();
+        for (Name name : root.getSelectProperties()) {
+            String pn = session.getJCRName(name);
+            ColumnImpl col = (ColumnImpl) qomFactory.column(
+                    session.getJCRName(DEFAULT_SELECTOR_NAME), pn, pn);
+            columns.put(name, col);
+        }
+        if (columns.size() == 0) {
             // use node type constraint
             LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
             final Name[] ntName = new Name[1];
@@ -165,23 +172,23 @@ public class QueryImpl extends AbstractQueryImpl {
             }
             NodeTypeImpl nt = session.getNodeTypeManager().getNodeType(ntName[0]);
             PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
-            for (int i = 0; i < propDefs.length; i++) {
-                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) propDefs[i];
+            for (PropertyDefinition pd : propDefs) {
+                PropertyDefinitionImpl propDef = (PropertyDefinitionImpl) pd;
                 if (!propDef.definesResidual() && !propDef.isMultiple()) {
-                    selectProps.add(propDef.getQName());
+                    columns.put(propDef.getQName(), columnForName(propDef.getQName()));
                 }
             }
         }
 
         // add jcr:path and jcr:score if not selected already
-        if (!selectProps.contains(NameConstants.JCR_PATH)) {
-            selectProps.add(NameConstants.JCR_PATH);
+        if (!columns.containsKey(NameConstants.JCR_PATH)) {
+            columns.put(NameConstants.JCR_PATH, columnForName(NameConstants.JCR_PATH));
         }
-        if (!selectProps.contains(NameConstants.JCR_SCORE)) {
-            selectProps.add(NameConstants.JCR_SCORE);
+        if (!columns.containsKey(NameConstants.JCR_SCORE)) {
+            columns.put(NameConstants.JCR_SCORE, columnForName(NameConstants.JCR_SCORE));
         }
 
-        return (Name[]) selectProps.toArray(new Name[selectProps.size()]);
+        return columns.values().toArray(new ColumnImpl[columns.size()]);
     }
 
     /**
@@ -195,4 +202,18 @@ public class QueryImpl extends AbstractQueryImpl {
         return this.root.needsSystemTree();
     }
 
+    /**
+     * Returns a column for the given property name and the default selector
+     * name.
+     *
+     * @param propertyName the name of the property as well as the column.
+     * @return a column.
+     * @throws RepositoryException if an error occurs while creating the column.
+     */
+    protected ColumnImpl columnForName(Name propertyName) throws RepositoryException {
+        QueryObjectModelFactory qomFactory = session.getWorkspace().getQueryManager().getQOMFactory();
+        String name = session.getJCRName(propertyName);
+        return (ColumnImpl) qomFactory.column(
+                session.getJCRName(DEFAULT_SELECTOR_NAME), name, name);
+    }
 }

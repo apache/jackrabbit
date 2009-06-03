@@ -44,12 +44,12 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     /**
      * The name of the column.
      */
-    private final Name columnName;
+    private final String columnName;
 
     ColumnImpl(NamePathResolver resolver,
                Name selectorName,
                Name propertyName,
-               Name columnName) {
+               String columnName) {
         super(resolver);
         this.selectorName = selectorName;
         this.propertyName = propertyName;
@@ -74,18 +74,6 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
     public Name getPropertyQName() {
         return propertyName;
     }
-
-    /**
-     * Gets the column name.
-     * <p/>
-     *
-     * @return the column name; must be null if <code>getPropertyName</code> is
-     *         null and non-null otherwise
-     */
-    public Name getColumnQName() {
-        return columnName;
-    }
-
 
     //---------------------------< Column >-------------------------------------
 
@@ -116,7 +104,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
      *         null and non-null otherwise
      */
     public String getColumnName() {
-        return getJCRName(columnName);
+        return columnName;
     }
 
     //------------------------< AbstractQOMNode >-------------------------------

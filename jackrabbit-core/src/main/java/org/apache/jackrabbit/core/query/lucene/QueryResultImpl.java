@@ -21,11 +21,11 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * Implements the <code>QueryResult</code> interface.
@@ -76,9 +78,9 @@ public abstract class QueryResultImpl implements QueryResult {
     protected final SpellSuggestion spellSuggestion;
 
     /**
-     * The select properties
+     * The columns to select.
      */
-    protected final Name[] selectProps;
+    protected final Map<String, ColumnImpl> columns = new LinkedHashMap<String, ColumnImpl>();
 
     /**
      * The relative paths of properties to use for ordering the result set.
@@ -96,7 +98,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * <p/>
      * The exact type is: <code>List&lt;ScoreNode[]></code>
      */
-    private final List resultNodes = new ArrayList();
+    private final List<ScoreNode[]> resultNodes = new ArrayList<ScoreNode[]>();
 
     /**
      * This is the raw number of results that matched the query. This number
@@ -151,7 +153,7 @@ public abstract class QueryResultImpl implements QueryResult {
      *                        result.
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
      *                        is available.
-     * @param selectProps     the select properties of the query.
+     * @param columns         the select properties of the query.
      * @param orderProps      the relative paths of the order properties.
      * @param orderSpecs      the order specs, one for each order property
      *                        name.
@@ -161,6 +163,8 @@ public abstract class QueryResultImpl implements QueryResult {
      * @param offset          the offset in the total result set
      * @throws RepositoryException if an error occurs while reading from the
      *                             repository.
+     * @throws IllegalArgumentException if any of the columns does not have a
+     *                                  column name.
      */
     public QueryResultImpl(SearchIndex index,
                            ItemManager itemMgr,
@@ -168,7 +172,7 @@ public abstract class QueryResultImpl implements QueryResult {
                            AccessManager accessMgr,
                            AbstractQueryImpl queryImpl,
                            SpellSuggestion spellSuggestion,
-                           Name[] selectProps,
+                           ColumnImpl[] columns,
                            Path[] orderProps,
                            boolean[] orderSpecs,
                            boolean documentOrder,
@@ -180,29 +184,27 @@ public abstract class QueryResultImpl implements QueryResult {
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
         this.spellSuggestion = spellSuggestion;
-        this.selectProps = selectProps;
         this.orderProps = orderProps;
         this.orderSpecs = orderSpecs;
         this.docOrder = orderProps.length == 0 && documentOrder;
         this.offset = offset;
         this.limit = limit;
+        for (ColumnImpl column : columns) {
+            String cn = column.getColumnName();
+            if (cn == null) {
+                String msg = column + " does not have a column name";
+                throw new IllegalArgumentException(msg);
+            }
+            this.columns.put(cn, column);
+
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getColumnNames() throws RepositoryException {
-        try {
-            String[] propNames = new String[selectProps.length];
-            for (int i = 0; i < selectProps.length; i++) {
-                propNames[i] = session.getJCRName(selectProps[i]);
-            }
-            return propNames;
-        } catch (NamespaceException npde) {
-            String msg = "encountered invalid property name";
-            log.debug(msg);
-            throw new RepositoryException(msg, npde);
-        }
+        return columns.keySet().toArray(new String[columns.size()]);
     }
 
     /**
@@ -223,7 +225,7 @@ public abstract class QueryResultImpl implements QueryResult {
                 throw new RepositoryException(e);
             }
         }
-        return new RowIteratorImpl(getScoreNodes(), selectProps,
+        return new RowIteratorImpl(getScoreNodes(), columns,
                 selectorNames, itemMgr,
                 index.getContext().getHierarchyManager(), session, session.getValueFactory(),
                 excerptProvider, spellSuggestion);
@@ -276,7 +278,7 @@ public abstract class QueryResultImpl implements QueryResult {
      */
     protected void getResults(long size) throws RepositoryException {
         if (log.isDebugEnabled()) {
-            log.debug("getResults({}) limit={}", new Long(size), new Long(limit));
+            log.debug("getResults({}) limit={}", size, limit);
         }
 
         long maxResultSize = size;
@@ -297,13 +299,13 @@ public abstract class QueryResultImpl implements QueryResult {
             long time = System.currentTimeMillis();
             result = executeQuery(maxResultSize);
             log.debug("query executed in {} ms",
-                    new Long(System.currentTimeMillis() - time));
+                    System.currentTimeMillis() - time);
             // set selector names
             selectorNames = result.getSelectorNames();
 
             if (resultNodes.isEmpty() && offset > 0) {
                 // collect result offset into dummy list
-                collectScoreNodes(result, new ArrayList(), offset);
+                collectScoreNodes(result, new ArrayList<ScoreNode[]>(), offset);
             } else {
                 int start = resultNodes.size() + invalid + (int) offset;
                 result.skip(start);
@@ -312,7 +314,7 @@ public abstract class QueryResultImpl implements QueryResult {
             time = System.currentTimeMillis();
             collectScoreNodes(result, resultNodes, maxResultSize);
             log.debug("retrieved ScoreNodes in {} ms",
-                    new Long(System.currentTimeMillis() - time));
+                    System.currentTimeMillis() - time);
 
             // update numResults
             numResults = result.getSize();
@@ -342,7 +344,7 @@ public abstract class QueryResultImpl implements QueryResult {
      * @throws RepositoryException if an error occurs while checking access rights.
      */
     private void collectScoreNodes(MultiColumnQueryHits hits,
-                                   List collector,
+                                   List<ScoreNode[]> collector,
                                    long maxResults)
             throws IOException, RepositoryException {
         while (collector.size() < maxResults) {
@@ -371,10 +373,10 @@ public abstract class QueryResultImpl implements QueryResult {
      */
     private boolean isAccessGranted(ScoreNode[] nodes)
             throws RepositoryException {
-        for (int i = 0; i < nodes.length; i++) {
+        for (ScoreNode node : nodes) {
             try {
                 // TODO: rather use AccessManager.canRead(Path)
-                if (nodes[i] != null && !accessMgr.isGranted(nodes[i].getNodeId(), AccessManager.READ)) {
+                if (node != null && !accessMgr.isGranted(node.getNodeId(), AccessManager.READ)) {
                     return false;
                 }
             } catch (ItemNotFoundException e) {
@@ -540,7 +542,7 @@ public abstract class QueryResultImpl implements QueryResult {
                         break;
                     }
                 }
-                next = (ScoreNode[]) resultNodes.get(nextPos);
+                next = resultNodes.get(nextPos);
             }
             position++;
         }

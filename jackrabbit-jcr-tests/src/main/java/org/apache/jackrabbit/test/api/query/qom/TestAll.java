@@ -32,6 +32,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(BindVariableValueTest.class);
         suite.addTestSuite(ChildNodeJoinConditionTest.class);
         suite.addTestSuite(ChildNodeTest.class);
+        suite.addTestSuite(ColumnTest.class);
         suite.addTestSuite(DescendantNodeJoinConditionTest.class);
         suite.addTestSuite(DescendantNodeTest.class);
         suite.addTestSuite(EquiJoinConditionTest.class);
@@ -40,6 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeNameTest.class);
         suite.addTestSuite(PropertyExistenceTest.class);
         suite.addTestSuite(QueryObjectModelFactoryTest.class);
+        suite.addTestSuite(RowTest.class);
         suite.addTestSuite(SameNodeJoinConditionTest.class); 
         suite.addTestSuite(SameNodeTest.class);
         suite.addTestSuite(SelectorTest.class);
