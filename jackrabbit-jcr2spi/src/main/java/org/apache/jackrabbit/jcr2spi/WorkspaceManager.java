@@ -722,6 +722,12 @@ public class WorkspaceManager
                         case Event.PROPERTY_REMOVED:
                             type = "PropertyRemoved";
                             break;
+                        case Event.NODE_MOVED:
+                            type = "NodeMoved";
+                            break;
+                        case Event.PERSIST:
+                            type = "Persist";
+                            break;
                         default:
                             type = "Unknown";
                     }
