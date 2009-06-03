@@ -201,13 +201,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
-    private static final EventType[] ALL_EVENTS = new EventType[5];
+    private static final EventType[] ALL_EVENTS = new EventType[7];
     static {
         ALL_EVENTS[0] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_ADDED);
         ALL_EVENTS[1] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_REMOVED);
         ALL_EVENTS[2] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_ADDED);
         ALL_EVENTS[3] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_CHANGED);
         ALL_EVENTS[4] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PROPERTY_REMOVED);
+        ALL_EVENTS[5] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.NODE_MOVED);
+        ALL_EVENTS[6] = SubscriptionImpl.getEventType(javax.jcr.observation.Event.PERSIST);
     }
     private static final SubscriptionInfo S_INFO = new SubscriptionInfo(ALL_EVENTS, true, INFINITE_TIMEOUT);
 
@@ -345,7 +347,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     protected NamePathResolver getNamePathResolver(SessionInfo sessionInfo) throws RepositoryException {
         checkSessionInfo(sessionInfo);
-        NamePathResolver resolver = ((SessionInfoImpl) sessionInfo).getNamePathResolver();
+        return getNamePathResolver(((SessionInfoImpl) sessionInfo));
+    }
+
+    private NamePathResolver getNamePathResolver(SessionInfoImpl sessionInfo) {
+        NamePathResolver resolver = sessionInfo.getNamePathResolver();
         if (resolver == null) {
             resolver = new NamePathResolverImpl(sessionInfo);
             ((SessionInfoImpl) sessionInfo).setNamePathResolver(resolver);
@@ -1878,7 +1884,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private List buildEventList(Element bundleElement, SessionInfo sessionInfo) {
+    private List buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) {
         List events = new ArrayList();
         ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
         while (eventElementIterator.hasNext()) {
@@ -1926,7 +1932,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 log.warn("Unable to build event parentId: ", e.getMessage());
             }
 
-            events.add(new EventImpl(eventId, eventPath, parentId, type, evElem));
+
+            events.add(new EventImpl(eventId, eventPath, parentId, type, evElem, getNamePathResolver(sessionInfo), getQValueFactory()));
         }
 
         return events;
