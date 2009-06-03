@@ -69,7 +69,6 @@
               <value>
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
-                org.apache.jackrabbit.test.api.observation.NodeReorderTest
                 org.apache.jackrabbit.test.api.observation.EventJournalTest
               </value>
             </property>

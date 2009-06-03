@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.EventImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -289,11 +290,17 @@ class EventSubscription implements Subscription, EventListener {
                 Map jcrInfo = e.getInfo();
                 for (Iterator it = jcrInfo.keySet().iterator(); it.hasNext();) {
                     String key = it.next().toString();
-                    Name name = resolver.getQName(key);
-                    // TODO: review again. how to determine value type?
-                    QValue v = qValueFactory.create(jcrInfo.get(key).toString(), PropertyType.STRING);
-                    info.put(name, v);
+                    Object value = jcrInfo.get(key);
 
+                    Name name = resolver.getQName(key);
+                    if (value != null) {
+                        // event information is generated for NODE_MOVED only in which
+                        // case all values are of type PATH.
+                        QValue v = ValueFormat.getQValue(value.toString(), PropertyType.PATH, resolver, qValueFactory);
+                        info.put(name, v);
+                    } else {
+                        info.put(name, null);
+                    }
                 }
                 Event spiEvent = new EventImpl(e.getType(), p, itemId, parentId,
                         nodeTypeName, mixinTypes, e.getUserID(), e.getUserData(), e.getDate(), info);
