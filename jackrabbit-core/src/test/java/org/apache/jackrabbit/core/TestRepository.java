@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 

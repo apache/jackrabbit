@@ -23,7 +23,6 @@ import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.Session;
 
 /**
  * Tests copying binary values from one node to another.

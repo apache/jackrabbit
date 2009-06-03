@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.retention;
 import javax.jcr.RepositoryException;
 import javax.jcr.retention.RetentionPolicy;
 
-import org.apache.jackrabbit.core.retention.RetentionPolicyImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 /**

@@ -16,9 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
-import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
