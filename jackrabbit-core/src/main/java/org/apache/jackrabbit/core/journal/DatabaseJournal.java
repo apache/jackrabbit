@@ -394,7 +394,7 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Creates a new database connection. This method is called inside
-     * {@link #init(String, org.apache.jackrabbit.name.NamespaceResolver)} or
+     * {@link #init(String, org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver)} or
      * when a connection has been dropped and must be reacquired. Base
      * implementation uses <code>java.sql.DriverManager</code> to get the
      * connection. May be overridden by subclasses.
@@ -961,7 +961,7 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * Get the database type.
      * @deprecated
-     * This method is deprecated; {@link getDatabaseType} should be used instead.
+     * This method is deprecated; {@link #getDatabaseType} should be used instead.
      * 
      * @return the database type
      */
@@ -1020,7 +1020,7 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * Set the database type.
     * @deprecated
-    * This method is deprecated; {@link getDatabaseType} should be used instead.
+    * This method is deprecated; {@link #getDatabaseType} should be used instead.
      * 
      * @param databaseType the database type
      */
