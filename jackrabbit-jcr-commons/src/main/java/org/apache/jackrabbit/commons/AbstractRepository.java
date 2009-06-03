@@ -23,7 +23,6 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 
 /**
  * Abstract base class for implementing the JCR {@link Repository} interface.
