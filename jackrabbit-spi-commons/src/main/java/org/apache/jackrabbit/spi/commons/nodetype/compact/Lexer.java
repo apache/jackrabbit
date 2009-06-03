@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import java.io.StreamTokenizer;
 import java.io.Reader;
 import java.io.IOException;

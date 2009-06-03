@@ -19,12 +19,9 @@ package org.apache.jackrabbit.spi.commons.nodetype.constraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import javax.jcr.NamespaceException;
 
 /**
  * <code>NumericConstraintTest</code>...
