@@ -40,7 +40,6 @@ import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.XASessionInfo;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 /**
  * <code>RepositoryImpl</code>...
@@ -88,8 +87,8 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
     public Value getDescriptorValue(String key) {
         String value = getDescriptor(key);
         if (value != null) {
-            // TODO: Do we have a better value factory?
-            return ValueFactoryImpl.getInstance().createValue(value);
+            // TODO implementation missing
+            throw new UnsupportedOperationException("not implemented yet - see JCR-2062");
         } else {
             return null;
         }
