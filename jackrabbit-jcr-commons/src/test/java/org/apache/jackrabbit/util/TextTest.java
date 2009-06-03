@@ -22,9 +22,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.name.IllegalNameException;
-import org.apache.jackrabbit.name.NameFormat;
-
 /**
  * Test cases for the Text utility class.
  */
@@ -32,11 +29,6 @@ public class TextTest extends TestCase {
 
     private void checkEscape(String name) {
         String escaped = Text.escapeIllegalJcrChars(name);
-        try {
-            NameFormat.checkFormat(escaped);
-        } catch (IllegalNameException e) {
-            fail("Illegal name: " + escaped);
-        }
         assertEquals(name, Text.unescapeIllegalJcrChars(escaped));
     }
 

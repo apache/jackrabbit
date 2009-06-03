@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.name;
 
-import org.apache.jackrabbit.BaseException;
-
 /**
  * Base class for exceptions about malformed or otherwise
  * invalid JCR names and paths.
@@ -26,7 +24,7 @@ import org.apache.jackrabbit.BaseException;
  *             the org.apache.jackrabbit.spi.commons.conversion package of
  *             the jackrabbit-spi-commons component.
  */
-public class NameException extends BaseException {
+public class NameException extends Exception {
 
     /**
      * Creates a NameException with the given error message.
