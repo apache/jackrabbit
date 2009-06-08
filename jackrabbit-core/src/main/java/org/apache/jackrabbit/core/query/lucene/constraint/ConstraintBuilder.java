@@ -80,7 +80,7 @@ public class ConstraintBuilder {
      *                             constraint.
      */
     public static Constraint create(ConstraintImpl constraint,
-                                    Map bindVariableValues,
+                                    Map<Name, Value> bindVariableValues,
                                     SelectorImpl[] selectors,
                                     LuceneQueryFactory factory,
                                     ValueFactory vf)
@@ -103,7 +103,7 @@ public class ConstraintBuilder {
         /**
          * The bind variables and their values.
          */
-        private final Map bindVariableValues;
+        private final Map<Name, Value> bindVariableValues;
 
         /**
          * The selectors of the query.
@@ -128,7 +128,7 @@ public class ConstraintBuilder {
          * @param factory            the lucene query factory.
          * @param vf                 the value factory of the current session.
          */
-        Visitor(Map bindVariableValues,
+        Visitor(Map<Name, Value> bindVariableValues,
                 SelectorImpl[] selectors,
                 LuceneQueryFactory factory,
                 ValueFactory vf) {
@@ -333,9 +333,9 @@ public class ConstraintBuilder {
                 // assume default selector
                 return selectors[0];
             }
-            for (int i = 0; i < selectors.length; i++) {
-                if (selectors[i].getSelectorQName().equals(name)) {
-                    return selectors[i];
+            for (SelectorImpl selector : selectors) {
+                if (selector.getSelectorQName().equals(name)) {
+                    return selector;
                 }
             }
             return null;

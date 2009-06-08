@@ -45,6 +45,17 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -542,7 +553,7 @@ public class SearchIndex extends AbstractQueryHandler {
         if (!index.getIndexFormatVersion().equals(getIndexFormatVersion())) {
             log.warn("Using Version {} for reading. Please re-index version " +
                     "storage for optimal performance.",
-                    new Integer(getIndexFormatVersion().getVersion()));
+                    getIndexFormatVersion().getVersion());
         }
     }
 
@@ -773,23 +784,19 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param session         the session that executes the query.
      * @param query           the query.
-     * @param orderProps      name of the properties for sort order.
-     * @param orderSpecs      the order specs for the sort order properties.
-     *                        <code>true</code> indicates ascending order,
-     *                        <code>false</code> indicates descending.
+     * @param orderings       the order specs for the sort order.
      * @param resultFetchHint a hint on how many results should be fetched.
      * @return the query hits.
      * @throws IOException if an error occurs while searching the index.
      */
     public MultiColumnQueryHits executeQuery(SessionImpl session,
                                              MultiColumnQuery query,
-                                             Path[] orderProps,
-                                             boolean[] orderSpecs,
+                                             OrderingImpl[] orderings,
                                              long resultFetchHint)
             throws IOException {
         checkOpen();
 
-        Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
+        Sort sort = new Sort(createSortFields(orderings));
 
         final IndexReader reader = getIndexReader();
         JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
@@ -985,6 +992,77 @@ public class SearchIndex extends AbstractQueryHandler {
                 sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
             } else {
                 sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
+            }
+        }
+        return sortFields.toArray(new SortField[sortFields.size()]);
+    }
+
+    /**
+     * Creates sort fields for the ordering specifications.
+     *
+     * @param orderings the ordering specifications.
+     * @return the sort fields.
+     */
+    protected SortField[] createSortFields(OrderingImpl[] orderings) {
+        List<SortField> sortFields = new ArrayList<SortField>();
+        for (final OrderingImpl ordering : orderings) {
+            QOMTreeVisitor visitor = new DefaultTraversingQOMTreeVisitor() {
+
+                public Object visit(LengthImpl node, Object data) throws Exception {
+                    PropertyValueImpl propValue = (PropertyValueImpl) node.getPropertyValue();
+                    return new SortField(propValue.getPropertyQName().toString(),
+                            new LengthSortComparator(),
+                            !ordering.isAscending());
+                }
+
+                public Object visit(LowerCaseImpl node, Object data)
+                        throws Exception {
+                    SortField sf = (SortField) super.visit(node, data);
+                    return new SortField(sf.getField(),
+                            new LowerCaseSortComparator(sf.getFactory()),
+                            sf.getReverse());
+                }
+
+                public Object visit(UpperCaseImpl node, Object data)
+                        throws Exception {
+                    SortField sf = (SortField) super.visit(node, data);
+                    return new SortField(sf.getField(),
+                            new UpperCaseSortComparator(sf.getFactory()),
+                            sf.getReverse());
+                }
+
+                public Object visit(FullTextSearchScoreImpl node, Object data)
+                        throws Exception {
+                    // TODO: selector ignored
+                    return new SortField(null, SortField.SCORE,
+                            ordering.isAscending());
+                }
+
+                public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
+                    return new SortField(FieldNames.LOCAL_NAME,
+                           SortField.STRING, !ordering.isAscending());
+                }
+
+                public Object visit(NodeNameImpl node, Object data) throws Exception {
+                    return new SortField(FieldNames.LABEL,
+                           SortField.STRING, !ordering.isAscending());
+                }
+
+                public Object visit(PropertyValueImpl node, Object data)
+                        throws Exception {
+                    return new SortField(node.getPropertyQName().toString(),
+                            scs, !ordering.isAscending());
+                }
+
+                public Object visit(OrderingImpl node, Object data)
+                        throws Exception {
+                    return ((DynamicOperandImpl) node.getOperand()).accept(this, data);
+                }
+            };
+            try {
+                sortFields.add((SortField) ordering.accept(visitor, null));
+            } catch (Exception e) {
+                // TODO
             }
         }
         return sortFields.toArray(new SortField[sortFields.size()]);
@@ -1234,44 +1312,36 @@ public class SearchIndex extends AbstractQueryHandler {
             }
             try {
                 ItemStateManager ism = getContext().getItemStateManager();
-                for (int i = 0; i < aggregateRules.length; i++) {
+                for (AggregateRule aggregateRule : aggregateRules) {
                     boolean ruleMatched = false;
                     // node includes
-                    NodeState[] aggregates = aggregateRules[i].getAggregatedNodeStates(state);
+                    NodeState[] aggregates = aggregateRule.getAggregatedNodeStates(state);
                     if (aggregates != null) {
                         ruleMatched = true;
-                        for (int j = 0; j < aggregates.length; j++) {
-                            Document aDoc = createDocument(aggregates[j],
-                                    getNamespaceMappings(),
-                                    index.getIndexFormatVersion());
+                        for (NodeState aggregate : aggregates) {
+                            Document aDoc = createDocument(aggregate, getNamespaceMappings(), index.getIndexFormatVersion());
                             // transfer fields to doc if there are any
                             Fieldable[] fulltextFields = aDoc.getFieldables(FieldNames.FULLTEXT);
                             if (fulltextFields != null) {
-                                for (int k = 0; k < fulltextFields.length; k++) {
-                                    doc.add(fulltextFields[k]);
+                                for (Fieldable fulltextField : fulltextFields) {
+                                    doc.add(fulltextField);
                                 }
-                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
-                                        aggregates[j].getNodeId().getUUID().toString(),
-                                        Field.Store.NO,
-                                        Field.Index.NOT_ANALYZED_NO_NORMS));
+                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().getUUID().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                             }
                         }
                     }
                     // property includes
-                    PropertyState[] propStates = aggregateRules[i].getAggregatedPropertyStates(state);
+                    PropertyState[] propStates = aggregateRule.getAggregatedPropertyStates(state);
                     if (propStates != null) {
                         ruleMatched = true;
-                        for (int j = 0; j < propStates.length; j++) {
-                            PropertyState propState = propStates[j];
-                            String namePrefix = FieldNames.createNamedValue(
-                                    getNamespaceMappings().translateName(propState.getName()), "");
+                        for (PropertyState propState : propStates) {
+                            String namePrefix = FieldNames.createNamedValue(getNamespaceMappings().translateName(propState.getName()), "");
                             NodeState parent = (NodeState) ism.getItemState(propState.getParentId());
                             Document aDoc = createDocument(parent, getNamespaceMappings(), getIndex().getIndexFormatVersion());
                             // find the right fields to transfer
                             Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
                             Token t = new Token();
-                            for (int k = 0; k < fields.length; k++) {
-                                Fieldable field = fields[k];
+                            for (Fieldable field : fields) {
                                 // assume properties fields use SingleTokenStream
                                 t = field.tokenStreamValue().next(t);
                                 String value = new String(t.termBuffer(), 0, t.termLength());
@@ -1284,10 +1354,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                     value = FieldNames.createNamedValue(path, value);
                                     t.setTermBuffer(value);
                                     doc.add(new Field(field.name(), new SingletonTokenStream(t)));
-                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
-                                            parent.getNodeId().getUUID().toString(),
-                                            Field.Store.NO,
-                                            Field.Index.NOT_ANALYZED_NO_NORMS));
+                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, parent.getNodeId().getUUID().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                                 }
                             }
                         }
@@ -1355,8 +1422,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 return;
             }
             try {
-                for (int i = 0; i < aggregateRules.length; i++) {
-                    NodeState root = aggregateRules[i].getAggregateRoot(state);
+                for (AggregateRule aggregateRule : aggregateRules) {
+                    NodeState root = aggregateRule.getAggregateRoot(state);
                     if (root != null) {
                         map.put(root.getNodeId().getUUID(), root);
                     }
@@ -1477,8 +1544,8 @@ public class SearchIndex extends AbstractQueryHandler {
          * {@inheritDoc}
          */
         public void release() throws IOException {
-            for (int i = 0; i < subReaders.length; i++) {
-                subReaders[i].release();
+            for (CachingMultiIndexReader subReader : subReaders) {
+                subReader.release();
             }
         }
 
@@ -1522,8 +1589,8 @@ public class SearchIndex extends AbstractQueryHandler {
 
         public int hashCode() {
             int hash = 0;
-            for (int i = 0; i < subReaders.length; i++) {
-                hash = 31 * hash + subReaders[i].hashCode();
+            for (CachingMultiIndexReader subReader : subReaders) {
+                hash = 31 * hash + subReader.hashCode();
             }
             return hash;
         }
@@ -1532,8 +1599,7 @@ public class SearchIndex extends AbstractQueryHandler {
          * {@inheritDoc}
          */
         public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
-            for (int i = 0; i < subReaders.length; i++) {
-                CachingMultiIndexReader subReader = subReaders[i];
+            for (CachingMultiIndexReader subReader : subReaders) {
                 ForeignSegmentDocId doc = subReader.createDocId(uuid);
                 if (doc != null) {
                     return doc;

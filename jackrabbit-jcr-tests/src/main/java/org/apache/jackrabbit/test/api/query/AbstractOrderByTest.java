@@ -22,6 +22,11 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyValue;
+
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Arrays;
@@ -123,6 +128,10 @@ class AbstractOrderByTest extends AbstractQueryTest {
         result = q.execute();
         checkResultOrder(result, nodeNames);
 
+        q = createQOM(true);
+        result = q.execute();
+        checkResultOrder(result, nodeNames);
+
         // then check descending
         Collections.reverse(Arrays.asList(nodeNames));
 
@@ -133,6 +142,10 @@ class AbstractOrderByTest extends AbstractQueryTest {
         }
 
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath + " descending", Query.XPATH);
+        result = q.execute();
+        checkResultOrder(result, nodeNames);
+
+        q = createQOM(false);
         result = q.execute();
         checkResultOrder(result, nodeNames);
     }
@@ -157,4 +170,21 @@ class AbstractOrderByTest extends AbstractQueryTest {
         }
     }
 
+    protected QueryObjectModel createQOM(boolean ascending)
+            throws RepositoryException {
+        QueryObjectModelFactory qf = superuser.getWorkspace().getQueryManager().getQOMFactory();
+        PropertyValue pv = qf.propertyValue("s", propertyName1);
+        Ordering ordering;
+        if (ascending) {
+            ordering = qf.ascending(pv);
+        } else {
+            ordering = qf.descending(pv);
+        }
+        return qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.descendantNode("s", testRoot),
+                new Ordering[]{ordering},
+                null
+        );
+    }
 }

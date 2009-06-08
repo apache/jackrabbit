@@ -40,14 +40,14 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
     /**
      * The order.
      */
-    private final String order;
+    private final Order order;
 
     OrderingImpl(NamePathResolver resolver,
                  DynamicOperandImpl operand,
                  String order) {
         super(resolver);
         this.operand = operand;
-        this.order = order;
+        this.order = Order.getOrderByName(order);
     }
 
     /**
@@ -67,9 +67,16 @@ public class OrderingImpl extends AbstractQOMNode implements Ordering {
      *         </ul>
      */
     public String getOrder() {
-        return order;
+        return order.getName();
     }
 
+    /**
+     * @return <code>true</code> if this ordering is ascending. Returns
+     *         <code>false</code> if ordering is descending.
+     */
+    public boolean isAscending() {
+        return order == Order.ASCENDING;
+    }
 
     //------------------------< AbstractQOMNode >-------------------------------
 
