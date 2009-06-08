@@ -185,6 +185,13 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
         throw new UnsupportedRepositoryOperationException("JCR-2108");
     }
 
+    public EventJournal getEventJournal(
+            int eventTypes, String absPath, boolean isDeep,
+            String[] uuid, String[] nodeTypeName, boolean noLocal)
+            throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("JCR-2108");
+    }
+
     /**
      * @see javax.jcr.observation.ObservationManager#setUserData(String) 
      */

@@ -300,6 +300,10 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                 public long getSize() throws RepositoryException {
                     return getLength();
                 }
+
+                public void dispose() {
+                }
+
             };
         }
 
@@ -694,6 +698,10 @@ public final class QValueFactoryImpl extends AbstractQValueFactory {
                 // this instance is backed by an in-memory buffer
                 buffer = EMPTY_BYTE_ARRAY;
             }
+        }
+
+        public void dispose() {
+            discard();
         }
 
         //-----------------------------------------------< java.lang.Object >---

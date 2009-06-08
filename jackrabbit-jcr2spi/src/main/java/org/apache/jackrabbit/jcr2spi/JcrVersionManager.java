@@ -245,6 +245,15 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
     }
 
     /**
+     * @see javax.jcr.version.VersionManager#removeActivity(Node)
+     */
+    public void removeActivity(Node node) throws RepositoryException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException(
+                "JCR-2104: JSR 283 Versioning. Implementation missing");
+    }
+
+    /**
      * @see javax.jcr.version.VersionManager#merge(Node)
      */
     public NodeIterator merge(Node activityNode) throws VersionException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
@@ -252,4 +261,5 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
         Iterator failedIds = vMgr.mergeActivity((NodeState) ((NodeImpl) activityNode).getItemState());
         return new LazyItemIterator(itemManager, session.getHierarchyManager(), failedIds);
     }
+
 }

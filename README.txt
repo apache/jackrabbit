@@ -20,15 +20,12 @@ Apache Jackrabbit is a project of the Apache Software Foundation.
 Building Jackrabbit
 ===================
 
-To build Jackrabbit, you first need to download the PFD version of the
-JCR 2.0 specification from http://jcp.org/en/jsr/detail?id=283 and install
-the contained jcr-2.0.jar file to your local Maven repository.
-
-Use the following command to install the required JCR API jar with metadata
-included in the jcr-2.0-pfd.xml file in this directory:
+To build Jackrabbit, you first need to download the jcr-2.0-b15.jar and
+jcr-2.0-b15.xml files from https://issues.apache.org/jira/browse/JCR-1104
+and install them to your local Maven repository:
 
     mvn install:install-file \
-        -Dfile=/path/to/lib/jcr-2.0.jar -DpomFile=jcr-2.0-pfd.xml    
+        -Dfile=jcr-2.0-b15.jar -DpomFile=jcr-2.0-b15.xml
 
 Once you've installed the jar, you can build Jackrabbit like this:
 

@@ -96,7 +96,7 @@ class PropertyDefinitionTemplateImpl
     /**
      * {@inheritDoc}
      */
-    public void setAvailablrQueryOperators(String[] operators) {
+    public void setAvailableQueryOperators(String[] operators) {
         queryOperators = operators;
     }
 
@@ -163,4 +163,5 @@ class PropertyDefinitionTemplateImpl
     public boolean isQueryOrderable() {
         return queryOrderable;
     }
+
 }

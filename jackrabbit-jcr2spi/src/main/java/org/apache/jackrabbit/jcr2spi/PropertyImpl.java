@@ -458,7 +458,15 @@ public class PropertyImpl extends ItemImpl implements Property {
         return getPropertyState().getType();
     }
 
-    //-----------------------------------------------------------< ItemImpl >---
+    /**
+     *
+     * @return true if the definition indicates that this Property is multivalued.
+     */
+    public boolean isMultiple() {
+        return getPropertyState().isMultiValued();
+    }
+
+   //-----------------------------------------------------------< ItemImpl >---
     /**
      * Returns the Name defined with this <code>PropertyState</code>
      *
@@ -487,13 +495,6 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     //---------------------------------------------< private implementation >---
-    /**
-     *
-     * @return true if the definition indicates that this Property is multivalued.
-     */
-    private boolean isMultiple() {
-        return getPropertyState().isMultiValued();
-    }
 
     /**
      *

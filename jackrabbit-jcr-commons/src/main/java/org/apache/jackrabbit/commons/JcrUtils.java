@@ -151,11 +151,11 @@ public class JcrUtils {
      * @param pattern property name globs
      * @return matching properties of the node
      * @throws RepositoryException
-     *         if the {@link Node#getProperty(String[])} call fails
+     *         if the {@link Node#getProperties(String[])} call fails
      */
     public static Iterable<Property> getProperties(Node node, String[] globs)
             throws RepositoryException {
-        return new PropertyIterable(node.getProperty(globs));
+        return new PropertyIterable(node.getProperties(globs));
     }
 
     /**

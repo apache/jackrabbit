@@ -456,6 +456,10 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 public long getSize() throws RepositoryException {
                     return getLength();
                 }
+
+                public void dispose() {
+                }
+
             };
         }
 
@@ -874,6 +878,10 @@ class QValueFactoryImpl extends AbstractQValueFactory {
                 public long getSize() throws RepositoryException {
                     return getLength();
                 }
+
+                public void dispose() {
+                }
+
             };
         }
 
