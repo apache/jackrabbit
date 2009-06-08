@@ -97,17 +97,17 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     private static final Set JOIN_TYPES = new HashSet();
 
     static {
-        OPERATORS.add(AbstractQOMTest.JCR_OPERATOR_EQUAL_TO);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
-        OPERATORS.add(AbstractQOMTest.JCR_OPERATOR_NOT_EQUAL_TO);
+        OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
 
         JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER);
-        JOIN_TYPES.add(AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER);
-        JOIN_TYPES.add(AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER);
+        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER);
+        JOIN_TYPES.add(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
     }
 
     /**

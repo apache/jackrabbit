@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 /**
  * <code>BindVariableValueTest</code>...
@@ -52,7 +53,7 @@ public class BindVariableValueTest extends AbstractQOMTest {
                         qomFactory.childNode("s", testRoot),
                         qomFactory.comparison(
                                 qomFactory.propertyValue("s", propertyName1),
-                                AbstractQOMTest.JCR_OPERATOR_EQUAL_TO,
+                                QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
                                 qomFactory.bindVariable("v")
                         )
                 ), null, null);

@@ -37,11 +37,6 @@ import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
  */
 public class AbstractQOMTest extends AbstractQueryTest {
 
-    // Constants broken in JCR 2.0 PFD
-    // TODO remove when API is fixed
-    protected static String JCR_OPERATOR_EQUAL_TO = "{http://www.jcp.org/jcr/1.0}operatorEqualTo";
-    protected static String JCR_OPERATOR_NOT_EQUAL_TO = "{http://www.jcp.org/jcr/1.0}operatorNotEqualTo";
-
     protected QueryObjectModelFactory qomFactory;
 
     protected void setUp() throws Exception {

@@ -32,11 +32,9 @@ public enum JoinType {
 
     INNER(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER),
 
-    LEFT("{http://www.jcp.org/jcr/1.0}joinTypeLeftOuter"),
-    // LEFT(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER),
+    LEFT(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER),
 
-    RIGHT("{http://www.jcp.org/jcr/1.0}joinTypeRightOuter");
-    // RIGHT(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
+    RIGHT(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER);
 
     /**
      * JCR name of this join type.

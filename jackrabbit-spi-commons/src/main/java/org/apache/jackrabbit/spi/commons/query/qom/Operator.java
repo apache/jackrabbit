@@ -30,11 +30,9 @@ import javax.jcr.query.qom.StaticOperand;
  */
 public enum Operator {
 
-    EQ("{http://www.jcp.org/jcr/1.0}operatorEqualTo", "="),
-    // EQ(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, "="),
+    EQ(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, "="),
 
-    NE("{http://www.jcp.org/jcr/1.0}operatorNotEqualTo", "!=", "<>"),
-    // NE(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO, "!=", "<>"),
+    NE(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO, "!=", "<>"),
 
     GT(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN, ">"),
 
