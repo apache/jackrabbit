@@ -58,7 +58,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                qomFactory.join(
                        qomFactory.selector(testNodeType, LEFT),
                        qomFactory.selector(mixReferenceable, RIGHT),
-                       AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER,
+                       QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER,
                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                qomFactory.descendantNode(LEFT, testRoot),
                null, null);
@@ -68,7 +68,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testLeftOuterJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = createQomQuery(AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER, nodeName2);
+        QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, nodeName2);
         QueryResult result = qom.execute();
         checkResult(result, new Node[][]{{n1, null}, {n2, n1}});
     }
@@ -78,7 +78,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                 qomFactory.join(
                         qomFactory.selector(mixReferenceable, LEFT),
                         qomFactory.selector(testNodeType, RIGHT),
-                        AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER,
+                        QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER,
                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);
@@ -92,7 +92,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                 qomFactory.join(
                         qomFactory.selector(mixReferenceable, LEFT),
                         qomFactory.selector(testNodeType, RIGHT),
-                        AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER,
+                        QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER,
                         qomFactory.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)),
                 qomFactory.descendantNode(RIGHT, testRoot),
                 null, null);

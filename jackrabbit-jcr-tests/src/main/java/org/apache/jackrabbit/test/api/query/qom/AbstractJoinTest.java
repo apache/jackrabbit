@@ -23,6 +23,7 @@ import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 
 /**
  * <code>AbstractJoinTest</code> provides utility methods for join related
@@ -44,11 +45,6 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
      * The selector names for the join.
      */
     protected static final String[] SELECTOR_NAMES = new String[]{LEFT, RIGHT};
-
-    // Constants broken in JCR 2.0 PFD
-    // TODO remove when API is fixed
-    protected static String JCR_JOIN_TYPE_LEFT_OUTER = "{http://www.jcp.org/jcr/1.0}joinTypeLeftOuter";
-    protected static String JCR_JOIN_TYPE_RIGHT_OUTER = "{http://www.jcp.org/jcr/1.0}joinTypeRightOuter";
     
     //--------------------------< utilities >-----------------------------------
 
@@ -70,7 +66,7 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
             throws RepositoryException {
         // only consider nodes under test root
         Constraint constraint;
-        if (JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
+        if (QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
             constraint = qomFactory.descendantNode(LEFT, testRoot);
         } else {
             constraint = qomFactory.descendantNode(RIGHT, testRoot);

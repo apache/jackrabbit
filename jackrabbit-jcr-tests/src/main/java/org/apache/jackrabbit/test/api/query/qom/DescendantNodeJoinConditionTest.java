@@ -51,13 +51,13 @@ public class DescendantNodeJoinConditionTest extends AbstractJoinTest {
 
     public void testRightOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.descendantNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(AbstractJoinTest.JCR_JOIN_TYPE_RIGHT_OUTER, c);
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, c);
         checkResult(qom.execute(), new Node[][]{{n2, n1}, {null, n2}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
         JoinCondition c = qomFactory.descendantNodeJoinCondition(LEFT, RIGHT);
-        QueryObjectModel qom = createQuery(AbstractJoinTest.JCR_JOIN_TYPE_LEFT_OUTER, c);
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, c);
         List result = new ArrayList();
         result.add(new Node[]{n2, n1});
         // for each ancestor-or-self of testRootNode check
