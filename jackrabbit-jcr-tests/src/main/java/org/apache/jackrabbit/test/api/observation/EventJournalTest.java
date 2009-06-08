@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.observation.Event;
 import javax.jcr.observation.EventJournal;
 
 /**
@@ -137,7 +138,60 @@ public class EventJournalTest extends AbstractObservationTest {
         assertEquals("Wrong user data", data, journal.nextEvent().getUserData());
     }
 
+    public void testEventType() throws RepositoryException {
+        Node n1 = testRootNode.addNode(nodeName1);
+
+        journal = getEventJournal(Event.PROPERTY_ADDED, testRoot, true, null, null);
+        journal.skipTo(System.currentTimeMillis());
+
+        superuser.save();
+
+        checkJournal(new String[]{n1.getPath() + "/" + jcrPrimaryType},
+                new String[]{n1.getPath()});
+    }
+
+    public void testPath() throws RepositoryException {
+        Node n1 = testRootNode.addNode(nodeName1);
+        Node n2 = n1.addNode(nodeName2);
+
+        journal = getEventJournal(ALL_TYPES, n1.getPath(), true, null, null);
+        journal.skipTo(System.currentTimeMillis());
+
+        superuser.save();
+
+        checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
+    }
+
+    public void testIsDeepFalse() throws RepositoryException {
+        Node n1 = testRootNode.addNode(nodeName1);
+        Node n2 = n1.addNode(nodeName2);
+
+        journal = getEventJournal(ALL_TYPES, testRoot, false, null, null);
+        journal.skipTo(System.currentTimeMillis());
+
+        superuser.save();
+
+        checkJournal(new String[]{n1.getPath()}, new String[]{n2.getPath()});
+    }
+
+    public void testNodeType() throws RepositoryException {
+        Node n1 = testRootNode.addNode(nodeName1, "nt:folder");
+        Node n2 = n1.addNode(nodeName2, "nt:folder");
+
+        journal = getEventJournal(ALL_TYPES, testRoot, true, null,
+                new String[]{"nt:folder"});
+        journal.skipTo(System.currentTimeMillis());
+
+        superuser.save();
+
+        checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
+    }
+    
     //-------------------------------< internal >-------------------------------
+
+    private EventJournal getEventJournal(int eventTypes, String absPath, boolean isDeep, String[] uuid, String[] nodeTypeName) throws RepositoryException {
+        return superuser.getWorkspace().getObservationManager().getEventJournal(eventTypes, absPath, isDeep, uuid, nodeTypeName);
+    }
 
     /**
      * Checks the journal for events.
