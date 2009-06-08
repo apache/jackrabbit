@@ -23,8 +23,8 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.lucene.search.Query;
 
 /**
@@ -37,6 +37,16 @@ public class SingleColumnQueryResult extends QueryResultImpl {
      * The query to execute.
      */
     private final Query query;
+
+    /**
+     * The relative paths of properties to use for ordering the result set.
+     */
+    protected final Path[] orderProps;
+
+    /**
+     * The order specifier for each of the order properties.
+     */
+    protected final boolean[] orderSpecs;
 
     public SingleColumnQueryResult(SearchIndex index,
                                    ItemManager itemMgr,
@@ -52,8 +62,10 @@ public class SingleColumnQueryResult extends QueryResultImpl {
                                    long offset,
                                    long limit) throws RepositoryException {
         super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
-                columns, orderProps, orderSpecs, documentOrder, offset, limit);
+                columns, documentOrder, offset, limit);
         this.query = query;
+        this.orderProps = orderProps;
+        this.orderSpecs = orderSpecs;
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }

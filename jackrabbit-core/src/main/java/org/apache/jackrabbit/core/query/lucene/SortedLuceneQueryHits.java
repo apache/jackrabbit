@@ -80,7 +80,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     /**
      * The score nodes.
      */
-    private final List scoreNodes = new ArrayList();
+    private final List<ScoreNode> scoreNodes = new ArrayList<ScoreNode>();
 
     /**
      * The total number of hits.
@@ -136,7 +136,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
             this.numHits = Math.max(this.numHits, hitIndex * 2);
             getHits();
         }
-        return (ScoreNode) scoreNodes.get(hitIndex);
+        return scoreNodes.get(hitIndex);
     }
 
     /**
@@ -161,7 +161,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
             NodeId id = new NodeId(UUID.fromString(uuid));
             scoreNodes.add(new ScoreNode(id, docs[i].score, docs[i].doc));
         }
-        log.debug("getHits() {}/{}", new Integer(scoreNodes.size()), new Integer(numHits));
+        log.debug("getHits() {}/{}", scoreNodes.size(), numHits);
         // double hits for next round
         numHits *= 2;
     }

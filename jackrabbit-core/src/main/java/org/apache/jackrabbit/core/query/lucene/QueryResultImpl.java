@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,16 +80,6 @@ public abstract class QueryResultImpl implements QueryResult {
      * The columns to select.
      */
     protected final Map<String, ColumnImpl> columns = new LinkedHashMap<String, ColumnImpl>();
-
-    /**
-     * The relative paths of properties to use for ordering the result set.
-     */
-    protected final Path[] orderProps;
-
-    /**
-     * The order specifier for each of the order properties.
-     */
-    protected final boolean[] orderSpecs;
 
     /**
      * The result nodes including their score. This list is populated on a lazy
@@ -154,9 +143,6 @@ public abstract class QueryResultImpl implements QueryResult {
      * @param spellSuggestion the spell suggestion or <code>null</code> if none
      *                        is available.
      * @param columns         the select properties of the query.
-     * @param orderProps      the relative paths of the order properties.
-     * @param orderSpecs      the order specs, one for each order property
-     *                        name.
      * @param documentOrder   if <code>true</code> the result is returned in
      *                        document order.
      * @param limit           the maximum result size
@@ -173,8 +159,6 @@ public abstract class QueryResultImpl implements QueryResult {
                            AbstractQueryImpl queryImpl,
                            SpellSuggestion spellSuggestion,
                            ColumnImpl[] columns,
-                           Path[] orderProps,
-                           boolean[] orderSpecs,
                            boolean documentOrder,
                            long offset,
                            long limit) throws RepositoryException {
@@ -184,9 +168,7 @@ public abstract class QueryResultImpl implements QueryResult {
         this.accessMgr = accessMgr;
         this.queryImpl = queryImpl;
         this.spellSuggestion = spellSuggestion;
-        this.orderProps = orderProps;
-        this.orderSpecs = orderSpecs;
-        this.docOrder = orderProps.length == 0 && documentOrder;
+        this.docOrder = documentOrder;
         this.offset = offset;
         this.limit = limit;
         for (ColumnImpl column : columns) {
@@ -196,7 +178,6 @@ public abstract class QueryResultImpl implements QueryResult {
                 throw new IllegalArgumentException(msg);
             }
             this.columns.put(cn, column);
-
         }
     }
 

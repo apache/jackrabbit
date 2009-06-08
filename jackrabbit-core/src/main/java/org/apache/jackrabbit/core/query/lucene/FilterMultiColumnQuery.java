@@ -84,6 +84,16 @@ public class FilterMultiColumnQuery implements MultiColumnQuery {
                 } while (next != null && !constraint.evaluate(next, getSelectorNames(), searcher));
                 return next;
             }
+
+            public int getSize() {
+                return -1;
+            }
+
+            public void skip(int n) throws IOException {
+                while (n-- > 0) {
+                    nextScoreNodes();
+                }
+            }
         };
     }
 }

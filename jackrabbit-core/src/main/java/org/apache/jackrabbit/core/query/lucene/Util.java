@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.Iterator;
 import java.util.regex.Pattern;
 import java.io.IOException;
 
@@ -51,8 +50,8 @@ public class Util {
      * @param old the document to dispose.
      */
     public static void disposeDocument(Document old) {
-        for (Iterator it = old.getFields().iterator(); it.hasNext(); ) {
-            Fieldable f = (Fieldable) it.next();
+        for (Object o : old.getFields()) {
+            Fieldable f = (Fieldable) o;
             try {
                 if (f.readerValue() != null) {
                     f.readerValue().close();
@@ -75,8 +74,8 @@ public class Util {
      *         otherwise.
      */
     public static boolean isDocumentReady(Document doc) {
-        for (Iterator it = doc.getFields().iterator(); it.hasNext(); ) {
-            Fieldable f = (Fieldable) it.next();
+        for (Object o : doc.getFields()) {
+            Fieldable f = (Fieldable) o;
             if (f instanceof LazyTextExtractorField) {
                 LazyTextExtractorField field = (LazyTextExtractorField) f;
                 if (!field.isExtractorFinished()) {
@@ -145,13 +144,13 @@ public class Util {
             case PropertyType.BINARY:
                 return null;
             case PropertyType.BOOLEAN:
-                return ComparableBoolean.valueOf(value.getBoolean());
+                return value.getBoolean();
             case PropertyType.DATE:
-                return new Long(value.getDate().getTimeInMillis());
+                return value.getDate().getTimeInMillis();
             case PropertyType.DOUBLE:
-                return new Double(value.getDouble());
+                return value.getDouble();
             case PropertyType.LONG:
-                return new Long(value.getLong());
+                return value.getLong();
             case PropertyType.DECIMAL:
                 return value.getDecimal();
             case PropertyType.NAME:
@@ -183,13 +182,13 @@ public class Util {
             throws ValueFormatException, RepositoryException {
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
-                return ComparableBoolean.valueOf(value.getBoolean());
+                return value.getBoolean();
             case PropertyType.DATE:
-                return new Long(value.getDate().getTimeInMillis());
+                return value.getDate().getTimeInMillis();
             case PropertyType.DOUBLE:
-                return new Double(value.getDouble());
+                return value.getDouble();
             case PropertyType.LONG:
-                return new Long(value.getLong());
+                return value.getLong();
             case PropertyType.DECIMAL:
                 return value.getDecimal();
             case PropertyType.NAME:
@@ -258,16 +257,16 @@ public class Util {
         Comparable c2;
         switch (v1.getType()) {
             case PropertyType.BOOLEAN:
-                c2 = ComparableBoolean.valueOf(v2.getBoolean());
+                c2 = v2.getBoolean();
                 break;
             case PropertyType.DATE:
-                c2 = new Long(v2.getDate().getTimeInMillis());
+                c2 = v2.getDate().getTimeInMillis();
                 break;
             case PropertyType.DOUBLE:
-                c2 = new Double(v2.getDouble());
+                c2 = v2.getDouble();
                 break;
             case PropertyType.LONG:
-                c2 = new Long(v2.getLong());
+                c2 = v2.getLong();
                 break;
             case PropertyType.DECIMAL:
                 c2 = v2.getDecimal();

@@ -21,7 +21,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermPositions;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.SortComparatorSource;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class SharedFieldCache {
         /**
          * Values (Comparable) map indexed by document id.
          */
-        public final Map valuesMap;
+        public final Map<Integer, Comparable> valuesMap;
 
         /**
          * Boolean indicating whether the {@link #valuesMap} impl has to be used
@@ -86,17 +86,17 @@ public class SharedFieldCache {
 
         public Comparable getValue(int i) {
             if (sparse) {
-                return valuesMap == null ? null : (Comparable) valuesMap.get(new Integer(i));
+                return valuesMap == null ? null : valuesMap.get(i);
             } else {
                 return values[i];
             }
         }
 
-        private Map getValuesMap(Comparable[] values, int setValues) {
-            Map map = new HashMap(setValues);
+        private Map<Integer, Comparable> getValuesMap(Comparable[] values, int setValues) {
+            Map<Integer, Comparable> map = new HashMap<Integer, Comparable>(setValues);
             for (int i = 0; i < values.length && setValues > 0; i++) {
                 if (values[i] != null) {
-                    map.put(new Integer(i), values[i]);
+                    map.put(i, values[i]);
                     setValues--;
                 }
             }
@@ -121,7 +121,7 @@ public class SharedFieldCache {
     /**
      * The internal cache. Maps Entry to array of interpreted term values.
      */
-    private final Map cache = new WeakHashMap();
+    private final Map<IndexReader, Map<Key, ValueIndex>> cache = new WeakHashMap<IndexReader, Map<Key, ValueIndex>>();
 
     /**
      * Private constructor.
@@ -147,7 +147,7 @@ public class SharedFieldCache {
     public ValueIndex getValueIndex(IndexReader reader,
                                     String field,
                                     String prefix,
-                                    SortComparator comparator)
+                                    SortComparatorSource comparator)
             throws IOException {
 
         if (reader instanceof ReadOnlyIndexReader) {
@@ -225,27 +225,27 @@ public class SharedFieldCache {
      * See if a <code>ValueIndex</code> object is in the cache.
      */
     ValueIndex lookup(IndexReader reader, String field,
-                                  String prefix, SortComparator comparer) {
+                      String prefix, SortComparatorSource comparer) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
-            HashMap readerCache = (HashMap) cache.get(reader);
+            Map<Key, ValueIndex> readerCache = cache.get(reader);
             if (readerCache == null) {
                 return null;
             }
-            return (ValueIndex) readerCache.get(key);
+            return readerCache.get(key);
         }
     }
 
     /**
      * Put a <code>ValueIndex</code> <code>value</code> to cache.
      */
-    Object store(IndexReader reader, String field, String prefix,
-                 SortComparator comparer, ValueIndex value) {
+    ValueIndex store(IndexReader reader, String field, String prefix,
+                 SortComparatorSource comparer, ValueIndex value) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
-            HashMap readerCache = (HashMap) cache.get(reader);
+            Map<Key, ValueIndex> readerCache = cache.get(reader);
             if (readerCache == null) {
-                readerCache = new HashMap();
+                readerCache = new HashMap<Key, ValueIndex>();
                 cache.put(reader, readerCache);
             }
             return readerCache.put(key, value);
@@ -263,13 +263,13 @@ public class SharedFieldCache {
     private Comparable getValue(String value, int type) {
         switch (type) {
             case PropertyType.BOOLEAN:
-                return ComparableBoolean.valueOf(Boolean.valueOf(value).booleanValue());
+                return Boolean.valueOf(value);
             case PropertyType.DATE:
-                return new Long(DateField.stringToTime(value));
+                return DateField.stringToTime(value);
             case PropertyType.LONG:
-                return new Long(LongField.stringToLong(value));
+                return LongField.stringToLong(value);
             case PropertyType.DOUBLE:
-                return new Double(DoubleField.stringToDouble(value));
+                return DoubleField.stringToDouble(value);
             case PropertyType.DECIMAL:
                 return DecimalField.stringToDecimal(value);
             default:
@@ -285,12 +285,12 @@ public class SharedFieldCache {
 
         private final String field;
         private final String prefix;
-        private final SortComparator comparator;
+        private final SortComparatorSource comparator;
 
         /**
          * Creates <code>Key</code> for ValueIndex lookup.
          */
-        Key(String field, String prefix, SortComparator comparator) {
+        Key(String field, String prefix, SortComparatorSource comparator) {
             this.field = field.intern();
             this.prefix = prefix.intern();
             this.comparator = comparator;

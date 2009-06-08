@@ -24,6 +24,8 @@ import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.Value;
 import javax.jcr.RepositoryException;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,12 +67,12 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
     /**
      * Set&lt;Name>, where Name is a variable name in the query statement.
      */
-    private final Set variableNames = new HashSet();
+    private final Set<Name> variableNames = new HashSet<Name>();
 
     /**
      * Binding of variable name to value. Maps {@link Name} to {@link Value}.
      */
-    private final Map bindValues = new HashMap();
+    private final Map<Name, Value> bindValues = new HashMap<Name, Value>();
 
 
     /**
@@ -150,8 +152,17 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      * @return an unmodifieable map, which contains the variable names and their
      *         respective value.
      */
-    protected Map getBindVariableValues() {
+    protected Map<Name, Value> getBindVariableValues() {
         return Collections.unmodifiableMap(bindValues);
+    }
+
+    /**
+     * @return the query object model factory.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected QueryObjectModelFactory getQOMFactory()
+            throws RepositoryException {
+        return session.getWorkspace().getQueryManager().getQOMFactory();
     }
 
     /**

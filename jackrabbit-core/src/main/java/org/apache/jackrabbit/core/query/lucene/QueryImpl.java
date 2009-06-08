@@ -133,7 +133,8 @@ public class QueryImpl extends AbstractQueryImpl {
                 session, session.getAccessManager(),
                 this, query, new SpellSuggestion(index.getSpellChecker(), root),
                 getColumns(), orderProperties, ascSpecs,
-                getRespectDocumentOrder(), offset, limit);
+                orderProperties.length == 0 && getRespectDocumentOrder(),
+                offset, limit);
     }
 
     /**
