@@ -512,10 +512,10 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * TODO: method name is wrong! should be getProperties (Issue 736 of the pfd)
-     * @see javax.jcr.Node#getProperty(String)
+     * @see javax.jcr.Node#getProperties(String)
      */
-    public PropertyIterator getProperty(String[] nameGlobs) throws RepositoryException {
+    public PropertyIterator getProperties(String[] nameGlobs)
+            throws RepositoryException {
         checkStatus();
         List properties = new ArrayList();
         // traverse child properties using a filtering item visitor

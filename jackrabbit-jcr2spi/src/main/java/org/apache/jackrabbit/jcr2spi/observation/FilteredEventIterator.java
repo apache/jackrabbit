@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.observation;
 
-import java.util.Calendar;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -129,7 +128,7 @@ class FilteredEventIterator implements EventIterator {
     /**
      * @see javax.jcr.observation.EventIterator#getDate()
      */
-    public Calendar getDate() {
+    public long getDate() {
         // TODO
         throw new UnsupportedOperationException("JCR-2108. Implementation Missing");
     }

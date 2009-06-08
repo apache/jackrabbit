@@ -267,6 +267,16 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                 clusterNode.getId());
     }
 
+    // TODO: Removed in a more recent version of the JCR API jar
+    @Deprecated
+    public EventJournal getEventJournal(
+            int eventTypes, String absPath, boolean isDeep,
+            String[] uuid, String[] nodeTypeName, boolean noLocal)
+            throws RepositoryException {
+        return getEventJournal(eventTypes, absPath, isDeep, uuid, nodeTypeName);
+    }
+
+
     /**
      * Returns an unfiltered event journal for this workspace.
      *

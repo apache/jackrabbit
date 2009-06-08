@@ -213,7 +213,15 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
     /**
      * {@inheritDoc}
      */
+    public void removeActivity(Node node) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("comming soon...");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public NodeIterator merge(Node activityNode) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("comming soon...");
     }
+
 }

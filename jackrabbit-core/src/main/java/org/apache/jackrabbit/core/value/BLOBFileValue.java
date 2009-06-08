@@ -182,4 +182,9 @@ public abstract class BLOBFileValue implements Binary {
     public long getSize() throws RepositoryException {
         return getLength();
     }
+
+    public void dispose() {
+        discard();
+    }
+
 }

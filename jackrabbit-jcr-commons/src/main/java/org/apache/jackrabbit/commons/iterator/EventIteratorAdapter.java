@@ -33,15 +33,9 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
         implements EventIterator {
 
     /**
-     * Static instance of an empty {@link EventIterator}.
-     */
-    public static final EventIterator EMPTY =
-        new EventIteratorAdapter(RangeIteratorAdapter.EMPTY);
-
-    /**
      * Date associated with this iterator.
      */
-    private final Calendar date;
+    private final long date;
 
     /**
      * Creates an adapter for the given {@link RangeIterator}.
@@ -58,9 +52,9 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Event}s
      */
-    public EventIteratorAdapter(RangeIterator iterator) {
+    public EventIteratorAdapter(RangeIterator iterator, long date) {
         super(iterator);
-        this.date = null;
+        this.date = date;
     }
 
     /**
@@ -68,9 +62,9 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Event}s.
      */
-    public EventIteratorAdapter(Iterator iterator) {
+    public EventIteratorAdapter(Iterator iterator, long date) {
         super(new RangeIteratorAdapter(iterator));
-        this.date = null;
+        this.date = date;
     }
 
     /**
@@ -78,9 +72,9 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Event}s
      */
-    public EventIteratorAdapter(Collection collection) {
+    public EventIteratorAdapter(Collection collection, long date) {
         super(new RangeIteratorAdapter(collection));
-        this.date = null;
+        this.date = date;
     }
 
     //-------------------------------------------------------< EventIterator >
@@ -100,7 +94,7 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @return date associated with this iterator, or <code>null</code> 
      */
-    public Calendar getDate() {
+    public long getDate() {
         return date;
     }
 
