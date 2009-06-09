@@ -85,6 +85,18 @@ public class QueryImpl implements Query {
     private WorkspaceManager wspManager;
 
     /**
+     * The maximum result size
+     * TODO: review default value
+     */
+    private long limit = Long.MAX_VALUE;
+
+    /**
+     * The offset in the total result set
+     * TODO: review default value
+     */
+    private long offset = 0;
+
+    /**
      * Creates a new query.
      *
      * @param session          the session that created this query.
@@ -151,7 +163,7 @@ public class QueryImpl implements Query {
      */
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(
-                statement, language, getNamespaceMappings());
+                statement, language, getNamespaceMappings(), limit, offset);
         return new QueryResultImpl(itemManager, mgrProvider, qI);
     }
 
@@ -229,7 +241,7 @@ public class QueryImpl implements Query {
      * @see Query#bindValue(String, Value)
      */
     public void bindValue(String varName, Value value) throws RepositoryException {
-        //TODO
+        //TODO implementation missing
         throw new UnsupportedOperationException("JCR-2107: Implementation missing");
     }
 
@@ -237,15 +249,13 @@ public class QueryImpl implements Query {
      * @see Query#setLimit(long)
      */
     public void setLimit(long limit) {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
+        this.limit = limit;
     }
 
     /**
      * @see Query#setOffset(long)
      */
     public void setOffset(long offset) {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
+        this.offset = offset;
     }
 }

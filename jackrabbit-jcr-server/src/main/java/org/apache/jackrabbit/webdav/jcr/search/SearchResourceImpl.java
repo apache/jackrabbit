@@ -146,6 +146,13 @@ public class SearchResourceImpl implements SearchResource {
                     session.setNamespacePrefix(prefix, uri);
                 }
                 q = qMgr.createQuery(sInfo.getQuery(), sInfo.getLanguageName());
+
+                if (SearchInfo.NRESULTS_UNDEFINED != sInfo.getNumberResults()) {
+                    q.setLimit(sInfo.getNumberResults());
+                }
+                if (SearchInfo.OFFSET_UNDEFINED != sInfo.getOffset()) {
+                    q.setOffset(sInfo.getOffset());
+                }
             } finally {
                 // reset namespace mappings
                 for (Iterator it = namespaces.values().iterator(); it.hasNext(); ) {

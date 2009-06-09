@@ -19,6 +19,8 @@ package org.apache.jackrabbit.jcr2spi.query;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -27,6 +29,7 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * This class implements the {@link QueryManager} interface.
@@ -54,6 +57,11 @@ public class QueryManagerImpl implements QueryManager {
     private final WorkspaceManager wspManager;
 
     /**
+     * The query object model factory.
+     */
+    private final QueryObjectModelFactory qomFactory;
+
+    /**
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>Session</code>.
      *
@@ -65,11 +73,20 @@ public class QueryManagerImpl implements QueryManager {
     public QueryManagerImpl(Session session,
                             ManagerProvider mgrProvider,
                             ItemManager itemMgr,
-                            WorkspaceManager wspManager) {
+                            WorkspaceManager wspManager) throws RepositoryException {
         this.session = session;
         this.mgrProvider = mgrProvider;
         this.itemMgr = itemMgr;
         this.wspManager = wspManager;
+        this.qomFactory = new QueryObjectModelFactoryImpl(
+                mgrProvider.getNamePathResolver(), mgrProvider.getJcrValueFactory()) {
+            
+            protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
+                    throws InvalidQueryException, RepositoryException {
+                // TODO implementation missing
+                throw new UnsupportedOperationException("Implementation missing: JCR-2107");
+            }
+        };
     }
 
     /**
@@ -101,8 +118,7 @@ public class QueryManagerImpl implements QueryManager {
      * @see QueryManager#getQOMFactory()
      */
     public QueryObjectModelFactory getQOMFactory() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2107: Implementation missing");        
+        return qomFactory;        
     }
 
     //------------------------------------------------------------< private >---
