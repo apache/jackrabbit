@@ -26,19 +26,22 @@ import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.Lexer;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
@@ -163,17 +166,27 @@ public class CompactNodeTypeDefReader {
     /**
      * the current namespace mapping
      */
-    private NamespaceMapping nsMapping;
+    private final NamespaceMapping nsMapping;
 
     /**
      * Name and Path resolver
      */
-    private NamePathResolver resolver;
+    private final NamePathResolver resolver;
+
+    /**
+     * Value factory
+     */
+    private final ValueFactory valueFactory;
+
+    /**
+     * Factory for InternalValue(s)
+     */
+    private final QValueFactory qValueFactory = InternalValueFactory.getInstance();
 
     /**
      * the underlying lexer
      */
-    private Lexer lexer;
+    private final Lexer lexer;
 
     /**
      * the current token
@@ -202,6 +215,8 @@ public class CompactNodeTypeDefReader {
         lexer = new Lexer(r, systemId);
         this.nsMapping = mapping;
         this.resolver = new DefaultNamePathResolver(nsMapping);
+        valueFactory = new ValueFactoryQImpl(qValueFactory, resolver);
+
         nextToken();
         parse();
     }
@@ -593,15 +608,15 @@ public class CompactNodeTypeDefReader {
         if (!currentTokenEquals(Lexer.DEFAULT)) {
             return;
         }
-        List defaultValues = new ArrayList();
+        List<InternalValue> defaultValues = new ArrayList();
         do {
             nextToken();
             InternalValue value = null;
             try {
                 Value v = ValueHelper.convert(
                         currentToken, pdi.getRequiredType(),
-                        ValueFactoryImpl.getInstance());
-                value = InternalValue.create(v, resolver);
+                        valueFactory);
+                value = (InternalValue) ValueFormat.getQValue(v, resolver, qValueFactory);
             } catch (ValueFormatException e) {
                 lexer.fail("'" + currentToken + "' is not a valid string"
                         + " representation of a value of type " + pdi.getRequiredType());

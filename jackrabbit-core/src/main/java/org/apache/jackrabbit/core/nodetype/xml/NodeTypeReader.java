@@ -27,17 +27,22 @@ import org.apache.jackrabbit.core.nodetype.PropDefImpl;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.value.ValueHelper;
-import org.apache.jackrabbit.value.ValueFactoryImpl;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
+import javax.jcr.ValueFactory;
+import javax.jcr.Value;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.IOException;
@@ -87,6 +92,10 @@ public class NodeTypeReader {
     /** The name, path resolver. */
     private final NamePathResolver resolver;
 
+    private final ValueFactory valueFactory;
+
+    private final QValueFactory qValueFactory = InternalValueFactory.getInstance();
+
     /**
      * Creates a node type definition file reader.
      *
@@ -98,6 +107,7 @@ public class NodeTypeReader {
         namespaces = walker.getNamespaces();
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(namespaces);
         resolver = new DefaultNamePathResolver(nsResolver);
+        valueFactory = new ValueFactoryQImpl(qValueFactory, resolver);
     }
 
     /**
@@ -284,7 +294,7 @@ public class NodeTypeReader {
 
         // default values
         if (walker.enterElement(Constants.DEFAULTVALUES_ELEMENT)) {
-            List values = new ArrayList();
+            List<InternalValue> values = new ArrayList();
             int type = def.getRequiredType();
             if (type == PropertyType.UNDEFINED) {
                 type = PropertyType.STRING;
@@ -292,8 +302,8 @@ public class NodeTypeReader {
             while (walker.iterateElements(Constants.DEFAULTVALUE_ELEMENT)) {
                 String value = walker.getContent();
                 try {
-                    values.add(InternalValue.create(ValueHelper.convert(
-                            value, type, ValueFactoryImpl.getInstance()), resolver));
+                    Value v = ValueHelper.convert(value, type, valueFactory);
+                    values.add((InternalValue) ValueFormat.getQValue(v, resolver, qValueFactory));
                 } catch (RepositoryException e) {
                     throw new InvalidNodeTypeDefException(
                             "Unable to create default value: " + value, e);
