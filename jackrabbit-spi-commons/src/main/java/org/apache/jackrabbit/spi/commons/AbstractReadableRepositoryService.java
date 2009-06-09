@@ -783,4 +783,10 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
             RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
+
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement,
+                                  String language, Map namespaces, long limit,
+                                  long offset) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
 }

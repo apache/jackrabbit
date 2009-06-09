@@ -564,6 +564,17 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 new Object[]{unwrap(sessionInfo), statement, language, namespaces});
     }
 
+    public QueryInfo executeQuery(final SessionInfo sessionInfo, final String statement,
+            final String language, final Map namespaces, final long limit, final long offset) throws RepositoryException {
+
+        return (QueryInfo) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces, limit, offset);
+            }
+        }, "executeQuery(SessionInfo, String, String, Map, long, long)",
+                new Object[]{unwrap(sessionInfo), statement, language, namespaces, limit, offset});
+    }
+
     public EventFilter createEventFilter(final SessionInfo sessionInfo, final int eventTypes,
             final Path absPath, final boolean isDeep, final String[] uuid, final Name[] qnodeTypeName,
             final boolean noLocal) throws RepositoryException {

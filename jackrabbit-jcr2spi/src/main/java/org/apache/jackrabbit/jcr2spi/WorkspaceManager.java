@@ -310,12 +310,14 @@ public class WorkspaceManager
      * @param language   the query language.
      * @param namespaces the locally remapped namespaces which might be used in
      *                   the query statement.
+     * @param limit
+     * @param offset
      * @return
      * @throws RepositoryException
      */
-    public QueryInfo executeQuery(String statement, String language, Map namespaces)
-            throws RepositoryException {
-        return service.executeQuery(sessionInfo, statement, language, namespaces);
+    public QueryInfo executeQuery(String statement, String language, Map namespaces,
+                                  long limit, long offset) throws RepositoryException {
+        return service.executeQuery(sessionInfo, statement, language, namespaces, limit, offset);
     }
 
     /**

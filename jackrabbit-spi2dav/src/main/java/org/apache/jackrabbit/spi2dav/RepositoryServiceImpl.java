@@ -1703,6 +1703,37 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#executeQuery(SessionInfo, String, String, Map, long, long)
+     */
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset) throws RepositoryException {
+        SearchMethod method = null;
+        try {
+            String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+            SearchInfo sInfo = new SearchInfo(language,
+                    Namespace.EMPTY_NAMESPACE, statement, namespaces);
+            
+            sInfo.setNumberResults(limit);
+            sInfo.setOffset(offset);
+
+            method = new SearchMethod(uri, sInfo);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            MultiStatus ms = method.getResponseBodyAsMultiStatus();
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            return new QueryInfoImpl(ms, sessionInfo, uriResolver, resolver, valueFactory, getQValueFactory());
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        }  finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
+    /**
      * @see RepositoryService#createEventFilter(SessionInfo, int, Path, boolean, String[], Name[], boolean)
      */
     public EventFilter createEventFilter(SessionInfo sessionInfo,
