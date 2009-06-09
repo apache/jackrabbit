@@ -190,15 +190,6 @@ public abstract class AbstractSession implements Session {
                     "Prefix is not a valid XML NCName: " + prefix);
         }
 
-        // FIXME Figure out how this should be handled
-        // Currently JSR 283 does not specify this exception, but for
-        // compatibility with JCR 1.0 TCK it probably should.
-        // Note that the solution here also affects the remove() code below
-        String previous = namespaces.get(prefix);
-        if (previous != null && !previous.equals(uri)) {
-            throw new NamespaceException("Namespace already mapped");
-        }
-
         // Remove existing mapping for the given prefix
         namespaces.remove(prefix);
 
