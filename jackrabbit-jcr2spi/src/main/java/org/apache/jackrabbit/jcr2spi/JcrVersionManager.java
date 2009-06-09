@@ -236,21 +236,10 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
     }
 
     /**
-     * @see javax.jcr.version.VersionManager#removeActivity(String)
-     */
-    public Node removeActivity(String title) throws UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO uncomment as soon as jsr 283 is fixed
-        // vMgr.removeActivity((NodeState) ((NodeImpl) activityNode).getItemState());       
-        throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
-    }
-
-    /**
      * @see javax.jcr.version.VersionManager#removeActivity(Node)
      */
-    public void removeActivity(Node node) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException(
-                "JCR-2104: JSR 283 Versioning. Implementation missing");
+    public void removeActivity(Node activityNode) throws UnsupportedRepositoryOperationException, RepositoryException {
+        vMgr.removeActivity((NodeState) ((NodeImpl) activityNode).getItemState());
     }
 
     /**
