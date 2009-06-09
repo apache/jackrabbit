@@ -51,22 +51,6 @@ public class QueryImpl extends AbstractQueryImpl {
     private static final Logger log = LoggerFactory.getLogger(QueryImpl.class);
 
     /**
-     * A string constant representing the JCR-SQL2 query language.
-     *
-     * @since JCR 2.0
-     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
-     */
-    public static final String JCR_SQL2 = "JCR-SQL2";
-
-    /**
-     * A string constant representing the JCR-JQOM query language.
-     *
-     * @since JCR 2.0
-     * TODO: REMOVE WHEN JSR 283 IS FINAL!!
-     */
-    public static final String JCR_JQOM = "JCR-JQOM";
-
-    /**
      * The session of the user executing this query
      */
     protected SessionImpl session;
