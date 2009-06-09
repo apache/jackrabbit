@@ -48,8 +48,6 @@ import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
-import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -220,31 +218,6 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      */
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
-    }
-
-    /**
-     * Builds a single List from the properties to set and the properties to
-     * remove and delegates the list to {@link AbstractResource#alterProperties(List)};
-     *
-     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
-     */
-    public MultiStatusResponse alterProperties(DavPropertySet setProperties,
-                                               DavPropertyNameSet removePropertyNames)
-            throws DavException {
-        List changeList = new ArrayList();
-        if (removePropertyNames != null) {
-            DavPropertyNameIterator it = removePropertyNames.iterator();
-            while (it.hasNext()) {
-                changeList.add(it.next());
-            }
-        }
-        if (setProperties != null) {
-            DavPropertyIterator it = setProperties.iterator();
-            while (it.hasNext()) {
-                changeList.add(it.next());
-            }
-        }
-        return alterProperties(changeList);
     }
 
     /**
