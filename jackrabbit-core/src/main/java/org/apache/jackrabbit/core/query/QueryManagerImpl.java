@@ -92,7 +92,7 @@ public class QueryManagerImpl implements QueryManager {
             protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                     throws InvalidQueryException, RepositoryException {
                 return searchMgr.createQueryObjectModel(
-                        session, qomTree, QueryImpl.JCR_SQL2);
+                        session, qomTree, Query.JCR_SQL2);
             }
         };
     }
