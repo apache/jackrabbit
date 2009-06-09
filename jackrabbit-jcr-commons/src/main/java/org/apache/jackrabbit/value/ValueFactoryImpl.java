@@ -16,25 +16,16 @@
  */
 package org.apache.jackrabbit.value;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.Calendar;
-
-import javax.jcr.Binary;
-import javax.jcr.Node;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
 /**
- * This class implements the <code>ValueFactory</code> interface.
+ * Simple extension of the <code>AbstractValueFactory</code> that omits any
+ * validation checks for path and name values.
  *
  * @see javax.jcr.Session#getValueFactory()
  */
-public class ValueFactoryImpl implements ValueFactory {
+public class ValueFactoryImpl extends AbstractValueFactory {
 
     private static final ValueFactory valueFactory = new ValueFactoryImpl();
 
@@ -44,7 +35,6 @@ public class ValueFactoryImpl implements ValueFactory {
     protected ValueFactoryImpl() {
     }
 
-    //--------------------------------------------------------------------------
     /**
      *
      */
@@ -52,140 +42,17 @@ public class ValueFactoryImpl implements ValueFactory {
         return valueFactory;
     }
 
-    //---------------------------------------------------------< ValueFactory >
     /**
-     * {@inheritDoc}
+     * @see AbstractValueFactory#checkPathFormat(String)
      */
-    public Value createValue(boolean value) {
-        return new BooleanValue(value);
+    protected void checkPathFormat(String pathValue) throws ValueFormatException {
+        // ignore
     }
 
     /**
-     * {@inheritDoc}
+     * @see AbstractValueFactory#checkNameFormat(String)
      */
-    public Value createValue(Calendar value) {
-        return new DateValue(value);
+    protected void checkNameFormat(String nameValue) throws ValueFormatException {
+        // ignore
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(double value) {
-        return new DoubleValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(InputStream value) {
-        return new BinaryValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(long value) {
-        return new LongValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(Node value) throws RepositoryException {
-        return createValue(value, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(String value) {
-        return new StringValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(String value, int type)
-            throws ValueFormatException {
-        Value val;
-        switch (type) {
-            case PropertyType.STRING:
-                val = new StringValue(value);
-                break;
-            case PropertyType.BOOLEAN:
-                val = BooleanValue.valueOf(value);
-                break;
-            case PropertyType.DOUBLE:
-                val = DoubleValue.valueOf(value);
-                break;
-            case PropertyType.LONG:
-                val = LongValue.valueOf(value);
-                break;
-            case PropertyType.DECIMAL:
-                val = DecimalValue.valueOf(value);
-                break;
-            case PropertyType.DATE:
-                val = DateValue.valueOf(value);
-                break;
-            case PropertyType.NAME:
-                val = NameValue.valueOf(value);
-                break;
-            case PropertyType.PATH:
-                val = PathValue.valueOf(value);
-                break;
-            case PropertyType.URI:
-                val = URIValue.valueOf(value);
-                break;
-            case PropertyType.REFERENCE:
-                val = ReferenceValue.valueOf(value);
-                break;
-            case PropertyType.WEAKREFERENCE:
-                val = WeakReferenceValue.valueOf(value);
-                break;
-            case PropertyType.BINARY:
-                val = new BinaryValue(value);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid type constant: " + type);
-        }
-        return val;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Binary createBinary(InputStream stream) throws RepositoryException {
-        try {
-            return new BinaryImpl(stream);
-        } catch (IOException e) {
-            throw new RepositoryException("failed to create Binary instance", e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(Binary value) {
-        return new BinaryValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(BigDecimal value) {
-        return new DecimalValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Value createValue(Node node, boolean weak)
-            throws RepositoryException {
-        if (weak) {
-            return new WeakReferenceValue(node);
-        } else {
-            return new ReferenceValue(node);
-        }
-    }
-
 }

@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.value;
 
-import org.apache.jackrabbit.name.NameFormat;
-import org.apache.jackrabbit.name.IllegalNameException;
-
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -49,34 +46,7 @@ public class NameValue extends BaseValue {
      *                              name.
      */
     public static NameValue valueOf(String s) throws ValueFormatException {
-        return valueOf(s, true);
-    }
-
-    /**
-     * Returns a new <code>NameValue</code> initialized to the value represented
-     * by the specified <code>String</code>.
-     * <p/>
-     * If <code>checkFormat</code> is <code>true</code> specified
-     * <code>String</code> must be a valid JCR name, otherwise the string is
-     * used as is.
-     *
-     * @param s           the string to be parsed.
-     * @param checkFormat if the format should be checked.
-     * @return a newly constructed <code>NameValue</code> representing the
-     *         specified value.
-     * @throws javax.jcr.ValueFormatException If the format should be checked
-     *                                        and the <code>String</code> is not
-     *                                        a valid name.
-     */
-    public static NameValue valueOf(String s, boolean checkFormat) throws ValueFormatException {
         if (s != null) {
-            if (checkFormat) {
-                try {
-                    NameFormat.checkFormat(s);
-                } catch (IllegalNameException ine) {
-                    throw new ValueFormatException(ine.getMessage());
-                }
-            }
             return new NameValue(s);
         } else {
             throw new ValueFormatException("not a valid name format: " + s);
