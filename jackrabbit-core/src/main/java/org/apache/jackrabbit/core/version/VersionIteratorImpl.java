@@ -81,12 +81,13 @@ class VersionIteratorImpl implements VersionIterator {
      * @param rootVersion the root version
      * @param baseVersion the ending base version
      */
-    public VersionIteratorImpl(Session session, InternalVersion rootVersion, InternalVersion baseVersion) {
+    public VersionIteratorImpl(Session session, InternalVersion rootVersion,
+                               InternalVersion baseVersion) {
         this.session = (SessionImpl) session;
         if (baseVersion == null) {
-            initVersions(rootVersion);
+            collectAllVersions(rootVersion);
         } else {
-            initVersions(rootVersion, baseVersion);
+            collectLinearVersions(baseVersion);
         }
         // retrieve initial size, since size of the list is not stable
         size = versions.size();
@@ -161,7 +162,7 @@ class VersionIteratorImpl implements VersionIterator {
      *
      * @param root the root version
      */
-    private synchronized void initVersions(InternalVersion root) {
+    private synchronized void collectAllVersions(InternalVersion root) {
         LinkedList<InternalVersion> workQueue = new LinkedList<InternalVersion>();
         workQueue.add(root);
         while (!workQueue.isEmpty()) {
@@ -177,15 +178,13 @@ class VersionIteratorImpl implements VersionIterator {
     }
 
     /**
-     * Adds all versions of a single line of decent starting from <code>root</code>
-     * and ending at <code>base</code>.
+     * Adds all versions of a single line of decent starting from the root
+     * version to the <code>base</code> version.
      *
-     * @param root the root version
      * @param base the base version
      */
-    private synchronized void initVersions(InternalVersion root, InternalVersion base) {
-        NodeId rootId = root == null ? null : root.getId();
-        while (base != null && !base.getId().equals(rootId)) {
+    private synchronized void collectLinearVersions(InternalVersion base) {
+        while (base != null) {
             versions.addFirst(base.getId());
             InternalVersion[] preds = base.getPredecessors();
             if (preds.length == 0) {

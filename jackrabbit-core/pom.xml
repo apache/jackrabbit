@@ -90,8 +90,6 @@
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.test.api.NodeCanAddMixinTest#testAddMixinTwice
                 org.apache.jackrabbit.test.api.ShareableNodeTest#testSharedNodePath
-                org.apache.jackrabbit.test.api.version.VersionHistoryTest#testInitialNumberOfLinearVersions
-                org.apache.jackrabbit.test.api.version.VersionHistoryTest#testInitiallyGetAllLinearVersionsContainsTheRootAndTheBaseVersion
               </value>
             </property>
           </systemProperties>
