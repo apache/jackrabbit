@@ -74,6 +74,11 @@
                 org.apache.jackrabbit.test.api.query.OrderByDoubleTest
                 org.apache.jackrabbit.test.api.query.OrderByLongTest
                 org.apache.jackrabbit.test.api.query.OrderByStringTest
+                org.apache.jackrabbit.test.api.query.OrderByLengthTest
+                org.apache.jackrabbit.test.api.query.OrderByLocalNameTest
+                org.apache.jackrabbit.test.api.query.OrderByLowerCaseTest
+                org.apache.jackrabbit.test.api.query.OrderByNameTest
+                org.apache.jackrabbit.test.api.query.OrderByUpperCaseTest
               </value>
             </property>
           </systemProperties>

@@ -43,7 +43,7 @@
     <module>jackrabbit-api</module>
     <module>jackrabbit-jcr-commons</module>
     <module>jackrabbit-jcr-tests</module>
-    <module>jackrabbit-core</module>
+    <!--module>jackrabbit-core</module-->
     <module>jackrabbit-text-extractors</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
@@ -54,7 +54,7 @@
     <module>jackrabbit-jcr2spi</module>
     <module>jackrabbit-spi2jcr</module>
     <module>jackrabbit-spi2dav</module>
-    <module>jackrabbit-standalone</module>
+    <!--module>jackrabbit-standalone</module-->
   </modules>
 
   <scm>

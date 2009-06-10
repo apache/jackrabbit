@@ -1011,24 +1011,24 @@ public class SearchIndex extends AbstractQueryHandler {
                 public Object visit(LengthImpl node, Object data) throws Exception {
                     PropertyValueImpl propValue = (PropertyValueImpl) node.getPropertyValue();
                     return new SortField(propValue.getPropertyQName().toString(),
-                            new LengthSortComparator(),
+                            new LengthSortComparator(nsMappings),
                             !ordering.isAscending());
                 }
 
                 public Object visit(LowerCaseImpl node, Object data)
                         throws Exception {
-                    SortField sf = (SortField) super.visit(node, data);
+                    SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
                     return new SortField(sf.getField(),
                             new LowerCaseSortComparator(sf.getFactory()),
-                            sf.getReverse());
+                            !ordering.isAscending());
                 }
 
                 public Object visit(UpperCaseImpl node, Object data)
                         throws Exception {
-                    SortField sf = (SortField) super.visit(node, data);
+                    SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
                     return new SortField(sf.getField(),
                             new UpperCaseSortComparator(sf.getFactory()),
-                            sf.getReverse());
+                            !ordering.isAscending());
                 }
 
                 public Object visit(FullTextSearchScoreImpl node, Object data)
