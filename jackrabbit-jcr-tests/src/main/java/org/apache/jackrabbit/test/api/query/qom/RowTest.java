@@ -89,11 +89,11 @@ public class RowTest extends AbstractQOMTest {
     }
 
     private Row getRow() throws RepositoryException {
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, SELECTOR_NAME),
-                qomFactory.descendantNode(SELECTOR_NAME, testRoot),
+        QueryObjectModel qom = qf.createQuery(
+                qf.selector(testNodeType, SELECTOR_NAME),
+                qf.descendantNode(SELECTOR_NAME, testRoot),
                 null,
-                new Column[]{qomFactory.column(SELECTOR_NAME, propertyName1, propertyName1)});
+                new Column[]{qf.column(SELECTOR_NAME, propertyName1, propertyName1)});
         RowIterator rows = qom.execute().getRows();
         assertTrue("empty result", rows.hasNext());
         Row r = rows.nextRow();

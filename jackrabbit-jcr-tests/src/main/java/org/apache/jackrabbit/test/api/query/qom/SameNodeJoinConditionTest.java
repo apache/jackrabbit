@@ -54,13 +54,13 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
-       QueryObjectModel qom = qomFactory.createQuery(
-               qomFactory.join(
-                       qomFactory.selector(testNodeType, LEFT),
-                       qomFactory.selector(mixReferenceable, RIGHT),
+       QueryObjectModel qom = qf.createQuery(
+               qf.join(
+                       qf.selector(testNodeType, LEFT),
+                       qf.selector(mixReferenceable, RIGHT),
                        QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER,
-                       qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
-               qomFactory.descendantNode(LEFT, testRoot),
+                       qf.sameNodeJoinCondition(LEFT, RIGHT, ".")),
+               qf.descendantNode(LEFT, testRoot),
                null, null);
 
         QueryResult result = qom.execute();
@@ -74,13 +74,13 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testRightOuterJoin() throws RepositoryException {
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.join(
-                        qomFactory.selector(mixReferenceable, LEFT),
-                        qomFactory.selector(testNodeType, RIGHT),
+        QueryObjectModel qom = qf.createQuery(
+                qf.join(
+                        qf.selector(mixReferenceable, LEFT),
+                        qf.selector(testNodeType, RIGHT),
                         QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER,
-                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".")),
-                qomFactory.descendantNode(RIGHT, testRoot),
+                        qf.sameNodeJoinCondition(LEFT, RIGHT, ".")),
+                qf.descendantNode(RIGHT, testRoot),
                 null, null);
 
         QueryResult result = qom.execute();
@@ -88,13 +88,13 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
     }
 
     public void testRightOuterJoinWithPath() throws RepositoryException {
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.join(
-                        qomFactory.selector(mixReferenceable, LEFT),
-                        qomFactory.selector(testNodeType, RIGHT),
+        QueryObjectModel qom = qf.createQuery(
+                qf.join(
+                        qf.selector(mixReferenceable, LEFT),
+                        qf.selector(testNodeType, RIGHT),
                         QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER,
-                        qomFactory.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)),
-                qomFactory.descendantNode(RIGHT, testRoot),
+                        qf.sameNodeJoinCondition(LEFT, RIGHT, nodeName2)),
+                qf.descendantNode(RIGHT, testRoot),
                 null, null);
 
         QueryResult result = qom.execute();
@@ -107,9 +107,9 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
             throws RepositoryException {
         JoinCondition c;
         if (relPath != null) {
-            c = qomFactory.sameNodeJoinCondition(LEFT, RIGHT, relPath);
+            c = qf.sameNodeJoinCondition(LEFT, RIGHT, relPath);
         } else {
-            c = qomFactory.sameNodeJoinCondition(LEFT, RIGHT, ".");
+            c = qf.sameNodeJoinCondition(LEFT, RIGHT, ".");
         }
         return createQuery(joinType, c);
     }

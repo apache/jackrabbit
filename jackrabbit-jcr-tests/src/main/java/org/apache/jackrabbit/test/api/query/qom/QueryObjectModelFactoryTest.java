@@ -114,9 +114,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#and(Constraint, Constraint)}
      */
     public void testAnd() throws RepositoryException {
-        PropertyExistence c1 = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyExistence c2 = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName2);
-        And and = qomFactory.and(c1, c2);
+        PropertyExistence c1 = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyExistence c2 = qf.propertyExistence(SELECTOR_NAME1, propertyName2);
+        And and = qf.and(c1, c2);
         assertTrue("Not a PropertyExistence constraint",
                 and.getConstraint1() instanceof PropertyExistence);
         assertTrue("Not a PropertyExistence constraint",
@@ -127,8 +127,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#ascending(DynamicOperand)}
      */
     public void testOrderingAscending() throws RepositoryException {
-        PropertyValue op = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering asc = qomFactory.ascending(op);
+        PropertyValue op = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering asc = qf.ascending(op);
         assertEquals("Ordering.getOrder() must return QueryObjectModelConstants.ORDER_ASCENDING",
                 QueryObjectModelConstants.JCR_ORDER_ASCENDING, asc.getOrder());
         assertTrue("Not a PropertyValue operand", asc.getOperand() instanceof PropertyValue);
@@ -138,7 +138,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#bindVariable(String)}
      */
     public void testBindVariableValue() throws RepositoryException {
-        BindVariableValue bindVar = qomFactory.bindVariable(propertyName1);
+        BindVariableValue bindVar = qf.bindVariable(propertyName1);
         assertEquals("Wrong variable name", propertyName1, bindVar.getBindVariableName());
     }
 
@@ -146,7 +146,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#childNode(String)}
      */
     public void testChildNode() throws RepositoryException {
-        ChildNode childNode = qomFactory.childNode(SELECTOR_NAME1, testRootNode.getPath());
+        ChildNode childNode = qf.childNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong path", testRootNode.getPath(), childNode.getParentPath());
         assertEquals("Wrong selector name", SELECTOR_NAME1, childNode.getSelectorName());
     }
@@ -155,7 +155,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#childNode(String, String)}
      */
     public void testChildNodeWithSelector() throws RepositoryException {
-        ChildNode childNode = qomFactory.childNode(SELECTOR_NAME1, testRootNode.getPath());
+        ChildNode childNode = qf.childNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong path", testRootNode.getPath(), childNode.getParentPath());
         assertEquals("Wrong selector name", SELECTOR_NAME1, childNode.getSelectorName());
     }
@@ -164,7 +164,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#childNodeJoinCondition(String, String)}
      */
     public void testChildNodeJoinCondition() throws RepositoryException {
-        ChildNodeJoinCondition cond = qomFactory.childNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2);
+        ChildNodeJoinCondition cond = qf.childNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2);
         assertEquals("Wrong selector name", cond.getChildSelectorName(), SELECTOR_NAME1);
         assertEquals("Wrong selector name", cond.getParentSelectorName(), SELECTOR_NAME2);
     }
@@ -173,7 +173,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#column(String)}
      */
     public void testColumn() throws RepositoryException {
-        Column col = qomFactory.column(SELECTOR_NAME1, propertyName1, null);
+        Column col = qf.column(SELECTOR_NAME1, propertyName1, null);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertEquals("Wrong property name", propertyName1, col.getPropertyName());
         assertNull("Column name must be null", col.getColumnName());
@@ -183,7 +183,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#column(String)}
      */
     public void testColumnAllProperties() throws RepositoryException {
-        Column col = qomFactory.column(SELECTOR_NAME1, null, null);
+        Column col = qf.column(SELECTOR_NAME1, null, null);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertNull("Property name must be null", col.getPropertyName());
         assertNull("Column name must be null", col.getColumnName());
@@ -193,7 +193,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#column(String, String)}
      */
     public void testColumnWithColumnName() throws RepositoryException {
-        Column col = qomFactory.column(SELECTOR_NAME1, propertyName1, COLUMN_NAME);
+        Column col = qf.column(SELECTOR_NAME1, propertyName1, COLUMN_NAME);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertEquals("Wrong property name", propertyName1, col.getPropertyName());
         assertEquals("Wrong column name", COLUMN_NAME, col.getColumnName());
@@ -203,7 +203,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#column(String, String, String)}
      */
     public void testColumnWithSelector() throws RepositoryException {
-        Column col = qomFactory.column(SELECTOR_NAME1, propertyName1, COLUMN_NAME);
+        Column col = qf.column(SELECTOR_NAME1, propertyName1, COLUMN_NAME);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertEquals("Wrong property name", propertyName1, col.getPropertyName());
         assertEquals("Wrong column name", COLUMN_NAME, col.getColumnName());
@@ -213,11 +213,11 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#comparison(DynamicOperand, int, StaticOperand)}
      */
     public void testComparison() throws RepositoryException {
-        PropertyValue op1 = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        BindVariableValue op2 = qomFactory.bindVariable(VARIABLE_NAME);
+        PropertyValue op1 = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        BindVariableValue op2 = qf.bindVariable(VARIABLE_NAME);
         for (Iterator it = OPERATORS.iterator(); it.hasNext(); ) {
             String operator = (String) it.next();
-            Comparison comp = qomFactory.comparison(op1, operator, op2);
+            Comparison comp = qf.comparison(op1, operator, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
             assertEquals("Wrong operator", operator.toString(), comp.getOperator());
@@ -225,8 +225,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQuery() throws RepositoryException {
-        Selector selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        QueryObjectModel qom = qomFactory.createQuery(selector, null, null, null);
+        Selector selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        QueryObjectModel qom = qf.createQuery(selector, null, null, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertNull("Constraint must be null", qom.getConstraint());
         assertEquals("Wrong size of orderings", 0, qom.getOrderings().length);
@@ -234,9 +234,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryWithConstraint() throws RepositoryException {
-        Selector selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        QueryObjectModel qom = qomFactory.createQuery(
+        Selector selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        QueryObjectModel qom = qf.createQuery(
                 selector, propExist, null, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -245,11 +245,11 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryWithConstraintAndOrdering() throws RepositoryException {
-        Selector selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering ordering = qomFactory.ascending(propValue);
-        QueryObjectModel qom = qomFactory.createQuery(selector, propExist,
+        Selector selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering ordering = qf.ascending(propValue);
+        QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -258,12 +258,12 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryWithConstraintOrderingAndColumn() throws RepositoryException {
-        Selector selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering ordering = qomFactory.ascending(propValue);
-        Column column = qomFactory.column(SELECTOR_NAME1, propertyName1, null);
-        QueryObjectModel qom = qomFactory.createQuery(selector, propExist,
+        Selector selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering ordering = qf.ascending(propValue);
+        Column column = qf.column(SELECTOR_NAME1, propertyName1, null);
+        QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, new Column[]{column});
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -272,8 +272,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryFromSource() throws RepositoryException {
-        Source selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        QueryObjectModel qom = qomFactory.createQuery(selector, null, null, null);
+        Source selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        QueryObjectModel qom = qf.createQuery(selector, null, null, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertNull("Constraint must be null", qom.getConstraint());
         assertEquals("Wrong size of orderings", 0, qom.getOrderings().length);
@@ -281,9 +281,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryFromSourceWithConstraint() throws RepositoryException {
-        Source selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        QueryObjectModel qom = qomFactory.createQuery(
+        Source selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        QueryObjectModel qom = qf.createQuery(
                 selector, propExist, null, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -292,11 +292,11 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryFromSourceWithConstraintAndOrdering() throws RepositoryException {
-        Source selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering ordering = qomFactory.ascending(propValue);
-        QueryObjectModel qom = qomFactory.createQuery(selector, propExist,
+        Source selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering ordering = qf.ascending(propValue);
+        QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, null);
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -305,12 +305,12 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     public void testCreateQueryFromSourceWithConstraintOrderingAndColumn() throws RepositoryException {
-        Source selector = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering ordering = qomFactory.ascending(propValue);
-        Column column = qomFactory.column(SELECTOR_NAME1, propertyName1, null);
-        QueryObjectModel qom = qomFactory.createQuery(selector, propExist,
+        Source selector = qf.selector(testNodeType, SELECTOR_NAME1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering ordering = qf.ascending(propValue);
+        Column column = qf.column(SELECTOR_NAME1, propertyName1, null);
+        QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, new Column[]{column});
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
         assertTrue("Not a property existence constraint", qom.getConstraint() instanceof PropertyExistence);
@@ -322,7 +322,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#descendantNode(String)}
      */
     public void testDescendantNode() throws RepositoryException {
-        DescendantNode descNode = qomFactory.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
+        DescendantNode descNode = qf.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong selector", SELECTOR_NAME1, descNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), descNode.getAncestorPath());
     }
@@ -331,7 +331,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#descendantNode(String, String)}
      */
     public void testDescendantNodeWithSelector() throws RepositoryException {
-        DescendantNode descNode = qomFactory.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
+        DescendantNode descNode = qf.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong selector name", SELECTOR_NAME1, descNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), descNode.getAncestorPath());
     }
@@ -340,7 +340,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#descendantNodeJoinCondition(String, String)}
      */
     public void testDescendantNodeJoinCondition() throws RepositoryException {
-        DescendantNodeJoinCondition cond = qomFactory.descendantNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2);
+        DescendantNodeJoinCondition cond = qf.descendantNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2);
         assertEquals("Wrong selector name", SELECTOR_NAME1, cond.getDescendantSelectorName());
         assertEquals("Wrong selector name", SELECTOR_NAME2, cond.getAncestorSelectorName());
     }
@@ -349,8 +349,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#descending(DynamicOperand)}
      */
     public void testOrderingDescending() throws RepositoryException {
-        PropertyValue op = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Ordering desc = qomFactory.descending(op);
+        PropertyValue op = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Ordering desc = qf.descending(op);
         assertEquals("Ordering.getOrder() must return QueryObjectModelConstants.ORDER_DESCENDING",
                 QueryObjectModelConstants.JCR_ORDER_DESCENDING, desc.getOrder());
         assertTrue("Not a PropertyValue operand", desc.getOperand() instanceof PropertyValue);
@@ -360,7 +360,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#equiJoinCondition(String, String, String, String)}
      */
     public void testEquiJoinCondition() throws RepositoryException {
-        EquiJoinCondition cond = qomFactory.equiJoinCondition(SELECTOR_NAME1, propertyName1, SELECTOR_NAME2, propertyName2);
+        EquiJoinCondition cond = qf.equiJoinCondition(SELECTOR_NAME1, propertyName1, SELECTOR_NAME2, propertyName2);
         assertEquals("Wrong selector name", SELECTOR_NAME1, cond.getSelector1Name());
         assertEquals("Wrong property name", propertyName1, cond.getProperty1Name());
         assertEquals("Wrong selector name", SELECTOR_NAME2, cond.getSelector2Name());
@@ -371,7 +371,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String)}
      */
     public void testFullTextSearch() throws RepositoryException {
-        FullTextSearch ftSearch = qomFactory.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
+        FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertEquals("Wrong propertyName", propertyName1, ftSearch.getPropertyName());
         // TODO is there some way to check the contents of a StaticOperand?
@@ -381,7 +381,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String)}
      */
     public void testFullTextSearchAllProperties() throws RepositoryException {
-        FullTextSearch ftSearch = qomFactory.fullTextSearch(SELECTOR_NAME1, null, FULLTEXT_SEARCH_EXPR);
+        FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, null, FULLTEXT_SEARCH_EXPR);
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertNull("Property name must be null", ftSearch.getPropertyName());
         // TODO is there some way to check the contents of a StaticOperand?
@@ -391,7 +391,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
      */
     public void testFullTextSearchWithSelector() throws RepositoryException {
-        FullTextSearch ftSearch = qomFactory.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
+        FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertEquals("Wrong propertyName", propertyName1, ftSearch.getPropertyName());
         // TODO is there some way to check the contents of a StaticOperand?
@@ -401,7 +401,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearchScore()}
      */
     public void testFullTextSearchScore() throws RepositoryException {
-        FullTextSearchScore score = qomFactory.fullTextSearchScore(SELECTOR_NAME1);
+        FullTextSearchScore score = qf.fullTextSearchScore(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, score.getSelectorName());
     }
 
@@ -409,7 +409,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearchScore(String)}
      */
     public void testFullTextSearchScoreWithSelector() throws RepositoryException {
-        FullTextSearchScore score = qomFactory.fullTextSearchScore(SELECTOR_NAME1);
+        FullTextSearchScore score = qf.fullTextSearchScore(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, score.getSelectorName());
     }
 
@@ -417,12 +417,12 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#join(Source, Source, int, JoinCondition)}
      */
     public void testJoin() throws RepositoryException {
-        Selector s1 = qomFactory.selector(ntBase, SELECTOR_NAME1);
-        Selector s2 = qomFactory.selector(testNodeType, SELECTOR_NAME1);
-        JoinCondition cond = qomFactory.equiJoinCondition(ntBase, jcrPrimaryType, testNodeType, jcrPrimaryType);
+        Selector s1 = qf.selector(ntBase, SELECTOR_NAME1);
+        Selector s2 = qf.selector(testNodeType, SELECTOR_NAME1);
+        JoinCondition cond = qf.equiJoinCondition(ntBase, jcrPrimaryType, testNodeType, jcrPrimaryType);
         for (Iterator it = JOIN_TYPES.iterator(); it.hasNext(); ) {
             String joinType = (String) it.next();
-            Join join = qomFactory.join(s1, s2, joinType, cond);
+            Join join = qf.join(s1, s2, joinType, cond);
             assertTrue("Not a selector source", join.getLeft() instanceof Selector);
             assertTrue("Not a selector source", join.getRight() instanceof Selector);
             assertEquals("Wrong join type", joinType.toString(), join.getJoinType());
@@ -434,8 +434,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#length(PropertyValue)}
      */
     public void testLength() throws RepositoryException {
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        Length len = qomFactory.length(propValue);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        Length len = qf.length(propValue);
         assertNotNull("Property value must not be null", len.getPropertyValue());
     }
 
@@ -443,8 +443,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#lowerCase(DynamicOperand)}
      */
     public void testLowerCase() throws RepositoryException {
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        LowerCase lower = qomFactory.lowerCase(propValue);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        LowerCase lower = qf.lowerCase(propValue);
         assertTrue("Not a property value operand", lower.getOperand() instanceof PropertyValue);
     }
 
@@ -452,7 +452,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#nodeLocalName()}
      */
     public void testNodeLocalName() throws RepositoryException {
-        NodeLocalName localName = qomFactory.nodeLocalName(SELECTOR_NAME1);
+        NodeLocalName localName = qf.nodeLocalName(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, localName.getSelectorName());
     }
 
@@ -460,7 +460,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#nodeLocalName(String)}
      */
     public void testNodeLocalNameWithSelector() throws RepositoryException {
-        NodeLocalName localName = qomFactory.nodeLocalName(SELECTOR_NAME1);
+        NodeLocalName localName = qf.nodeLocalName(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, localName.getSelectorName());
     }
 
@@ -468,7 +468,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#nodeName()}
      */
     public void testNodeName() throws RepositoryException {
-        NodeName nodeName = qomFactory.nodeName(SELECTOR_NAME1);
+        NodeName nodeName = qf.nodeName(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, nodeName.getSelectorName());
     }
 
@@ -476,7 +476,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#nodeName(String)}
      */
     public void testNodeNameWithSelector() throws RepositoryException {
-        NodeName nodeName = qomFactory.nodeName(SELECTOR_NAME1);
+        NodeName nodeName = qf.nodeName(SELECTOR_NAME1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, nodeName.getSelectorName());
     }
 
@@ -484,8 +484,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#not(Constraint)}
      */
     public void testNot() throws RepositoryException {
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        Not not = qomFactory.not(propExist);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        Not not = qf.not(propExist);
         assertTrue("Not a property existence constraint", not.getConstraint() instanceof PropertyExistence);
     }
 
@@ -493,9 +493,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#or(Constraint, Constraint)}
      */
     public void testOr() throws RepositoryException {
-        PropertyExistence c1 = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
-        PropertyExistence c2 = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName2);
-        Or or = qomFactory.or(c1, c2);
+        PropertyExistence c1 = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyExistence c2 = qf.propertyExistence(SELECTOR_NAME1, propertyName2);
+        Or or = qf.or(c1, c2);
         assertTrue("Not a PropertyExistence constraint",
                 or.getConstraint1() instanceof PropertyExistence);
         assertTrue("Not a PropertyExistence constraint",
@@ -506,7 +506,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#propertyExistence(String)}
      */
     public void testPropertyExistence() throws RepositoryException {
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
         assertEquals("Wrong selector", SELECTOR_NAME1, propExist.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propExist.getPropertyName());
     }
@@ -515,7 +515,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#propertyExistence(String, String)}
      */
     public void testPropertyExistenceWithSelector() throws RepositoryException {
-        PropertyExistence propExist = qomFactory.propertyExistence(SELECTOR_NAME1, propertyName1);
+        PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, propExist.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propExist.getPropertyName());
     }
@@ -524,7 +524,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#propertyValue(String)}
      */
     public void testPropertyValue() throws RepositoryException {
-        PropertyValue propVal = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
+        PropertyValue propVal = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, propVal.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propVal.getPropertyName());
     }
@@ -533,7 +533,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#propertyValue(String, String)}
      */
     public void testPropertyValueWithSelector() throws RepositoryException {
-        PropertyValue propVal = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
+        PropertyValue propVal = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, propVal.getSelectorName());
         assertEquals("Wrong property name", propertyName1, propVal.getPropertyName());
     }
@@ -542,7 +542,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#sameNode(String)}
      */
     public void testSameNode() throws RepositoryException {
-        SameNode sameNode = qomFactory.sameNode(SELECTOR_NAME1, testRootNode.getPath());
+        SameNode sameNode = qf.sameNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong selector name", SELECTOR_NAME1, sameNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), sameNode.getPath());
     }
@@ -551,7 +551,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#sameNode(String, String)}
      */
     public void testSameNodeWithSelector() throws RepositoryException {
-        SameNode sameNode = qomFactory.sameNode(SELECTOR_NAME1, testRootNode.getPath());
+        SameNode sameNode = qf.sameNode(SELECTOR_NAME1, testRootNode.getPath());
         assertEquals("Wrong selector name", SELECTOR_NAME1, sameNode.getSelectorName());
         assertEquals("Wrong path", testRootNode.getPath(), sameNode.getPath());
     }
@@ -560,7 +560,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#sameNodeJoinCondition(String, String)}
      */
     public void testSameNodeJoinCondition() throws RepositoryException {
-        SameNodeJoinCondition cond = qomFactory.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, ".");
+        SameNodeJoinCondition cond = qf.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, ".");
         assertEquals("Wrong selector name", SELECTOR_NAME1, cond.getSelector1Name());
         assertEquals("Wrong selector name", SELECTOR_NAME2, cond.getSelector2Name());
         assertEquals("Wrong selector path", ".", cond.getSelector2Path());
@@ -570,7 +570,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#sameNodeJoinCondition(String, String, String)}
      */
     public void testSameNodeJoinConditionWithPath() throws RepositoryException {
-        SameNodeJoinCondition cond = qomFactory.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, nodeName1);
+        SameNodeJoinCondition cond = qf.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, nodeName1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, cond.getSelector1Name());
         assertEquals("Wrong selector name", SELECTOR_NAME2, cond.getSelector2Name());
         assertEquals("Wrong path", nodeName1, cond.getSelector2Path());
@@ -580,7 +580,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#selector(String)}
      */
     public void testSelector() throws RepositoryException {
-        Selector selector = qomFactory.selector(ntBase, SELECTOR_NAME1);
+        Selector selector = qf.selector(ntBase, SELECTOR_NAME1);
         assertEquals("Wrong node type name", ntBase, selector.getNodeTypeName());
         assertEquals("Wrong selector name", SELECTOR_NAME1, selector.getSelectorName());
     }
@@ -589,7 +589,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#selector(String, String)}
      */
     public void testSelectorWithName() throws RepositoryException {
-        Selector selector = qomFactory.selector(ntBase, SELECTOR_NAME1);
+        Selector selector = qf.selector(ntBase, SELECTOR_NAME1);
         assertEquals("Wrong node type name", ntBase, selector.getNodeTypeName());
         assertEquals("Wrong selector name", SELECTOR_NAME1, selector.getSelectorName());
     }
@@ -598,8 +598,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#upperCase(DynamicOperand)}
      */
     public void testUpperCase() throws RepositoryException {
-        PropertyValue propValue = qomFactory.propertyValue(SELECTOR_NAME1, propertyName1);
-        UpperCase upper = qomFactory.upperCase(propValue);
+        PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
+        UpperCase upper = qf.upperCase(propValue);
         assertTrue("Not a property value operand", upper.getOperand() instanceof PropertyValue);
     }
 }

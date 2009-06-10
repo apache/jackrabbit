@@ -265,16 +265,16 @@ public class LengthTest extends AbstractQOMTest {
     private QueryResult executeQuery(String propertyName,
                                      String operator,
                                      Value length) throws RepositoryException {
-        return qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
-                                qomFactory.length(
-                                        qomFactory.propertyValue(
+        return qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.comparison(
+                                qf.length(
+                                        qf.propertyValue(
                                                 "s", propertyName)),
                                 operator,
-                                qomFactory.literal(length))
+                                qf.literal(length))
 
                 ), null, null).execute();
     }

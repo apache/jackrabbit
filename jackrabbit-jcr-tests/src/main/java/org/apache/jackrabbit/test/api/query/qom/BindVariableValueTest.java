@@ -47,14 +47,14 @@ public class BindVariableValueTest extends AbstractQOMTest {
     protected void setUp() throws Exception {
         super.setUp();
         vf = superuser.getValueFactory();
-        query = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
-                                qomFactory.propertyValue("s", propertyName1),
+        query = qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.comparison(
+                                qf.propertyValue("s", propertyName1),
                                 QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                                qomFactory.bindVariable("v")
+                                qf.bindVariable("v")
                         )
                 ), null, null);
     }

@@ -217,14 +217,14 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     private Query createQuery(String operator, Value literal) throws RepositoryException {
-        return qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
-                                qomFactory.nodeName("s"),
+        return qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.comparison(
+                                qf.nodeName("s"),
                                 operator,
-                                qomFactory.literal(literal)
+                                qf.literal(literal)
                         )
                 ), null, null);
     }

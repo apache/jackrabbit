@@ -35,14 +35,14 @@ public class SameNodeTest extends AbstractQOMTest {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
 
-        Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                qomFactory.sameNode("s", testRoot + "/" + nodeName1), null, null);
+        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+                qf.sameNode("s", testRoot + "/" + nodeName1), null, null);
         checkResult(q.execute(), new Node[]{n});
     }
 
     public void testPathDoesNotExist() throws RepositoryException {
-        Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                qomFactory.sameNode("s", testRoot + "/" + nodeName1),
+        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+                qf.sameNode("s", testRoot + "/" + nodeName1),
                 null, null);
         checkResult(q.execute(), new Node[]{});
     }
@@ -59,8 +59,8 @@ public class SameNodeTest extends AbstractQOMTest {
             NodeType nt = it.nextNodeType();
             if (!testNt.isNodeType(nt.getName())) {
                 // perform test
-                Query q = qomFactory.createQuery(qomFactory.selector(nt.getName(), "s"),
-                        qomFactory.sameNode("s", testRoot + "/" + nodeName1), null, null);
+                Query q = qf.createQuery(qf.selector(nt.getName(), "s"),
+                        qf.sameNode("s", testRoot + "/" + nodeName1), null, null);
                 checkResult(q.execute(), new Node[]{});
                 return;
             }
@@ -71,8 +71,8 @@ public class SameNodeTest extends AbstractQOMTest {
 
     public void testRelativePath() throws RepositoryException {
         try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                    qomFactory.sameNode("s", testPath), null, null);
+            Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+                    qf.sameNode("s", testPath), null, null);
             q.execute();
             fail("SameNode with relative path argument must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
@@ -82,8 +82,8 @@ public class SameNodeTest extends AbstractQOMTest {
 
     public void testSyntacticallyInvalidPath() throws RepositoryException {
         try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                    qomFactory.sameNode("s", testRoot + "/" + nodeName1 + "["),
+            Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+                    qf.sameNode("s", testRoot + "/" + nodeName1 + "["),
                     null, null);
             q.execute();
             fail("SameNode with syntactically invalid path argument must throw InvalidQueryException");
@@ -94,8 +94,8 @@ public class SameNodeTest extends AbstractQOMTest {
 
     public void testNotASelectorName() throws RepositoryException {
         try {
-            Query q = qomFactory.createQuery(qomFactory.selector(testNodeType, "s"),
-                    qomFactory.sameNode("x", testRoot), null, null);
+            Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+                    qf.sameNode("x", testRoot), null, null);
             q.execute();
             fail("SameNode with an invalid selector name must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
