@@ -1524,6 +1524,7 @@ public class BatchedItemOperations extends ItemValidator {
         // compute system generated values
         Name declaringNT = def.getDeclaringNodeType();
         Name name = def.getName();
+        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
         if (NameConstants.MIX_REFERENCEABLE.equals(declaringNT)) {
             // mix:referenceable node type
             if (NameConstants.JCR_UUID.equals(name)) {
