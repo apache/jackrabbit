@@ -36,6 +36,9 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 
+/**
+ * Test AbstractBundlePersistenceManager.getAllNodeIds
+ */
 public class PersistenceManagerIteratorTest extends AbstractJCRTest {
     /** logger instance */
     private static final Logger LOG = LoggerFactory.getLogger(PersistenceManagerIteratorTest.class);
@@ -58,20 +61,20 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
 
         RepositoryImpl r = (RepositoryImpl) rep;
         RepositoryConfig conf = r.getConfig();
-        Collection coll = conf.getWorkspaceConfigs();
+        Collection<WorkspaceConfig> coll = conf.getWorkspaceConfigs();
         String[] names = new String[coll.size()];
-        Iterator wspIt = coll.iterator();
-        for(int i = 0; wspIt.hasNext(); i++) {
+        Iterator<WorkspaceConfig> wspIt = coll.iterator();
+        for (int i = 0; wspIt.hasNext(); i++) {
             WorkspaceConfig wsc = (WorkspaceConfig) wspIt.next();
             names[i] = wsc.getName();
         }
 
-        for (int i = 0; i < names.length; i++) {
+        for (int i = 0; i < names.length && i < 1; i++) {
             Session s = helper.getSuperuserSession(names[i]);
             try {
                 Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
                 m.setAccessible(true);
-                Object info = m.invoke(r, new String[] { names[i] });
+                Object info = m.invoke(r, names[i]);
                 m = info.getClass().getDeclaredMethod("getPersistenceManager", new Class[0]);
                 m.setAccessible(true);
                 PersistenceManager pm = (PersistenceManager) m.invoke(info, new Object[0]);

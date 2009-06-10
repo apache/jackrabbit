@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +31,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 /**
  * Test cases for data store garbage collection.
@@ -51,16 +51,18 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
         final SynchronousChannel sync = new SynchronousChannel();
         final Node node = root.addNode("slowBlob");
+        final int blobLength = 1000;
+        final ValueFactory vf = session.getValueFactory();
         new Thread() {
             public void run() {
                 try {
-                    node.setProperty("slowBlob", new InputStream() {
+                    node.setProperty("slowBlob", vf.createBinary(new InputStream() {
                         int pos;
                         public int read() throws IOException {
                             pos++;
-                            if (pos < 10000) {
+                            if (pos < blobLength) {
                                 return pos % 80 == 0 ? '\n' : '.';
-                            } else if (pos == 10000) {
+                            } else if (pos == blobLength) {
                                 try {
                                     sync.put("x");
                                     // deleted
@@ -72,7 +74,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
                             }
                             return -1;
                         }
-                    });
+                    }));
                     node.getSession().save();
                     sync.put("saved");
                 } catch (Exception e) {
@@ -87,13 +89,14 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         gc.deleteUnused();
         sync.put("deleted");
         assertEquals("saved", sync.take());
-        InputStream in = node.getProperty("slowBlob").getStream();
-        for (int pos = 1; pos < 10000; pos++) {
+        InputStream in = node.getProperty("slowBlob").getBinary().getStream();
+        for (int pos = 1; pos < blobLength; pos++) {
             int expected = pos % 80 == 0 ? '\n' : '.';
             assertEquals(expected, in.read());
         }
         assertEquals('x', in.read());
         in.close();
+        gc.close();
     }
 
     public void testGC() throws Exception {
@@ -108,23 +111,25 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         deleteMyNodes();
         runGC(session, true);
-        runGC(session, true);
 
         root.addNode("node1");
         Node node2 = root.addNode("node2");
         Node n = node2.addNode("nodeWithBlob");
-        n.setProperty("test", new RandomInputStream(10, 10000));
+        ValueFactory vf = session.getValueFactory();
+        n.setProperty("test", vf.createBinary(new RandomInputStream(10, 1000)));
         n = node2.addNode("nodeWithTemporaryBlob");
-        n.setProperty("test", new RandomInputStream(11, 10000));
+        n.setProperty("test", vf.createBinary(new RandomInputStream(11, 1000)));
         session.save();
 
         n.remove();
         session.save();
-        Thread.sleep(1000);
-
+        
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
-        gc.setScanEventListener(this);
-        gc.setTestDelay(1000);
+
+        if (gc.getDataStore() instanceof FileDataStore) {
+            // make sure the file is old (access time resolution is 2 seconds)
+            Thread.sleep(2000);
+        }
 
         LOG.debug("scanning...");
         gc.scan();
@@ -138,26 +143,32 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         assertEquals(count - 1, count2);
 
         deleteMyNodes();
+
+        gc.close();
     }
 
-    private void runGC(Session session, boolean all) throws RepositoryException, IOException, ItemStateException {
+    private void runGC(Session session, boolean all) throws Exception {
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
         gc.setScanEventListener(this);
-        gc.setTestDelay(1000);
+        if (gc.getDataStore() instanceof FileDataStore) {
+            // make sure the file is old (access time resolution is 2 seconds)
+            Thread.sleep(2000);
+        }
         gc.scan();
         gc.stopScan();
         if (all) {
             gc.getDataStore().clearInUse();
         }
         gc.deleteUnused();
+        gc.close();
     }
 
     private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
         LOG.debug("identifiers:");
-        Iterator it = gc.getDataStore().getAllIdentifiers();
         int count = 0;
+        Iterator<DataIdentifier> it = gc.getDataStore().getAllIdentifiers();
         while (it.hasNext()) {
-            DataIdentifier id = (DataIdentifier) it.next();
+            DataIdentifier id = it.next();
             LOG.debug("  " + id);
             count++;
         }
@@ -176,23 +187,21 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
 
         deleteMyNodes();
-        runGC(session, true);
-        runGC(session, true);
 
         Credentials cred = helper.getSuperuserCredentials();
         Session s2 = helper.getRepository().login(cred);
         root = s2.getRootNode();
         Node node2 = root.addNode("node3");
         Node n = node2.addNode("nodeWithBlob");
-        n.setProperty("test", new RandomInputStream(10, 10000));
-        Thread.sleep(1000);
+        ValueFactory vf = session.getValueFactory();
+        n.setProperty("test", vf.createBinary(new RandomInputStream(10, 1000)));
 
         runGC(session, false);
 
         s2.save();
 
-        InputStream in = n.getProperty("test").getStream();
-        InputStream in2 = new RandomInputStream(10, 10000);
+        InputStream in = n.getProperty("test").getBinary().getStream();
+        InputStream in2 = new RandomInputStream(10, 1000);
         while (true) {
             int a = in.read();
             int b = in2.read();

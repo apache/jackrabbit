@@ -23,6 +23,7 @@ import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.ValueFactory;
 
 /**
  * Tests copying binary values from one node to another.
@@ -58,10 +59,11 @@ public class CopyValueTest extends AbstractJCRTest {
         Node n = testRoot.addNode("a");
         superuser.save();
         byte[] data = new byte[length + 1];
-        n.setProperty("data", new ByteArrayInputStream(data));
+        ValueFactory vf = superuser.getValueFactory();
+        n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
         superuser.save();
         data = new byte[length];
-        n.setProperty("data", new ByteArrayInputStream(data));
+        n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
         Property p = testRoot.getNode("a").getProperty("data");
         assertEquals(length, p.getLength());
         superuser.getWorkspace().copy("/testCopy/a", "/testCopy/b");
@@ -105,7 +107,8 @@ public class CopyValueTest extends AbstractJCRTest {
                         .nextGaussian())));
                 byte[] data = new byte[dataLength];
                 log(node1 + " add len:" + dataLength);
-                n.setProperty("data", new ByteArrayInputStream(data));
+                ValueFactory vf = superuser.getValueFactory();
+                n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
                 n.setProperty("len", dataLength);
                 break;
             }

@@ -37,7 +37,7 @@ public class TestTwoGetStreams extends AbstractJCRTest {
 
     private static Logger log = LoggerFactory.getLogger(TestTwoGetStreams.class);
 
-    private static final int STREAM_LENGTH = 1 * 1024 * 1024;
+    private static final int STREAM_LENGTH = 256 * 1024;
     
     private boolean isDataStoreEnabled() throws RepositoryException {
         RepositoryImpl rep = (RepositoryImpl) superuser.getRepository();
@@ -78,9 +78,9 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
         superuser.save();
         time = System.currentTimeMillis() - time;
-        // streaming the value again and again takes about 4.3 seconds
+        // streaming 1 MB again and again takes about 4.3 seconds
         // on my computer; copying the data identifier takes about 16 ms
-        assertTrue(time < 500);
+        assertTrue(time < 100);
 
     }
     
@@ -94,12 +94,13 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
         
         Node root = superuser.getRootNode();
-        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
-        root.setProperty("p2", new RandomInputStream(2, STREAM_LENGTH));
+        ValueFactory vf = superuser.getValueFactory();
+        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p2", vf.createBinary(new RandomInputStream(2, STREAM_LENGTH)));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getStream();
-        InputStream i2 = root.getProperty("p2").getStream();
+        InputStream i1 = root.getProperty("p1").getBinary().getStream();
+        InputStream i2 = root.getProperty("p2").getBinary().getStream();
         assertEquals("p1", i1, new RandomInputStream(1, STREAM_LENGTH));
         assertEquals("p2", i2, new RandomInputStream(2, STREAM_LENGTH));
         try {
@@ -124,12 +125,13 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
         
         Node root = superuser.getRootNode();
-        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
-        root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
+        ValueFactory vf = superuser.getValueFactory();
+        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getStream();
-        InputStream i2 = root.getProperty("p2").getStream();
+        InputStream i1 = root.getProperty("p1").getBinary().getStream();
+        InputStream i2 = root.getProperty("p2").getBinary().getStream();
         assertEquals("Streams are different", i1, i2);
         try {
             i1.close();
@@ -154,11 +156,12 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
         
         Node root = superuser.getRootNode();
-        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
+        ValueFactory vf = superuser.getValueFactory();
+        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
 
-        InputStream i1 = root.getProperty("p1").getStream();
-        InputStream i2 = root.getProperty("p1").getStream();
+        InputStream i1 = root.getProperty("p1").getBinary().getStream();
+        InputStream i2 = root.getProperty("p1").getBinary().getStream();
         assertEquals("Streams are different", i1, i2);
         try {
             i1.close();

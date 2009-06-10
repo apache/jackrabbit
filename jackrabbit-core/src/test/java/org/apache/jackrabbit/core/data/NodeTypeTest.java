@@ -27,8 +27,10 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 
+/**
+ * Test node types with binary default values.
+ */
 public class NodeTypeTest extends AbstractJCRTest {
-
 
     /**
      * Test a node type with a binary default value
