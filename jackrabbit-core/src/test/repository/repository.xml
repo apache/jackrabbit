@@ -29,7 +29,15 @@
 
     <!--
         data store configuration
+    -->
 	<DataStore class="org.apache.jackrabbit.core.data.FileDataStore"/>
+    <!--
+        sample database data store configuration
+        <DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
+            <param name="url" value="jdbc:h2:~/test"/>
+            <param name="user" value="sa"/>
+            <param name="password" value="sa"/>
+        </DataStore>
     -->
     
     <!--
