@@ -252,7 +252,7 @@
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected version
   - rep:principalName (string) protected mandatory
   - rep:referees (string) protected multiple
-  - rep:groups (reference) protected multiple < 'rep:Group'
+  - rep:groups (weakreference) protected multiple < 'rep:Group'
   - * (undefined)
   - * (undefined) multiple
 

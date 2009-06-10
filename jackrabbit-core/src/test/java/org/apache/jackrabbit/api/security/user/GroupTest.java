@@ -279,14 +279,12 @@ public class GroupTest extends AbstractUserTest {
     }
 
     /**
-     * TODO: uncomment once membership-relation is stored as weak ref.
      * Removing a GroupImpl must be possible even if there are still existing
      * members present.
      *
      * @throws RepositoryException
      * @throws NotExecutableException
      */
-    /*
     public void testRemoveGroupIfMemberExist() throws RepositoryException, NotExecutableException {
         User auth = getTestUser(superuser);
         String newGroupId = null;
@@ -306,5 +304,4 @@ public class GroupTest extends AbstractUserTest {
             }
         }
     }
-    */
 }
