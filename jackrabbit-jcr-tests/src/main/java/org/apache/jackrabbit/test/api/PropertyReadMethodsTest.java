@@ -176,6 +176,14 @@ public class PropertyReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
+     * Tests if isMultiple() is consistent with PropertyDefinition.isMultiple().
+     */
+    public void testIsMultiple() throws RepositoryException {
+        assertEquals("Property.isMultiple() must be consistent with PropertyDefinition.isMultiple()",
+                property.isMultiple(), property.getDefinition().isMultiple());
+    }
+
+    /**
      * Tests if isNode() returns false
      */
     public void testIsNode() {
