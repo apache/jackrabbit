@@ -118,7 +118,6 @@ class IndexNodeResolver extends NodeResolver {
     private Query buildQuery(String value, Set props, Name ntName,
                              boolean exact, long maxSize)
             throws RepositoryException {
-        // TODO: include maxSize in query statement.
         StringBuffer stmt = new StringBuffer("/jcr:root");
         stmt.append(getSearchRoot(ntName));
         stmt.append("//element(*,");
@@ -143,6 +142,8 @@ class IndexNodeResolver extends NodeResolver {
             }
             stmt.append("]");
         }
-        return queryManager.createQuery(stmt.toString(), Query.XPATH);
+        Query q = queryManager.createQuery(stmt.toString(), Query.XPATH);
+        q.setLimit(maxSize);
+        return q;
     }
 }
