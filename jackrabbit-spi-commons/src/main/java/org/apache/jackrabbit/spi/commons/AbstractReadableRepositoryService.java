@@ -31,6 +31,7 @@ import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilderImpl;
@@ -786,7 +787,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
 
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement,
                                   String language, Map namespaces, long limit,
-                                  long offset) throws RepositoryException {
+                                  long offset, Map<String, QValue> values) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 }

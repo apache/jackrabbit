@@ -39,9 +39,11 @@ import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.jcr2spi.WorkspaceManager;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 
 /**
  * Provides the default implementation for a JCR query.
@@ -95,6 +97,11 @@ public class QueryImpl implements Query {
      * TODO: review default value
      */
     private long offset = 0;
+
+    /**
+     * The name/value pairs collected upon calls to {@link #bindValue(String, Value)}.
+     */
+    private final Map<String, QValue> boundValues = new HashMap();
 
     /**
      * Creates a new query.
@@ -163,7 +170,7 @@ public class QueryImpl implements Query {
      */
     public QueryResult execute() throws RepositoryException {
         QueryInfo qI = wspManager.executeQuery(
-                statement, language, getNamespaceMappings(), limit, offset);
+                statement, language, getNamespaceMappings(), limit, offset, boundValues);
         return new QueryResultImpl(itemManager, mgrProvider, qI);
     }
 
@@ -241,8 +248,11 @@ public class QueryImpl implements Query {
      * @see Query#bindValue(String, Value)
      */
     public void bindValue(String varName, Value value) throws RepositoryException {
-        //TODO implementation missing
-        throw new UnsupportedOperationException("JCR-2107: Implementation missing");
+        if (value == null) {
+            boundValues.remove(varName);
+        } else {
+            boundValues.put(varName, ValueFormat.getQValue(value, mgrProvider.getNamePathResolver(), mgrProvider.getQValueFactory()));
+        }
     }
 
     /**
