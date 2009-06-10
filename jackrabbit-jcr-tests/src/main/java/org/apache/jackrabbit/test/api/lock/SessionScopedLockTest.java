@@ -19,6 +19,13 @@ package org.apache.jackrabbit.test.api.lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Node;
+import javax.jcr.Session;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
+
 /** <code>SessionScopedLockTest</code>... */
 public class SessionScopedLockTest extends AbstractLockTest {
 
@@ -38,5 +45,66 @@ public class SessionScopedLockTest extends AbstractLockTest {
      */
     public void testGetLockToken() {
         assertNull("A session scoped lock may never expose the token.", lock.getLockToken());
+    }
+
+    /**
+     * Test locks are released when session logs out
+     */
+    public void testImplicitUnlock() throws RepositoryException {
+        Session other = helper.getReadWriteSession();
+        try {
+            Node testNode = (Node) other.getItem(testRootNode.getPath());
+            Node lockedNode = testNode.addNode(nodeName1, testNodeType);
+            other.save();
+
+            assertLockable(lockedNode);
+
+            Lock lock = getLockManager(other).lock(lockedNode.getPath(), isDeep(), isSessionScoped(), getTimeoutHint(), getLockOwner());
+            other.logout();
+
+            assertFalse(lock.isLive());
+        } finally {
+            if (other.isLive()) {
+                other.logout();
+            }
+        }
+    }
+
+    /**
+     * Test locks are released when session logs out
+     */
+    public void testImplicitUnlock2() throws RepositoryException {
+        Session other = helper.getReadWriteSession();
+        try {
+            Node testNode = (Node) other.getItem(testRootNode.getPath());
+            Node lockedNode = testNode.addNode(nodeName1, testNodeType);
+            other.save();
+
+            assertLockable(lockedNode);
+
+            LockManager lMgr = getLockManager(other);
+            Lock lock = lMgr.lock(lockedNode.getPath(), isDeep(), isSessionScoped(), getTimeoutHint(), getLockOwner());
+
+            // access the locked noded added by another session
+            testRootNode.refresh(false);
+            Node n = (Node) superuser.getItem(lockedNode.getPath());
+
+            // remove lock implicit by logout lock-holding session
+            other.logout();
+
+            // check if superuser session is properly informed about the unlock
+            assertFalse(n.isLocked());
+            assertFalse(n.holdsLock());
+            try {
+                n.getLock();
+                fail("Upon logout of the session a session-scoped lock must be gone.");
+            } catch (LockException e) {
+                // ok
+            }
+        } finally {
+            if (other.isLive()) {
+                other.logout();
+            }
+        }
     }
 }
