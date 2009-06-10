@@ -204,7 +204,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
 
     public void testFindNodesWithNonExistingSearchRoot() throws NotExecutableException, RepositoryException {
         String searchRoot = nodeResolver.getSearchRoot(UserConstants.NT_REP_AUTHORIZABLE);
-        if (((SessionImpl) superuser).nodeExists(searchRoot)) {
+        if (superuser.nodeExists(searchRoot)) {
             throw new NotExecutableException();
         }
 
