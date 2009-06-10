@@ -30,6 +30,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 /**
  * Test case for concurrent garbage collection
@@ -58,7 +59,8 @@ public class GCConcurrentTest extends AbstractJCRTest {
                 gcThread.start();
             }
             Node n = node(root, "test" + i);
-            n.setProperty("data", randomInputStream(i));
+            ValueFactory vf = session.getValueFactory();
+            n.setProperty("data", vf.createBinary(randomInputStream(i)));
             session.save();
             LOG.debug("saved: " + i);
         }
@@ -66,7 +68,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
         for (int i = 0; i < len; i++) {
             Node n = root.getNode("test" + i);
             Property p = n.getProperty("data");
-            InputStream in = p.getStream();
+            InputStream in = p.getBinary().getStream();
             InputStream expected = randomInputStream(i);
             checkStreams(expected, in);
             n.remove();

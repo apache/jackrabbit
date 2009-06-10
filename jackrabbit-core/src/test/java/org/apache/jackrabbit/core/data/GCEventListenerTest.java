@@ -27,6 +27,7 @@ import java.util.Random;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 /**
  * Test the DataStore garbage collector.
@@ -60,10 +61,11 @@ public class GCEventListenerTest extends AbstractJCRTest implements ScanEventLis
         Node test = root.addNode(TEST_NODE_NAME);
         Random random = new Random();
         byte[] data = new byte[10000];
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             Node n = test.addNode("x" + i);
             random.nextBytes(data);
-            n.setProperty("data", new ByteArrayInputStream(data));
+            ValueFactory vf = session.getValueFactory();
+            n.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
             session.save();
             if (i % 2 == 0) {
                 n.remove();
@@ -92,6 +94,7 @@ public class GCEventListenerTest extends AbstractJCRTest implements ScanEventLis
             int deleted = gc.deleteUnused();
             LOG.debug("Deleted " + deleted);
             assertTrue("Should delete at least one item", deleted >= 0);
+            gc.close();
         }
     }
 

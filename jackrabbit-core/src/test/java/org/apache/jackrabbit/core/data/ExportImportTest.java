@@ -28,6 +28,7 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 /**
  * Test importing and exporting large binary and text objects.
@@ -68,7 +69,6 @@ public class ExportImportTest extends AbstractJCRTest {
             session.save();
             String s = new String(chars);
             test.setProperty("text", s);
-            test.save();
             session.save();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             session.exportSystemView("/testText", out, false, false);
@@ -120,8 +120,8 @@ public class ExportImportTest extends AbstractJCRTest {
             byte[] data = new byte[len];
             Random random = new Random(1);
             random.nextBytes(data);
-            test.setProperty("data", new ByteArrayInputStream(data));
-            test.save();
+            ValueFactory vf = session.getValueFactory();
+            test.setProperty("data", vf.createBinary(new ByteArrayInputStream(data)));
             session.save();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             session.exportSystemView("/testBinary", out, false, false);
@@ -136,8 +136,8 @@ public class ExportImportTest extends AbstractJCRTest {
             test2 = test2.getNode("testBinary");
             test3 = root.getNode("testBinary3");
             test3 = test3.getNode("testBinary");
-            byte[] data2 = readFromStream(test2.getProperty("data").getStream());
-            byte[] data3 = readFromStream(test3.getProperty("data").getStream());
+            byte[] data2 = readFromStream(test2.getProperty("data").getBinary().getStream());
+            byte[] data3 = readFromStream(test3.getProperty("data").getBinary().getStream());
             assertEquals(data.length, data2.length);
             assertEquals(data.length, data3.length);
             for (int i = 0; i < len; i++) {
