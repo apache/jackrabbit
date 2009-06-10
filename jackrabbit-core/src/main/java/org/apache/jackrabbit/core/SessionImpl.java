@@ -1223,7 +1223,7 @@ public class SessionImpl extends AbstractSession
     public ValueFactory getValueFactory()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (valueFactory == null) {
-            valueFactory = new ValueFactoryImpl(this);
+            valueFactory = new ValueFactoryImpl(this, rep.getDataStore());
         }
         return valueFactory;
     }

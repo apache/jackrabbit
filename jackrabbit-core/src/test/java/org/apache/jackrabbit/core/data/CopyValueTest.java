@@ -50,7 +50,7 @@ public class CopyValueTest extends AbstractJCRTest {
 
     private void doTestCopy(int length) throws Exception {
         Node root = superuser.getRootNode();
-        if(root.hasNode("testCopy")) {
+        if (root.hasNode("testCopy")) {
             root.getNode("testCopy").remove();
             superuser.save();
         }
@@ -80,7 +80,7 @@ public class CopyValueTest extends AbstractJCRTest {
     public void testRandomOperations() throws Exception {
         Random random = new Random(1);
         Node root = superuser.getRootNode();
-        if(root.hasNode("testRandom")) {
+        if (root.hasNode("testRandom")) {
             root.getNode("testRandom").remove();
             superuser.save();
         }
@@ -150,7 +150,7 @@ public class CopyValueTest extends AbstractJCRTest {
             }
         }
         superuser.save();
-        for(int i=0; i<opCounts.length; i++) {
+        for (int i = 0; i < opCounts.length; i++) {
             log(i + ": " + opCounts[i]);
         }
         testRoot.remove();
