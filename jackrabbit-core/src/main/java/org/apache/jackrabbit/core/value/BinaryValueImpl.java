@@ -34,7 +34,7 @@ public class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
      * @param blob the blob
      */
     BinaryValueImpl(BLOBFileValue blob) throws RepositoryException {
-        super(blob.getStream());
+        super(blob);
         this.blob = blob;
     }
 
@@ -46,15 +46,6 @@ public class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
         return id == null ? null : id.toString();
     }
 
-    /**
-     * Get the wrapped blob file value
-     * 
-     * @return the blob file value
-     */
-    BLOBFileValue getBlob() {
-        return blob;
-    }
-    
     /**
      * Get the data identifier if one is available.
      * 

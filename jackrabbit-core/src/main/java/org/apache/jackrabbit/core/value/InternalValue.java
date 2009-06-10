@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.value;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -123,6 +124,15 @@ public class InternalValue extends AbstractQValue {
                 InternalValue result;
                 if (USE_DATA_STORE) {
                     BLOBFileValue blob = null;
+                    if (value instanceof QValueValue) {
+                        QValueValue qvv = (QValueValue) value;
+                        QValue qv = qvv.getQValue();
+                        if (qv instanceof InternalValue) {
+                            InternalValue iv = (InternalValue) qv;
+                            
+                            iv.getBLOBFileValue();
+                        }
+                    }
                     if (value instanceof BinaryValueImpl) {
                         BinaryValueImpl bin = (BinaryValueImpl) value;
                         DataIdentifier identifier = bin.getDataIdentifier();
@@ -206,6 +216,18 @@ public class InternalValue extends AbstractQValue {
             default:
                 throw new IllegalArgumentException("illegal value");
         }
+    }
+    
+    static InternalValue getInternalValue(DataIdentifier identifier, DataStore store) throws DataStoreException {
+        // access the record to ensure it is not garbage collected
+        if (store.getRecordIfStored(identifier) != null) {
+            // it exists - so we don't need to stream it again
+            // but we need to create a new object because the original
+            // one might be in a different data store (repository)
+            BLOBFileValue blob = BLOBInDataStore.getInstance(store, identifier);
+            return new InternalValue(blob);
+        }
+        return null;
     }
 
     /**
@@ -309,6 +331,23 @@ public class InternalValue extends AbstractQValue {
             return new InternalValue(new BLOBValue(value, true));
         } catch (IOException e) {
             throw new RepositoryException("Error creating temporary file", e);
+        }
+    }
+
+    /**
+     * Create an internal value that is stored in the data store (if enabled).
+     * 
+     * @param value the input stream
+     * @return the internal value
+     */
+    public static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
+        if (USE_DATA_STORE) {
+            return new InternalValue(getBLOBFileValue(store, value, false));
+        }
+        try {
+            return new InternalValue(new BLOBValue(value, false));
+        } catch (IOException e) {
+            throw new RepositoryException("Error creating file", e);
         }
     }
 
@@ -432,7 +471,7 @@ public class InternalValue extends AbstractQValue {
         if (resolver instanceof Session) {
             vf = ((Session) resolver).getValueFactory();
         } else {
-            vf = new ValueFactoryImpl(resolver);
+            vf = new ValueFactoryImpl(resolver, null);
         }
 
         if (vf instanceof ValueFactoryQImpl) {

@@ -22,6 +22,7 @@ import java.io.InputStream;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.JackrabbitValue;
 import org.apache.jackrabbit.core.RepositoryImpl;
@@ -53,8 +54,9 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
         
         Node root = superuser.getRootNode();
-        root.setProperty("p1", new RandomInputStream(1, STREAM_LENGTH));
-        root.setProperty("p2", new RandomInputStream(1, STREAM_LENGTH));
+        ValueFactory vf = superuser.getValueFactory();
+        root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
 
         Value v1 = root.getProperty("p1").getValue();

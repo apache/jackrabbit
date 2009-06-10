@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
@@ -50,11 +51,14 @@ public final class InternalValueFactory extends AbstractQValueFactory {
      */
     private static final Logger log = LoggerFactory.getLogger(InternalValueFactory.class);
 
-    private static final QValueFactory INSTANCE = new InternalValueFactory();
+    private static final QValueFactory INSTANCE = new InternalValueFactory(null);
 
-    private InternalValueFactory() {
+    private final DataStore store;
+
+    InternalValueFactory(DataStore store) {
+        this.store = store;
     }
-
+    
     public static QValueFactory getInstance() {
         return INSTANCE;
     }
@@ -146,7 +150,7 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     }
 
     public QValue create(InputStream value) throws RepositoryException, IOException {
-        return InternalValue.create(value);
+        return InternalValue.create(value, store);
     }
 
     public QValue create(File value) throws RepositoryException, IOException {

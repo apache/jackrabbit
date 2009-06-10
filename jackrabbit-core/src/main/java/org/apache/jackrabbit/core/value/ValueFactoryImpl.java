@@ -16,12 +16,15 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.QValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.Binary;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
@@ -38,6 +41,8 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
      * logger instance
      */
     private static final Logger log = LoggerFactory.getLogger(ValueFactoryImpl.class);
+    
+    private final DataStore store;
 
     /**
      * Constructs a new <code>ValueFactoryQImpl</code> based
@@ -46,8 +51,9 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
      *
      * @param resolver wrapped <code>NamePathResolver</code>
      */
-    public ValueFactoryImpl(NamePathResolver resolver) {
-        super(InternalValueFactory.getInstance(), resolver);
+    public ValueFactoryImpl(NamePathResolver resolver, DataStore store) {
+        super(new InternalValueFactory(store), resolver);
+        this.store = store;
     }
 
     public Value createValue(QValue qvalue) {
@@ -56,11 +62,29 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
                 return new BinaryValueImpl(((InternalValue) qvalue).getBLOBFileValue());
             } catch (RepositoryException e) {
                 // should not get here
-                log.error(e.getMessage());
+                log.error(e.getMessage(), e);
             }
         }
         return super.createValue(qvalue);
     }
+    
+    public Value createValue(Binary binary) {
+        try {
+            if (binary instanceof BLOBInDataStore) {
+                DataIdentifier identifier = ((BLOBInDataStore) binary).getDataIdentifier();
+                InternalValue value = InternalValue.getInternalValue(identifier, store);
+                if (value != null) {
+                    // if the value is already in this data store
+                    return new BinaryValueImpl(value.getBLOBFileValue());
+                }
+            }
+            return createValue(binary.getStream());
+        } catch (RepositoryException e) {
+            log.error(e.getMessage(), e);
+            // ignore - the super method may be smarter
+        }
+        return super.createValue(binary);
+    }    
 
     public Value createValue(InputStream value) {
         try {
