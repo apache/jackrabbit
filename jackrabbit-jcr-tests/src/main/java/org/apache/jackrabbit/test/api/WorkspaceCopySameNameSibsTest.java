@@ -60,7 +60,7 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
         int cnt = 0;
         NodeIterator iter = node2.getNodes();
         while (iter.hasNext()) {
-            Node n = (Node) iter.nextNode();
+            Node n = iter.nextNode();
 
             assertTrue(n.getName().equals(orderList[cnt]));
             cnt++;
