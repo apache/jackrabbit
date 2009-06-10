@@ -99,16 +99,15 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
         Node child = (Node) superuser.getItem(childNode.getPath());
         String ntName = child.getPrimaryNodeType().getName();
 
-        // TODO: remove casts once jsr 283 is released.        
         String changedNtName = "nt:folder";
-        ((javax.jcr.Node) child).setPrimaryType(changedNtName);
+        child.setPrimaryType(changedNtName);
         child.save();
 
         try {
             checkReadOnly(childNode.getPath());
 
             try {
-                ((javax.jcr.Node) childNode).setPrimaryType(ntName);
+                childNode.setPrimaryType(ntName);
                 childNode.save();
                 fail("TestSession does not have sufficient privileges to change the primary type.");
             } catch (AccessDeniedException e) {
@@ -122,7 +121,7 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
              */
             modifyPrivileges(childNode.getPath(), Privilege.JCR_NODE_TYPE_MANAGEMENT, true);
             try {
-                ((javax.jcr.Node) childNode).setPrimaryType(ntName);
+                childNode.setPrimaryType(ntName);
                 childNode.save();
                 fail("TestSession does not have sufficient privileges to change the primary type.");
             } catch (AccessDeniedException e) {
@@ -132,12 +131,12 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
 
             // with complete write permission the call must succeed.
             modifyPrivileges(childNode.getPath(), Privilege.JCR_MODIFY_PROPERTIES, true);
-            ((javax.jcr.Node) childNode).setPrimaryType(ntName);
+            childNode.setPrimaryType(ntName);
             childNode.save();
 
         } finally {
             if (!ntName.equals(child.getPrimaryNodeType().getName())) {
-                ((javax.jcr.Node) child).setPrimaryType(ntName);
+                child.setPrimaryType(ntName);
                 child.save();
             }
         }
