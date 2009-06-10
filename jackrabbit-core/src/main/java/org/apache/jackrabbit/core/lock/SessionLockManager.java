@@ -120,14 +120,14 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
             while (node.isNew()) {
                 node = (NodeImpl) node.getParent();
             }
-            Lock l = (Lock) systemLockMgr.getLock(node);
+            Lock l = systemLockMgr.getLock(node);
             if (l.isDeep()) {
                 return l;
             } else {
                 throw new LockException("Node not locked: " + node);
             }
         } else {
-            return (Lock) systemLockMgr.getLock(node);
+            return systemLockMgr.getLock(node);
         }
     }
 
@@ -157,7 +157,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
         checkLockable(node);
 
         synchronized (systemLockMgr) {
-            return (Lock) systemLockMgr.lock(node, isDeep, isSessionScoped, timeoutHint, ownerInfo);
+            return systemLockMgr.lock(node, isDeep, isSessionScoped, timeoutHint, ownerInfo);
         }
     }
 
