@@ -75,6 +75,13 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     protected abstract boolean isSessionScoped();
     protected abstract boolean isDeep();
 
+    protected void assertLockable(Node n) throws RepositoryException {
+        if (!n.isNodeType(mixLockable)) {
+            n.addMixin(mixLockable);
+            n.getSession().save();
+        }
+    }
+
     protected long getTimeoutHint() throws RepositoryException {
         String timoutStr = getProperty(RepositoryStub.PROP_LOCK_TIMEOUT);
         long hint = Long.MAX_VALUE;
@@ -96,7 +103,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         return ownerStr;
     }
 
-    private static LockManager getLockManager(Session session) throws RepositoryException {
+    protected static LockManager getLockManager(Session session) throws RepositoryException {
         return session.getWorkspace().getLockManager();
     }
 
@@ -105,6 +112,42 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      */
     public void testIsDeep() {
         assertEquals("Lock.isDeep must be consistent with lock call.", isDeep(), lock.isDeep());
+    }
+
+    /**
+     * Test {@link javax.jcr.lock.Lock#isLive()}.
+     */
+    public void testIsLive() throws RepositoryException {
+        assertTrue("Lock.isLive must be true.", lock.isLive());
+    }
+
+    /**
+     * Test {@link javax.jcr.lock.Lock#refresh()} on a released lock.
+     *
+     * @throws Exception
+     */
+    public void testRefresh() throws RepositoryException {
+        // refresh must succeed
+        lock.refresh();
+    }
+
+    // TODO: test if timeout gets reset upon Lock.refresh()
+    
+    /**
+     * Test {@link javax.jcr.lock.Lock#refresh()} on a released lock.
+     *
+     * @throws Exception
+     */
+    public void testRefreshNotLive() throws Exception {
+        // release the lock
+        lockMgr.unlock(lockedNode.getPath());
+        // refresh
+        try {
+            lock.refresh();
+            fail("Refresh on a lock that is not alive must fail");
+        } catch (LockException e) {
+            // success
+        }
     }
 
     /**
@@ -135,7 +178,23 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         assertTrue("Node must hold lock after lock creation.", lockedNode.holdsLock());
         assertTrue("Node must hold lock after lock creation.", lockMgr.holdsLock(lockedNode.getPath()));
     }
-    
+
+
+    /**
+     * A locked node must also be locked if accessed by some other session.
+     */
+    public void testLockVisibility() throws RepositoryException {
+        Session otherSession = helper.getReadWriteSession();
+        try {
+            Node ln = (Node) otherSession.getItem(lockedNode.getPath());
+            assertTrue("Locked node must also be locked for another session", ln.isLocked());
+            assertTrue("Locked node must also be locked for another session", ln.holdsLock());
+            assertTrue("Locked node must also be locked for another session", getLockManager(otherSession).holdsLock(ln.getPath()));
+        } finally {
+            otherSession.logout();
+        }
+    }
+
     /**
      * Test {@link javax.jcr.lock.Lock#isSessionScoped()}
      */
@@ -234,6 +293,20 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             obsMgr.removeEventListener(listener);
         }
     }
+
+    /**
+     * Test if Lock is properly released.
+     * 
+     * @throws RepositoryException
+     */
+    public void testUnlock() throws RepositoryException {
+        // release the lock
+        lockMgr.unlock(lockedNode.getPath());
+        
+        // assert: lock must not be alive
+        assertFalse("lock must not be alive", lock.isLive());
+    }
+
     /**
      * Test {@link LockManager#unlock(String)} for a session that is not
      * lock owner.
