@@ -1,12 +1,11 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha1
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha2
 
 Introduction
 ------------
 
-This is the first alpha release of Apache Jackrabbit 2.0. This release
-implements the Proposed Final Draft (PFD) version of the JCR 2.0 API,
-that is being specified by the Java Specification Request 283 (JSR 283,
-http://jcp.org/en/jsr/detail?id=283).
+This is the second alpha release of Apache Jackrabbit 2.0. This release
+implements a pre-release version of the JCR 2.0 API, specified by the
+Java Specification Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
 
 The purpose of this alpha release is to allow people to test and review
 the new JCR 2.0 features before they are finalized. Feedback to both the
@@ -21,13 +20,17 @@ Jackrabbit 2.0 is a major upgrade from the earlier 1.x releases. The most
 notable changes in this release are:
 
   * Upgrade to JCR 2.0. This Jackrabbit release implements and is based
-    on the PFD version of the JCR 2.0 API. See below for a status listing
-    of the issues related to JCR 2.0 changes. We expect to achieve full
-    feature-completeness in time for the final Jackrabbit 2.0 release.
+    on a pre-release version of the JCR 2.0 API. See below for a status
+    listing of the issues related to JCR 2.0 changes. We expect to achieve
+    full feature-completeness in time for the final Jackrabbit 2.0 release.
 
   * Upgrade to Java 5. All of Jackrabbit (except the jcr-tests component)
     now requires Java 5 as the base platform. Java 1.4 environments are no
     longer supported.
+
+  * Removal of deprecated classes and features. Jackrabbit 2.0 is not
+    backwards compatible with client code that used any classes or features
+    that had been deprecated during the 1.x release cycle.
 
   * Separate JCR Commons components. Many of the general-purpose JCR
     components like JCR-RMI and OCM are now developed and released
@@ -47,21 +50,16 @@ the Jackrabbit issue tracker. Most of them have already been partially
 implemented, but the issue will only be marked as resolved once no more
 related work is needed.
 
-Open (25 issues)
-  [JCR-1564] JSR 283 namespace handling
+Open (20 issues)
   [JCR-1565] JSR 283 lifecycle management
   [JCR-1588] JSR 283: Access Control
-  [JCR-1589] JSR 283: Retention & Hold Management
   [JCR-1590] JSR 283: Locking
   [JCR-1591] JSR 283: NodeType Management
   [JCR-1592] JSR 283: Baselines & Activities
   [JCR-1608] JSR 283: Workspace Management
-  [JCR-1609] JSR 283: new Property Types
   [JCR-1712] JSR 283: JCR Names
   [JCR-1947] JSR 283: Node Type Attribute Subtyping Rules
   [JCR-1974] JSR 283: Evaluate Capabilities
-  [JCR-2028] JSR 283: JCR Path
-  [JCR-2056] JSR 283: Binary interfaces
   [JCR-2058] JSR 283: VersionManager and new versioning methods
   [JCR-2060] JSR 283: Access Nodes and Properties by Array of "NameGlob"
   [JCR-2061] JSR 283: References and Dereferencing of Property Values
@@ -74,13 +72,18 @@ Open (25 issues)
   [JCR-2116] JSR 283: Built-In Node Types
   [JCR-2117] JSR 283: adopt CND syntax changes
 
-Resolved (11 issues)
+Resolved (16 issues)
+  [JCR-1564] JSR 283 namespace handling
+  [JCR-1589] JSR 283: Retention & Hold Management
   [JCR-1593] JSR 283: Simple versioning
+  [JCR-1609] JSR 283: new Property Types
   [JCR-1834] JSR 283: Create RepositoryFactory implementation
   [JCR-1839] JSR 283: Introduce Event.getDate()
   [JCR-1849] JSR 283: EventJournal
   [JCR-1904] JSR 283: Event user data
+  [JCR-2028] JSR 283: JCR Path
   [JCR-2053] JSR 283: Shareable nodes support in query
+  [JCR-2056] JSR 283: Binary interfaces
   [JCR-2059] JSR 283: Access Property/Node from Session
   [JCR-2074] JSR 283: New Event Types
   [JCR-2075] JSR 283: Identifier based event filtering
