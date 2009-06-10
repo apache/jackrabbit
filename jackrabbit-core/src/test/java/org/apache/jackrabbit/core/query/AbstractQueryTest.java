@@ -49,7 +49,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         qm = superuser.getWorkspace().getQueryManager();
-        qomFactory = ((QueryManagerImpl) qm).getQOMFactory();
+        qomFactory = qm.getQOMFactory();
     }
 
     protected void tearDown() throws Exception {
