@@ -3074,7 +3074,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeIterator iter = getSharedSet();
         while (iter.hasNext()) {
-            ((NodeImpl) iter.nextNode()).removeShare();
+            iter.nextNode().removeShare();
         }
     }
 
@@ -4464,7 +4464,7 @@ public class NodeImpl extends ItemImpl implements Node {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        LockManager lockMgr = session.getWorkspace().getLockManager();
         return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
     }
 
@@ -4476,7 +4476,7 @@ public class NodeImpl extends ItemImpl implements Node {
             AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        LockManager lockMgr = session.getWorkspace().getLockManager();
         return lockMgr.getLock(getPath());
     }
 
@@ -4489,7 +4489,7 @@ public class NodeImpl extends ItemImpl implements Node {
             RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        LockManager lockMgr = session.getWorkspace().getLockManager();
         lockMgr.unlock(getPath());
     }
 
@@ -4499,7 +4499,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean holdsLock() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        LockManager lockMgr = session.getWorkspace().getLockManager();
         return lockMgr.holdsLock(getPath());
     }
 
@@ -4509,7 +4509,7 @@ public class NodeImpl extends ItemImpl implements Node {
     public boolean isLocked() throws RepositoryException {
         // check state of this instance
         sanityCheck();
-        LockManager lockMgr = ((WorkspaceImpl) session.getWorkspace()).getLockManager();
+        LockManager lockMgr = session.getWorkspace().getLockManager();
         return lockMgr.isLocked(getPath());
     }
 
