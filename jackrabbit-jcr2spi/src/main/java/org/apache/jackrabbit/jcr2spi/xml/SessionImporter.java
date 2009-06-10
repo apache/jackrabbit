@@ -215,7 +215,7 @@ public class SessionImporter implements Importer, SessionListener {
                    // assert that the entry is available
                    conflicting.getItemState();
 
-                   nodeState = resolveUUIDConflict(parent, (NodeEntry) conflicting, nodeInfo);
+                   nodeState = resolveUUIDConflict(parent, conflicting, nodeInfo);
                } catch (ItemNotFoundException e) {
                    // no conflict: create new with given uuid
                    nodeState = importNode(nodeInfo, parent);
