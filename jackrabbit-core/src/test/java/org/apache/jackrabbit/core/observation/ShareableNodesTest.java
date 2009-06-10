@@ -87,6 +87,6 @@ public class ShareableNodesTest extends AbstractObservationTest {
     }
 
     protected void removeFromSharedSet(Node node) throws RepositoryException {
-        ((NodeImpl) node).removeShare();
+        node.removeShare();
     }
 }
