@@ -168,8 +168,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @throws RepositoryException If an error occurs while collecting the members.
      */
     private Collection getMembers(boolean includeIndirect) throws RepositoryException {
-        // TODO: replace by weak-refs
-        PropertyIterator itr = getNode().getReferences();
+        PropertyIterator itr = getNode().getWeakReferences();
         Collection members = new HashSet((int) itr.getSize());
         while (itr.hasNext()) {
             NodeImpl n = (NodeImpl) itr.nextProperty().getParent();

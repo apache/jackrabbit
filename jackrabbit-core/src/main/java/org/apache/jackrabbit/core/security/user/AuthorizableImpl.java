@@ -39,6 +39,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import java.security.Principal;
@@ -304,8 +305,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     boolean addToGroup(GroupImpl group) throws RepositoryException {
         try {
             Value[] values;
-            // TODO: replace by weak-refs
-            Value added = getSession().getValueFactory().createValue(group.getNode());
+            Value added = getSession().getValueFactory().createValue(group.getNode(), true);
             NodeImpl node = getNode();
             if (node.hasProperty(P_GROUPS)) {
                 Value[] old = node.getProperty(P_GROUPS).getValues();
@@ -364,10 +364,16 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         }
         Value[] refs = node.getProperty(P_GROUPS).getValues();
         for (int i = 0; i < refs.length; i++) {
-            NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
-            Group group = GroupImpl.create(groupNode, userManager);
-            if (groups.add(group) && includedIndirect) {
-                ((AuthorizableImpl) group).collectMembership(groups, true);
+            try {
+                NodeImpl groupNode = (NodeImpl) getSession().getNodeByUUID(refs[i].getString());
+                Group group = GroupImpl.create(groupNode, userManager);
+                if (groups.add(group) && includedIndirect) {
+                    ((AuthorizableImpl) group).collectMembership(groups, true);
+                }
+            } catch (ItemNotFoundException e) {
+                // groupNode doesn't exist any more
+                log.warn("Group node referenced by " + getID() + " doesn't exist -> Ignored from membership list.");
+                // TODO: ev. clean up list of group memberships
             }
         }
     }
