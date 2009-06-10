@@ -1703,9 +1703,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#executeQuery(SessionInfo, String, String, Map, long, long)
+     * @see RepositoryService#executeQuery(SessionInfo, String, String,java.util.Map,long,long,java.util.Map
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
         SearchMethod method = null;
         try {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -1714,6 +1714,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             
             sInfo.setNumberResults(limit);
             sInfo.setOffset(offset);
+
+            if (!(values == null || values.isEmpty())) {
+                throw new UnsupportedOperationException("Implementation missing:  JCR-2107");
+            }
 
             method = new SearchMethod(uri, sInfo);
             getClient(sessionInfo).executeMethod(method);

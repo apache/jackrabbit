@@ -49,6 +49,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValue;
 
 /**
  * Log wrapper for a {@link RepositoryService}.
@@ -565,14 +566,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
     }
 
     public QueryInfo executeQuery(final SessionInfo sessionInfo, final String statement,
-            final String language, final Map namespaces, final long limit, final long offset) throws RepositoryException {
+                                  final String language, final Map namespaces, final long limit, final long offset, final Map<String, QValue> values) throws RepositoryException {
 
         return (QueryInfo) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces, limit, offset);
+                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces, limit, offset, values);
             }
-        }, "executeQuery(SessionInfo, String, String, Map, long, long)",
-                new Object[]{unwrap(sessionInfo), statement, language, namespaces, limit, offset});
+        }, "executeQuery(SessionInfo, String, String, Map, long, long, Map)",
+                new Object[]{unwrap(sessionInfo), statement, language, namespaces, limit, offset, values});
     }
 
     public EventFilter createEventFilter(final SessionInfo sessionInfo, final int eventTypes,

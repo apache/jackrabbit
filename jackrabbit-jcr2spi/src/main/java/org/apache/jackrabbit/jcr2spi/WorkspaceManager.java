@@ -312,12 +312,13 @@ public class WorkspaceManager
      *                   the query statement.
      * @param limit
      * @param offset
+     * @param boundValues
      * @return
      * @throws RepositoryException
      */
     public QueryInfo executeQuery(String statement, String language, Map namespaces,
-                                  long limit, long offset) throws RepositoryException {
-        return service.executeQuery(sessionInfo, statement, language, namespaces, limit, offset);
+                                  long limit, long offset, Map<String, QValue> boundValues) throws RepositoryException {
+        return service.executeQuery(sessionInfo, statement, language, namespaces, limit, offset, boundValues);
     }
 
     /**

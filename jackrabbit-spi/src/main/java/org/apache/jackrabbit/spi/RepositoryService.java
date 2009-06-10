@@ -913,11 +913,13 @@ public interface RepositoryService {
      * the query <code>statement</code>.
      * @param limit The maximum result size.
      * @param offset The offset in the total result set.
+     * @param values A Map of name/value pairs collected upon calls to
+     * {@link javax.jcr.query.Query#bindValue(String, javax.jcr.Value)}.
      * @return The query info.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset) throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
     /**

@@ -1040,12 +1040,22 @@ public class RepositoryServiceImpl implements RepositoryService {
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
 
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset) throws RepositoryException {
+    /**
+     * {@inheritDoc}
+     */
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);
         query.setLimit(limit);
         query.setOffset(offset);
+        if (values != null && !values.isEmpty()) {
+            for (Iterator<String> it = values.keySet().iterator(); it.hasNext();) {
+                String varName = it.next();
+                Value value = ValueFormat.getJCRValue(values.get(varName), sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory());
+                query.bindValue(varName, value);
+            }
+        }
         return new QueryInfoImpl(query.execute(), idFactory,
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
