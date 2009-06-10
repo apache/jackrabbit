@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.Session;
 import java.security.Principal;
 import java.util.Map;
 import java.util.HashMap;
@@ -111,7 +112,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
     public void testCombinedPolicies() throws RepositoryException, NotExecutableException {
         Group testGroup = getTestGroup();
-        SessionImpl testSession = getTestSession();
+        Session testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
 
         /*

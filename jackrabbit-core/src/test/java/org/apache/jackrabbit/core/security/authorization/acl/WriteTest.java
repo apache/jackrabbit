@@ -95,7 +95,7 @@ public class WriteTest extends AbstractWriteTest {
         // make sure the 'rep:policy' node has been created.
         assertTrue(superuser.itemExists(tmpl.getPath() + "/rep:policy"));
 
-        SessionImpl testSession = getTestSession();
+        Session testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
         // test: MODIFY_AC granted at 'path'
         assertTrue(testAcMgr.hasPrivileges(path, privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL)));

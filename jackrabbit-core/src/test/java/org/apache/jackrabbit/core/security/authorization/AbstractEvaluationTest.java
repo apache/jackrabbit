@@ -28,7 +28,6 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
-import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.Session;
 import javax.jcr.Node;
@@ -49,7 +48,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     protected User testUser;
     protected Credentials creds;
     
-    private SessionImpl testSession;
+    private Session testSession;
     private AccessControlManager testAccessControlManager;
     private Node trn;
     private Set toClear = new HashSet();
@@ -110,10 +109,9 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         }
     }
 
-    protected SessionImpl getTestSession() throws RepositoryException {
+    protected Session getTestSession() throws RepositoryException {
         if (testSession == null) {
-            // TODO: remove cast once 283 is released.
-            testSession = (SessionImpl) helper.getRepository().login(creds);
+            testSession = helper.getRepository().login(creds);
         }
         return testSession;
     }
