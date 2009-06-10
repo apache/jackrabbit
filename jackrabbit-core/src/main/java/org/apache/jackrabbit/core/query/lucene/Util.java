@@ -344,15 +344,16 @@ public class Util {
      *         cannot be determined.
      */
     public static long getLength(InternalValue value) {
-        // TODO: support new JSR 283 property types
-        if (value.getType() == PropertyType.BINARY) {
-            return value.getBLOBFileValue().getLength();
-        } else
         if (value.getType() == PropertyType.NAME
                 || value.getType() == PropertyType.PATH) {
             return -1;
         } else {
-            return value.toString().length();
+            try {
+                return value.getLength();
+            } catch (RepositoryException e) {
+                log.warn("Unable to determine length of value.", e.getMessage());
+                return -1;
+            }
         }
     }
 }
