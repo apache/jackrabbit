@@ -100,7 +100,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         if (acNode != null && acNode.hasNode(N_POLICY)) {
             // build the list of policy entries;
             NodeImpl aclNode = acNode.getNode(N_POLICY);
-            AccessControlManager acMgr = ((SessionImpl) aclNode.getSession()).getAccessControlManager();
+            AccessControlManager acMgr = aclNode.getSession().getAccessControlManager();
 
             // loop over all entries in the aclNode for the princ-Principal
             for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
