@@ -275,7 +275,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     }
 
     static SessionLockManager getSessionLockManager(SessionImpl session) throws RepositoryException {
-        Workspace wsp = (Workspace) session.getWorkspace();
+        Workspace wsp = session.getWorkspace();
         return (SessionLockManager) wsp.getLockManager();
     }
 
