@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -64,11 +63,9 @@ class TraversingNodeResolver extends NodeResolver {
      */
     public Node findNode(Name nodeName, Name ntName) throws RepositoryException {
         String sr = getSearchRoot(ntName);
-        // TODO: remove cast once 283 is released
-        SessionImpl sImpl = (SessionImpl) getSession();
-        if (sImpl.nodeExists(sr)) {
+        if (getSession().nodeExists(sr)) {
             try {
-                Node root = sImpl.getNode(sr);
+                Node root = getSession().getNode(sr);
                 return collectNode(nodeName, ntName, root.getNodes());
             } catch (PathNotFoundException e) {
                 // should not get here
@@ -83,11 +80,9 @@ class TraversingNodeResolver extends NodeResolver {
      */
     public Node findNode(Name propertyName, String value, Name ntName) throws RepositoryException {
         String sr = getSearchRoot(ntName);
-        // TODO: remove cast once 283 is released
-        SessionImpl sImpl = (SessionImpl) getSession();
-        if (sImpl.nodeExists(sr)) {
+        if (getSession().nodeExists(sr)) {
             try {
-                Node root = sImpl.getNode(sr);
+                Node root = getSession().getNode(sr);
                 NodeIterator nodes = collectNodes(value,
                         Collections.singleton(propertyName), ntName,
                         root.getNodes(), true, 1);
@@ -108,11 +103,9 @@ class TraversingNodeResolver extends NodeResolver {
     public NodeIterator findNodes(Set propertyNames, String value, Name ntName,
                                   boolean exact, long maxSize) throws RepositoryException {
         String sr = getSearchRoot(ntName);
-        // TODO: remove cast once 283 is released
-        SessionImpl sImpl = (SessionImpl) getSession();
-        if (sImpl.nodeExists(sr)) {
+        if (getSession().nodeExists(sr)) {
             try {
-                Node root = sImpl.getNode(sr);
+                Node root = getSession().getNode(sr);
                 return collectNodes(value, propertyNames, ntName, root.getNodes(), exact, maxSize);
             } catch (PathNotFoundException e) {
                 // should not get here
