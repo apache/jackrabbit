@@ -22,6 +22,9 @@ import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.index.IndexReader;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 
 /**
  * <code>LengthSortComparator</code> implements a sort comparator source that
@@ -30,6 +33,15 @@ import org.apache.lucene.index.IndexReader;
 public class LengthSortComparator implements SortComparatorSource {
 
     private static final long serialVersionUID = 2513564768671391632L;
+
+    /**
+     * The index internal namespace mappings.
+     */
+    private final NamespaceMappings nsMappings;
+
+    public LengthSortComparator(NamespaceMappings nsMappings) {
+        this.nsMappings = nsMappings;
+    }
 
     /**
      * Creates a new comparator.
@@ -44,7 +56,13 @@ public class LengthSortComparator implements SortComparatorSource {
     public ScoreDocComparator newComparator(IndexReader reader,
                                             String fieldname)
             throws IOException {
-        return new Comparator(reader, fieldname);
+        NameFactory factory = NameFactoryImpl.getInstance();
+        try {
+            return new Comparator(reader,
+                    nsMappings.translateName(factory.create(fieldname)));
+        } catch (IllegalNameException e) {
+            throw Util.createIOException(e);
+        }
     }
 
     private final class Comparator extends AbstractScoreDocComparator {
@@ -59,7 +77,7 @@ public class LengthSortComparator implements SortComparatorSource {
             super(reader);
             this.indexes = new SharedFieldCache.ValueIndex[readers.size()];
 
-            String namedLength = FieldNames.createNamedLength(propertyName, 0);
+            String namedLength = FieldNames.createNamedValue(propertyName, "");
             for (int i = 0; i < readers.size(); i++) {
                 IndexReader r = readers.get(i);
                 indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(

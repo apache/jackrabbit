@@ -68,6 +68,11 @@ public class TestAll extends TestCase {
         suite.addTestSuite(OrderByLongTest.class);
         suite.addTestSuite(OrderByMultiTypeTest.class);
         suite.addTestSuite(OrderByStringTest.class);
+        suite.addTestSuite(OrderByLengthTest.class);
+        suite.addTestSuite(OrderByLocalNameTest.class);
+        suite.addTestSuite(OrderByNameTest.class);
+        suite.addTestSuite(OrderByLowerCaseTest.class);
+        suite.addTestSuite(OrderByUpperCaseTest.class);
 
         return suite;
     }
