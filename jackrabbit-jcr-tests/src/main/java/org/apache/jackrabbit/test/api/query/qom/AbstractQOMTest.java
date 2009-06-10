@@ -37,12 +37,12 @@ import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
  */
 public class AbstractQOMTest extends AbstractQueryTest {
 
-    protected QueryObjectModelFactory qomFactory;
+    protected QueryObjectModelFactory qf;
 
     protected void setUp() throws Exception {
         super.setUp();
         QueryManager qm = superuser.getWorkspace().getQueryManager();
-        qomFactory = qm.getQOMFactory();
+        qf = qm.getQOMFactory();
     }
 
     /**

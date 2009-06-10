@@ -33,19 +33,19 @@ public class PropertyExistenceTest extends AbstractQOMTest {
         n2.setProperty(propertyName2, "abc");
         testRootNode.save();
 
-        QueryResult result = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.propertyExistence("s", propertyName1)
+        QueryResult result = qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.propertyExistence("s", propertyName1)
                 ), null, null).execute();
         checkResult(result, new Node[]{n1});
 
-        result = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.propertyExistence("s", propertyName2)
+        result = qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.propertyExistence("s", propertyName2)
                 ), null, null).execute();
         checkResult(result, new Node[]{n2});
     }

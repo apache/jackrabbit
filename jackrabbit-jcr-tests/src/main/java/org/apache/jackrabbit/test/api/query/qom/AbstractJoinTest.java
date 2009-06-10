@@ -67,22 +67,22 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
         // only consider nodes under test root
         Constraint constraint;
         if (QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER.equals(joinType)) {
-            constraint = qomFactory.descendantNode(LEFT, testRoot);
+            constraint = qf.descendantNode(LEFT, testRoot);
         } else {
-            constraint = qomFactory.descendantNode(RIGHT, testRoot);
+            constraint = qf.descendantNode(RIGHT, testRoot);
         }
 
         if (left != null) {
-            constraint = qomFactory.and(constraint, left);
+            constraint = qf.and(constraint, left);
         }
         if (right != null) {
-            constraint = qomFactory.and(constraint, right);
+            constraint = qf.and(constraint, right);
         }
-        Join join = qomFactory.join(
-                qomFactory.selector(testNodeType, LEFT),
-                qomFactory.selector(testNodeType, RIGHT),
+        Join join = qf.join(
+                qf.selector(testNodeType, LEFT),
+                qf.selector(testNodeType, RIGHT),
                 joinType,
                 condition);
-        return qomFactory.createQuery(join, constraint, null, null);
+        return qf.createQuery(join, constraint, null, null);
     }
 }

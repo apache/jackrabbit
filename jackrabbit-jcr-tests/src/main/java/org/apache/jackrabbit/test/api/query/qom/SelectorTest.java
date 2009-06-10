@@ -33,8 +33,8 @@ public class SelectorTest extends AbstractQOMTest {
         // make sure there's at least one node with this node type
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.save();
-        Query q = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"), null, null, null);
+        Query q = qf.createQuery(
+                qf.selector(testNodeType, "s"), null, null, null);
         NodeIterator it = q.execute().getNodes();
         while (it.hasNext()) {
             assertTrue("Wrong node type", it.nextNode().isNodeType(testNodeType));
@@ -43,8 +43,8 @@ public class SelectorTest extends AbstractQOMTest {
 
     public void testSyntacticallyInvalidName() throws RepositoryException {
         try {
-            Query q = qomFactory.createQuery(
-                    qomFactory.selector(testNodeType + "[", "s"), null, null, null);
+            Query q = qf.createQuery(
+                    qf.selector(testNodeType + "[", "s"), null, null, null);
             q.execute();
             fail("Selector with syntactically invalid name must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
@@ -63,7 +63,7 @@ public class SelectorTest extends AbstractQOMTest {
                 break;
             }
         }
-        Query q = qomFactory.createQuery(qomFactory.selector(ntName, "s"),
+        Query q = qf.createQuery(qf.selector(ntName, "s"),
                 null, null, null);
         assertFalse("Selector must not select nodes for unknown node type",
                 q.execute().getNodes().hasNext());
@@ -71,12 +71,12 @@ public class SelectorTest extends AbstractQOMTest {
 
     public void testDuplicateNodeType() throws RepositoryException {
         try {
-            Query q = qomFactory.createQuery(
-                    qomFactory.join(
-                            qomFactory.selector(testNodeType, "nt"),
-                            qomFactory.selector(testNodeType, "nt"),
+            Query q = qf.createQuery(
+                    qf.join(
+                            qf.selector(testNodeType, "nt"),
+                            qf.selector(testNodeType, "nt"),
                             QueryObjectModelConstants.JCR_JOIN_TYPE_INNER,
-                            qomFactory.descendantNodeJoinCondition("nt", "nt")),
+                            qf.descendantNodeJoinCondition("nt", "nt")),
                     null, null, null);
             q.execute();
             fail("Selector with two identical selector names must throw InvalidQueryException");

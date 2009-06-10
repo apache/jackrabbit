@@ -205,14 +205,14 @@ public class NodeLocalNameTest extends AbstractQOMTest {
 
     private Query createQuery(String operator, Value literal)
             throws RepositoryException {
-        return qomFactory.createQuery(
-                qomFactory.selector(testNodeType, "s"),
-                qomFactory.and(
-                        qomFactory.childNode("s", testRoot),
-                        qomFactory.comparison(
-                                qomFactory.nodeLocalName("s"),
+        return qf.createQuery(
+                qf.selector(testNodeType, "s"),
+                qf.and(
+                        qf.childNode("s", testRoot),
+                        qf.comparison(
+                                qf.nodeLocalName("s"),
                                 operator,
-                                qomFactory.literal(literal)
+                                qf.literal(literal)
                         )
                 ), null, null);
     }

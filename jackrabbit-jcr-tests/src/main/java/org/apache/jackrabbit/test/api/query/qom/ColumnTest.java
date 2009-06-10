@@ -56,11 +56,11 @@ public class ColumnTest extends AbstractQOMTest {
      * named "selectorName.propertyName".
      */
     public void testExpandColumnsForNodeType() throws RepositoryException {
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, SELECTOR_1),
+        QueryObjectModel qom = qf.createQuery(
+                qf.selector(testNodeType, SELECTOR_1),
                 null,
                 null,
-                new Column[]{qomFactory.column(SELECTOR_1, null, null)});
+                new Column[]{qf.column(SELECTOR_1, null, null)});
         QueryResult result = qom.execute();
         List names = new ArrayList(Arrays.asList(result.getColumnNames()));
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
@@ -86,11 +86,11 @@ public class ColumnTest extends AbstractQOMTest {
      * the column in the tabular results.
      */
     public void testColumnNames() throws RepositoryException {
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.selector(testNodeType, SELECTOR_1),
+        QueryObjectModel qom = qf.createQuery(
+                qf.selector(testNodeType, SELECTOR_1),
                 null,
                 null,
-                new Column[]{qomFactory.column(SELECTOR_1, propertyName1, propertyName1)});
+                new Column[]{qf.column(SELECTOR_1, propertyName1, propertyName1)});
         QueryResult result = qom.execute();
         List names = new ArrayList(Arrays.asList(result.getColumnNames()));
         assertTrue("Missing column: " + propertyName1, names.remove(propertyName1));
@@ -106,18 +106,18 @@ public class ColumnTest extends AbstractQOMTest {
 
         String columnName1 = SELECTOR_1 + "." + propertyName1;
         String columnName2 = SELECTOR_2 + "." + propertyName1;
-        QueryObjectModel qom = qomFactory.createQuery(
-                qomFactory.join(
-                        qomFactory.selector(testNodeType, SELECTOR_1),
-                        qomFactory.selector(testNodeType, SELECTOR_2),
+        QueryObjectModel qom = qf.createQuery(
+                qf.join(
+                        qf.selector(testNodeType, SELECTOR_1),
+                        qf.selector(testNodeType, SELECTOR_2),
                         QueryObjectModelConstants.JCR_JOIN_TYPE_INNER,
-                        qomFactory.equiJoinCondition(SELECTOR_1, propertyName1, SELECTOR_2, propertyName1)
+                        qf.equiJoinCondition(SELECTOR_1, propertyName1, SELECTOR_2, propertyName1)
                 ),
-                qomFactory.descendantNode(SELECTOR_1, testRoot),
+                qf.descendantNode(SELECTOR_1, testRoot),
                 null,
                 new Column[]{
-                        qomFactory.column(SELECTOR_1, propertyName1, columnName1),
-                        qomFactory.column(SELECTOR_2, propertyName1, columnName2)
+                        qf.column(SELECTOR_1, propertyName1, columnName1),
+                        qf.column(SELECTOR_2, propertyName1, columnName2)
                 }
         );
         RowIterator rows = qom.execute().getRows();
