@@ -828,7 +828,7 @@ public class DbDataStore implements DataStore {
     /**
      * {@inheritDoc}
      */
-    public synchronized void close() {
+    public synchronized void close() throws DataStoreException {
         ArrayList<ConnectionRecoveryManager> list = connectionPool.getAll();
         for (ConnectionRecoveryManager conn : list) {
             conn.close();
