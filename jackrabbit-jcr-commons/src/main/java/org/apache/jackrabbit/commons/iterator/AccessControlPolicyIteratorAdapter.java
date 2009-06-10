@@ -14,14 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security;
-
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.RangeIteratorDecorator;
+package org.apache.jackrabbit.commons.iterator;
 
 import javax.jcr.RangeIterator;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -29,8 +26,6 @@ import java.util.NoSuchElementException;
 /**
  * Adapter class for turning {@link RangeIterator}s or {@link Iterator}s
  * into {@link AccessControlPolicyIteratorAdapter}s.
- *
- * TODO: move to jackrabbit-jcr-commons project as soon as jsr 283 is released.
  */
 public class AccessControlPolicyIteratorAdapter extends RangeIteratorDecorator
         implements AccessControlPolicyIterator {

@@ -35,6 +35,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

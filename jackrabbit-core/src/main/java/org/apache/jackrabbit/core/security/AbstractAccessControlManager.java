@@ -24,6 +24,7 @@ import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
