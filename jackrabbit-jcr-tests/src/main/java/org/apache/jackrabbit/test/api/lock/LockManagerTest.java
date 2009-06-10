@@ -54,7 +54,6 @@ public class LockManagerTest extends AbstractJCRTest {
         testRootNode.save();
         testPath = testNode.getPath();
 
-        // TODO: rm cast and adjust call as soon as 283 is released
         lockMgr = getLockManager(superuser);
     }
 
@@ -182,7 +181,7 @@ public class LockManagerTest extends AbstractJCRTest {
     }
 
     public void testAddLockTokenToAnotherSession() throws RepositoryException {
-        // TODO: for 283 add config option for simutaneous tokens....
+        // TODO: for 283 add config option for simultaneous tokens....
         
         assertLockable(testNode);
 
@@ -335,7 +334,7 @@ public class LockManagerTest extends AbstractJCRTest {
     }
 
     public void testLockTransfer2() throws Exception {
-        // TODO: for 283 add config option for simutaneous tokens....
+        // TODO: for 283 add config option for simultaneous tokens....
 
         assertLockable(testNode);
 
