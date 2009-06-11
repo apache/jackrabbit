@@ -2859,7 +2859,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // the version storage jcr:versionManagement privilege is required
         // in addition.
         if (NameConstants.MIX_VERSIONABLE.equals(ntName)
-                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(mixinName)) {
+                || NameConstants.MIX_SIMPLE_VERSIONABLE.equals(ntName)) {
             permissions |= Permission.VERSION_MNGMT;
         }
         if (!session.getValidator().canModify(this, options, permissions)) {
@@ -2870,7 +2870,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         NodeTypeImpl primaryType = ntMgr.getNodeType(primaryTypeName);
         if (primaryType.isDerivedFrom(ntName)) {
-            return false;
+            // mixin already inherited -> addMixin is allowed but has no effect.
+            return true;
         }
 
         // build effective node type of mixins & primary type
@@ -2884,7 +2885,9 @@ public class NodeImpl extends ItemImpl implements Node {
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
             if (entExisting.includesNodeType(ntName)) {
-                return false;
+                // the existing mixins already include the mixin to be added.
+                // addMixin would succeed without modifying the node.
+                return true;
             }
 
             // add new mixin
@@ -3017,7 +3020,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // if root is common ancestor, corresponding path is same as ours
             if (m1.getDepth() == 0) {
                 // check existence
-                if (!srcSession.getItemManager().itemExists(getPrimaryPath())) {
+                if (!srcSession.getItemManager().nodeExists(getPrimaryPath())) {
                     throw new ItemNotFoundException("Node not found: " + this);
                 } else {
                     return getPath();
@@ -3427,6 +3430,9 @@ public class NodeImpl extends ItemImpl implements Node {
         return new LazyItemIterator(itemMgr, failedIds);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void cancelMerge(Version version)
             throws VersionException, InvalidItemStateException,
             UnsupportedRepositoryOperationException, RepositoryException {
@@ -3651,8 +3657,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *         node exists.
      * @throws RepositoryException If another error occurs.
      */
-    private NodeImpl getCorrespondingNode(SessionImpl srcSession)
-            throws AccessDeniedException, RepositoryException {
+    private NodeImpl getCorrespondingNode(SessionImpl srcSession) throws RepositoryException {
 
         // search nearest ancestor that is referenceable
         NodeImpl m1 = this;
