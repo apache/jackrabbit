@@ -199,35 +199,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
     //--------------------------------------------------< new JSR 283 methods >
     /**
-     * Creates a new <code>Workspace</code> with the specified <code>name</code>
-     * initialized with a <code>clone</code> of the content of the workspace
-     * <code>srcWorkspace</code>. Semantically, this method is equivalent to
-     * creating a new workspace and manually cloning <code>srcWorkspace</code>
-     * to it; however, this method may assist some implementations in optimizing
-     * subsequent <code>Node.update</code> and <code>Node.merge</code> calls
-     * between the new workspace and its source.
-     * <p/>
-     * The new workspace can be accessed through a <code>login</code>
-     * specifying its name.
-     * <p/>
-     * Throws an <code>AccessDeniedException</code> if the session through which
-     * this <code>Workspace</code> object was acquired does not have permission
-     * to create the new workspace.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if the repository does
-     * not support the creation of workspaces.
-     * <p/>
-     * A <code>RepositoryException</code> is thrown if another error occurs.
-     *
-     * @param name A <code>String</code>, the name of the new workspace.
-     * @param srcWorkspace The name of the workspace from which the new workspace is to be cloned.
-     * @throws AccessDeniedException if the session through which
-     * this <code>Workspace</code> object was acquired does not have permission
-     * to create the new workspace.
-     * @throws UnsupportedRepositoryOperationException if the repository does
-     * not support the creation of workspaces.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
+     * {@inheritDoc}
      */
     public void createWorkspace(String name, String srcWorkspace)
             throws AccessDeniedException, UnsupportedRepositoryOperationException,
@@ -253,24 +225,10 @@ public class WorkspaceImpl extends AbstractWorkspace
     }
 
     /**
-     * Deletes the workspace with the specified <code>name</code> from the
-     * repository, deleting all content within it.
+     * {@inheritDoc}
      * <p/>
-     * Throws an <code>AccessDeniedException</code> if the session through which
-     * this <code>Workspace</code> object was acquired does not have permission
-     * to remove the workspace.
-     * <p/>
-     * Throws an <code>UnsupportedRepositoryOperationException</code> if the
-     * repository does not support the removal of workspaces.
-     *
-     * @param name A <code>String</code>, the name of the workspace to be deleted.
-     * @throws AccessDeniedException if the session through which
-     * this <code>Workspace</code> object was acquired does not have permission
-     * to remove the workspace.
-     * @throws UnsupportedRepositoryOperationException if the
-     * repository does not support the removal of workspaces.
-     * @throws RepositoryException if another error occurs.
-     * @since JCR 2.0
+     * Always throws <code>UnsupportedRepositoryOperationException</code> since
+     * removal of workspaces is currently not supported.
      */
     public void deleteWorkspace(String name) throws AccessDeniedException,
             UnsupportedRepositoryOperationException, RepositoryException {
