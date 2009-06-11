@@ -18,14 +18,12 @@ package org.apache.jackrabbit.core.value;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Binary;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 
 /**
@@ -46,7 +44,7 @@ public abstract class BLOBFileValue implements Binary {
      * @return String representation of this value.
      * @throws RepositoryException
      */
-    public String getString() throws RepositoryException {
+    String getString() throws RepositoryException {
         // TODO: review again. currently the getString method of the JCR Value is delegated to the QValue.
         InputStream stream = getStream();
         try {
@@ -105,7 +103,7 @@ public abstract class BLOBFileValue implements Binary {
      *
      * @return true if the object is immutable
      */
-    public abstract boolean isImmutable();
+    abstract boolean isImmutable();
 
     /**
      * {@inheritDoc}
@@ -116,24 +114,6 @@ public abstract class BLOBFileValue implements Binary {
      * {@inheritDoc}
      */
     public abstract String toString();
-
-    /*
-     * Spools the contents of this <code>BLOBFileValue</code> to the given
-     * output stream.
-     *
-     * @param out output stream
-     * @throws RepositoryException if the input stream for this
-     *                             <code>BLOBFileValue</code> could not be obtained
-     * @throws IOException         if an error occurs while while spooling
-     */
-    public void spool(OutputStream out) throws RepositoryException, IOException {
-        InputStream in = getStream();
-        try {
-            IOUtils.copy(in, out);
-        } finally {
-            IOUtils.closeQuietly(in);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -147,13 +127,13 @@ public abstract class BLOBFileValue implements Binary {
      * @return true if the value is small
      */
     public abstract boolean isSmall();
-    
+
     /**
      * Get the data identifier if one is available.
-     * 
+     *
      * @return the data identifier or null
      */
-    public DataIdentifier getDataIdentifier() {
+    DataIdentifier getDataIdentifier() {
         return null;
     }
 

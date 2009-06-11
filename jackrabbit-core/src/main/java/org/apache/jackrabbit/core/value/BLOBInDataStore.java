@@ -60,15 +60,12 @@ public class BLOBInDataStore extends BLOBFileValue {
     public void discard() {
         // do nothing
     }
-    
+
     public DataIdentifier getDataIdentifier() {
         return identifier;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isImmutable() {
+    boolean isImmutable() {
         return true;
     }
 
@@ -113,7 +110,7 @@ public class BLOBInDataStore extends BLOBFileValue {
         DataIdentifier identifier = new DataIdentifier(id);
         return new BLOBInDataStore(store, identifier);
     }
-    
+
     static BLOBInDataStore getInstance(DataStore store, DataIdentifier identifier) {
         return new BLOBInDataStore(store, identifier);
     }
