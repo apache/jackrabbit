@@ -14,15 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test;
+package org.apache.jackrabbit.test.api.query;
 
-import junit.framework.TestCase;
-import junit.framework.Test;
-import org.apache.jackrabbit.test.JCRTestSuite;
+import java.math.BigDecimal;
 
-public class TestAll extends TestCase {
+import javax.jcr.RepositoryException;
 
-    public static Test suite() {
-        return new JCRTestSuite();
+/**
+ * <code>OrderByDecimalTest</code> tests order by queries with decimal properties.
+ */
+public class OrderByDecimalTest extends AbstractOrderByTest {
+
+    public void testDecimal() throws RepositoryException {
+        populate(new BigDecimal[]{new BigDecimal(0), new BigDecimal(-1), new BigDecimal(1), new BigDecimal(5)});
+        checkOrder(new String[]{nodeName2, nodeName1, nodeName3, nodeName4});
     }
 }

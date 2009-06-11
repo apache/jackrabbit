@@ -14,15 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.test;
+package org.apache.jackrabbit.test.api.query;
 
-import junit.framework.TestCase;
-import junit.framework.Test;
-import org.apache.jackrabbit.test.JCRTestSuite;
+import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 
-public class TestAll extends TestCase {
+/**
+ * <code>OrderByURITest</code> tests order by queries with URI properties.
+ */
+public class OrderByURITest extends AbstractOrderByTest {
 
-    public static Test suite() {
-        return new JCRTestSuite();
+    private static final String BASE_URI = "http://example.com/";
+
+    public void testURI() throws RepositoryException {
+        populate(new String[]{BASE_URI + "a", BASE_URI + "b", BASE_URI + "c", BASE_URI + "d"}, PropertyType.URI);
+        checkOrder(new String[]{nodeName1, nodeName2, nodeName3, nodeName4});
     }
 }

@@ -22,6 +22,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
@@ -64,6 +66,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected String jcrDeref;
 
     /**
+     * The query object model factory for {@link #superuser}.
+     */
+    protected QueryObjectModelFactory qf;
+
+    /**
      * Set-up the configuration values used for the test. Per default retrieves
      * a session, configures testRoot, and nodetype and checks if the query
      * language for the current language is available.<br>
@@ -75,6 +82,8 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
         jcrContains = superuser.getNamespacePrefix(NS_JCR_URI) + ":contains";
         jcrDeref = superuser.getNamespacePrefix(NS_JCR_URI) + ":deref";
+        QueryManager qm = superuser.getWorkspace().getQueryManager();
+        qf = qm.getQOMFactory();
     }
 
     /**

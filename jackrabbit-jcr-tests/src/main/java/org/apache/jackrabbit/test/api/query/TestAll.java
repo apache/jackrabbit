@@ -73,6 +73,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(OrderByNameTest.class);
         suite.addTestSuite(OrderByLowerCaseTest.class);
         suite.addTestSuite(OrderByUpperCaseTest.class);
+        suite.addTestSuite(OrderByDecimalTest.class);
+        suite.addTestSuite(OrderByURITest.class);
+        suite.addTestSuite(SetLimitTest.class);
+        suite.addTestSuite(SetOffsetTest.class);
 
         return suite;
     }
