@@ -89,7 +89,7 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * The maximum result size
      */
-    private long limit;
+    private long limit = -1;
 
     /**
      * The offset in the total result set
@@ -256,6 +256,9 @@ public class QueryImpl extends AbstractQueryImpl {
      * @param limit new maximum size of the result set
      */
     public void setLimit(long limit) {
+        if (limit < 0) {
+            throw new IllegalArgumentException("limit must not be negativ");
+        }
         this.limit = limit;
     }
 
@@ -265,6 +268,9 @@ public class QueryImpl extends AbstractQueryImpl {
      * @param offset new start offset of the result set
      */
     public void setOffset(long offset) {
+        if (offset < 0) {
+            throw new IllegalArgumentException("offset must not be negativ");
+        }
         this.offset = offset;
     }
 

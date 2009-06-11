@@ -79,6 +79,12 @@
                 org.apache.jackrabbit.test.api.query.OrderByLowerCaseTest
                 org.apache.jackrabbit.test.api.query.OrderByNameTest
                 org.apache.jackrabbit.test.api.query.OrderByUpperCaseTest
+                org.apache.jackrabbit.test.api.query.OrderByDecimalTest
+                org.apache.jackrabbit.test.api.query.OrderByURITest
+                org.apache.jackrabbit.test.api.query.SetLimitTest
+                org.apache.jackrabbit.test.api.query.SetOffsetTest
+                org.apache.jackrabbit.test.api.query.qom
+                org.apache.jackrabbit.test.api.version.simple
               </value>
             </property>
           </systemProperties>

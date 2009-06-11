@@ -24,11 +24,9 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
-import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
@@ -36,14 +34,6 @@ import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
  * <code>AbstractQOMTest</code> is a base class for test cases on the JQOM.
  */
 public class AbstractQOMTest extends AbstractQueryTest {
-
-    protected QueryObjectModelFactory qf;
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        QueryManager qm = superuser.getWorkspace().getQueryManager();
-        qf = qm.getQOMFactory();
-    }
 
     /**
      * Binds the given <code>value</code> to the variable named

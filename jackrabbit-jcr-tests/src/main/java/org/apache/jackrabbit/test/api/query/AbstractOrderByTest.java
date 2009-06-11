@@ -20,6 +20,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModel;
@@ -32,6 +34,7 @@ import java.util.Collections;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 
 /**
  * Abstract base class for all order by tests. Provides utility methods.
@@ -41,7 +44,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
     /** If <code>true</code> this repository supports sql queries */
     protected boolean checkSQL;
 
-    protected QueryObjectModelFactory qf;
+    protected ValueFactory vf;
 
     private String[] nodeNames;
 
@@ -49,7 +52,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
         super.setUp();
         checkSQL = isSupported(Repository.OPTION_QUERY_SQL_SUPPORTED);
         nodeNames = new String[]{nodeName1, nodeName2, nodeName3, nodeName4};
-        qf = superuser.getWorkspace().getQueryManager().getQOMFactory();
+        vf = superuser.getValueFactory();
     }
 
     /**
@@ -63,7 +66,24 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        testRootNode.save();
+        superuser.save();
+    }
+
+    /**
+     * Populates the workspace with child nodes under <code>testroot</code> with
+     * each node has a value set in property with name
+     * <code>propertyname1</code>. The actual value is created by using the
+     * sessions value factory and the given <code>type</code>.
+     *
+     * @param values the String values.
+     * @param type a JCR property type.
+     */
+    protected void populate(String[] values, int type) throws RepositoryException {
+        for (int i = 0; i < values.length; i++) {
+            Node node = testRootNode.addNode(nodeNames[i], testNodeType);
+            node.setProperty(propertyName1, vf.createValue(values[i], type));
+        }
+        superuser.save();
     }
 
     /**
@@ -77,7 +97,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        testRootNode.save();
+        superuser.save();
     }
 
     /**
@@ -91,7 +111,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        testRootNode.save();
+        superuser.save();
     }
 
     /**
@@ -105,7 +125,21 @@ class AbstractOrderByTest extends AbstractQueryTest {
             Node node = testRootNode.addNode(nodeNames[i], testNodeType);
             node.setProperty(propertyName1, values[i]);
         }
-        testRootNode.save();
+        superuser.save();
+    }
+
+    /**
+     * Populates the workspace with child nodes under <code>testroot</code> with
+     * each node has a decimal value set in property with name
+     * <code>propertyname1</code>.
+     * @param values the decimal values.
+     */
+    protected void populate(BigDecimal[] values) throws RepositoryException {
+        for (int i = 0; i < values.length; i++) {
+            Node node = testRootNode.addNode(nodeNames[i], testNodeType);
+            node.setProperty(propertyName1, values[i]);
+        }
+        superuser.save();
     }
 
     /**

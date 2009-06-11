@@ -124,7 +124,7 @@ public abstract class QueryResultImpl implements QueryResult {
     private final long offset;
 
     /**
-     * The maximum size of this result if limit > 0
+     * The maximum size of this result if limit >= 0
      */
     private final long limit;
 
@@ -265,7 +265,7 @@ public abstract class QueryResultImpl implements QueryResult {
         long maxResultSize = size;
 
         // is there any limit?
-        if (limit > 0) {
+        if (limit >= 0) {
             maxResultSize = limit;
         }
 
@@ -442,7 +442,7 @@ public abstract class QueryResultImpl implements QueryResult {
                 return -1;
             }
             long size = total - offset;
-            if (limit > 0 && size > limit) {
+            if (limit >= 0 && size > limit) {
                 return limit;
             } else {
                 return size;
