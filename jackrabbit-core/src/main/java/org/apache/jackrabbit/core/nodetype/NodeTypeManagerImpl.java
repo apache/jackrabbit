@@ -776,7 +776,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                             qconstraints[j] = ValueConstraint.create(type, constraints[j], session);
                         } catch (InvalidConstraintException e) {
                             throw new InvalidNodeTypeDefinitionException(
-                                    "Invalid value constraint " + constraints[i], e);
+                                    "Invalid value constraint: " + constraints[j], e);
                         }
                     }
                     qpdef.setValueConstraints(qconstraints);
@@ -790,7 +790,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                             qvalues[j] = InternalValue.create(values[j], session);
                         } catch (ValueFormatException e) {
                             throw new InvalidNodeTypeDefinitionException(
-                                    "Invalid default value format", e);
+                                    "Invalid default value format: " + values[j], e);
                         }
                     }
                     qpdef.setDefaultValues(qvalues);
