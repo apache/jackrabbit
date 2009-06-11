@@ -360,7 +360,7 @@ public class NodeIndexer {
                 if (name.equals(NameConstants.JCR_PRIMARYTYPE)
                         || name.equals(NameConstants.JCR_MIXINTYPES)
                         || isIndexed(name)) {
-                    addNameValue(doc, fieldName, value.getQName());
+                    addNameValue(doc, fieldName, value.getName());
                 }
                 break;
             case PropertyType.DECIMAL:

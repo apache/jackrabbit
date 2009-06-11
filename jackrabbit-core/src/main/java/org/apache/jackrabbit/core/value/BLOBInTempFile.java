@@ -123,10 +123,7 @@ public class BLOBInTempFile extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isImmutable() {
+    boolean isImmutable() {
         // discard and delete can modify the state.
         return false;
     }

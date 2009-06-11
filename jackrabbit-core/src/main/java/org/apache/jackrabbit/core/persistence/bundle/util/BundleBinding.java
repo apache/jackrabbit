@@ -713,7 +713,12 @@ public class BundleBinding extends ItemStateBinding {
                     }
                     break;
                 case PropertyType.NAME:
-                    writeQName(out, val.getQName());
+                    try {
+                        writeQName(out, val.getName());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing NAME value.");
+                    }
                     break;
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:

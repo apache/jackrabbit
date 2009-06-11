@@ -147,13 +147,13 @@ public class InternalValue extends AbstractQValue {
                         }
                     }
                     if (blob == null) {
-                        blob = getBLOBFileValue(store, value.getStream(), true);
+                        blob = getBLOBFileValue(store, value.getBinary().getStream(), true);
                     }
                     result = new InternalValue(blob);
                 } else if (value instanceof BLOBFileValue) {
                     result = new InternalValue((BLOBFileValue) value);
                 } else {
-                    InputStream stream = value.getStream();
+                    InputStream stream = value.getBinary().getStream();
                     try {
                         result = createTemporary(stream);
                     } finally {
@@ -217,7 +217,7 @@ public class InternalValue extends AbstractQValue {
                 throw new IllegalArgumentException("illegal value");
         }
     }
-    
+
     static InternalValue getInternalValue(DataIdentifier identifier, DataStore store) throws DataStoreException {
         // access the record to ensure it is not garbage collected
         if (store.getRecordIfStored(identifier) != null) {
@@ -315,32 +315,12 @@ public class InternalValue extends AbstractQValue {
     }
 
     /**
-     * Create an internal value that is backed by a temporary file
-     * (if data store usage is disabled or the store is null)
-     * or in the data store if it is not null and enabled.
-     *
-     * @param value the stream
-     * @param store the data store or null to use a temporary file
-     * @return the internal value
-     */
-    public static InternalValue createTemporary(InputStream value, DataStore store) throws RepositoryException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(store, value, true));
-        }
-        try {
-            return new InternalValue(new BLOBValue(value, true));
-        } catch (IOException e) {
-            throw new RepositoryException("Error creating temporary file", e);
-        }
-    }
-
-    /**
      * Create an internal value that is stored in the data store (if enabled).
-     * 
+     *
      * @param value the input stream
      * @return the internal value
      */
-    public static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
+    static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
         if (USE_DATA_STORE) {
             return new InternalValue(getBLOBFileValue(store, value, false));
         }
@@ -508,14 +488,6 @@ public class InternalValue extends AbstractQValue {
         }
     }
 
-    /**
-     * @deprecated
-     * @return the internal object
-     */
-    public Object internalValue() {
-        return val;
-    }
-
     public BLOBFileValue getBLOBFileValue() {
         assert val != null && type == PropertyType.BINARY;
         return (BLOBFileValue) val;
@@ -524,11 +496,6 @@ public class InternalValue extends AbstractQValue {
     public UUID getUUID() {
         assert val != null && (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE);
         return (UUID) val;
-    }
-
-    public Name getQName() {
-        assert val != null && type == PropertyType.NAME;
-        return (Name) val;
     }
 
     public Calendar getDate() {

@@ -285,10 +285,7 @@ public class BLOBValue extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isImmutable() {
+    boolean isImmutable() {
         // delete will modify the state
         return false;
     }

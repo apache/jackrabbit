@@ -102,10 +102,7 @@ public class BLOBInResource extends BLOBFileValue {
         // this instance is not backed by temporarily allocated resource/buffer
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isImmutable() {
+    boolean isImmutable() {
         // delete will modify the state.
         return false;
     }

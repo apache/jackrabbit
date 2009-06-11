@@ -135,10 +135,7 @@ public class BLOBInMemory extends BLOBFileValue {
         // the data will be garbage collected
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isImmutable() {
+    boolean isImmutable() {
         return true;
     }
 
