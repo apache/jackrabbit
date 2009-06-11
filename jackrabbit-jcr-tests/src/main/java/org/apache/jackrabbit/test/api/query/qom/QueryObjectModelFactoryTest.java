@@ -143,7 +143,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#childNode(String)}
+     * Test case for {@link QueryObjectModelFactory#childNode(String, String)}
      */
     public void testChildNode() throws RepositoryException {
         ChildNode childNode = qf.childNode(SELECTOR_NAME1, testRootNode.getPath());
@@ -170,7 +170,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#column(String)}
+     * Test case for {@link QueryObjectModelFactory#column(String, String, String)}
      */
     public void testColumn() throws RepositoryException {
         Column col = qf.column(SELECTOR_NAME1, propertyName1, null);
@@ -180,7 +180,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#column(String)}
+     * Test case for {@link QueryObjectModelFactory#column(String, String, String)}
      */
     public void testColumnAllProperties() throws RepositoryException {
         Column col = qf.column(SELECTOR_NAME1, null, null);
@@ -190,7 +190,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#column(String, String)}
+     * Test case for {@link QueryObjectModelFactory#column(String, String, String)}
      */
     public void testColumnWithColumnName() throws RepositoryException {
         Column col = qf.column(SELECTOR_NAME1, propertyName1, COLUMN_NAME);
@@ -210,7 +210,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#comparison(DynamicOperand, int, StaticOperand)}
+     * Test case for {@link QueryObjectModelFactory#comparison(DynamicOperand, String, StaticOperand)}
      */
     public void testComparison() throws RepositoryException {
         PropertyValue op1 = qf.propertyValue(SELECTOR_NAME1, propertyName1);
@@ -319,7 +319,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#descendantNode(String)}
+     * Test case for {@link QueryObjectModelFactory#descendantNode(String, String)}
      */
     public void testDescendantNode() throws RepositoryException {
         DescendantNode descNode = qf.descendantNode(SELECTOR_NAME1, testRootNode.getPath());
@@ -368,7 +368,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String)}
+     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
      */
     public void testFullTextSearch() throws RepositoryException {
         FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
@@ -378,7 +378,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String)}
+     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
      */
     public void testFullTextSearchAllProperties() throws RepositoryException {
         FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, null, FULLTEXT_SEARCH_EXPR);
@@ -398,7 +398,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#fullTextSearchScore()}
+     * Test case for {@link QueryObjectModelFactory#fullTextSearchScore(String)}
      */
     public void testFullTextSearchScore() throws RepositoryException {
         FullTextSearchScore score = qf.fullTextSearchScore(SELECTOR_NAME1);
@@ -414,7 +414,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#join(Source, Source, int, JoinCondition)}
+     * Test case for {@link QueryObjectModelFactory#join(Source, Source, String, JoinCondition)}
      */
     public void testJoin() throws RepositoryException {
         Selector s1 = qf.selector(ntBase, SELECTOR_NAME1);
@@ -449,7 +449,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#nodeLocalName()}
+     * Test case for {@link QueryObjectModelFactory#nodeLocalName(String)}
      */
     public void testNodeLocalName() throws RepositoryException {
         NodeLocalName localName = qf.nodeLocalName(SELECTOR_NAME1);
@@ -465,7 +465,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#nodeName()}
+     * Test case for {@link QueryObjectModelFactory#nodeName(String)}
      */
     public void testNodeName() throws RepositoryException {
         NodeName nodeName = qf.nodeName(SELECTOR_NAME1);
@@ -503,7 +503,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#propertyExistence(String)}
+     * Test case for {@link QueryObjectModelFactory#propertyExistence(String, String)}
      */
     public void testPropertyExistence() throws RepositoryException {
         PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
@@ -521,7 +521,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#propertyValue(String)}
+     * Test case for {@link QueryObjectModelFactory#propertyValue(String, String)}
      */
     public void testPropertyValue() throws RepositoryException {
         PropertyValue propVal = qf.propertyValue(SELECTOR_NAME1, propertyName1);
@@ -539,7 +539,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#sameNode(String)}
+     * Test case for {@link QueryObjectModelFactory#sameNode(String, String)}
      */
     public void testSameNode() throws RepositoryException {
         SameNode sameNode = qf.sameNode(SELECTOR_NAME1, testRootNode.getPath());
@@ -557,7 +557,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#sameNodeJoinCondition(String, String)}
+     * Test case for {@link QueryObjectModelFactory#sameNodeJoinCondition(String, String, String)}
      */
     public void testSameNodeJoinCondition() throws RepositoryException {
         SameNodeJoinCondition cond = qf.sameNodeJoinCondition(SELECTOR_NAME1, SELECTOR_NAME2, ".");
@@ -577,7 +577,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#selector(String)}
+     * Test case for {@link QueryObjectModelFactory#selector(String, String)}
      */
     public void testSelector() throws RepositoryException {
         Selector selector = qf.selector(ntBase, SELECTOR_NAME1);
