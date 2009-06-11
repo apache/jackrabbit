@@ -813,4 +813,16 @@ public class InternalValue extends AbstractQValue {
             }
         }
     }
+
+    /**
+     * @see org.apache.jackrabbit.spi.QValue#discard()
+     */
+    public void discard() {
+        if (type == PropertyType.BINARY) {
+            BLOBFileValue bfv = (BLOBFileValue) val;
+            bfv.discard();
+        } else {
+            super.discard();
+        }
+    }
 }
