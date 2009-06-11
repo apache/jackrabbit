@@ -284,7 +284,7 @@ public class TransientRepository extends AbstractRepository
      *
      * @param key descriptor key
      * @return descriptor value
-     * @see Repository#getDescriptor(String)
+     * @see javax.jcr.Repository#getDescriptor(String)
      */
     public synchronized String getDescriptor(String key) {
         if (repository != null) {
@@ -331,7 +331,7 @@ public class TransientRepository extends AbstractRepository
      * @param workspaceName workspace name
      * @return new session
      * @throws RepositoryException if the session could not be created
-     * @see Repository#login(Credentials,String)
+     * @see javax.jcr.Repository#login(Credentials,String)
      */
     public synchronized Session login(
             Credentials credentials, String workspaceName)
