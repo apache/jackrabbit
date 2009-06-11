@@ -79,11 +79,11 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
         String[] supertypes = new String[ntNames.length];
         for (int i = 0; i < ntNames.length; i++) {
             try {
-                supertypes[i] = resolver.getJCRName(ntd.getName());
+                supertypes[i] = resolver.getJCRName(ntNames[i]);
             } catch (NamespaceException e) {
                 // should never get here
                 log.error("encountered unregistered namespace in node type name", e);
-                supertypes[i] = ntd.getName().toString();
+                supertypes[i] = ntNames[i].toString();
             }
         }
         return supertypes;

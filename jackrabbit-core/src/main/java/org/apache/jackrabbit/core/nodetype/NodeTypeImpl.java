@@ -264,7 +264,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
             } catch (NamespaceException e) {
                 // should never get here
                 log.error("encountered unregistered namespace in node type name", e);
-                supertypes[i] = ntd.getName().toString();
+                supertypes[i] = ntNames[i].toString();
             }
         }
         return supertypes;
