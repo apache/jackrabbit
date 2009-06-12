@@ -46,16 +46,6 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -791,19 +781,17 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public MultiColumnQueryHits executeQuery(SessionImpl session,
                                              MultiColumnQuery query,
-                                             OrderingImpl[] orderings,
+                                             Ordering[] orderings,
                                              long resultFetchHint)
             throws IOException {
         checkOpen();
-
-        Sort sort = new Sort(createSortFields(orderings));
 
         final IndexReader reader = getIndexReader();
         JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
                 session, reader, getContext().getItemStateManager());
         searcher.setSimilarity(getSimilarity());
         return new FilterMultiColumnQueryHits(
-                query.execute(searcher, sort, resultFetchHint)) {
+                query.execute(searcher, orderings, resultFetchHint)) {
             public void close() throws IOException {
                 try {
                     super.close();
@@ -998,74 +986,19 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Creates sort fields for the ordering specifications.
+     * Creates internal orderings for the QOM ordering specifications.
      *
-     * @param orderings the ordering specifications.
-     * @return the sort fields.
+     * @param orderings the QOM ordering specifications.
+     * @return the internal orderings.
+     * @throws RepositoryException if an error occurs.
      */
-    protected SortField[] createSortFields(OrderingImpl[] orderings) {
-        List<SortField> sortFields = new ArrayList<SortField>();
-        for (final OrderingImpl ordering : orderings) {
-            QOMTreeVisitor visitor = new DefaultTraversingQOMTreeVisitor() {
-
-                public Object visit(LengthImpl node, Object data) throws Exception {
-                    PropertyValueImpl propValue = (PropertyValueImpl) node.getPropertyValue();
-                    return new SortField(propValue.getPropertyQName().toString(),
-                            new LengthSortComparator(nsMappings),
-                            !ordering.isAscending());
-                }
-
-                public Object visit(LowerCaseImpl node, Object data)
-                        throws Exception {
-                    SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
-                    return new SortField(sf.getField(),
-                            new LowerCaseSortComparator(sf.getFactory()),
-                            !ordering.isAscending());
-                }
-
-                public Object visit(UpperCaseImpl node, Object data)
-                        throws Exception {
-                    SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
-                    return new SortField(sf.getField(),
-                            new UpperCaseSortComparator(sf.getFactory()),
-                            !ordering.isAscending());
-                }
-
-                public Object visit(FullTextSearchScoreImpl node, Object data)
-                        throws Exception {
-                    // TODO: selector ignored
-                    return new SortField(null, SortField.SCORE,
-                            ordering.isAscending());
-                }
-
-                public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
-                    return new SortField(FieldNames.LOCAL_NAME,
-                           SortField.STRING, !ordering.isAscending());
-                }
-
-                public Object visit(NodeNameImpl node, Object data) throws Exception {
-                    return new SortField(FieldNames.LABEL,
-                           SortField.STRING, !ordering.isAscending());
-                }
-
-                public Object visit(PropertyValueImpl node, Object data)
-                        throws Exception {
-                    return new SortField(node.getPropertyQName().toString(),
-                            scs, !ordering.isAscending());
-                }
-
-                public Object visit(OrderingImpl node, Object data)
-                        throws Exception {
-                    return ((DynamicOperandImpl) node.getOperand()).accept(this, data);
-                }
-            };
-            try {
-                sortFields.add((SortField) ordering.accept(visitor, null));
-            } catch (Exception e) {
-                // TODO
-            }
+    protected Ordering[] createOrderings(OrderingImpl[] orderings)
+            throws RepositoryException {
+        Ordering[] ords = new Ordering[orderings.length];
+        for (int i = 0; i < orderings.length; i++) {
+            ords[i] = Ordering.fromQOM(orderings[i], scs, nsMappings);
         }
-        return sortFields.toArray(new SortField[sortFields.size()]);
+        return ords;
     }
 
     /**

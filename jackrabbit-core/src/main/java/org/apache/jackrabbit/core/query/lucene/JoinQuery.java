@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
-import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortComparatorSource;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.query.lucene.join.Join;
@@ -89,13 +88,13 @@ public class JoinQuery implements MultiColumnQuery {
      * {@inheritDoc}
      */
     public MultiColumnQueryHits execute(JackrabbitIndexSearcher searcher,
-                                        Sort sort,
+                                        Ordering[] orderings,
                                         long resultFetchHint)
             throws IOException {
         IndexReader reader = searcher.getIndexReader();
         HierarchyResolver resolver = (HierarchyResolver) reader;
-        return Join.create(left.execute(searcher, sort, resultFetchHint),
-                right.execute(searcher, sort, resultFetchHint),
+        return Join.create(left.execute(searcher, orderings, resultFetchHint),
+                right.execute(searcher, orderings, resultFetchHint),
                 joinType, joinCondition, reader, resolver, scs, hmgr);
     }
 }
