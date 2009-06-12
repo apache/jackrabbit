@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.Node;
-import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Iterator;

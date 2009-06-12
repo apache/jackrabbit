@@ -16,10 +16,13 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
@@ -28,12 +31,10 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
-
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.test.NotExecutableException;
-import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
+import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <code>JackrabbitAccessControlListTest</code>...

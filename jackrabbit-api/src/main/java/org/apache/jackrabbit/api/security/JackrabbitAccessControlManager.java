@@ -14,19 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security;
-
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlManager;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
+package org.apache.jackrabbit.api.security;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlManager;
 import java.security.Principal;
 
 /**
- * <code>JackrabbitAccessControlManager</code>...
+ * <code>JackrabbitAccessControlManager</code> provides extensions to the
+ * <code>AccessControlManager</code> interface.
  */
 public interface JackrabbitAccessControlManager extends AccessControlManager {
 
@@ -42,9 +41,9 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * @throws AccessControlException if the specified principal does not exist
      * or if another access control related exception occurs.
      * @throws UnsupportedRepositoryOperationException if editing access control
-     * policies is not supported.
+     * policies by principal is not supported.
      * @throws RepositoryException if another error occurs.
-     * @see org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy#getPath()
+     * @see JackrabbitAccessControlPolicy#getPath()
      */
     JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 }

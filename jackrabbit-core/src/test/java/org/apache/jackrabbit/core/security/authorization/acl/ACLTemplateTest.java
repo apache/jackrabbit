@@ -17,18 +17,18 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Collections;

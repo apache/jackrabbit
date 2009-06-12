@@ -16,25 +16,25 @@
  */
 package org.apache.jackrabbit.core.security.authorization.combined;
 
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.Privilege;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>EvaluationTest</code>...

@@ -16,16 +16,11 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlManager;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.slf4j.Logger;
@@ -38,6 +33,11 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Implementation of the {@link JackrabbitAccessControlList} interface that
+ * Implementation of the {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList} interface that
  * is detached from the effective access control content. Consequently, any
  * modifications applied to this ACL only take effect, if the policy gets
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
@@ -197,7 +197,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     }
 
     /**
-     * @see JackrabbitAccessControlList#size()
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
      */
     public int size() {
         return entries.size();
@@ -218,7 +218,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
      *   rep:glob      (optional)  value-type: STRING
      * </pre>
      *
-     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map restrictions)

@@ -16,21 +16,16 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -40,12 +35,17 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.PropertyType;
 import javax.jcr.ValueFormatException;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 
 /**

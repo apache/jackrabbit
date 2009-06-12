@@ -16,21 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.JackrabbitAccessControlManager;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.PropertyType;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
 import java.security.Principal;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * <code>EvaluationTest</code>...
