@@ -145,6 +145,7 @@ public class TestAll extends TestCase {
         //// new Session features
         
         suite.addTestSuite(SessionRemoveItemTest.class);
+        suite.addTestSuite(HasPermissionTest.class);
 
         //// new Workspace features
         
