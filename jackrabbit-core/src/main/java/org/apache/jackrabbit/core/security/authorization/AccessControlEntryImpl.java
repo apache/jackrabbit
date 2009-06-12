@@ -16,18 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.value.StringValue;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Simple, immutable implementation of the
@@ -93,8 +94,8 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @param isAllow <code>true</code> if this ACE grants the specified
      * privileges to the specified principal; <code>false</code> otherwise.
      * @param restrictions A map of restriction name (String) to restriction
-     * (Value). See {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionNames()}
-     * and {@link org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList#getRestrictionType(String)}. 
+     * (Value). See {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionNames()}
+     * and {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionType(String)}.
      * @param valueFactory the value factory.
      * @throws AccessControlException if either principal or privileges are invalid.
      */
@@ -183,14 +184,14 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
-     * @see JackrabbitAccessControlEntry#getRestrictionNames()
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestrictionNames()
      */
     public String[] getRestrictionNames() {
         return (String[]) restrictions.keySet().toArray(new String[restrictions.size()]);
     }
 
     /**
-     * @see JackrabbitAccessControlEntry#getRestriction(String)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestriction(String)
      */
     public Value getRestriction(String restrictionName) {
         if (restrictions.containsKey(restrictionName)) {

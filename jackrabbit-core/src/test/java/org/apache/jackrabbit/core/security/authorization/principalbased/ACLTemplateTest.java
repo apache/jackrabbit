@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
-import java.util.List;
+import javax.jcr.RepositoryException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * <code>ACLTemplateTest</code>...

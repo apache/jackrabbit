@@ -14,14 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization;
-
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
+package org.apache.jackrabbit.api.security;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Map;
 

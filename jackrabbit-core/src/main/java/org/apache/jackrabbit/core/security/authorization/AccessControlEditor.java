@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlPolicy;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlPolicy;
 import java.security.Principal;
 
 /**

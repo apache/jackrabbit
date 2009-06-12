@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization;
-
-import javax.jcr.security.AccessControlEntry;
+package org.apache.jackrabbit.api.security;
 
 import javax.jcr.Value;
+import javax.jcr.security.AccessControlEntry;
 
 /**
  * <code>JackrabbitAccessControlEntry</code> is a Jackrabbit specific extension

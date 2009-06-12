@@ -17,28 +17,28 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.commons.collections.map.ListOrderedMap;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlManager;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.NoSuchPrincipalException;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
-import org.apache.jackrabbit.core.security.authorization.JackrabbitAccessControlList;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
 import javax.jcr.ValueFactory;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementation of the {@link JackrabbitAccessControlList} interface that
+ * Implementation of the {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList} interface that
  * is detached from the effective access control content. Consequently, any
  * modifications applied to this ACL only take effect, if the policy gets
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy) reapplied}
@@ -343,7 +343,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
 
     //-----------------------------------------------------< JackrabbitAccessControlList >---
     /**
-     * @see JackrabbitAccessControlList#getPath()
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getPath()
      */
     public String getPath() {
         return path;
@@ -352,7 +352,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
     /**
      * Returns an empty String array.
      *
-     * @see JackrabbitAccessControlList#getRestrictionType(String)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionType(String)
      */
     public String[] getRestrictionNames() {
         return new String[0];
@@ -369,21 +369,21 @@ class ACLTemplate implements JackrabbitAccessControlList {
     }
 
     /**
-     * @see JackrabbitAccessControlList#isEmpty()
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#isEmpty()
      */
     public boolean isEmpty() {
         return entries.isEmpty();
     }
 
     /**
-     * @see JackrabbitAccessControlList#size()
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
      */
     public int size() {
         return internalGetEntries().size();
     }
 
     /**
-     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws AccessControlException, RepositoryException {
@@ -391,7 +391,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
     }
 
     /**
-     * @see JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map restrictions)
