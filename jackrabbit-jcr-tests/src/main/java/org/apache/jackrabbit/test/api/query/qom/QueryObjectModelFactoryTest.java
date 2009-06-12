@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.query.qom.And;
 import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.ChildNode;
@@ -54,6 +55,7 @@ import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.StaticOperand;
 import javax.jcr.query.qom.UpperCase;
+import javax.jcr.query.qom.Literal;
 
 /**
  * <code>QueryObjectModelFactoryTest</code> tests all methods on the
@@ -425,7 +427,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
             Join join = qf.join(s1, s2, joinType, cond);
             assertTrue("Not a selector source", join.getLeft() instanceof Selector);
             assertTrue("Not a selector source", join.getRight() instanceof Selector);
-            assertEquals("Wrong join type", joinType.toString(), join.getJoinType());
+            assertEquals("Wrong join type", joinType, join.getJoinType());
             assertTrue("Not an EquiJoinCondition", join.getJoinCondition() instanceof EquiJoinCondition);
         }
     }
@@ -437,6 +439,16 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         Length len = qf.length(propValue);
         assertNotNull("Property value must not be null", len.getPropertyValue());
+    }
+
+    /**
+     * Test case for {@link QueryObjectModelFactory#literal(Value)}
+     */
+    public void testLiteral() throws RepositoryException {
+        Value v = superuser.getValueFactory().createValue("test");
+        Literal literal = qf.literal(v);
+        assertEquals("Wrong literal value", v.getString(),
+                literal.getLiteralValue().getString());
     }
 
     /**
