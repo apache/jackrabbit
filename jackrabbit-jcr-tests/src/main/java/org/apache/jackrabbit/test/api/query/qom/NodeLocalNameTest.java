@@ -24,11 +24,11 @@ import javax.jcr.query.Query;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import java.util.Calendar;
+import java.math.BigDecimal;
 
 /**
  * <code>NodeLocalNameTest</code> checks if conversion of literals is correctly
  * performed and operators work as specified.
- * TODO: assumes https://jsr-283.dev.java.net/issues/show_bug.cgi?id=483 gets resolved as initially proposed
  */
 public class NodeLocalNameTest extends AbstractQOMTest {
 
@@ -39,7 +39,7 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     protected void setUp() throws Exception {
         super.setUp();
         node1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
         int colon = nodeName1.indexOf(':');
         if (colon != -1) {
             nodeLocalName = nodeName1.substring(colon + 1);
@@ -85,7 +85,9 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     }
 
     public void testDecimalLiteral() throws RepositoryException {
-        // TODO must not match node
+        Value literal = superuser.getValueFactory().createValue(new BigDecimal(283));
+        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testLongLiteral() throws RepositoryException {
@@ -128,18 +130,26 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         if (!node1.isNodeType(mixReferenceable)) {
             node1.addMixin(mixReferenceable);
         }
-        node1.save();
+        superuser.save();
         Value literal = superuser.getValueFactory().createValue(node1);
         Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{});
     }
 
     public void testWeakReferenceLiteral() throws RepositoryException {
-        // TODO must not match node
+        if (!node1.isNodeType(mixReferenceable)) {
+            node1.addMixin(mixReferenceable);
+        }
+        superuser.save();
+        Value literal = superuser.getValueFactory().createValue(node1, true);
+        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testURILiteral() throws RepositoryException {
-        // TODO must not match node
+        Value literal = superuser.getValueFactory().createValue("http://example.com", PropertyType.URI);
+        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{});
     }
 
     public void testEqualTo() throws RepositoryException {
