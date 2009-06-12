@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -410,11 +409,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
                 if (val != null) {
-                    if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = val.getBLOBFileValue();
-                        // delete blob file and prune empty parent folders
-                        blobVal.delete(true);
-                    }
+                    val.deleteBinaryResource();
                 }
             }
         }

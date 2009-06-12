@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
@@ -608,76 +607,76 @@ public class BundleBinding extends ItemStateBinding {
             InternalValue val = values[i];
             switch (state.getType()) {
                 case PropertyType.BINARY:
-                    BLOBFileValue blobVal = val.getBLOBFileValue();
-                    if (InternalValue.USE_DATA_STORE && dataStore != null) {
-                        if (blobVal.isSmall()) {
-                            writeSmallBinary(out, blobVal, state, i);
-                        } else {
-                            out.writeInt(BINARY_IN_DATA_STORE);
-                            try {
+                    try {
+                        long size = val.getLength();
+                        if (InternalValue.USE_DATA_STORE && dataStore != null) {
+                            int maxMemorySize = dataStore.getMinRecordLength() - 1;
+                            if (size < maxMemorySize) {
+                                writeSmallBinary(out, val, state, i);
+                            } else {
+                                out.writeInt(BINARY_IN_DATA_STORE);
                                 val.store(dataStore);
-                            } catch (RepositoryException e) {
-                                String msg = "Error while storing blob. id="
-                                    + state.getId() + " idx=" + i + " size=" + val.getBLOBFileValue().getLength();
-                                log.error(msg, e);
-                                throw new IOException(msg);
+                                out.writeUTF(val.toString());
                             }
-                            out.writeUTF(val.toString());
+                            break;
                         }
-                        break;
-                    }
-                    // special handling required for binary value:
-                    // spool binary value to file in blob store
-                    long size = blobVal.getLength();
-                    if (size < 0) {
-                        log.warn("Blob has negative size. Potential loss of data. "
-                                + "id={} idx={}", state.getId(), String.valueOf(i));
-                        out.writeInt(0);
-                        values[i] = InternalValue.create(new byte[0]);
-                        blobVal.discard();
-                    } else if (size > minBlobSize) {
-                        out.writeInt(BINARY_IN_BLOB_STORE);
-                        String blobId = state.getBlobId(i);
-                        if (blobId == null) {
-                            try {
-                                InputStream in = blobVal.getStream();
+                        // special handling required for binary value:
+                        // spool binary value to file in blob store
+                        if (size < 0) {
+                            log.warn("Blob has negative size. Potential loss of data. "
+                                    + "id={} idx={}", state.getId(), String.valueOf(i));
+                            out.writeInt(0);
+                            values[i] = InternalValue.create(new byte[0]);
+                            val.discard();
+                        } else if (size > minBlobSize) {
+                            out.writeInt(BINARY_IN_BLOB_STORE);
+                            String blobId = state.getBlobId(i);
+                            if (blobId == null) {
                                 try {
-                                    blobId = blobStore.createId(state.getId(), i);
-                                    blobStore.put(blobId, in, size);
-                                    state.setBlobId(blobId, i);
-                                } finally {
-                                    IOUtils.closeQuietly(in);
+                                    InputStream in = val.getStream();
+                                    try {
+                                        blobId = blobStore.createId(state.getId(), i);
+                                        blobStore.put(blobId, in, size);
+                                        state.setBlobId(blobId, i);
+                                    } finally {
+                                        IOUtils.closeQuietly(in);
+                                    }
+                                } catch (Exception e) {
+                                    String msg = "Error while storing blob. id="
+                                            + state.getId() + " idx=" + i + " size=" + size;
+                                    log.error(msg, e);
+                                    throw new IOException(msg);
                                 }
-                            } catch (Exception e) {
-                                String msg = "Error while storing blob. id="
-                                        + state.getId() + " idx=" + i + " size=" + size;
-                                log.error(msg, e);
-                                throw new IOException(msg);
-                            }
-                            try {
-                                // replace value instance with value
-                                // backed by resource in blob store and delete temp file
-                                if (blobStore instanceof ResourceBasedBLOBStore) {
-                                    values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
-                                } else {
-                                    values[i] = InternalValue.create(blobStore.get(blobId));
+                                try {
+                                    // replace value instance with value
+                                    // backed by resource in blob store and delete temp file
+                                    if (blobStore instanceof ResourceBasedBLOBStore) {
+                                        values[i] = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobId));
+                                    } else {
+                                        values[i] = InternalValue.create(blobStore.get(blobId));
+                                    }
+                                } catch (Exception e) {
+                                    log.error("Error while reloading blob. truncating. id="
+                                            + state.getId() + " idx=" + i + " size=" + size, e);
+                                    values[i] = InternalValue.create(new byte[0]);
                                 }
-                            } catch (Exception e) {
-                                log.error("Error while reloading blob. truncating. id="
-                                        + state.getId() + " idx=" + i + " size=" + size, e);
-                                values[i] = InternalValue.create(new byte[0]);
+                                val.discard();
                             }
-                            blobVal.discard();
+                            // store id of blob as property value
+                            out.writeUTF(blobId);   // value
+                        } else {
+                            // delete evt. blob
+                            byte[] data = writeSmallBinary(out, val, state, i);
+                            // replace value instance with value
+                            // backed by resource in blob store and delete temp file
+                            values[i] = InternalValue.create(data);
+                            val.discard();
                         }
-                        // store id of blob as property value
-                        out.writeUTF(blobId);   // value
-                    } else {
-                        // delete evt. blob
-                        byte[] data = writeSmallBinary(out, blobVal, state, i);
-                        // replace value instance with value
-                        // backed by resource in blob store and delete temp file
-                        values[i] = InternalValue.create(data);
-                        blobVal.discard();
+                    } catch (RepositoryException e) {
+                        String msg = "Error while storing blob. id="
+                            + state.getId() + " idx=" + i + " value=" + val;
+                        log.error(msg, e);
+                        throw new IOException(msg);
                     }
                     break;
                 case PropertyType.DOUBLE:
@@ -744,25 +743,25 @@ public class BundleBinding extends ItemStateBinding {
      * @return the data
      * @throws IOException if the data could not be read
      */
-    private byte[] writeSmallBinary(DataOutputStream out, BLOBFileValue blobVal, NodePropBundle.PropertyEntry state, int i) throws IOException {
-        int size = (int) blobVal.getLength();
-        out.writeInt(size);
-        byte[] data = new byte[size];
+    private byte[] writeSmallBinary(DataOutputStream out, InternalValue value, NodePropBundle.PropertyEntry state, int i) throws IOException {
         try {
+            int size = (int) value.getLength();
+            out.writeInt(size);
+            byte[] data = new byte[size];
             DataInputStream in =
-                new DataInputStream(blobVal.getStream());
+                new DataInputStream(value.getStream());
             try {
                 in.readFully(data);
             } finally {
                 IOUtils.closeQuietly(in);
             }
+            out.write(data, 0, data.length);
+            return data;
         } catch (Exception e) {
             String msg = "Error while storing blob. id="
-                    + state.getId() + " idx=" + i + " size=" + size;
+                    + state.getId() + " idx=" + i + " value=" + value;
             log.error(msg, e);
             throw new IOException(msg);
         }
-        out.write(data, 0, data.length);
-        return data;
     }
 }

@@ -53,15 +53,15 @@ class BLOBInDataStore extends BLOBFileValue {
         this.identifier = identifier;
     }
 
-    public void delete(boolean pruneEmptyParentDirs) {
+    void delete(boolean pruneEmptyParentDirs) {
         // do nothing
     }
 
-    public void discard() {
+    void discard() {
         // do nothing
     }
 
-    public DataIdentifier getDataIdentifier() {
+    DataIdentifier getDataIdentifier() {
         return identifier;
     }
 
@@ -88,11 +88,11 @@ class BLOBInDataStore extends BLOBFileValue {
         return 0;
     }
 
-    public long getLength() {
+    public long getSize() {
         try {
             return getDataRecord().getLength();
         } catch (DataStoreException e) {
-            log.warn("getLength for " + identifier + " failed", e);
+            log.warn("getSize for " + identifier + " failed", e);
             return -1;
         }
     }
@@ -133,10 +133,6 @@ class BLOBInDataStore extends BLOBFileValue {
     private DataRecord getDataRecord() throws DataStoreException {
         // may not keep the record, otherwise garbage collection doesn't work
         return store.getRecord(identifier);
-    }
-
-    public boolean isSmall() {
-        return false;
     }
 
 }

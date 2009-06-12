@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.extractor.TextExtractor;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -298,7 +297,7 @@ public class NodeIndexer {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 if (isIndexed(name)) {
-                    addBinaryValue(doc, fieldName, value.getBLOBFileValue());
+                    addBinaryValue(doc, fieldName, value);
                 }
                 break;
             case PropertyType.BOOLEAN:
@@ -409,7 +408,7 @@ public class NodeIndexer {
      */
     protected void addBinaryValue(Document doc,
                                   String fieldName,
-                                  Object internalValue) {
+                                  InternalValue internalValue) {
         // 'check' if node is of type nt:resource
         try {
             String jcrData = mappings.getPrefix(Name.NS_JCR_URI) + ":data";
@@ -429,8 +428,7 @@ public class NodeIndexer {
                     encoding = encodingValue.getString();
                 }
 
-                InputStream stream =
-                        ((BLOBFileValue) internalValue).getStream();
+                InputStream stream = internalValue.getStream();
                 Reader reader = extractor.extractText(stream, type, encoding);
                 doc.add(createFulltextField(reader));
             }

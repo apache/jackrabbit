@@ -86,7 +86,7 @@ public class GarbageCollector {
 
     private final Session[] sessionList;
     private final SessionListener sessionListener;
-    
+
     private final AtomicBoolean closed = new AtomicBoolean();
 
     private boolean persistenceManagerScan;
@@ -108,7 +108,7 @@ public class GarbageCollector {
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
-        
+
         // Auto-close if the main session logs out
         this.sessionListener = new SessionListener() {
             public void loggedOut(SessionImpl session) {
@@ -231,6 +231,8 @@ public class GarbageCollector {
                         PropertyState ps = pm.load(pid);
                         if (ps.getType() == PropertyType.BINARY) {
                             for (InternalValue v : ps.getValues()) {
+                                // getLength will update the last modified date
+                                // if the persistence manager scan is running
                                 v.getLength();
                             }
                         }
@@ -264,7 +266,7 @@ public class GarbageCollector {
 
     /**
      * Delete all unused items in the data store.
-     * 
+     *
      * @return the number of deleted items
      */
     public int deleteUnused() throws RepositoryException {
@@ -287,7 +289,7 @@ public class GarbageCollector {
 
     /**
      * Get the data store if one is used.
-     * 
+     *
      * @return the data store, or null
      */
     public DataStore getDataStore() {
@@ -358,13 +360,13 @@ public class GarbageCollector {
          *
          * We can't use node path for this, UUIDs are required as nodes could be
          * moved around.
-         * 
-         * This mechanism requires that all data stores update the last modified 
+         *
+         * This mechanism requires that all data stores update the last modified
          * date when calling addRecord and that record already exists.
          *
          */
     }
-    
+
     /**
      * Cleanup resources used internally by this instance.
      */

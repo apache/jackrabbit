@@ -82,10 +82,7 @@ class BLOBInResource extends BLOBFileValue {
         return new BLOBInResource(fsResource);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(boolean pruneEmptyParentDirs) {
+    void delete(boolean pruneEmptyParentDirs) {
         try {
             fsResource.delete(pruneEmptyParentDirs);
         } catch (FileSystemException fse) {
@@ -95,10 +92,7 @@ class BLOBInResource extends BLOBFileValue {
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void discard() {
+    void discard() {
         // this instance is not backed by temporarily allocated resource/buffer
     }
 
@@ -107,16 +101,10 @@ class BLOBInResource extends BLOBFileValue {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long getLength() {
+    public long getSize() {
         return length;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public InputStream getStream() throws RepositoryException {
         try {
             return fsResource.getInputStream();
@@ -126,16 +114,10 @@ class BLOBInResource extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String toString() {
         return PREFIX +  fsResource.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -156,13 +138,6 @@ class BLOBInResource extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isSmall() {
-        return false;
     }
 
 }

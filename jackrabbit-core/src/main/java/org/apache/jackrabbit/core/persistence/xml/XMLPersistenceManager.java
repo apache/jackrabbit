@@ -39,7 +39,6 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.ResourceBasedBLOBStore;
 import org.apache.jackrabbit.core.util.DOMWalker;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -672,11 +671,10 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                             if (type == PropertyType.BINARY) {
                                 // special handling required for binary value:
                                 // put binary value in BLOB store
-                                BLOBFileValue blobVal = val.getBLOBFileValue();
-                                InputStream in = blobVal.getStream();
+                                InputStream in = val.getStream();
                                 String blobId = blobStore.createId(state.getPropertyId(), i);
                                 try {
-                                    blobStore.put(blobId, in, blobVal.getLength());
+                                    blobStore.put(blobId, in, val.getLength());
                                 } finally {
                                     IOUtils.closeQuietly(in);
                                 }
@@ -703,7 +701,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                                         }
                                     }
                                 }
-                                blobVal.discard();
+                                val.discard();
                             } else {
                                 writer.write(Text.encodeIllegalXMLCharacters(val.toString()));
                             }
@@ -760,11 +758,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
                 if (val != null) {
-                    if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = val.getBLOBFileValue();
-                        // delete blob file and prune empty parent folders
-                        blobVal.delete(true);
-                    }
+                    val.deleteBinaryResource();
                 }
             }
         }

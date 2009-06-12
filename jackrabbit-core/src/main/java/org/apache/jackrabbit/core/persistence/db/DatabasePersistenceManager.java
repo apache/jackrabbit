@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -534,9 +533,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 InternalValue val = values[i];
                 if (val != null) {
                     if (val.getType() == PropertyType.BINARY) {
-                        BLOBFileValue blobVal = val.getBLOBFileValue();
-                        // delete internal resource representation of BLOB value
-                        blobVal.delete(true);
+                        val.deleteBinaryResource();
                         // also remove from BLOBStore
                         String blobId = blobStore.createId(state.getPropertyId(), i);
                         try {

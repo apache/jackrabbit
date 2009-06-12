@@ -121,15 +121,6 @@ public class InternalValue extends AbstractQValue {
                 InternalValue result;
                 if (USE_DATA_STORE) {
                     BLOBFileValue blob = null;
-                    if (value instanceof QValueValue) {
-                        QValueValue qvv = (QValueValue) value;
-                        QValue qv = qvv.getQValue();
-                        if (qv instanceof InternalValue) {
-                            InternalValue iv = (InternalValue) qv;
-
-                            iv.getBLOBFileValue();
-                        }
-                    }
                     if (value instanceof BinaryValueImpl) {
                         BinaryValueImpl bin = (BinaryValueImpl) value;
                         DataIdentifier identifier = bin.getDataIdentifier();
@@ -271,7 +262,7 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return the created value
      */
-    public static InternalValue create(URI value) {
+    static InternalValue create(URI value) {
         return new InternalValue(value);
     }
 
@@ -399,18 +390,6 @@ public class InternalValue extends AbstractQValue {
     }
 
     /**
-     * @param values
-     * @return the created value
-     */
-    public static InternalValue[] create(String[] values) {
-        InternalValue[] ret = new InternalValue[values.length];
-        for (int i = 0; i < values.length; i++) {
-            ret[i] = new InternalValue(values[i]);
-        }
-        return ret;
-    }
-
-    /**
      * @param value
      * @return the created value
      */
@@ -437,7 +416,7 @@ public class InternalValue extends AbstractQValue {
 
     //----------------------------------------------------< conversions, etc. >
 
-    public BLOBFileValue getBLOBFileValue() {
+    BLOBFileValue getBLOBFileValue() {
         assert val != null && type == PropertyType.BINARY;
         return (BLOBFileValue) val;
     }
@@ -655,7 +634,7 @@ public class InternalValue extends AbstractQValue {
      * @param dataStore the data store
      * @throws RepositoryException
      */
-    public void store(DataStore dataStore) throws RepositoryException, IOException {
+    public void store(DataStore dataStore) throws RepositoryException {
         assert USE_DATA_STORE;
         assert dataStore != null;
         assert type == PropertyType.BINARY;
@@ -663,14 +642,9 @@ public class InternalValue extends AbstractQValue {
         if (v instanceof BLOBInDataStore) {
             // already in the data store, OK
             return;
-        } else if (v instanceof BLOBInMemory) {
-            if (v.getLength() < dataStore.getMinRecordLength()) {
-                // in memory and does not make sense to store, OK
-                return;
-            }
         }
-        // store the temp file to the data store, or (theoretically) load it in memory
-        val = getBLOBFileValue(dataStore, v.getStream(), false);
+        // store it in the data store
+        val = BLOBInDataStore.getInstance(dataStore, getStream());
     }
 
     //-------------------------------------------------------------< QValue >---
@@ -679,7 +653,7 @@ public class InternalValue extends AbstractQValue {
      */
     public long getLength() throws RepositoryException {
         if (PropertyType.BINARY == type) {
-            return ((BLOBFileValue) val).getLength();
+            return ((BLOBFileValue) val).getSize();
         } else {
             return super.getLength();
         }
@@ -741,4 +715,16 @@ public class InternalValue extends AbstractQValue {
             super.discard();
         }
     }
+
+    /**
+     * Delete persistent binary objects. This method does not delete objects in
+     * the data store.
+     */
+    public void deleteBinaryResource() {
+        if (type == PropertyType.BINARY) {
+            BLOBFileValue bfv = (BLOBFileValue) val;
+            bfv.delete(true);
+        }
+    }
+
 }

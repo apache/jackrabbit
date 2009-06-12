@@ -105,19 +105,13 @@ class BLOBInTempFile extends BLOBFileValue {
         return new BLOBInTempFile(file, temp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(boolean pruneEmptyParentDirs) {
+    void delete(boolean pruneEmptyParentDirs) {
         file.delete();
         length = -1;
         file = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void discard() {
+    void discard() {
         if (temp) {
             delete(true);
         }
@@ -128,16 +122,10 @@ class BLOBInTempFile extends BLOBFileValue {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long getLength() {
+    public long getSize() {
         return length;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public InputStream getStream() throws IllegalStateException, RepositoryException {
         try {
             return new LazyFileInputStream(file);
@@ -146,16 +134,10 @@ class BLOBInTempFile extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String toString() {
         return PREFIX + file.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -178,16 +160,6 @@ class BLOBInTempFile extends BLOBFileValue {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isSmall() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         RandomAccessFile raf = new RandomAccessFile(file, "r");
         try {

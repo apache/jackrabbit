@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.uuid.UUID;
@@ -97,14 +96,14 @@ public final class Serializer {
         c = state.getPropertyNames();
         out.writeInt(c.size()); // count
         for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
+            Name propName = iter.next();
             out.writeUTF(propName.toString());   // name
         }
         // child nodes (list of name/uuid pairs)
         Collection<ChildNodeEntry> collChildren = state.getChildNodeEntries();
         out.writeInt(collChildren.size()); // count
         for (Iterator<ChildNodeEntry> iter = collChildren.iterator(); iter.hasNext();) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = iter.next();
             out.writeUTF(entry.getName().toString());   // name
             out.write(entry.getId().getUUID().getRawBytes());    // uuid
         }
@@ -196,11 +195,10 @@ public final class Serializer {
             if (state.getType() == PropertyType.BINARY) {
                 // special handling required for binary value:
                 // put binary value in BLOB store
-                BLOBFileValue blobVal = val.getBLOBFileValue();
-                InputStream in = blobVal.getStream();
+                InputStream in = val.getStream();
                 String blobId = blobStore.createId(state.getPropertyId(), i);
                 try {
-                    blobStore.put(blobId, in, blobVal.getLength());
+                    blobStore.put(blobId, in, val.getLength());
                 } finally {
                     IOUtils.closeQuietly(in);
                 }
@@ -223,7 +221,7 @@ public final class Serializer {
                         IOUtils.closeQuietly(in);
                     }
                 }
-                blobVal.discard();
+                val.discard();
             } else {
                 /**
                  * because writeUTF(String) has a size limit of 65k,
