@@ -306,7 +306,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * Internal implementation of {@link #resolvePath(Path)} that will either
      * resolve to a node or a property. Should be overridden by a subclass
      * that can resolve an intermediate path into an <code>ItemId</code>. This
-     * subclass can then invoke {@link #resolvePath(Path.Element[], int, ItemId, int)}
+     * subclass can then invoke {@link #resolvePath(org.apache.jackrabbit.spi.Path.Element[], int, ItemId, int)}
      * with a value of <code>next</code> greater than <code>1</code>.
      *
      * @param path path to resolve
@@ -331,7 +331,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     }
 
     /**
-     * Called by {@link #resolvePath(Path.Element[], int, ItemId, int)}.
+     * Called by {@link #resolvePath(org.apache.jackrabbit.spi.Path.Element[], int, ItemId, int)}.
      * May be overridden by some subclass to process/cache intermediate state.
      *
      * @param id      id of resolved item
