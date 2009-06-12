@@ -23,13 +23,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
+import javax.jcr.Binary;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Calendar;
+import java.math.BigDecimal;
 
 /**
  * <code>LengthTest</code> performs tests with the Query Object Model length
@@ -44,7 +45,7 @@ public class LengthTest extends AbstractQOMTest {
     protected void setUp() throws Exception {
         super.setUp();
         node = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
         vf = superuser.getValueFactory();
     }
 
@@ -56,80 +57,104 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testStringLength() throws RepositoryException {
         node.setProperty(propertyName1, "abc");
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
     
     public void testBinaryLength() throws RepositoryException {
         byte[] data = "abc".getBytes();
-        node.setProperty(propertyName1, new ByteArrayInputStream(data));
-        node.save();
+        Binary b = vf.createBinary(new ByteArrayInputStream(data));
+        try {
+            node.setProperty(propertyName1, b);
+        } finally {
+            b.dispose();
+        }
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testLongLength() throws RepositoryException {
         node.setProperty(propertyName1, 123);
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testDoubleLength() throws RepositoryException {
         node.setProperty(propertyName1, Math.PI);
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testDateLength() throws RepositoryException {
         node.setProperty(propertyName1, Calendar.getInstance());
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testBooleanLength() throws RepositoryException {
         node.setProperty(propertyName1, false);
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testNameLength() throws RepositoryException {
-        // TODO
+        node.setProperty(propertyName1, vf.createValue(node.getName(), PropertyType.NAME));
+        superuser.save();
+        checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testPathLength() throws RepositoryException {
-        // TODO
+        node.setProperty(propertyName1, vf.createValue(node.getPath(), PropertyType.PATH));
+        superuser.save();
+        checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testReferenceLength() throws RepositoryException, NotExecutableException {
         try {
             if (!node.isNodeType(mixReferenceable)) {
                 node.addMixin(mixReferenceable);
-                node.save();
+                superuser.save();
             }
         } catch (RepositoryException e) {
             throw new NotExecutableException("Cannot add mix:referenceable to node");
         }
         node.setProperty(propertyName1, node);
-        node.save();
+        superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
-    public void testWeakReferenceLength() throws RepositoryException {
-        // TODO
+    public void testWeakReferenceLength()
+            throws RepositoryException, NotExecutableException {
+        try {
+            if (!node.isNodeType(mixReferenceable)) {
+                node.addMixin(mixReferenceable);
+                superuser.save();
+            }
+        } catch (RepositoryException e) {
+            throw new NotExecutableException("Cannot add mix:referenceable to node");
+        }
+        node.setProperty(propertyName1, vf.createValue(node, true));
+        superuser.save();
+        checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testURILength() throws RepositoryException {
-        // TODO
+        node.setProperty(propertyName1, vf.createValue("http://example.com", PropertyType.URI));
+        superuser.save();
+        checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     public void testDecimalLength() throws RepositoryException {
-        // TODO
+        node.setProperty(propertyName1, new BigDecimal(123));
+        superuser.save();
+        checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
     }
 
     //------------------------< conversion tests >------------------------------
 
     public void testLengthStringLiteral() throws RepositoryException {
         node.setProperty(propertyName1, "abc");
-        node.save();
+        superuser.save();
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
         executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
@@ -137,16 +162,21 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testLengthBinaryLiteral() throws RepositoryException {
         node.setProperty(propertyName1, "abc");
-        node.save();
+        superuser.save();
 
         String length = String.valueOf(node.getProperty(propertyName1).getLength());
-        InputStream in = new ByteArrayInputStream(length.getBytes());
-        executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(in));
+        Binary b = vf.createBinary(new ByteArrayInputStream(length.getBytes()));
+        try {
+            executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                    vf.createValue(b));
+        } finally {
+            b.dispose();
+        }
     }
 
     public void testLengthDoubleLiteral() throws RepositoryException {
         node.setProperty(propertyName1, "abc");
-        node.save();
+        superuser.save();
 
         double length = node.getProperty(propertyName1).getLength();
         executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
@@ -154,7 +184,7 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testLengthDateLiteral() throws RepositoryException {
         node.setProperty(propertyName1, "abc");
-        node.save();
+        superuser.save();
 
         Calendar length = Calendar.getInstance();
         length.setTimeInMillis(node.getProperty(propertyName1).getLength());
@@ -194,7 +224,7 @@ public class LengthTest extends AbstractQOMTest {
         try {
             if (!node.isNodeType(mixReferenceable)) {
                 node.addMixin(mixReferenceable);
-                node.save();
+                superuser.save();
             }
         } catch (RepositoryException e) {
             throw new NotExecutableException("Cannot add mix:referenceable to node");
@@ -207,16 +237,39 @@ public class LengthTest extends AbstractQOMTest {
         }
     }
 
-    public void testLengthWeakReferenceLiteral() throws RepositoryException {
-        // TODO
+    public void testLengthWeakReferenceLiteral() throws RepositoryException, NotExecutableException {
+        try {
+            if (!node.isNodeType(mixReferenceable)) {
+                node.addMixin(mixReferenceable);
+                superuser.save();
+            }
+        } catch (RepositoryException e) {
+            throw new NotExecutableException("Cannot add mix:referenceable to node");
+        }
+        try {
+            executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(node, true));
+            fail("Reference literal cannot be converted to long");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testLengthURILiteral() throws RepositoryException {
-        // TODO
+        try {
+            executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                    vf.createValue(node.getPath(), PropertyType.URI));
+            fail("URI literal cannot be converted to long");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testLengthDecimalLiteral() throws RepositoryException {
-        // TODO
+        node.setProperty(propertyName1, "abc");
+        superuser.save();
+
+        BigDecimal length = new BigDecimal(node.getProperty(propertyName1).getLength());
+        executeQuery(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(length));
     }
 
     //------------------------< internal helpers >------------------------------
