@@ -20,12 +20,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
-import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.DynamicOperand;
 

@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.jackrabbit.core.query.lucene.constraint.Constraint;
-import org.apache.lucene.search.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,11 +61,11 @@ public class FilterMultiColumnQuery implements MultiColumnQuery {
      * {@inheritDoc}
      */
     public MultiColumnQueryHits execute(final JackrabbitIndexSearcher searcher,
-                                        Sort sort,
+                                        Ordering[] orderings,
                                         long resultFetchHint)
             throws IOException {
-        return new FilterMultiColumnQueryHits(query.execute(
-                searcher, sort, resultFetchHint)) {
+        MultiColumnQueryHits hits = new FilterMultiColumnQueryHits(query.execute(
+                searcher, orderings, resultFetchHint)) {
 
             {
                 log.debug(Arrays.asList(getSelectorNames()).toString());
@@ -95,5 +94,11 @@ public class FilterMultiColumnQuery implements MultiColumnQuery {
                 }
             }
         };
+        if (orderings.length > 0 && hits.getSelectorNames().length > 1) {
+            // subsequent ordering is only needed
+            // when there is more than one column
+            hits = new SortedMultiColumnQueryHits(hits, orderings, searcher.getIndexReader());
+        }
+        return hits;
     }
 }

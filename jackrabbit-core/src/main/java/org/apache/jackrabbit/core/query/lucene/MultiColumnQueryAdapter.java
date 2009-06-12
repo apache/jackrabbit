@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Sort;
 import org.apache.jackrabbit.spi.Name;
 
@@ -64,9 +65,13 @@ public class MultiColumnQueryAdapter implements MultiColumnQuery {
      * {@inheritDoc}
      */
     public MultiColumnQueryHits execute(JackrabbitIndexSearcher searcher,
-                                        Sort sort,
+                                        Ordering[] orderings,
                                         long resultFetchHint)
             throws IOException {
-        return searcher.execute(query, sort, resultFetchHint, selectorName);
+        SortField[] fields = new SortField[orderings.length];
+        for (int i = 0; i < orderings.length; i++) {
+            fields[i] = orderings[i].getSortField();
+        }
+        return searcher.execute(query, new Sort(fields), resultFetchHint, selectorName);
     }
 }

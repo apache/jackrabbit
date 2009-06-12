@@ -40,7 +40,7 @@ public class MultiColumnQueryResult extends QueryResultImpl {
     /**
      * The order specifier for each of the order properties.
      */
-    protected final OrderingImpl[] orderings;
+    protected final Ordering[] orderings;
 
     public MultiColumnQueryResult(SearchIndex index,
                                   ItemManager itemMgr,
@@ -57,7 +57,7 @@ public class MultiColumnQueryResult extends QueryResultImpl {
         super(index, itemMgr, session, accessMgr, queryImpl, spellSuggestion,
                 columns, documentOrder, offset, limit);
         this.query = query;
-        this.orderings = orderings;
+        this.orderings = index.createOrderings(orderings);
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }

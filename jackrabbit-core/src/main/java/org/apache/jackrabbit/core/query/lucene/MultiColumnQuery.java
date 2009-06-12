@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
-import org.apache.lucene.search.Sort;
-
 /**
  * <code>MultiColumnQuery</code> defines an interface for a query that returns
  * {@link MultiColumnQueryHits}.
@@ -30,13 +28,13 @@ public interface MultiColumnQuery {
      * Executes this query and returns multi column query hits.
      *
      * @param searcher        the index searcher.
-     * @param sort            the sort criteria.
+     * @param orderings       the orderings.
      * @param resultFetchHint the result fetch hint.
      * @return the query hits.
      * @throws IOException if an error occurs while executing the query.
      */
     public MultiColumnQueryHits execute(JackrabbitIndexSearcher searcher,
-                                        Sort sort,
+                                        Ordering[] orderings,
                                         long resultFetchHint)
             throws IOException;
 }
