@@ -278,7 +278,7 @@ public class PropertyImpl extends ItemImpl implements Property {
                 if (old != null && old.getType() == PropertyType.BINARY) {
                     // make sure temporarily allocated data is discarded
                     // before overwriting it
-                    old.getBLOBFileValue().discard();
+                    old.discard();
                 }
             }
         }

@@ -231,7 +231,7 @@ public class GarbageCollector {
                         PropertyState ps = pm.load(pid);
                         if (ps.getType() == PropertyType.BINARY) {
                             for (InternalValue v : ps.getValues()) {
-                                v.getBLOBFileValue().getLength();
+                                v.getLength();
                             }
                         }
                     }
