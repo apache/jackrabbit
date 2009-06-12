@@ -141,7 +141,6 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @throws AccessDeniedException is never thrown
-         * @throws ItemNotFoundException is never thrown
          * @throws RepositoryException   is never thrown
          */
         public void checkPermission(ItemId id, int permissions)
@@ -160,7 +159,6 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @return always <code>true</code>
-         * @throws ItemNotFoundException is never thrown
          * @throws RepositoryException   is never thrown
          */
         public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
@@ -202,7 +200,6 @@ class SystemSession extends SessionImpl {
          * {@inheritDoc}
          *
          * @return always <code>true</code>
-         * @throws NoSuchWorkspaceException is never thrown
          * @throws RepositoryException      is never thrown
          */
         public boolean canAccess(String workspaceName) throws RepositoryException {
@@ -249,7 +246,7 @@ class SystemSession extends SessionImpl {
 
         //-------------------------------------------< AccessControlManager >---
         /**
-         * @see AccessControlManager#hasPrivileges(String, Privilege[])
+         * @see javax.jcr.security.AccessControlManager#hasPrivileges(String, Privilege[])
          */
         public boolean hasPrivileges(String absPath, Privilege[] privileges)
                 throws PathNotFoundException, RepositoryException {
@@ -259,7 +256,7 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AccessControlManager#getPrivileges(String)
+         * @see javax.jcr.security.AccessControlManager#getPrivileges(String)
          */
         public Privilege[] getPrivileges(String absPath)
                 throws PathNotFoundException, RepositoryException {
@@ -268,12 +265,12 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AccessControlManager#getEffectivePolicies(String)
+         * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
          */
         public AccessControlPolicy[] getEffectivePolicies(String absPath) throws
                 PathNotFoundException, AccessDeniedException, RepositoryException {
-            // TODO
-            throw new UnsupportedOperationException();
+            // cannot determine the effective policies for the system session.
+            return new AccessControlPolicy[0];
         }
     }
 }
