@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
 import java.util.Map;
+import java.net.URLDecoder;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -252,11 +253,19 @@ public class ConstraintBuilder {
                 case PropertyType.URI:
                     // make sure static value is valid NAME
                     try {
-                            vf.createValue(staticValue.getString(), PropertyType.NAME);
+                        String s = staticValue.getString();
+                        if (staticValue.getType() == PropertyType.URI) {
+                            if (s.startsWith("./")) {
+                                s = s.substring(2);
+                            }
+                            // need to decode
+                            s = URLDecoder.decode(s, "UTF-8");
+                        }
+                        vf.createValue(s, PropertyType.NAME);
                     } catch (ValueFormatException e) {
                             throw new InvalidQueryException("Value " +
                                 staticValue.getString() +
-                                " cannot be converted into STRING");
+                                " cannot be converted into NAME");
                     }
                     break;
                 // the following types cannot be converted to NAME
