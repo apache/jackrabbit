@@ -29,7 +29,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in a file system resource.
  */
-public class BLOBInResource extends BLOBFileValue {
+class BLOBInResource extends BLOBFileValue {
 
     /**
      * The default logger

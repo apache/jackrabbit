@@ -28,6 +28,7 @@ import java.util.List;
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
@@ -37,15 +38,19 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.Lexer;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 
 /**
- * Prints node type defs in a compact notation
+ * Prints node type defs in a compact notation.
+ * All used namespace declarations are also written.
  * Print Format:
  * <ex = "http://apache.org/jackrabbit/example">
  * [ex:NodeType] > ex:ParentType1, ex:ParentType2
@@ -96,27 +101,10 @@ public class CompactNodeTypeDefWriter {
      * @param npResolver
      */
     public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver) {
-        this(out, r, npResolver, false);
-    }
-
-    /**
-     * Creates a new nodetype writer
-     *
-     * @param out the underlaying writer
-     * @param r the naespace resolver
-     * @param npResolver
-     * @param includeNS if <code>true</code> all used namespace decl. are also
-     */
-    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver, boolean includeNS) {
         this.resolver = r;
         this.npResolver = npResolver;
-        if (includeNS) {
-            this.out = new StringWriter();
-            this.nsWriter = out;
-        } else {
-            this.out = out;
-            this.nsWriter = null;
-        }
+        this.out = new StringWriter();
+        this.nsWriter = out;
     }
 
     /**
@@ -131,7 +119,7 @@ public class CompactNodeTypeDefWriter {
      */
     public static void write(List l, NamespaceResolver r, NamePathResolver npResolver, Writer out)
             throws IOException {
-        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, npResolver, true);
+        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, npResolver);
         Iterator iter = l.iterator();
         while (iter.hasNext()) {
             NodeTypeDef def = (NodeTypeDef) iter.next();
@@ -315,7 +303,7 @@ public class CompactNodeTypeDefWriter {
                 out.write("'");
             }
         }
-        
+
         writeValueConstraints(pd.getValueConstraints());
     }
 
@@ -325,11 +313,13 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeDefaultValues(InternalValue[] dva) throws IOException {
         if (dva != null && dva.length > 0) {
+            ValueFactoryQImpl factory = ValueFactoryImpl.getInstance(npResolver);
             String delim = " = '";
             for (int i = 0; i < dva.length; i++) {
                 out.write(delim);
                 try {
-                    out.write(escape(dva[i].toJCRValue(npResolver).getString()));
+                    InternalValue v = dva[i];
+                    out.write(escape(factory.createValue(v).getString()));
                 } catch (RepositoryException e) {
                     out.write(escape(dva[i].toString()));
                 }

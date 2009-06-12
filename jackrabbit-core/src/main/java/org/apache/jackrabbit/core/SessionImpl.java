@@ -210,7 +210,7 @@ public class SessionImpl extends AbstractSession
      * Retention and Hold Manager
      */
     private RetentionManager retentionManager;
-        
+
     /**
      * The stack trace knows who opened this session. It is logged
      * if the session is finalized, but Session.logout() was never called.
@@ -473,7 +473,7 @@ public class SessionImpl extends AbstractSession
     /**
      * Returns the internal retention manager used for evaluation of effective
      * retention policies and holds.
-     * 
+     *
      * @return internal retention manager
      * @throws RepositoryException
      */
@@ -679,7 +679,7 @@ public class SessionImpl extends AbstractSession
         }
         IterablePersistenceManager[] ipmList = new IterablePersistenceManager[pmList.size()];
         for (int i = 0; i < pmList.size(); i++) {
-            pm = (PersistenceManager) pmList.get(i);
+            pm = pmList.get(i);
             if (!(pm instanceof IterablePersistenceManager)) {
                 ipmList = null;
                 break;
@@ -1220,8 +1220,7 @@ public class SessionImpl extends AbstractSession
     /**
      * {@inheritDoc}
      */
-    public ValueFactory getValueFactory()
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+    public ValueFactory getValueFactory() {
         if (valueFactory == null) {
             valueFactory = new ValueFactoryImpl(this, rep.getDataStore());
         }
@@ -1246,7 +1245,7 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public String[] getAttributeNames() {
-        return (String[]) attributes.keySet().toArray(new String[attributes.size()]);
+        return attributes.keySet().toArray(new String[attributes.size()]);
     }
 
     /**
@@ -1558,10 +1557,10 @@ public class SessionImpl extends AbstractSession
         ps.println();
         itemStateMgr.dump(ps);
     }
-    
+
     /**
-     * Finalize the session. If the application doesn't close Session.logout(), 
-     * the session is closed automatically; however a warning is written to the log file, 
+     * Finalize the session. If the application doesn't call Session.logout(),
+     * the session is closed automatically; however a warning is written to the log file,
      * together with the stack trace of where the session was opened.
      */
     public void finalize() {

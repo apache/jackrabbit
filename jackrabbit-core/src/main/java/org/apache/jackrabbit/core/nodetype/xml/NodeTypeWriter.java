@@ -22,10 +22,12 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.Name;
 
 import javax.jcr.NamespaceRegistry;
@@ -255,11 +257,13 @@ public final class NodeTypeWriter {
         // default values
         InternalValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
+            ValueFactoryQImpl factory = ValueFactoryImpl.getInstance(resolver);
             builder.startElement(Constants.DEFAULTVALUES_ELEMENT);
             for (int i = 0; i < defaults.length; i++) {
+                InternalValue v = defaults[i];
                 builder.addContentElement(
                         Constants.DEFAULTVALUE_ELEMENT,
-                        defaults[i].toJCRValue(resolver).getString());
+                        factory.createValue(v).getString());
             }
             builder.endElement();
         }

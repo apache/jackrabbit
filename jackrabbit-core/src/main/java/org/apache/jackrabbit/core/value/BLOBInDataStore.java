@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in the data store.
  */
-public class BLOBInDataStore extends BLOBFileValue {
+class BLOBInDataStore extends BLOBFileValue {
 
     private final DataStore store;
     private final DataIdentifier identifier;

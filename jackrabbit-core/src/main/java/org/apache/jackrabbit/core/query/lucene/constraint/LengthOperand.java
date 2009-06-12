@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
@@ -56,17 +55,13 @@ public class LengthOperand extends DynamicOperand {
         if (ps == null) {
             return EMPTY;
         } else {
-            try {
-                ValueFactory vf = context.getSession().getValueFactory();
-                InternalValue[] values = ps.getValues();
-                Value[] lengths = new Value[values.length];
-                for (int i = 0; i < lengths.length; i++) {
-                    lengths[i] = vf.createValue(Util.getLength(values[i]));
-                }
-                return lengths;
-            } catch (RepositoryException e) {
-                throw Util.createIOException(e);
+            ValueFactory vf = context.getSession().getValueFactory();
+            InternalValue[] values = ps.getValues();
+            Value[] lengths = new Value[values.length];
+            for (int i = 0; i < lengths.length; i++) {
+                lengths[i] = vf.createValue(Util.getLength(values[i]));
             }
+            return lengths;
         }
     }
 }

@@ -29,7 +29,7 @@ import java.util.Arrays;
 /**
  * Represents binary data which is backed by a byte[] (in memory).
  */
-public class BLOBInMemory extends BLOBFileValue {
+class BLOBInMemory extends BLOBFileValue {
 
     /**
      * Logger instance for this class

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -41,7 +42,7 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
      * logger instance
      */
     private static final Logger log = LoggerFactory.getLogger(ValueFactoryImpl.class);
-    
+
     private final DataStore store;
 
     /**
@@ -56,6 +57,23 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
         this.store = store;
     }
 
+    /**
+     * Constructs a new <code>ValueFactoryQImpl</code>. If possible,
+     * an existing value factory is reused.
+     * @deprecated
+     * If possible this method should not be used, instead the value factory
+     * should be retrieved from the session.
+     *
+     * @param resolver <code>NamePathResolver</code>
+     */
+    public static ValueFactoryQImpl getInstance(NamePathResolver resolver) {
+        if (resolver instanceof SessionImpl) {
+            return (ValueFactoryImpl) ((SessionImpl) resolver).getValueFactory();
+        } else {
+            return new ValueFactoryImpl(resolver, null);
+        }
+    }
+
     public Value createValue(QValue qvalue) {
         if (qvalue instanceof InternalValue && PropertyType.BINARY == qvalue.getType()) {
             try {
@@ -67,7 +85,7 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
         }
         return super.createValue(qvalue);
     }
-    
+
     public Value createValue(Binary binary) {
         try {
             if (binary instanceof BLOBInDataStore) {
@@ -84,7 +102,7 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
             // ignore - the super method may be smarter
         }
         return super.createValue(binary);
-    }    
+    }
 
     public Value createValue(InputStream value) {
         try {
@@ -100,7 +118,7 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
     public Value createValue(String value, int type) throws ValueFormatException {
         if (PropertyType.BINARY == type) {
             try {
-                InternalValue qvalue = (InternalValue) getQValueFactory().create(value, type);                
+                InternalValue qvalue = (InternalValue) getQValueFactory().create(value, type);
                 return new BinaryValueImpl(qvalue.getBLOBFileValue());
             } catch (RepositoryException e) {
                 throw new ValueFormatException(e);
