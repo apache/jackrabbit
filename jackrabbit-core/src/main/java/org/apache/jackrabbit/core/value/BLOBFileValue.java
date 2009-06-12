@@ -156,9 +156,6 @@ public abstract class BLOBFileValue implements Binary {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public long getSize() throws RepositoryException {
         return getLength();
     }

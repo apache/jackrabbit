@@ -31,7 +31,6 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 
@@ -39,8 +38,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import javax.jcr.Session;
-import javax.jcr.ValueFactory;
 import javax.jcr.Binary;
 
 import java.io.ByteArrayInputStream;
@@ -129,7 +126,7 @@ public class InternalValue extends AbstractQValue {
                         QValue qv = qvv.getQValue();
                         if (qv instanceof InternalValue) {
                             InternalValue iv = (InternalValue) qv;
-                            
+
                             iv.getBLOBFileValue();
                         }
                     }
@@ -439,54 +436,6 @@ public class InternalValue extends AbstractQValue {
     }
 
     //----------------------------------------------------< conversions, etc. >
-    /**
-     * @param resolver
-     * @return
-     * @throws RepositoryException
-     * @deprecated
-     */
-    public Value toJCRValue(NamePathResolver resolver)
-            throws RepositoryException {
-        ValueFactory vf;
-        if (resolver instanceof Session) {
-            vf = ((Session) resolver).getValueFactory();
-        } else {
-            vf = new ValueFactoryImpl(resolver, null);
-        }
-
-        if (vf instanceof ValueFactoryQImpl) {
-            return ((ValueFactoryQImpl) vf).createValue(this);
-        } else {
-            switch (type) {
-                case PropertyType.BINARY:
-                    return vf.createValue((BLOBFileValue) val);
-                case PropertyType.BOOLEAN:
-                    return vf.createValue((Boolean) val);
-                case PropertyType.DATE:
-                    return vf.createValue((Calendar) val);
-                case PropertyType.DOUBLE:
-                    return vf.createValue((Double) val);
-                case PropertyType.LONG:
-                    return vf.createValue(((Long) val).longValue());
-                case PropertyType.DECIMAL:
-                    return vf.createValue((BigDecimal) val);
-                case PropertyType.REFERENCE:
-                    return vf.createValue(val.toString(), PropertyType.REFERENCE);
-                case PropertyType.WEAKREFERENCE:
-                    return vf.createValue(val.toString(), PropertyType.WEAKREFERENCE);
-                case PropertyType.URI:
-                    return vf.createValue(val.toString(),  PropertyType.URI);
-                case PropertyType.PATH:
-                    return vf.createValue(resolver.getJCRPath((Path) val), PropertyType.PATH);
-                case PropertyType.NAME:
-                    return vf.createValue(resolver.getJCRName((Name) val), PropertyType.NAME);
-                case PropertyType.STRING:
-                    return vf.createValue((String) val);
-                default:
-                    throw new RepositoryException("illegal internal value type");
-            }
-        }
-    }
 
     public BLOBFileValue getBLOBFileValue() {
         assert val != null && type == PropertyType.BINARY;

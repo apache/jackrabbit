@@ -144,7 +144,7 @@ public abstract class AbstractRecord implements Record {
     public void writeNodeTypeDef(NodeTypeDef ntd) throws JournalException {
         try {
             StringWriter sw = new StringWriter();
-            CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, nsResolver, resolver, true);
+            CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, nsResolver, resolver);
             writer.write(ntd);
             writer.close();
 

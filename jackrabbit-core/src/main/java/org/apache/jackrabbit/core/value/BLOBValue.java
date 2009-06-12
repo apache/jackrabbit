@@ -42,7 +42,7 @@ import javax.jcr.RepositoryException;
  * <code>InputStream</code> instance.
  * <p/>
  */
-public class BLOBValue extends BLOBFileValue {
+class BLOBValue extends BLOBFileValue {
 
     /**
      * The default logger

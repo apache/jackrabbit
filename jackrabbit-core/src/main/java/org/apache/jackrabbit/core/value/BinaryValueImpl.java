@@ -24,13 +24,13 @@ import org.apache.jackrabbit.value.BinaryValue;
 /**
  * Represents a binary value that is backed by a blob file value.
  */
-public class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
-    
+class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
+
     private final BLOBFileValue blob;
 
     /**
      * Construct a new object from the given blob.
-     * 
+     *
      * @param blob the blob
      */
     BinaryValueImpl(BLOBFileValue blob) throws RepositoryException {
@@ -48,7 +48,7 @@ public class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
 
     /**
      * Get the data identifier if one is available.
-     * 
+     *
      * @return the data identifier or null
      */
     DataIdentifier getDataIdentifier() {

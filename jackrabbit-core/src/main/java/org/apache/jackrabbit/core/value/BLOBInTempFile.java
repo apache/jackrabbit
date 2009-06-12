@@ -33,7 +33,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in a temporary file.
  */
-public class BLOBInTempFile extends BLOBFileValue {
+class BLOBInTempFile extends BLOBFileValue {
 
     /**
      * the prefix of the string representation of this value
