@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 
 import java.util.regex.Pattern;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Value;
@@ -272,6 +274,21 @@ public class Util {
                 c2 = v2.getDecimal();
                 break;
             case PropertyType.NAME:
+                if (v2.getType() == PropertyType.URI) {
+                    String s = v2.getString();
+                    if (s.startsWith("./")) {
+                        s = s.substring(2);
+                    }
+                    // need to decode
+                    try {
+                        c2 = URLDecoder.decode(s, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RepositoryException(e);
+                    }
+                } else {
+                    c2 = v2.getString();
+                }
+                break;
             case PropertyType.PATH:
             case PropertyType.REFERENCE:
             case PropertyType.WEAKREFERENCE:

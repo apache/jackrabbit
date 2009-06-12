@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.PropertyType;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
@@ -44,7 +45,7 @@ public class NodeNameOperand extends DynamicOperand {
         try {
             SessionImpl session = context.getSession();
             String name = session.getNodeById(sn.getNodeId()).getName();
-            return new Value[]{session.getValueFactory().createValue(name)};
+            return new Value[]{session.getValueFactory().createValue(name, PropertyType.NAME)};
         } catch (RepositoryException e) {
             throw Util.createIOException(e);
         }

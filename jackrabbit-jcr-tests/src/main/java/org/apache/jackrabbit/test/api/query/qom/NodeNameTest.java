@@ -20,11 +20,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
+import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
 import java.util.Calendar;
+import java.math.BigDecimal;
 
 /**
  * <code>NodeNameTest</code> checks if conversion of literals is correctly
@@ -34,10 +36,13 @@ public class NodeNameTest extends AbstractQOMTest {
 
     private Node node1;
 
+    private ValueFactory vf;
+
     protected void setUp() throws Exception {
         super.setUp();
         node1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
+        vf = superuser.getValueFactory();
     }
 
     protected void tearDown() throws Exception {
@@ -46,13 +51,13 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testStringLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(nodeName1);
+        Value literal = vf.createValue(nodeName1);
         Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testStringLiteralInvalidName() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue("[" + nodeName1);
+        Value literal = vf.createValue("[" + nodeName1);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with STRING that cannot be converted to NAME must fail with InvalidQueryException");
@@ -62,14 +67,14 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testBinaryLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(
+        Value literal = vf.createValue(
                 nodeName1, PropertyType.BINARY);
         Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testDateLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(Calendar.getInstance());
+        Value literal = vf.createValue(Calendar.getInstance());
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with DATE must fail with InvalidQueryException");
@@ -79,7 +84,7 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testDoubleLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(Math.PI);
+        Value literal = vf.createValue(Math.PI);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with DOUBLE must fail with InvalidQueryException");
@@ -89,11 +94,17 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testDecimalLiteral() throws RepositoryException {
-        // TODO must throw InvalidQueryException
+        Value literal = vf.createValue(new BigDecimal(283));
+        try {
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
+            fail("NodeName comparison with DECIMAL must fail with InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testLongLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(283);
+        Value literal = vf.createValue(283);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with LONG must fail with InvalidQueryException");
@@ -103,7 +114,7 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testBooleanLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(true);
+        Value literal = vf.createValue(true);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with BOOLEAN must fail with InvalidQueryException");
@@ -113,20 +124,17 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testNameLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(
-                nodeName1, PropertyType.NAME);
+        Value literal = vf.createValue(nodeName1, PropertyType.NAME);
         Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
     }
 
     public void testPathLiteral() throws RepositoryException {
-        Value literal = superuser.getValueFactory().createValue(
-                nodeName1, PropertyType.PATH);
+        Value literal = vf.createValue(nodeName1, PropertyType.PATH);
         Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkResult(q.execute(), new Node[]{node1});
 
-        literal = superuser.getValueFactory().createValue(
-                node1.getPath(), PropertyType.PATH);
+        literal = vf.createValue(node1.getPath(), PropertyType.PATH);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with absolute PATH must fail with InvalidQueryException");
@@ -134,8 +142,7 @@ public class NodeNameTest extends AbstractQOMTest {
             // expected
         }
 
-        literal = superuser.getValueFactory().createValue(
-                nodeName1 + "/" + nodeName1, PropertyType.PATH);
+        literal = vf.createValue(nodeName1 + "/" + nodeName1, PropertyType.PATH);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with PATH length >1 must fail with InvalidQueryException");
@@ -148,8 +155,8 @@ public class NodeNameTest extends AbstractQOMTest {
         if (!node1.isNodeType(mixReferenceable)) {
             node1.addMixin(mixReferenceable);
         }
-        node1.save();
-        Value literal = superuser.getValueFactory().createValue(node1);
+        superuser.save();
+        Value literal = vf.createValue(node1);
         try {
             createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
             fail("NodeName comparison with REFERENCE must fail with InvalidQueryException");
@@ -159,7 +166,17 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     public void testWeakReferenceLiteral() throws RepositoryException {
-        // TODO: must throw InvalidQueryException
+        if (!node1.isNodeType(mixReferenceable)) {
+            node1.addMixin(mixReferenceable);
+        }
+        superuser.save();
+        Value literal = vf.createValue(node1, true);
+        try {
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
+            fail("NodeName comparison with WEAKREFERENCE must fail with InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     /**
@@ -172,7 +189,17 @@ public class NodeNameTest extends AbstractQOMTest {
      * thrown.
      */
     public void testURILiteral() throws RepositoryException {
-        // TODO
+        Value literal = vf.createValue("./" + nodeName1, PropertyType.URI);
+        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkResult(q.execute(), new Node[]{node1});
+
+        literal = vf.createValue("http://example.com", PropertyType.URI);
+        try {
+            createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal).execute();
+            fail("NodeName comparison with URI that cannot be converted to NAME must fail with InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testEqualTo() throws RepositoryException {
@@ -199,7 +226,7 @@ public class NodeNameTest extends AbstractQOMTest {
                                             String operator,
                                             boolean matches)
             throws RepositoryException {
-        Value value = superuser.getValueFactory().createValue(literal);
+        Value value = vf.createValue(literal);
         Query q = createQuery(operator, value);
         checkResult(q.execute(), matches ? new Node[]{node1} : new Node[0]);
     }
