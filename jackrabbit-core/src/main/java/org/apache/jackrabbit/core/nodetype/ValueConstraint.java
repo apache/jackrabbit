@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.value.BLOBFileValue;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -353,8 +352,7 @@ class NumericConstraint extends ValueConstraint {
                 return;
 
             case PropertyType.BINARY:
-                BLOBFileValue blob = value.getBLOBFileValue();
-                long length = blob.getLength();
+                long length = value.getLength();
                 if (length != -1) {
                     check(length);
                 } else {

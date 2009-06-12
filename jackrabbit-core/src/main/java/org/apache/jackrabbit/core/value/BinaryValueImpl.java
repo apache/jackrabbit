@@ -38,9 +38,6 @@ class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
         this.blob = blob;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getContentIdentity() {
         DataIdentifier id = blob.getDataIdentifier();
         return id == null ? null : id.toString();

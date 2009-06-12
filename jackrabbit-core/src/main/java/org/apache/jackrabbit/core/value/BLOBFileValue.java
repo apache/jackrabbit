@@ -36,7 +36,7 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
  * This interface is for Jackrabbit-internal use only. Applications should
  * use <code>javax.jcr.ValueFactory</code> to create binary values.
  */
-public abstract class BLOBFileValue implements Binary {
+abstract class BLOBFileValue implements Binary {
 
     /**
      * Returns a String representation of this value.
@@ -72,22 +72,13 @@ public abstract class BLOBFileValue implements Binary {
     }
 
     /**
-     * Returns the length of this <code>BLOBFileValue</code>.
-     *
-     * @return The length, in bytes, of this <code>BLOBFileValue</code>,
-     *         or -1L if the length can't be determined.
-     * @throws IOException
-     */
-    public abstract long getLength();
-
-    /**
      * Frees temporarily allocated resources such as temporary file, buffer, etc.
      * If this <code>BLOBFileValue</code> is backed by a persistent resource
      * calling this method will have no effect.
      *
      * @see #delete(boolean)
      */
-    public abstract void discard();
+    abstract void discard();
 
     /**
      * Deletes the persistent resource backing this <code>BLOBFileValue</code>.
@@ -95,7 +86,7 @@ public abstract class BLOBFileValue implements Binary {
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
      *                             will automatically be deleted
      */
-    public abstract void delete(boolean pruneEmptyParentDirs);
+    abstract void delete(boolean pruneEmptyParentDirs);
 
     /**
      * Checks if this object is immutable.
@@ -105,28 +96,11 @@ public abstract class BLOBFileValue implements Binary {
      */
     abstract boolean isImmutable();
 
-    /**
-     * {@inheritDoc}
-     */
     public abstract boolean equals(Object obj);
 
-    /**
-     * {@inheritDoc}
-     */
     public abstract String toString();
 
-    /**
-     * {@inheritDoc}
-     */
     public abstract int hashCode();
-
-    /**
-     * Check if the value is small (contains a low number of bytes) and should
-     * be stored inline.
-     *
-     * @return true if the value is small
-     */
-    public abstract boolean isSmall();
 
     /**
      * Get the data identifier if one is available.
@@ -138,14 +112,10 @@ public abstract class BLOBFileValue implements Binary {
     }
 
     //-----------------------------------------------------< javax.jcr.Binary >
-    /**
-     * {@inheritDoc}
-     */
+    public abstract long getSize();
+
     public abstract InputStream getStream() throws RepositoryException;
 
-    /**
-     * {@inheritDoc}
-     */
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         InputStream in = getStream();
         try {
@@ -154,10 +124,6 @@ public abstract class BLOBFileValue implements Binary {
         } finally {
             in.close();
         }
-    }
-
-    public long getSize() throws RepositoryException {
-        return getLength();
     }
 
     public void dispose() {

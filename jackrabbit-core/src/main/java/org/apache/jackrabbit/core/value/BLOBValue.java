@@ -205,13 +205,7 @@ class BLOBValue extends BLOBFileValue {
         temp = false;
     }
 
-    /**
-     * Returns the length of this <code>BLOBFileValue</code>.
-     *
-     * @return The length, in bytes, of this <code>BLOBFileValue</code>,
-     *         or -1L if the length can't be determined.
-     */
-    public long getLength() {
+    public long getSize() {
         if (file != null) {
             // this instance is backed by a 'real' file
             if (file.exists()) {
@@ -239,7 +233,7 @@ class BLOBValue extends BLOBFileValue {
      *
      * @see #delete(boolean)
      */
-    public void discard() {
+    void discard() {
         if (!temp) {
             // do nothing if this instance is not backed by temporarily
             // allocated resource/buffer
@@ -260,7 +254,7 @@ class BLOBValue extends BLOBFileValue {
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent directories
      *                             will automatically be deleted
      */
-    public void delete(boolean pruneEmptyParentDirs) {
+    void delete(boolean pruneEmptyParentDirs) {
         if (file != null) {
             // this instance is backed by a 'real' file
             file.delete();
@@ -313,9 +307,6 @@ class BLOBValue extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -340,16 +331,6 @@ class BLOBValue extends BLOBFileValue {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean isSmall() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public InputStream getStream() throws RepositoryException {
         // always return a 'fresh' stream
         if (file != null) {
@@ -373,9 +354,6 @@ class BLOBValue extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int read(byte[] b, long position) throws IOException, RepositoryException {
         if (file != null) {
             // this instance is backed by a temp file

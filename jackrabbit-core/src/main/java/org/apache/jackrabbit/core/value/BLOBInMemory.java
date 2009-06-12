@@ -117,19 +117,13 @@ class BLOBInMemory extends BLOBFileValue {
         return BLOBInMemory.getInstance(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void delete(boolean pruneEmptyParentDirs) {
+    void delete(boolean pruneEmptyParentDirs) {
         // do nothing
         // this object could still be referenced
         // the data will be garbage collected
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void discard() {
+    void discard() {
         // do nothing
         // this object could still be referenced
         // the data will be garbage collected
@@ -139,24 +133,15 @@ class BLOBInMemory extends BLOBFileValue {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public long getLength() {
+    public long getSize() {
         return data.length;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public InputStream getStream() {
         return new ByteArrayInputStream(data);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getString() throws RepositoryException {
+    String getString() throws RepositoryException {
         try {
             return new String(data, "UTF-8");
         } catch (UnsupportedEncodingException e) {
@@ -164,9 +149,6 @@ class BLOBInMemory extends BLOBFileValue {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String toString() {
         StringBuilder buff = new StringBuilder(PREFIX.length() + 2 * data.length);
         buff.append(PREFIX);
@@ -179,9 +161,6 @@ class BLOBInMemory extends BLOBFileValue {
         return buff.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -202,10 +181,6 @@ class BLOBInMemory extends BLOBFileValue {
      */
     public int hashCode() {
         return 0;
-    }
-
-    public boolean isSmall() {
-        return true;
     }
 
 }
