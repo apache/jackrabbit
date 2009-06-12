@@ -19,12 +19,15 @@ package org.apache.jackrabbit.core.query.lucene.constraint;
 import java.io.IOException;
 
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.query.lucene.Util;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.spi.QValueFactory;
 
 /**
  * <code>LengthOperand</code> implements a length operand.
@@ -55,11 +58,25 @@ public class LengthOperand extends DynamicOperand {
         if (ps == null) {
             return EMPTY;
         } else {
-            ValueFactory vf = context.getSession().getValueFactory();
+            ValueFactoryImpl vf = (ValueFactoryImpl) context.getSession().getValueFactory();
+            QValueFactory qvf = vf.getQValueFactory();
             InternalValue[] values = ps.getValues();
             Value[] lengths = new Value[values.length];
             for (int i = 0; i < lengths.length; i++) {
-                lengths[i] = vf.createValue(Util.getLength(values[i]));
+                long len;
+                int type = values[i].getType();
+                try {
+                    if (type == PropertyType.NAME) {
+                        len = vf.createValue(qvf.create(values[i].getName())).getString().length();
+                    } else if (type == PropertyType.PATH) {
+                        len = vf.createValue(qvf.create(values[i].getPath())).getString().length();
+                    } else {
+                        len = Util.getLength(values[i]);
+                    }
+                } catch (RepositoryException e) {
+                    throw Util.createIOException(e);
+                }
+                lengths[i] = vf.createValue(len);
             }
             return lengths;
         }
