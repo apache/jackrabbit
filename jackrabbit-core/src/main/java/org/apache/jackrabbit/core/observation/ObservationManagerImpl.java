@@ -244,6 +244,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * @throws UnsupportedRepositoryOperationException if this repository does
      *          not support an event journal (cluster journal disabled).
      * @throws RepositoryException if another error occurs.
+     * @see ObservationManager#getEventJournal(int, String, boolean, String[], String[])
      */
     public EventJournal getEventJournal(
             int eventTypes, String absPath, boolean isDeep,
@@ -266,16 +267,6 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         return new EventJournalImpl(filter, clusterNode.getJournal(),
                 clusterNode.getId());
     }
-
-    // TODO: Removed in a more recent version of the JCR API jar
-    @Deprecated
-    public EventJournal getEventJournal(
-            int eventTypes, String absPath, boolean isDeep,
-            String[] uuid, String[] nodeTypeName, boolean noLocal)
-            throws RepositoryException {
-        return getEventJournal(eventTypes, absPath, isDeep, uuid, nodeTypeName);
-    }
-
 
     /**
      * Returns an unfiltered event journal for this workspace.
