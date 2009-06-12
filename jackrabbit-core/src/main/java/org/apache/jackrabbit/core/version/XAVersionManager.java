@@ -152,7 +152,7 @@ public class XAVersionManager extends AbstractVersionManager
             throws RepositoryException {
 
         if (isInXA()) {
-            NodeStateEx state = createVersionHistory(node, copiedFrom);
+            NodeStateEx state = internalCreateVersionHistory(node, copiedFrom);
             InternalVersionHistory history =
                 new InternalVersionHistoryImpl(vMgr, state);
             xaItems.put(state.getNodeId(), history);
@@ -167,6 +167,56 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
+    public NodeId createActivity(Session session, String title)
+            throws RepositoryException {
+
+        if (isInXA()) {
+            NodeStateEx state = internalCreateActivity(title);
+            InternalActivityImpl activity =
+                new InternalActivityImpl(vMgr, state);
+            xaItems.put(state.getNodeId(), activity);
+            return state.getNodeId();
+        }
+        return vMgr.createActivity(session, title);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void removeActivity(Session session, NodeId nodeId)
+            throws RepositoryException {
+
+        if (isInXA()) {
+            InternalActivityImpl act = (InternalActivityImpl) getItem(nodeId);
+            internalRemoveActivity(act);
+        }
+        vMgr.removeActivity(session, nodeId);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Before modifying activity, make a local copy of it.
+     */
+    protected void internalRemoveActivity(InternalActivityImpl activity)
+            throws VersionException, RepositoryException {
+        if (activity.getVersionManager() != this) {
+            activity = makeLocalCopy(activity);
+            xaItems.put(activity.getId(), activity);
+        }
+        super.internalRemoveActivity(activity);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Version checkout(NodeImpl node) throws RepositoryException {
+        return vMgr.checkout(node);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public Version checkin(NodeImpl node) throws RepositoryException {
         if (isInXA()) {
             InternalVersionHistory vh;
@@ -176,11 +226,11 @@ public class XAVersionManager extends AbstractVersionManager
                 // the property
                 String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                 vh = getVersionHistory(NodeId.valueOf(histUUID));
-                version = checkin((InternalVersionHistoryImpl) vh, node, false);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, false);
             } else {
                 // in simple versioning the history id needs to be calculated
                 vh = getVersionHistoryOfNode(node.getNodeId());
-                version = checkin((InternalVersionHistoryImpl) vh, node, true);
+                version = internalCheckin((InternalVersionHistoryImpl) vh, node, true);
             }
             return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
         }
@@ -196,7 +246,7 @@ public class XAVersionManager extends AbstractVersionManager
         if (isInXA()) {
             InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                     ((VersionHistoryImpl) history).getInternalVersionHistory();
-            removeVersion(vh, versionName);
+            internalRemoveVersion(vh, versionName);
             return;
         }
         vMgr.removeVersion(history, versionName);
@@ -401,7 +451,7 @@ public class XAVersionManager extends AbstractVersionManager
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
-    protected InternalVersion checkin(InternalVersionHistoryImpl history,
+    protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
                                       NodeImpl node, boolean simple)
             throws RepositoryException {
 
@@ -409,7 +459,7 @@ public class XAVersionManager extends AbstractVersionManager
             history = makeLocalCopy(history);
             xaItems.put(history.getId(), history);
         }
-        InternalVersion version = super.checkin(history, node, simple);
+        InternalVersion version = super.internalCheckin(history, node, simple);
         NodeId frozenNodeId = version.getFrozenNodeId();
         InternalVersionItem frozenNode = createInternalVersionItem(frozenNodeId);
         if (frozenNode != null) {
@@ -423,7 +473,7 @@ public class XAVersionManager extends AbstractVersionManager
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
-    protected void removeVersion(InternalVersionHistoryImpl history, Name name)
+    protected void internalRemoveVersion(InternalVersionHistoryImpl history, Name name)
             throws VersionException, RepositoryException {
 
         if (history.getVersionManager() != this) {
@@ -440,7 +490,7 @@ public class XAVersionManager extends AbstractVersionManager
                 xaItems.put(v1.getId(), v1);
             }
         }
-        super.removeVersion(history, name);
+        super.internalRemoveVersion(history, name);
     }
 
     /**
@@ -524,10 +574,12 @@ public class XAVersionManager extends AbstractVersionManager
      * Delegate the call to our XA item state manager. If successful, inform
      * global repository manager to update its caches.
      */
+    @SuppressWarnings("unchecked")
     public void commit(TransactionContext tx) throws TransactionException {
         if (vmgrLocked) {
             ((XAItemStateManager) stateMgr).commit(tx);
-            Map xaItems = (Map) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
+            Map<NodeId, InternalVersionItem> xaItems =
+                    (Map<NodeId, InternalVersionItem>) tx.getAttribute(ITEMS_ATTRIBUTE_NAME);
             vMgr.itemsUpdated(xaItems.values());
         }
     }
@@ -646,6 +698,28 @@ public class XAVersionManager extends AbstractVersionManager
             NodeState state = (NodeState) stateMgr.getItemState(history.getId());
             NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
             return new InternalVersionHistoryImpl(this, stateEx);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to make local copy", e);
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
+     * Make a local copy of an internal version item. This will recreate the
+     * (global) version item with state information from our own state
+     * manager.
+     * @param act source
+     * @return the new copy
+     * @throws RepositoryException if an error occurs
+     */
+    private InternalActivityImpl makeLocalCopy(InternalActivityImpl act)
+            throws RepositoryException {
+        ReadLock lock = acquireReadLock();
+        try {
+            NodeState state = (NodeState) stateMgr.getItemState(act.getId());
+            NodeStateEx stateEx = new NodeStateEx(stateMgr, ntReg, state, null);
+            return new InternalActivityImpl(this, stateEx);
         } catch (ItemStateException e) {
             throw new RepositoryException("Unable to make local copy", e);
         } finally {

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
@@ -435,6 +436,19 @@ public class NodeStateEx {
         return node;
     }
 
+    /**
+     * Sets the given mixin types
+     * @param mixinTypeNames the mixin type names
+     * @throws RepositoryException if an error occurs
+     */
+    public void setMixins(Set<Name> mixinTypeNames) throws RepositoryException {
+        nodeState.setMixinTypeNames(mixinTypeNames);
+        // update jcr:mixinTypes property
+        setPropertyValues(NameConstants.JCR_MIXINTYPES, PropertyType.NAME,
+                InternalValue.create(
+                        mixinTypeNames.toArray(new Name[mixinTypeNames.size()]))
+        );
+    }
     /**
      * creates a new child node
      *

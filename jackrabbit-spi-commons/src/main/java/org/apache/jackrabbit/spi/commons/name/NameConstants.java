@@ -216,8 +216,28 @@ public class NameConstants {
 
     /**
      * jcr:copiedFrom
+     * @since 2.0
      */
     public static final Name JCR_COPIEDFROM = FACTORY.create(Name.NS_JCR_URI, "copiedFrom");
+
+    /**
+     * jcr:activities
+     * @since 2.0
+     */
+    public static final Name JCR_ACTIVITIES = FACTORY.create(Name.NS_JCR_URI, "activities");
+
+    /**
+     * jcr:activity
+     * @since 2.0
+     */
+    public static final Name JCR_ACTIVITY = FACTORY.create(Name.NS_JCR_URI, "activity");
+
+    /**
+     * jcr:activityTitle
+     * @since 2.0
+     */
+    public static final Name JCR_ACTIVITY_TITLE = FACTORY.create(Name.NS_JCR_URI, "activityTitle");
+
 
     //--------------------------------< node type related item name constants >
 
@@ -437,6 +457,12 @@ public class NameConstants {
     public static final Name MIX_LIFECYCLE =
         FACTORY.create(Name.NS_MIX_URI, "lifecycle");
 
+    /**
+     * nt:activity
+     * @since 2.0
+     */
+    public static final Name NT_ACTIVITY = FACTORY.create(Name.NS_NT_URI, "activity");
+
     //--------------------------------------------------------------------------
     /**
      * rep:root
@@ -453,6 +479,21 @@ public class NameConstants {
      */
     public static final Name REP_VERSIONSTORAGE = FACTORY.create(Name.NS_REP_URI, "versionStorage");
 
+    /**
+     * rep:activities
+     */
+    public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "activities");
+
+    /**
+     * rep:versionReference
+     */
+    public static final Name REP_VERSION_REFERENCE = FACTORY.create(Name.NS_REP_URI, "VersionReference");
+
+    /**
+     * rep:versions
+     */
+    public static final Name REP_VERSIONS = FACTORY.create(Name.NS_REP_URI, "versions");
+    
     /**
      * rep:nodeTypes
      */

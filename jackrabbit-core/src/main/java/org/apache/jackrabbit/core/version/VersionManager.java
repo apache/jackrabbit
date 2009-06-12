@@ -69,6 +69,15 @@ public interface VersionManager {
     Version checkin(NodeImpl node) throws RepositoryException;
 
     /**
+     * invokes the checkout() on the persistent version manager.
+     *
+     * @param node node to checkout
+     * @return the base version
+     * @throws RepositoryException if an error occurs
+     */
+    Version checkout(NodeImpl node) throws RepositoryException;
+
+    /**
      * Removes the specified version from the given version history.
      * @param history version history to remove the version from
      * @param versionName name of the version
@@ -126,6 +135,15 @@ public interface VersionManager {
     InternalVersion getVersion(NodeId id) throws RepositoryException;
 
     /**
+     * Returns the activity with the given id
+     *
+     * @param id id of the activity to retrieve
+     * @return the activity.
+     * @throws RepositoryException if an error occurs
+     */
+    InternalActivity getActivity(NodeId id) throws RepositoryException;
+
+    /**
      * Returns the head version of the node with the given id. this is always
      * the last of all versions. this only works correctly for liner version
      * graphs (i.e. simple versioning)
@@ -135,6 +153,23 @@ public interface VersionManager {
      * @throws RepositoryException if an error occurs
      */
     InternalVersion getHeadVersionOfNode(NodeId id) throws RepositoryException;
+
+    /**
+     * Creates a new activity
+     * @param session the current session
+     * @param title title of the new activity
+     * @return the nodeid of the new activity
+     * @throws RepositoryException if an error occurs
+     */
+    NodeId createActivity(Session session, String title) throws RepositoryException;
+
+    /**
+     * Removes an activity and all 
+     * @param session the current session
+     * @param nodeId id of the activity to remove
+     * @throws RepositoryException if an error occurs
+     */
+    void removeActivity(Session session, NodeId nodeId) throws RepositoryException;
 
     /**
      * Close this version manager. After having closed a persistence
