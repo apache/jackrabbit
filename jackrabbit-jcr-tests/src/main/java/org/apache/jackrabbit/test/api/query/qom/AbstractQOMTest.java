@@ -19,6 +19,8 @@ package org.apache.jackrabbit.test.api.query.qom;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -33,7 +35,7 @@ import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 /**
  * <code>AbstractQOMTest</code> is a base class for test cases on the JQOM.
  */
-public class AbstractQOMTest extends AbstractQueryTest {
+public abstract class AbstractQOMTest extends AbstractQueryTest {
 
     /**
      * Binds the given <code>value</code> to the variable named
@@ -49,6 +51,39 @@ public class AbstractQOMTest extends AbstractQueryTest {
     protected void bindVariableValue(Query q, String var, Value value)
             throws RepositoryException {
         q.bindValue(var, value);
+    }
+
+    protected void checkResultOrder(QueryResult result,
+                                    String[] selectorNames,
+                                    Node[][] nodes)
+            throws RepositoryException {
+        // collect rows
+        List expectedPaths = new ArrayList();
+        log.println("expected:");
+        for (int i = 0; i < nodes.length; i++) {
+            StringBuffer aggregatedPaths = new StringBuffer();
+            for (int j = 0; j < nodes[i].length; j++) {
+                aggregatedPaths.append(getPath(nodes[i][j]));
+                aggregatedPaths.append("|");
+            }
+            expectedPaths.add(aggregatedPaths.toString());
+            log.println(aggregatedPaths.toString());
+        }
+
+        List resultPaths = new ArrayList();
+        log.println("result:");
+        for (RowIterator it = result.getRows(); it.hasNext();) {
+            Row r = it.nextRow();
+            StringBuffer aggregatedPaths = new StringBuffer();
+            for (int i = 0; i < selectorNames.length; i++) {
+                aggregatedPaths.append(getPath(r.getNode(selectorNames[i])));
+                aggregatedPaths.append("|");
+            }
+            resultPaths.add(aggregatedPaths.toString());
+            log.println(aggregatedPaths.toString());
+        }
+
+        assertEquals("wrong result order", expectedPaths, resultPaths);
     }
 
     protected void checkResult(QueryResult result,
