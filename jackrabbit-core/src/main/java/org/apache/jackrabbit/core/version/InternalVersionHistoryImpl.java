@@ -380,6 +380,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         // detach from the version graph
         v.internalDetach();
 
+        // check if referenced by an activity
+        InternalActivityImpl activity = v.getActivity();
+        if (activity != null) {
+            activity.removeVersion(v);
+        }
+
         // remove from persistence state
         node.removeNode(v.getName());
 
@@ -517,6 +523,12 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         NodeId versionId = new NodeId(UUID.randomUUID());
         NodeStateEx vNode = node.addNode(name, NameConstants.NT_VERSION, versionId, true);
+
+        // check for jcr:activity
+        if (src.hasProperty(NameConstants.JCR_ACTIVITY)) {
+            InternalValue act = src.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue();
+            vNode.setPropertyValue(NameConstants.JCR_ACTIVITY, act);
+        }
 
         // initialize 'created', 'predecessors' and 'successors'
         vNode.setPropertyValue(NameConstants.JCR_CREATED, InternalValue.create(getCurrentTime()));

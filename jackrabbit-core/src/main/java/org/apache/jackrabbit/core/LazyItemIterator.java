@@ -45,7 +45,7 @@ import java.util.ArrayList;
  *
  * @see #getSize()
  */
-class LazyItemIterator implements NodeIterator, PropertyIterator {
+public class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /** Logger instance for this class */
     private static Logger log = LoggerFactory.getLogger(LazyItemIterator.class);
@@ -54,7 +54,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
     private final ItemManager itemMgr;
 
     /** the list of item ids */
-    private final List idList;
+    private final List<ItemId> idList;
 
     /** parent node id (when returning children nodes) or <code>null</code> */
     private final NodeId parentId;
@@ -71,7 +71,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param itemMgr item manager
      * @param idList  list of item id's
      */
-    public LazyItemIterator(ItemManager itemMgr, List idList) {
+    public LazyItemIterator(ItemManager itemMgr, List<ItemId> idList) {
         this(itemMgr, idList, null);
     }
 
@@ -84,9 +84,9 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param idList  list of item id's
      * @param parentId parent id.
      */
-    public LazyItemIterator(ItemManager itemMgr, List idList, NodeId parentId) {
+    public LazyItemIterator(ItemManager itemMgr, List<ItemId> idList, NodeId parentId) {
         this.itemMgr = itemMgr;
-        this.idList = new ArrayList(idList);
+        this.idList = new ArrayList<ItemId>(idList);
         this.parentId = parentId;
         // prefetch first item
         pos = 0;
@@ -103,7 +103,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
         // reset
         next = null;
         while (next == null && pos < idList.size()) {
-            ItemId id = (ItemId) idList.get(pos);
+            ItemId id = idList.get(pos);
             try {
                 if (parentId != null) {
                     next = itemMgr.getNode((NodeId) id, parentId);
@@ -190,7 +190,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
                 // skipped past last item
                 throw new NoSuchElementException();
             }
-            ItemId id = (ItemId) idList.get(pos);
+            ItemId id = idList.get(pos);
             // eliminate invalid items from this iterator
             while (!itemMgr.itemExists(id)) {
                 log.debug("ignoring nonexistent item " + id);
@@ -200,9 +200,7 @@ class LazyItemIterator implements NodeIterator, PropertyIterator {
                     // skipped past last item
                     throw new NoSuchElementException();
                 }
-                id = (ItemId) idList.get(pos);
-                // try next
-                continue;
+                id = idList.get(pos);
             }
         }
         // prefetch final item (the one to be returned on next())

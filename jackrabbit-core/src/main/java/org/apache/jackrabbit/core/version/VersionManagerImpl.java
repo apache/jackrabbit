@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.version;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -26,8 +26,10 @@ import javax.jcr.Session;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
+import javax.jcr.version.ActivityViolationException;
 
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.ItemId;
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyId;
@@ -52,6 +54,7 @@ import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
@@ -78,6 +81,11 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     private static final Path VERSION_STORAGE_PATH;
 
+    /**
+     * The path to the version storage: /jcr:system/jcr:versionStorage/jcr:activities
+     */
+    private static final Path ACTIVITIES_PATH;
+
     static {
         try {
             PathBuilder builder = new PathBuilder();
@@ -85,6 +93,13 @@ public class VersionManagerImpl extends AbstractVersionManager
             builder.addLast(NameConstants.JCR_SYSTEM);
             builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
             VERSION_STORAGE_PATH = builder.getPath();
+
+            builder = new PathBuilder();
+            builder.addRoot();
+            builder.addLast(NameConstants.JCR_SYSTEM);
+            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
+            builder.addLast(NameConstants.JCR_ACTIVITIES);
+            ACTIVITIES_PATH = builder.getPath();
         } catch (MalformedPathException e) {
             // will not happen. path is always valid
             throw new InternalError("Cannot initialize path");
@@ -119,7 +134,8 @@ public class VersionManagerImpl extends AbstractVersionManager
     /**
      * Map of returned items. this is kept for invalidating
      */
-    private final ReferenceMap versionItems = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+    private final Map<ItemId, InternalVersionItem> versionItems =
+            new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
      * Creates a new version manager
@@ -127,8 +143,10 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     public VersionManagerImpl(PersistenceManager pMgr, FileSystem fs,
                               NodeTypeRegistry ntReg,
-                              DelegatingObservationDispatcher obsMgr, NodeId rootId,
+                              DelegatingObservationDispatcher obsMgr,
                               NodeId rootParentId,
+                              NodeId storageId,
+                              NodeId activitiesId,
                               ItemStateCacheFactory cacheFactory,
                               ISMLocking ismLocking) throws RepositoryException {
         super(ntReg);
@@ -138,13 +156,13 @@ public class VersionManagerImpl extends AbstractVersionManager
             this.escFactory = new DynamicESCFactory(obsMgr);
 
             // need to store the version storage root directly into the persistence manager
-            if (!pMgr.exists(rootId)) {
-                NodeState root = pMgr.createNew(rootId);
+            if (!pMgr.exists(storageId)) {
+                NodeState root = pMgr.createNew(storageId);
                 root.setParentId(rootParentId);
                 root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicableChildNodeDef(
                         NameConstants.JCR_VERSIONSTORAGE, NameConstants.REP_VERSIONSTORAGE, ntReg).getId());
                 root.setNodeTypeName(NameConstants.REP_VERSIONSTORAGE);
-                PropertyState pt = pMgr.createNew(new PropertyId(rootId, NameConstants.JCR_PRIMARYTYPE));
+                PropertyState pt = pMgr.createNew(new PropertyId(storageId, NameConstants.JCR_PRIMARYTYPE));
                 pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_SYSTEM).getApplicablePropertyDef(
                         NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
                 pt.setMultiValued(false);
@@ -156,13 +174,43 @@ public class VersionManagerImpl extends AbstractVersionManager
                 cl.added(pt);
                 pMgr.store(cl);
             }
-            sharedStateMgr = createItemStateManager(pMgr, rootId, ntReg, cacheFactory, ismLocking);
+
+            // check for jcr:activities
+            if (!pMgr.exists(activitiesId)) {
+                NodeState root = pMgr.createNew(activitiesId);
+                root.setParentId(storageId);
+                root.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_VERSIONSTORAGE).getApplicableChildNodeDef(
+                        NameConstants.JCR_ACTIVITIES, NameConstants.REP_ACTIVITIES, ntReg).getId());
+                root.setNodeTypeName(NameConstants.REP_ACTIVITIES);
+                PropertyState pt = pMgr.createNew(new PropertyId(activitiesId, NameConstants.JCR_PRIMARYTYPE));
+                pt.setDefinitionId(ntReg.getEffectiveNodeType(NameConstants.REP_ACTIVITIES).getApplicablePropertyDef(
+                        NameConstants.JCR_PRIMARYTYPE, PropertyType.NAME, false).getId());
+                pt.setMultiValued(false);
+                pt.setType(PropertyType.NAME);
+                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_ACTIVITIES)});
+                root.addPropertyName(pt.getName());
+
+                // add activities as child
+                NodeState historyState = pMgr.load(storageId);
+                historyState.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, activitiesId);
+                                
+                ChangeLog cl = new ChangeLog();
+                cl.added(root);
+                cl.added(pt);
+                cl.modified(historyState);
+                pMgr.store(cl);
+            }
+
+            sharedStateMgr = createItemStateManager(pMgr, storageId, ntReg, cacheFactory, ismLocking);
 
             stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
 
-            NodeState nodeState = (NodeState) stateMgr.getItemState(rootId);
+            NodeState nodeState = (NodeState) stateMgr.getItemState(storageId);
             historyRoot = new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_VERSIONSTORAGE);
+
+            nodeState = (NodeState) stateMgr.getItemState(activitiesId);
+            activitiesRoot =  new NodeStateEx(stateMgr, ntReg, nodeState, NameConstants.JCR_ACTIVITIES);
 
             // create the virtual item state provider
             versProvider = new VersionItemStateProvider(
@@ -217,7 +265,7 @@ public class VersionManagerImpl extends AbstractVersionManager
         NodeStateEx state = (NodeStateEx)
                 escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
-                return createVersionHistory(node, copiedFrom);
+                return internalCreateVersionHistory(node, copiedFrom);
             }
         });
 
@@ -228,6 +276,39 @@ public class VersionManagerImpl extends AbstractVersionManager
         return new VersionHistoryInfo(
                 state.getNodeId(),
                 state.getState().getChildNodeEntry(root, 1).getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
+     */
+    public NodeId createActivity(Session session, final String title) throws RepositoryException {
+        NodeStateEx state = (NodeStateEx)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
+            public Object run() throws RepositoryException {
+                return internalCreateActivity(title);
+            }
+        });
+        return state.getNodeId();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
+     */
+    public void removeActivity(Session session, final NodeId nodeId)
+            throws RepositoryException {
+        escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
+            public Object run() throws RepositoryException {
+                InternalActivityImpl act = (InternalActivityImpl) getItem(nodeId);
+                internalRemoveActivity(act);
+                return null;
+            }
+        });
     }
 
     /**
@@ -254,7 +335,7 @@ public class VersionManagerImpl extends AbstractVersionManager
         ReadLock lock = acquireReadLock();
         try {
             synchronized (versionItems) {
-                InternalVersionItem item = (InternalVersionItem) versionItems.get(id);
+                InternalVersionItem item = versionItems.get(id);
                 if (item == null) {
                     item = createInternalVersionItem(id);
                     if (item != null) {
@@ -269,7 +350,63 @@ public class VersionManagerImpl extends AbstractVersionManager
             lock.release();
         }
     }
-    
+    /**
+     * {@inheritDoc}
+     *
+     * this method currently does no modifications to the persistence and just
+     * checks if the checkout is valid in respect to a possible activity set on
+     * the session
+     */
+    public Version checkout(NodeImpl node) throws RepositoryException {
+        NodeId baseId = NodeId.valueOf(node.getProperty(NameConstants.JCR_BASEVERSION).getString());
+        NodeImpl activity = (NodeImpl) node.getSession().getWorkspace().getVersionManager().getActivity();
+        if (activity != null) {
+            // If there exists another workspace with node N' where N' also has version
+            // history H, N' is checked out and the jcr:activity property of N'
+            // references A, then the checkout fails with an
+            // ActivityViolationException indicating which workspace currently has
+            // the checkout.
+
+            // we're currently leverage the fact, that only references to "real"
+            // workspaces are recorded.
+            NodeId nodeId = activity.getNodeId();
+            NodeReferencesId refId = new NodeReferencesId(nodeId);
+            if (stateMgr.hasNodeReferences(refId)) {
+                try {
+                    NodeReferences refs = stateMgr.getNodeReferences(refId);
+                    if (refs.hasReferences()) {
+                        throw new ActivityViolationException("Unable to checkout. " +
+                                "Activity is already used for the same node in " +
+                                "another workspace.");
+                    }
+                } catch (ItemStateException e) {
+                    throw new RepositoryException("Error during checkout.", e);
+                }
+            }
+
+            // TODO:
+            // If there is a version in H that is not an eventual predecessor of N but
+            // whose jcr:activity references A, then the checkout fails with an
+            // ActivityViolationException
+            InternalActivityImpl a = (InternalActivityImpl) getItem(nodeId);
+            NodeId historyId = NodeId.valueOf(node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString());
+            InternalVersionHistory history = (InternalVersionHistory) getItem(historyId);
+            InternalVersion version = a.getLatestVersion(history);
+            if (version != null) {
+                InternalVersion baseVersion = (InternalVersion) getItem(baseId);
+                while (baseVersion != null && !baseVersion.getId().equals(version.getId())) {
+                    baseVersion = baseVersion.getLinearPredecessor();
+                }
+                if (baseVersion == null) {
+                    throw new ActivityViolationException("Unable to checkout. " +
+                            "Activity is used by another version on a different branch: " + version.getName());
+                }
+            }
+        }
+        return (VersionImpl)
+                ((SessionImpl) node.getSession()).getNodeById(baseId);
+    }
+
     /**
      * {@inheritDoc}
      * <p/>
@@ -286,11 +423,11 @@ public class VersionManagerImpl extends AbstractVersionManager
                     // the property
                     String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
                     vh = getVersionHistory(NodeId.valueOf(histUUID));
-                    return checkin((InternalVersionHistoryImpl) vh, node, false);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, false);
                 } else {
                     // in simple versioning the history id needs to be calculated
                     vh = getVersionHistoryOfNode(node.getNodeId());
-                    return checkin((InternalVersionHistoryImpl) vh, node, true);
+                    return internalCheckin((InternalVersionHistoryImpl) vh, node, true);
                 }
             }
         });
@@ -318,7 +455,7 @@ public class VersionManagerImpl extends AbstractVersionManager
             public Object run() throws RepositoryException {
                 InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
                         historyImpl.getInternalVersionHistory();
-                removeVersion(vh, name);
+                internalRemoveVersion(vh, name);
                 return null;
             }
         });
@@ -359,14 +496,12 @@ public class VersionManagerImpl extends AbstractVersionManager
      *
      * @param items items updated
      */
-    public void itemsUpdated(Collection items) {
+    public void itemsUpdated(Collection<InternalVersionItem> items) {
         ReadLock lock = acquireReadLock();
         try {
             synchronized (versionItems) {
-                Iterator iter = items.iterator();
-                while (iter.hasNext()) {
-                    InternalVersionItem item = (InternalVersionItem) iter.next();
-                    InternalVersionItem cached = (InternalVersionItem) versionItems.remove(item.getId());
+                for (InternalVersionItem item : items) {
+                    InternalVersionItem cached = versionItems.remove(item.getId());
                     if (cached != null) {
                         if (cached instanceof InternalVersionHistoryImpl) {
                             InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl) cached;
@@ -439,7 +574,8 @@ public class VersionManagerImpl extends AbstractVersionManager
     }
 
     /**
-     * Return the shared item state manager.
+     * Returns the shared item state manager.
+     * @return the shared item state manager.
      */
     protected SharedItemStateManager getSharedStateMgr() {
         return sharedStateMgr;
@@ -537,7 +673,7 @@ public class VersionManagerImpl extends AbstractVersionManager
 
         /**
          * Creates a new event state collection factory
-         * @param obsMgr
+         * @param obsMgr dispatcher
          */
         public DynamicESCFactory(DelegatingObservationDispatcher obsMgr) {
             this.obsMgr = obsMgr;
@@ -574,9 +710,10 @@ public class VersionManagerImpl extends AbstractVersionManager
         /**
          * Executes the given runnable using the given event source.
          *
-         * @param eventSource
-         * @param runnable
-         * @throws RepositoryException
+         * @param eventSource event source
+         * @param runnable the runnable to execute
+         * @return the return value of the executed runnable
+         * @throws RepositoryException if an error occurs
          */
         public synchronized Object doSourced(SessionImpl eventSource, SourcedTarget runnable)
                 throws RepositoryException {

@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -23,8 +29,14 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
+import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.LazyItemIterator;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Implementation of the {@link javax.jcr.version.VersionManager}.
@@ -35,9 +47,20 @@ import org.apache.jackrabbit.core.SessionImpl;
 public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
 
     /**
+     * default logger
+     */
+    private static final Logger log = LoggerFactory.getLogger(JcrVersionManagerImpl.class);
+
+    /**
      * workspace session
      */
     private final SessionImpl session;
+
+    /**
+     * the node id of the current activity
+     */
+    private NodeId currentActivity;
+
 
     /**
      * Creates a new version manager for the given session
@@ -186,42 +209,142 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
      * {@inheritDoc}
      */
     public Node setActivity(Node activity) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        Node oldActivity = getActivity();
+        if (activity == null) {
+            currentActivity = null;
+        } else {
+            NodeImpl actNode = (NodeImpl) activity;
+            if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
+                throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+            }
+            currentActivity = actNode.getNodeId();
+        }
+        return oldActivity;
     }
 
     /**
      * {@inheritDoc}
      */
     public Node getActivity() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        if (currentActivity == null) {
+            return null;
+        } else {
+            return session.getNodeById(currentActivity);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public Node createActivity(String title) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Node removeActivity(String title) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        NodeId id = session.getVersionManager().createActivity(session, title);
+        return session.getNodeById(id);
     }
 
     /**
      * {@inheritDoc}
      */
     public void removeActivity(Node node) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        NodeImpl actNode = (NodeImpl) node;
+        if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
+            throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+        }
+        NodeId actId = actNode.getNodeId();
+        session.getVersionManager().removeActivity(session, actId);
+        if (currentActivity.equals(actId)) {
+            currentActivity = null;
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     public NodeIterator merge(Node activityNode) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("comming soon...");
+        NodeImpl actNode = (NodeImpl) activityNode;
+        if (!actNode.isNodeType(NameConstants.NT_ACTIVITY)) {
+            throw new UnsupportedRepositoryOperationException("Given node is not an activity.");
+        }
+        InternalActivity activity = session.getVersionManager().getActivity(actNode.getNodeId());
+        if (activity == null) {
+            throw new UnsupportedRepositoryOperationException("Given activity not found.");
+        }
+        boolean success = false;
+        try {
+            NodeIterator ret = internalMerge(activity);
+            session.save();
+            success = true;
+            return ret;
+        } finally {
+            if (!success) {
+                // revert session
+                try {
+                    log.debug("reverting changes applied during merge...");
+                    session.refresh(false);
+                } catch (RepositoryException e) {
+                    log.error("Error while reverting changes applied merge restore.", e);
+                }
+            }
+        }
     }
 
+    /**
+     * Internally does the merge without saving the changes.
+     * @param activity internal activity
+     * @throws RepositoryException if an error occurs
+     * @return a node iterator of all failed nodes
+     */
+    private NodeIterator internalMerge(InternalActivity activity)
+            throws RepositoryException {
+        List<ItemId> failedIds = new ArrayList<ItemId>();
+        Map<NodeId, InternalVersion> changeSet = activity.getChangeSet();
+        ChangeSetVersionSelector vsel = new ChangeSetVersionSelector(changeSet);
+        Iterator<NodeId> iter = changeSet.keySet().iterator();
+        while (iter.hasNext()) {
+            InternalVersion v = changeSet.remove(iter.next());
+            NodeId nodeId = new NodeId(v.getVersionHistory().getVersionableUUID());
+            try {
+                NodeImpl node = session.getNodeById(nodeId);
+                InternalVersion base = ((VersionImpl) node.getBaseVersion()).getInternalVersion();
+                VersionImpl version = (VersionImpl) session.getNodeById(v.getId());
+                // if base version is newer than version, add to failed list
+                // but merge it anyways
+                if (base.isMoreRecent(version.getInternalVersion())) {
+                    failedIds.add(node.getNodeId());
+                    // should we add it to the jcr:mergeFailed property ?
+                } else {
+                    Version[] vs = node.internalRestore(version, vsel, true);
+                    for (Version restored: vs) {
+                        changeSet.remove(((VersionImpl) restored).getNodeId());
+                    }
+                }
+            } catch (ItemNotFoundException e) {
+                // ignore nodes not present in this workspace (not best practice)
+            }
+
+            // reset iterator
+            iter = changeSet.keySet().iterator();
+        }
+        return new LazyItemIterator(session.getItemManager(), failedIds);
+    }
+
+    /**
+     * Internal version selector that selects the version in the changeset.
+     */
+    private class ChangeSetVersionSelector implements VersionSelector {
+
+        private final Map<NodeId, InternalVersion> changeSet;
+
+        private ChangeSetVersionSelector(Map<NodeId, InternalVersion> changeSet) {
+            this.changeSet = changeSet;
+        }
+
+        public Version select(VersionHistory vh) throws RepositoryException {
+            InternalVersion v = changeSet.get(((VersionHistoryImpl) vh).getNodeId());
+            if (v != null) {
+                return (Version) session.getNodeById(v.getId());
+            } else {
+                return null;
+            }
+        }
+    }
 }

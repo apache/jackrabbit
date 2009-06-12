@@ -16,26 +16,30 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.LocalItemStateManager;
+import org.apache.jackrabbit.core.state.NodeReferences;
+import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.version.VersionException;
 
 /**
  * Base implementation of the {@link VersionManager} interface.
@@ -66,6 +70,11 @@ abstract class AbstractVersionManager implements VersionManager {
     protected NodeStateEx historyRoot;
 
     /**
+     * Persistent root node of the activities.
+     */
+    protected NodeStateEx activitiesRoot;
+
+    /**
      * the lock on this version manager
      */
     private final DefaultISMLocking rwLock = new DefaultISMLocking();
@@ -91,6 +100,18 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * {@inheritDoc}
      */
+    public InternalActivity getActivity(NodeId id) throws RepositoryException {
+        // lock handling via getItem()
+        InternalActivity v = (InternalActivity) getItem(id);
+        if (v == null) {
+            log.warn("Versioning item not found: " + id);
+        }
+        return v;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public InternalVersionHistory getVersionHistory(NodeId id)
             throws RepositoryException {
         // lock handling via getItem()
@@ -107,7 +128,7 @@ abstract class AbstractVersionManager implements VersionManager {
             String uuid = id.getUUID().toString();
             Name name = getName(uuid);
 
-            NodeStateEx parent = getParentNode(uuid, false);
+            NodeStateEx parent = getParentNode(historyRoot, uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
                 return getVersionHistory(history.getNodeId());
@@ -258,7 +279,7 @@ abstract class AbstractVersionManager implements VersionManager {
             String uuid = node.getNodeId().getUUID().toString();
             Name name = getName(uuid);
 
-            NodeStateEx parent = getParentNode(uuid, false);
+            NodeStateEx parent = getParentNode(historyRoot, uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
                 Name root = NameConstants.JCR_ROOTVERSION;
@@ -353,13 +374,13 @@ abstract class AbstractVersionManager implements VersionManager {
      * @return the identifiers of the newly created version history and root version
      * @throws RepositoryException if an error occurs
      */
-    NodeStateEx createVersionHistory(NodeState node, NodeId copiedFrom)
+    NodeStateEx internalCreateVersionHistory(NodeState node, NodeId copiedFrom)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
             // create deep path
             String uuid = node.getNodeId().getUUID().toString();
-            NodeStateEx parent = getParentNode(uuid, true);
+            NodeStateEx parent = getParentNode(historyRoot, uuid, NameConstants.REP_VERSIONSTORAGE);
             Name name = getName(uuid);
             if (parent.hasNode(name)) {
                 // already exists
@@ -385,6 +406,84 @@ abstract class AbstractVersionManager implements VersionManager {
     }
 
     /**
+     * Creates a new activity.
+     *
+     * @param title title of the new activity
+     * @return the id of the newly created activity
+     * @throws RepositoryException if an error occurs
+     */
+    NodeStateEx internalCreateActivity(String title)
+            throws RepositoryException {
+        WriteOperation operation = startWriteOperation();
+        try {
+            // create deep path
+            NodeId activityId = new NodeId(UUID.randomUUID());
+            NodeStateEx parent = getParentNode(activitiesRoot, activityId.toString(), NameConstants.REP_ACTIVITIES);
+            Name name = getName(activityId.toString());
+
+            // create new activity node in the persistent state
+            NodeStateEx pNode = InternalActivityImpl.create(parent, name, activityId, title);
+
+            // end update
+            operation.save();
+
+            log.debug("Created new activity " + activityId
+                    + " with title " + title + ".");
+            return pNode;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            operation.close();
+        }
+    }
+
+    /**
+     * Removes the specified activity
+     *
+     * @param activity the acitvity to remove
+     * @throws javax.jcr.RepositoryException if any other error occurs.
+     */
+    protected void internalRemoveActivity(InternalActivityImpl activity)
+            throws RepositoryException {
+        WriteOperation operation = startWriteOperation();
+        try {
+            // check if the activity has any references in the workspaces
+            NodeId nodeId = activity.getId();
+            NodeReferencesId refId = new NodeReferencesId(nodeId);
+            if (stateMgr.hasNodeReferences(refId)) {
+                NodeReferences refs = stateMgr.getNodeReferences(refId);
+                if (refs.hasReferences()) {
+                    throw new ReferentialIntegrityException("Unable to delete activity. still referenced.");
+                }
+            }
+            // TODO:
+            // check if the activity is used in anywhere in the version storage
+            // and reject removal
+
+            // remove activity and possible empty parent directories
+            NodeStateEx act = getNodeStateEx(nodeId);
+            NodeId parentId = act.getParentId();
+            Name name = act.getName();
+            while (parentId != null) {
+                NodeStateEx parent = getNodeStateEx(parentId);
+                parent.removeNode(name);
+                parent.store();
+                if (parent.getChildNodes().length == 0 && !parentId.equals(activitiesRoot.getNodeId())) {
+                    name = parent.getName();
+                    parentId = parent.getParentId();
+                } else {
+                    parentId = null;
+                }
+            }
+            operation.save();
+        } catch (ItemStateException e) {
+            log.error("Error while storing: " + e.toString());
+        } finally {
+            operation.close();
+        }
+    }
+
+    /**
      * Utility method that returns the given string as a name in the default
      * namespace.
      *
@@ -398,24 +497,26 @@ abstract class AbstractVersionManager implements VersionManager {
     /**
      * Utility method that returns the parent node under which the version
      * history of the identified versionable node is or will be stored. If
-     * the create flag is set, then the returned parent node and any ancestor
-     * nodes are automatically created if they do not already exist. Otherwise
+     * the <code>interNT</code> is not <code>null</code> then the returned
+     * parent node and any ancestor nodes are automatically created if they do
+     * not already exist. Otherwise
      * <code>null</code> is returned if the parent node does not exist.
      *
+     * @param parent the parent node
      * @param uuid UUID of a versionable node
-     * @param create whether to create missing nodes
+     * @param interNT intermediate nodetype.
      * @return parent node of the version history, or <code>null</code>
      * @throws RepositoryException if an error occurs
      */
-    private NodeStateEx getParentNode(String uuid, boolean create)
+    private NodeStateEx getParentNode(NodeStateEx parent, String uuid, Name interNT)
             throws RepositoryException {
-        NodeStateEx n = historyRoot;
+        NodeStateEx n = parent;
         for (int i = 0; i < 3; i++) {
             Name name = getName(uuid.substring(i * 2, i * 2 + 2));
             if (n.hasNode(name)) {
                 n = n.getNode(name, 1);
-            } else if (create) {
-                n.addNode(name, NameConstants.REP_VERSIONSTORAGE, null, false);
+            } else if (interNT != null) {
+                n.addNode(name, interNT, null, false);
                 n.store();
                 n = n.getNode(name, 1);
             } else {
@@ -435,13 +536,21 @@ abstract class AbstractVersionManager implements VersionManager {
      * @throws javax.jcr.RepositoryException if an error occurs
      * @see javax.jcr.Node#checkin()
      */
-    protected InternalVersion checkin(InternalVersionHistoryImpl history,
+    protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
                                       NodeImpl node, boolean simple)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
             String versionName = calculateCheckinVersionName(history, node, simple);
             InternalVersionImpl v = history.checkin(NameFactoryImpl.getInstance().create("", versionName), node);
+
+            // check for jcr:activity
+            if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
+                NodeId actId = new NodeId(node.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue().getUUID());
+                InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
+                act.addVersion(v);
+            }
+
             operation.save();
             return v;
         } catch (ItemStateException e) {
@@ -538,7 +647,7 @@ abstract class AbstractVersionManager implements VersionManager {
      *  not have a version with <code>name</code>.
      * @throws javax.jcr.RepositoryException if any other error occurs.
      */
-    protected void removeVersion(InternalVersionHistoryImpl history, Name name)
+    protected void internalRemoveVersion(InternalVersionHistoryImpl history, Name name)
             throws VersionException, RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
@@ -629,6 +738,8 @@ abstract class AbstractVersionManager implements VersionManager {
                     return ((InternalVersionHistory) parent).getVersion(id);
                 } else if (ntName.equals(NameConstants.NT_VERSIONHISTORY)) {
                     return new InternalVersionHistoryImpl(this, pNode);
+                } else if (ntName.equals(NameConstants.NT_ACTIVITY)) {
+                    return new InternalActivityImpl(this, pNode);
                 } else {
                     return null;
                 }

@@ -811,7 +811,7 @@ public class NodeImpl extends ItemImpl implements Node {
         return createChildNode(nodeName, def, nodeType, id);
     }
 
-    private void setMixinTypesProperty(Set mixinNames) throws RepositoryException {
+    private void setMixinTypesProperty(Set<Name> mixinNames) throws RepositoryException {
         NodeState thisState = data.getNodeState();
         // get or create jcr:mixinTypes property
         PropertyImpl prop;
@@ -3322,6 +3322,9 @@ public class NodeImpl extends ItemImpl implements Node {
             if (isFull) {
                 internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
                 internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
+                if (hasProperty(NameConstants.JCR_ACTIVITY)) {
+                    removeChildProperty(NameConstants.JCR_ACTIVITY);
+                }
             }
             save();
             success = true;
@@ -3362,20 +3365,26 @@ public class NodeImpl extends ItemImpl implements Node {
         session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
         boolean hasPendingChanges = hasPendingChanges();
-        Property[] props = new Property[2];
+        Property[] props = new Property[3];
         boolean success = false;
         try {
             props[0] = internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(true));
             if (isFull) {
+                NodeImpl activity = (NodeImpl) session.getWorkspace().getVersionManager().getActivity();
+                Version baseVersion = session.getVersionManager().checkout(this);
                 props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
                         new InternalValue[]{
-                                InternalValue.create(new UUID(getBaseVersion().getUUID()))
+                                InternalValue.create(new UUID(baseVersion.getUUID()))
                         });
+                if (activity != null) {
+                    props[2] = internalSetProperty(NameConstants.JCR_ACTIVITY,
+                            InternalValue.create(activity.getNodeId().getUUID()));
+                }
             }
             if (hasPendingChanges) {
-                for (int i = 0; i < props.length; i++) {
-                    if (props[i] != null) {
-                        props[i].save();
+                for (Property prop : props) {
+                    if (prop != null) {
+                        prop.save();
                     }
                 }
             } else {
@@ -3384,10 +3393,10 @@ public class NodeImpl extends ItemImpl implements Node {
             success = true;
         } finally {
             if (!success) {
-                for (int i = 0; i < props.length; i++) {
-                    if (props[i] != null) {
+                for (Property prop : props) {
+                    if (prop != null) {
                         try {
-                            props[i].refresh(false);
+                            prop.refresh(false);
                         } catch (RepositoryException e) {
                             log.error("Error while cleaning up after failed Node.checkout", e);
                         }
@@ -3973,8 +3982,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // get frozen mixin
         // todo: also respect mixing types on creation?
         Name[] mxNames = frozen.getFrozenMixinTypes();
-        for (int i = 0; i < mxNames.length; i++) {
-            node.addMixin(mxNames[i]);
+        for (Name mxName : mxNames) {
+            node.addMixin(mxName);
         }
         return node;
     }
@@ -4017,8 +4026,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // get frozen mixin
         // todo: also respect mixing types on creation?
         Name[] mxNames = frozen.getFrozenMixinTypes();
-        for (int i = 0; i < mxNames.length; i++) {
-            node.addMixin(mxNames[i]);
+        for (Name mxName : mxNames) {
+            node.addMixin(mxName);
         }
         return node;
     }
@@ -4216,15 +4225,14 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Internal method to restore a version.
      *
-     * @param version
-     * @param vsel    the version selector that will select the correct version for
-     *                OPV=Version child nodes.
-     * @throws UnsupportedRepositoryOperationException
-     *
-     * @throws RepositoryException
+     * @param version version to restore
+     * @param vsel the version selector that will select the correct version for
+     * OPV=Version child nodes.
+     * @param removeExisting remove existing flag
+     * @throws RepositoryException if an error occurs
      */
     private void internalRestore(Version version, VersionSelector vsel, boolean removeExisting)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
 
         boolean success = false;
         try {
@@ -4247,13 +4255,14 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Internal method to restore a version.
      *
-     * @param version
-     * @param vsel           the version selector that will select the correct version for
-     *                       OPV=Version child nodes.
-     * @param removeExisting
-     * @throws RepositoryException
+     * @param version version to restore
+     * @param vsel the version selector that will select the correct version for
+     * OPV=Version child nodes.
+     * @param removeExisting remove existing flag
+     * @return array of restored versions
+     * @throws RepositoryException if an error occurs
      */
-    protected Version[] internalRestore(VersionImpl version, VersionSelector vsel,
+    public Version[] internalRestore(VersionImpl version, VersionSelector vsel,
                                         boolean removeExisting)
             throws RepositoryException {
 
@@ -4273,7 +4282,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // 1. The child node and properties of N will be changed, removed or
         //    added to, depending on their corresponding copies in V and their
         //    own OnParentVersion attributes (see 7.2.8, below, for details).
-        HashSet restored = new HashSet();
+        HashSet<Version> restored = new HashSet<Version>();
         restoreFrozenState(version.getInternalFrozenNode(), vsel, restored, removeExisting);
         restored.add(version);
 
@@ -4296,18 +4305,20 @@ public class NodeImpl extends ItemImpl implements Node {
         // 3. N's jcr:isCheckedOut property is set to false.
         internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
 
-        return (Version[]) restored.toArray(new Version[restored.size()]);
+        return restored.toArray(new Version[restored.size()]);
     }
 
     /**
      * Restores the properties and child nodes from the frozen state.
      *
-     * @param freeze
-     * @param vsel
-     * @param removeExisting
-     * @throws RepositoryException
+     * @param freeze the frozen node
+     * @param vsel version selector
+     * @param restored set of restored versions
+     * @param removeExisting remove existing flag
+     * @throws RepositoryException if an error occurs
      */
-    void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, Set restored, boolean removeExisting)
+    public void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, 
+                            Set<Version> restored, boolean removeExisting)
             throws RepositoryException {
 
         // check uuid
@@ -4326,19 +4337,22 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // adjust mixins
         Name[] mixinNames = freeze.getFrozenMixinTypes();
-        setMixinTypesProperty(new HashSet(Arrays.asList(mixinNames)));
+        setMixinTypesProperty(new HashSet<Name>(Arrays.asList(mixinNames)));
 
         // copy frozen properties
         PropertyState[] props = freeze.getFrozenProperties();
-        HashSet propNames = new HashSet();
-        for (int i = 0; i < props.length; i++) {
-            PropertyState prop = props[i];
+        HashSet<Name> propNames = new HashSet<Name>();
+        for (PropertyState prop : props) {
+            // skip properties that should not to be reverted back
+            if (prop.getName().equals(NameConstants.JCR_ACTIVITY)) {
+                continue;
+            }
             propNames.add(prop.getName());
             if (prop.isMultiValued()) {
                 internalSetProperty(
-                        props[i].getName(), prop.getValues(), prop.getType());
+                        prop.getName(), prop.getValues(), prop.getType());
             } else {
-                internalSetProperty(props[i].getName(), prop.getValues()[0]);
+                internalSetProperty(prop.getName(), prop.getValues()[0]);
             }
         }
         // remove properties that do not exist in the frozen representation
@@ -4361,11 +4375,11 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // add 'auto-create' properties that do not exist yet
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
-        for (int j = 0; j < mixinNames.length; j++) {
-            NodeTypeImpl mixin = ntMgr.getNodeType(mixinNames[j]);
+        for (Name mixinName : mixinNames) {
+            NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
             PropertyDefinition[] pda = mixin.getAutoCreatedPropertyDefinitions();
-            for (int i = 0; i < pda.length; i++) {
-                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) pda[i];
+            for (PropertyDefinition aPda : pda) {
+                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) aPda;
                 if (!hasProperty(pd.getQName())) {
                     createChildProperty(pd.getQName(), pd.getRequiredType(), pd);
                 }
@@ -4393,8 +4407,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // restore the frozen nodes
         InternalFreeze[] frozenNodes = freeze.getFrozenChildNodes();
-        for (int i = 0; i < frozenNodes.length; i++) {
-            InternalFreeze child = frozenNodes[i];
+        for (InternalFreeze child : frozenNodes) {
             NodeImpl restoredChild = null;
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
@@ -4402,7 +4415,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 if (f.getFrozenUUID() != null) {
                     try {
                         NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
-                        // check if one of this restoretrees node
+                        // check if one of this restore trees node
                         if (removeExisting) {
                             existing.remove();
                         } else if (existing.isShareable()) {
@@ -4413,8 +4426,8 @@ public class NodeImpl extends ItemImpl implements Node {
                             // found nodes must be outside of this tree
                             throw new ItemExistsException(
                                     "Unable to restore node, item already"
-                                    + " exists outside of restored tree: "
-                                    + existing);
+                                            + " exists outside of restored tree: "
+                                            + existing);
                         }
                     } catch (ItemNotFoundException e) {
                         // ignore, item with uuid does not exist
@@ -4447,7 +4460,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         // found nodes must be outside of this tree
                         throw new ItemExistsException(
                                 "Unable to restore node, item already exists"
-                                + " outside of restored tree: " + n);
+                                        + " outside of restored tree: " + n);
                     }
                 }
                 // get desired version from version selector
@@ -4461,7 +4474,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         Version[] vs = history.getRootVersion().getSuccessors();
                         if (vs.length == 0) {
                             String msg = "Unable to select appropariate version for "
-                                + child.getName() + " using " + vsel;
+                                    + child.getName() + " using " + vsel;
                             log.error(msg);
                             throw new VersionException(msg);
                         }
@@ -4497,7 +4510,7 @@ public class NodeImpl extends ItemImpl implements Node {
                     restored.add(v);
                 }
             }
-            // ensure proper odering (issue JCR-469)
+            // ensure proper ordering (issue JCR-469)
             if (restoredChild != null
                     && getPrimaryNodeType().hasOrderableChildNodes()) {
                 orderBefore(restoredChild.getPrimaryPath().getNameElement(), null);
@@ -4508,8 +4521,8 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Copies a property to this node
      *
-     * @param prop
-     * @throws RepositoryException
+     * @param prop property to copy from
+     * @throws RepositoryException if an error occurs
      */
     protected void internalCopyPropertyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {

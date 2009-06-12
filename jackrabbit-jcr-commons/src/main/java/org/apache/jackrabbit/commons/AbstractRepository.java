@@ -77,6 +77,9 @@ public abstract class AbstractRepository implements Repository {
         add(Repository.OPTION_WORKSPACE_MANAGEMENT_SUPPORTED);
         add(Repository.OPTION_XML_EXPORT_SUPPORTED);
         add(Repository.OPTION_XML_IMPORT_SUPPORTED);
+        add(Repository.OPTION_ACTIVITIES_SUPPORTED);
+        // add(Repository.OPTION_BASELINES_SUPPORTED);
+        
         add(Repository.QUERY_FULL_TEXT_SEARCH_SUPPORTED);
         add(Repository.QUERY_JOINS);
         add(Repository.QUERY_JOINS_INNER);

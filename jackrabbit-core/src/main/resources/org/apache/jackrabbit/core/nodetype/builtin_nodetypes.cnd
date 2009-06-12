@@ -204,10 +204,25 @@
   + jcr:nodeTypes (rep:nodeTypes) = rep:nodeTypes mandatory protected abort
   + * (nt:base) = nt:unstructured multiple ignore
 
+// implementation note: currently we keep the activities below the version storage
+// because of the complexity of adding new virtual item state providers.
+// the future goal is to keep them as siblings, of course.
+
 [rep:versionStorage]
   + * (nt:versionHistory) = nt:versionHistory protected multiple abort
   + * (rep:versionStorage) = rep:versionStorage protected multiple abort
+  + * (rep:activities) = rep:activities protected multiple abort
 
+[rep:activities]
+  + * (nt:activity) = nt:activity protected multiple abort
+  + * (rep:activities) = rep:activities protected multiple abort
+
+// implementation note: because node references are not maintained within the
+// version storage, we store a bidirectional relationship between activities and
+ // the respective versions
+[rep:VersionReference] mix
+  - rep:versions (reference) protected multiple abort
+  
 // -----------------------------------------------------------------------------
 // J A C K R A B B I T  S E C U R I T Y
 // -----------------------------------------------------------------------------

@@ -132,6 +132,11 @@ public class RepositoryImpl extends AbstractRepository
     public static final NodeId VERSION_STORAGE_NODE_ID = NodeId.valueOf("deadbeef-face-babe-cafe-babecafebabe");
 
     /**
+     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:activities" node
+     */
+    public static final NodeId ACTIVITIES_NODE_ID = NodeId.valueOf("deadbeef-face-babe-ac71-babecafebabe");
+
+    /**
      * hardcoded id of the "/jcr:system/jcr:nodeTypes" node
      */
     public static final NodeId NODETYPES_NODE_ID = NodeId.valueOf("deadbeef-cafe-cafe-cafe-babecafebabe");
@@ -467,7 +472,10 @@ public class RepositoryImpl extends AbstractRepository
         ISMLocking ismLocking = vConfig.getISMLocking();
 
         return new VersionManagerImpl(pm, fs, ntReg, delegatingDispatcher,
-                VERSION_STORAGE_NODE_ID, SYSTEM_ROOT_NODE_ID, cacheFactory,
+                SYSTEM_ROOT_NODE_ID,
+                VERSION_STORAGE_NODE_ID,
+                ACTIVITIES_NODE_ID,
+                cacheFactory,
                 ismLocking);
     }
 
