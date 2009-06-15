@@ -237,7 +237,7 @@ public class ConstraintBuilder {
 
         public Object visit(LowerCaseImpl node, Object data) throws Exception {
             DynamicOperandImpl operand = (DynamicOperandImpl) node.getOperand();
-            return new LowerCaseOperand((DynamicOperand) operand.accept(this, null));
+            return new LowerCaseOperand((DynamicOperand) operand.accept(this, data));
         }
 
         public Object visit(NodeLocalNameImpl node, Object data) throws Exception {
@@ -334,7 +334,7 @@ public class ConstraintBuilder {
 
         public Object visit(UpperCaseImpl node, Object data) throws Exception {
             DynamicOperandImpl operand = (DynamicOperandImpl) node.getOperand();
-            return new UpperCaseOperand((DynamicOperand) operand.accept(this, null));
+            return new UpperCaseOperand((DynamicOperand) operand.accept(this, data));
         }
 
         private SelectorImpl getSelector(Name name) {

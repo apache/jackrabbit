@@ -41,7 +41,7 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
         node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "abc");
         node.setProperty(propertyName2, "ABC");
-        testRootNode.save();
+        superuser.save();
     }
 
     protected void tearDown() throws Exception {
@@ -50,48 +50,54 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
         super.tearDown();
     }
 
-    public void testFullTextSearchScore() throws RepositoryException {
-        // TODO
-    }
-
     public void testLength() throws RepositoryException {
-        // TODO
+        String lenStr = String.valueOf(node.getProperty(propertyName1).getLength());
+        // upper case
+        checkQueries(qf.length(qf.propertyValue("s", propertyName1)),
+                true, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                new String[]{lenStr.toUpperCase()},
+                PropertyType.STRING,
+                new boolean[]{true});
+
+        // lower case
+        checkQueries(qf.length(qf.propertyValue("s", propertyName1)),
+                false, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                new String[]{lenStr.toLowerCase()},
+                PropertyType.STRING,
+                new boolean[]{true});
     }
 
     public void testNodeLocalName() throws RepositoryException {
-        // TODO
+        String localName = getLocalName(node.getName());
+        // upper case
+        checkQueries(qf.nodeLocalName("s"),
+                true, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                new String[]{localName.toLowerCase(), localName.toUpperCase()},
+                PropertyType.STRING,
+                new boolean[]{false, true});
+
+        // lower case
+        checkQueries(qf.nodeLocalName("s"),
+                false, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                new String[]{localName.toLowerCase(), localName.toUpperCase()},
+                PropertyType.STRING,
+                new boolean[]{true, false});
     }
 
     public void testNodeName() throws RepositoryException {
-        node.setProperty(propertyName1, "abc", PropertyType.NAME);
-        node.setProperty(propertyName2, "ABC", PropertyType.NAME);
-        node.save();
-
         // upper case
-        checkQueries(qf.propertyValue("s", propertyName1),
+        checkQueries(qf.nodeName("s"),
                 true, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
+                new String[]{node.getName().toLowerCase(), node.getName().toUpperCase()},
                 PropertyType.NAME,
-                new boolean[]{false, false, false, false, true});
-
-        checkQueries(qf.propertyValue("s", propertyName2),
-                true, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
-                PropertyType.NAME,
-                new boolean[]{false, false, false, false, true});
+                new boolean[]{false, true});
 
         // lower case
-        checkQueries(qf.propertyValue("s", propertyName1),
+        checkQueries(qf.nodeName("s"),
                 false, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
+                new String[]{node.getName().toLowerCase(), node.getName().toUpperCase()},
                 PropertyType.NAME,
-                new boolean[]{true, false, false, false, false});
-
-        checkQueries(qf.propertyValue("s", propertyName2),
-                false, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
-                new String[]{"abc", "Abc", "aBc", "abC", "ABC"},
-                PropertyType.NAME,
-                new boolean[]{true, false, false, false, false});
+                new boolean[]{true, false});
     }
 
     public void testPropertyValue() throws RepositoryException {

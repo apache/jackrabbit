@@ -554,6 +554,21 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
+     * Returns the local name for the given <code>name</code>.
+     *
+     * @param name the name.
+     * @return the local name part.
+     */
+    protected static String getLocalName(String name) {
+        int idx = name.indexOf(':');
+        if (idx != -1) {
+            return name.substring(idx + 1);
+        } else {
+            return name;
+        }
+    }
+
+    /**
      * Returns the name of a workspace that is not accessible from
      * <code>session</code>.
      * @param session the session.
