@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.value;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
@@ -41,7 +40,6 @@ import javax.jcr.ValueFormatException;
 import javax.jcr.Binary;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -81,12 +79,6 @@ public class InternalValue extends AbstractQValue {
     private static final InternalValue BOOLEAN_FALSE = new InternalValue(false);
 
     /**
-     * If set to 'true', the data store is used when configured in repository.xml
-     */
-    public static final boolean USE_DATA_STORE =
-        Boolean.valueOf(System.getProperty("org.jackrabbit.useDataStore", "true")).booleanValue();
-
-    /**
      * Temporary binary values smaller or equal this size are kept in memory
      */
     private static final int MIN_BLOB_FILE_SIZE = 1024;
@@ -119,35 +111,24 @@ public class InternalValue extends AbstractQValue {
         switch (value.getType()) {
             case PropertyType.BINARY:
                 InternalValue result;
-                if (USE_DATA_STORE) {
-                    BLOBFileValue blob = null;
-                    if (value instanceof BinaryValueImpl) {
-                        BinaryValueImpl bin = (BinaryValueImpl) value;
-                        DataIdentifier identifier = bin.getDataIdentifier();
-                        if (identifier != null) {
-                            // access the record to ensure it is not garbage collected
-                            if (store.getRecordIfStored(identifier) != null) {
-                                // it exists - so we don't need to stream it again
-                                // but we need to create a new object because the original
-                                // one might be in a different data store (repository)
-                                blob = BLOBInDataStore.getInstance(store, identifier);
-                            }
+                BLOBFileValue blob = null;
+                if (value instanceof BinaryValueImpl) {
+                    BinaryValueImpl bin = (BinaryValueImpl) value;
+                    DataIdentifier identifier = bin.getDataIdentifier();
+                    if (identifier != null) {
+                        // access the record to ensure it is not garbage collected
+                        if (store.getRecordIfStored(identifier) != null) {
+                            // it exists - so we don't need to stream it again
+                            // but we need to create a new object because the original
+                            // one might be in a different data store (repository)
+                            blob = BLOBInDataStore.getInstance(store, identifier);
                         }
                     }
-                    if (blob == null) {
-                        blob = getBLOBFileValue(store, value.getBinary().getStream(), true);
-                    }
-                    result = new InternalValue(blob);
-                } else if (value instanceof BLOBFileValue) {
-                    result = new InternalValue((BLOBFileValue) value);
-                } else {
-                    InputStream stream = value.getBinary().getStream();
-                    try {
-                        result = createTemporary(stream);
-                    } finally {
-                        IOUtils.closeQuietly(stream);
-                    }
                 }
+                if (blob == null) {
+                    blob = getBLOBFileValue(store, value.getBinary().getStream(), true);
+                }
+                result = new InternalValue(blob);
                 return result;
             case PropertyType.BOOLEAN:
                 return create(value.getBoolean());
@@ -279,10 +260,7 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue create(byte[] value) {
-        if (USE_DATA_STORE) {
-            return new InternalValue(BLOBInMemory.getInstance(value));
-        }
-        return new InternalValue(new BLOBValue(value));
+        return new InternalValue(BLOBInMemory.getInstance(value));
     }
 
     /**
@@ -292,14 +270,7 @@ public class InternalValue extends AbstractQValue {
      * @return the internal value
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(null, value, true));
-        }
-        try {
-            return new InternalValue(new BLOBValue(value, true));
-        } catch (IOException e) {
-            throw new RepositoryException("Error creating temporary file", e);
-        }
+        return new InternalValue(getBLOBFileValue(null, value, true));
     }
 
     /**
@@ -309,14 +280,7 @@ public class InternalValue extends AbstractQValue {
      * @return the internal value
      */
     static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(store, value, false));
-        }
-        try {
-            return new InternalValue(new BLOBValue(value, false));
-        } catch (IOException e) {
-            throw new RepositoryException("Error creating file", e);
-        }
+        return new InternalValue(getBLOBFileValue(store, value, false));
     }
 
     /**
@@ -325,14 +289,7 @@ public class InternalValue extends AbstractQValue {
      * @throws IOException
      */
     public static InternalValue create(InputStream value) throws RepositoryException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(getBLOBFileValue(null, value, false));
-        }
-        try {
-            return new InternalValue(new BLOBValue(value, false));
-        } catch (IOException e) {
-            throw new RepositoryException("Error creating file", e);
-        }
+        return new InternalValue(getBLOBFileValue(null, value, false));
     }
 
     /**
@@ -341,20 +298,7 @@ public class InternalValue extends AbstractQValue {
      * @throws IOException
      */
     public static InternalValue create(FileSystemResource value) throws IOException {
-        if (USE_DATA_STORE) {
-            return new InternalValue(BLOBInResource.getInstance(value));
-        }
-        return new InternalValue(new BLOBValue(value));
-    }
-
-    /**
-     * @param value
-     * @return
-     * @throws IOException
-     */
-    public static InternalValue create(File value) throws IOException {
-        assert !USE_DATA_STORE;
-        return new InternalValue(new BLOBValue(value));
+        return new InternalValue(BLOBInResource.getInstance(value));
     }
 
     /**
@@ -365,7 +309,6 @@ public class InternalValue extends AbstractQValue {
      * @return the value
      */
     public static InternalValue create(DataStore store, String id) {
-        assert USE_DATA_STORE && store != null;
         return new InternalValue(getBLOBFileValue(store, id));
     }
 
@@ -445,10 +388,8 @@ public class InternalValue extends AbstractQValue {
             return this;
         }
         BLOBFileValue v = (BLOBFileValue) val;
-        if (USE_DATA_STORE) {
-            if (v.isImmutable()) {
-                return this;
-            }
+        if (v.isImmutable()) {
+            return this;
         }
         // return a copy since the wrapped BLOBFileValue instance is mutable
         InputStream stream = v.getStream();
@@ -635,7 +576,6 @@ public class InternalValue extends AbstractQValue {
      * @throws RepositoryException
      */
     public void store(DataStore dataStore) throws RepositoryException {
-        assert USE_DATA_STORE;
         assert dataStore != null;
         assert type == PropertyType.BINARY;
         BLOBFileValue v = (BLOBFileValue) val;
@@ -697,7 +637,8 @@ public class InternalValue extends AbstractQValue {
         } else {
             try {
                 // convert via string
-                return new BLOBValue(getString().getBytes(InternalValueFactory.DEFAULT_ENCODING));
+                byte[] data = getString().getBytes(InternalValueFactory.DEFAULT_ENCODING);
+                return BLOBInMemory.getInstance(data);
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException(InternalValueFactory.DEFAULT_ENCODING + " is not supported encoding on this platform", e);
             }

@@ -296,9 +296,6 @@ public class RepositoryImpl extends AbstractRepository
             ntReg = createNodeTypeRegistry(nsReg, new BasedFileSystem(repStore, "/nodetypes"));
 
             dataStore = repConfig.getDataStore();
-            if (dataStore != null) {
-                assert InternalValue.USE_DATA_STORE;
-            }
 
             // init workspace configs
             Iterator iter = repConfig.getWorkspaceConfigs().iterator();
@@ -315,7 +312,7 @@ public class RepositoryImpl extends AbstractRepository
                 clusterNode = createClusterNode();
                 nsReg.setEventChannel(clusterNode);
                 ntReg.setEventChannel(clusterNode);
-                
+
                 createWorkspaceEventChannel = clusterNode;
                 clusterNode.setListener(this);
             }
@@ -789,7 +786,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Creates a workspace with the given name and given workspace configuration
      * template.
-     * 
+     *
      * The difference between this method and {@link #createWorkspace(String, InputSource)}
      * is that the later notifies the other cluster node that workspace has been created
      * whereas this method only creates the workspace.
@@ -816,7 +813,7 @@ public class RepositoryImpl extends AbstractRepository
             wspInfos.put(workspaceName, info);
         }
     }
-    
+
     /**
      * Creates a workspace with the given name and given workspace configuration
      * template.
@@ -836,7 +833,7 @@ public class RepositoryImpl extends AbstractRepository
             createWorkspaceInternal(workspaceName, configTemplate);
         }
         else {
-        
+
             ClonedInputSource template = new ClonedInputSource(configTemplate);
             createWorkspaceInternal(workspaceName, template.cloneInputSource());
             createWorkspaceEventChannel.workspaceCreated(workspaceName, template);
@@ -1156,7 +1153,7 @@ public class RepositoryImpl extends AbstractRepository
                 log.error("failed to persist repository properties", e);
             }
         }
-        
+
         if (dataStore != null) {
             try {
                 // close the datastore
@@ -1187,7 +1184,7 @@ public class RepositoryImpl extends AbstractRepository
                 repLock.release();
             } catch (RepositoryException e) {
                 log.error("failed to release the repository lock", e);
-            }            
+            }
         }
 
         log.info("Repository has been shutdown");
@@ -1432,7 +1429,7 @@ public class RepositoryImpl extends AbstractRepository
      * {@inheritDoc}
      */
     public String[] getDescriptorKeys() {
-        String[] keys = (String[]) repProps.keySet().toArray(new String[repProps.keySet().size()]);
+        String[] keys = repProps.keySet().toArray(new String[repProps.keySet().size()]);
         Arrays.sort(keys);
         return keys;
     }

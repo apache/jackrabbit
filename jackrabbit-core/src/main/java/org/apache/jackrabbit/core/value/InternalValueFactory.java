@@ -58,7 +58,7 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     InternalValueFactory(DataStore store) {
         this.store = store;
     }
-    
+
     public static QValueFactory getInstance() {
         return INSTANCE;
     }
@@ -154,11 +154,7 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     }
 
     public QValue create(File value) throws RepositoryException, IOException {
-        if (InternalValue.USE_DATA_STORE) {
-            InputStream in = new FileInputStream(value);
-            return InternalValue.createTemporary(in);
-        } else {
-            return InternalValue.create(value);
-        }
+        InputStream in = new FileInputStream(value);
+        return InternalValue.createTemporary(in);
     }
 }
