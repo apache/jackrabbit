@@ -94,9 +94,7 @@ public class FilterMultiColumnQuery implements MultiColumnQuery {
                 }
             }
         };
-        if (orderings.length > 0 && hits.getSelectorNames().length > 1) {
-            // subsequent ordering is only needed
-            // when there is more than one column
+        if (orderings.length > 0) {
             hits = new SortedMultiColumnQueryHits(hits, orderings, searcher.getIndexReader());
         }
         return hits;

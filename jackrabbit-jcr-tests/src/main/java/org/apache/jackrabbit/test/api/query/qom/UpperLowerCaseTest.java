@@ -20,7 +20,6 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -31,13 +30,10 @@ import javax.jcr.query.qom.QueryObjectModelConstants;
  */
 public class UpperLowerCaseTest extends AbstractQOMTest {
 
-    private ValueFactory vf;
-
     private Node node;
 
     protected void setUp() throws Exception {
         super.setUp();
-        vf = superuser.getValueFactory();
         node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "abc");
         node.setProperty(propertyName2, "ABC");
@@ -45,7 +41,6 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
     }
 
     protected void tearDown() throws Exception {
-        vf = null;
         node = null;
         super.tearDown();
     }

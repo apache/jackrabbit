@@ -37,7 +37,7 @@ public final class ScoreNode {
     /**
      * The score of the node.
      */
-    private final float score;
+    private float score;
 
     /**
      * The lucene document number for this score node. Set to <code>-1</code> if
@@ -80,6 +80,15 @@ public final class ScoreNode {
      */
     public float getScore() {
         return score;
+    }
+
+    /**
+     * Sets a new score value.
+     *
+     * @param score the score value.
+     */
+    public void setScore(float score) {
+        this.score = score;
     }
 
     /**

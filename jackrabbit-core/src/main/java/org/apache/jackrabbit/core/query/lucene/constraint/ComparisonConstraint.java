@@ -76,10 +76,10 @@ public class ComparisonConstraint extends SelectorBasedConstraint {
         if (sn == null) {
             return false;
         }
-        Value[] values = operand1.getValues(sn, context);
         try {
-            for (int i = 0; i < values.length; i++) {
-                if (evaluate(values[i])) {
+            Value[] values = operand1.getValues(sn, context);
+            for (Value value : values) {
+                if (evaluate(value)) {
                     return true;
                 }
             }

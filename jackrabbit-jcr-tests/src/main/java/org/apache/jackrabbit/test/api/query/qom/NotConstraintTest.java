@@ -21,32 +21,28 @@ import javax.jcr.Node;
 import javax.jcr.query.QueryResult;
 
 /**
- * <code>PropertyExistenceTest</code> performs a test with
- * <code>PropertyExistence</code>.
+ * <code>NotConstraintTest</code> contains tests that check NOT constraints.
  */
-public class PropertyExistenceTest extends AbstractQOMTest {
+public class NotConstraintTest extends AbstractQOMTest {
 
-    public void testPropertyExistence() throws RepositoryException {
+    public void testNot() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.setProperty(propertyName1, "abc");
+        n1.setProperty(propertyName1, "foo");
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        n2.setProperty(propertyName2, "abc");
+        n2.setProperty(propertyName2, "bar");
         superuser.save();
 
         QueryResult result = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
-                        qf.childNode("s", testRoot),
-                        qf.propertyExistence("s", propertyName1)
-                ), null, null).execute();
-        checkResult(result, new Node[]{n1});
-
-        result = qf.createQuery(
-                qf.selector(testNodeType, "s"),
-                qf.and(
-                        qf.childNode("s", testRoot),
-                        qf.propertyExistence("s", propertyName2)
-                ), null, null).execute();
+                        qf.descendantNode("s", testRootNode.getPath()),
+                        qf.not(
+                                qf.propertyExistence("s", propertyName1)
+                        )
+                ),
+                null,
+                null
+        ).execute();
         checkResult(result, new Node[]{n2});
     }
 }

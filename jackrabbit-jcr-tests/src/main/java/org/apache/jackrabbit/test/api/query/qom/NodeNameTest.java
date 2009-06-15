@@ -20,7 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -36,13 +35,10 @@ public class NodeNameTest extends AbstractQOMTest {
 
     private Node node1;
 
-    private ValueFactory vf;
-
     protected void setUp() throws Exception {
         super.setUp();
         node1 = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
-        vf = superuser.getValueFactory();
     }
 
     protected void tearDown() throws Exception {
