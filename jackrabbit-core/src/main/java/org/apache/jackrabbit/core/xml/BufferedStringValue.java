@@ -63,12 +63,12 @@ class BufferedStringValue implements TextValue {
      * The maximum size for buffering data in memory.
      */
     private static final int MAX_BUFFER_SIZE = 0x10000;
-    
+
     /**
      * The in-memory buffer.
      */
     private StringWriter buffer;
-    
+
     /**
      * The number of characters written so far.
      * If the in-memory buffer is used, this is position within buffer (size of actual data in buffer)
@@ -80,7 +80,7 @@ class BufferedStringValue implements TextValue {
      * MAX_BUFFER_SIZE.
      */
     private File tmpFile;
-    
+
     /**
      * Writer used to write to tmpFile.
      */
@@ -88,7 +88,7 @@ class BufferedStringValue implements TextValue {
 
     private final NamePathResolver nsContext;
     private final ValueFactory valueFactory;
-    
+
     /**
      * Whether the value is base64 encoded.
      */
@@ -116,7 +116,7 @@ class BufferedStringValue implements TextValue {
     public long length() throws IOException {
         return length;
     }
-    
+
     private String retrieveString() throws IOException {
         String value = retrieve();
         if (base64) {
@@ -158,7 +158,7 @@ class BufferedStringValue implements TextValue {
             throw new IOException("this instance has already been disposed");
         }
     }
-    
+
     private Reader openReader() throws IOException {
         return new InputStreamReader(
                 new BufferedInputStream(new FileInputStream(tmpFile)), "UTF-8");
@@ -290,21 +290,8 @@ class BufferedStringValue implements TextValue {
                 } else {
                     // >= 65kb: deserialize BINARY type
                     // using Reader and temporary file
-                    if (InternalValue.USE_DATA_STORE) {
-                        Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
-                        return InternalValue.createTemporary(in);
-                    }
-                    TransientFileFactory fileFactory = TransientFileFactory.getInstance();
-                    File tmpFile = fileFactory.createTransientFile("bin", null, null);
-                    FileOutputStream out = new FileOutputStream(tmpFile);
-                    Reader reader = reader();
-                    try {
-                        Base64.decode(reader, out);
-                    } finally {
-                        reader.close();
-                        out.close();
-                    }
-                    return InternalValue.create(tmpFile);
+                    Base64ReaderInputStream in = new Base64ReaderInputStream(reader());
+                    return InternalValue.createTemporary(in);
                 }
             } else {
                 // convert serialized value to InternalValue using
@@ -383,7 +370,7 @@ class BufferedStringValue implements TextValue {
 
     /**
      * Whether this value is base64 encoded
-     * 
+     *
      * @param base64 the flag
      */
     public void setBase64(boolean base64) {

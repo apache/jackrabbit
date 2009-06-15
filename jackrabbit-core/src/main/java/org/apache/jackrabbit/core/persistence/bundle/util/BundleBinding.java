@@ -609,7 +609,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.BINARY:
                     try {
                         long size = val.getLength();
-                        if (InternalValue.USE_DATA_STORE && dataStore != null) {
+                        if (dataStore != null) {
                             int maxMemorySize = dataStore.getMinRecordLength() - 1;
                             if (size < maxMemorySize) {
                                 writeSmallBinary(out, val, state, i);
