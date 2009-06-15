@@ -195,7 +195,6 @@
   + * (nt:nodeType) = nt:nodeType protected abort
 
 [rep:root] > nt:unstructured
-  orderable
   + jcr:system (rep:system) = rep:system mandatory ignore
 
 [rep:system]

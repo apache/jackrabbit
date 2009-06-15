@@ -305,13 +305,14 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
      * {@inheritDoc}
      */
     public boolean hasOrderableChildNodes() {
-        return ntd.hasOrderableChildNodes();
+        return ent.hasOrderableChildNodes();
     }
 
     /**
      * {@inheritDoc}
      */
     public String getPrimaryItemName() {
+        // TODO JCR-1947: JSR 283: Node Type Attribute Subtyping Rules
         try {
             Name piName = ntd.getPrimaryItemName();
             if (piName != null) {

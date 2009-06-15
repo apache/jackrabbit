@@ -1466,6 +1466,15 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
                 }
+                // check whether specified node type definition overrides
+                // a supertypes's primaryItem -> illegal (JCR-1947)
+                if (ntd.getPrimaryItemName() != null
+                        && est.getPrimaryItemName() != null) {
+                    String msg = "[" + name + "] primaryItemName is already specified by a supertype and must therefore not be overridden.";
+                    log.debug(msg);
+                    throw new InvalidNodeTypeDefException(msg);
+
+                }
             } catch (NodeTypeConflictException ntce) {
                 String msg = "[" + name + "] failed to validate supertypes";
                 log.debug(msg);
