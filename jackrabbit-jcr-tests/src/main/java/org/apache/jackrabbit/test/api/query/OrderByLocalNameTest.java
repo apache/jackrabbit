@@ -55,13 +55,4 @@ public class OrderByLocalNameTest extends AbstractOrderByTest {
         // no SQL equivalent
         return null;
     }
-
-    private static String getLocalName(String name) {
-        int idx = name.indexOf(':');
-        if (idx != -1) {
-            return name.substring(idx + 1);
-        } else {
-            return name;
-        }
-    }
 }
