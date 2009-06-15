@@ -55,6 +55,11 @@ public class EffectiveNodeType implements Cloneable {
     // list of unnamed item definitions (i.e. residual definitions)
     private final ArrayList unnamedItemDefs;
 
+    // flag indicating whether any included node type supports orderable child nodes
+    private boolean orderableChildNodes;
+
+    private Name primaryItemName;
+
     /**
      * private constructor.
      */
@@ -64,6 +69,8 @@ public class EffectiveNodeType implements Cloneable {
         allNodeTypes = new TreeSet();
         namedItemDefs = new HashMap();
         unnamedItemDefs = new ArrayList();
+        orderableChildNodes = false;
+        primaryItemName = null;
     }
 
     /**
@@ -204,6 +211,34 @@ public class EffectiveNodeType implements Cloneable {
             ent.internalMerge(base, true);
         }
 
+        // resolve 'orderable child nodes' attribute value (JCR-1947)
+        if (ntd.hasOrderableChildNodes()) {
+            ent.orderableChildNodes = true;
+        } else {
+            Name[] nta = ent.getInheritedNodeTypes();
+            for (int i = 0; i < nta.length; i++) {
+                NodeTypeDef def = (NodeTypeDef) ntdCache.get(nta[i]);
+                if (def.hasOrderableChildNodes()) {
+                    ent.orderableChildNodes = true;
+                    break;
+                }
+            }
+        }
+
+        // resolve 'primary item' attribute value (JCR-1947)
+        if (ntd.getPrimaryItemName() != null) {
+            ent.primaryItemName = ntd.getPrimaryItemName();
+        } else {
+            Name[] nta = ent.getInheritedNodeTypes();
+            for (int i = 0; i < nta.length; i++) {
+                NodeTypeDef def = (NodeTypeDef) ntdCache.get(nta[i]);
+                if (def.getPrimaryItemName() != null) {
+                    ent.primaryItemName = def.getPrimaryItemName();
+                    break;
+                }
+            }
+        }
+
         // we're done
         return ent;
     }
@@ -216,6 +251,18 @@ public class EffectiveNodeType implements Cloneable {
      */
     static EffectiveNodeType create() {
         return new EffectiveNodeType();
+    }
+
+    /**
+     * Returns true if any of the included node types supports
+     * 'orderable child nodes'; returns alse otherwise.
+     */
+    public boolean hasOrderableChildNodes() {
+        return orderableChildNodes;
+    }
+    
+    public Name getPrimaryItemName() {
+        return primaryItemName;
     }
 
     public Name[] getMergedNodeTypes() {
@@ -1150,6 +1197,15 @@ public class EffectiveNodeType implements Cloneable {
             for (int i = 0; i < nta.length; i++) {
                 inheritedNodeTypes.add(nta[i]);
             }
+        }
+
+        // update 'orderable child nodes' attribute value (JCR-1947)
+        if (other.hasOrderableChildNodes()) {
+            orderableChildNodes = true;
+        }
+        // update 'primary item' attribute value (JCR-1947)
+        if (primaryItemName == null && other.getPrimaryItemName() != null) {
+            primaryItemName = other.getPrimaryItemName();
         }
     }
 
