@@ -19,25 +19,32 @@ package org.apache.jackrabbit.test.api.query.qom;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModelFactory;
 
 /**
- * <code>PropertyExistenceTest</code> performs a test with
- * <code>PropertyExistence</code>.
+ * <code>PropertyValueTest</code> performs a test with property value
+ * comparision.
  */
-public class PropertyExistenceTest extends AbstractQOMTest {
+public class PropertyValueTest extends AbstractQOMTest {
+
+    private static final String TEXT = "abc";
 
     public void testPropertyExistence() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        n1.setProperty(propertyName1, "abc");
+        n1.setProperty(propertyName1, TEXT);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        n2.setProperty(propertyName2, "abc");
+        n2.setProperty(propertyName2, TEXT);
         superuser.save();
 
         QueryResult result = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.childNode("s", testRoot),
-                        qf.propertyExistence("s", propertyName1)
+                        qf.comparison(
+                                qf.propertyValue("s", propertyName1),
+                                QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
+                                qf.literal(vf.createValue(TEXT))
+                        )
                 ), null, null).execute();
         checkResult(result, new Node[]{n1});
 
@@ -45,7 +52,11 @@ public class PropertyExistenceTest extends AbstractQOMTest {
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.childNode("s", testRoot),
-                        qf.propertyExistence("s", propertyName2)
+                        qf.comparison(
+                                qf.propertyValue("s", propertyName2),
+                                QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
+                                qf.literal(vf.createValue(TEXT))
+                        )
                 ), null, null).execute();
         checkResult(result, new Node[]{n2});
     }

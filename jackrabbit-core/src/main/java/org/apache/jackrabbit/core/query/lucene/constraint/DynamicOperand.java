@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
-import java.io.IOException;
-
 import javax.jcr.Value;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 
@@ -40,8 +39,8 @@ public abstract class DynamicOperand {
      * @param sn      the current score node.
      * @param context the evaluation context.
      * @return the values for the given score node.
-     * @throws IOException if an error occurs while retrieving the value.
+     * @throws RepositoryException if an error occurs while retrieving the value.
      */
     public abstract Value[] getValues(ScoreNode sn, EvaluationContext context)
-            throws IOException;
+            throws RepositoryException;
 }

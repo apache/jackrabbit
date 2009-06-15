@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -48,11 +47,8 @@ public class BindVariableValueTest extends AbstractQOMTest {
 
     private Query query;
 
-    private ValueFactory vf;
-
     protected void setUp() throws Exception {
         super.setUp();
-        vf = superuser.getValueFactory();
         query = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
@@ -66,7 +62,6 @@ public class BindVariableValueTest extends AbstractQOMTest {
     }
 
     protected void tearDown() throws Exception {
-        vf = null;
         query = null;
         super.tearDown();
     }

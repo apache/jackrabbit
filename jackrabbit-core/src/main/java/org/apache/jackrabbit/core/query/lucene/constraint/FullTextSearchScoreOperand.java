@@ -16,31 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
-import org.apache.jackrabbit.core.SessionImpl;
 
 /**
- * <code>NodeNameOperand</code> implements a node name operand.
+ * <code>FullTextSearchScoreOperand</code> implements a full text search score
+ * operand.
  */
-public class NodeNameOperand extends DynamicOperand {
+public class FullTextSearchScoreOperand extends DynamicOperand {
 
     /**
-     * Returns the name of the node denoted by the given score node
-     * <code>sn</code>.
-     *
-     * @param sn      the score node.
-     * @param context the evaluation context.
-     * @return the node name.
-     * @throws RepositoryException if an error occurs while reading the name.
+     * {@inheritDoc}
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
             throws RepositoryException {
-        SessionImpl session = context.getSession();
-        String name = session.getNodeById(sn.getNodeId()).getName();
-        return new Value[]{session.getValueFactory().createValue(name, PropertyType.NAME)};
+        return new Value[]{context.getSession().getValueFactory().createValue(sn.getScore())};
     }
 }

@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene.constraint;
 
-import java.io.IOException;
-
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -53,7 +51,7 @@ public class LengthOperand extends DynamicOperand {
      * {@inheritDoc}
      */
     public Value[] getValues(ScoreNode sn, EvaluationContext context)
-            throws IOException {
+            throws RepositoryException {
         PropertyState ps = property.getPropertyState(sn, context);
         if (ps == null) {
             return EMPTY;
@@ -65,16 +63,12 @@ public class LengthOperand extends DynamicOperand {
             for (int i = 0; i < lengths.length; i++) {
                 long len;
                 int type = values[i].getType();
-                try {
-                    if (type == PropertyType.NAME) {
-                        len = vf.createValue(qvf.create(values[i].getName())).getString().length();
-                    } else if (type == PropertyType.PATH) {
-                        len = vf.createValue(qvf.create(values[i].getPath())).getString().length();
-                    } else {
-                        len = Util.getLength(values[i]);
-                    }
-                } catch (RepositoryException e) {
-                    throw Util.createIOException(e);
+                if (type == PropertyType.NAME) {
+                    len = vf.createValue(qvf.create(values[i].getName())).getString().length();
+                } else if (type == PropertyType.PATH) {
+                    len = vf.createValue(qvf.create(values[i].getPath())).getString().length();
+                } else {
+                    len = Util.getLength(values[i]);
                 }
                 lengths[i] = vf.createValue(len);
             }

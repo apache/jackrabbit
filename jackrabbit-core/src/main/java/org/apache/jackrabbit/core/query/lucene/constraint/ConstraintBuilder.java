@@ -31,17 +31,12 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.AndImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ComparisonImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.ConstraintImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.EquiJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LiteralImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
@@ -50,16 +45,13 @@ import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NotImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.query.qom.OrImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.SameNodeImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.SameNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.StaticOperandImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 
 /**
  * <code>ConstraintBuilder</code> builds a {@link Constraint} from a tree of
@@ -99,7 +91,7 @@ public class ConstraintBuilder {
     /**
      * A QOM tree visitor that translates the contraints.
      */
-    private static final class Visitor implements QOMTreeVisitor {
+    private static final class Visitor extends DefaultQOMTreeVisitor {
 
         /**
          * The bind variables and their values.
@@ -156,17 +148,6 @@ public class ConstraintBuilder {
                     getSelector(node.getSelectorQName()));
         }
 
-        public Object visit(ChildNodeJoinConditionImpl node, Object data)
-                throws Exception {
-            // not used
-            return null;
-        }
-
-        public Object visit(ColumnImpl node, Object data) throws Exception {
-            // not used
-            return null;
-        }
-
         public Object visit(ComparisonImpl node, Object data) throws Exception {
             DynamicOperandImpl op1 = (DynamicOperandImpl) node.getOperand1();
             Operator operator = node.getOperatorInstance();
@@ -189,18 +170,6 @@ public class ConstraintBuilder {
                     getSelector(node.getSelectorQName()));
         }
 
-        public Object visit(DescendantNodeJoinConditionImpl node, Object data)
-                throws Exception {
-            // not used
-            return null;
-        }
-
-        public Object visit(EquiJoinConditionImpl node, Object data)
-                throws Exception {
-            // not used
-            return null;
-        }
-
         public Object visit(FullTextSearchImpl node, Object data)
                 throws Exception {
             return new FullTextConstraint(node,
@@ -209,13 +178,7 @@ public class ConstraintBuilder {
 
         public Object visit(FullTextSearchScoreImpl node, Object data)
                 throws Exception {
-            // TODO
-            return null;
-        }
-
-        public Object visit(JoinImpl node, Object data) throws Exception {
-            // not used
-            return null;
+            return new FullTextSearchScoreOperand();
         }
 
         public Object visit(LengthImpl node, Object data) throws Exception {
@@ -288,11 +251,6 @@ public class ConstraintBuilder {
             return new NotConstraint((Constraint) c.accept(this, null));
         }
 
-        public Object visit(OrderingImpl node, Object data) throws Exception {
-            // not used
-            return null;
-        }
-
         public Object visit(OrImpl node, Object data) throws Exception {
             ConstraintImpl left = (ConstraintImpl) node.getConstraint1();
             ConstraintImpl right = (ConstraintImpl) node.getConstraint2();
@@ -310,26 +268,9 @@ public class ConstraintBuilder {
             return new PropertyValueOperand(node);
         }
 
-        public Object visit(QueryObjectModelTree node, Object data)
-                throws Exception {
-            // not used
-            return null;
-        }
-
         public Object visit(SameNodeImpl node, Object data) throws Exception {
             return new SameNodeConstraint(node,
                     getSelector(node.getSelectorQName()));
-        }
-
-        public Object visit(SameNodeJoinConditionImpl node, Object data)
-                throws Exception {
-            // not used
-            return null;
-        }
-
-        public Object visit(SelectorImpl node, Object data) throws Exception {
-            // not used
-            return null;
         }
 
         public Object visit(UpperCaseImpl node, Object data) throws Exception {
@@ -338,10 +279,6 @@ public class ConstraintBuilder {
         }
 
         private SelectorImpl getSelector(Name name) {
-            if (name == null) {
-                // assume default selector
-                return selectors[0];
-            }
             for (SelectorImpl selector : selectors) {
                 if (selector.getSelectorQName().equals(name)) {
                     return selector;
@@ -349,6 +286,5 @@ public class ConstraintBuilder {
             }
             return null;
         }
-
     }
 }

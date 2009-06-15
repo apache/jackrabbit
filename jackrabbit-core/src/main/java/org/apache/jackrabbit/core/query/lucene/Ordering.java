@@ -120,7 +120,7 @@ public class Ordering {
                     throws Exception {
                 selectorName[0] = node.getSelectorQName();
                 return new SortField(null, SortField.SCORE,
-                        ordering.isAscending());
+                        !ordering.isAscending());
             }
 
             public Object visit(NodeLocalNameImpl node, Object data) throws Exception {

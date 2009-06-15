@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
 import javax.jcr.Binary;
 import javax.jcr.query.QueryResult;
@@ -40,18 +39,15 @@ public class LengthTest extends AbstractQOMTest {
 
     private Node node;
 
-    private ValueFactory vf;
 
     protected void setUp() throws Exception {
         super.setUp();
         node = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
-        vf = superuser.getValueFactory();
     }
 
     protected void tearDown() throws Exception {
         node = null;
-        vf = null;
         super.tearDown();
     }
 

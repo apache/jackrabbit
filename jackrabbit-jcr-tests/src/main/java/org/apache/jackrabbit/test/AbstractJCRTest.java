@@ -284,6 +284,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
      */
     protected Node testRootNode;
 
+    /**
+     * The value factory for {@link #superuser}.
+     */
+    protected ValueFactory vf;
+
     protected void setUp() throws Exception {
         super.setUp();
         testRoot = getProperty(RepositoryStub.PROP_TESTROOT);
@@ -375,6 +380,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
                     }
                 }
             }
+            vf = superuser.getValueFactory();
         }
 
         if (isReadOnly) {
@@ -413,6 +419,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
             } finally {
                 superuser.logout();
                 superuser = null;
+                vf = null;
             }
         }
         testRootNode = null;

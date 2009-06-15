@@ -20,7 +20,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModel;
@@ -42,15 +41,12 @@ class AbstractOrderByTest extends AbstractQueryTest {
     /** If <code>true</code> this repository supports sql queries */
     protected boolean checkSQL;
 
-    protected ValueFactory vf;
-
     private String[] nodeNames;
 
     protected void setUp() throws Exception {
         super.setUp();
         checkSQL = isSupported(Repository.OPTION_QUERY_SQL_SUPPORTED);
         nodeNames = new String[]{nodeName1, nodeName2, nodeName3, nodeName4};
-        vf = superuser.getValueFactory();
     }
 
     /**

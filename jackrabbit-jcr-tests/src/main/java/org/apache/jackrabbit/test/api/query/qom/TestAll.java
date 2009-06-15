@@ -29,6 +29,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("QOM tests");
 
+        suite.addTestSuite(AndConstraintTest.class);
         suite.addTestSuite(BindVariableValueTest.class);
         suite.addTestSuite(ChildNodeJoinConditionTest.class);
         suite.addTestSuite(ChildNodeTest.class);
@@ -36,11 +37,15 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DescendantNodeJoinConditionTest.class);
         suite.addTestSuite(DescendantNodeTest.class);
         suite.addTestSuite(EquiJoinConditionTest.class);
+        suite.addTestSuite(FullTextSearchScoreTest.class);
         suite.addTestSuite(LengthTest.class);
         suite.addTestSuite(NodeLocalNameTest.class);
         suite.addTestSuite(NodeNameTest.class);
+        suite.addTestSuite(NotConstraintTest.class);
+        suite.addTestSuite(OrConstraintTest.class);
         suite.addTestSuite(OrderingTest.class);
         suite.addTestSuite(PropertyExistenceTest.class);
+        suite.addTestSuite(PropertyValueTest.class);
         suite.addTestSuite(QueryObjectModelFactoryTest.class);
         suite.addTestSuite(RowTest.class);
         suite.addTestSuite(SameNodeJoinConditionTest.class); 
