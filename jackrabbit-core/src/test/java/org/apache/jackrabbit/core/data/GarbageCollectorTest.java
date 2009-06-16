@@ -123,7 +123,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         n.remove();
         session.save();
-        
+
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
 
         if (gc.getDataStore() instanceof FileDataStore) {
@@ -212,6 +212,8 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
 
         deleteMyNodes();
+
+        s2.logout();
     }
 
     public void afterScanning(Node n) throws RepositoryException {

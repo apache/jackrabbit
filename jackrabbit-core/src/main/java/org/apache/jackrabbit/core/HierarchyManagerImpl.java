@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -186,7 +185,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * @return set of parent <code>NodeId</code>s. If state has no parent,
      *         array has length <code>0</code>.
      */
-    protected Set getParentIds(ItemState state, boolean useOverlayed) {
+    protected Set<NodeId> getParentIds(ItemState state, boolean useOverlayed) {
         if (state.isNode()) {
             // if this is a node, quickly check whether it is shareable and
             // whether it contains more than one parent
@@ -194,18 +193,18 @@ public class HierarchyManagerImpl implements HierarchyManager {
             if (ns.isShareable() && useOverlayed && ns.hasOverlayedState()) {
                 ns = (NodeState) ns.getOverlayedState();
             }
-            Set s = ns.getSharedSet();
+            Set<NodeId> s = ns.getSharedSet();
             if (s.size() > 1) {
                 return s;
             }
         }
         NodeId parentId = getParentId(state);
         if (parentId != null) {
-            LinkedHashSet s = new LinkedHashSet();
+            LinkedHashSet<NodeId> s = new LinkedHashSet<NodeId>();
             s.add(parentId);
             return s;
         }
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     /**
@@ -577,15 +576,13 @@ public class HierarchyManagerImpl implements HierarchyManager {
         }
         try {
             ItemState state = getItemState(descendant);
-            Set parentIds = getParentIds(state, false);
+            Set<NodeId> parentIds = getParentIds(state, false);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return true;
                 }
-                Set grandparentIds = new LinkedHashSet();
-                Iterator iter = parentIds.iterator();
-                while (iter.hasNext()) {
-                    NodeId parentId = (NodeId) iter.next();
+                Set<NodeId> grandparentIds = new LinkedHashSet<NodeId>();
+                for (NodeId parentId : parentIds) {
                     grandparentIds.addAll(getParentIds(getItemState(parentId), false));
                 }
                 parentIds = grandparentIds;
@@ -617,16 +614,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
         int depth = 1;
         try {
             ItemState state = getItemState(descendant);
-            Set parentIds = getParentIds(state, true);
+            Set<NodeId> parentIds = getParentIds(state, true);
             while (parentIds.size() > 0) {
                 if (parentIds.contains(ancestor)) {
                     return depth;
                 }
                 depth++;
-                Set grandparentIds = new LinkedHashSet();
-                Iterator iter = parentIds.iterator();
-                while (iter.hasNext()) {
-                    NodeId parentId = (NodeId) iter.next();
+                Set<NodeId> grandparentIds = new LinkedHashSet<NodeId>();
+                for (NodeId parentId : parentIds) {
                     state = getItemState(parentId);
                     grandparentIds.addAll(getParentIds(state, true));
                 }

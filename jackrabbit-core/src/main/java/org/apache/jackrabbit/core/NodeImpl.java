@@ -251,7 +251,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (isTransient()) {
             return true;
         }
-        Iterator iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
+        Iterator<ItemState> iter = stateMgr.getDescendantTransientItemStates((NodeId) id);
         return iter.hasNext();
     }
 
@@ -353,13 +353,12 @@ public class NodeImpl extends ItemImpl implements Node {
                 genValues = new InternalValue[]{InternalValue.create(thisState.getNodeTypeName())};
             } else if (name.equals(NameConstants.JCR_MIXINTYPES)) {
                 // jcr:mixinTypes property
-                Set mixins = thisState.getMixinTypeNames();
-                ArrayList values = new ArrayList(mixins.size());
-                Iterator iter = mixins.iterator();
-                while (iter.hasNext()) {
-                    values.add(InternalValue.create((Name) iter.next()));
+                Set<Name> mixins = thisState.getMixinTypeNames();
+                ArrayList<InternalValue> values = new ArrayList<InternalValue>(mixins.size());
+                for (Name n : mixins) {
+                    values.add(InternalValue.create(n));
                 }
-                genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
+                genValues = values.toArray(new InternalValue[values.size()]);
             }
         }
 
@@ -654,11 +653,11 @@ public class NodeImpl extends ItemImpl implements Node {
         if (thisState.hasChildNodeEntries()) {
             // remove child nodes
             // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp = new ArrayList(thisState.getChildNodeEntries());
+            ArrayList<ChildNodeEntry> tmp = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
                 ChildNodeEntry entry =
-                        (ChildNodeEntry) tmp.get(i);
+                        tmp.get(i);
                 // recursively remove child node
                 NodeId childId = entry.getId();
                 //NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
@@ -671,9 +670,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // remove properties
         // use temp set to avoid ConcurrentModificationException
-        HashSet tmp = new HashSet(thisState.getPropertyNames());
-        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
+        HashSet<Name> tmp = new HashSet<Name>(thisState.getPropertyNames());
+        for (Name propName : tmp) {
             // remove the property entry
             thisState.removePropertyName(propName);
             // remove property
@@ -803,8 +801,8 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // check protected flag of parent (i.e. this) node and retention/hold
-        int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD |
-                ItemValidator.CHECK_RETENTION;
+        int options = ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD
+                | ItemValidator.CHECK_RETENTION;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // now do create the child node
@@ -833,10 +831,10 @@ public class NodeImpl extends ItemImpl implements Node {
         // call internalSetValue for setting the jcr:mixinTypes property
         // to avoid checking of the 'protected' flag
         InternalValue[] vals = new InternalValue[mixinNames.size()];
-        Iterator iter = mixinNames.iterator();
+        Iterator<Name> iter = mixinNames.iterator();
         int cnt = 0;
         while (iter.hasNext()) {
-            vals[cnt++] = InternalValue.create((Name) iter.next());
+            vals[cnt++] = InternalValue.create(iter.next());
         }
         prop.internalSetValue(vals, PropertyType.NAME);
     }
@@ -846,7 +844,7 @@ public class NodeImpl extends ItemImpl implements Node {
      *
      * @return a set of the <code>Name</code>s of this node's mixin types.
      */
-    public Set getMixinTypeNames() {
+    public Set<Name> getMixinTypeNames() {
         return data.getNodeState().getMixinTypeNames();
     }
 
@@ -1012,8 +1010,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
@@ -1042,7 +1040,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
+            Set<Name> mixins = new HashSet<Name>(data.getNodeState().getMixinTypeNames());
 
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
@@ -1065,7 +1063,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // modify the state of this node
             NodeState thisState = (NodeState) getOrCreateTransientItemState();
             // add mixin name
-            Set mixins = new HashSet(thisState.getMixinTypeNames());
+            Set<Name> mixins = new HashSet<Name>(thisState.getMixinTypeNames());
             mixins.add(mixinName);
             thisState.setMixinTypeNames(mixins);
 
@@ -1118,8 +1116,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         session.getValidator().checkModify(this, options, permissions);
 
@@ -1133,7 +1131,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
 
         // build effective node type of remaining mixin's & primary type
-        Set remainingMixins = new HashSet<Name>(state.getMixinTypeNames());
+        Set<Name> remainingMixins = new HashSet<Name>(state.getMixinTypeNames());
         // remove name of target mixin
         remainingMixins.remove(mixinName);
         EffectiveNodeType entResulting;
@@ -1195,9 +1193,8 @@ public class NodeImpl extends ItemImpl implements Node {
         boolean success = false;
         try {
             // use temp set to avoid ConcurrentModificationException
-            HashSet set = new HashSet<Name>(thisState.getPropertyNames());
-            for (Iterator iter = set.iterator(); iter.hasNext();) {
-                Name propName = (Name) iter.next();
+            HashSet<Name> set = new HashSet<Name>(thisState.getPropertyNames());
+            for (Name propName : set) {
                 PropertyState propState = (PropertyState) stateMgr.getItemState(new PropertyId(thisState.getNodeId(), propName));
                 // check if property has been defined by mixin type (or one of its supertypes)
                 PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
@@ -1259,10 +1256,10 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             }
             // use temp array to avoid ConcurrentModificationException
-            ArrayList list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
+            ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
             // start from tail to avoid problems with same-name siblings
             for (int i = list.size() - 1; i >= 0; i--) {
-                ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
+                ChildNodeEntry entry = list.get(i);
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
                 NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
                 // check if node has been defined by mixin type (or one of its supertypes)
@@ -1317,7 +1314,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (ntName.equals(primary)) {
             return true;
         }
-        Set mixins = data.getNodeState().getMixinTypeNames();
+        Set<Name> mixins = data.getNodeState().getMixinTypeNames();
         if (mixins.contains(ntName)) {
             return true;
         }
@@ -1853,14 +1850,14 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // make sure this node is checked-out and neither protected nor locked
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
-                ItemValidator.CHECK_CONSTRAINTS;
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+                | ItemValidator.CHECK_CONSTRAINTS;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
-        ArrayList list = new ArrayList(data.getNodeState().getChildNodeEntries());
+        ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
-            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = list.get(i);
             if (srcInd == -1) {
                 if (entry.getName().equals(srcName.getName())
                         && (entry.getIndex() == srcName.getIndex()
@@ -1953,7 +1950,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new ItemNotFoundException(
                     this + ": no child node entry with id " + id);
         }
-        List cneList = new ArrayList(state.getChildNodeEntries());
+        List<ChildNodeEntry> cneList = new ArrayList<ChildNodeEntry>(state.getChildNodeEntries());
 
         // remove existing
         existing.remove();
@@ -1977,8 +1974,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // replace child node entry with different name
             // but preserving original position
             state.removeAllChildNodeEntries();
-            for (Iterator iter = cneList.iterator(); iter.hasNext();) {
-                ChildNodeEntry cne = (ChildNodeEntry) iter.next();
+            for (ChildNodeEntry cne : cneList) {
                 if (cne.getId().equals(id)) {
                     // replace entry with different name
                     state.addChildNodeEntry(nodeName, id);
@@ -2796,15 +2792,15 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        Set mixinNames = data.getNodeState().getMixinTypeNames();
+        Set<Name> mixinNames = data.getNodeState().getMixinTypeNames();
         if (mixinNames.isEmpty()) {
             return new NodeType[0];
         }
         NodeType[] nta = new NodeType[mixinNames.size()];
-        Iterator iter = mixinNames.iterator();
+        Iterator<Name> iter = mixinNames.iterator();
         int i = 0;
         while (iter.hasNext()) {
-            nta[i++] = session.getNodeTypeManager().getNodeType((Name) iter.next());
+            nta[i++] = session.getNodeTypeManager().getNodeType(iter.next());
         }
         return nta;
     }
@@ -2851,9 +2847,9 @@ public class NodeImpl extends ItemImpl implements Node {
         if (!mixin.isMixin()) {
             return false;
         }
-        
-        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+
+        int options = ItemValidator.CHECK_LOCK | ItemValidator.CHECK_VERSIONING
+                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         int permissions = Permission.NODE_TYPE_MNGMT;
         // special handling of mix:(simple)versionable. since adding the mixin alters
         // the version storage jcr:versionManagement privilege is required
@@ -2880,7 +2876,7 @@ public class NodeImpl extends ItemImpl implements Node {
         EffectiveNodeType entExisting;
         try {
             // existing mixin's
-            Set mixins = new HashSet(data.getNodeState().getMixinTypeNames());
+            Set<Name> mixins = new HashSet<Name>(data.getNodeState().getMixinTypeNames());
 
             // build effective node type representing primary type including existing mixin's
             entExisting = ntReg.getEffectiveNodeType(primaryTypeName, mixins);
@@ -3102,15 +3098,13 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList list = new ArrayList();
+        ArrayList<NodeImpl> list = new ArrayList<NodeImpl>();
 
         if (!isShareable()) {
             list.add(this);
         } else {
             NodeState state = data.getNodeState();
-            Iterator iter = state.getSharedSet().iterator();
-            while (iter.hasNext()) {
-                NodeId parentId = (NodeId) iter.next();
+            for (NodeId parentId : state.getSharedSet()) {
                 list.add(itemMgr.getNode(getNodeId(), parentId));
             }
         }
@@ -3497,7 +3491,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // do checks
         sanityCheck();
         checkVersionable();
-        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         // check if 'own' version
@@ -3568,7 +3562,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // do checks
         sanityCheck();
-        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK| ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_PENDING_CHANGES | ItemValidator.CHECK_LOCK | ItemValidator.CHECK_HOLD;
         session.getValidator().checkModify(this, options, Permission.NONE);
 
         Version v = getVersionHistory().getVersionByLabel(versionLabel);
@@ -3757,7 +3751,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException if an error occurs.
      * @throws AccessDeniedException if access is denied
      */
-    private NodeImpl doMergeTest(SessionImpl srcSession, List failedIds, boolean bestEffort)
+    private NodeImpl doMergeTest(SessionImpl srcSession, List<ItemId> failedIds, boolean bestEffort)
             throws RepositoryException, AccessDeniedException {
 
         // If N does not have a corresponding node then the merge result for N is leave.
@@ -3795,7 +3789,7 @@ public class NodeImpl extends ItemImpl implements Node {
             // thus determining the result of a merge is non-trivial.
             if (bestEffort) {
                 // add 'offending' version to jcr:mergeFailed property
-                Set set = internalGetMergeFailed();
+                Set<String> set = internalGetMergeFailed();
                 set.add(srcNode.getBaseVersion().getUUID());
                 internalSetMergeFailed(set);
                 failedIds.add(id);
@@ -3827,7 +3821,7 @@ public class NodeImpl extends ItemImpl implements Node {
         session.getValidator().checkModify(this, options, Permission.VERSION_MNGMT);
 
         // check if version is in mergeFailed list
-        Set failed = internalGetMergeFailed();
+        Set<String> failed = internalGetMergeFailed();
         if (!failed.remove(version.getUUID())) {
             String msg =
                 "Unable to finish merge. Specified version is not in"
@@ -3869,8 +3863,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return
      * @throws RepositoryException
      */
-    private Set internalGetMergeFailed() throws RepositoryException {
-        HashSet set = new HashSet();
+    private Set<String> internalGetMergeFailed() throws RepositoryException {
+        HashSet<String> set = new HashSet<String>();
         if (hasProperty(NameConstants.JCR_MERGEFAILED)) {
             Value[] vals = getProperty(NameConstants.JCR_MERGEFAILED).getValues();
             for (int i = 0; i < vals.length; i++) {
@@ -3884,15 +3878,15 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param set
      * @throws RepositoryException
      */
-    private void internalSetMergeFailed(Set set) throws RepositoryException {
+    private void internalSetMergeFailed(Set<String> set) throws RepositoryException {
         if (set.isEmpty()) {
             internalSetProperty(NameConstants.JCR_MERGEFAILED, (InternalValue[]) null);
         } else {
             InternalValue[] vals = new InternalValue[set.size()];
-            Iterator iter = set.iterator();
+            Iterator<String> iter = set.iterator();
             int i = 0;
             while (iter.hasNext()) {
-                String uuid = (String) iter.next();
+                String uuid = iter.next();
                 vals[i++] = InternalValue.create(UUID.fromString(uuid));
             }
             internalSetProperty(NameConstants.JCR_MERGEFAILED, vals);
@@ -4048,7 +4042,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     private void internalMerge(String srcWorkspaceName,
-                               List failedIds, boolean bestEffort,
+                               List<ItemId> failedIds, boolean bestEffort,
                                boolean shallow)
             throws NoSuchWorkspaceException, AccessDeniedException,
             LockException, InvalidItemStateException, RepositoryException {
@@ -4101,7 +4095,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws LockException
      * @throws RepositoryException
      */
-    private void internalMerge(SessionImpl srcSession, List failedIds,
+    private void internalMerge(SessionImpl srcSession, List<ItemId> failedIds,
                                boolean bestEffort, boolean removeExisting,
                                boolean replaceExisting, boolean shallow)
             throws LockException, RepositoryException {
@@ -4317,7 +4311,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param removeExisting remove existing flag
      * @throws RepositoryException if an error occurs
      */
-    public void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel, 
+    public void restoreFrozenState(InternalFrozenNode freeze, VersionSelector vsel,
                             Set<Version> restored, boolean removeExisting)
             throws RepositoryException {
 
@@ -4633,7 +4627,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (stateMgr.hasNodeReferences(targetId)) {
                 NodeReferences refs = stateMgr.getNodeReferences(targetId);
                 // refs.getReferences() returns a list of PropertyId's
-                List idList = refs.getReferences();
+                List<PropertyId> idList = refs.getReferences();
                 if (name != null) {
                     Name qName;
                     try {
@@ -4641,9 +4635,8 @@ public class NodeImpl extends ItemImpl implements Node {
                     } catch (NameException e) {
                         throw new RepositoryException("invalid property name: " + name, e);
                     }
-                    ArrayList filteredList = new ArrayList(idList.size());
-                    for (Iterator iter = idList.iterator(); iter.hasNext();) {
-                        PropertyId propId = (PropertyId) iter.next();
+                    ArrayList<PropertyId> filteredList = new ArrayList<PropertyId>(idList.size());
+                    for (PropertyId propId : filteredList) {
                         if (propId.getName().equals(qName)) {
                             filteredList.add(propId);
                         }
@@ -4676,17 +4669,17 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        // TODO tweak query implemention in order to support WEAKREFERENCE reverse lookup 
+        // TODO tweak query implemention in order to support WEAKREFERENCE reverse lookup
         try {
             Query q = session.getWorkspace().getQueryManager().createQuery(
                     "//*[jcr:contains(., '" + data.getId() + "')]",
                     //"//*[@*='" + data.getId() + "']",
                     Query.XPATH);
             QueryResult result = q.execute();
-            ArrayList l = new ArrayList<Property>();
-            for (NodeIterator nit = result.getNodes(); nit.hasNext(); ) {
+            ArrayList<Property> l = new ArrayList<Property>();
+            for (NodeIterator nit = result.getNodes(); nit.hasNext();) {
                 Node n = nit.nextNode();
-                for (PropertyIterator pit = n.getProperties(); pit.hasNext(); ) {
+                for (PropertyIterator pit = n.getProperties(); pit.hasNext();) {
                     Property p = pit.nextProperty();
                     if (p.getType() == PropertyType.WEAKREFERENCE
                             && p.getString().equals(getIdentifier())) {
@@ -4751,8 +4744,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // make sure this node is checked-out, neither protected nor locked and
         // the editing session has sufficient permission to change the primary type.
-        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK |
-                ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        int options = ItemValidator.CHECK_VERSIONING | ItemValidator.CHECK_LOCK
+                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
         session.getValidator().checkModify(this, options, Permission.NODE_TYPE_MNGMT);
 
         final NodeState state = data.getNodeState();
@@ -4805,12 +4798,12 @@ public class NodeImpl extends ItemImpl implements Node {
             onRedefine(defId);
         }
 
-        Set oldDefs = new HashSet(Arrays.asList(entOld.getAllItemDefs()));
-        Set newDefs = new HashSet(Arrays.asList(entNew.getAllItemDefs()));
-        Set allDefs = new HashSet(Arrays.asList(entAll.getAllItemDefs()));
+        Set<ItemDef> oldDefs = new HashSet<ItemDef>(Arrays.asList(entOld.getAllItemDefs()));
+        Set<ItemDef> newDefs = new HashSet<ItemDef>(Arrays.asList(entNew.getAllItemDefs()));
+        Set<ItemDef> allDefs = new HashSet<ItemDef>(Arrays.asList(entAll.getAllItemDefs()));
 
         // added child item definitions
-        Set addedDefs = new HashSet(newDefs);
+        Set<ItemDef> addedDefs = new HashSet<ItemDef>(newDefs);
         addedDefs.removeAll(oldDefs);
 
         // referential integrity check
@@ -4840,9 +4833,8 @@ public class NodeImpl extends ItemImpl implements Node {
         // walk through properties and child nodes and change definition as necessary
 
         // use temp set to avoid ConcurrentModificationException
-        HashSet set = new HashSet(thisState.getPropertyNames());
-        for (Iterator iter = set.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
+        HashSet<Name> set = new HashSet<Name>(thisState.getPropertyNames());
+        for (Name propName : set) {
             try {
                 PropertyState propState =
                         (PropertyState) stateMgr.getItemState(
@@ -4909,10 +4901,10 @@ public class NodeImpl extends ItemImpl implements Node {
         }
 
         // use temp array to avoid ConcurrentModificationException
-        ArrayList list = new ArrayList(thisState.getChildNodeEntries());
+        ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
         // start from tail to avoid problems with same-name siblings
         for (int i = list.size() - 1; i >= 0; i--) {
-            ChildNodeEntry entry = (ChildNodeEntry) list.get(i);
+            ChildNodeEntry entry = list.get(i);
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
                 if (!allDefs.contains(ntReg.getNodeDef(nodeState.getDefinitionId()))) {
@@ -4947,8 +4939,8 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // create items that are defined as auto-created by the new primary node
         // type and at the same time were not present with the old nt
-        for (Iterator iter = addedDefs.iterator(); iter.hasNext();) {
-            ItemDef def = (ItemDef) iter.next();
+        for (Iterator<ItemDef> iter = addedDefs.iterator(); iter.hasNext();) {
+            ItemDef def = iter.next();
             if (def.isAutoCreated()) {
                 if (def.definesNode()) {
                     NodeDefinitionImpl ndi = ntMgr.getNodeDefinition(((NodeDef) def).getId());

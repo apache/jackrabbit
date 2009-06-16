@@ -33,8 +33,8 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class SessionGarbageCollectedTest extends AbstractJCRTest {
 
     public void testSessionsGetGarbageCollected() throws RepositoryException {
-        ArrayList list = new ArrayList();
-        ReferenceQueue detect = new ReferenceQueue();
+        ArrayList<WeakReference<Session>> list = new ArrayList<WeakReference<Session>>();
+        ReferenceQueue<Session> detect = new ReferenceQueue<Session>();
         Error error = null;
         try {
             for (int i = 0;; i++) {
@@ -43,7 +43,7 @@ public class SessionGarbageCollectedTest extends AbstractJCRTest {
                 // (or quickly runs out of memory)
                 Node n = s.getRootNode().addNode("n" + i);
                 n.setProperty("x", new String(new char[1000000]));
-                list.add(new WeakReference(s, detect));
+                list.add(new WeakReference<Session>(s, detect));
                 if (detect.poll() != null) {
                     break;
                 }
@@ -52,8 +52,8 @@ public class SessionGarbageCollectedTest extends AbstractJCRTest {
             error = e;
         }
         for (int i = 0; i < list.size(); i++) {
-            Reference ref = (Reference) list.get(i);
-            Session s = (Session) ref.get();
+            Reference<Session> ref = list.get(i);
+            Session s = ref.get();
             if (s != null) {
                 s.logout();
             }
