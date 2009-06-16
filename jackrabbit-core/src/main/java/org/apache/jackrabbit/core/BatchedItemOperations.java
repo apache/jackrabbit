@@ -434,7 +434,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         // adjust references that refer to uuid's which have been mapped to
         // newly generated uuid's on copy/clone
-        Iterator iter = refTracker.getProcessedReferences();
+        Iterator<Object> iter = refTracker.getProcessedReferences();
         while (iter.hasNext()) {
             PropertyState prop = (PropertyState) iter.next();
             // being paranoid...
@@ -547,8 +547,8 @@ public class BatchedItemOperations extends ItemValidator {
         // 2. check if target state can be removed from old/added to new parent
 
         checkRemoveNode(target, srcParent.getNodeId(),
-                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS |
-                        CHECK_HOLD | CHECK_RETENTION);
+                CHECK_ACCESS | CHECK_LOCK | CHECK_VERSIONING | CHECK_CONSTRAINTS
+                | CHECK_HOLD | CHECK_RETENTION);
         checkAddNode(destParent, destName.getName(),
                 target.getNodeTypeName(), CHECK_ACCESS | CHECK_LOCK
                 | CHECK_VERSIONING | CHECK_CONSTRAINTS | CHECK_HOLD | CHECK_RETENTION);
@@ -1122,7 +1122,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
         NodeState node = stateMgr.createNew(id, nodeTypeName, parent.getNodeId());
         if (mixinNames != null && mixinNames.length > 0) {
-            node.setMixinTypeNames(new HashSet(Arrays.asList(mixinNames)));
+            node.setMixinTypeNames(new HashSet<Name>(Arrays.asList(mixinNames)));
         }
         node.setDefinitionId(def.getId());
 
@@ -1144,16 +1144,12 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // add 'auto-create' properties defined in node type
-        PropDef[] pda = ent.getAutoCreatePropDefs();
-        for (int i = 0; i < pda.length; i++) {
-            PropDef pd = pda[i];
+        for (PropDef pd : ent.getAutoCreatePropDefs()) {
             createPropertyState(node, pd.getName(), pd.getRequiredType(), pd);
         }
 
         // recursively add 'auto-create' child nodes defined in node type
-        NodeDef[] nda = ent.getAutoCreateNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDef nd = nda[i];
+        for (NodeDef nd : ent.getAutoCreateNodeDefs()) {
             createNodeState(node, nd.getName(), nd.getDefaultPrimaryType(),
                     null, null, nd);
         }
@@ -1539,13 +1535,12 @@ public class BatchedItemOperations extends ItemValidator {
                 genValues = new InternalValue[]{InternalValue.create(parent.getNodeTypeName())};
             } else if (NameConstants.JCR_MIXINTYPES.equals(name)) {
                 // jcr:mixinTypes property
-                Set mixins = parent.getMixinTypeNames();
-                ArrayList values = new ArrayList(mixins.size());
-                Iterator iter = mixins.iterator();
-                while (iter.hasNext()) {
-                    values.add(InternalValue.create((Name) iter.next()));
+                Set<Name> mixins = parent.getMixinTypeNames();
+                ArrayList<InternalValue> values = new ArrayList<InternalValue>(mixins.size());
+                for (Name n : mixins) {
+                    values.add(InternalValue.create(n));
                 }
-                genValues = (InternalValue[]) values.toArray(new InternalValue[values.size()]);
+                genValues = values.toArray(new InternalValue[values.size()]);
             }
         } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)) {
             // nt:hierarchyNode node type
@@ -1591,10 +1586,10 @@ public class BatchedItemOperations extends ItemValidator {
         if (targetState.hasChildNodeEntries()) {
             // remove child nodes
             // use temp array to avoid ConcurrentModificationException
-            ArrayList tmp = new ArrayList(targetState.getChildNodeEntries());
+            ArrayList<ChildNodeEntry> tmp = new ArrayList<ChildNodeEntry>(targetState.getChildNodeEntries());
             // remove from tail to avoid problems with same-name siblings
             for (int i = tmp.size() - 1; i >= 0; i--) {
-                ChildNodeEntry entry = (ChildNodeEntry) tmp.get(i);
+                ChildNodeEntry entry = tmp.get(i);
                 NodeId nodeId = entry.getId();
                 try {
                     NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
@@ -1625,9 +1620,8 @@ public class BatchedItemOperations extends ItemValidator {
 
         // remove properties
         // use temp set to avoid ConcurrentModificationException
-        HashSet tmp = new HashSet(targetState.getPropertyNames());
-        for (Iterator iter = tmp.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
+        HashSet<Name> tmp = new HashSet<Name>(targetState.getPropertyNames());
+        for (Name propName : tmp) {
             PropertyId propId =
                     new PropertyId(targetState.getNodeId(), propName);
             try {
@@ -1758,9 +1752,7 @@ public class BatchedItemOperations extends ItemValidator {
                 newState.addShare(destParentId);
             }
             // copy child nodes
-            Iterator iter = srcState.getChildNodeEntries().iterator();
-            while (iter.hasNext()) {
-                ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            for (ChildNodeEntry entry : srcState.getChildNodeEntries()) {
                 Path srcChildPath = PathFactoryImpl.getInstance().create(srcPath, entry.getName(), true);
                 if (!srcAccessMgr.isGranted(srcChildPath, Permission.READ)) {
                     continue;
@@ -1826,9 +1818,7 @@ public class BatchedItemOperations extends ItemValidator {
                 history = manager.getVersionHistory(session, newState, copiedFrom);
             }
             // copy properties
-            iter = srcState.getPropertyNames().iterator();
-            while (iter.hasNext()) {
-                Name propName = (Name) iter.next();
+            for (Name propName : srcState.getPropertyNames()) {
                 Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);
                 if (!srcAccessMgr.canRead(propPath)) {
                     continue;
@@ -1967,7 +1957,7 @@ public class BatchedItemOperations extends ItemValidator {
     private boolean isShareable(NodeState state) throws RepositoryException {
         // shortcut: check some wellknown built-in types first
         Name primary = state.getNodeTypeName();
-        Set mixins = state.getMixinTypeNames();
+        Set<Name> mixins = state.getMixinTypeNames();
         if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
             return true;
         }

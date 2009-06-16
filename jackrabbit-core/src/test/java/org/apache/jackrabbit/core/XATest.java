@@ -947,10 +947,10 @@ public class XATest extends AbstractJCRTest {
 
         // commit
         utx.commit();
-        
+
         // Check if it is locked in other session
         Session other = helper.getSuperuserSession();
-        Node nOther = other.getNodeByUUID(n.getUUID());        
+        Node nOther = other.getNodeByUUID(n.getUUID());
         assertTrue(nOther.isLocked());
 
         // Check if it is also locked in other transaction
@@ -958,16 +958,19 @@ public class XATest extends AbstractJCRTest {
         // start new Transaction and try to add locktoken
         utx = new UserTransactionImpl(other2);
         utx.begin();
-        
-        Node nOther2 = other2.getNodeByUUID(n.getUUID());        
+
+        Node nOther2 = other2.getNodeByUUID(n.getUUID());
         assertTrue(nOther2.isLocked());
-        
+
         utx.commit();
-    
+
+        other.logout();
+        other2.logout();
+
     }
 
     /**
-     * Test add and remove lock tokens in a transaction 
+     * Test add and remove lock tokens in a transaction
      * @throws Exception
      */
     public void testAddRemoveLockToken() throws Exception {
@@ -976,18 +979,18 @@ public class XATest extends AbstractJCRTest {
         utx.begin();
 
         // add node that is both lockable and referenceable, save
-        Node rootNode = superuser.getRootNode(); 
+        Node rootNode = superuser.getRootNode();
         Node n = rootNode.addNode(nodeName1);
         n.addMixin(mixLockable);
         n.addMixin(mixReferenceable);
         rootNode.save();
 
         String uuid = n.getUUID();
-        
+
         // lock this new node
         Lock lock = n.lock(true, false);
         String lockToken = lock.getLockToken();
-        
+
         // assert: session must get a non-null lock token
         assertNotNull("session must get a non-null lock token", lockToken);
 
@@ -996,10 +999,10 @@ public class XATest extends AbstractJCRTest {
 
         superuser.removeLockToken(lockToken);
         assertNull("session must get a null lock token", lock.getLockToken());
-        
+
         // commit
         utx.commit();
-        
+
         // refresh Lock Info
         lock = n.getLock();
 
@@ -1009,8 +1012,8 @@ public class XATest extends AbstractJCRTest {
         // start new Transaction and try to add lock token
         utx = new UserTransactionImpl(other);
         utx.begin();
-        
-        Node otherNode = other.getNodeByUUID(uuid); 
+
+        Node otherNode = other.getNodeByUUID(uuid);
         assertTrue("Node not locked", otherNode.isLocked());
         try {
             otherNode.setProperty(propertyName1, "foo");
@@ -1018,20 +1021,20 @@ public class XATest extends AbstractJCRTest {
         } catch (LockException e) {
             // expected
         }
-        
+
         // add lock token
         other.addLockToken(lockToken);
-        
+
         // refresh Lock Info
         lock = otherNode.getLock();
 
         // assert: session must hold lock token
-        assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));        
-        
+        assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));
+
         otherNode.unlock();
-        
+
         assertFalse("Node is locked", otherNode.isLocked());
-        
+
         otherNode.setProperty(propertyName1, "foo");
         other.save();
         utx.commit();
@@ -1742,7 +1745,7 @@ public class XATest extends AbstractJCRTest {
 
         utx.commit();
     }
-    
+
     /**
      * Return a flag indicating whether the indicated session contains
      * a specific lock token
@@ -1755,5 +1758,5 @@ public class XATest extends AbstractJCRTest {
             }
         }
         return false;
-    }    
+    }
 }

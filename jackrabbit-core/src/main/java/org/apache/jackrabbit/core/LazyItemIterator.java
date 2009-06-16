@@ -71,7 +71,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param itemMgr item manager
      * @param idList  list of item id's
      */
-    public LazyItemIterator(ItemManager itemMgr, List<ItemId> idList) {
+    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList) {
         this(itemMgr, idList, null);
     }
 
@@ -84,7 +84,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
      * @param idList  list of item id's
      * @param parentId parent id.
      */
-    public LazyItemIterator(ItemManager itemMgr, List<ItemId> idList, NodeId parentId) {
+    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList, NodeId parentId) {
         this.itemMgr = itemMgr;
         this.idList = new ArrayList<ItemId>(idList);
         this.parentId = parentId;

@@ -383,10 +383,11 @@ public class SessionItemStateManager
      *                                   deleted externally
      * @throws RepositoryException       if another error occurs
      */
-    public Iterator getDescendantTransientItemStates(NodeId parentId)
+    public Iterator<ItemState> getDescendantTransientItemStates(NodeId parentId)
             throws InvalidItemStateException, RepositoryException {
         if (transientStore.isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
 
         // build ordered collection of descendant transient states
@@ -460,7 +461,8 @@ public class SessionItemStateManager
          * situation
          */
         if (resultIter.getIterators().isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
         return resultIter;
     }
@@ -473,9 +475,10 @@ public class SessionItemStateManager
      *                 instances to be returned.
      * @return an iterator over descendant transient item state instances in the attic
      */
-    public Iterator getDescendantTransientItemStatesInAttic(NodeId parentId) {
+    public Iterator<ItemState> getDescendantTransientItemStatesInAttic(NodeId parentId) {
         if (atticStore.isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
 
         // build ordered collection of descendant transient states in attic
@@ -489,9 +492,7 @@ public class SessionItemStateManager
         // the depth is used as array index
         List[] la = new List[10];
         try {
-            Iterator iter = atticStore.values().iterator();
-            while (iter.hasNext()) {
-                ItemState state = (ItemState) iter.next();
+            for (ItemState state : atticStore.values()) {
                 // determine relative depth: > 0 means it's a descendant
                 //int depth = zombieHierMgr.getRelativeDepth(parentId, state.getId());
                 int depth = zombieHierMgr.getShareRelativeDepth(parentId, state.getId());
@@ -534,7 +535,8 @@ public class SessionItemStateManager
          * situation
          */
         if (resultIter.getIterators().isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            List<ItemState> empty = Collections.emptyList();
+            return empty.iterator();
         }
         return resultIter;
     }
@@ -729,16 +731,12 @@ public class SessionItemStateManager
     public void disposeAllTransientItemStates() {
         // dispose item states in transient map & attic
         // (use temp collection to avoid ConcurrentModificationException)
-        Collection tmp = new ArrayList(transientStore.values());
-        Iterator iter = tmp.iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+        Collection<ItemState> tmp = new ArrayList<ItemState>(transientStore.values());
+        for (ItemState state : tmp) {
             disposeTransientItemState(state);
         }
-        tmp = new ArrayList(atticStore.values());
-        iter = tmp.iterator();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+        tmp = new ArrayList<ItemState>(atticStore.values());
+        for (ItemState state : tmp) {
             disposeTransientItemStateInAttic(state);
         }
     }

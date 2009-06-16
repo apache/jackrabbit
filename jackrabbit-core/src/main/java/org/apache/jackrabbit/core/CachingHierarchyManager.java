@@ -308,9 +308,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 // Item not cached, ignore
                 return;
             }
-            PathMap.Element[] elements = entry.getElements();
-            for (int i = 0; i < elements.length; i++) {
-                Iterator iter = elements[i].getChildren();
+            for (PathMap.Element element : entry.getElements()) {
+                Iterator iter = element.getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     ChildNodeEntry cne = modified.getChildNodeEntry(
@@ -393,12 +392,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             if (entry == null) {
                 return;
             }
-            PathMap.Element[] parents = entry.getElements();
-            for (int i = 0; i < parents.length; i++) {
-                HashMap newChildrenOrder = new HashMap();
+            for (PathMap.Element parent : entry.getElements()) {
+                HashMap<Path.Element, PathMap.Element> newChildrenOrder = new HashMap<Path.Element, PathMap.Element>();
                 boolean orderChanged = false;
 
-                Iterator iter = parents[i].getChildren();
+                Iterator iter = parent.getChildren();
                 while (iter.hasNext()) {
                     PathMap.Element child = (PathMap.Element) iter.next();
                     LRUEntry childEntry = (LRUEntry) child.get();
@@ -436,7 +434,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
                 if (orderChanged) {
                     /* If at least one child changed its position, reorder */
-                    parents[i].setChildren(newChildrenOrder);
+                    parent.setChildren(newChildrenOrder);
                 }
             }
             checkConsistency();
