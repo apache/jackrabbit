@@ -73,7 +73,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
                 config = (RepositoryConfig) param;
             }
             if (config == null) {
-                config = org.apache.jackrabbit.client.spi2dav.RepositoryConfigImpl.create(parameters);
+                config = org.apache.jackrabbit.client.spi2davex.RepositoryConfigImpl.create(parameters);
                 if (config == null) {
                     config = org.apache.jackrabbit.client.spi2dav.RepositoryConfigImpl.create(parameters);
                 }
