@@ -17,8 +17,12 @@
 
 # See also jcr-spec.pdf
 
+select * from test where name=$nt:name
+
 # 6.7.1 Query (p 99)
 select * from test
+SELECT * FROM TEST
+SeLeCt * FrOm test
 select * from test where id=1
 select * from test where id=1 order by id
 select * from test order by id
@@ -171,15 +175,11 @@ select * from test where name=$name
 select * from test where name=$x and id=$y
 select * from test where name=$x14
 select * from test where name=$_
-select * from test where name=$äöü
-select * from test where name=$äöü
 
 # 6.7.36 Prefix (p 124)
 select * from test where name=$nt:name
 select * from test where name=$_:name
 select * from test where name=$_1:name
-select * from test where name=$_-.0:name
-select * from test where name=$x..:name
 
 # 6.7.37 Ordering (p 125)
 # 6.7.38 Order (p 126)

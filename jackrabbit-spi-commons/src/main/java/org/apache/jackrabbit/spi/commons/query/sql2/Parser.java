@@ -120,6 +120,9 @@ public class Parser {
             read("BY");
             orderings = parseOrder();
         }
+        if (currentToken.length() > 0) {
+            throw getSyntaxError("<end>");
+        }
         return factory.createQuery(source, constraint, orderings, columnArray);
     }
 
@@ -192,7 +195,7 @@ public class Parser {
         String name = readName();
         JoinCondition c;
         if (identifier && readIf("(")) {
-            if ("ISSAMENODE".equals(name)) {
+            if ("ISSAMENODE".equalsIgnoreCase(name)) {
                 String selector1 = readName();
                 read(",");
                 String selector2 = readName();
@@ -202,11 +205,11 @@ public class Parser {
                     // TODO verify "." is correct
                     c = factory.sameNodeJoinCondition(selector1, selector2, ".");
                 }
-            } else if ("ISCHILDNODE".equals(name)) {
+            } else if ("ISCHILDNODE".equalsIgnoreCase(name)) {
                 String childSelector = readName();
                 read(",");
                 c = factory.childNodeJoinCondition(childSelector, readName());
-            } else if ("ISDESCENDANTNODE".equals(name)) {
+            } else if ("ISDESCENDANTNODE".equalsIgnoreCase(name)) {
                 String descendantSelector = readName();
                 read(",");
                 c = factory.descendantNodeJoinCondition(descendantSelector, readName());
@@ -322,7 +325,7 @@ public class Parser {
 
     private Constraint parseConditionFuntionIf(String functionName) throws RepositoryException {
         Constraint c;
-        if ("CONTAINS".equals(functionName)) {
+        if ("CONTAINS".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(".")) {
                 if (readIf("*")) {
@@ -338,21 +341,21 @@ public class Parser {
                 read(",");
                 c = factory.fullTextSearch(getOnlySelectorName(), name, readString());
             }
-        } else if ("ISSAMENODE".equals(functionName)) {
+        } else if ("ISSAMENODE".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.sameNode(name, readPath());
             } else {
                 c = factory.sameNode(getOnlySelectorName(), name);
             }
-        } else if ("ISCHILDNODE".equals(functionName)) {
+        } else if ("ISCHILDNODE".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.childNode(name, readPath());
             } else {
                 c = factory.childNode(getOnlySelectorName(), name);
             }
-        } else if ("ISDESCENDANTNODE".equals(functionName)) {
+        } else if ("ISDESCENDANTNODE".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.descendantNode(name, readPath());
@@ -382,29 +385,29 @@ public class Parser {
 
     private DynamicOperand parseExpressionFunction(String functionName) throws RepositoryException {
         DynamicOperand op;
-        if ("LENGTH".equals(functionName)) {
+        if ("LENGTH".equalsIgnoreCase(functionName)) {
             op = factory.length(parsePropertyValue(readName()));
-        } else if ("NAME".equals(functionName)) {
+        } else if ("NAME".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
                 op = factory.nodeName(getOnlySelectorName());
             } else {
                 op = factory.nodeName(readName());
             }
-        } else if ("LOCALNAME".equals(functionName)) {
+        } else if ("LOCALNAME".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
                 op = factory.nodeLocalName(getOnlySelectorName());
             } else {
                 op = factory.nodeLocalName(readName());
             }
-        } else if ("SCORE".equals(functionName)) {
+        } else if ("SCORE".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
                 op = factory.fullTextSearchScore(getOnlySelectorName());
             } else {
                 op = factory.fullTextSearchScore(readName());
             }
-        } else if ("LOWER".equals(functionName)) {
+        } else if ("LOWER".equalsIgnoreCase(functionName)) {
             op = factory.lowerCase(parseDynamicOperand());
-        } else if ("UPPER".equals(functionName)) {
+        } else if ("UPPER".equalsIgnoreCase(functionName)) {
             op = factory.upperCase(parseDynamicOperand());
         } else {
             throw getSyntaxError("LENGTH, NAME, LOCALNAME, SCORE, LOWER, UPPER, or CAST");
@@ -454,6 +457,9 @@ public class Parser {
         } else if (currentTokenType == PARAMETER) {
             read();
             String name = readName();
+            if (readIf(":")) {
+                name = name + ":" + readName();
+            }
             BindVariableValue var = bindVariables.get(name);
             if (var == null) {
                 var = factory.bindVariable(name);
@@ -483,7 +489,7 @@ public class Parser {
             throw getSyntaxError("static operand");
         }
     }
-    
+
     private Value parseCastAs(Value value) throws RepositoryException {
         if (readIf("STRING")) {
             return valueFactory.createValue(value.getString());
@@ -610,7 +616,7 @@ public class Parser {
     }
 
     private boolean isToken(String token) {
-        boolean result = token.equals(currentToken) && !currentTokenQuoted;
+        boolean result = token.equalsIgnoreCase(currentToken) && !currentTokenQuoted;
         if (result) {
             return true;
         }
@@ -619,7 +625,7 @@ public class Parser {
     }
 
     private void read(String expected) throws RepositoryException {
-        if (!expected.equals(currentToken) || currentTokenQuoted) {
+        if (!expected.equalsIgnoreCase(currentToken) || currentTokenQuoted) {
             throw getSyntaxError(expected);
         }
         read();
@@ -664,7 +670,6 @@ public class Parser {
         int[] types = new int[len];
         len--;
         query.getChars(0, len, command, 0);
-        boolean changed = false;
         command[len] = ' ';
         int startLoop = 0;
         for (int i = 0; i < len; i++) {
@@ -720,8 +725,6 @@ public class Parser {
                 break;
             default:
                 if (c >= 'a' && c <= 'z') {
-                    command[i] = (char) (c - ('a' - 'A'));
-                    changed = true;
                     type = CHAR_NAME;
                 } else if (c >= 'A' && c <= 'Z') {
                     type = CHAR_NAME;
@@ -730,11 +733,6 @@ public class Parser {
                 } else {
                     if (Character.isJavaIdentifierPart(c)) {
                         type = CHAR_NAME;
-                        char u = Character.toUpperCase(c);
-                        if (u != c) {
-                            command[i] = u;
-                            changed = true;
-                        }
                     }
                 }
             }
@@ -743,9 +741,6 @@ public class Parser {
         statementChars = command;
         types[len] = CHAR_END;
         characterTypes = types;
-        if (changed) {
-            statement = new String(command);
-        }
         parseIndex = 0;
     }
 
@@ -825,12 +820,12 @@ public class Parser {
                         readDecimal(start, i);
                         break;
                     }
-                    if (c == 'E') {
+                    if (c == 'E' || c == 'e') {
                         readDecimal(start, i);
                         break;
                     }
                     checkLiterals(false);
-                    currentValue = valueFactory.createValue((long) number);
+                    currentValue = valueFactory.createValue(number);
                     currentTokenType = VALUE;
                     currentToken = "0";
                     parseIndex = i;
@@ -868,7 +863,7 @@ public class Parser {
             throw getSyntaxError();
         }
     }
-    
+
     private void readString(int i, char end) throws RepositoryException {
         char[] chars = statementChars;
         String result = null;
@@ -911,7 +906,7 @@ public class Parser {
             }
             i++;
         }
-        if (chars[i] == 'E') {
+        if (chars[i] == 'E' || chars[i] == 'e') {
             i++;
             if (chars[i] == '+' || chars[i] == '-') {
                 i++;
@@ -932,7 +927,7 @@ public class Parser {
             throw new InvalidQueryException("Data conversion error converting " + sub + " to BigDecimal: " + e);
         }
         checkLiterals(false);
-        
+
         currentValue = valueFactory.createValue(bd);
         currentTokenType = VALUE;
     }
@@ -954,7 +949,7 @@ public class Parser {
 
     private InvalidQueryException getSyntaxError(String expected) {
         int index = Math.min(parseIndex, statement.length() - 1);
-        String query = statement.substring(0, index) + ">*<" + statement.substring(index).trim();
+        String query = statement.substring(0, index) + "(*)" + statement.substring(index).trim();
         if (expected != null) {
             query += "; expected: " + expected;
         }
@@ -970,11 +965,11 @@ public class Parser {
         private String propertyName;
         private String columnName;
     }
-    
+
     /**
      * Get the selector name if only one selector exists in the query.
      * If more than one selector exists, an exception is thrown.
-     * 
+     *
      * @return the selector name
      */
     private String getOnlySelectorName() throws RepositoryException {
