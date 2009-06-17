@@ -184,7 +184,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable {
      * @return a human readable string representation
      */
     public String toString() {
-        return DomUtil.getQualifiedName(name, namespace);
+        return DomUtil.getExpandedName(name, namespace);
     }
 
     /**
