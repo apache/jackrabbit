@@ -100,6 +100,7 @@ public final class QValueValue implements Value {
             case PropertyType.DOUBLE:
             case PropertyType.LONG:
             case PropertyType.DATE:
+            case PropertyType.STRING:
                 return qvalue.getDecimal();
             default:
                 throw new ValueFormatException("incompatible type " + PropertyType.nameFromValue(qvalue.getType()));
@@ -177,7 +178,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * @see javax.jcr.Value#getType() 
+     * @see javax.jcr.Value#getType()
      */
     public int getType() {
         return qvalue.getType();
@@ -196,7 +197,7 @@ public final class QValueValue implements Value {
     }
 
     /**
-     * @see Object#hashCode() 
+     * @see Object#hashCode()
      */
     public int hashCode() {
         return qvalue.hashCode();

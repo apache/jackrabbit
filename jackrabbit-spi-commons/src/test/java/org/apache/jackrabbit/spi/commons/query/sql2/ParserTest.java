@@ -23,6 +23,7 @@ import java.util.Random;
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.QueryObjectModel;
 import junit.framework.TestCase;
@@ -42,7 +43,7 @@ public class ParserTest extends TestCase {
     protected Parser parser;
 
     protected Random random = new Random();
-    
+
     static class QOMF extends QueryObjectModelFactoryImpl  {
 
         public QOMF(NamePathResolver resolver, ValueFactory factory) {
@@ -53,12 +54,12 @@ public class ParserTest extends TestCase {
                 RepositoryException {
             return null;
         }
-        
+
     };
 
     protected void setUp() throws Exception {
         super.setUp();
-        NamePathResolver resolver = new DefaultNamePathResolver(new DummyNamespaceResolver());        
+        NamePathResolver resolver = new DefaultNamePathResolver(new DummyNamespaceResolver());
         ValueFactory vf = new ValueFactoryQImpl(QValueFactoryImpl.getInstance(), resolver);
         QueryObjectModelFactoryImpl factory = new QOMF(resolver, vf);
         parser = new Parser(factory, vf);
@@ -130,6 +131,8 @@ public class ParserTest extends TestCase {
             String q = buff.toString();
             try {
                 parser.createQueryObjectModel(q);
+            } catch (ValueFormatException e) {
+                // OK
             } catch (InvalidQueryException e) {
                 // OK
             } catch (NamespaceException e) {
