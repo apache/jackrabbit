@@ -27,7 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Binary;
 
 /**
- * <code>QValue</code> is the qualified SPI representation of a
+ * <code>QValue</code> is the SPI representation of a
  * {@link javax.jcr.Value jcr value}. It therefore refers to <code>Name</code>s
  * and <code>Path</code>s only and is thus isolated from session-specific
  * namespace mappings.

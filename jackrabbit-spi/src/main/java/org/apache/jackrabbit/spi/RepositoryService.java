@@ -68,9 +68,9 @@ import javax.jcr.version.VersionException;
  * If <code>srcWorkspaceName</code> differs from the workspace name present with
  * the SessionInfo, the copy is corresponds to a copy across workspaces.
  * The source and destination of the copy operation are specified by
- * {@link NodeId}s. The <code>Name</code> holds the new name in fully qualified
- * form. Taken together, this information is sufficient to completely specify
- * and authorize the copy operations.<p/>
+ * {@link NodeId}s. The <code>Name</code> holds the new name. Taken together,
+ * this information is sufficient to completely specify and authorize the copy
+ * operations.<p/>
  *
  * The RepositoryService in addition allows to create and submit {@link Batch}
  * objects, that cover lists of operations that have to be applied to the

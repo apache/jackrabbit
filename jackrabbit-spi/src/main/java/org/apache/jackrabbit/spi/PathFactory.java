@@ -119,7 +119,7 @@ public interface PathFactory {
     public Path create(String pathString) throws IllegalArgumentException;
 
     /**
-     * Creates a path element with the given qualified name.
+     * Creates a path element from the given <code>name</code>.
      * The created path element does not contain an explicit index.
      * <p/>
      * If the specified name denotes a <i>special</i> path element (either

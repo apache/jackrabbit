@@ -108,7 +108,7 @@ public interface Batch {
      * 
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
-     * @param value The qualified value of the property to be created.
+     * @param value The value of the property to be created.
      * @throws ValueFormatException
      * @throws VersionException
      * @throws LockException
@@ -139,7 +139,7 @@ public interface Batch {
      *
      * @param parentId NodeId identifying the parent node.
      * @param propertyName Name of the property to be created.
-     * @param values The qualified values of the property to be created.
+     * @param values The values of the property to be created.
      * @throws javax.jcr.ValueFormatException
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.lock.LockException
