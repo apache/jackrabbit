@@ -31,14 +31,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NamespaceException;
 
 /**
- * <code>QNodeTypeDefinitionImpl</code> implements a qualified node type
+ * <code>QNodeTypeDefinitionImpl</code> implements a SPI node type
  * definition based on a JCR {@link NodeType}.
  */
 class QNodeTypeDefinitionImpl
         extends org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl {
 
     /**
-     * Creates a new qualified node type definition based on a JCR
+     * Creates a new SPI node type definition based on a JCR
      * <code>NodeType</code>.
      *
      * @param nt            the JCR node type.
@@ -66,12 +66,11 @@ class QNodeTypeDefinitionImpl
     }
 
     /**
-     * Returns the qualified names of the passed node types using the namespace
-     * resolver to parse the names.
+     * Builds the names of the passed node types using the given <code>resolver</code>.
      *
      * @param nt the node types.
      * @param resolver the name and path resolver.
-     * @return the qualified names of the node types.
+     * @return the names of the node types.
      * @throws IllegalNameException   if a node type returns an illegal name.
      * @throws NamespaceException if the name of a node type contains a
      *                            prefix that is not known to <code>rResolver</code>.
@@ -88,12 +87,12 @@ class QNodeTypeDefinitionImpl
     }
 
     /**
-     * Returns qualified property definitions for JCR property definitions.
+     * Builds SPI property definitions from the given {@link javax.jcr.nodetype.PropertyDefinition}s.
      *
      * @param propDefs   the JCR property definitions.
      * @param resolver
      * @param factory    the value factory.
-     * @return qualified property definitions.
+     * @return property definitions.
      * @throws RepositoryException    if an error occurs while converting the
      *                                definitions.
      */
@@ -109,11 +108,11 @@ class QNodeTypeDefinitionImpl
     }
 
     /**
-     * Returns qualified node definitions for JCR node definitions.
+     * Builds SPI node definitions from the given JCR node definitions.
      *
      * @param nodeDefs the JCR node definitions.
      * @param resolver the name and path resolver.
-     * @return qualified node definitions.
+     * @return node definitions.
      * @throws IllegalNameException   if the node definition contains an illegal
      *                                name.
      * @throws NamespaceException if the name of a node definition contains

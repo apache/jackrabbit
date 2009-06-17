@@ -31,14 +31,14 @@ import javax.jcr.PropertyType;
 import javax.jcr.NamespaceException;
 
 /**
- * <code>QPropertyDefinitionImpl</code> implements a qualified property
+ * <code>QPropertyDefinitionImpl</code> implements a property
  * definition based on a JCR {@link javax.jcr.nodetype.PropertyDefinition}.
  */
 class QPropertyDefinitionImpl
         extends org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl {
 
     /**
-     * Creates a new qualified property definition based on
+     * Creates a new property definition based on
      * <code>propDef</code>.
      *
      * @param propDef       the JCR property definition.

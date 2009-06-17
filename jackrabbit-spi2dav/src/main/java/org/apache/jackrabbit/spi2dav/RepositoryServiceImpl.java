@@ -2422,7 +2422,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } else {
                 // TODO: use multipart-POST instead of ValuesProperty
                 DavPropertySet setProperties = new DavPropertySet();
-                // qualified values must be converted to jcr values
+                // SPI values must be converted to jcr values
                 Value[] jcrValues = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
                     jcrValues[i] = ValueFormat.getJCRValue(values[i], resolver, valueFactory);
@@ -2439,7 +2439,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         private RequestEntity getEntity(QValue value) throws RepositoryException {
-            // qualified value must be converted to jcr value
+            // SPI value must be converted to jcr value
             InputStream in;
             int type = value.getType();
             String contentType = JcrValueType.contentTypeFromType(type);
