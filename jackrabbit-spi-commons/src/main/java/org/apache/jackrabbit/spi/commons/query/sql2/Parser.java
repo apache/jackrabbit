@@ -494,20 +494,15 @@ public class Parser {
         if (readIf("STRING")) {
             return valueFactory.createValue(value.getString());
         } else if(readIf("BINARY")) {
-            // TODO getBinary
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getBinary());
         } else if(readIf("DATE")) {
-            // TODO getDate
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getDate());
         } else if(readIf("LONG")) {
-            // TODO getLong
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getLong());
         } else if(readIf("DOUBLE")) {
-            // TODO getDouble
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getDouble());
         } else if(readIf("DECIMAL")) {
-            // TODO getDecimal
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getDecimal());
         } else if(readIf("BOOLEAN")) {
             return valueFactory.createValue(value.getBoolean());
         } else if(readIf("NAME")) {
