@@ -21,8 +21,10 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.w3c.dom.Element;
@@ -50,7 +52,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * The value constraints.
      */
-    private final String[] valueConstraints;
+    private final QValueConstraint[] valueConstraints;
 
     /**
      * The default values.
@@ -62,7 +64,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
      */
     private final boolean multiple;
 
-    private final Name[] availableQueryOperators;
+    private final String[] availableQueryOperators;
     private final boolean fullTextSearcheable;
     private final boolean queryOrderable;
 
@@ -126,37 +128,31 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
 
         child = DomUtil.getChildElement(pdefElement, VALUECONSTRAINTS_ELEMENT, null);
         if (child == null) {
-            valueConstraints = new String[0];
+            valueConstraints = QValueConstraint.EMPTY_ARRAY;
         } else {
-            List vc = new ArrayList();
+            List<QValueConstraint> vc = new ArrayList<QValueConstraint>();
             ElementIterator it = DomUtil.getChildren(child, VALUECONSTRAINT_ELEMENT, null);
             while (it.hasNext()) {
-                int constType = (requiredType == PropertyType.REFERENCE
-                        || requiredType == PropertyType.WEAKREFERENCE) ?  PropertyType.NAME : requiredType;
                 String qValue = DomUtil.getText(it.nextElement());
                 // in case of name and path constraint, the value must be
                 // converted to SPI values
                 // TODO: tobefixed. path-constraint may contain trailing *
-                if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
-                   qValue = ValueFormat.getQValue(qValue, constType, resolver, qValueFactory).getString();
-                }
-                vc.add(qValue);
+                vc.add(ValueConstraint.create(requiredType, qValue));
             }
-            valueConstraints = (String[]) vc.toArray(new String[vc.size()]);
+            valueConstraints = vc.toArray(new QValueConstraint[vc.size()]);
         }
 
         child = DomUtil.getChildElement(pdefElement, AVAILABLE_QUERY_OPERATORS_ELEMENT, null);
         if (child == null) {
-            availableQueryOperators = new Name[0];
+            availableQueryOperators = new String[0];
         } else {
-            List names = new ArrayList();
+            List<String> names = new ArrayList<String>();
             ElementIterator it = DomUtil.getChildren(child, AVAILABLE_QUERY_OPERATOR_ELEMENT, null);
             while (it.hasNext()) {
                 String str = DomUtil.getText(it.nextElement());
-                Name n = resolver.getQName(str);
-                names.add(n);
+                names.add(str);
             }
-            availableQueryOperators = (Name[]) names.toArray(new Name[names.size()]);
+            availableQueryOperators = names.toArray(new String[names.size()]);
         }
     }
     
@@ -171,7 +167,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * {@inheritDoc}
      */
-    public String[] getValueConstraints() {
+    public QValueConstraint[] getValueConstraints() {
         return valueConstraints;
     }
 
@@ -192,7 +188,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
     /**
      * {@inheritDoc}
      */
-    public Name[] getAvailableQueryOperators() {
+    public String[] getAvailableQueryOperators() {
         return availableQueryOperators;
     }
 

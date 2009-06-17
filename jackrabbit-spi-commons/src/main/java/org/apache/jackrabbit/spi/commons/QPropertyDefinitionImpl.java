@@ -19,6 +19,7 @@ package org.apache.jackrabbit.spi.commons;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -28,8 +29,7 @@ import java.util.Set;
  * <code>QPropertyDefinitionImpl</code> implements SPI property
  * definition interface.
  */
-public class QPropertyDefinitionImpl
-        extends QItemDefinitionImpl
+public class QPropertyDefinitionImpl extends QItemDefinitionImpl
         implements QPropertyDefinition {
 
     /**
@@ -40,7 +40,7 @@ public class QPropertyDefinitionImpl
     /**
      * The value constraints.
      */
-    private final String[] valueConstraints;
+    private final QValueConstraint[] valueConstraints;
 
     /**
      * The default values.
@@ -53,9 +53,9 @@ public class QPropertyDefinitionImpl
     private final boolean multiple;
 
     /**
-     * The 'multiple' flag
+     * The available query operators
      */
-    private final Name[] availableQueryOperators;
+    private final String[] availableQueryOperators;
 
     /**
      * The 'fullTextSearcheable' flag
@@ -98,40 +98,9 @@ public class QPropertyDefinitionImpl
      * @param requiredType      the required type for this property.
      * @param valueConstraints  the value constraints for this property. If none
      *                          exist an empty array must be passed.
-     * @throws NullPointerException if <code>valueConstraints</code> is
-     *                              <code>null</code>.
-     * @deprecated Use {@link #QPropertyDefinitionImpl(Name, Name,
-                                   boolean, boolean, int, boolean, QValue[], boolean,
-                                   int, String[], Name[], boolean, boolean)} instead.
-     */
-    public QPropertyDefinitionImpl(Name name, Name declaringNodeType,
-                                   boolean isAutoCreated, boolean isMandatory,
-                                   int onParentVersion, boolean isProtected,
-                                   QValue[] defaultValues, boolean isMultiple,
-                                   int requiredType, String[] valueConstraints) {
-        this(name, declaringNodeType, isAutoCreated, isMandatory,
-                onParentVersion, isProtected, defaultValues, isMultiple,
-                requiredType, valueConstraints, null, false, false);
-    }
-
-    /**
-     * Creates a new serializable property definition.
-     *
-     * @param name              the name of the child item.
-     * @param declaringNodeType the delaring node type
-     * @param isAutoCreated     if this item is auto created.
-     * @param isMandatory       if this is a mandatory item.
-     * @param onParentVersion   the on parent version behaviour.
-     * @param isProtected       if this item is protected.
-     * @param defaultValues     the default values or <code>null</code> if there
-     *                          are none.
-     * @param isMultiple        if this property is multi-valued.
-     * @param requiredType      the required type for this property.
-     * @param valueConstraints  the value constraints for this property. If none
-     *                          exist an empty array must be passed.
-     * @param availableQueryOperators
-     * @param isFullTextSearchable
-     * @param isQueryOrderable
+     * @param availableQueryOperators the available query operators
+     * @param isFullTextSearchable if this is fulltext searchable
+     * @param isQueryOrderable   if this is queryable
      * @throws NullPointerException if <code>valueConstraints</code> is
      *                              <code>null</code>.
      * @since JCR 2.0
@@ -140,8 +109,9 @@ public class QPropertyDefinitionImpl
                                    boolean isAutoCreated, boolean isMandatory,
                                    int onParentVersion, boolean isProtected,
                                    QValue[] defaultValues, boolean isMultiple,
-                                   int requiredType, String[] valueConstraints,
-                                   Name[] availableQueryOperators,
+                                   int requiredType,
+                                   QValueConstraint[] valueConstraints,
+                                   String[] availableQueryOperators,
                                    boolean isFullTextSearchable,
                                    boolean isQueryOrderable) {
         super(name, declaringNodeType, isAutoCreated, isMandatory,
@@ -169,7 +139,7 @@ public class QPropertyDefinitionImpl
     /**
      * {@inheritDoc}
      */
-    public String[] getValueConstraints() {
+    public QValueConstraint[] getValueConstraints() {
         return valueConstraints;
     }
 
@@ -190,7 +160,7 @@ public class QPropertyDefinitionImpl
     /**
      * {@inheritDoc}
      */
-    public Name[] getAvailableQueryOperators() {
+    public String[] getAvailableQueryOperators() {
         return availableQueryOperators;
     }
 
@@ -249,7 +219,7 @@ public class QPropertyDefinitionImpl
     /**
      * Overwrites {@link QItemDefinitionImpl#hashCode()}.
      *
-     * @return
+     * @return the hashcode
      */
     public int hashCode() {
         if (hashCode == 0) {
@@ -272,11 +242,9 @@ public class QPropertyDefinitionImpl
             sb.append('/');
             sb.append(queryOrderable ? 1 : 0);
             sb.append('/');
-            Set<Name> s = new HashSet<Name>();
-            Name[] names = getAvailableQueryOperators();
-            for (int i = 0; i < names.length; i++) {
-                s.add(names[i]);
-            }
+            Set<String> s = new HashSet<String>();
+            String[] names = getAvailableQueryOperators();
+            s.addAll(Arrays.asList(names));
             sb.append(s.toString());
 
             hashCode = sb.toString().hashCode();

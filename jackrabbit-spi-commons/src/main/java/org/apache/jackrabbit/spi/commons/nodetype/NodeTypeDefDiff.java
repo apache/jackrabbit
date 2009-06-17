@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.Map;
 
 import javax.jcr.PropertyType;
 
@@ -30,6 +32,7 @@ import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValueConstraint;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -100,11 +103,13 @@ public class NodeTypeDefDiff {
     private final QNodeTypeDefinition newDef;
     private int type;
 
-    private final List propDefDiffs = new ArrayList();
-    private final List childNodeDefDiffs = new ArrayList();
+    private final List<PropDefDiff> propDefDiffs = new ArrayList<PropDefDiff>();
+    private final List<ChildNodeDefDiff> childNodeDefDiffs = new ArrayList<ChildNodeDefDiff>();
 
     /**
      * Constructor
+     * @param oldDef old definition
+     * @param newDef new definition
      */
     private NodeTypeDefDiff(QNodeTypeDefinition oldDef, QNodeTypeDefinition newDef) {
         this.oldDef = oldDef;
@@ -154,9 +159,9 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @param oldDef
-     * @param newDef
-     * @return
+     * @param oldDef old definition
+     * @param newDef new definition
+     * @return the diff
      */
     public static NodeTypeDefDiff create(QNodeTypeDefinition oldDef, QNodeTypeDefinition newDef) {
         if (oldDef == null || newDef == null) {
@@ -169,28 +174,28 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @return
+     * @return <code>true</code> if modified
      */
     public boolean isModified() {
         return type != NONE;
     }
 
     /**
-     * @return
+     * @return <code>true</code> if trivial
      */
     public boolean isTrivial() {
         return type == TRIVIAL;
     }
 
     /**
-     * @return
+     * @return <code>true</code> if minor
      */
     public boolean isMinor() {
         return type == MINOR;
     }
 
     /**
-     * @return
+     * @return <code>true</code> if major
      */
     public boolean isMajor() {
         return type == MAJOR;
@@ -215,21 +220,21 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @return
+     * @return <code>true</code> if mixin diff
      */
     public int mixinFlagDiff() {
         return oldDef.isMixin() != newDef.isMixin() ? MAJOR : NONE;
     }
 
     /**
-     * @return
+     * @return <code>true</code> if supertypes diff
      */
     public int supertypesDiff() {
         return !Arrays.equals(oldDef.getSupertypes(), newDef.getSupertypes()) ? MAJOR : NONE;
     }
 
     /**
-     * @return
+     * @return diff type
      */
     private int buildPropDefDiffs() {
         /**
@@ -239,15 +244,15 @@ public class NodeTypeDefDiff {
 
         int maxType = NONE;
         QPropertyDefinition[] pda1 = oldDef.getPropertyDefs();
-        HashMap defs1 = new HashMap();
-        for (int i = 0; i < pda1.length; i++) {
-            defs1.put(pda1[i].getName(), pda1[i]);
+        Map<Name, QPropertyDefinition> defs1 = new HashMap<Name, QPropertyDefinition>();
+        for (QPropertyDefinition aPda1 : pda1) {
+            defs1.put(aPda1.getName(), aPda1);
         }
 
         QPropertyDefinition[] pda2 = newDef.getPropertyDefs();
-        HashMap defs2 = new HashMap();
-        for (int i = 0; i < pda2.length; i++) {
-            defs2.put(pda2[i].getName(), pda2[i]);
+        Map<Name, QPropertyDefinition> defs2 = new HashMap<Name, QPropertyDefinition>();
+        for (QPropertyDefinition aPda2 : pda2) {
+            defs2.put(aPda2.getName(), aPda2);
         }
 
         /**
@@ -257,8 +262,8 @@ public class NodeTypeDefDiff {
         Iterator iter = defs1.keySet().iterator();
         while (iter.hasNext()) {
             Name name = (Name) iter.next();
-            QPropertyDefinition def1 = (QPropertyDefinition) defs1.get(name);
-            QPropertyDefinition def2 = (QPropertyDefinition) defs2.get(name);
+            QPropertyDefinition def1 = defs1.get(name);
+            QPropertyDefinition def2 = defs2.get(name);
             PropDefDiff diff = new PropDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -274,7 +279,7 @@ public class NodeTypeDefDiff {
         iter = defs2.keySet().iterator();
         while (iter.hasNext()) {
             Name name = (Name) iter.next();
-            QPropertyDefinition def = (QPropertyDefinition) defs2.get(name);
+            QPropertyDefinition def = defs2.get(name);
             PropDefDiff diff = new PropDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -286,7 +291,7 @@ public class NodeTypeDefDiff {
     }
 
     /**
-     * @return
+     * @return diff type
      */
     private int buildChildNodeDefDiffs() {
         /**
@@ -296,15 +301,15 @@ public class NodeTypeDefDiff {
 
         int maxType = NONE;
         QNodeDefinition[] cnda1 = oldDef.getChildNodeDefs();
-        HashMap defs1 = new HashMap();
-        for (int i = 0; i < cnda1.length; i++) {
-            defs1.put(cnda1[i].getName(), cnda1[i]);
+        Map<Name, QNodeDefinition> defs1 = new HashMap<Name, QNodeDefinition>();
+        for (QNodeDefinition aCnda1 : cnda1) {
+            defs1.put(aCnda1.getName(), aCnda1);
         }
 
         QNodeDefinition[] cnda2 = newDef.getChildNodeDefs();
-        HashMap defs2 = new HashMap();
-        for (int i = 0; i < cnda2.length; i++) {
-            defs2.put(cnda2[i].getName(), cnda2[i]);
+        Map<Name, QNodeDefinition> defs2 = new HashMap<Name, QNodeDefinition>();
+        for (QNodeDefinition aCnda2 : cnda2) {
+            defs2.put(aCnda2.getName(), aCnda2);
         }
 
         /**
@@ -314,8 +319,8 @@ public class NodeTypeDefDiff {
         Iterator iter = defs1.keySet().iterator();
         while (iter.hasNext()) {
             Name name = (Name) iter.next();
-            QNodeDefinition def1 = (QNodeDefinition) defs1.get(name);
-            QNodeDefinition def2 = (QNodeDefinition) defs2.get(name);
+            QNodeDefinition def1 = defs1.get(name);
+            QNodeDefinition def2 = defs2.get(name);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -331,7 +336,7 @@ public class NodeTypeDefDiff {
         iter = defs2.keySet().iterator();
         while (iter.hasNext()) {
             Name name = (Name) iter.next();
-            QNodeDefinition def = (QNodeDefinition) defs2.get(name);
+            QNodeDefinition def = defs2.get(name);
             ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def);
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
@@ -361,7 +366,7 @@ public class NodeTypeDefDiff {
         return result;
     }
 
-    private String toString(List childItemDefDiffs) {
+    private String toString(List<? extends ChildItemDefDiff> childItemDefDiffs) {
         String result = "";
         for (Iterator iter = childItemDefDiffs.iterator(); iter.hasNext();) {
             ChildItemDefDiff propDefDiff = (ChildItemDefDiff) iter.next();
@@ -520,15 +525,15 @@ public class NodeTypeDefDiff {
                  * check if valueConstraints were made more restrictive
                  * (constraints are ORed)
                  */
-                String[] vca1 = getOldDef().getValueConstraints();
-                HashSet set1 = new HashSet();
-                for (int i = 0; i < vca1.length; i++) {
-                    set1.add(vca1[i]);
+                QValueConstraint[] vca1 = getOldDef().getValueConstraints();
+                Set<String> set1 = new HashSet<String>();
+                for (QValueConstraint aVca1 : vca1) {
+                    set1.add(aVca1.getString());
                 }
-                String[] vca2 = getNewDef().getValueConstraints();
-                HashSet set2 = new HashSet();
-                for (int i = 0; i < vca2.length; i++) {
-                    set2.add(vca2[i]);
+                QValueConstraint[] vca2 = getNewDef().getValueConstraints();
+                Set<String> set2 = new HashSet<String>();
+                for (QValueConstraint aVca2 : vca2) {
+                    set2.add(aVca2.getString());
                 }
 
                 if (set1.isEmpty() && !set2.isEmpty()) {
@@ -603,8 +608,8 @@ public class NodeTypeDefDiff {
                 // no need to check defaultPrimaryType (TRIVIAL change)
 
                 if (type == TRIVIAL) {
-                    List l1 = Arrays.asList(getOldDef().getRequiredPrimaryTypes());
-                    List l2 = Arrays.asList(getNewDef().getRequiredPrimaryTypes());
+                    List<Name> l1 = Arrays.asList(getOldDef().getRequiredPrimaryTypes());
+                    List<Name> l2 = Arrays.asList(getNewDef().getRequiredPrimaryTypes());
                     if (!l1.equals(l2)) {
                         if (l1.containsAll(l2)) {
                             // removed requiredPrimaryType (MINOR change)

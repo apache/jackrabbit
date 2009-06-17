@@ -17,10 +17,13 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class implements the <code>NodeDef</code> interface and additionally
@@ -36,7 +39,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
     /**
      * The names of the required primary types.
      */
-    private HashSet requiredPrimaryTypes;
+    private Set<Name> requiredPrimaryTypes;
 
     /**
      * The 'allowsSameNameSiblings' flag.
@@ -55,10 +58,36 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
      */
     public NodeDefImpl() {
         defaultPrimaryType = null;
-        requiredPrimaryTypes = new HashSet();
+        requiredPrimaryTypes = new HashSet<Name>();
         requiredPrimaryTypes.add(NameConstants.NT_BASE);
         allowsSameNameSiblings = false;
         id = null;
+    }
+
+    public NodeDefImpl(QNodeDefinition nd) {
+        super(nd);
+        defaultPrimaryType = nd.getDefaultPrimaryType();
+        requiredPrimaryTypes = new HashSet<Name>(Arrays.asList(nd.getRequiredPrimaryTypes()));
+        allowsSameNameSiblings = nd.allowsSameNameSiblings();
+        id = null;
+    }
+
+    /**
+     * Returns the QNodeDefinition for this NodeDef
+     * @return the QNodeDefinition
+     */
+    public QNodeDefinition getQNodeDefinition() {
+        return new QNodeDefinitionImpl(
+                getName(),
+                getDeclaringNodeType(),
+                isAutoCreated(),
+                isMandatory(),
+                getOnParentVersion(),
+                isProtected(),
+                getDefaultPrimaryType(),
+                getRequiredPrimaryTypes(),
+                allowsSameNameSiblings()
+        );
     }
 
     /**
@@ -183,7 +212,7 @@ public class NodeDefImpl extends ItemDefImpl implements NodeDef {
         if (requiredPrimaryTypes.isEmpty()) {
             return Name.EMPTY_ARRAY;
         }
-        return (Name[]) requiredPrimaryTypes.toArray(
+        return requiredPrimaryTypes.toArray(
                 new Name[requiredPrimaryTypes.size()]);
     }
 

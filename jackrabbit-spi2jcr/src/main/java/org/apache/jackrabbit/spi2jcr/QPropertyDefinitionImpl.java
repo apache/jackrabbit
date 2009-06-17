@@ -19,10 +19,12 @@ package org.apache.jackrabbit.spi2jcr;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.RepositoryException;
@@ -53,13 +55,17 @@ class QPropertyDefinitionImpl
             throws RepositoryException, NameException {
         super(propDef.getName().equals(ANY_NAME.getLocalName()) ? ANY_NAME : resolver.getQName(propDef.getName()),
                 resolver.getQName(propDef.getDeclaringNodeType().getName()),
-                propDef.isAutoCreated(), propDef.isMandatory(),
-                propDef.getOnParentVersion(), propDef.isProtected(),
+                propDef.isAutoCreated(),
+                propDef.isMandatory(),
+                propDef.getOnParentVersion(),
+                propDef.isProtected(),
                 convertValues(propDef.getDefaultValues(), resolver, qValueFactory),
-                propDef.isMultiple(), propDef.getRequiredType(),
-                convertConstraints(propDef.getValueConstraints(), resolver, qValueFactory, propDef.getRequiredType()),
-                convertQueryOperators(propDef.getAvailableQueryOperators(), resolver),
-                propDef.isFullTextSearchable(), propDef.isQueryOrderable());
+                propDef.isMultiple(),
+                propDef.getRequiredType(),
+                ValueConstraint.create(propDef.getRequiredType(), propDef.getValueConstraints(), resolver),
+                propDef.getAvailableQueryOperators(),
+                propDef.isFullTextSearchable(),
+                propDef.isQueryOrderable());
     }
 
     /**
@@ -84,37 +90,6 @@ class QPropertyDefinitionImpl
             }
         }
         return defaultValues;
-    }
-
-    /**
-     * Makes sure name and path constraints are parsed correctly using the
-     * namespace resolver.
-     *
-     * @param constraints  the constraint strings from the JCR property
-     *                     definition.
-     * @param resolver
-     * @param factory      the QValueFactory.
-     * @param requiredType the required type of the property definition.
-     * @return SPI formatted constraint strings.
-     * @throws RepositoryException if an error occurs while converting the
-     *                             constraint strings.
-     */
-    private static String[] convertConstraints(String[] constraints,
-                                               NamePathResolver resolver,
-                                               QValueFactory factory,
-                                               int requiredType)
-            throws RepositoryException {
-        if (requiredType == PropertyType.REFERENCE
-                || requiredType == PropertyType.WEAKREFERENCE
-                || requiredType == PropertyType.NAME
-                || requiredType == PropertyType.PATH) {
-            int type = ((requiredType == PropertyType.REFERENCE || requiredType == PropertyType.WEAKREFERENCE) ? PropertyType.NAME : requiredType);
-            for (int i = 0; i < constraints.length; i++) {
-                constraints[i] = ValueFormat.getQValue(
-                        constraints[i], type, resolver, factory).getString();
-            }
-        }
-        return constraints;
     }
 
     /**

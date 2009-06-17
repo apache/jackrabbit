@@ -98,7 +98,7 @@ public abstract class ValueConstraintTest extends TestCase {
         String[] qDefs = getQualifiedDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
-            assertEquals(qDefs[i], vc.getQualifiedDefinition());
+            assertEquals(qDefs[i], vc.getString());
         }
     }
 
@@ -128,7 +128,7 @@ public abstract class ValueConstraintTest extends TestCase {
         String[] qDefs = getQualifiedDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
-            assertNotNull(vc.getQualifiedDefinition());
+            assertNotNull(vc.getString());
         }
     }
 
@@ -185,7 +185,7 @@ public abstract class ValueConstraintTest extends TestCase {
             ValueConstraint vc2 = createValueConstraint(qDefs[i]);
             assertEquals(vc, vc2);
 
-            vc2 = createValueConstraint(vc.getQualifiedDefinition());
+            vc2 = createValueConstraint(vc.getString());
             assertEquals(vc, vc2);
         }
     }

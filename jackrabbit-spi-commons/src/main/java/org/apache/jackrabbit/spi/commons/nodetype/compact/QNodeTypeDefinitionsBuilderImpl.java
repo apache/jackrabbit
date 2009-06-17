@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
@@ -72,7 +73,10 @@ public class QNodeTypeDefinitionsBuilderImpl extends QNodeTypeDefinitionsBuilder
             return new QNodeTypeDefinitionImpl(
                     this.getName(),
                     this.getSuperTypes(),
+                    null,
                     this.getMixin(),
+                    this.getAbstract(),
+                    this.getQueryable(),
                     this.getOrderableChildNodes(),
                     this.getPrimaryItemName(),
                     this.getPropertyDefs(),
@@ -93,10 +97,10 @@ public class QNodeTypeDefinitionsBuilderImpl extends QNodeTypeDefinitionsBuilder
                     .getInstance());
         }
 
-        public String createValueConstraint(String constraint, NamePathResolver resolver)
+        public QValueConstraint createValueConstraint(String constraint, NamePathResolver resolver)
                 throws InvalidConstraintException {
 
-            return ValueConstraint.create(getRequiredType(), constraint, resolver).getQualifiedDefinition();
+            return ValueConstraint.create(getRequiredType(), constraint, resolver);
         }
 
         public QPropertyDefinition build() {
@@ -110,7 +114,10 @@ public class QNodeTypeDefinitionsBuilderImpl extends QNodeTypeDefinitionsBuilder
                     this.getDefaultValues(),
                     this.getMultiple(),
                     this.getRequiredType(),
-                    this.getValueConstraints());
+                    this.getValueConstraints(),
+                    this.getAvailableQueryOperators(),
+                    this.getFullTextSearchable(),
+                    this.getQueryOrderable());
         }
 
     }

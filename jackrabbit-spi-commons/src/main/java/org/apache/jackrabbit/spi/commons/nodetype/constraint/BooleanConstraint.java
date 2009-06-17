@@ -49,15 +49,15 @@ class BooleanConstraint extends ValueConstraint {
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '"  + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '"  + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.BOOLEAN:
-                boolean b = Boolean.valueOf(value.getString()).booleanValue();
+                boolean b = Boolean.valueOf(value.getString());
                 if (b != reqBool) {
-                    throw new ConstraintViolationException("'" + b + "' does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+                    throw new ConstraintViolationException("'" + b + "' does not satisfy the constraint '" + getString() + "'");
                 }
                 return;
 

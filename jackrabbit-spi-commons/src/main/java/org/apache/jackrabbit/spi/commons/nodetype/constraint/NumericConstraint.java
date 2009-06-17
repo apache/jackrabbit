@@ -74,7 +74,7 @@ class NumericConstraint extends ValueConstraint {
                     throw new InvalidConstraintException(msg);
                 }
                 if (lowerLimit != null && upperLimit != null) {
-                    if (lowerLimit.doubleValue() > upperLimit.doubleValue()) {
+                    if (lowerLimit > upperLimit) {
                         String msg = "'" + definition
                                 + "' is not a valid value constraint format for numeric types: lower-limit exceeds upper-limit";
                         log.debug(msg);
@@ -98,31 +98,31 @@ class NumericConstraint extends ValueConstraint {
     private void check(double number) throws ConstraintViolationException {
         if (lowerLimit != null) {
             if (lowerInclusive) {
-                if (number < lowerLimit.doubleValue()) {
+                if (number < lowerLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             } else {
-                if (number <= lowerLimit.doubleValue()) {
+                if (number <= lowerLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             }
         }
         if (upperLimit != null) {
             if (upperInclusive) {
-                if (number > upperLimit.doubleValue()) {
+                if (number > upperLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             } else {
-                if (number >= upperLimit.doubleValue()) {
+                if (number >= upperLimit) {
                     throw new ConstraintViolationException(number
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             }
         }
@@ -131,10 +131,10 @@ class NumericConstraint extends ValueConstraint {
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
             throw new ConstraintViolationException("null value does not satisfy the constraint '"
-                    + getQualifiedDefinition() + "'");
+                    + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.LONG:

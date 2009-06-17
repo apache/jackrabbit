@@ -106,20 +106,20 @@ class DateConstraint extends ValueConstraint {
 
     private void check(Calendar cal) throws ConstraintViolationException {
         if (cal == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getString() + "'");
         }
         if (lowerLimit != null) {
             if (lowerInclusive) {
                 if (cal.getTimeInMillis() < lowerLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() <= lowerLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             }
         }
@@ -128,13 +128,13 @@ class DateConstraint extends ValueConstraint {
                 if (cal.getTimeInMillis() > upperLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             } else {
                 if (cal.getTimeInMillis() >= upperLimit.getTimeInMillis()) {
                     throw new ConstraintViolationException(cal
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
             }
         }
@@ -143,9 +143,9 @@ class DateConstraint extends ValueConstraint {
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.DATE:

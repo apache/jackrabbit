@@ -17,120 +17,112 @@
 package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilder.QNodeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilder.QNodeTypeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilder.QPropertyDefinitionBuilder;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.util.ISO9075;
 
 /**
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
- * node type definition format and returns a list of QNodeTypeDefinition objects that
- * can then be used to register node types.
+ * node type definition format and provides a list of QNodeTypeDefinition
+ * objects that can then be used to register node types.
+ *
  * <p/>
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
- * cnd ::= ns_mapping* node_type_def+
- *
- * ns_mapping ::= "&lt;" prefix "=" namespace "&gt;"
- *
- * prefix ::= string
- *
- * namespace ::= string
- *
- * node_type_def ::= node_type_name [super_types] [options] {property_def | node_def}
- *
- * node_type_name ::= "[" string "]"
- *
- * super_types ::= "&gt;" string_list
- *
- * options ::= orderable_opt | mixin_opt | orderable_opt mixin_opt | mixin_opt orderable_opt
- *
- * orderable_opt ::= "orderable" | "ord" | "o"
- *
- * mixin_opt ::= "mixin" | "mix" | "m"
- *
- * property_def ::= "-" property_name [property_type_decl] [default_values] [attributes] [value_constraints]
- *
- * property_name ::= string
- *
- * property_type_decl ::= "(" property_type ")"
- *
- * property_type ::= "STRING" | "String |"string" |
- *                   "BINARY" | "Binary" | "binary" |
- *                   "LONG" | "Long" | "long" |
- *                   "DOUBLE" | "Double" | "double" |
- *                   "BOOLEAN" | "Boolean" | "boolean" |
- *                   "DATE" | "Date" | "date" |
- *                   "NAME | "Name | "name |
- *                   "PATH" | "Path" | "path" |
- *                   "REFERENCE" | "Reference" | "reference" |
- *                   "UNDEFINED" | "Undefined" | "undefined" | "*"
- *
- *
- * default_values ::= "=" string_list
- *
- * value_constraints ::= "&lt;" string_list
- *
- * node_def ::= "+" node_name [required_types] [default_type] [attributes]
- *
- * node_name ::= string
- *
- * required_types ::= "(" string_list ")"
- *
- * default_type ::= "=" string
- *
- * attributes ::= "primary" | "pri" | "!" |
- *                "autocreated" | "aut" | "a" |
- *                "mandatory" | "man" | "m" |
- *                "protected" | "pro" | "p" |
- *                "multiple" | "mul" | "*" |
- *                "COPY" | "Copy" | "copy" |
- *                "VERSION" | "Version" | "version" |
- *                "INITIALIZE" | "Initialize" | "initialize" |
- *                "COMPUTE" | "Compute" | "compute" |
- *                "IGNORE" | "Ignore" | "ignore" |
- *                "ABORT" | "Abort" | "abort"
- *
- * string_list ::= string {"," string}
- *
- * string ::= quoted_string | unquoted_string
- *
- * quoted_string :: = "'" unquoted_string "'"
- *
- * unquoted_string ::= [A-Za-z0-9:_]+
+ * Cnd ::= {NamespaceMapping | NodeTypeDef}
+ * NamespaceMapping ::= '<' Prefix '=' Uri '>'
+ * Prefix ::= String
+ * Uri ::= String
+ * NodeTypeDef ::= NodeTypeName [Supertypes]
+ *                 [NodeTypeAttribute {NodeTypeAttribute}]
+ *                 {PropertyDef | ChildNodeDef}
+ * NodeTypeName ::= '[' String ']'
+ * Supertypes ::= '>' (StringList | '?')
+ * NodeTypeAttribute ::= Orderable | Mixin | Abstract | Query |
+ *                       PrimaryItem
+ * Orderable ::= ('orderable' | 'ord' | 'o') ['?']
+ * Mixin ::= ('mixin' | 'mix' | 'm') ['?']
+ * Abstract ::= ('abstract' | 'abs' | 'a') ['?']
+ * Query ::= ('noquery' | 'nq') | ('query' | 'q' )
+ * PrimaryItem ::= ('primaryitem'| '!')(String | '?')
+ * PropertyDef ::= PropertyName [PropertyType] [DefaultValues]
+ *                 [PropertyAttribute {PropertyAttribute}]
+ *                 [ValueConstraints]
+ * PropertyName ::= '-' String
+ * PropertyType ::= '(' ('STRING' | 'BINARY' | 'LONG' | 'DOUBLE' |
+ *                       'BOOLEAN' | 'DATE' | 'NAME' | 'PATH' |
+ *                       'REFERENCE' | 'WEAKREFERENCE' |
+ *                       'DECIMAL' | 'URI' | 'UNDEFINED' | '*' |
+ *                       '?') ')'
+ * DefaultValues ::= '=' (StringList | '?')
+ * ValueConstraints ::= '<' (StringList | '?')
+ * ChildNodeDef ::= NodeName [RequiredTypes] [DefaultType]
+ *                  [NodeAttribute {NodeAttribute}]
+ * NodeName ::= '+' String
+ * RequiredTypes ::= '(' (StringList | '?') ')'
+ * DefaultType ::= '=' (String | '?')
+ * PropertyAttribute ::= Autocreated | Mandatory | Protected |
+ *                       Opv | Multiple | QueryOps | NoFullText |
+ *                       NoQueryOrder
+ * NodeAttribute ::= Autocreated | Mandatory | Protected |
+ *                   Opv | Sns
+ * Autocreated ::= ('autocreated' | 'aut' | 'a' )['?']
+ * Mandatory ::= ('mandatory' | 'man' | 'm') ['?']
+ * Protected ::= ('protected' | 'pro' | 'p') ['?']
+ * Opv ::= 'COPY' | 'VERSION' | 'INITIALIZE' | 'COMPUTE' |
+ *         'IGNORE' | 'ABORT' | ('OPV' '?')
+ * Multiple ::= ('multiple' | 'mul' | '*') ['?']
+ * QueryOps ::= ('queryops' | 'qop')
+ *              (('''Operator {','Operator}''') | '?')
+ * Operator ::= '=' | '<>' | '<' | '<=' | '>' | '>=' | 'LIKE'
+ * NoFullText ::= ('nofulltext' | 'nof') ['?']
+ * NoQueryOrder ::= ('noqueryorder' | 'nqord') ['?']
+ * Sns ::= ('sns' | '*') ['?']
+ * StringList ::= String {',' String}
+ * String ::= QuotedString | UnquotedString
+ * QuotedString ::= SingleQuotedString | DoubleQuotedString
+ * SingleQuotedString ::= ''' UnquotedString '''
+ * DoubleQuotedString ::= '"' UnquotedString '"'
+ * UnquotedString ::= XmlChar {XmlChar}
+ * XmlChar ::= see ¤3.2.2 Local Names
  * </pre>
  */
 public class CompactNodeTypeDefReader {
 
     /**
-     * Empty array of value constraints
-     */
-    private final static String[] EMPTY_VALUE_CONSTRAINTS = new String[0];
-
-    /**
      * the list of parsed QNodeTypeDefinition
      */
-    private final List nodeTypeDefs = new LinkedList();
+    private final List<QNodeTypeDefinition> nodeTypeDefs
+            = new LinkedList<QNodeTypeDefinition>();
 
     /**
      * the current namespace mapping
@@ -158,27 +150,63 @@ public class CompactNodeTypeDefReader {
     private final QNodeTypeDefinitionsBuilder builder;
 
     /**
-     * Creates a new CND reader.
-     * @param r
-     * @param systemId
-     * @param builder
-     * @throws ParseException
+     * Creates a new CND reader and parses the given stream it directly.
+     *
+     * @param r a reader to the CND
+     * @param systemId a informative id of the given stream
+     * @throws ParseException if an error occurs
      */
-    public CompactNodeTypeDefReader(Reader r, String systemId, QNodeTypeDefinitionsBuilder builder) throws ParseException {
+    public CompactNodeTypeDefReader(Reader r, String systemId)
+            throws ParseException {
+        this(r, systemId, new NamespaceMapping(), null);
+    }
+
+    /**
+     * Creates a new CND reader and parses the given stream it directly.
+     * If <code>builder</code> is <code>null</code> the reader uses the
+     * default {@link QNodeTypeDefinitionsBuilderImpl}.
+     *
+     * @param r a reader to the CND
+     * @param systemId a informative id of the given stream
+     * @param builder build for creating new definitions or <code>null</code>
+     * @throws ParseException if an error occurs
+     */
+    public CompactNodeTypeDefReader(Reader r, String systemId,
+                                    QNodeTypeDefinitionsBuilder builder)
+            throws ParseException {
         this(r, systemId, new NamespaceMapping(), builder);
     }
 
+    /**
+     * Creates a new CND reader and parses the given stream it directly.
+     *
+     * @param r a reader to the CND
+     * @param systemId a informative id of the given stream
+     * @param mapping default namespace mapping to use
+     * @throws ParseException if an error occurs
+     */
+    public CompactNodeTypeDefReader(Reader r, String systemId, NamespaceMapping mapping)
+            throws ParseException {
+        this(r, systemId, mapping, null);
+    }
 
     /**
-     * Creates a new CND reader.
-     * @param r
-     * @param builder
-     * @throws ParseException
+     * Creates a new CND reader and parses the given stream it directly.
+     * If <code>builder</code> is <code>null</code> the reader uses the
+     * default {@link QNodeTypeDefinitionsBuilderImpl}.
+     *
+     * @param r a reader to the CND
+     * @param systemId a informative id of the given stream
+     * @param mapping default namespace mapping to use
+     * @param builder build for creating new definitions
+     * @throws ParseException if an error occurs
      */
     public CompactNodeTypeDefReader(Reader r, String systemId, NamespaceMapping mapping,
             QNodeTypeDefinitionsBuilder builder) throws ParseException {
 
-        this.builder = builder;
+        this.builder = builder == null
+                ? new QNodeTypeDefinitionsBuilderImpl()
+                : builder;
         lexer = new Lexer(r, systemId);
         this.nsMapping = mapping;
         this.resolver = new DefaultNamePathResolver(nsMapping);
@@ -189,10 +217,24 @@ public class CompactNodeTypeDefReader {
     /**
      * Returns the list of parsed QNodeTypeDefinition definitions.
      *
-     * @return a List of QNodeTypeDefinition objects
+     * @return a collection of QNodeTypeDefinition objects
      */
-    public List getNodeTypeDefs() {
+    public List<QNodeTypeDefinition> getNodeTypeDefinitions() {
         return nodeTypeDefs;
+    }
+
+    /**
+     * Convenience methdo that returns the list of parsed NodeTypeDefinition
+     * definitions, using the {@link NodeTypeDefinitionFactory}.
+     *
+     * @param session repository session used for converting the definitions.
+     * @return a collection of NodeTypeDefinition objects
+     * @throws RepositoryException if an error occurs
+     */
+    public List<NodeTypeDefinition> getNodeTypeDefinitions(Session session)
+            throws RepositoryException {
+        NodeTypeDefinitionFactory fac = new NodeTypeDefinitionFactory(session);
+        return fac.create(nodeTypeDefs);
     }
 
     /**
@@ -207,7 +249,7 @@ public class CompactNodeTypeDefReader {
     /**
      * Parses the definition
      *
-     * @throws ParseException
+     * @throws ParseException if an error during parsing occurs
      */
     private void parse() throws ParseException {
         while (!currentTokenEquals(Lexer.EOF)) {
@@ -219,6 +261,8 @@ public class CompactNodeTypeDefReader {
             QNodeTypeDefinitionBuilder ntd = builder.newQNodeTypeDefinition();
             ntd.setOrderableChildNodes(false);
             ntd.setMixin(false);
+            ntd.setAbstract(false);
+            ntd.setQueryable(true);
             ntd.setPrimaryItemName(null);
             doNodeTypeName(ntd);
             doSuperTypes(ntd);
@@ -233,8 +277,8 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the namespace declaration
      *
-     * @return
-     * @throws ParseException
+     * @return <code>true</code> if a namespace was parsed
+     * @throws ParseException if an error during parsing occurs
      */
     private boolean doNameSpace() throws ParseException {
         if (!currentTokenEquals('<')) {
@@ -264,8 +308,8 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the nodetype name
      *
-     * @param ntd
-     * @throws ParseException
+     * @param ntd nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doNodeTypeName(QNodeTypeDefinitionBuilder ntd) throws ParseException {
         if (!currentTokenEquals(Lexer.BEGIN_NODE_TYPE_NAME)) {
@@ -284,14 +328,11 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the superclasses
      *
-     * @param ntd
-     * @throws ParseException
+     * @param ntd nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doSuperTypes(QNodeTypeDefinitionBuilder ntd) throws ParseException {
-        // a set would be nicer here, in case someone defines a supertype twice.
-        // but due to issue [JCR-333], the resulting node type definition is
-        // not symmetric anymore and the tests will fail.
-        ArrayList supertypes = new ArrayList();
+        Set<Name> supertypes = new HashSet<Name>();
         if (currentTokenEquals(Lexer.EXTENDS))
             do {
                 nextToken();
@@ -299,29 +340,39 @@ public class CompactNodeTypeDefReader {
                 nextToken();
             } while (currentTokenEquals(Lexer.LIST_DELIMITER));
 
-        ntd.setSupertypes((Name[]) supertypes.toArray(new Name[0]));
+        ntd.setSupertypes(supertypes.toArray(new Name[supertypes.size()]));
     }
 
     /**
      * processes the options
      *
-     * @param ntd
-     * @throws ParseException
+     * @param ntd nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doOptions(QNodeTypeDefinitionBuilder ntd) throws ParseException {
-        if (currentTokenEquals(Lexer.ORDERABLE)) {
-            ntd.setOrderableChildNodes(true);
-            nextToken();
-            if (currentTokenEquals(Lexer.MIXIN)) {
-                ntd.setMixin(true);
-                nextToken();
-            }
-        } else if (currentTokenEquals(Lexer.MIXIN)) {
-            ntd.setMixin(true);
-            nextToken();
+        boolean hasOption = true;
+        while (hasOption) {
             if (currentTokenEquals(Lexer.ORDERABLE)) {
-                ntd.setOrderableChildNodes(true);
                 nextToken();
+                ntd.setOrderableChildNodes(true);
+            } else if (currentTokenEquals(Lexer.MIXIN)) {
+                nextToken();
+                ntd.setMixin(true);
+            } else if (currentTokenEquals(Lexer.ABSTRACT)) {
+                nextToken();
+                ntd.setAbstract(true);
+            } else if (currentTokenEquals(Lexer.NOQUERY)) {
+                nextToken();
+                ntd.setQueryable(false);
+            } else if (currentTokenEquals(Lexer.QUERY)) {
+                nextToken();
+                ntd.setQueryable(true);
+            } else if (currentTokenEquals(Lexer.PRIMARYITEM)) {
+                nextToken();
+                ntd.setPrimaryItemName(toName(currentToken));
+                nextToken();
+            } else {
+                hasOption = false;
             }
         }
     }
@@ -329,12 +380,12 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the item definitions
      *
-     * @param ntd
-     * @throws ParseException
+     * @param ntd nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doItemDefs(QNodeTypeDefinitionBuilder ntd) throws ParseException {
-        List propertyDefinitions = new ArrayList();
-        List nodeDefinitions = new ArrayList();
+        List<QPropertyDefinition> propertyDefinitions = new LinkedList<QPropertyDefinition>();
+        List<QNodeDefinition> nodeDefinitions = new LinkedList<QNodeDefinition>();
         while (currentTokenEquals(Lexer.PROPERTY_DEFINITION) || currentTokenEquals(Lexer.CHILD_NODE_DEFINITION)) {
             if (currentTokenEquals(Lexer.PROPERTY_DEFINITION)) {
                 QPropertyDefinitionBuilder pd = ntd.newQPropertyDefinition();
@@ -347,7 +398,10 @@ public class CompactNodeTypeDefReader {
                 pd.setOnParentVersion(OnParentVersionAction.COPY);
                 pd.setProtected(false);
                 pd.setRequiredType(PropertyType.STRING);
-                pd.setValueConstraints(EMPTY_VALUE_CONSTRAINTS);
+                pd.setValueConstraints(QValueConstraint.EMPTY_ARRAY);
+                pd.setFullTextSearchable(true);
+                pd.setQueryOrderable(true);
+                pd.setAvailableQueryOperators(Operator.getAllQueryOperators());
 
                 nextToken();
                 doPropertyDefinition(pd, ntd);
@@ -370,19 +424,16 @@ public class CompactNodeTypeDefReader {
                 nodeDefinitions.add(nd.build());
             }
         }
-
-        ntd.setPropertyDefs((QPropertyDefinition[]) propertyDefinitions
-                .toArray(new QPropertyDefinition[0]));
-
-        ntd.setChildNodeDefs((QNodeDefinition[]) nodeDefinitions.toArray(new QNodeDefinition[0]));
+        ntd.setPropertyDefs(propertyDefinitions.toArray(new QPropertyDefinition[propertyDefinitions.size()]));
+        ntd.setChildNodeDefs(nodeDefinitions.toArray(new QNodeDefinition[nodeDefinitions.size()]));
     }
 
     /**
      * processes the property definition
      *
-     * @param pd
-     * @param ntd
-     * @throws ParseException
+     * @param pd property definition builder
+     * @param ntd declaring nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doPropertyDefinition(QPropertyDefinitionBuilder pd, QNodeTypeDefinitionBuilder ntd)
             throws ParseException {
@@ -401,8 +452,8 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the property type
      *
-     * @param pd
-     * @throws ParseException
+     * @param pd property definition builder
+     * @throws ParseException if an error during parsing occurs
      */
     private void doPropertyType(QPropertyDefinitionBuilder pd) throws ParseException {
         if (!currentTokenEquals(Lexer.BEGIN_TYPE)) {
@@ -448,11 +499,13 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the property attributes
      *
-     * @param pd
-     * @param ntd
-     * @throws ParseException
+     * @param pd property definition builder
+     * @param ntd declaring nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doPropertyAttributes(QPropertyDefinitionBuilder pd, QNodeTypeDefinitionBuilder ntd) throws ParseException {
+    private void doPropertyAttributes(QPropertyDefinitionBuilder pd,
+                                      QNodeTypeDefinitionBuilder ntd)
+            throws ParseException {
         while (currentTokenEquals(Lexer.ATTRIBUTE)) {
             if (currentTokenEquals(Lexer.PRIMARY)) {
                 if (ntd.getPrimaryItemName() != null) {
@@ -485,71 +538,114 @@ public class CompactNodeTypeDefReader {
                 pd.setOnParentVersion(OnParentVersionAction.IGNORE);
             } else if (currentTokenEquals(Lexer.ABORT)) {
                 pd.setOnParentVersion(OnParentVersionAction.ABORT);
+            } else if (currentTokenEquals(Lexer.NOFULLTEXT)) {
+                pd.setFullTextSearchable(false);
+            } else if (currentTokenEquals(Lexer.NOQUERYORDER)) {
+                pd.setQueryOrderable(false);
+            } else if (currentTokenEquals(Lexer.QUERYOPS)) {
+                doPropertyQueryOperators(pd);
             }
             nextToken();
         }
+    }
+
+    /**
+     * processes the property query operators
+     *
+     * @param pd the property definition builder
+     * @throws ParseException if an error occurs
+     */
+    private void doPropertyQueryOperators(QPropertyDefinitionBuilder pd)
+            throws ParseException {
+        if (!currentTokenEquals(Lexer.QUERYOPS)) {
+            return;
+        }
+        nextToken();
+
+        String[] ops = currentToken.split(",");
+        List<String> queryOps = new LinkedList<String>();
+        for (String op : ops) {
+            String s = op.trim();
+            if (s.equals(Lexer.QUEROPS_EQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
+            } else if (s.equals(Lexer.QUEROPS_NOTEQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO);
+            } else if (s.equals(Lexer.QUEROPS_LESSTHAN)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN);
+            } else if (s.equals(Lexer.QUEROPS_LESSTHANOREQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO);
+            } else if (s.equals(Lexer.QUEROPS_GREATERTHAN)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN);
+            } else if (s.equals(Lexer.QUEROPS_GREATERTHANOREQUAL)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO);
+            } else if (s.equals(Lexer.QUEROPS_LIKE)) {
+                queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_LIKE);
+            } else {
+                lexer.fail("'" + s + "' is not a valid query operator");
+            }
+        }
+        pd.setAvailableQueryOperators(queryOps.toArray(new String[queryOps.size()]));
     }
 
     /**
      * processes the property default values
      *
-     * @param pd
-     * @throws ParseException
+     * @param pd property definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doPropertyDefaultValue(QPropertyDefinitionBuilder pd) throws ParseException {
+    private void doPropertyDefaultValue(QPropertyDefinitionBuilder pd)
+            throws ParseException {
         if (!currentTokenEquals(Lexer.DEFAULT)) {
             return;
         }
-        List defaultValues = new ArrayList();
+        List<QValue> defaultValues = new LinkedList<QValue>();
         do {
             nextToken();
-            QValue value = null;
             try {
-                value = pd.createValue(currentToken, resolver);
+                defaultValues.add(pd.createValue(currentToken, resolver));
             } catch (ValueFormatException e) {
                 lexer.fail("'" + currentToken + "' is not a valid string representation of a value of type " + pd.getRequiredType());
             } catch (RepositoryException e) {
                 lexer.fail("An error occured during value conversion of '" + currentToken + "'");
             }
-            defaultValues.add(value);
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        pd.setDefaultValues((QValue[]) defaultValues.toArray(new QValue[0]));
+        pd.setDefaultValues(defaultValues.toArray(new QValue[defaultValues.size()]));
     }
 
     /**
      * processes the property value constraints
      *
-     * @param pd
-     * @throws ParseException
+     * @param pd property definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doPropertyValueConstraints(QPropertyDefinitionBuilder pd) throws ParseException {
+    private void doPropertyValueConstraints(QPropertyDefinitionBuilder pd)
+            throws ParseException {
         if (!currentTokenEquals(Lexer.CONSTRAINT)) {
             return;
         }
-        List constraints = new ArrayList();
+        List<QValueConstraint> constraints = new LinkedList<QValueConstraint>();
         do {
             nextToken();
-            String constraint = null;
             try {
-                constraint = pd.createValueConstraint(currentToken, resolver);
+                constraints.add(pd.createValueConstraint(currentToken, resolver));
             } catch (InvalidConstraintException e) {
                 lexer.fail("'" + currentToken + "' is not a valid constraint expression for a value of type " + pd.getRequiredType());
             }
-            constraints.add(constraint);
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        pd.setValueConstraints((String[]) constraints.toArray(new String[0]));
+        pd.setValueConstraints(constraints.toArray(new QValueConstraint[constraints.size()]));
     }
 
     /**
      * processes the childnode definition
      *
-     * @param nd
-     * @param ntd
-     * @throws ParseException
+     * @param nd node definition builder
+     * @param ntd declaring nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doChildNodeDefinition(QNodeDefinitionBuilder nd, QNodeTypeDefinitionBuilder ntd)
+    private void doChildNodeDefinition(QNodeDefinitionBuilder nd,
+                                       QNodeTypeDefinitionBuilder ntd)
             throws ParseException {
         if (currentTokenEquals('*')) {
             nd.setName(NameConstants.ANY_NAME);
@@ -565,30 +661,32 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the childnode required types
      *
-     * @param nd
-     * @throws ParseException
+     * @param nd node definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doChildNodeRequiredTypes(QNodeDefinitionBuilder nd) throws ParseException {
+    private void doChildNodeRequiredTypes(QNodeDefinitionBuilder nd)
+            throws ParseException {
         if (!currentTokenEquals(Lexer.BEGIN_TYPE)) {
             return;
         }
-        List types = new ArrayList();
+        List<Name> types = new LinkedList<Name>();
         do {
             nextToken();
             types.add(toName(currentToken));
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
-        nd.setRequiredPrimaryTypes((Name[]) types.toArray(new Name[0]));
+        nd.setRequiredPrimaryTypes(types.toArray(new Name[types.size()]));
         nextToken();
     }
 
     /**
      * processes the childnode default types
      *
-     * @param nd
-     * @throws ParseException
+     * @param nd node definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doChildNodeDefaultType(QNodeDefinitionBuilder nd) throws ParseException {
+    private void doChildNodeDefaultType(QNodeDefinitionBuilder nd)
+            throws ParseException {
         if (!currentTokenEquals(Lexer.DEFAULT)) {
             return;
         }
@@ -600,11 +698,13 @@ public class CompactNodeTypeDefReader {
     /**
      * processes the childnode attributes
      *
-     * @param nd
-     * @param ntd
-     * @throws ParseException
+     * @param nd node definition builder
+     * @param ntd declaring nodetype definition builder
+     * @throws ParseException if an error during parsing occurs
      */
-    private void doChildNodeAttributes(QNodeDefinitionBuilder nd, QNodeTypeDefinitionBuilder ntd) throws ParseException {
+    private void doChildNodeAttributes(QNodeDefinitionBuilder nd,
+                                       QNodeTypeDefinitionBuilder ntd)
+            throws ParseException {
         while (currentTokenEquals(Lexer.ATTRIBUTE)) {
             if (currentTokenEquals(Lexer.PRIMARY)) {
                 if (ntd.getPrimaryItemName() != null) {
@@ -646,7 +746,7 @@ public class CompactNodeTypeDefReader {
      * Converts the given string into a <code>Name</code> using the current
      * namespace mapping.
      *
-     * @param stringName
+     * @param stringName jcr name
      * @return A <code>Name</code> object.
      * @throws ParseException if the conversion fails
      */
@@ -676,14 +776,14 @@ public class CompactNodeTypeDefReader {
 
     /**
      * Checks if the {@link #currentToken} is semantically equal to the given
-     * argument.
+     * argument ignoring the case.
      *
      * @param s the tokens to compare with
      * @return <code>true</code> if equals; <code>false</code> otherwise.
      */
     private boolean currentTokenEquals(String[] s) {
-        for (int i = 0; i < s.length; i++) {
-            if (currentToken.equals(s[i])) {
+        for (String value : s) {
+            if (currentToken.equalsIgnoreCase(value)) {
                 return true;
             }
         }

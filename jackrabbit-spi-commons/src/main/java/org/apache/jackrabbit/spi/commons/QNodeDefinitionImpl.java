@@ -65,6 +65,9 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
      * @param isMandatory       if this is a mandatory item.
      * @param onParentVersion   the on parent version behaviour.
      * @param isProtected       if this item is protected.
+     * @param defaultPrimaryType the default primary type name
+     * @param requiredPrimaryTypes the required primary type name
+     * @param allowsSameNameSiblings if this node allows SNS
      */
     public QNodeDefinitionImpl(Name name, Name declaringNodeType,
                                boolean isAutoCreated, boolean isMandatory,
@@ -139,7 +142,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     /**
      * Overwrites {@link QItemDefinitionImpl#hashCode()}.
      *
-     * @return
+     * @return the hash code
      */
     public int hashCode() {
         if (hashCode == 0) {
@@ -157,11 +160,9 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
             }
             sb.append('/');
             // set of required node type names, sorted in ascending order
-            TreeSet set = new TreeSet();
+            TreeSet<Name> set = new TreeSet<Name>();
             Name[] names = getRequiredPrimaryTypes();
-            for (int i = 0; i < names.length; i++) {
-                set.add(names[i]);
-            }
+            set.addAll(Arrays.asList(names));
             sb.append(set.toString());
 
             hashCode = sb.toString().hashCode();

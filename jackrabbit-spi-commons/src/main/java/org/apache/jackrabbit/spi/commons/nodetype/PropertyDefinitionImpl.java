@@ -16,20 +16,19 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.PropertyDefinition;
+
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.Value;
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-import javax.jcr.ValueFactory;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class implements the <code>PropertyDefinition</code> interface.
@@ -50,8 +49,8 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * Package private constructor
      *
      * @param propDef    property definition
-     * @param resolver
-     * @param valueFactory
+     * @param resolver the name-path resolver
+     * @param valueFactory a value factory
      */
     public PropertyDefinitionImpl(QPropertyDefinition propDef, NamePathResolver resolver,
                                   ValueFactory valueFactory) {
@@ -60,10 +59,10 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
 
     /**
      *
-     * @param propDef
-     * @param ntMgr
-     * @param resolver
-     * @param valueFactory
+     * @param propDef underlying propdef
+     * @param ntMgr nodetype manager
+     * @param resolver name-path resolver
+     * @param valueFactory value factory (for default values)
      */
     public PropertyDefinitionImpl(QPropertyDefinition propDef,
                                   AbstractNodeTypeManager ntMgr,
@@ -110,21 +109,21 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      */
     public String[] getValueConstraints() {
         QPropertyDefinition pd = (QPropertyDefinition) itemDef;
-        String[] constraints = pd.getValueConstraints();
+        QValueConstraint[] constraints = pd.getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             return new String[0];
         }
-        try {
-            String[] vca = new String[constraints.length];
-            for (int i = 0; i < constraints.length; i++) {
-                ValueConstraint constr = ValueConstraint.create(pd.getRequiredType(), constraints[i]);
-                vca[i] = constr.getDefinition(resolver);
+        String[] vca = new String[constraints.length];
+        for (int i = 0; i < constraints.length; i++) {
+            try {
+                ValueConstraint vc = ValueConstraint.create(pd.getRequiredType(), constraints[i].getString());
+                vca[i] = vc.getDefinition(resolver);
+            } catch (InvalidConstraintException e) {
+                log.warn("Internal error during conversion of constraint.", e);
+                vca[i] = constraints[i].getString();
             }
-            return vca;
-        } catch (InvalidConstraintException e) {
-            log.error("Invalid value constraint: " + e.getMessage());
-            return null;
         }
+        return vca;
     }
 
     /**
@@ -138,18 +137,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
      * @see javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators()
      */
     public String[] getAvailableQueryOperators() {
-        Name[] names = ((QPropertyDefinition) itemDef).getAvailableQueryOperators();
-        String[] aqos = new String[names.length];
-        for (int i = 0; i < names.length; i++) {
-            try {
-                aqos[i] = resolver.getJCRName(names[i]);
-            } catch (NamespaceException e) {
-                // should not occure. fallback
-                log.warn(e.getMessage());
-                aqos[i] = names[i].toString();
-            }
-        }
-        return aqos;
+        return ((QPropertyDefinition) itemDef).getAvailableQueryOperators();
     }
 
     /**

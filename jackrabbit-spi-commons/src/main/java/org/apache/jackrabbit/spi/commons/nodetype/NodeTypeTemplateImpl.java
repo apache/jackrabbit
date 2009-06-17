@@ -16,17 +16,15 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype;
 
-import org.apache.commons.collections.list.TypedList;
-
-import javax.jcr.nodetype.NodeTypeTemplate;
-import javax.jcr.nodetype.NodeTypeDefinition;
-import javax.jcr.nodetype.NodeDefinitionTemplate;
-import javax.jcr.nodetype.PropertyDefinitionTemplate;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeDefinitionTemplate;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.PropertyDefinition;
-import java.util.ArrayList;
-import java.util.List;
+import javax.jcr.nodetype.PropertyDefinitionTemplate;
 
 /**
  * A <code>NodeTypeTemplateImpl</code> ...
@@ -40,8 +38,8 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     private boolean queryable;
     private boolean mixin;
     private boolean orderableChildNodes;
-    private List nodeDefinitionTemplates;
-    private List propertyDefinitionTemplates;
+    private List<NodeDefinitionTemplate> nodeDefinitionTemplates;
+    private List<PropertyDefinitionTemplate> propertyDefinitionTemplates;
 
     /**
      * Package private constructor
@@ -66,15 +64,15 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
         if (nodeDefs != null) {
             List list = getNodeDefinitionTemplates();
-            for (int i = 0; i < nodeDefs.length; i++) {
-                list.add(new NodeDefinitionTemplateImpl(nodeDefs[i]));
+            for (NodeDefinition nodeDef : nodeDefs) {
+                list.add(new NodeDefinitionTemplateImpl(nodeDef));
             }
         }
         PropertyDefinition[] propDefs = def.getDeclaredPropertyDefinitions();
         if (propDefs != null) {
             List list = getPropertyDefinitionTemplates();
-            for (int i = 0; i < propDefs.length; i++) {
-                list.add(new PropertyDefinitionTemplateImpl(propDefs[i]));
+            for (PropertyDefinition propDef : propDefs) {
+                list.add(new PropertyDefinitionTemplateImpl(propDef));
             }
         }
     }
@@ -127,8 +125,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      */
     public List getPropertyDefinitionTemplates() {
         if (propertyDefinitionTemplates == null) {
-            propertyDefinitionTemplates = TypedList.decorate(
-                    new ArrayList(), PropertyDefinitionTemplate.class);
+            propertyDefinitionTemplates = new LinkedList<PropertyDefinitionTemplate>();
         }
         return propertyDefinitionTemplates;
     }
@@ -138,8 +135,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
      */
     public List getNodeDefinitionTemplates() {
         if (nodeDefinitionTemplates == null) {
-            nodeDefinitionTemplates = TypedList.decorate(
-                    new ArrayList(), NodeDefinitionTemplate.class);
+            nodeDefinitionTemplates = new LinkedList<NodeDefinitionTemplate>();
         }
         return nodeDefinitionTemplates;
     }
@@ -205,7 +201,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         if (propertyDefinitionTemplates == null) {
             return null;
         } else {
-            return (PropertyDefinition[]) propertyDefinitionTemplates.toArray(
+            return propertyDefinitionTemplates.toArray(
                     new PropertyDefinition[propertyDefinitionTemplates.size()]);
         }
     }
@@ -217,7 +213,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
         if (nodeDefinitionTemplates == null) {
             return null;
         } else {
-            return (NodeDefinition[]) nodeDefinitionTemplates.toArray(
+            return nodeDefinitionTemplates.toArray(
                     new NodeDefinition[nodeDefinitionTemplates.size()]);
         }
     }

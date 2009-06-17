@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
@@ -28,7 +27,9 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -66,8 +67,8 @@ public final class NodeTypeWriter {
             throws IOException, RepositoryException {
         try {
             NodeTypeWriter writer = new NodeTypeWriter(registry);
-            for (int i = 0; i < types.length; i++) {
-                writer.addNodeTypeDef(types[i]);
+            for (NodeTypeDef type : types) {
+                writer.addNodeTypeDef(type);
             }
             writer.write(xml);
         } catch (ParserConfigurationException e) {
@@ -103,10 +104,10 @@ public final class NodeTypeWriter {
         builder = new DOMBuilder(Constants.NODETYPES_ELEMENT);
 
         String[] prefixes = registry.getPrefixes();
-        for (int i = 0; i < prefixes.length; i++) {
-            if (!"".equals(prefixes[i])) {
-                String uri = registry.getURI(prefixes[i]);
-                builder.setAttribute("xmlns:" + prefixes[i], uri);
+        for (String prefix : prefixes) {
+            if (!"".equals(prefix)) {
+                String uri = registry.getURI(prefix);
+                builder.setAttribute("xmlns:" + prefix, uri);
             }
         }
 
@@ -155,24 +156,24 @@ public final class NodeTypeWriter {
         Name[] supertypes = def.getSupertypes();
         if (supertypes.length > 0) {
             builder.startElement(Constants.SUPERTYPES_ELEMENT);
-            for (int i = 0; i < supertypes.length; i++) {
+            for (Name supertype : supertypes) {
                 builder.addContentElement(
                         Constants.SUPERTYPE_ELEMENT,
-                        resolver.getJCRName(supertypes[i]));
+                        resolver.getJCRName(supertype));
             }
             builder.endElement();
         }
 
         // property definitions
         PropDef[] properties = def.getPropertyDefs();
-        for (int i = 0; i < properties.length; i++) {
-            addPropDef(properties[i]);
+        for (PropDef property : properties) {
+            addPropDef(property);
         }
 
         // child node definitions
         NodeDef[] nodes = def.getChildNodeDefs();
-        for (int i = 0; i < nodes.length; i++) {
-            addChildNodeDef(nodes[i]);
+        for (NodeDef node : nodes) {
+            addChildNodeDef(node);
         }
 
         builder.endElement();
@@ -246,13 +247,15 @@ public final class NodeTypeWriter {
                 PropertyType.nameFromValue(def.getRequiredType()));
 
         // value constraints
-        ValueConstraint[] constraints = def.getValueConstraints();
+        QValueConstraint[] constraints = def.getValueConstraints();
         if (constraints != null && constraints.length > 0) {
             builder.startElement(Constants.VALUECONSTRAINTS_ELEMENT);
-            for (int i = 0; i < constraints.length; i++) {
+            for (QValueConstraint constraint : constraints) {
+                ValueConstraint vc = ValueConstraint.create(
+                        def.getRequiredType(), constraint.getString());
                 builder.addContentElement(
                         Constants.VALUECONSTRAINT_ELEMENT,
-                        constraints[i].getDefinition(resolver));
+                        vc.getDefinition(resolver));
             }
             builder.endElement();
         }
@@ -261,8 +264,7 @@ public final class NodeTypeWriter {
         InternalValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
             builder.startElement(Constants.DEFAULTVALUES_ELEMENT);
-            for (int i = 0; i < defaults.length; i++) {
-                InternalValue v = defaults[i];
+            for (InternalValue v : defaults) {
                 builder.addContentElement(
                         Constants.DEFAULTVALUE_ELEMENT,
                         factory.createValue(v).getString());
@@ -312,10 +314,10 @@ public final class NodeTypeWriter {
         // required primary types
         Name[] requiredTypes = def.getRequiredPrimaryTypes();
         builder.startElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT);
-        for (int i = 0; i < requiredTypes.length; i++) {
+        for (Name requiredType : requiredTypes) {
             builder.addContentElement(
                     Constants.REQUIREDPRIMARYTYPE_ELEMENT,
-                    resolver.getJCRName(requiredTypes[i]));
+                    resolver.getJCRName(requiredType));
         }
         builder.endElement();
 

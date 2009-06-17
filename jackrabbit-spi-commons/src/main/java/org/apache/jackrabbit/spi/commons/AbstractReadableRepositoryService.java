@@ -131,10 +131,8 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
             this.namespaces.setMapping((String) entry.getKey(),
                     (String) entry.getValue());
         }
-        CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
-                cnd, "", this.namespaces, new QNodeTypeDefinitionsBuilderImpl());
-        for (Iterator it = reader.getNodeTypeDefs().iterator(); it.hasNext(); ) {
-            QNodeTypeDefinition def = (QNodeTypeDefinition) it.next();
+        CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(cnd, "", this.namespaces);
+        for (QNodeTypeDefinition def : reader.getNodeTypeDefinitions()) {
             nodeTypeDefs.put(def.getName(), def);
         }
         this.wspNames = Collections.unmodifiableList(new ArrayList(wspNames));

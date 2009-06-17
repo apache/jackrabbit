@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.nodetype.xml;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.core.TestRepository;
@@ -34,6 +33,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
@@ -50,7 +50,7 @@ import java.util.Arrays;
 /**
  * Test cases for reading and writing node type definition files.
  */
-public class TestAll extends TestCase {
+public class TestAll extends AbstractJCRTest {
 
     /** The dummy test namespace. */
     private static final String TEST_NAMESPACE = "http://www.apache.org/jackrabbit/test";
@@ -81,6 +81,7 @@ public class TestAll extends TestCase {
      * @throws Exception on initialization errors
      */
     protected void setUp() throws Exception {
+        super.setUp();
         InputStream xml =
             getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES);
 
@@ -119,7 +120,7 @@ public class TestAll extends TestCase {
      * @param propertyName property name, or <code>null</code>
      * @return property definition
      */
-    private PropDef getProperty(String typeName, String propertyName) {
+    private PropDef getPropDef(String typeName, String propertyName) {
         Name name;
         if (propertyName != null) {
             name = FACTORY.create(TEST_NAMESPACE, propertyName);
@@ -229,7 +230,7 @@ public class TestAll extends TestCase {
                 def.getPrimaryItemName());
         assertEquals("itemNodeType propertyDefs",
                 10, def.getPropertyDefs().length);
-        PropDef pdef = getProperty("itemNodeType", null);
+        PropDef pdef = getPropDef("itemNodeType", null);
         assertTrue("itemNodeType wildcard property", pdef.definesResidual());
     }
 
@@ -280,7 +281,7 @@ public class TestAll extends TestCase {
 
     /** Test for the empty item definition. */
     public void testEmptyItem() {
-        PropDef def = getProperty("itemNodeType", "emptyItem");
+        PropDef def = getPropDef("itemNodeType", "emptyItem");
         assertEquals("emptyItem autoCreate",
                 false, def.isAutoCreated());
         assertEquals("emptyItem mandatory",
@@ -293,56 +294,56 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>autoCreated</code> item definition attribute. */
     public void testAutoCreateItem() {
-        PropDef def = getProperty("itemNodeType", "autoCreatedItem");
+        PropDef def = getPropDef("itemNodeType", "autoCreatedItem");
         assertEquals("autoCreatedItem autoCreated",
                 true, def.isAutoCreated());
     }
 
     /** Test for the <code>mandatory</code> item definition attribute. */
     public void testMandatoryItem() {
-        PropDef def = getProperty("itemNodeType", "mandatoryItem");
+        PropDef def = getPropDef("itemNodeType", "mandatoryItem");
         assertEquals("mandatoryItem mandatory",
                 true, def.isMandatory());
     }
 
     /** Test for the <code>copy</code> parent version action. */
     public void testCopyItem() {
-        PropDef def = getProperty("itemNodeType", "copyItem");
+        PropDef def = getPropDef("itemNodeType", "copyItem");
         assertEquals("copyItem onParentVersion",
                 OnParentVersionAction.COPY, def.getOnParentVersion());
     }
 
     /** Test for the <code>version</code> parent version action. */
     public void testVersionItem() {
-        PropDef def = getProperty("itemNodeType", "versionItem");
+        PropDef def = getPropDef("itemNodeType", "versionItem");
         assertEquals("versionItem onParentVersion",
                 OnParentVersionAction.VERSION, def.getOnParentVersion());
     }
 
     /** Test for the <code>initialize</code> parent version action. */
     public void testInitializeItem() {
-        PropDef def = getProperty("itemNodeType", "initializeItem");
+        PropDef def = getPropDef("itemNodeType", "initializeItem");
         assertEquals("initializeItem onParentVersion",
                 OnParentVersionAction.INITIALIZE, def.getOnParentVersion());
     }
 
     /** Test for the <code>compute</code> parent version action. */
     public void testComputeItem() {
-        PropDef def = getProperty("itemNodeType", "computeItem");
+        PropDef def = getPropDef("itemNodeType", "computeItem");
         assertEquals("computeItem onParentVersion",
                 OnParentVersionAction.COMPUTE, def.getOnParentVersion());
     }
 
     /** Test for the <code>abort</code> parent version action. */
     public void testAbortItem() {
-        PropDef def = getProperty("itemNodeType", "abortItem");
+        PropDef def = getPropDef("itemNodeType", "abortItem");
         assertEquals("abortItem onParentVersion",
                 OnParentVersionAction.ABORT, def.getOnParentVersion());
     }
 
     /** Test for the <code>protected</code> item definition attribute. */
     public void testProtectedItem() {
-        PropDef def = getProperty("itemNodeType", "protectedItem");
+        PropDef def = getPropDef("itemNodeType", "protectedItem");
         assertEquals("protectedItem protected",
                 true, def.isProtected());
     }
@@ -351,12 +352,12 @@ public class TestAll extends TestCase {
     public void testPropertyNodeType() {
         NodeTypeDef def = getNodeType("propertyNodeType");
         assertEquals("propertyNodeType propertyDefs",
-                11, def.getPropertyDefs().length);
+                13, def.getPropertyDefs().length);
     }
 
     /** Test for the empty property definition. */
     public void testEmptyProperty() {
-        PropDef def = getProperty("propertyNodeType", "emptyProperty");
+        PropDef def = getPropDef("propertyNodeType", "emptyProperty");
         assertEquals("emptyProperty requiredType",
                 PropertyType.UNDEFINED, def.getRequiredType());
         assertEquals("emptyProperty multiple",
@@ -369,28 +370,28 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>binary</code> property definition type. */
     public void testBinaryProperty() {
-        PropDef def = getProperty("propertyNodeType", "binaryProperty");
+        PropDef def = getPropDef("propertyNodeType", "binaryProperty");
         assertEquals("binaryProperty requiredType",
                 PropertyType.BINARY, def.getRequiredType());
         assertEquals("binaryProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("binaryProperty valueConstraints[0]",
-                "[0,)", (def.getValueConstraints())[0].getDefinition());
+                "[0,)", (def.getValueConstraints())[0].getString());
         assertEquals("binaryProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>boolean</code> property definition type. */
     public void testBooleanProperty() {
-        PropDef def = getProperty("propertyNodeType", "booleanProperty");
+        PropDef def = getPropDef("propertyNodeType", "booleanProperty");
         assertEquals("booleanProperty requiredType",
                 PropertyType.BOOLEAN, def.getRequiredType());
         assertEquals("booleanProperty valueConstraints",
                 2, def.getValueConstraints().length);
         assertEquals("booleanProperty valueConstraints[0]",
-                "true", (def.getValueConstraints())[0].getDefinition());
+                "true", (def.getValueConstraints())[0].getString());
         assertEquals("booleanProperty valueConstraints[1]",
-                "false", (def.getValueConstraints())[1].getDefinition());
+                "false", (def.getValueConstraints())[1].getString());
         assertEquals("booleanProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("booleanProperty defaultValues[0]",
@@ -399,14 +400,14 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>date</code> property definition type. */
     public void testDateProperty() {
-        PropDef def = getProperty("propertyNodeType", "dateProperty");
+        PropDef def = getPropDef("propertyNodeType", "dateProperty");
         assertEquals("dateProperty requiredType",
                 PropertyType.DATE, def.getRequiredType());
         assertEquals("dateProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("dateProperty valueConstraints[0]",
                 "[2005-01-01T00:00:00.000Z,2006-01-01T00:00:00.000Z)",
-                (def.getValueConstraints())[0].getDefinition());
+                (def.getValueConstraints())[0].getString());
         assertEquals("dateProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("dateProperty defaultValues[0]",
@@ -415,17 +416,17 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>double</code> property definition type. */
     public void testDoubleProperty() {
-        PropDef def = getProperty("propertyNodeType", "doubleProperty");
+        PropDef def = getPropDef("propertyNodeType", "doubleProperty");
         assertEquals("doubleProperty requiredType",
                 PropertyType.DOUBLE, def.getRequiredType());
         assertEquals("doubleProperty valueConstraints",
                 3, def.getValueConstraints().length);
         assertEquals("doubleProperty valueConstraints[0]",
-                "[,0.0)", (def.getValueConstraints())[0].getDefinition());
+                "[,0.0)", (def.getValueConstraints())[0].getString());
         assertEquals("doubleProperty valueConstraints[1]",
-                "(1.0,2.0)", (def.getValueConstraints())[1].getDefinition());
+                "(1.0,2.0)", (def.getValueConstraints())[1].getString());
         assertEquals("doubleProperty valueConstraints[2]",
-                "(3.0,]", (def.getValueConstraints())[2].getDefinition());
+                "(3.0,]", (def.getValueConstraints())[2].getString());
         assertEquals("doubleProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("doubleProperty defaultValues[0]",
@@ -434,17 +435,17 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>long</code> property definition type. */
     public void testLongProperty() {
-        PropDef def = getProperty("propertyNodeType", "longProperty");
+        PropDef def = getPropDef("propertyNodeType", "longProperty");
         assertEquals("longProperty requiredType",
                 PropertyType.LONG, def.getRequiredType());
         assertEquals("longProperty valueConstraints",
                 3, def.getValueConstraints().length);
         assertEquals("longProperty valueConstraints[0]",
-                "(-10,0]", (def.getValueConstraints())[0].getDefinition());
+                "(-10,0]", (def.getValueConstraints())[0].getString());
         assertEquals("longProperty valueConstraints[1]",
-                "[1,2]", (def.getValueConstraints())[1].getDefinition());
+                "[1,2]", (def.getValueConstraints())[1].getString());
         assertEquals("longProperty valueConstraints[2]",
-                "[10,100)", (def.getValueConstraints())[2].getDefinition());
+                "[10,100)", (def.getValueConstraints())[2].getString());
         assertEquals("longProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("longProperty defaultValues[0]",
@@ -453,14 +454,14 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>name</code> property definition type. */
     public void testNameProperty() {
-        PropDef def = getProperty("propertyNodeType", "nameProperty");
+        PropDef def = getPropDef("propertyNodeType", "nameProperty");
         assertEquals("nameProperty requiredType",
                 PropertyType.NAME, def.getRequiredType());
         assertEquals("nameProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("nameProperty valueConstraints[0]",
-                "test:testName",
-                (def.getValueConstraints())[0].getDefinition());
+                "{http://www.apache.org/jackrabbit/test}testName",
+                (def.getValueConstraints())[0].getString());
         assertEquals("nameProperty defaultValues",
                 1, def.getDefaultValues().length);
         assertEquals("nameProperty defaultValues[0]",
@@ -469,42 +470,70 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>path</code> property definition type. */
     public void testPathProperty() {
-        PropDef def = getProperty("propertyNodeType", "pathProperty");
+        PropDef def = getPropDef("propertyNodeType", "pathProperty");
         assertEquals("pathProperty requiredType",
                 PropertyType.PATH, def.getRequiredType());
         assertEquals("pathProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("pathProperty valueConstraints[0]",
-                "/test:testPath",
-                (def.getValueConstraints())[0].getDefinition());
+                "{}\t{http://www.apache.org/jackrabbit/test}testPath",
+                (def.getValueConstraints())[0].getString());
+        assertEquals("pathProperty defaultValues",
+                0, def.getDefaultValues().length);
+    }
+
+    /** Test for the <code>path</code> property definition type. */
+    public void testPathProperty1() {
+        PropDef def = getPropDef("propertyNodeType", "pathProperty1");
+        assertEquals("pathProperty requiredType",
+                PropertyType.PATH, def.getRequiredType());
+        assertEquals("pathProperty valueConstraints",
+                1, def.getValueConstraints().length);
+        assertEquals("pathProperty valueConstraints[0]",
+                "{}\t{http://www.apache.org/jackrabbit/test}testPath\t{}*",
+                (def.getValueConstraints())[0].getString());
+        assertEquals("pathProperty defaultValues",
+                0, def.getDefaultValues().length);
+    }
+
+    /** Test for the <code>path</code> property definition type. */
+    public void testPathProperty2() {
+        PropDef def = getPropDef("propertyNodeType", "pathProperty2");
+        assertEquals("pathProperty requiredType",
+                PropertyType.PATH, def.getRequiredType());
+        assertEquals("pathProperty valueConstraints",
+                1, def.getValueConstraints().length);
+        assertEquals("pathProperty valueConstraints[0]",
+                "{http://www.apache.org/jackrabbit/test}testPath\t{}*",
+                (def.getValueConstraints())[0].getString());
         assertEquals("pathProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>reference</code> property definition type. */
     public void testReferenceProperty() {
-        PropDef def = getProperty("propertyNodeType", "referenceProperty");
+        PropDef def = getPropDef("propertyNodeType", "referenceProperty");
         assertEquals("referenceProperty requiredType",
                 PropertyType.REFERENCE, def.getRequiredType());
         assertEquals("referenceProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("referenceProperty valueConstraints[0]",
-                "nt:base",
-                (def.getValueConstraints())[0].getDefinition());
+                "{http://www.jcp.org/jcr/nt/1.0}base",
+                (def.getValueConstraints())[0].getString());
         assertEquals("referenceProperty defaultValues",
                 0, def.getDefaultValues().length);
     }
 
     /** Test for the <code>string</code> property definition type. */
     public void testStringProperty() {
-        PropDef def = getProperty("propertyNodeType", "stringProperty");
+        PropDef def = getPropDef("propertyNodeType", "stringProperty");
         assertEquals("stringProperty requiredType",
                 PropertyType.STRING, def.getRequiredType());
         assertEquals("stringProperty valueConstraints",
                 1, def.getValueConstraints().length);
         assertEquals("stringProperty valueConstraints[0]",
                 "bananas?",
-                (def.getValueConstraints())[0].getDefinition());
+                (def.getValueConstraints())[0].getString());
         assertEquals("stringProperty defaultValues",
                 2, def.getDefaultValues().length);
         assertEquals("stringProperty defaultValues[0]",
@@ -515,7 +544,7 @@ public class TestAll extends TestCase {
 
     /** Test for the <code>multiple</code> property definition attribute. */
     public void testMultipleProperty() {
-        PropDef def = getProperty("propertyNodeType", "multipleProperty");
+        PropDef def = getPropDef("propertyNodeType", "multipleProperty");
         assertEquals("multipleProperty multiple",
                 true, def.isMultiple());
     }

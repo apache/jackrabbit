@@ -18,9 +18,15 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
 import java.util.Arrays;
 
 /**
@@ -37,7 +43,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * The value constraints.
      */
-    private ValueConstraint[] valueConstraints = ValueConstraint.EMPTY_ARRAY;
+    private QValueConstraint[] valueConstraints = QValueConstraint.EMPTY_ARRAY;
 
     /**
      * The default values.
@@ -78,6 +84,49 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     public PropDefImpl() {
     }
 
+    public PropDefImpl(QPropertyDefinition pd) {
+        super(pd);
+        requiredType = pd.getRequiredType();
+        valueConstraints = pd.getValueConstraints();
+        QValue[] vs = pd.getDefaultValues();
+        if (vs != null) {
+            defaultValues = new InternalValue[vs.length];
+            for (int i=0; i<vs.length; i++) {
+                try {
+                    defaultValues[i] = InternalValue.create(vs[i]);
+                } catch (RepositoryException e) {
+                    throw new IllegalStateException("Error while converting default values.", e);
+                }
+            }
+        }
+        multiple = pd.isMultiple();
+        fullTextSearchable = pd.isFullTextSearchable();
+        queryOrderable = pd.isQueryOrderable();
+        queryOperators = pd.getAvailableQueryOperators();
+    }
+
+    /**
+     * Returns the QPropertyDefinition of this PropDef
+     * @return the QPropertyDefinition
+     */
+    public QPropertyDefinition getQPropertyDefinition() {
+        return new QPropertyDefinitionImpl(
+                getName(),
+                getDeclaringNodeType(),
+                isAutoCreated(),
+                isMandatory(),
+                getOnParentVersion(),
+                isProtected(),
+                getDefaultValues(),
+                isMultiple(),
+                getRequiredType(),
+                getValueConstraints(),
+                getAvailableQueryOperators(),
+                isFullTextSearchable(),
+                isQueryOrderable()
+        );
+    }
+
     /**
      * Sets the required type
      *
@@ -94,13 +143,13 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
      *
      * @param valueConstraints
      */
-    public void setValueConstraints(ValueConstraint[] valueConstraints) {
+    public void setValueConstraints(QValueConstraint[] valueConstraints) {
         // reset id field in order to force lazy recomputation of identifier
         id = null;
         if (valueConstraints != null) {
             this.valueConstraints = valueConstraints;
         } else {
-            this.valueConstraints = ValueConstraint.EMPTY_ARRAY;
+            this.valueConstraints = QValueConstraint.EMPTY_ARRAY;
         }
     }
 
@@ -248,7 +297,7 @@ public class PropDefImpl extends ItemDefImpl implements PropDef {
     /**
      * {@inheritDoc}
      */
-    public ValueConstraint[] getValueConstraints() {
+    public QValueConstraint[] getValueConstraints() {
         return valueConstraints;
     }
 

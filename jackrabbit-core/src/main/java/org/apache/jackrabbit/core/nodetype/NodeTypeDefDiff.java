@@ -26,6 +26,8 @@ import java.util.Map;
 
 import javax.jcr.PropertyType;
 
+import org.apache.jackrabbit.spi.QValueConstraint;
+
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
  * two node type definitions.
@@ -529,15 +531,15 @@ public class NodeTypeDefDiff {
                  * check if valueConstraints were made more restrictive
                  * (constraints are ORed)
                  */
-                ValueConstraint[] vca1 = getOldDef().getValueConstraints();
+                QValueConstraint[] vca1 = getOldDef().getValueConstraints();
                 HashSet set1 = new HashSet();
                 for (int i = 0; i < vca1.length; i++) {
-                    set1.add(vca1[i].getDefinition());
+                    set1.add(vca1[i].getString());
                 }
-                ValueConstraint[] vca2 = getNewDef().getValueConstraints();
+                QValueConstraint[] vca2 = getNewDef().getValueConstraints();
                 HashSet set2 = new HashSet();
                 for (int i = 0; i < vca2.length; i++) {
-                    set2.add(vca2[i].getDefinition());
+                    set2.add(vca2[i].getString());
                 }
 
                 if (set1.isEmpty() && !set2.isEmpty()) {

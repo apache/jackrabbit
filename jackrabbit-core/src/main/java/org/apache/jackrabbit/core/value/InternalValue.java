@@ -16,38 +16,39 @@
  */
 package org.apache.jackrabbit.core.value;
 
-import org.apache.jackrabbit.core.data.DataIdentifier;
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
-import org.apache.jackrabbit.spi.commons.value.QValueValue;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.Binary;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Calendar;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.math.BigDecimal;
+import java.util.Calendar;
+
+import javax.jcr.Binary;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+
+import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
+import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
+import org.apache.jackrabbit.spi.commons.value.QValueValue;
+import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -91,6 +92,8 @@ public class InternalValue extends AbstractQValue {
      * @param value the JCR value
      * @param resolver
      * @return the created internal value
+     * @throws RepositoryException
+     * @throws ValueFormatException
      */
     public static InternalValue create(Value value, NamePathResolver resolver)
             throws ValueFormatException, RepositoryException {
@@ -105,6 +108,8 @@ public class InternalValue extends AbstractQValue {
      * @param resolver
      * @param store the data store
      * @return the created internal value
+     * @throws RepositoryException
+     * @throws ValueFormatException
      */
     public static InternalValue create(Value value, NamePathResolver resolver, DataStore store)
             throws ValueFormatException, RepositoryException {
@@ -182,6 +187,42 @@ public class InternalValue extends AbstractQValue {
                 }
             case PropertyType.STRING:
                 return create(value.getString());
+            default:
+                throw new IllegalArgumentException("illegal value");
+        }
+    }
+
+    public static InternalValue create(QValue value)
+            throws RepositoryException {
+        switch (value.getType()) {
+            case PropertyType.BINARY:
+                try {
+                    return create(value.getString().getBytes(AbstractQValueFactory.DEFAULT_ENCODING));
+                } catch (UnsupportedEncodingException e) {
+                    throw new InternalError(AbstractQValueFactory.DEFAULT_ENCODING + " not supported");
+                }
+            case PropertyType.BOOLEAN:
+                return new InternalValue(value.getBoolean());
+            case PropertyType.DATE:
+                return new InternalValue(value.getCalendar());
+            case PropertyType.DOUBLE:
+                return new InternalValue(value.getDouble());
+            case PropertyType.DECIMAL:
+                return new InternalValue(value.getDecimal());
+            case PropertyType.LONG:
+                return new InternalValue(value.getLong());
+            case PropertyType.REFERENCE:
+                return create(new UUID(value.getString()));
+            case PropertyType.WEAKREFERENCE:
+                return create(new UUID(value.getString()), true);
+            case PropertyType.URI:
+                return new InternalValue(value.getURI());
+            case PropertyType.NAME:
+                return new InternalValue(value.getName());
+            case PropertyType.PATH:
+                return new InternalValue(value.getPath());
+            case PropertyType.STRING:
+                return new InternalValue(value.getString());
             default:
                 throw new IllegalArgumentException("illegal value");
         }
@@ -268,6 +309,7 @@ public class InternalValue extends AbstractQValue {
      *
      * @param value the stream
      * @return the internal value
+     * @throws RepositoryException
      */
     public static InternalValue createTemporary(InputStream value) throws RepositoryException {
         return new InternalValue(getBLOBFileValue(null, value, true));
@@ -277,7 +319,9 @@ public class InternalValue extends AbstractQValue {
      * Create an internal value that is stored in the data store (if enabled).
      *
      * @param value the input stream
+     * @param store
      * @return the internal value
+     * @throws RepositoryException
      */
     static InternalValue create(InputStream value, DataStore store) throws RepositoryException {
         return new InternalValue(getBLOBFileValue(store, value, false));
@@ -287,6 +331,7 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return
      * @throws IOException
+     * @throws RepositoryException
      */
     public static InternalValue create(InputStream value) throws RepositoryException {
         return new InternalValue(getBLOBFileValue(null, value, false));
@@ -421,7 +466,7 @@ public class InternalValue extends AbstractQValue {
     public static InternalValue valueOf(String s, int type) {
         switch (type) {
             case PropertyType.BOOLEAN:
-                return create(Boolean.valueOf(s).booleanValue());
+                return create(Boolean.valueOf(s));
             case PropertyType.DATE:
                 return create(ISO8601.parse(s));
             case PropertyType.DOUBLE:
@@ -476,11 +521,11 @@ public class InternalValue extends AbstractQValue {
     }
 
     private InternalValue(long value) {
-        super(Long.valueOf(value));
+        super(value);
     }
 
     private InternalValue(double value) {
-        super(Double.valueOf(value));
+        super(value);
     }
 
     private InternalValue(Calendar value) {
@@ -488,7 +533,7 @@ public class InternalValue extends AbstractQValue {
     }
 
     private InternalValue(boolean value) {
-        super(Boolean.valueOf(value));
+        super(value);
     }
 
     private InternalValue(URI value) {
@@ -519,6 +564,7 @@ public class InternalValue extends AbstractQValue {
      * @param in the input stream
      * @param temporary if the file should be deleted when discard is called (ignored if a data store is used)
      * @return the value
+     * @throws RepositoryException
      */
     private static BLOBFileValue getBLOBFileValue(DataStore store, InputStream in, boolean temporary) throws RepositoryException {
         int maxMemorySize;
