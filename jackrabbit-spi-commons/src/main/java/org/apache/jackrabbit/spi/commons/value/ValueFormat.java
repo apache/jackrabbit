@@ -189,4 +189,46 @@ public class ValueFormat {
             return jcrValue;
         }
     }
+
+    /**
+     * Returns the JCR string representation of the given <code>QValue</code>.
+     * This method is a shortcut for
+     * {@link #getJCRValue(QValue, NamePathResolver, ValueFactory)} followed by
+     * {@link Value#getString()}.
+     *
+     * @param qualifiedValue
+     * @param resolver
+     * @return the JCR String representation for the given <code>qualifiedValue</code>.
+     * @throws RepositoryException
+     */
+    public static String getJCRString(QValue qualifiedValue,
+                                      NamePathResolver resolver) throws RepositoryException {
+        String jcrString;
+        int propertyType = qualifiedValue.getType();
+        switch (propertyType) {
+            case PropertyType.STRING:
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+            case PropertyType.URI:
+            case PropertyType.BOOLEAN:
+            case PropertyType.DATE:
+            case PropertyType.DOUBLE:
+            case PropertyType.LONG:
+            case PropertyType.DECIMAL:
+            case PropertyType.BINARY:
+                jcrString = qualifiedValue.getString();
+                break;
+            case PropertyType.PATH:
+                Path qPath = qualifiedValue.getPath();
+                jcrString = resolver.getJCRPath(qPath);
+                break;
+            case PropertyType.NAME:
+                Name qName = qualifiedValue.getName();
+                jcrString = resolver.getJCRName(qName);
+                break;
+            default:
+                throw new RepositoryException("illegal internal value type");
+        }
+        return jcrString;
+    }
 }
