@@ -246,7 +246,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         NodeImpl node = (NodeImpl) session.getRootNode();
         for (int i = 0; i < segms.length; i++) {
             Name nName = session.getQName(segms[i]);
-            Name ntName = (i < segms.length-1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
+            Name ntName = (i < segms.length - 1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
             if (node.hasNode(nName)) {
                 NodeImpl n = node.getNode(nName);
                 if (!n.isNodeType(ntName)) {
@@ -381,7 +381,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 log.debug("Invalid path name for Permission: " + name + ".");
             }
         }
-        int i=0;
+        int i = 0;
         String check = name;
         while (node.hasNode(check)) {
             check = name + i;

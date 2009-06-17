@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -39,8 +38,8 @@ class UserImpl extends AuthorizableImpl implements User {
 
     private final String id;
 
-    private Principal principal = null;
-    private Impersonation impersonation = null;
+    private Principal principal;
+    private Impersonation impersonation;
 
     private UserImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
         super(node, userManager);
@@ -59,14 +58,14 @@ class UserImpl extends AuthorizableImpl implements User {
         if (node == null || !node.isNodeType(NT_REP_USER)) {
             throw new IllegalArgumentException();
         }
-        if(!Text.isDescendant(USERS_PATH, node.getPath())) {
+        if (!Text.isDescendant(USERS_PATH, node.getPath())) {
             throw new IllegalArgumentException("User has to be within the User Path");
         }
         return new UserImpl(node, userManager);
     }
 
     /**
-     * 
+     *
      * @param password
      * @return
      * @throws RepositoryException

@@ -18,9 +18,6 @@ package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.commons.collections.set.ListOrderedSet;
 import javax.jcr.GuestCredentials;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.api.security.user.Impersonation;
-import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
@@ -131,7 +128,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             }
             if (principalProvider == null) {
                 principalProvider = registry.getDefault();
-                if (principalProvider==null) {
+                if (principalProvider == null) {
                     return; // abort. not even a default principal provider
                 }
             }
@@ -267,7 +264,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             return false;
         }
 
-        // check for availablity of Credentials;
+        // check for availability of Credentials;
         Credentials creds = getCredentials();
         if (creds == null) {
             log.warn("No credentials available -> try default (anonymous) authentication.");
@@ -419,9 +416,9 @@ public abstract class AbstractLoginModule implements LoginModule {
             throws FailedLoginException, RepositoryException {
 
         Authentication auth = getAuthentication(principal, credentials);
-        if(auth == null) {
+        if (auth == null) {
             return false;
-        } else if (auth.authenticate(credentials)){
+        } else if (auth.authenticate(credentials)) {
             return true;
         }
         throw new FailedLoginException();
@@ -453,7 +450,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @throws LoginException If credentials don't allow to impersonate to principal.
      * @throws RepositoryException If another error occurs.
      */
-    abstract protected boolean impersonate(Principal principal, Credentials credentials)
+    protected abstract boolean impersonate(Principal principal, Credentials credentials)
             throws RepositoryException, LoginException;
 
     /**
@@ -464,7 +461,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @return Authentication object for the given principal / credentials.
      * @throws RepositoryException If an error occurs.
      */
-    abstract protected Authentication getAuthentication(Principal principal, Credentials creds)
+    protected abstract Authentication getAuthentication(Principal principal, Credentials creds)
             throws RepositoryException;
 
     /**
@@ -543,9 +540,9 @@ public abstract class AbstractLoginModule implements LoginModule {
         // ask subject if still no credentials
         if (null == credentials) {
             // try if subject contains SimpleCredentials
-            Set preAuthCreds = subject.getPublicCredentials(SimpleCredentials.class);
+            Set<SimpleCredentials> preAuthCreds = subject.getPublicCredentials(SimpleCredentials.class);
             if (!preAuthCreds.isEmpty()) {
-                credentials = (Credentials) preAuthCreds.iterator().next();
+                credentials = preAuthCreds.iterator().next();
             }
         }
         return credentials;

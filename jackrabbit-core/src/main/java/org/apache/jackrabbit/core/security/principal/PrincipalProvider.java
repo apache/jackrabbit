@@ -17,11 +17,9 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
-import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 
 import javax.jcr.Session;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Properties;
 
 /**

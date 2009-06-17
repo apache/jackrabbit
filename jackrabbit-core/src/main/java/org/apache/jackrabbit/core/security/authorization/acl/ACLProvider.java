@@ -32,7 +32,6 @@ import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlPr
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -53,7 +52,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.security.Principal;
@@ -336,7 +334,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * flag indicating that there is not 'deny READ'.
          * -> simplify {@link #grants(Path, int)} in case of permissions == READ
          */
-        private boolean readAllowed = false;
+        private boolean readAllowed;
 
         private AclPermissions(Set principals) throws RepositoryException {
             this(principals, true);

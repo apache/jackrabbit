@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 /**
@@ -40,7 +39,7 @@ public abstract interface AuthContext {
      * @see LoginContext#login()
      * @throws LoginException if the authentication fails.
      */
-    public abstract void login() throws LoginException;
+    void login() throws LoginException;
 
     /**
      * Return the authenticated Subject.
@@ -48,7 +47,7 @@ public abstract interface AuthContext {
      * @see LoginContext#getSubject()
      * @return the authenticated Subject or <code>null</code> if authentication failed.
      */
-    public abstract Subject getSubject();
+    Subject getSubject();
 
     /**
      * Logout the <code>Subject</code>.
@@ -56,5 +55,5 @@ public abstract interface AuthContext {
      * @see LoginContext#logout()
      * @exception LoginException if the logout fails.
      */
-    public abstract void logout() throws LoginException;
+    void logout() throws LoginException;
 }
