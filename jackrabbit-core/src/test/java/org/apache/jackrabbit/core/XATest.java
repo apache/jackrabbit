@@ -1547,55 +1547,6 @@ public class XATest extends AbstractJCRTest {
     }
     
     /**
-     * Tests JCR-1666 After transaction rollback session may become 'corrupt'
-     * 
-     * @throws Exception
-     */
-    public void testRollbackRefreshSave() throws Exception {
-        // get user transaction object
-        UserTransaction utx = new UserTransactionImpl(superuser);
-
-        // start transaction
-        utx.begin();
-
-        // add node and save
-        Node n = testRootNode.addNode("n");
-        n.addMixin(mixVersionable);
-        superuser.save();
-
-        // assertion: node exists in this session
-        String uuid = n.getUUID();
-
-        try {
-            superuser.getNodeByUUID(uuid);
-        } catch (ItemNotFoundException e) {
-            fail("New node not visible after save()");
-        }
-
-        // rollback
-        utx.rollback();
-
-        superuser.refresh(false);
-
-        // assertion: node does not exist in this session
-        try {
-            superuser.getNodeByUUID(uuid);
-            fail("Node still visible after rollback()");
-        } catch (ItemNotFoundException e) {
-            /* expected */
-        }
-
-        utx = new UserTransactionImpl(superuser);
-        utx.begin();
-        Node m = superuser.getRootNode().addNode("m");
-        m.addMixin(mixVersionable);
-        superuser.save();
-        utx.commit();
-        
-        superuser.logout();
-    }
-
-    /**
      * helper method for {@link #testXAVersionsThoroughly()}
      */
     private void check(Version v, String phase, String name, int numSucc) {
