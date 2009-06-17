@@ -57,7 +57,7 @@ public class QNodeDefinitionImpl extends QItemDefinitionImpl implements QNodeDef
     }
 
     /**
-     * Creates a new qualified node definition based on a JCR NodeDefinition.
+     * Creates a new SPI node definition based on a JCR NodeDefinition.
      *
      * @param name              the name of the child item.
      * @param declaringNodeType the delaring node type

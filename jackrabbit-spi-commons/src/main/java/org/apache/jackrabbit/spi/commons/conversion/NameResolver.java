@@ -21,26 +21,27 @@ import org.apache.jackrabbit.spi.Name;
 import javax.jcr.NamespaceException;
 
 /**
- * Resolver for prefixed JCR names and namespace-qualified
- * {@link Name Names}.
+ * Resolver for JCR name Strings and {@link Name} objects.
  */
 public interface NameResolver {
 
     /**
-     * Returns the qualified name for the given prefixed JCR name.
+     * Returns the <code>Name</code> for the given JCR name String.
      *
-     * @param name prefixed JCR name
-     * @return qualified name
+     * @param name A JCR name String.
+     * @return A <code>Name</code> object.
      * @throws IllegalNameException if the JCR name format is invalid
      * @throws NamespaceException if the namespace prefix can not be resolved
      */
     Name getQName(String name) throws IllegalNameException, NamespaceException;
 
     /**
-     * Returns the prefixed JCR name for the given qualified name.
+     * Returns the qualified JCR name String for the given <code>Name</code> object.
      *
-     * @param name qualified name
-     * @return prefixed JCR name
+     * @param name A <code>Name</code> object.
+     * @return The qualified JCR name String consisting of
+     * <code>prefix:localName</code> or
+     * <code>localName</code> in case of the empty namespace.
      * @throws NamespaceException if the namespace URI can not be resolved
      */
     String getJCRName(Name name) throws NamespaceException;

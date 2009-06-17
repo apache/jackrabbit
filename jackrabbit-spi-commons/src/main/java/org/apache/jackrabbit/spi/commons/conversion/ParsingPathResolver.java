@@ -68,35 +68,36 @@ public class ParsingPathResolver implements PathResolver {
     }
 
     /**
-     * Parses the given JCR path and returns the resolved qualified path.
+     * Parses the given JCR path into a <code>Path</code> object.
      *
-     * @param path prefixed JCR path
-     * @return qualified path
+     * @param jcrPath A JCR path String.
+     * @return A <code>Path</code> object.
      * @throws MalformedPathException if the JCR path format is invalid.
      * @throws IllegalNameException if any of the JCR names contained in the path are invalid.
      * @throws NamespaceException if a namespace prefix can not be resolved
      */
-    public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
-        return PathParser.parse(path, nameResolver, idResolver, pathFactory);
+    public Path getQPath(String jcrPath) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return PathParser.parse(jcrPath, nameResolver, idResolver, pathFactory);
     }
 
     /**
      * Calls {@link PathParser#parse(String, NameResolver, IdentifierResolver, org.apache.jackrabbit.spi.PathFactory)}
-     * from the given <code>path</code>.
+     * from the given <code>jcrPath</code>.
      * 
      * @see PathResolver#getQPath(String, boolean)
      */
-    public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
-        return PathParser.parse(path, nameResolver, idResolver, pathFactory, normalizeIdentifier);
+    public Path getQPath(String jcrPath, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
+        return PathParser.parse(jcrPath, nameResolver, idResolver, pathFactory, normalizeIdentifier);
     }
 
 
     /**
-     * Returns the given JCR path for the given qualified path.
+     * Returns the JCR path representation for the given <code>Path</code> object.
      *
-     * @param path qualified path
-     * @return prefixed JCR path
-     * @throws NamespaceException if a namespace URI can not be resolved
+     * @param path A <code>Path</code> object.
+     * @return A JCR path String in the standard form.
+     * @throws NamespaceException if a namespace URI can not be resolved.
+     * @see PathResolver#getJCRPath(org.apache.jackrabbit.spi.Path) 
      */
     public String getJCRPath(Path path) throws NamespaceException {
         StringBuffer buffer = new StringBuffer();

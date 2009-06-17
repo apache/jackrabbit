@@ -356,10 +356,10 @@ public abstract class QNodeTypeDefinitionsBuilder {
          *
          * @param constraint
          * @param resolver
-         * @return A syntactically valid value constrained which refers to fully qualified names and
-         *         paths only.
-         * @throws InvalidConstraintException if <code>constraint</code> cannot be converted to a
-         *                 valid value constrained.
+         * @return A syntactically valid value constrained which refers to
+         * internal names and paths representations only.
+         * @throws InvalidConstraintException if <code>constraint</code> cannot
+         * be converted to a valid value constrained.
          */
         public abstract String createValueConstraint(String constraint, NamePathResolver resolver)
                 throws InvalidConstraintException;

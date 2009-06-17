@@ -44,14 +44,14 @@ public class PathParser {
     private static final int STATE_URI_END = 10;
 
     /**
-     * Parses <code>jcrPath</code> into a qualified path using
+     * Parses <code>jcrPath</code> into a <code>Path</code> object using
      * <code>resolver</code> to convert prefixes into namespace URI's. If
      * resolver is <code>null</code> this method only checks the format of the
      * passed String and returns <code>null</code>.
      *
      * @param jcrPath the jcr path.
      * @param resolver the namespace resolver.
-     * @param factory
+     * @param factory <code>PathFactory</code> to be used.
      * @return A path object.
      * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
      * @throws IllegalNameException if any of the jcrNames is malformed.
@@ -63,7 +63,7 @@ public class PathParser {
     }
 
     /**
-     * Parses <code>jcrPath</code> into a qualified path using
+     * Parses <code>jcrPath</code> into a <code>Path</code> object using
      * <code>resolver</code> to convert prefixes into namespace URI's. If the
      * specified <code>jcrPath</code> is an identifier based absolute path
      * beginning with an identifier segment the specified
@@ -91,7 +91,7 @@ public class PathParser {
     }
 
     /**
-     * Parses <code>jcrPath</code> into a qualified path using
+     * Parses <code>jcrPath</code> into a <code>Path</code> object using
      * <code>resolver</code> to convert prefixes into namespace URI's. If the
      * specified <code>jcrPath</code> is an identifier based absolute path
      * beginning with an identifier segment the specified

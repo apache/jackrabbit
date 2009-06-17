@@ -45,7 +45,7 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected static final String ANY_NAME = "*";
 
     /**
-     * The namespace resolver used to translate qualified names to JCR names.
+     * The namespace resolver used to translate <code>Name</code>s to JCR name strings.
      */
     protected final NamePathResolver resolver;
 

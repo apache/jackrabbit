@@ -25,8 +25,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * <code>QPropertyDefinitionImpl</code> implements a qualified property
- * definition.
+ * <code>QPropertyDefinitionImpl</code> implements SPI property
+ * definition interface.
  */
 public class QPropertyDefinitionImpl
         extends QItemDefinitionImpl
@@ -84,7 +84,7 @@ public class QPropertyDefinitionImpl
     }
 
     /**
-     * Creates a new serializable qualified property definition.
+     * Creates a new serializable property definition.
      *
      * @param name              the name of the child item.
      * @param declaringNodeType the delaring node type
@@ -115,7 +115,7 @@ public class QPropertyDefinitionImpl
     }
 
     /**
-     * Creates a new serializable qualified property definition.
+     * Creates a new serializable property definition.
      *
      * @param name              the name of the child item.
      * @param declaringNodeType the delaring node type

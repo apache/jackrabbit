@@ -45,10 +45,10 @@ public abstract class AbstractQOMNode {
     //---------------------------< internal >-----------------------------------
 
     /**
-     * Returns the prefixed JCR name for the given qualified name or
+     * Returns the JCR name string for the given <code>Name</code> or
      * <code>null</code> if <code>name</code> is <code>null</code>.
      *
-     * @param name the qualified name.
+     * @param name the <code>Name</code>.
      * @return the prefixed JCR name or <code>name.toString()</code> if an
      *         unknown namespace URI is encountered.
      */
@@ -64,12 +64,12 @@ public abstract class AbstractQOMNode {
     }
 
     /**
-     * Returns the prefixed JCR path for the given qualified path or
+     * Returns the JCR path String for the given <code>Path</code> object or
      * <code>null</code> if <code>path</code> is <code>null</code>.
      *
-     * @param path qualified path
-     * @return prefixed JCR path or <code>path.toString()</code> if an unknown
-     *         namespace URI is encountered.
+     * @param path A <code>Path</code> object.
+     * @return JCR path in the standard form or <code>path.toString()</code>
+     * if an unknown namespace URI is encountered.
      */
     protected String getJCRPath(Path path) {
         if (path == null) {

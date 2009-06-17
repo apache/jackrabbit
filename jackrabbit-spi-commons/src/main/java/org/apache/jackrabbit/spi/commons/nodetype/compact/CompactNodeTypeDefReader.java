@@ -643,11 +643,11 @@ public class CompactNodeTypeDefReader {
     }
 
     /**
-     * Converts the given string into a qualified name using the current
+     * Converts the given string into a <code>Name</code> using the current
      * namespace mapping.
      *
      * @param stringName
-     * @return the qualified name
+     * @return A <code>Name</code> object.
      * @throws ParseException if the conversion fails
      */
     private Name toName(String stringName) throws ParseException {

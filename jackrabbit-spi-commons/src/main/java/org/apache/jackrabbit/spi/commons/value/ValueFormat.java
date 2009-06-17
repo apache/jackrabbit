@@ -136,52 +136,52 @@ public class ValueFormat {
     }
 
     /**
-     * @param qualifiedValue
+     * @param value
      * @param resolver
      * @param factory
-     * @return the JCR value created from the given <code>qualifiedValue</code>.
+     * @return the JCR value created from the given <code>QValue</code>.
      * @throws RepositoryException
      */
-    public static Value getJCRValue(QValue qualifiedValue,
+    public static Value getJCRValue(QValue value,
                                     NamePathResolver resolver,
                                     ValueFactory factory) throws RepositoryException {
         if (factory instanceof ValueFactoryQImpl) {
-            return ((ValueFactoryQImpl)factory).createValue(qualifiedValue);
+            return ((ValueFactoryQImpl)factory).createValue(value);
         } else {
             Value jcrValue;
-            int propertyType = qualifiedValue.getType();
+            int propertyType = value.getType();
             switch (propertyType) {
                 case PropertyType.STRING:
                 case PropertyType.REFERENCE:
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.URI:
-                    jcrValue = factory.createValue(qualifiedValue.getString(), propertyType);
+                    jcrValue = factory.createValue(value.getString(), propertyType);
                     break;
                 case PropertyType.PATH:
-                    Path qPath = qualifiedValue.getPath();
+                    Path qPath = value.getPath();
                     jcrValue = factory.createValue(resolver.getJCRPath(qPath), propertyType);
                     break;
                 case PropertyType.NAME:
-                    Name qName = qualifiedValue.getName();
+                    Name qName = value.getName();
                     jcrValue = factory.createValue(resolver.getJCRName(qName), propertyType);
                     break;
                 case PropertyType.BOOLEAN:
-                    jcrValue = factory.createValue(qualifiedValue.getBoolean());
+                    jcrValue = factory.createValue(value.getBoolean());
                     break;
                 case PropertyType.BINARY:
-                    jcrValue = factory.createValue(qualifiedValue.getBinary());
+                    jcrValue = factory.createValue(value.getBinary());
                     break;
                 case PropertyType.DATE:
-                    jcrValue = factory.createValue(qualifiedValue.getCalendar());
+                    jcrValue = factory.createValue(value.getCalendar());
                     break;
                 case PropertyType.DOUBLE:
-                    jcrValue = factory.createValue(qualifiedValue.getDouble());
+                    jcrValue = factory.createValue(value.getDouble());
                     break;
                 case PropertyType.LONG:
-                    jcrValue = factory.createValue(qualifiedValue.getLong());
+                    jcrValue = factory.createValue(value.getLong());
                     break;
                 case PropertyType.DECIMAL:
-                    jcrValue = factory.createValue(qualifiedValue.getDecimal());
+                    jcrValue = factory.createValue(value.getDecimal());
                     break;
                 default:
                     throw new RepositoryException("illegal internal value type");
@@ -196,15 +196,15 @@ public class ValueFormat {
      * {@link #getJCRValue(QValue, NamePathResolver, ValueFactory)} followed by
      * {@link Value#getString()}.
      *
-     * @param qualifiedValue
+     * @param value
      * @param resolver
-     * @return the JCR String representation for the given <code>qualifiedValue</code>.
+     * @return the JCR String representation for the given <code>QValue</code>.
      * @throws RepositoryException
      */
-    public static String getJCRString(QValue qualifiedValue,
+    public static String getJCRString(QValue value,
                                       NamePathResolver resolver) throws RepositoryException {
         String jcrString;
-        int propertyType = qualifiedValue.getType();
+        int propertyType = value.getType();
         switch (propertyType) {
             case PropertyType.STRING:
             case PropertyType.REFERENCE:
@@ -216,14 +216,14 @@ public class ValueFormat {
             case PropertyType.LONG:
             case PropertyType.DECIMAL:
             case PropertyType.BINARY:
-                jcrString = qualifiedValue.getString();
+                jcrString = value.getString();
                 break;
             case PropertyType.PATH:
-                Path qPath = qualifiedValue.getPath();
+                Path qPath = value.getPath();
                 jcrString = resolver.getJCRPath(qPath);
                 break;
             case PropertyType.NAME:
-                Name qName = qualifiedValue.getName();
+                Name qName = value.getName();
                 jcrString = resolver.getJCRName(qName);
                 break;
             default:

@@ -722,7 +722,7 @@ public class PathFactoryImpl implements PathFactory {
     private static class Element implements Path.Element {
 
         /**
-         * Qualified name of the path element.
+         * Name of the path element.
          */
         private final Name name;
 
@@ -734,11 +734,11 @@ public class PathFactoryImpl implements PathFactory {
 
         /**
          * Private constructor for creating a path element with the given
-         * qualified name and index. Instead of using this constructor directly
+         * name and index. Instead of using this constructor directly
          * the factory methods {@link PathFactory#createElement(Name)} and
          * {@link PathFactory#create(Name, int)} should be used.
          *
-         * @param name  qualified name
+         * @param name A <code>Name</code> object.
          * @param index index
          */
         private Element(Name name, int index) {
