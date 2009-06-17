@@ -135,7 +135,8 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                         || requiredType == PropertyType.WEAKREFERENCE) ?  PropertyType.NAME : requiredType;
                 String qValue = DomUtil.getText(it.nextElement());
                 // in case of name and path constraint, the value must be
-                // converted to be in qualified format
+                // converted to SPI values
+                // TODO: tobefixed. path-constraint may contain trailing *
                 if (constType == PropertyType.NAME || constType == PropertyType.PATH) {
                    qValue = ValueFormat.getQValue(qValue, constType, resolver, qValueFactory).getString();
                 }
