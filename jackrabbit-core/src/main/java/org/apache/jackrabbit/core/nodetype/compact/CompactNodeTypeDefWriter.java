@@ -28,7 +28,6 @@ import java.util.List;
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
@@ -39,7 +38,6 @@ import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.Lexer;
 import org.apache.jackrabbit.spi.Name;
@@ -93,6 +91,8 @@ public class CompactNodeTypeDefWriter {
      */
     private HashSet usedNamespaces = new HashSet();
 
+    private final ValueFactoryQImpl factory;
+
     /**
      * Creates a new nodetype writer
      *
@@ -105,6 +105,7 @@ public class CompactNodeTypeDefWriter {
         this.npResolver = npResolver;
         this.out = new StringWriter();
         this.nsWriter = out;
+        factory = new ValueFactoryQImpl(InternalValueFactory.getInstance(), npResolver); 
     }
 
     /**
@@ -313,7 +314,6 @@ public class CompactNodeTypeDefWriter {
      */
     private void writeDefaultValues(InternalValue[] dva) throws IOException {
         if (dva != null && dva.length > 0) {
-            ValueFactoryQImpl factory = ValueFactoryImpl.getInstance(npResolver);
             String delim = " = '";
             for (int i = 0; i < dva.length; i++) {
                 out.write(delim);
