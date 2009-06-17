@@ -71,7 +71,7 @@ import java.util.Set;
  * the <code>AccessControlProvider</code> set to this AccessManager.
  *
  * @see AccessManager
- * @see AccessControlManager
+ * @see javax.jcr.security.AccessControlManager
  */
 public class DefaultAccessManager extends AbstractAccessControlManager implements AccessManager {
 
@@ -275,7 +275,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     //-----------------------------------------------< AccessControlManager >---
     /**
-     * @see AccessControlManager#hasPrivileges(String, Privilege[])
+     * @see javax.jcr.security.AccessControlManager#hasPrivileges(String, Privilege[])
      */
     public boolean hasPrivileges(String absPath, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
         checkInitialized();
@@ -292,7 +292,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#getPrivileges(String)
+     * @see javax.jcr.security.AccessControlManager#getPrivileges(String)
      */
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
@@ -304,7 +304,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#getPolicies(String)
+     * @see javax.jcr.security.AccessControlManager#getPolicies(String)
      */
     public AccessControlPolicy[] getPolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -320,7 +320,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#getEffectivePolicies(String)
+     * @see javax.jcr.security.AccessControlManager#getEffectivePolicies(String)
      */
     public AccessControlPolicy[] getEffectivePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -331,7 +331,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#getApplicablePolicies(String)
+     * @see javax.jcr.security.AccessControlManager#getApplicablePolicies(String)
      */
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws PathNotFoundException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -350,7 +350,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#setPolicy(String, AccessControlPolicy)
+     * @see javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
      */
     public void setPolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
@@ -362,7 +362,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AccessControlManager#removePolicy(String, AccessControlPolicy)
+     * @see javax.jcr.security.AccessControlManager#removePolicy(String, AccessControlPolicy)
      */
     public void removePolicy(String absPath, AccessControlPolicy policy) throws PathNotFoundException, AccessControlException, AccessDeniedException, RepositoryException {
         checkInitialized();
