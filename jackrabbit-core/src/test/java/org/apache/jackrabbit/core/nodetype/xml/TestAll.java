@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -151,7 +151,7 @@ public class TestAll extends TestCase {
             InternalValue[] values = def.getDefaultValues();
             NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
             NamePathResolver resolver = new DefaultNamePathResolver(nsResolver);
-            ValueFactoryQImpl factory = ValueFactoryImpl.getInstance(resolver);
+            ValueFactoryQImpl factory = new ValueFactoryQImpl(InternalValueFactory.getInstance(), resolver);
             return factory.createValue(values[index]).getString();
         } catch (RepositoryException e) {
             throw new AssertionFailedError(e.getMessage());

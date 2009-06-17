@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMBuilder;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.value.ValueFactoryImpl;
+import org.apache.jackrabbit.core.value.InternalValueFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -86,6 +86,8 @@ public final class NodeTypeWriter {
     /** The namespace resolver. */
     private final NamePathResolver resolver;
 
+    private final ValueFactoryQImpl factory;
+
     /**
      * Creates a node type definition file writer. The given namespace
      * registry is used for the XML namespace bindings.
@@ -110,6 +112,7 @@ public final class NodeTypeWriter {
 
         NamespaceResolver nsResolver = new AdditionalNamespaceResolver(registry);
         resolver = new DefaultNamePathResolver(nsResolver);
+        factory = new ValueFactoryQImpl(InternalValueFactory.getInstance(), resolver);
     }
 
     /**
@@ -257,7 +260,6 @@ public final class NodeTypeWriter {
         // default values
         InternalValue[] defaults = def.getDefaultValues();
         if (defaults != null && defaults.length > 0) {
-            ValueFactoryQImpl factory = ValueFactoryImpl.getInstance(resolver);
             builder.startElement(Constants.DEFAULTVALUES_ELEMENT);
             for (int i = 0; i < defaults.length; i++) {
                 InternalValue v = defaults[i];
