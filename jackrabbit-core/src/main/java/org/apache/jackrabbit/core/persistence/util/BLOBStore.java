@@ -24,6 +24,8 @@ import java.io.InputStream;
  * <code>BLOBStore</code> represents an abstract store for binary property
  * values (BLOBs).
  *
+ * @deprecated the DataStore should be used instead
+ *
  * @see ResourceBasedBLOBStore
  */
 public interface BLOBStore {

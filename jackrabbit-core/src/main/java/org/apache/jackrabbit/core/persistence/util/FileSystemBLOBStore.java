@@ -28,6 +28,8 @@ import java.io.OutputStream;
 /**
  * <code>FileSystemBLOBStore</code> is a <code>ResourceBasedBLOBStore</code>
  * implementation that stores BLOB data in a <code>FileSystem</code>.
+ *
+ * @deprecated the FileDataStore should be used instead
  */
 public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
 
