@@ -148,7 +148,7 @@ public final class EventImpl implements JackrabbitEvent, Event {
             InternalValue value = (InternalValue) entry.getValue();
             String strValue = null;
             if (value != null) {
-                strValue = ValueFormat.getJCRValue(value, session, session.getValueFactory()).getString();
+                strValue = ValueFormat.getJCRString(value, session);
             }
             info.put(entry.getKey(), strValue);
         }

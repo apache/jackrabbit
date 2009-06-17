@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
@@ -61,11 +60,6 @@ class FilteredEventIterator implements EventIterator {
     private final NamePathResolver resolver;
 
     /**
-     * The value factory of the session that created this event iterator.
-     */
-    private final ValueFactory valueFactory;
-
-    /**
      * The IdFactory
      */
     private final IdFactory idFactory;
@@ -88,19 +82,16 @@ class FilteredEventIterator implements EventIterator {
      * @param filter     only event that pass the filter will be dispatched to
  *                   the event listener.
      * @param resolver
-     * @param valueFactory
      * @param idFactory
      */
     public FilteredEventIterator(EventBundle events,
                                  EventFilter filter,
                                  NamePathResolver resolver,
-                                 ValueFactory valueFactory,
                                  IdFactory idFactory) {
         this.actualEvents = events.getEvents();
         this.filter = filter;
         this.isLocal = events.isLocal();
         this.resolver = resolver;
-        this.valueFactory = valueFactory;
         this.idFactory = idFactory;
         fetchNext();
     }
@@ -187,7 +178,7 @@ class FilteredEventIterator implements EventIterator {
         next = null;
         while (next == null && actualEvents.hasNext()) {
             event = (org.apache.jackrabbit.spi.Event) actualEvents.next();
-            next = filter.accept(event, isLocal) ? new EventImpl(event, resolver, valueFactory, idFactory) : null;
+            next = filter.accept(event, isLocal) ? new EventImpl(event, resolver, idFactory) : null;
         }
     }
 }

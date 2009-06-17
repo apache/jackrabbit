@@ -55,6 +55,8 @@ import org.apache.jackrabbit.util.ISO9075;
  */
 public class CompactNodeTypeDefWriter {
 
+    // TODO: valueFactory not needed any more -> remove from constructor and write calls...
+
     /**
      * the indention string
      */
@@ -69,11 +71,6 @@ public class CompactNodeTypeDefWriter {
      * the current name/path resolver
      */
     private final NamePathResolver npResolver;
-
-    /**
-     * the current value factory
-     */
-    private final ValueFactory valueFactory;
 
     /**
      * the underlying writer
@@ -116,7 +113,6 @@ public class CompactNodeTypeDefWriter {
             ValueFactory valueFactory, boolean includeNS) {
         this.resolver = r;
         this.npResolver = npResolver;
-        this.valueFactory = valueFactory;
         if (includeNS) {
             this.out = new StringWriter();
             this.nsWriter = out;
@@ -332,7 +328,7 @@ public class CompactNodeTypeDefWriter {
 
             try {
                 QValue qv = QValueFactoryImpl.getInstance().create(vc, type);
-                vc = ValueFormat.getJCRValue(qv, npResolver, valueFactory).getString();
+                vc = ValueFormat.getJCRString(qv, npResolver);
             }
             catch (RepositoryException e) {
                 // ignore -> return unconverted constraint
