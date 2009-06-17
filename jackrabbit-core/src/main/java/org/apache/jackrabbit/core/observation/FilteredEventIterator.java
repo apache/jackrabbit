@@ -59,7 +59,7 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
     /**
      * Current position
      */
-    private long pos = 0;
+    private long pos;
 
     /**
      * The timestamp when the events occured.

@@ -93,22 +93,25 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     private final PathMap lockMap = new PathMap();
 
     private final ReentrantLock lockMapLock = new ReentrantLock(){
-        
+
         private Xid activeXid;
-        
+
         public void acquire() throws InterruptedException {
-            if (Thread.interrupted()) throw new InterruptedException();
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
             Thread caller = Thread.currentThread();
-            synchronized(this) {
+            synchronized (this) {
                 boolean allow = TransactionContext.isCurrentXid(activeXid, caller == owner_);
                 if (allow) {
                     ++holds_;
                 } else {
-                    try {  
-                        while (owner_ != null) 
-                            wait(); 
+                    try {
+                        while (owner_ != null) {
+                            wait();
+                        }
                         owner_ = caller;
-                        activeXid = (Xid) TransactionContext.getCurrentXid();
+                        activeXid = TransactionContext.getCurrentXid();
                         holds_ = 1;
                     } catch (InterruptedException ex) {
                         notify();
@@ -117,18 +120,18 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 }
             }
         }
-        
+
         public synchronized void release()  {
             boolean allow = TransactionContext.isCurrentXid(activeXid, Thread.currentThread() == owner_);
-            if (!allow)
-                throw new Error("Illegal Lock usage"); 
-
+            if (!allow) {
+                throw new Error("Illegal Lock usage");
+            }
             if (--holds_ == 0) {
                 owner_ = null;
                 activeXid = null;
-                notify(); 
+                notify();
             }
-        }       
+        }
     };
 
     /**
@@ -257,7 +260,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             writer = new BufferedWriter(
                     new OutputStreamWriter(locksFile.getOutputStream()));
             for (int i = 0; i < list.size(); i++) {
-                AbstractLockInfo info = (AbstractLockInfo) list.get(i);
+                AbstractLockInfo info = list.get(i);
                 writer.write(info.lockToken.toString());
                 writer.newLine();
             }
@@ -388,7 +391,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             }
 
             getSessionLockManager(session).lockTokenRemoved(info.getLockToken(session));
-            
+
             element.set(null);
             info.setLive(false);
 
@@ -423,7 +426,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                 }
             }
         }, false);
-        return (AbstractLockInfo[]) infos.toArray(new AbstractLockInfo[infos.size()]);
+        return infos.toArray(new AbstractLockInfo[infos.size()]);
     }
 
     /**
@@ -1020,7 +1023,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * its position.
      */
     private void refresh(PathMap.Element element) {
-        final ArrayList infos = new ArrayList();
+        final ArrayList<LockInfo> infos = new ArrayList<LockInfo>();
         boolean needsSave = false;
 
         // save away non-empty children
@@ -1037,7 +1040,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         // now re-insert at appropriate location or throw away if node
         // does no longer exist
         for (int i = 0; i < infos.size(); i++) {
-            LockInfo info = (LockInfo) infos.get(i);
+            LockInfo info = infos.get(i);
             try {
                 NodeImpl node = (NodeImpl) sysSession.getItemManager().
                         getItem(info.getId());

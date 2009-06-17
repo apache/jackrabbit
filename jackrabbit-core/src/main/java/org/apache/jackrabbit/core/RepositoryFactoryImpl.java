@@ -47,7 +47,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      * Map of repository instances. Key = repository home, value = repository
      * instance.
      */
-    private static final Map REPOSITORY_INSTANCES = new HashMap();
+    private static final Map<String, JackrabbitRepository> REPOSITORY_INSTANCES = new HashMap<String, JackrabbitRepository>();
 
     public Repository getRepository(Map parameters) throws RepositoryException {
         JackrabbitRepository repo;
@@ -80,7 +80,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     private JackrabbitRepository getOrCreateRepository(String conf,
                                                        String home)
             throws RepositoryException {
-        JackrabbitRepository repo = (JackrabbitRepository) REPOSITORY_INSTANCES.get(home);
+        JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
         if (repo == null) {
             if (home == null) {
                 repo = new TransientRepository();

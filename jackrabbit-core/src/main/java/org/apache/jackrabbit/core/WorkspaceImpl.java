@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.util.HashMap;
-import java.util.Iterator;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -794,22 +793,21 @@ public class WorkspaceImpl extends AbstractWorkspace
         sanityCheck();
 
         // add all versions to map of versions to restore
-        final HashMap toRestore = new HashMap();
-        for (int i = 0; i < versions.length; i++) {
-            VersionImpl v = (VersionImpl) versions[i];
+        final HashMap<String, VersionImpl> toRestore = new HashMap<String, VersionImpl>();
+        for (Version v : versions) {
             VersionHistory vh = v.getContainingHistory();
             // check for collision
             if (toRestore.containsKey(vh.getUUID())) {
                 throw new VersionException("Unable to restore. Two or more versions have same version history.");
             }
-            toRestore.put(vh.getUUID(), v);
+            toRestore.put(vh.getUUID(), (VersionImpl) v);
         }
 
         // create a version selector to the set of versions
         VersionSelector vsel = new VersionSelector() {
             public Version select(VersionHistory versionHistory) throws RepositoryException {
                 // try to select version as specified
-                Version v = (Version) toRestore.get(versionHistory.getUUID());
+                Version v = toRestore.get(versionHistory.getUUID());
                 if (v == null) {
                     // select latest one
                     v = DateVersionSelector.selectByDate(versionHistory, null);
@@ -831,15 +829,13 @@ public class WorkspaceImpl extends AbstractWorkspace
             int numRestored = 0;
             while (toRestore.size() > 0) {
                 Version[] restored = null;
-                Iterator iter = toRestore.values().iterator();
-                while (iter.hasNext()) {
-                    VersionImpl v = (VersionImpl) iter.next();
+                for (VersionImpl v : toRestore.values()) {
                     try {
                         NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getInternalFrozenNode().getFrozenUUID());
                         restored = node.internalRestore(v, vsel, removeExisting);
                         // remove restored versions from set
-                        for (int i = 0; i < restored.length; i++) {
-                            toRestore.remove(restored[i].getContainingHistory().getUUID());
+                        for (Version r : restored) {
+                            toRestore.remove(r.getContainingHistory().getUUID());
                         }
                         numRestored += restored.length;
                         break;
