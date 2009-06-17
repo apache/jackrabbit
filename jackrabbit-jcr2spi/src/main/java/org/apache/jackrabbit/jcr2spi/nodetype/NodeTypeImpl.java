@@ -22,7 +22,6 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -37,7 +36,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
@@ -92,31 +90,6 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     }
 
     /**
-     * ValueFactory used to convert JCR values from one type to another in order
-     * to determine whether a property specified by name and value(s) would be
-     * allowed.
-     *
-     * @see NodeType#canSetProperty(String, Value)
-     * @see NodeType#canSetProperty(String, Value[])
-     * @return ValueFactory used to convert JCR values.
-     * @throws javax.jcr.RepositoryException If an error occurs.
-     */
-    private ValueFactory valueFactory() throws RepositoryException {
-        return mgrProvider.getJcrValueFactory();
-    }
-
-    /**
-     * ValueFactory used to convert JCR values to qualified ones in order to
-     * determine value constraints within the NodeType interface.
-     *
-     * @return ValueFactory used to convert JCR values to qualified ones.
-     * @throws javax.jcr.RepositoryException If an error occurs.
-     */
-    private QValueFactory qValueFactory() throws RepositoryException {
-        return mgrProvider.getQValueFactory();
-    }
-
-    /**
      * Returns the applicable property definition for a property with the
      * specified name and type.
      *
@@ -150,7 +123,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     /**
      * Returns the node type definition.
      *
-     * @return the qualified definition
+     * @return the internal node type definition.
      */
     QNodeTypeDefinition getDefinition() {
         return ntd;
@@ -384,13 +357,13 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             if (def.getRequiredType() != PropertyType.UNDEFINED
                     && def.getRequiredType() != value.getType()) {
                 // type conversion required
-                v =  ValueHelper.convert(value, def.getRequiredType(), valueFactory());
+                v =  ValueHelper.convert(value, def.getRequiredType(), mgrProvider.getJcrValueFactory());
             } else {
                 // no type conversion required
                 v = value;
             }
             // create QValue from Value
-            QValue qValue = ValueFormat.getQValue(v, resolver(), qValueFactory());
+            QValue qValue = ValueFormat.getQValue(v, resolver(), mgrProvider.getQValueFactory());
             checkSetPropertyValueConstraints(def, new QValue[]{qValue});
             return true;
         } catch (NameException re) {
@@ -457,8 +430,8 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
                 if (values[i] != null) {
                     // create QValue from Value and perform
                     // type conversion as necessary
-                    Value v = ValueHelper.convert(values[i], targetType, valueFactory());
-                    QValue qValue = ValueFormat.getQValue(v, resolver(), qValueFactory());
+                    Value v = ValueHelper.convert(values[i], targetType, mgrProvider.getJcrValueFactory());
+                    QValue qValue = ValueFormat.getQValue(v, resolver(), mgrProvider.getQValueFactory());
                     list.add(qValue);
                 }
             }

@@ -118,7 +118,7 @@ class DefinitionValidator {
     /**
      *
      * @param ntDef
-     * @param validatedDefs Map of qualified nodetype names and nodetype definitions
+     * @param validatedDefs Map of nodetype names and nodetype definitions
      * that are known to be valid or are already registered. This map is used to
      * validated dependencies and check for circular inheritance
      * @return

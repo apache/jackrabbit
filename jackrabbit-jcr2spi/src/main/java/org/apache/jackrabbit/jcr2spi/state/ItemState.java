@@ -186,13 +186,13 @@ public abstract class ItemState {
 
     /**
      * Utility method:
-     * Returns the qualified path of this item state. Shortcut for calling
+     * Returns the path of this item state. Shortcut for calling
      * 'getPath' on the {@link ItemState#getHierarchyEntry() hierarchy entry}.
      *
      * @return
      * @throws RepositoryException if an error occurs
      */
-    public Path getQPath() throws RepositoryException {
+    public Path getPath() throws RepositoryException {
         return getHierarchyEntry().getPath();
     }
 

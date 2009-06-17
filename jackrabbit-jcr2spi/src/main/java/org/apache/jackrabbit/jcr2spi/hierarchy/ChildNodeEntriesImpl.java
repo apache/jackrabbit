@@ -767,13 +767,13 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         /**
          * Returns a unmodifiable List of NodeEntry objects even if the name map
          * only contains a single entry for the given name. If no matching entry
-         * exists for the given qualified name an empty list is returned.
+         * exists for the given <code>Name</code> an empty list is returned.
          *
-         * @param qName
+         * @param name
          * @return list of entries or an empty list.
          */
-        public List getList(Name qName) {
-            Object obj = get(qName);
+        public List getList(Name name) {
+            Object obj = get(name);
             if (obj == null) {
                 return Collections.EMPTY_LIST;
             } else if (obj instanceof List) {
@@ -785,8 +785,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public NodeEntry getNodeEntry(Name qName, int index) {
-            Object obj = get(qName);
+        public NodeEntry getNodeEntry(Name name, int index) {
+            Object obj = get(name);
             if (obj == null) {
                 return null;
             }
@@ -802,35 +802,35 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return null;
         }
 
-        public LinkedEntries.LinkNode getLinkNode(Name qName, int index) {
+        public LinkedEntries.LinkNode getLinkNode(Name name, int index) {
             if (index < Path.INDEX_DEFAULT) {
                 throw new IllegalArgumentException("Illegal index " + index);
             }
 
-            LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(qName);
+            LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(name);
             if (val != null) {
                 return (index == Path.INDEX_DEFAULT) ? val : null;
             } else {
                 // look in snsMap
-                List l = (List) snsMap.get(qName);
+                List l = (List) snsMap.get(name);
                 int pos = index - 1; // Index of NodeEntry is 1-based
                 return (l != null && pos < l.size()) ? (LinkedEntries.LinkNode) l.get(pos) : null;
             }
         }
 
-        public LinkedEntries.LinkNode getLinkNode(Name qName, int index, String uniqueID) {
+        public LinkedEntries.LinkNode getLinkNode(Name name, int index, String uniqueID) {
             if (uniqueID != null) {
                 // -> try if any entry matches.
                 // if none matches it be might that entry doesn't have uniqueID
                 // set yet -> search without uniqueID
-                LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(qName);
+                LinkedEntries.LinkNode val = (LinkedEntries.LinkNode) nameMap.get(name);
                 if (val != null) {
                     if (uniqueID.equals(val.getNodeEntry().getUniqueID())) {
                         return val;
                     }
                 } else {
                     // look in snsMap
-                    List l = (List) snsMap.get(qName);
+                    List l = (List) snsMap.get(name);
                     if (l != null) {
                         for (Iterator it = l.iterator(); it.hasNext();) {
                             LinkedEntries.LinkNode ln = (LinkedEntries.LinkNode) it.next();
@@ -843,25 +843,25 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
             // no uniqueID passed or not match.
             // try to load the child entry by name and index.
-            return getLinkNode(qName, index);
+            return getLinkNode(name, index);
         }
 
-        public void put(Name qName, int index, LinkedEntries.LinkNode value) {
+        public void put(Name name, int index, LinkedEntries.LinkNode value) {
             // if 'nameMap' already contains a single entry -> move it to snsMap
-            LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(qName);
+            LinkedEntries.LinkNode single = (LinkedEntries.LinkNode) nameMap.remove(name);
             List l;
             if (single != null) {
                 l = new ArrayList();
                 l.add(single);
-                snsMap.put(qName, l);
+                snsMap.put(name, l);
             } else {
                 // if 'snsMap' already contains list
-                l = (List) snsMap.get(qName);
+                l = (List) snsMap.get(name);
             }
 
             if (l == null) {
                 // no same name siblings -> simply put to the name map.
-                nameMap.put(qName, value);
+                nameMap.put(name, value);
             } else {
                 // sibling(s) already present -> insert into the list
                 int position = index - 1;
@@ -873,10 +873,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             }
         }
 
-        public LinkedEntries.LinkNode remove(Name qName, LinkedEntries.LinkNode value) {
-            Object rm = nameMap.remove(qName);
+        public LinkedEntries.LinkNode remove(Name name, LinkedEntries.LinkNode value) {
+            Object rm = nameMap.remove(name);
             if (rm == null) {
-                List l = (List) snsMap.get(qName);
+                List l = (List) snsMap.get(name);
                 if (l != null && l.remove(value)) {
                     rm = value;
                 }
@@ -884,8 +884,8 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             return ((LinkedEntries.LinkNode) rm);
         }
 
-        public void reorder(Name qName, LinkedEntries.LinkNode insertValue, int position) {
-            List sns = (List) snsMap.get(qName);
+        public void reorder(Name name, LinkedEntries.LinkNode insertValue, int position) {
+            List sns = (List) snsMap.get(name);
             if (sns == null) {
                 // no same name siblings -> no special handling required
                 return;

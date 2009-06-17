@@ -149,7 +149,7 @@ public class SessionImpl extends AbstractSession
         valueFactory = new ValueFactoryQImpl(config.getRepositoryService().getQValueFactory(), npResolver);
 
         // build nodetype manager
-        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this, getJcrValueFactory());
+        ntManager = new NodeTypeManagerImpl(workspace.getNodeTypeRegistry(), this);
         validator = new ItemStateValidator(this, getPathFactory());
 
         itemStateManager = createSessionItemStateManager(workspace.getUpdatableItemStateManager(), workspace.getItemStateFactory());
@@ -310,7 +310,7 @@ public class SessionImpl extends AbstractSession
         checkSupportedOption(Repository.LEVEL_2_SUPPORTED);
         checkIsAlive();
 
-        // retrieve qualified paths
+        // build paths from the given JCR paths.
         Path srcPath = getQPath(srcAbsPath);
         Path destPath = getQPath(destAbsPath);
 
@@ -845,12 +845,12 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Builds an qualified path from the given absolute path.
+     * Builds a <code>Path</code> object from the given absolute JCR path string.
      *
      * @param absPath
-     * @return
-     * @throws RepositoryException if the resulting qualified path is not absolute
-     * or if the given path cannot be resolved to a qualified path.
+     * @return A <code>Path</code> object.
+     * @throws RepositoryException if the resulting path isn't absolute
+     * or if the given JCR path cannot be resolved to a path object.
      */
     Path getQPath(String absPath) throws RepositoryException {
         try {
