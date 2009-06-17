@@ -71,7 +71,7 @@ public final class EventStateCollection {
     /**
      * List of events
      */
-    private final List events = new ArrayList();
+    private final List<EventState> events = new ArrayList<EventState>();
 
     /**
      * Event dispatcher.
@@ -161,8 +161,8 @@ public final class EventStateCollection {
 
         // 1. modified items
 
-        for (Iterator it = changes.modifiedStates(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
+        for (Iterator<ItemState> it = changes.modifiedStates(); it.hasNext();) {
+            ItemState state = it.next();
             if (state.isNode()) {
                 // node changed
                 // covers the following cases:
@@ -195,7 +195,7 @@ public final class EventStateCollection {
                     NodeId newParentId = n.getParentId();
                     if (newParentId != null && !oldParentId.equals(newParentId) &&
                             !n.isShareable()) {
-                        
+
                         // node moved
                         // generate node removed & node added event
                         NodeState oldParent;
@@ -208,7 +208,7 @@ public final class EventStateCollection {
                         }
 
                         NodeTypeImpl oldParentNodeType = getNodeType(oldParent, session);
-                        Set mixins = oldParent.getMixinTypeNames();
+                        Set<Name> mixins = oldParent.getMixinTypeNames();
                         Path newPath = getPath(n.getNodeId(), hmgr);
                         Path oldPath = getZombiePath(n.getNodeId(), hmgr);
                         events.add(EventState.childNodeRemoved(oldParentId,
@@ -248,8 +248,7 @@ public final class EventStateCollection {
                         if (parent != null) {
                             // check if node has been renamed
                             ChildNodeEntry moved = null;
-                            for (Iterator removedNodes = parent.getRemovedChildNodeEntries().iterator(); removedNodes.hasNext();) {
-                                ChildNodeEntry child = (ChildNodeEntry) removedNodes.next();
+                            for (ChildNodeEntry child : parent.getRemovedChildNodeEntries()) {
                                 if (child.getId().equals(n.getNodeId())) {
                                     // found node re-added with different name
                                     moved = child;
@@ -257,7 +256,7 @@ public final class EventStateCollection {
                             }
                             if (moved != null) {
                                 NodeTypeImpl nodeType = getNodeType(parent, session);
-                                Set mixins = parent.getMixinTypeNames();
+                                Set<Name> mixins = parent.getMixinTypeNames();
                                 Path newPath = getPath(state.getId(), hmgr);
                                 Path parentPath = getParent(newPath);
                                 Path oldPath;
@@ -294,14 +293,13 @@ public final class EventStateCollection {
                 }
 
                 // check if child nodes of modified node state have been reordered
-                List reordered = n.getReorderedChildNodeEntries();
+                List<ChildNodeEntry> reordered = n.getReorderedChildNodeEntries();
                 NodeTypeImpl nodeType = getNodeType(n, session);
-                Set mixins = n.getMixinTypeNames();
+                Set<Name> mixins = n.getMixinTypeNames();
                 if (reordered.size() > 0) {
                     // create a node removed and a node added event for every
                     // reorder
-                    for (Iterator ro = reordered.iterator(); ro.hasNext();) {
-                        ChildNodeEntry child = (ChildNodeEntry) ro.next();
+                    for (ChildNodeEntry child : reordered) {
                         Path.Element addedElem = getPathElement(child);
                         Path parentPath = getPath(n.getNodeId(), hmgr);
                         // get removed index
@@ -320,13 +318,13 @@ public final class EventStateCollection {
                                 parentPath, child.getId(), addedElem,
                                 nodeType.getQName(), mixins, session));
 
-                        List cne = n.getChildNodeEntries();
+                        List<ChildNodeEntry> cne = n.getChildNodeEntries();
                         // index of the child node entry before which this
                         // child node entry was reordered
                         int idx = cne.indexOf(child) + 1;
                         Path.Element beforeElem = null;
                         if (idx < cne.size()) {
-                            beforeElem = getPathElement((ChildNodeEntry) cne.get(idx));
+                            beforeElem = getPathElement(cne.get(idx));
                         }
 
                         events.add(EventState.nodeReordered(n.getNodeId(),
@@ -343,7 +341,7 @@ public final class EventStateCollection {
                 Path path = getPath(state.getId(), hmgr);
                 NodeState parent = (NodeState) stateMgr.getItemState(state.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
-                Set mixins = parent.getMixinTypeNames();
+                Set<Name> mixins = parent.getMixinTypeNames();
                 events.add(EventState.propertyChanged(state.getParentId(),
                         getParent(path), path.getNameElement(),
                         nodeType.getQName(), mixins, session));
@@ -352,14 +350,14 @@ public final class EventStateCollection {
 
         // 2. removed items
 
-        for (Iterator it = changes.deletedStates(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
+        for (Iterator<ItemState> it = changes.deletedStates(); it.hasNext();) {
+            ItemState state = it.next();
             if (state.isNode()) {
                 // node deleted
                 NodeState n = (NodeState) state;
                 NodeState parent = (NodeState) stateMgr.getItemState(n.getParentId());
                 NodeTypeImpl nodeType = getNodeType(parent, session);
-                Set mixins = parent.getMixinTypeNames();
+                Set<Name> mixins = parent.getMixinTypeNames();
                 Path path = getZombiePath(state.getId(), hmgr);
                 events.add(EventState.childNodeRemoved(n.getParentId(),
                         getParent(path),
@@ -378,7 +376,7 @@ public final class EventStateCollection {
                     NodeState n = (NodeState) changes.get(state.getParentId());
                     // node state exists -> only property removed
                     NodeTypeImpl nodeType = getNodeType(n, session);
-                    Set mixins = n.getMixinTypeNames();
+                    Set<Name> mixins = n.getMixinTypeNames();
                     Path path = getZombiePath(state.getId(), hmgr);
                     events.add(EventState.propertyRemoved(state.getParentId(),
                             getParent(path),
@@ -394,8 +392,8 @@ public final class EventStateCollection {
 
         // 3. added items
 
-        for (Iterator it = changes.addedStates(); it.hasNext();) {
-            ItemState state = (ItemState) it.next();
+        for (Iterator<ItemState> it = changes.addedStates(); it.hasNext();) {
+            ItemState state = it.next();
             if (state.isNode()) {
                 // node created
                 NodeState n = (NodeState) state;
@@ -403,7 +401,7 @@ public final class EventStateCollection {
                 // the parent of an added item is always modified or new
                 NodeState parent = (NodeState) changes.get(parentId);
                 NodeTypeImpl nodeType = getNodeType(parent, session);
-                Set mixins = parent.getMixinTypeNames();
+                Set<Name> mixins = parent.getMixinTypeNames();
                 Path path = getPath(n.getNodeId(), hmgr);
                 events.add(EventState.childNodeAdded(parentId,
                         getParent(path),
@@ -419,7 +417,7 @@ public final class EventStateCollection {
                 // property created / set
                 NodeState n = (NodeState) changes.get(state.getParentId());
                 NodeTypeImpl nodeType = getNodeType(n, session);
-                Set mixins = n.getMixinTypeNames();
+                Set<Name> mixins = n.getMixinTypeNames();
                 Path path = getPath(state.getId(), hmgr);
                 events.add(EventState.propertyAdded(state.getParentId(),
                         getParent(path),
@@ -436,7 +434,7 @@ public final class EventStateCollection {
      *
      * @param c
      */
-    public void addAll(Collection c) {
+    public void addAll(Collection<EventState> c) {
         events.addAll(c);
     }
 
@@ -495,7 +493,7 @@ public final class EventStateCollection {
      *
      * @return an iterator over {@link EventState} instance.
      */
-    Iterator iterator() {
+    Iterator<EventState> iterator() {
         return events.iterator();
     }
 
@@ -503,7 +501,7 @@ public final class EventStateCollection {
      * Return the list of events.
      * @return list of events
      */
-    public List getEvents() {
+    public List<EventState> getEvents() {
         return Collections.unmodifiableList(events);
     }
 
@@ -540,8 +538,7 @@ public final class EventStateCollection {
             throws ItemStateException {
         if (n.isShareable()) {
             // check if a share was added or removed
-            for (Iterator added = n.getAddedShares().iterator(); added.hasNext(); ) {
-                NodeId parentId = (NodeId) added.next();
+            for (NodeId parentId : n.getAddedShares()) {
                 // ignore primary parent id
                 if (n.getParentId().equals(parentId)) {
                     continue;
@@ -565,8 +562,7 @@ public final class EventStateCollection {
                 es.setShareableNode(true);
                 events.add(es);
             }
-            for (Iterator removed = n.getRemovedShares().iterator(); removed.hasNext(); ) {
-                NodeId parentId = (NodeId) removed.next();
+            for (NodeId parentId : n.getRemovedShares()) {
                 // if this shareable node is removed, only create events for
                 // parent ids that are not primary
                 if (n.getParentId().equals(parentId)) {
@@ -765,15 +761,15 @@ public final class EventStateCollection {
     }
 
     /**
-     * Get the longest common path of all event state paths. 
-     * 
+     * Get the longest common path of all event state paths.
+     *
      * @return the longest common path
      */
     public String getCommonPath() {
         String common = null;
         try {
             for (int i = 0; i < events.size(); i++) {
-                EventState state = (EventState) events.get(i);
+                EventState state = events.get(i);
                 String s = session.getJCRPath(state.getParentPath());
                 if (common == null) {
                     common = s;

@@ -93,7 +93,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
     /**
      * A cache for item instances created by this <code>ItemManager</code>
      */
-    private final Map itemCache;
+    private final Map<ItemId, ItemData> itemCache;
 
     /**
      * Shareable node cache.
@@ -200,7 +200,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             if (!itemStateProvider.hasItemState(itemId)) {
                 return false;
             }
-            ItemData data = getItemData(itemId, path, true);
+            getItemData(itemId, path, true);
             return true;
         } catch (RepositoryException re) {
             return false;
@@ -589,11 +589,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        ArrayList childIds = new ArrayList();
-        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
+        ArrayList<ItemId> childIds = new ArrayList<ItemId>();
+        Iterator<ChildNodeEntry> iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
         while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+            ChildNodeEntry entry = iter.next();
             // delay check for read-access until item is being built
             // thus avoid duplicate check
             childIds.add(entry.getId());
@@ -620,10 +620,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
+        Iterator<Name> iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            Name propName = (Name) iter.next();
+            Name propName = iter.next();
             // make sure any of the properties can be read.
             if (canRead(new PropertyId(parentId, propName))) {
                 return true;
@@ -651,11 +651,11 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        ArrayList childIds = new ArrayList();
-        Iterator iter = ((NodeState) data.getState()).getPropertyNames().iterator();
+        ArrayList<PropertyId> childIds = new ArrayList<PropertyId>();
+        Iterator<Name> iter = ((NodeState) data.getState()).getPropertyNames().iterator();
 
         while (iter.hasNext()) {
-            Name propName = (Name) iter.next();
+            Name propName = iter.next();
             PropertyId id = new PropertyId(parentId, propName);
             // delay check for read-access until item is being built
             // thus avoid duplicate check
@@ -738,7 +738,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      */
     private ItemData retrieveItem(ItemId id) {
         synchronized (itemCache) {
-            ItemData data = (ItemData) itemCache.get(id);
+            ItemData data = itemCache.get(id);
             if (data == null && id.denotesNode()) {
                 data = shareableNodesCache.retrieveFirst((NodeId) id);
             }
@@ -821,7 +821,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
             if (data.isNode()) {
                 shareableNodesCache.evict((AbstractNodeData) data);
             }
-            ItemData cached = (ItemData) itemCache.get(data.getId());
+            ItemData cached = itemCache.get(data.getId());
             if (cached == data) {
                 itemCache.remove(data.getId());
             }
@@ -899,10 +899,8 @@ public class ItemManager implements Dumpable, ItemStateListener {
         ps.println("Items in cache:");
         ps.println();
         synchronized (itemCache) {
-            Iterator iter = itemCache.keySet().iterator();
-            while (iter.hasNext()) {
-                ItemId id = (ItemId) iter.next();
-                ItemData item = (ItemData) itemCache.get(id);
+            for (ItemId id : itemCache.keySet()) {
+                ItemData item = itemCache.get(id);
                 if (item.isNode()) {
                     ps.print("Node: ");
                 } else {
@@ -1070,10 +1068,10 @@ public class ItemManager implements Dumpable, ItemStateListener {
         public AbstractNodeData retrieveFirst(NodeId id) {
             ReferenceMap map = (ReferenceMap) cache.get(id);
             if (map != null) {
-                Iterator iter = map.values().iterator();
+                Iterator<AbstractNodeData> iter = map.values().iterator();
                 try {
                     while (iter.hasNext()) {
-                        AbstractNodeData data = (AbstractNodeData) iter.next();
+                        AbstractNodeData data = iter.next();
                         if (data != null) {
                             return data;
                         }

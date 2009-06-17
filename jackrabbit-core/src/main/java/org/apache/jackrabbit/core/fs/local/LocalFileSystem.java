@@ -41,7 +41,7 @@ public class LocalFileSystem implements FileSystem {
 
     private File root;
 
-    private HandleMonitor monitor = null;
+    private HandleMonitor monitor;
 
     /**
      * Default constructor

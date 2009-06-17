@@ -49,6 +49,7 @@ import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.virtual.VirtualNodeTypeStateManager;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
+import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.persistence.PMContext;
@@ -64,7 +65,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
-import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.version.VersionManager;
 import org.apache.jackrabbit.core.version.VersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
@@ -197,7 +197,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * map of workspace names and <code>WorkspaceInfo<code>s.
      */
-    private final HashMap wspInfos = new HashMap();
+    private final HashMap<String, WorkspaceInfo> wspInfos = new HashMap<String, WorkspaceInfo>();
 
     /**
      * active sessions (weak references)
@@ -206,11 +206,11 @@ public class RepositoryImpl extends AbstractRepository
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     // misc. statistics
-    private long nodesCount = 0;
-    private long propsCount = 0;
+    private long nodesCount;
+    private long propsCount;
 
     // flag indicating if repository has been shut down
-    private boolean disposed = false;
+    private boolean disposed;
 
     /**
      * The repository lock mechanism ensures that a repository is only instantiated once.
@@ -298,9 +298,7 @@ public class RepositoryImpl extends AbstractRepository
             dataStore = repConfig.getDataStore();
 
             // init workspace configs
-            Iterator iter = repConfig.getWorkspaceConfigs().iterator();
-            while (iter.hasNext()) {
-                WorkspaceConfig config = (WorkspaceConfig) iter.next();
+            for (WorkspaceConfig config : repConfig.getWorkspaceConfigs()) {
                 WorkspaceInfo info = createWorkspaceInfo(config);
                 wspInfos.put(config.getName(), info);
             }
@@ -491,7 +489,7 @@ public class RepositoryImpl extends AbstractRepository
            secWspName = smc.getWorkspaceName();
         }
         try {
-            ((WorkspaceInfo) wspInfos.get(wspName)).initialize();
+            (wspInfos.get(wspName)).initialize();
             if (secWspName != null && !wspInfos.containsKey(secWspName)) {
                 createWorkspace(secWspName);
                 log.info("created system workspace: {}", secWspName);
@@ -709,7 +707,7 @@ public class RepositoryImpl extends AbstractRepository
      */
     protected String[] getWorkspaceNames() {
         synchronized (wspInfos) {
-            return (String[]) wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
+            return wspInfos.keySet().toArray(new String[wspInfos.keySet().size()]);
         }
     }
 
@@ -730,7 +728,7 @@ public class RepositoryImpl extends AbstractRepository
 
         WorkspaceInfo wspInfo;
         synchronized (wspInfos) {
-            wspInfo = (WorkspaceInfo) wspInfos.get(workspaceName);
+            wspInfo = wspInfos.get(workspaceName);
             if (wspInfo == null) {
                 throw new NoSuchWorkspaceException(workspaceName);
             }
@@ -831,9 +829,7 @@ public class RepositoryImpl extends AbstractRepository
 
         if (createWorkspaceEventChannel == null) {
             createWorkspaceInternal(workspaceName, configTemplate);
-        }
-        else {
-
+        } else {
             ClonedInputSource template = new ClonedInputSource(configTemplate);
             createWorkspaceInternal(workspaceName, template.cloneInputSource());
             createWorkspaceEventChannel.workspaceCreated(workspaceName, template);
@@ -1114,8 +1110,8 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             int cnt = 0;
             sa = new SessionImpl[activeSessions.size()];
-            for (Iterator it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
-                sa[cnt] = (SessionImpl) it.next();
+            for (Iterator<SessionImpl> it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
+                sa[cnt] = it.next();
             }
         }
         for (int i = 0; i < sa.length; i++) {
@@ -1131,8 +1127,7 @@ public class RepositoryImpl extends AbstractRepository
 
         // shut down workspaces
         synchronized (wspInfos) {
-            for (Iterator it = wspInfos.values().iterator(); it.hasNext();) {
-                WorkspaceInfo wspInfo = (WorkspaceInfo) it.next();
+            for (WorkspaceInfo wspInfo : wspInfos.values()) {
                 wspInfo.dispose();
             }
         }
@@ -2183,7 +2178,7 @@ public class RepositoryImpl extends AbstractRepository
          * {@inheritDoc}
          */
         public void externalUpdate(ChangeLog external,
-                                   List events,
+                                   List<EventState> events,
                                    long timestamp,
                                    String userData) throws RepositoryException {
             try {
@@ -2257,9 +2252,9 @@ public class RepositoryImpl extends AbstractRepository
                     }
                 }
                 // get names of workspaces
-                Set wspNames;
+                Set<String> wspNames;
                 synchronized (wspInfos) {
-                    wspNames = new HashSet(wspInfos.keySet());
+                    wspNames = new HashSet<String>(wspInfos.keySet());
                 }
                 // remove default workspace (will never be shutdown when idle)
                 wspNames.remove(repConfig.getDefaultWorkspaceName());
@@ -2274,10 +2269,10 @@ public class RepositoryImpl extends AbstractRepository
 
                 // remaining names denote workspaces which currently have not
                 // active sessions
-                for (Iterator it = wspNames.iterator(); it.hasNext();) {
+                for (String wspName : wspNames) {
                     WorkspaceInfo wspInfo;
                     synchronized (wspInfos) {
-                        wspInfo = (WorkspaceInfo) wspInfos.get(it.next());
+                        wspInfo = wspInfos.get(wspName);
                     }
                     wspInfo.disposeIfIdle(maxIdleTime);
                 }
