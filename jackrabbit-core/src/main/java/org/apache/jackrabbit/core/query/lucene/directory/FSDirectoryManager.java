@@ -90,9 +90,8 @@ public class FSDirectoryManager implements DirectoryManager {
             return true;
         }
         // delete files first
-        File[] files = directory.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (!files[i].delete()) {
+        for (File file : directory.listFiles()) {
+            if (!file.delete()) {
                 return false;
             }
         }
