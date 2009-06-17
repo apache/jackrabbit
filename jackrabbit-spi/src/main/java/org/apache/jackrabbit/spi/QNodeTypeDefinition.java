@@ -19,8 +19,8 @@ package org.apache.jackrabbit.spi;
 import java.util.Collection;
 
 /**
- * <code>QNodeTypeDefinition</code> is the qualified SPI representation of a
- * {@link javax.jcr.nodetype.NodeType node type}. It refers to qualified names
+ * <code>QNodeTypeDefinition</code> is the SPI representation of a
+ * {@link javax.jcr.nodetype.NodeType node type}. It refers to <code>Name</code>s
  * only and is therefore independant of session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.NodeType

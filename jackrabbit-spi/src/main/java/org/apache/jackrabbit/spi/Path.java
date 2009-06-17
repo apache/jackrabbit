@@ -22,7 +22,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 /**
- * The <code>Path</code> interface defines the qualified representation of
+ * The <code>Path</code> interface defines the SPI level representation of
  * a JCR path. It consists of an ordered list of {@link Path.Element} objects
  * and is immutable.<p/>
  *
@@ -401,9 +401,9 @@ public interface Path extends Serializable {
     public interface Element extends Serializable {
 
         /**
-         * Returns the qualified name of this path element.
+         * Returns the name of this path element.
          *
-         * @return qualified name
+         * @return The name of this path element.
          */
         public Name getName();
 

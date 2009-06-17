@@ -19,9 +19,9 @@ package org.apache.jackrabbit.spi;
 import javax.jcr.nodetype.PropertyDefinition;
 
 /**
- * <code>QPropertyDefinition</code> is the qualified SPI representation of
- * a {@link PropertyDefinition property definition}. It refers to
- * qualified default values and value constraints only and is thus isolated
+ * <code>QPropertyDefinition</code> is the SPI representation of
+ * a {@link PropertyDefinition property definition}. It refers to <code>Name</code>s,
+ * SPI default values and value constraints only and is thus isolated
  * from session-specific namespace mappings.
  *
  * @see javax.jcr.nodetype.PropertyDefinition

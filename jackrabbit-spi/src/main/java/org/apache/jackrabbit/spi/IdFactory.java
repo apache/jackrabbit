@@ -30,7 +30,7 @@ public interface IdFactory {
 
     /**
      * Creates a new <code>PropertyId</code> from the given parent id and
-     * qualified property name.
+     * property name.
      *
      * @param parentId
      * @param propertyName
