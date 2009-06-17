@@ -100,8 +100,8 @@ public class SessionImporter implements Importer, SessionListener {
     /**
      * Creates a new <code>WorkspaceImporter</code> instance.
      *
-     * @param parentPath qualified path of target node where to add the imported
-     * subtree
+     * @param parentPath Path of target node where to add the imported
+     * subtree.
      * @param session
      * @param uuidBehavior Flag that governs how incoming UUIDs are handled.
      * @throws PathNotFoundException If no node exists at <code>parentPath</code>
@@ -338,7 +338,7 @@ public class SessionImporter implements Importer, SessionListener {
 
             case ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING:
                 // make sure conflicting node is not importTarget or an ancestor thereof
-                Path p0 = importTarget.getQPath();
+                Path p0 = importTarget.getPath();
                 Path p1 = conflicting.getPath();
                 if (p1.equals(p0) || p1.isAncestorOf(p0)) {
                     msg = "cannot remove ancestor node";

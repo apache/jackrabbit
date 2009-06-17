@@ -59,7 +59,8 @@ public class PropertyImpl extends ItemImpl implements Property {
 
     public PropertyImpl(SessionImpl session, PropertyState state, ItemLifeCycleListener[] listeners) {
         super(session, state, listeners);
-        // value will be read (and converted from qualified value) on demand.
+        // NOTE: JCR value(s) will be read (and converted from the internal value
+        // representation) on demand.
     }
 
     //-----------------------------------------------------< Item interface >---

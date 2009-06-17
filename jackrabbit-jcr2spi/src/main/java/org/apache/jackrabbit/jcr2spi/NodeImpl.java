@@ -151,8 +151,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Node addNode(String relPath, String primaryNodeTypeName) throws ItemExistsException, PathNotFoundException, NoSuchNodeTypeException, LockException, VersionException, ConstraintViolationException, RepositoryException {
         checkIsWritable();
-        // 1. build qualified path and retrieve parent node
-        Path nodePath = getQPath(relPath).getNormalizedPath();
+        // build path object and retrieve parent node
+        Path nodePath = getPath(relPath).getNormalizedPath();
         if (nodePath.getNameElement().getIndex() != Path.INDEX_UNDEFINED) {
             String msg = "Illegal subscript specified: " + relPath;
             log.debug(msg);
@@ -176,11 +176,11 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         }
 
-        // 2. get qualified names for node and nt
+        // get names objects for node and nt
         Name nodeName = nodePath.getNameElement().getName();
         Name ntName = (primaryNodeTypeName == null) ? null : getQName(primaryNodeTypeName);
 
-        // 3. create new node (including validation checks)
+        // create new node (including validation checks)
         return parentNode.createNode(nodeName, ntName);
     }
 
@@ -621,8 +621,7 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Returns true, if this <code>Node</code> has a property with the given
-     * qualified name.
+     * Returns true, if this <code>Node</code> has a property with the given name.
      *
      * @param propertyName
      * @return <code>true</code>, if this <code>Node</code> has a property with
@@ -1091,7 +1090,7 @@ public class NodeImpl extends ItemImpl implements Node {
             getNode(relPath).restore(version, removeExisting);
         } else {
             // node at 'relPath' does not yet exist -> build the NodeId
-            Path nPath = getQPath(relPath);
+            Path nPath = getPath(relPath);
             Path parentPath = nPath.getAncestor(1);
             ItemManager itemMgr = getItemManager();
             if (itemMgr.nodeExists(parentPath)) {
@@ -1684,29 +1683,28 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     *
-     * @param relativePath
-     * @return
+     * @param relativeJcrPath
+     * @return Path object for the specified relative JCR path string.
      * @throws RepositoryException
      */
-    private Path getQPath(String relativePath) throws RepositoryException {
+    private Path getPath(String relativeJcrPath) throws RepositoryException {
         try {
-            Path p = session.getPathResolver().getQPath(relativePath);
-            return getQPath(p);
+            Path p = session.getPathResolver().getQPath(relativeJcrPath);
+            return getPath(p);
         } catch (NameException e) {
-            String msg = "Invalid relative path: " + relativePath;
+            String msg = "Invalid relative path: " + relativeJcrPath;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
     }
 
     /**
-     *
      * @param relativePath
-     * @return
+     * @return normalized absolute path calculated from the given relative
+     * path and the path of this node.
      * @throws RepositoryException
      */
-    private Path getQPath(Path relativePath) throws RepositoryException {
+    private Path getPath(Path relativePath) throws RepositoryException {
         // shortcut
         if (relativePath.getLength() == 1 && relativePath.getNameElement() == session.getPathFactory().getCurrentElement()) {
             return getQPath();
@@ -1743,7 +1741,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 }
             } else {
                 // rp length > 1
-                Path p = getQPath(rp);
+                Path p = getPath(rp);
                 targetEntry = session.getHierarchyManager().getNodeEntry(p.getCanonicalPath());
             }
         } catch (PathNotFoundException e) {
@@ -1781,7 +1779,7 @@ public class NodeImpl extends ItemImpl implements Node {
                 targetEntry = getNodeEntry().getPropertyEntry(propName, true);
             } else {
                 // build and resolve absolute path
-                Path p = getQPath(rp).getCanonicalPath();
+                Path p = getPath(rp).getCanonicalPath();
                 try {
                     targetEntry = session.getHierarchyManager().getPropertyEntry(p);
                 } catch (PathNotFoundException e) {

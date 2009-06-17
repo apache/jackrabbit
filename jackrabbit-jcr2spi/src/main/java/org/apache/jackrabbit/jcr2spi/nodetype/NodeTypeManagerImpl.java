@@ -78,7 +78,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
     private final NodeTypeRegistry ntReg;
 
     /**
-     * The ValueFactory used to convert qualified values to JCR values.
+     * The ValueFactory used to build property definitions.
      */
     private final ValueFactory valueFactory;
 
@@ -105,15 +105,14 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      *
      * @param ntReg        node type registry
      * @param mgrProvider  the manager provider
-     * @param valueFactory the JCR value factory
+     * @throws RepositoryException If an error occurs.
      */
     public NodeTypeManagerImpl(NodeTypeRegistry ntReg,
-                               ManagerProvider mgrProvider,
-                               ValueFactory valueFactory) {
+                               ManagerProvider mgrProvider) throws RepositoryException {
         this.mgrProvider = mgrProvider;
         this.ntReg = ntReg;
         this.ntReg.addListener(this);
-        this.valueFactory = valueFactory;
+        this.valueFactory = mgrProvider.getJcrValueFactory();
 
         // setup caches with soft references to node type
         ntCache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
