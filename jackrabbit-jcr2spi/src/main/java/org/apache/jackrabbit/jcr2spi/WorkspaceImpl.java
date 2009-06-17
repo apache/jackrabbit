@@ -585,6 +585,6 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * @throws RepositoryException
      */
     protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) throws RepositoryException {
-        return new ObservationManagerImpl(wspManager, resolver, ntRegistry, session.getValueFactory());
+        return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
     }
 }

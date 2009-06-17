@@ -2448,15 +2448,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 switch (type) {
                     case PropertyType.NAME:
                     case PropertyType.PATH:
-                        Value v = ValueFormat.getJCRValue(value, resolver, valueFactory);
-                        ent = new StringRequestEntity(v.getString(), contentType, "UTF-8");
+                        String str = ValueFormat.getJCRString(value, resolver);
+                        ent = new StringRequestEntity(str, contentType, "UTF-8");
                         break;
                     case PropertyType.BINARY:
                         in = value.getStream();
                         ent = new InputStreamRequestEntity(in, contentType);
                         break;
                     default:
-                        String str = value.getString();
+                        str = value.getString();
                         ent = new StringRequestEntity(str, contentType, "UTF-8");
                         break;
                 }

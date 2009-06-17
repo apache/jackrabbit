@@ -28,6 +28,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
@@ -124,5 +125,26 @@ public class ValueFormatTest extends TestCase {
         assertEquals(v, ValueFormat.getJCRValue(qv, resolver, vFactory));
         assertEquals(qv, ValueFormat.getQValue(v, resolver, qvFactory));
         assertEquals(qv, ValueFormat.getQValue(reference, PropertyType.WEAKREFERENCE, resolver, qvFactory));        
+    }
+
+    public void testGetJCRString() throws RepositoryException, URISyntaxException {
+        List<QValue> qvs = new ArrayList();
+
+        String reference = UUID.randomUUID().toString();
+        qvs.add(qvFactory.create(reference, PropertyType.WEAKREFERENCE));
+        qvs.add(qvFactory.create(reference, PropertyType.REFERENCE));
+        qvs.add(qvFactory.create("anyString", PropertyType.STRING));
+        qvs.add(qvFactory.create(true));
+        qvs.add(qvFactory.create(12345));
+        qvs.add(qvFactory.create(12345.7889));
+        qvs.add(qvFactory.create(new URI("http://jackrabbit.apache.org")));
+        qvs.add(qvFactory.create(new BigDecimal(Double.MIN_VALUE)));
+        qvs.add(qvFactory.create(new byte[] {'a','b','c'}));
+        qvs.add(qvFactory.create(NameConstants.JCR_ACTIVITIES));
+        qvs.add(ValueFormat.getQValue("/a/b/c", PropertyType.PATH, resolver, qvFactory));
+
+        for (QValue qv : qvs) {
+            assertEquals(ValueFormat.getJCRValue(qv, resolver, vFactory).getString(), ValueFormat.getJCRString(qv, resolver));
+        }
     }
 }

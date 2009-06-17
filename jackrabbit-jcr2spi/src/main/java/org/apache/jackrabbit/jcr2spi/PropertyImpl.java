@@ -431,8 +431,8 @@ public class PropertyImpl extends ItemImpl implements Property {
         switch (value.getType()) {
             case PropertyType.NAME:
             case PropertyType.PATH:
-                Value jcrValue = ValueFormat.getJCRValue(value, session.getNamePathResolver(), session.getJcrValueFactory());
-                length = jcrValue.getString().length();
+                String jcrString = ValueFormat.getJCRString(value, session.getNamePathResolver());
+                length = jcrString.length();
                 break;
             default:
                 length = value.getLength();
