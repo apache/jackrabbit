@@ -75,7 +75,7 @@ public class LocalAuthContext implements AuthContext {
         Map<String, String> state = new HashMap<String, String>();
         Map<String, String> options = new HashMap<String, String>();
         Properties parameters = config.getParameters();
-        Enumeration<?> names = parameters.propertyNames();
+        Enumeration< ? > names = parameters.propertyNames();
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
             options.put(name, parameters.getProperty(name));

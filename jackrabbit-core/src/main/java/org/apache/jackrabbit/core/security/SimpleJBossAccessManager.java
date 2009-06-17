@@ -32,7 +32,6 @@ import java.io.FileInputStream;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Properties;
 
 /**
@@ -53,9 +52,9 @@ public class SimpleJBossAccessManager implements AccessManager {
     private static Logger log =
         LoggerFactory.getLogger(SimpleJBossAccessManager.class);
 
-    protected boolean system = false;
+    protected boolean system;
 
-    protected boolean anonymous = false;
+    protected boolean anonymous;
 
     //--------------------------------------------------------< AccessManager >
 
@@ -75,15 +74,13 @@ public class SimpleJBossAccessManager implements AccessManager {
             rolefs.close();
         }
 
-        Iterator iterator = context.getSubject().getPrincipals().iterator();
-        while (iterator.hasNext()) {
-            Principal principal = (Principal) iterator.next();
+        for (Principal principal : context.getSubject().getPrincipals()) {
             if (principal instanceof Group
                     && principal.getName().equalsIgnoreCase("Roles")) {
                 Group group = (Group) principal;
-                Enumeration members = group.members();
+                Enumeration< ? extends Principal> members = group.members();
                 while (members.hasMoreElements()) {
-                    Principal member = (Principal) members.nextElement();
+                    Principal member = members.nextElement();
                     String role = rolemaps.getProperty(member.getName());
                     system = system || "full".equalsIgnoreCase(role);
                     anonymous = anonymous || "read".equalsIgnoreCase(role);

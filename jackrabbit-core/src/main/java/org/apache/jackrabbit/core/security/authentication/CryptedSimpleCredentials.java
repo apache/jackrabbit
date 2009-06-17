@@ -156,8 +156,8 @@ public class CryptedSimpleCredentials implements Credentials {
 
     private static String getAlgorithm(String password) {
         int end = password.indexOf("}");
-        if (password.startsWith("{") && end>0) {
-            return password.substring(1,end);
+        if (password.startsWith("{") && end > 0) {
+            return password.substring(1, end);
         } else {
             return null;
         }

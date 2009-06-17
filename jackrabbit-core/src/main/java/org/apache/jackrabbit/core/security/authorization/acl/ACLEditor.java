@@ -305,7 +305,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 log.debug("Invalid path name for Permission: " + name + ".");
             }
         }
-        int i=0;
+        int i = 0;
         String check = name;
         while (node.hasNode(check)) {
             check = name + i;

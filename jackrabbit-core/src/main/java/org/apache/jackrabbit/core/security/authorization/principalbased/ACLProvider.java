@@ -18,13 +18,11 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -50,7 +48,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.ValueFactory;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventIterator;
 import java.util.Map;
 import java.util.Set;
@@ -171,7 +168,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath)
             throws ItemNotFoundException, RepositoryException {
-        /* 
+        /*
            TODO review
            since the per-node effect of the policies is defined by the
            rep:nodePath restriction, returning the principal-based

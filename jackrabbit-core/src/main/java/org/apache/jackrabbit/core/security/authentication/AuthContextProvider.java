@@ -97,7 +97,7 @@ public class AuthContextProvider {
 
         if (isJAAS()) {
             return new JAASAuthContext(appName, cbHandler, subject);
-        } else if (isLocal()){
+        } else if (isLocal()) {
             return new LocalAuthContext(config, cbHandler, subject);
         } else {
             throw new RepositoryException("No Login-Configuration");
@@ -110,7 +110,7 @@ public class AuthContextProvider {
     public boolean isJAAS() {
         if (!initialized) {
             AppConfigurationEntry[] entries = getJAASConfig();
-            isJAAS = null!=entries && entries.length>0;
+            isJAAS = null != entries && entries.length > 0;
             initialized = true;
         }
         return isJAAS;
@@ -132,9 +132,9 @@ public class AuthContextProvider {
             props = new Properties[] {config.getParameters()};
         } else {
             AppConfigurationEntry[] entries = getJAASConfig();
-            if(entries != null) {
+            if (entries != null) {
                 List tmp = new ArrayList(entries.length);
-                for(int i=0; i < entries.length; i++) {
+                for (int i = 0; i < entries.length; i++) {
                     Map opt = entries[i].getOptions();
                     if (opt != null) {
                         Properties prop = new Properties();

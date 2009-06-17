@@ -40,7 +40,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
@@ -97,7 +96,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     private NamePathResolver resolver;
 
-    private Set principals;
+    private Set<Principal> principals;
 
     private AccessControlProvider acProvider;
 
@@ -147,7 +146,11 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         hierMgr = amContext.getHierarchyManager();
 
         Subject subject = amContext.getSubject();
-        principals = (subject == null) ? Collections.EMPTY_SET : subject.getPrincipals();
+        if (subject == null) {
+            principals = Collections.emptySet();
+        } else {
+            principals = subject.getPrincipals();
+        }
 
         wspAccess = new WorkspaceAccess(wspAccessManager, isSystemOrAdmin(subject));
         privilegeRegistry = new PrivilegeRegistry(resolver);
@@ -454,16 +457,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
         private final boolean isAdmin;
         // TODO: entries must be cleared if access permission to wsp changes.
-        private final List allowed;
-        private final List denied;
+        private final List <String>allowed;
+        private final List<String> denied;
 
         private WorkspaceAccess(WorkspaceAccessManager wspAccessManager,
                                 boolean isAdmin) {
             this.wspAccessManager = wspAccessManager;
             this.isAdmin = isAdmin;
             if (!isAdmin) {
-                allowed = new ArrayList(5);
-                denied = new ArrayList(5);
+                allowed = new ArrayList<String>(5);
+                denied = new ArrayList<String>(5);
             } else {
                 allowed = denied = null;
             }

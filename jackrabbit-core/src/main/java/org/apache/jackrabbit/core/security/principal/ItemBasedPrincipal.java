@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import javax.jcr.RepositoryException;
-import java.security.Principal;
 
 /**
  * <code>ItemBasedPrincipal</code> is a <code>Principal</code> that is
