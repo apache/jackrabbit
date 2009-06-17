@@ -506,20 +506,15 @@ public class Parser {
         } else if(readIf("BOOLEAN")) {
             return valueFactory.createValue(value.getBoolean());
         } else if(readIf("NAME")) {
-            // TODO getName
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getString(), PropertyType.NAME);
         } else if(readIf("PATH")) {
-            // TODO getPath
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getString(), PropertyType.PATH);
         } else if(readIf("REFERENCE")) {
-            // TODO getReference
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getString(), PropertyType.REFERENCE);
         } else if(readIf("WEAKREFERENCE")) {
-            // TODO getWeakReference
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getString(), PropertyType.WEAKREFERENCE);
         } else if(readIf("URI")) {
-            // TODO getURI
-            return valueFactory.createValue(value.getString());
+            return valueFactory.createValue(value.getString(), PropertyType.URI);
         } else {
             throw getSyntaxError("data type (STRING|BINARY|...)");
         }
