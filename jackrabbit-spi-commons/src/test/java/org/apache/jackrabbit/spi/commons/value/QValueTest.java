@@ -256,19 +256,19 @@ public class QValueTest extends TestCase {
     public void testDateValueEquality() throws RepositoryException {
         QValue v = factory.create(CALENDAR);
         QValue otherV = factory.create(CALENDAR);
-        assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
+        assertEquals("Equality of date value must be calculated based on their String representation.", v, otherV);
     }
 
     public void testDateValueEquality2() throws RepositoryException {
         QValue v = factory.create(CALENDAR);
         QValue otherV = factory.create(v.getString(), PropertyType.DATE);
-        assertEquals("Equality of qualified date value must be calculated based on their String representation.", v, otherV);
+        assertEquals("Equality of date value must be calculated based on their String representation.", v, otherV);
     }
 
     public void testDateValueStringRepresentation() throws RepositoryException {
         QValue v = factory.create(CALENDAR);
         String s = ISO8601.format(CALENDAR);
-        assertEquals("Expected String representation of qualified date value to be ISO8601 compliant.", s, v.getString());
+        assertEquals("Expected String representation of date value to be ISO8601 compliant.", s, v.getString());
     }
 
     //----------------------------------------------------------< REFERENCE >---
@@ -290,7 +290,7 @@ public class QValueTest extends TestCase {
     public void testReferenceValueEquality() throws RepositoryException {
         QValue v = factory.create(REFERENCE, PropertyType.REFERENCE);
         QValue otherV = factory.create(REFERENCE, PropertyType.REFERENCE);
-        assertEquals("Qualified ref values created from the same string must be equal.", v, otherV);
+        assertEquals("Reference values created from the same string must be equal.", v, otherV);
     }
 
     public void testEqualityDifferentTypes() throws RepositoryException {
@@ -318,7 +318,7 @@ public class QValueTest extends TestCase {
     public void testWeakReferenceValueEquality() throws RepositoryException {
         QValue v = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
         QValue otherV = factory.create(REFERENCE, PropertyType.WEAKREFERENCE);
-        assertEquals("Qualified ref values created from the same string must be equal.", v, otherV);
+        assertEquals("Weak reference values created from the same string must be equal.", v, otherV);
     }
 
     public void testEqualityDifferentTypes2() throws RepositoryException {
@@ -346,11 +346,11 @@ public class QValueTest extends TestCase {
     public void testUriValueEquality() throws RepositoryException, URISyntaxException {
         QValue v = factory.create(URI_STRING, PropertyType.URI);
         QValue otherV = factory.create(URI_STRING, PropertyType.URI);
-        assertEquals("Qualified uri values created from the same string must be equal.", v, otherV);
+        assertEquals("Uri values created from the same string must be equal.", v, otherV);
 
         URI uri = new URI(URI_STRING);
         v = factory.create(uri);
-        assertEquals("Qualified uri values created from the same string must be equal.", v, otherV);
+        assertEquals("Uri values created from the same string must be equal.", v, otherV);
     }
 
     public void testEqualityDifferentTypes3() throws RepositoryException {

@@ -61,15 +61,17 @@ public class CachingPathResolver implements PathResolver {
     //--------------------------------------------------------< PathResolver >
 
     /**
-     * Returns the qualified path for the given prefixed JCR path. The path
-     * is first looked up form the generational cache and the call gets
+     * Returns the <code>Path</code> object for the given JCR path String.
+     * The path is first looked up form the generational cache and the call gets
      * delegated to the decorated path resolver only if the cache misses.
      *
-     * @param path prefixed JCR path
-     * @return qualified path
+     * @param path A JCR path String.
+     * @return A <code>Path</code> object.
      * @throws MalformedPathException if the JCR path format is invalid
-     * @throws IllegalNameException if any of the JCR names contained in the path are invalid.
-     * @throws NamespaceException if a namespace prefix can not be resolved
+     * @throws IllegalNameException if any of the JCR names contained in the
+     * path are invalid.
+     * @throws NamespaceException if a namespace prefix can not be resolved.
+     * @see PathResolver#getQPath(String) 
      */
     public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
         return getQPath(path, true);
@@ -103,21 +105,21 @@ public class CachingPathResolver implements PathResolver {
 
 
     /**
-     * Returns the prefixed JCR path for the given qualified path. The path
+     * Returns the JCR path String for the given <code>Path</code>. The path
      * is first looked up form the generational cache and the call gets
      * delegated to the decorated path resolver only if the cache misses.
      *
-     * @param qpath qualified path
-     * @return prefixed JCR path
-     * @throws NamespaceException if a namespace URI can not be resolved
+     * @param path A <code>Path</code> object.
+     * @return A JCR path String in the standard form.
+     * @throws NamespaceException if a namespace URI can not be resolved.
+     * @see PathResolver#getJCRPath(org.apache.jackrabbit.spi.Path)
      */
-    public String getJCRPath(Path qpath) throws NamespaceException {
-        String path = (String) cache.get(qpath);
-        if (path == null) {
-            path = resolver.getJCRPath(qpath);
-            cache.put(qpath, path);
+    public String getJCRPath(Path path) throws NamespaceException {
+        String jcrPath = (String) cache.get(path);
+        if (jcrPath == null) {
+            jcrPath = resolver.getJCRPath(path);
+            cache.put(path, jcrPath);
         }
-        return path;
+        return jcrPath;
     }
-
 }

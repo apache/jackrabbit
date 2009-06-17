@@ -52,26 +52,28 @@ public class ParsingNameResolver implements NameResolver {
     //--------------------------------------------------------< NameResolver >
 
     /**
-     * Parses the prefixed JCR name and returns the resolved qualified name.
+     * Parses the given JCR name and returns the resolved <code>Name</code> object.
      *
-     * @param name prefixed JCR name
-     * @return qualified name
+     * @param jcrName A JCR name String
+     * @return A <code>Name</code> object.
      * @throws IllegalNameException if the JCR name format is invalid
-     * @throws NamespaceException if the namespace prefix can not be resolved
+     * @throws NamespaceException if the namespace prefix can not be resolved.
+     * @see NameResolver#getQName(String)
      */
-    public Name getQName(String name) throws IllegalNameException, NamespaceException {
-        return NameParser.parse(name, resolver, nameFactory);
+    public Name getQName(String jcrName) throws IllegalNameException, NamespaceException {
+        return NameParser.parse(jcrName, resolver, nameFactory);
     }
 
     /**
-     * Returns the prefixed JCR name for the given qualified name.
+     * Returns the qualified JCR name for the given <code>Name</code> object.
      * If the name is in the default namespace, then the local name
      * is returned without a prefix. Otherwise the prefix for the
-     * namespace is resolved and used to construct returned the JCR name.
+     * namespace is resolved and used to construct the JCR name.
      *
-     * @param name qualified name
-     * @return prefixed JCR name
-     * @throws NamespaceException if the namespace URI can not be resolved
+     * @param name A <code>Name</code> object.
+     * @return A qualified JCR name string.
+     * @throws NamespaceException if the namespace URI can not be resolved.
+     * @see NameResolver#getJCRName(org.apache.jackrabbit.spi.Name)
      */
     public String getJCRName(Name name) throws NamespaceException {
         String uri = name.getNamespaceURI();

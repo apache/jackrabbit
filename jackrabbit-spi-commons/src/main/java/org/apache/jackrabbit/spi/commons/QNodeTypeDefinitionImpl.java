@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.io.Serializable;
 
 /**
- * <code>QNodeTypeDefinitionImpl</code> implements a serializable qualified node
+ * <code>QNodeTypeDefinitionImpl</code> implements a serializable SPI node
  * type definition.
  */
 public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializable {
@@ -104,7 +104,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     /**
      * Copy constructor.
      *
-     * @param nt the qualified node type definition.
+     * @param nt the node type definition.
      */
     public QNodeTypeDefinitionImpl(QNodeTypeDefinition nt) {
         this(nt.getName(), nt.getSupertypes(), nt.getSupportedMixinTypes(),
@@ -114,7 +114,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
-     * Creates a new serializable qualified node type definition.
+     * Creates a new serializable SPI node type definition.
      *
      * @param name                   the name of the node type
      * @param supertypes             the names of the supertypes
@@ -141,7 +141,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
-     * Creates a new serializable qualified node type definition. Same as
+     * Creates a new serializable SPI node type definition. Same as
      * {@link #QNodeTypeDefinitionImpl(Name, Name[], Name[], boolean, boolean, boolean, boolean, Name, QPropertyDefinition[], QNodeDefinition[])}
      * but using <code>false</code> for both {@link #isAbstract()} and {@link #isQueryable)}.
      *
@@ -172,7 +172,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
-     * Creates a new serializable qualified node type definition.
+     * Creates a new serializable SPI node type definition.
      *
      * @param name                   the name of the node type
      * @param supertypes             the names of the supertypes
@@ -363,7 +363,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * Returns an array of serializable property definitions for
      * <code>propDefs</code>.
      *
-     * @param propDefs the qualified property definitions.
+     * @param propDefs the SPI property definitions.
      * @return an array of serializable property definitions.
      */
     private static QPropertyDefinition[] getSerializablePropertyDefs(
@@ -383,7 +383,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
      * Returns an array of serializable node definitions for
      * <code>nodeDefs</code>.
      *
-     * @param nodeDefs the qualified node definitions.
+     * @param nodeDefs the node definitions.
      * @return an array of serializable node definitions.
      */
     private static QNodeDefinition[] getSerializableNodeDefs(
