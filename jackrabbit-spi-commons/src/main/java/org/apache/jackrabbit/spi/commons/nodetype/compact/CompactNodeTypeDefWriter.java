@@ -19,14 +19,18 @@ package org.apache.jackrabbit.spi.commons.nodetype.compact;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.jackrabbit.spi.Name;
@@ -34,10 +38,13 @@ import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.query.qom.Operator;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.ISO9075;
 
@@ -85,19 +92,19 @@ public class CompactNodeTypeDefWriter {
     /**
      * namespaces(prefixes) that are used
      */
-    private final HashSet usedNamespaces = new HashSet();
+    private final Set<String> usedNamespaces = new HashSet<String>();
 
     /**
-     * Creates a new nodetype writer
+     * Creates a new nodetype writer that does not include namepsaces.
      *
-     * @param out the underlying writer
-     * @param r the namespace resolver
-     * @param npResolver
-     * @param valueFactory
+     * @param out the underlaying writer
+     * @param r the naespace resolver
+     * @param npResolver name-path resolver
      */
-    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver,
-            ValueFactory valueFactory) {
-        this(out, r, npResolver, valueFactory, false);
+    public CompactNodeTypeDefWriter(Writer out,
+                                    NamespaceResolver r,
+                                    NamePathResolver npResolver) {
+        this(out, r, npResolver, false);
     }
 
     /**
@@ -105,12 +112,13 @@ public class CompactNodeTypeDefWriter {
      *
      * @param out the underlaying writer
      * @param r the naespace resolver
-     * @param npResolver
-     * @param valueFactory
+     * @param npResolver name-path resolver
      * @param includeNS if <code>true</code> all used namespace decl. are also
      */
-    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, NamePathResolver npResolver,
-            ValueFactory valueFactory, boolean includeNS) {
+    public CompactNodeTypeDefWriter(Writer out,
+                                    NamespaceResolver r,
+                                    NamePathResolver npResolver,
+                                    boolean includeNS) {
         this.resolver = r;
         this.npResolver = npResolver;
         if (includeNS) {
@@ -126,20 +134,19 @@ public class CompactNodeTypeDefWriter {
      * Writes the given list of QNodeTypeDefinition to the output writer including the
      * used namespaces.
      *
-     * @param l
-     * @param r
-     * @param npResolver
-     * @param valueFactory
-     * @param out
-     * @throws IOException
+     * @param defs collection of definitions
+     * @param r namespace resolver
+     * @param npResolver name-path resolver
+     * @param out output writer
+     * @throws IOException if an I/O error occurs
      */
-    public static void write(List l, NamespaceResolver r, NamePathResolver npResolver,
-            ValueFactory valueFactory, Writer out)
+    public static void write(Collection<QNodeTypeDefinition> defs,
+                             NamespaceResolver r,
+                             NamePathResolver npResolver,
+                             Writer out)
             throws IOException {
-        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, npResolver, valueFactory, true);
-        Iterator iter = l.iterator();
-        while (iter.hasNext()) {
-            QNodeTypeDefinition def = (QNodeTypeDefinition) iter.next();
+        CompactNodeTypeDefWriter w = new CompactNodeTypeDefWriter(out, r, npResolver, true);
+        for (QNodeTypeDefinition def : defs) {
             w.write(def);
         }
         w.close();
@@ -148,8 +155,8 @@ public class CompactNodeTypeDefWriter {
     /**
      * Write one QNodeTypeDefinition to this writer
      *
-     * @param ntd
-     * @throws IOException
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     public void write(QNodeTypeDefinition ntd) throws IOException {
         writeName(ntd);
@@ -161,10 +168,22 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
+     * Write one QNodeTypeDefinition to this writer
+     *
+     * @param defs node type definitions
+     * @throws IOException if an I/O error occurs
+     */
+    public void write(Collection<QNodeTypeDefinition> defs) throws IOException {
+        for (QNodeTypeDefinition def : defs) {
+            write(def);
+        }
+    }
+
+    /**
      * Flushes all pending write operations and Closes this writer. please note,
      * that the underlying writer remains open.
      *
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public void close() throws IOException {
         if (nsWriter != null) {
@@ -180,6 +199,8 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * write name
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     private void writeName(QNodeTypeDefinition ntd) throws IOException {
         out.write("[");
@@ -189,60 +210,79 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * write supertypes
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     private void writeSupertypes(QNodeTypeDefinition ntd) throws IOException {
-        Name[] sta = ntd.getSupertypes();
         String delim = " > ";
-        for (int i = 0; i < sta.length; i++) {
+        for (Name name : ntd.getSupertypes()) {
             out.write(delim);
-            out.write(resolve(sta[i]));
+            out.write(resolve(name));
             delim = ", ";
         }
     }
 
     /**
      * write options
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     private void writeOptions(QNodeTypeDefinition ntd) throws IOException {
+        List<String> options = new LinkedList<String>();
+        if (ntd.isAbstract()) {
+            options.add(Lexer.ABSTRACT[0]);
+        }
         if (ntd.hasOrderableChildNodes()) {
-            out.write("\n" + INDENT);
-            out.write("orderable");
-            if (ntd.isMixin()) {
-                out.write(" mixin");
+            options.add(Lexer.ORDERABLE[0]);
+        }
+        if (ntd.isMixin()) {
+            options.add(Lexer.MIXIN[0]);
+        }
+        if (!ntd.isQueryable()) {
+            options.add(Lexer.NOQUERY[0]);
+        }
+        if (ntd.getPrimaryItemName() != null) {
+            options.add(Lexer.PRIMARYITEM[0]);
+            options.add(resolve(ntd.getPrimaryItemName()));
+        }
+        for (int i = 0; i < options.size(); i++) {
+            if (i == 0) {
+                out.write("\n" + INDENT);
+            } else {
+                out.write(" ");
             }
-        } else if (ntd.isMixin()) {
-            out.write("\n" + INDENT);
-            out.write("mixin");
+            out.write(options.get(i));
         }
     }
 
     /**
      * write prop defs
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     private void writePropDefs(QNodeTypeDefinition ntd) throws IOException {
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
-            QPropertyDefinition pd = pda[i];
-            writePropDef(ntd, pd);
+        for (QPropertyDefinition pd : ntd.getPropertyDefs()) {
+            writePropDef(pd);
         }
     }
 
     /**
      * write node defs
+     * @param ntd node type definition
+     * @throws IOException if an I/O error occurs
      */
     private void writeNodeDefs(QNodeTypeDefinition ntd) throws IOException {
-        QNodeDefinition[] nda = ntd.getChildNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            QNodeDefinition nd = nda[i];
-            writeNodeDef(ntd, nd);
+        for (QNodeDefinition nd : ntd.getChildNodeDefs()) {
+            writeNodeDef(nd);
         }
     }
 
     /**
      * write prop def
-     * @param pd
+     * @param pd property definition
+     * @throws IOException if an I/O error occurs
      */
-    private void writePropDef(QNodeTypeDefinition ntd, QPropertyDefinition pd) throws IOException {
+    private void writePropDef(QPropertyDefinition pd) throws IOException {
         out.write("\n" + INDENT + "- ");
 
         Name name = pd.getName();
@@ -256,7 +296,6 @@ public class CompactNodeTypeDefWriter {
         out.write(PropertyType.nameFromValue(pd.getRequiredType()).toLowerCase());
         out.write(")");
         writeDefaultValues(pd.getDefaultValues());
-        out.write(ntd.getPrimaryItemName() != null && ntd.getPrimaryItemName().equals(pd.getName()) ? " primary" : "");
         if (pd.isMandatory()) {
             out.write(" mandatory");
         }
@@ -273,23 +312,59 @@ public class CompactNodeTypeDefWriter {
             out.write(" ");
             out.write(OnParentVersionAction.nameFromValue(pd.getOnParentVersion()).toLowerCase());
         }
+        if (!pd.isFullTextSearchable()) {
+            out.write(" nofulltext");
+        }
+        if (!pd.isQueryOrderable()) {
+            out.write(" noqueryorder");
+        }
+        String[] qops = pd.getAvailableQueryOperators();
+        if (qops != null && qops.length > 0) {
+            List<String> opts = new ArrayList<String>(Arrays.asList(qops));
+            List<String> defaultOps = Arrays.asList(Operator.getAllQueryOperators());
+            if (!opts.containsAll(defaultOps)) {
+                out.write(" queryops '");
+                String delim = "";
+                for (String opt: opts) {
+                    out.write(delim);
+                    delim= ", ";
+                    if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_EQUAL);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_NOTEQUAL);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN)) {
+                        out.write(Lexer.QUEROPS_GREATERTHAN);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_GREATERTHANOREQUAL);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN)) {
+                        out.write(Lexer.QUEROPS_LESSTHAN);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
+                        out.write(Lexer.QUEROPS_LESSTHANOREQUAL);
+                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LIKE)) {
+                        out.write(Lexer.QUEROPS_LIKE);
+                    }
+                }
+                out.write("'");
+            }
+        }
         writeValueConstraints(pd.getValueConstraints(), pd.getRequiredType());
     }
 
     /**
      * write default values
-     * @param dva
+     * @param dva default value
+     * @throws IOException if an I/O error occurs
      */
     private void writeDefaultValues(QValue[] dva) throws IOException {
         if (dva != null && dva.length > 0) {
             String delim = " = '";
-            for (int i = 0; i < dva.length; i++) {
+            for (QValue value : dva) {
                 out.write(delim);
                 try {
-                    String str = ValueFormat.getJCRString(dva[i], npResolver);
+                    String str = ValueFormat.getJCRString(value, npResolver);
                     out.write(escape(str));
                 } catch (RepositoryException e) {
-                    out.write(escape(dva[i].toString()));
+                    out.write(escape(value.toString()));
                 }
                 out.write("'");
                 delim = ", '";
@@ -299,9 +374,11 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * write value constraints
-     * @param vca
+     * @param vca value constraint
+     * @param type value type
+     * @throws IOException if an I/O error occurs
      */
-    private void writeValueConstraints(String[] vca, int type) throws IOException {
+    private void writeValueConstraints(QValueConstraint[] vca, int type) throws IOException {
         if (vca != null && vca.length > 0) {
             String vc = convertConstraint(vca[0], type);
             out.write(" < '");
@@ -316,34 +393,29 @@ public class CompactNodeTypeDefWriter {
         }
     }
 
-    private String convertConstraint(String vc, int type) {
-        if (type == PropertyType.REFERENCE
-                || type == PropertyType.WEAKREFERENCE
-                || type == PropertyType.NAME
-                || type == PropertyType.PATH) {
-            if (type == PropertyType.REFERENCE
-                    || type == PropertyType.WEAKREFERENCE) {
-                type = PropertyType.NAME;
-            }
-
-            try {
-                QValue qv = QValueFactoryImpl.getInstance().create(vc, type);
-                vc = ValueFormat.getJCRString(qv, npResolver);
-            }
-            catch (RepositoryException e) {
-                // ignore -> return unconverted constraint
-            }
+    /**
+     * Converts the constraint to a jcr value
+     * @param vc value constraint string
+     * @param type value type
+     * @return converted value
+     */
+    private String convertConstraint(QValueConstraint vc, int type) {
+        try {
+            ValueConstraint c = ValueConstraint.create(type, vc.getString());
+            return c.getDefinition(npResolver);
+        } catch (InvalidConstraintException e) {
+            // ignore -> return unconverted constraint
+            return vc.getString();
         }
-
-        return vc;
     }
 
     /**
      * write node def
      *
-     * @param nd
+     * @param nd node definition
+     * @throws IOException if an I/O error occurs
      */
-    private void writeNodeDef(QNodeTypeDefinition ntd, QNodeDefinition nd) throws IOException {
+    private void writeNodeDef(QNodeDefinition nd) throws IOException {
         out.write("\n" + INDENT + "+ ");
 
         Name name = nd.getName();
@@ -354,7 +426,6 @@ public class CompactNodeTypeDefWriter {
         }
         writeRequiredTypes(nd.getRequiredPrimaryTypes());
         writeDefaultType(nd.getDefaultPrimaryType());
-        out.write(ntd.getPrimaryItemName() != null && ntd.getPrimaryItemName().equals(nd.getName()) ? " primary" : "");
         if (nd.isMandatory()) {
             out.write(" mandatory");
         }
@@ -375,22 +446,23 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * Write item def name
-     * @param name
-     * @throws IOException
+     * @param name name
+     * @throws IOException if an I/O error occurs
      */
     private void writeItemDefName(Name name) throws IOException {
         out.write(resolve(name));
     }
     /**
      * write required types
-     * @param reqTypes
+     * @param reqTypes required type names
+     * @throws IOException if an I/O error occurs
      */
     private void writeRequiredTypes(Name[] reqTypes) throws IOException {
         if (reqTypes != null && reqTypes.length > 0) {
             String delim = " (";
-            for (int i = 0; i < reqTypes.length; i++) {
+            for (Name reqType : reqTypes) {
                 out.write(delim);
-                out.write(resolve(reqTypes[i]));
+                out.write(resolve(reqType));
                 delim = ", ";
             }
             out.write(")");
@@ -399,7 +471,8 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * write default types
-     * @param defType
+     * @param defType default type name
+     * @throws IOException if an I/O error occurs
      */
     private void writeDefaultType(Name defType) throws IOException {
         if (defType != null && !defType.getLocalName().equals("*")) {
@@ -410,8 +483,9 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * resolve
-     * @param name
+     * @param name name to resolve
      * @return the resolved name
+     * @throws IOException if an I/O error occurs
      */
     private String resolve(Name name) throws IOException {
         if (name == null) {
@@ -451,7 +525,7 @@ public class CompactNodeTypeDefWriter {
 
     /**
      * escape
-     * @param s
+     * @param s string
      * @return the escaped string
      */
     private String escape(String s) {

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QItemDefinition;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -806,7 +807,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                     ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                     String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
                     ps.println("\t\tRequiredType\t" + type);
-                    String[] vca = pd[i].getValueConstraints();
+                    QValueConstraint[] vca = pd[i].getValueConstraints();
                     StringBuffer constraints = new StringBuffer();
                     if (vca == null) {
                         constraints.append("<null>");
@@ -815,7 +816,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                             if (constraints.length() > 0) {
                                 constraints.append(", ");
                             }
-                            constraints.append(vca[n]);
+                            constraints.append(vca[n].getString());
                         }
                     }
                     ps.println("\t\tValueConstraints\t" + constraints.toString());
@@ -824,14 +825,14 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                     if (defVals == null) {
                         defaultValues.append("<null>");
                     } else {
-                        for (int n = 0; n < defVals.length; n++) {
+                        for (QValue defVal : defVals) {
                             if (defaultValues.length() > 0) {
                                 defaultValues.append(", ");
                             }
                             try {
-                                defaultValues.append(defVals[n].getString());
+                                defaultValues.append(defVal.getString());
                             } catch (RepositoryException e) {
-                                defaultValues.append(defVals[n].toString());
+                                defaultValues.append(defVal.toString());
                             }
                         }
                     }
@@ -843,25 +844,25 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                     ps.println("\t\tMultiple\t" + pd[i].isMultiple());
                 }
                 QNodeDefinition[] nd = ntd.getChildNodeDefs();
-                for (int i = 0; i < nd.length; i++) {
+                for (QNodeDefinition aNd : nd) {
                     ps.print("\tNodeDefinition");
-                    ps.println(" (declared in " + nd[i].getDeclaringNodeType() + ") ");
-                    ps.println("\t\tName\t\t" + (nd[i].definesResidual() ? "*" : nd[i].getName().toString()));
-                    Name[] reqPrimaryTypes = nd[i].getRequiredPrimaryTypes();
+                    ps.println(" (declared in " + aNd.getDeclaringNodeType() + ") ");
+                    ps.println("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
+                    Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                     if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                         for (int n = 0; n < reqPrimaryTypes.length; n++) {
                             ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
                         }
                     }
-                    Name defPrimaryType = nd[i].getDefaultPrimaryType();
+                    Name defPrimaryType = aNd.getDefaultPrimaryType();
                     if (defPrimaryType != null) {
                         ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
                     }
-                    ps.println("\n\t\tAutoCreated\t" + nd[i].isAutoCreated());
-                    ps.println("\t\tMandatory\t" + nd[i].isMandatory());
-                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(nd[i].getOnParentVersion()));
-                    ps.println("\t\tProtected\t" + nd[i].isProtected());
-                    ps.println("\t\tAllowsSameNameSiblings\t" + nd[i].allowsSameNameSiblings());
+                    ps.println("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
+                    ps.println("\t\tMandatory\t" + aNd.isMandatory());
+                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
+                    ps.println("\t\tProtected\t" + aNd.isProtected());
+                    ps.println("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
                 }
             }
         }

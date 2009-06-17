@@ -30,7 +30,6 @@ import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
-import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -38,6 +37,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.AbstractVISProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.uuid.UUID;
 
@@ -229,10 +229,10 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
             defValsType = defVals[0].getType();
         }
         pState.setPropertyValues(NameConstants.JCR_DEFAULTVALUES, defValsType, defVals);
-        ValueConstraint[] vc = propDef.getValueConstraints();
+        QValueConstraint[] vc = propDef.getValueConstraints();
         InternalValue[] vals = new InternalValue[vc.length];
         for (int i = 0; i < vc.length; i++) {
-            vals[i] = InternalValue.create(vc[i].getDefinition());
+            vals[i] = InternalValue.create(vc[i].getString());
         }
         pState.setPropertyValues(NameConstants.JCR_VALUECONSTRAINTS, PropertyType.STRING, vals);
         return pState;

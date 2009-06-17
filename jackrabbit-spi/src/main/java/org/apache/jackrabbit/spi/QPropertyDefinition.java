@@ -45,7 +45,7 @@ public interface QPropertyDefinition extends QItemDefinition {
      *
      * @return the array of value constraints.
      */
-    public String[] getValueConstraints();
+    public QValueConstraint[] getValueConstraints();
 
     /**
      * Returns the array of default values or <code>null</code> if no default
@@ -68,7 +68,7 @@ public interface QPropertyDefinition extends QItemDefinition {
      * @return the availabe query operators.
      * @since JCR 2.0
      */
-    public Name[] getAvailableQueryOperators();
+    public String[] getAvailableQueryOperators();
 
     /**
      * Reports whether this property definition is full text searchable.

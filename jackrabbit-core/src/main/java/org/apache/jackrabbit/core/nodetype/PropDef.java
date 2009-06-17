@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 
 /**
  * <code>PropDef</code> is the internal representation of
@@ -48,7 +49,7 @@ public interface PropDef extends ItemDef {
      *
      * @return the array of value constraints.
      */
-    ValueConstraint[] getValueConstraints();
+    QValueConstraint[] getValueConstraints();
 
     /**
      * Returns the array of default values.

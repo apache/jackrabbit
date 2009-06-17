@@ -16,40 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import org.apache.jackrabbit.commons.NamespaceHelper;
-import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
-
-import javax.jcr.nodetype.NodeTypeDefinition;
-import javax.jcr.nodetype.NodeTypeExistsException;
-
-import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
-import org.apache.jackrabbit.core.util.Dumpable;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
-import org.apache.jackrabbit.spi.Name;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
-import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -65,6 +31,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import javax.jcr.nodetype.NodeTypeExistsException;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.PropertyDefinition;
+
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
+import org.apache.jackrabbit.commons.NamespaceHelper;
+import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
+import org.apache.jackrabbit.core.util.Dumpable;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
@@ -97,19 +100,19 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * A cache for <code>NodeType</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map ntCache;
+    private final Map<Name, NodeTypeImpl> ntCache;
 
     /**
      * A cache for <code>PropertyDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map pdCache;
+    private final Map<PropDefId, PropertyDefinitionImpl> pdCache;
 
     /**
      * A cache for <code>NodeDefinition</code> instances created by this
      * <code>NodeTypeManager</code>
      */
-    private final Map ndCache;
+    private final Map<NodeDefId, NodeDefinitionImpl> ndCache;
 
     private final DataStore store;
 
@@ -118,8 +121,10 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      *
      * @param ntReg      node type registry
      * @param session    current session
+     * @param store      the data store
      * @throws RepositoryException If an error occurs.
      */
+    @SuppressWarnings("unchecked")
     public NodeTypeManagerImpl(
             NodeTypeRegistry ntReg, SessionImpl session, DataStore store)
             throws RepositoryException {
@@ -148,12 +153,12 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     }
 
     /**
-     * @param id
+     * @param id node def id
      * @return the node definition
      */
     public NodeDefinitionImpl getNodeDefinition(NodeDefId id) {
         synchronized (ndCache) {
-            NodeDefinitionImpl ndi = (NodeDefinitionImpl) ndCache.get(id);
+            NodeDefinitionImpl ndi = ndCache.get(id);
             if (ndi == null) {
                 NodeDef nd = ntReg.getNodeDef(id);
                 if (nd != null) {
@@ -166,12 +171,12 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     }
 
     /**
-     * @param id
+     * @param id prop def id
      * @return the property definition
      */
     public PropertyDefinitionImpl getPropertyDefinition(PropDefId id) {
         synchronized (pdCache) {
-            PropertyDefinitionImpl pdi = (PropertyDefinitionImpl) pdCache.get(id);
+            PropertyDefinitionImpl pdi = pdCache.get(id);
             if (pdi == null) {
                 PropDef pd = ntReg.getPropDef(id);
                 if (pd != null) {
@@ -184,13 +189,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     }
 
     /**
-     * @param name
-     * @return
-     * @throws NoSuchNodeTypeException
+     * @param name node type name
+     * @return node type
+     * @throws NoSuchNodeTypeException if the nodetype does not exit
      */
     public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
-            NodeTypeImpl nt = (NodeTypeImpl) ntCache.get(name);
+            NodeTypeImpl nt = ntCache.get(name);
             if (nt == null) {
                 EffectiveNodeType ent = ntReg.getEffectiveNodeType(name);
                 NodeTypeDef def = ntReg.getNodeTypeDef(name);
@@ -228,8 +233,8 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
             throws IOException, RepositoryException {
 
         try {
-            Map namespaceMap = new HashMap();
-            List nodeTypeDefs = new ArrayList();
+            Map<String, String> namespaceMap = new HashMap<String, String>();
+            List<NodeTypeDef> nodeTypeDefs = new ArrayList<NodeTypeDef>();
 
             if (contentType.equalsIgnoreCase(TEXT_XML)
                     || contentType.equalsIgnoreCase(APPLICATION_XML)) {
@@ -258,8 +263,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                             new InputStreamReader(in), "cnd input stream", mapping);
 
                     namespaceMap.putAll(mapping.getPrefixToURIMapping());
-
-                    nodeTypeDefs.addAll(reader.getNodeTypeDefs());
+                    for (QNodeTypeDefinition ntDef: reader.getNodeTypeDefinitions()) {
+                        nodeTypeDefs.add(new NodeTypeDef(ntDef));
+                    }
                 } catch (ParseException e) {
                     IOException e2 = new IOException(e.getMessage());
                     e2.initCause(e);
@@ -276,10 +282,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                 // split the node types into new and already registered node types.
                 // this way we can register new node types together with already
                 // registered node types which make circular dependencies possible
-                List newNodeTypeDefs = new ArrayList();
-                List registeredNodeTypeDefs = new ArrayList();
-                for (Iterator iter = nodeTypeDefs.iterator(); iter.hasNext();) {
-                    NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
+                List<NodeTypeDef> newNodeTypeDefs = new ArrayList<NodeTypeDef>();
+                List<NodeTypeDef> registeredNodeTypeDefs = new ArrayList<NodeTypeDef>();
+                for (NodeTypeDef nodeTypeDef: nodeTypeDefs) {
                     if (ntReg.isRegistered(nodeTypeDef.getName())) {
                         registeredNodeTypeDefs.add(nodeTypeDef);
                     } else {
@@ -287,21 +292,20 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                     }
                 }
 
-                ArrayList nodeTypes = new ArrayList();
+                ArrayList<NodeType> nodeTypes = new ArrayList<NodeType>();
 
                 // register new node types
                 nodeTypes.addAll(registerNodeTypes(newNodeTypeDefs));
 
-                // reregister already existing node types
-                for (Iterator iter = registeredNodeTypeDefs.iterator(); iter.hasNext();) {
-                    NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
+                // re-register already existing node types
+                for (NodeTypeDef nodeTypeDef: registeredNodeTypeDefs) {
                     ntReg.reregisterNodeType(nodeTypeDef);
                     nodeTypes.add(getNodeType(nodeTypeDef.getName()));
                 }
-                return (NodeType[]) nodeTypes.toArray(new NodeType[nodeTypes.size()]);
+                return nodeTypes.toArray(new NodeType[nodeTypes.size()]);
             } else {
-                Collection types = registerNodeTypes(nodeTypeDefs);
-                return (NodeType[]) types.toArray(new NodeType[types.size()]);
+                Collection<NodeType> types = registerNodeTypes(nodeTypeDefs);
+                return types.toArray(new NodeType[types.size()]);
             }
 
         } catch (InvalidNodeTypeDefException e) {
@@ -375,9 +379,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
-        for (int i = 0; i < ntNames.length; i++) {
-            list.add(getNodeType(ntNames[i]));
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
+        for (Name ntName : ntNames) {
+            list.add(getNodeType(ntName));
         }
         return new NodeTypeIteratorAdapter(list);
     }
@@ -387,9 +391,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
-        for (int i = 0; i < ntNames.length; i++) {
-            NodeType nt = getNodeType(ntNames[i]);
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
+        for (Name ntName : ntNames) {
+            NodeType nt = getNodeType(ntName);
             if (!nt.isMixin()) {
                 list.add(nt);
             }
@@ -402,9 +406,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
-        ArrayList list = new ArrayList(ntNames.length);
-        for (int i = 0; i < ntNames.length; i++) {
-            NodeType nt = getNodeType(ntNames[i]);
+        ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
+        for (Name ntName : ntNames) {
+            NodeType nt = getNodeType(ntName);
             if (nt.isMixin()) {
                 list.add(nt);
             }
@@ -433,19 +437,17 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * Returns a collection containing the registered node types.
      *
      * @param defs a collection of <code>NodeTypeDef<code> objects
-     * @returns registered node types
-     * @throws InvalidNodeTypeDefException
-     * @throws RepositoryException
+     * @return registered node types
+     * @throws InvalidNodeTypeDefException if a nodetype is invalid
+     * @throws RepositoryException if an error occurs
      */
-    private Collection registerNodeTypes(List defs)
+    private Collection<NodeType> registerNodeTypes(List<NodeTypeDef> defs)
             throws InvalidNodeTypeDefException, RepositoryException {
         ntReg.registerNodeTypes(defs);
 
-        Set types = new HashSet();
-        Iterator iterator = defs.iterator();
-        while (iterator.hasNext()) {
+        Set<NodeType> types = new HashSet<NodeType>();
+        for (NodeTypeDef def : defs) {
             try {
-                NodeTypeDef def = (NodeTypeDef) iterator.next();
                 types.add(getNodeType(def.getName()));
             } catch (NoSuchNodeTypeException e) {
                 // ignore
@@ -553,8 +555,8 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         // split the node types into new and already registered node types.
         // this way we can register new node types together with already
         // registered node types which make circular dependencies possible
-        List addedDefs = new ArrayList();
-        List modifiedDefs = new ArrayList();
+        List<NodeTypeDef> addedDefs = new ArrayList<NodeTypeDef>();
+        List<NodeTypeDef> modifiedDefs = new ArrayList<NodeTypeDef>();
         for (NodeTypeDefinition definition : definitions) {
             // convert to NodeTypeDef
             NodeTypeDef def = toNodeTypeDef(definition);
@@ -570,14 +572,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
         }
 
         try {
-            ArrayList result = new ArrayList();
+            ArrayList<NodeType> result = new ArrayList<NodeType>();
 
             // register new node types
             result.addAll(registerNodeTypes(addedDefs));
 
-            // reregister already existing node types
-            for (Iterator iter = modifiedDefs.iterator(); iter.hasNext();) {
-                NodeTypeDef nodeTypeDef = (NodeTypeDef) iter.next();
+            // re-register already existing node types
+            for (NodeTypeDef nodeTypeDef: modifiedDefs) {
                 ntReg.reregisterNodeType(nodeTypeDef);
                 result.add(getNodeType(nodeTypeDef.getName()));
             }
@@ -605,14 +606,14 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
     public void unregisterNodeTypes(String[] names)
             throws UnsupportedRepositoryOperationException,
             NoSuchNodeTypeException, RepositoryException {
-        HashSet ntNames = new HashSet();
-        for (int i = 0; i < names.length; i++) {
+        Set<Name> ntNames = new HashSet<Name>();
+        for (String name : names) {
             try {
-                ntNames.add(session.getQName(names[i]));
+                ntNames.add(session.getQName(name));
             } catch (NamespaceException e) {
-                throw new RepositoryException("Invalid name: " + names[i], e);
+                throw new RepositoryException("Invalid name: " + name, e);
             } catch (NameException e) {
-                throw new RepositoryException("Invalid name: " + names[i], e);
+                throw new RepositoryException("Invalid name: " + name, e);
             }
         }
         getNodeTypeRegistry().unregisterNodeTypes(ntNames);
@@ -623,10 +624,10 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      * (using prefixed JCR names) to a <code>NodeTypeDef</code> (using
      * namespace-qualified names).
      *
-     * @param definition
+     * @param definition the definition
      * @return a <code>NodeTypeDef</code>
-     * @throws InvalidNodeTypeDefinitionException
-     * @throws RepositoryException
+     * @throws InvalidNodeTypeDefinitionException if the definiton is invalid
+     * @throws RepositoryException if a repository error occurs
      */
     private NodeTypeDef toNodeTypeDef(NodeTypeDefinition definition)
             throws InvalidNodeTypeDefinitionException, RepositoryException {
@@ -770,7 +771,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
                 // value constraints
                 String[] constraints = pdefs[i].getValueConstraints();
                 if (constraints != null) {
-                    ValueConstraint[] qconstraints = new ValueConstraint[constraints.length];
+                    QValueConstraint[] qconstraints = new QValueConstraint[constraints.length];
                     for (int j = 0; j < constraints.length; j++) {
                         try {
                             qconstraints[j] = ValueConstraint.create(type, constraints[j], session);

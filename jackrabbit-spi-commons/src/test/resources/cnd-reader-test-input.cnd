@@ -44,6 +44,32 @@
 [ex:Path]
   - ex:path (path) < 'ex:a/ex:b'  
 
+[ex:Full] > ex:NodeType
+  orderable mixin abstract primaryitem ex:p1 noquery
+  - ex:p1 (STRING) mandatory protected autocreated multiple
+  - ex:p2 (BINARY) queryops '=, <>, <, <=, >, >=, LIKE'
+  - ex:p3 (LONG) nofulltext noqueryorder
+  - ex:p4 (DOUBLE)
+  - ex:p5 (BOOLEAN)
+  - ex:p6 (NAME)
+  - ex:p8 (PATH)
+  - ex:p9 (REFERENCE)
+  - ex:pa (WEAKREFERENCE)
+  - ex:pb (DECIMAL)
+  - ex:pc (URI)
+  - ex:pd (UNDEFINED)
+  - ex:pf (*)
+  + ex:n1 (ex:NodeType) COPY
+  + ex:n2 (ex:NodeType) VERSION
+  + ex:n3 (ex:NodeType) INITIALIZE
+  + ex:n4 (ex:NodeType) COMPUTE
+  + ex:n5 (ex:NodeType) IGNORE
+  + ex:n6 (ex:NodeType) ABORT
+
+[ex:Full1] > ex:NodeType
+  orderable mixin abstract primaryitem ex:p1 query
+  - ex:p1
+
 //------------------------------------------------------------------------------
 // B A S E  T Y P E S
 //------------------------------------------------------------------------------

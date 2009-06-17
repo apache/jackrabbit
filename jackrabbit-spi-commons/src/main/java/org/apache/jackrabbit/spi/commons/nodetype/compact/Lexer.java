@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Lexer
+ * Lexer of the CND definition.
  */
 public class Lexer {
     public static final char SINGLE_QUOTE = '\'';
@@ -43,6 +43,7 @@ public class Lexer {
     public static final String[] MIXIN = new String[]{"mixin", "mix", "m"};
     public static final String[] ABSTRACT = new String[]{"abstract", "abs", "a"};
     public static final String[] NOQUERY = new String[]{"noquery", "nq"};
+    public static final String[] QUERY = new String[]{"query", "q"};
     public static final String[] PRIMARYITEM = new String[]{"primaryitem", "!"};
 
     public static final String[] PRIMARY = new String[]{"primary", "pri", "!"};
@@ -54,12 +55,12 @@ public class Lexer {
     public static final String[] NOFULLTEXT = new String[]{"nofulltext", "nof"};
     public static final String[] NOQUERYORDER = new String[]{"noqueryorder", "nqord"};
 
-    public static final String[] COPY = new String[]{"copy", "Copy", "COPY"};
-    public static final String[] VERSION = new String[]{"version", "Version", "VERSION"};
-    public static final String[] INITIALIZE = new String[]{"initialize", "Initialize", "INITIALIZE"};
-    public static final String[] COMPUTE = new String[]{"compute", "Compute", "COMPUTE"};
-    public static final String[] IGNORE = new String[]{"ignore", "Ignore", "IGNORE"};
-    public static final String[] ABORT = new String[]{"abort", "Abort", "ABORT"};
+    public static final String[] COPY = new String[]{"COPY"};
+    public static final String[] VERSION = new String[]{"VERSION"};
+    public static final String[] INITIALIZE = new String[]{"INITIALIZE"};
+    public static final String[] COMPUTE = new String[]{"COMPUTE"};
+    public static final String[] IGNORE = new String[]{"IGNORE"};
+    public static final String[] ABORT = new String[]{"ABORT"};
 
     public static final String[] ATTRIBUTE;
     static {
@@ -89,20 +90,20 @@ public class Lexer {
     public static final String QUEROPS_GREATERTHANOREQUAL = ">=";
     public static final String QUEROPS_LIKE = "LIKE";
 
-    public static final String[] STRING = {"string", "String", "STRING"};
-    public static final String[] BINARY = {"binary", "Binary", "BINARY"};
-    public static final String[] LONG = {"long", "Long", "LONG"};
-    public static final String[] DOUBLE = {"double", "Double", "DOUBLE"};
-    public static final String[] BOOLEAN = {"boolean", "Boolean", "BOOLEAN"};
-    public static final String[] DATE = {"date", "Date", "DATE"};
-    public static final String[] NAME = {"name", "Name", "NAME"};
-    public static final String[] PATH = {"path", "Path", "PATH"};
-    public static final String[] REFERENCE = {"reference", "Reference", "REFERENCE"};
-    public static final String[] WEAKREFERENCE = {"weakreference", "WeakReference", "WEAKREFERENCE"};
-    public static final String[] URI = {"uri", "Uri", "URI"};
-    public static final String[] DECIMAL = {"decimal", "Decimal", "DECIMAL"};
+    public static final String[] STRING = {"STRING"};
+    public static final String[] BINARY = {"BINARY"};
+    public static final String[] LONG = {"LONG"};
+    public static final String[] DOUBLE = {"DOUBLE"};
+    public static final String[] BOOLEAN = {"BOOLEAN"};
+    public static final String[] DATE = {"DATE"};
+    public static final String[] NAME = {"NAME"};
+    public static final String[] PATH = {"PATH"};
+    public static final String[] REFERENCE = {"REFERENCE"};
+    public static final String[] WEAKREFERENCE = {"WEAKREFERENCE"};
+    public static final String[] URI = {"URI"};
+    public static final String[] DECIMAL = {"DECIMAL"};
 
-    public static final String[] UNDEFINED = new String[]{"undefined", "Undefined", "UNDEFINED", "*"};
+    public static final String[] UNDEFINED = new String[]{"UNDEFINED", "*"};
 
     public static final String EOF = "eof";
 
@@ -111,8 +112,9 @@ public class Lexer {
     private final String systemId;
 
     /**
-     * Constructor
-     * @param r
+     * Creates an unitialized lexer on top of the given reader.
+     * @param r the reader
+     * @param systemId informational systemid of the given stream
      */
     public Lexer(Reader r, String systemId) {
         this.systemId = systemId;
@@ -148,8 +150,8 @@ public class Lexer {
     /**
      * getNextToken
      *
-     * @return
-     * @throws ParseException
+     * @return the next token
+     * @throws ParseException if an error during parsing occurs
      */
     public String getNextToken() throws ParseException {
         try {
@@ -171,14 +173,30 @@ public class Lexer {
         }
     }
 
+    /**
+     * Creates a failure exception including the current line number and systemid.
+     * @param message message
+     * @throws ParseException the created exception
+     */
     public void fail(String message) throws ParseException {
         throw new ParseException(message, st.lineno(), -1, systemId);
     }
 
+    /**
+     * Creates a failure exception including the current line number and systemid.
+     * @param message message
+     * @param e root cause
+     * @throws ParseException the created exception
+     */
     public void fail(String message, Throwable e) throws ParseException {
         throw new ParseException(message, e, st.lineno(), -1, systemId);
     }
 
+    /**
+     * Creates a failure exception including the current line number and systemid.
+     * @param e root cause
+     * @throws ParseException the created exception
+     */
     public void fail(Throwable e) throws ParseException {
         throw new ParseException(e, st.lineno(), -1, systemId);
     }

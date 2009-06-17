@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype.xml;
 
-import org.apache.jackrabbit.core.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -24,7 +23,6 @@ import org.apache.jackrabbit.core.nodetype.NodeDefImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
 import org.apache.jackrabbit.core.nodetype.PropDef;
 import org.apache.jackrabbit.core.nodetype.PropDefImpl;
-import org.apache.jackrabbit.core.nodetype.ValueConstraint;
 import org.apache.jackrabbit.core.util.DOMWalker;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.value.InternalValueFactory;
@@ -34,8 +32,11 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.PropertyType;
@@ -113,6 +114,7 @@ public class NodeTypeReader {
     /**
      * Returns the namespaces declared in the node type definition
      * file.
+     * @return the namespaces
      */
     public Properties getNamespaces() {
         return namespaces;
@@ -126,14 +128,15 @@ public class NodeTypeReader {
      * @throws InvalidNodeTypeDefException if a definition is invalid
      * @throws NameException               if a definition contains an
      *                                     illegal name
+     * @throws NamespaceException if a namespace is not defined
      */
     public NodeTypeDef[] getNodeTypeDefs()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
-        List defs = new ArrayList();
+        List<NodeTypeDef> defs = new ArrayList<NodeTypeDef>();
         while (walker.iterateElements(Constants.NODETYPE_ELEMENT)) {
             defs.add(getNodeTypeDef());
         }
-        return (NodeTypeDef[]) defs.toArray(new NodeTypeDef[defs.size()]);
+        return defs.toArray(new NodeTypeDef[defs.size()]);
     }
 
     /**
@@ -143,6 +146,7 @@ public class NodeTypeReader {
      * @throws InvalidNodeTypeDefException if the definition is invalid
      * @throws NameException               if the definition contains an
      *                                     illegal name
+     * @throws NamespaceException if a namespace is not defined
      */
     private NodeTypeDef getNodeTypeDef()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
@@ -151,17 +155,15 @@ public class NodeTypeReader {
         type.setName(resolver.getQName(
                 walker.getAttribute(Constants.NAME_ATTRIBUTE)));
         type.setMixin(Boolean.valueOf(
-                walker.getAttribute(Constants.ISMIXIN_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.ISMIXIN_ATTRIBUTE)));
         type.setOrderableChildNodes(Boolean.valueOf(
-                walker.getAttribute(Constants.HASORDERABLECHILDNODES_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.HASORDERABLECHILDNODES_ATTRIBUTE)));
         type.setAbstract(Boolean.valueOf(
-                walker.getAttribute(Constants.ISABSTRACT_ATTRIBUTE))
-                .booleanValue());
-        type.setQueryable(Boolean.valueOf(
-                walker.getAttribute(Constants.ISQUERYABLE_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.ISABSTRACT_ATTRIBUTE)));
+        if (walker.getAttribute(Constants.ISQUERYABLE_ATTRIBUTE) != null) {
+            type.setQueryable(Boolean.valueOf(
+                    walker.getAttribute(Constants.ISQUERYABLE_ATTRIBUTE)));
+        }
         String primaryItemName =
             walker.getAttribute(Constants.PRIMARYITEMNAME_ATTRIBUTE);
         if (primaryItemName != null && primaryItemName.length() > 0) {
@@ -171,35 +173,32 @@ public class NodeTypeReader {
 
         // supertype declarations
         if (walker.enterElement(Constants.SUPERTYPES_ELEMENT)) {
-            List supertypes = new ArrayList();
+            List<Name> supertypes = new ArrayList<Name>();
             while (walker.iterateElements(Constants.SUPERTYPE_ELEMENT)) {
                 supertypes.add(
                         resolver.getQName(walker.getContent()));
             }
-            type.setSupertypes((Name[])
-                    supertypes.toArray(new Name[supertypes.size()]));
+            type.setSupertypes(supertypes.toArray(new Name[supertypes.size()]));
             walker.leaveElement();
         }
 
         // property definitions
-        List properties = new ArrayList();
+        List<PropDef> properties = new ArrayList<PropDef>();
         while (walker.iterateElements(Constants.PROPERTYDEFINITION_ELEMENT)) {
             PropDefImpl def = getPropDef();
             def.setDeclaringNodeType(type.getName());
             properties.add(def);
         }
-        type.setPropertyDefs((PropDef[])
-                properties.toArray(new PropDef[properties.size()]));
+        type.setPropertyDefs(properties.toArray(new PropDef[properties.size()]));
 
         // child node definitions
-        List nodes = new ArrayList();
+        List<NodeDef> nodes = new ArrayList<NodeDef>();
         while (walker.iterateElements(Constants.CHILDNODEDEFINITION_ELEMENT)) {
             NodeDefImpl def = getChildNodeDef();
             def.setDeclaringNodeType(type.getName());
             nodes.add(def);
         }
-        type.setChildNodeDefs((NodeDef[])
-                nodes.toArray(new NodeDef[nodes.size()]));
+        type.setChildNodeDefs(nodes.toArray(new NodeDef[nodes.size()]));
 
         return type;
     }
@@ -211,6 +210,7 @@ public class NodeTypeReader {
      * @throws InvalidNodeTypeDefException if the definition is invalid
      * @throws NameException               if the definition contains an
      *                                     illegal name
+     * @throws NamespaceException if a namespace is not defined
      */
     private PropDefImpl getPropDef()
             throws InvalidNodeTypeDefException, NameException, NamespaceException {
@@ -235,20 +235,17 @@ public class NodeTypeReader {
         def.setOnParentVersion(OnParentVersionAction.valueFromName(
                 walker.getAttribute(Constants.ONPARENTVERSION_ATTRIBUTE)));
         def.setMultiple(Boolean.valueOf(
-                walker.getAttribute(Constants.MULTIPLE_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.MULTIPLE_ATTRIBUTE)));
         def.setFullTextSearchable(Boolean.valueOf(
-                walker.getAttribute(Constants.ISFULLTEXTSEARCHABLE_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.ISFULLTEXTSEARCHABLE_ATTRIBUTE)));
         def.setQueryOrderable(Boolean.valueOf(
-                walker.getAttribute(Constants.ISQUERYORDERABLE_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.ISQUERYORDERABLE_ATTRIBUTE)));
         String s = walker.getAttribute(Constants.AVAILABLEQUERYOPERATORS_ATTRIBUTE);
         if (s != null && s.length() > 0) {
             String[] ops = s.split(" ");
-            List queryOps = new ArrayList();
-            for (int i = 0; i < ops.length; i++) {
-                String op = ops[i].trim();
+            List<String> queryOps = new ArrayList<String>();
+            for (String op1 : ops) {
+                String op = op1.trim();
                 if (op.equals(Constants.EQ_ENTITY)) {
                     queryOps.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
                 } else if (op.equals(Constants.NE_ENTITY)) {
@@ -267,7 +264,7 @@ public class NodeTypeReader {
                     throw new InvalidNodeTypeDefException("'" + op + "' is not a valid query operator");
                 }
             }
-            def.setAvailableQueryOperators((String[]) queryOps.toArray(new String[queryOps.size()]));
+            def.setAvailableQueryOperators(queryOps.toArray(new String[queryOps.size()]));
 
         }
         def.setRequiredType(PropertyType.valueFromName(
@@ -275,7 +272,7 @@ public class NodeTypeReader {
 
         // value constraints
         if (walker.enterElement(Constants.VALUECONSTRAINTS_ELEMENT)) {
-            List constraints = new ArrayList();
+            List<QValueConstraint> constraints = new ArrayList<QValueConstraint>();
             int type = def.getRequiredType();
             while (walker.iterateElements(Constants.VALUECONSTRAINT_ELEMENT)) {
                 String constraint = walker.getContent();
@@ -287,14 +284,14 @@ public class NodeTypeReader {
                             "Invalid value constraint " + constraint, e);
                 }
             }
-            def.setValueConstraints((ValueConstraint[]) constraints.toArray(
-                    new ValueConstraint[constraints.size()]));
+            def.setValueConstraints(constraints.toArray(
+                    new QValueConstraint[constraints.size()]));
             walker.leaveElement();
         }
 
         // default values
         if (walker.enterElement(Constants.DEFAULTVALUES_ELEMENT)) {
-            List<InternalValue> values = new ArrayList();
+            List<InternalValue> values = new ArrayList<InternalValue>();
             int type = def.getRequiredType();
             if (type == PropertyType.UNDEFINED) {
                 type = PropertyType.STRING;
@@ -309,8 +306,7 @@ public class NodeTypeReader {
                             "Unable to create default value: " + value, e);
                 }
             }
-            def.setDefaultValues((InternalValue[])
-                    values.toArray(new InternalValue[values.size()]));
+            def.setDefaultValues(values.toArray(new InternalValue[values.size()]));
             walker.leaveElement();
         }
 
@@ -322,6 +318,7 @@ public class NodeTypeReader {
      *
      * @return child node definition
      * @throws NameException if the definition contains an illegal name
+     * @throws NamespaceException if a namespace is not defined
      */
     private NodeDefImpl getChildNodeDef() throws NameException, NamespaceException {
         NodeDefImpl def = new NodeDefImpl();
@@ -345,8 +342,7 @@ public class NodeTypeReader {
         def.setOnParentVersion(OnParentVersionAction.valueFromName(
                 walker.getAttribute(Constants.ONPARENTVERSION_ATTRIBUTE)));
         def.setAllowsSameNameSiblings(Boolean.valueOf(
-                walker.getAttribute(Constants.SAMENAMESIBLINGS_ATTRIBUTE))
-                .booleanValue());
+                walker.getAttribute(Constants.SAMENAMESIBLINGS_ATTRIBUTE)));
 
         // default primary type
         String type =
@@ -357,12 +353,11 @@ public class NodeTypeReader {
 
         // required primary types
         if (walker.enterElement(Constants.REQUIREDPRIMARYTYPES_ELEMENT)) {
-            List types = new ArrayList();
+            List<Name> types = new ArrayList<Name>();
             while (walker.iterateElements(Constants.REQUIREDPRIMARYTYPE_ELEMENT)) {
                 types.add(resolver.getQName(walker.getContent()));
             }
-            def.setRequiredPrimaryTypes(
-                    (Name[]) types.toArray(new Name[types.size()]));
+            def.setRequiredPrimaryTypes(types.toArray(new Name[types.size()]));
             walker.leaveElement();
         } else {
             /* Default to nt:base?

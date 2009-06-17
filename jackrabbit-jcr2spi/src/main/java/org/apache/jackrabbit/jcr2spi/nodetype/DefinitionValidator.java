@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -263,13 +264,13 @@ class DefinitionValidator {
              * the specified node type must be registered, with one notable
              * exception: the node type just being registered
              */
-            String[] constraints = pd.getValueConstraints();
+            QValueConstraint[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length > 0) {
 
                 if (pd.getRequiredType() == PropertyType.REFERENCE) {
-                    for (int j = 0; j < constraints.length; j++) {
+                    for (QValueConstraint constraint : constraints) {
                         // TODO improve. don't rely on a specific factory impl
-                        Name ntName = NameFactoryImpl.getInstance().create(constraints[j]);
+                        Name ntName = NameFactoryImpl.getInstance().create(constraint.getString());
                         /* compare to given ntd map and not registered nts only */
                         if (!name.equals(ntName) && !validatedDefs.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()

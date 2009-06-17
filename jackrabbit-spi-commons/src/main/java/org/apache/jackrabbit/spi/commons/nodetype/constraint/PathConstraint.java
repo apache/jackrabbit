@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 
 /**
@@ -39,11 +40,11 @@ class PathConstraint extends ValueConstraint {
 
     static PathConstraint create(String qualifiedDefinition) throws InvalidConstraintException {
         // constraint format: qualified absolute or relative path with optional trailing wildcard
-        boolean deep = qualifiedDefinition.endsWith("*");
+        boolean deep = qualifiedDefinition.endsWith("\t{}*");
         Path path;
         // TODO improve. don't rely on a specific factory impl
         if (deep) {
-            path = PathFactoryImpl.getInstance().create(qualifiedDefinition.substring(0, qualifiedDefinition.length() - 1));
+            path = PathFactoryImpl.getInstance().create(qualifiedDefinition.substring(0, qualifiedDefinition.length() - 4));
         } else {
             path = PathFactoryImpl.getInstance().create(qualifiedDefinition);
         }
@@ -53,7 +54,6 @@ class PathConstraint extends ValueConstraint {
     static PathConstraint create(String definition, PathResolver resolver)
             throws InvalidConstraintException {
         try {
-            StringBuffer qualifiedDefinition = new StringBuffer();
             // constraint format: absolute or relative path with optional
             // trailing wildcard
             boolean deep = definition.endsWith("/*");
@@ -61,15 +61,16 @@ class PathConstraint extends ValueConstraint {
                 // trim trailing wildcard before building path
                 if (definition.equals("/*")) {
                     definition = "/";
-                    qualifiedDefinition.append('*');
                 } else {
                     definition = definition.substring(0, definition.length() - 2);
-                    qualifiedDefinition.append("/*");
                 }
             }
             Path path = resolver.getQPath(definition);
-            qualifiedDefinition.insert(0, path.getString());
-
+            StringBuffer qualifiedDefinition = new StringBuffer(path.getString());
+            if (deep) {
+                qualifiedDefinition.append(Path.DELIMITER);
+                qualifiedDefinition.append(NameConstants.ANY_NAME);
+            }
             return new PathConstraint(qualifiedDefinition.toString(), path, deep);
         } catch (NameException e) {
             String msg = "Invalid path expression specified as value constraint: " + definition;
@@ -93,7 +94,7 @@ class PathConstraint extends ValueConstraint {
      * qualified <code>Path</code> into a JCR path.
      *
      * @see ValueConstraint#getDefinition(NamePathResolver)
-     * @param resolver
+     * @param resolver name-path resolver
      */
     public String getDefinition(NamePathResolver resolver) {
         try {
@@ -107,16 +108,16 @@ class PathConstraint extends ValueConstraint {
             }
         } catch (NamespaceException e) {
             // should never get here, return raw definition as fallback
-            return getQualifiedDefinition();
+            return getString();
         }
     }
 
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.PATH:
@@ -134,20 +135,20 @@ class PathConstraint extends ValueConstraint {
                         if (!p0.isAncestorOf(p1)) {
                             throw new ConstraintViolationException(p
                                 + " does not satisfy the constraint '"
-                                + getQualifiedDefinition() + "'");
+                                + getString() + "'");
                         }
                     } catch (RepositoryException e) {
                         // can't compare relative with absolute path
                         throw new ConstraintViolationException(p
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                     }
                 } else {
                     // exact match required
                     if (!p0.equals(p1)) {
                         throw new ConstraintViolationException(p
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                     }
                 }
                 return;

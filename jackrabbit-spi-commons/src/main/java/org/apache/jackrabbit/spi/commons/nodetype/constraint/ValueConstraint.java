@@ -24,6 +24,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * syntax of a value constraint and to test if a specific value satisfies
  * it.
  */
-public abstract class ValueConstraint {
+public abstract class ValueConstraint implements QValueConstraint {
 
     protected static Logger log = LoggerFactory.getLogger(ValueConstraint.class);
 
@@ -52,7 +53,7 @@ public abstract class ValueConstraint {
 
     /**
      * For constraints that are not namespace prefix mapping sensitive this
-     * method returns the same result as <code>{@link #getQualifiedDefinition()}</code>.
+     * method returns the same result as <code>{@link #getString()}</code>.
      * <p/>
      * Those that are namespace prefix mapping sensitive (e.g.
      * <code>NameConstraint</code>, <code>PathConstraint</code> and
@@ -63,8 +64,8 @@ public abstract class ValueConstraint {
      * and path elements resolved.
      *
      * @return the definition of this constraint.
-     * @see #getQualifiedDefinition()
-     * @param resolver
+     * @see #getString ()
+     * @param resolver name-path resolver
      */
     public String getDefinition(NamePathResolver resolver) {
         return qualifiedDefinition;
@@ -73,11 +74,18 @@ public abstract class ValueConstraint {
     /**
      * By default the qualified definition is the same as the JCR definition.
      *
-     * @return the qualified definition String
-     * @see #getDefinition(NamePathResolver)
+     * @return the internal definition String
      */
-    public String getQualifiedDefinition() {
+    public String getString() {
         return qualifiedDefinition;
+    }
+
+    /**
+     * Same as {@link #getString()}
+     * @return the internal definition String
+     */
+    public String toString() {
+        return getString();
     }
 
     /**
@@ -88,17 +96,13 @@ public abstract class ValueConstraint {
      * <code>null</code> or does not matches the constraint.
      * @throws RepositoryException If another error occurs.
      */
-    abstract void check(QValue value) throws ConstraintViolationException, RepositoryException;
+    public abstract void check(QValue value) throws ConstraintViolationException, RepositoryException;
 
     //---------------------------------------------------< java.lang.Object >---
     public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        } else if (other instanceof ValueConstraint) {
-            return qualifiedDefinition.equals(((ValueConstraint) other).qualifiedDefinition);
-        } else {
-            return false;
-        }
+        return other == this
+                || other instanceof ValueConstraint
+                && qualifiedDefinition.equals(((ValueConstraint) other).qualifiedDefinition);
     }
 
     /**
@@ -117,10 +121,10 @@ public abstract class ValueConstraint {
      * Note, that the definition must be in the qualified format in case the type
      * indicates {@link PropertyType#NAME}, {@link PropertyType#PATH} or {@link PropertyType#REFERENCE}
      *
-     * @param type
-     * @param qualifiedDefinition
-     * @return
-     * @throws InvalidConstraintException
+     * @param type required type
+     * @param qualifiedDefinition internal definition string
+     * @return a new value constraint
+     * @throws InvalidConstraintException if the constraint is not valid
      */
     public static ValueConstraint create(int type, String qualifiedDefinition)
         throws InvalidConstraintException {
@@ -128,7 +132,7 @@ public abstract class ValueConstraint {
             throw new IllegalArgumentException("illegal definition (null)");
         }
         switch (type) {
-            // constraints which are not qName senstive
+            // constraints which are not qName sensitive
             case PropertyType.STRING:
             case PropertyType.URI:
                 return new StringConstraint(qualifiedDefinition);
@@ -165,12 +169,55 @@ public abstract class ValueConstraint {
     }
 
     /**
+     * Create a new <code>ValueConstraint</code> array from the String representation.
+     * Note, that the definition must be in the qualified format in case the type
+     * indicates {@link PropertyType#NAME}, {@link PropertyType#PATH} or {@link PropertyType#REFERENCE}
      *
-     * @param type
-     * @param definition
-     * @param resolver
-     * @return
-     * @throws InvalidConstraintException
+     * @param type the required type
+     * @param qualifiedDefinition internal definition strings
+     * @return the array of constraints
+     * @throws InvalidConstraintException if one of the constraints is invalid
+     */
+    public static ValueConstraint[] create(int type, String[] qualifiedDefinition)
+            throws InvalidConstraintException {
+        if (qualifiedDefinition == null || qualifiedDefinition.length == 0) {
+            return ValueConstraint.EMPTY_ARRAY;
+        }
+        ValueConstraint[] ret = new ValueConstraint[qualifiedDefinition.length];
+        for (int i=0; i<ret.length; i++) {
+            ret[i] = ValueConstraint.create(type, qualifiedDefinition[i]);
+        }
+        return ret;
+    }
+
+    /**
+     * Create a new <code>ValueConstraint</code> array from the JCR representation.
+     *
+     * @param type the required type
+     * @param definition definition strings
+     * @param resolver name-path resolver
+     * @return the array of constraints
+     * @throws InvalidConstraintException if one of the constraints is invalid
+     */
+    public static ValueConstraint[] create(int type, String definition[], NamePathResolver resolver)
+            throws InvalidConstraintException {
+        if (definition == null || definition.length == 0) {
+            return ValueConstraint.EMPTY_ARRAY;
+        }
+        ValueConstraint[] ret = new ValueConstraint[definition.length];
+        for (int i=0; i<ret.length; i++) {
+            ret[i] = ValueConstraint.create(type, definition[i], resolver);
+        }
+        return ret;
+    }
+
+    /**
+     *
+     * @param type required type
+     * @param definition JCR definition
+     * @param resolver name-path resolver
+     * @return a new value constraint
+     * @throws InvalidConstraintException if the constraint is invalid
      */
     public static ValueConstraint create(int type, String definition,
                                          NamePathResolver resolver)
@@ -220,9 +267,9 @@ public abstract class ValueConstraint {
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.
      *
-     * @param pd
-     * @param values
-     * @throws ConstraintViolationException
+     * @param pd propert definition
+     * @param values values to check
+     * @throws ConstraintViolationException if the constraints are violated
      */
     public static void checkValueConstraints(QPropertyDefinition pd, QValue[] values)
             throws ConstraintViolationException, RepositoryException {
@@ -231,21 +278,20 @@ public abstract class ValueConstraint {
             throw new ConstraintViolationException("the property is not multi-valued");
         }
 
-        String[] constraints = pd.getValueConstraints();
+        QValueConstraint[] constraints = pd.getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             // no constraints to check
             return;
         }
         if (values != null && values.length > 0) {
             // check value constraints on every value
-            for (int i = 0; i < values.length; i++) {
+            for (QValue value : values) {
                 // constraints are OR-ed together
                 boolean satisfied = false;
                 ConstraintViolationException cve = null;
                 for (int j = 0; j < constraints.length && !satisfied; j++) {
                     try {
-                        ValueConstraint cnstr = ValueConstraint.create(pd.getRequiredType(), constraints[j]);
-                        cnstr.check(values[i]);
+                        constraints[j].check(value);
                         satisfied = true;
                     } catch (ConstraintViolationException e) {
                         cve = e;

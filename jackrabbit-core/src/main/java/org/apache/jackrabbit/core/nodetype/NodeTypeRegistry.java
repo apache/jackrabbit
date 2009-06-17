@@ -27,7 +27,9 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -623,7 +625,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                 ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
                 String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
                 ps.println("\t\tRequiredType\t" + type);
-                ValueConstraint[] vca = pd[i].getValueConstraints();
+                QValueConstraint[] vca = pd[i].getValueConstraints();
                 StringBuffer constraints = new StringBuffer();
                 if (vca == null) {
                     constraints.append("<null>");
@@ -632,7 +634,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                         if (constraints.length() > 0) {
                             constraints.append(", ");
                         }
-                        constraints.append(vca[n].getDefinition());
+                        constraints.append(vca[n].getString());
                     }
                 }
                 ps.println("\t\tValueConstraints\t" + constraints.toString());
@@ -1551,7 +1553,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             }
 
             // check that default values satisfy value constraints
-            ValueConstraint[] constraints = pd.getValueConstraints();
+            QValueConstraint[] constraints = pd.getValueConstraints();
             if (constraints != null && constraints.length > 0) {
                 if (defVals != null && defVals.length > 0) {
                     // check value constraints on every value
@@ -1587,13 +1589,12 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                  */
                 if (pd.getRequiredType() == PropertyType.REFERENCE
                         || pd.getRequiredType() == PropertyType.WEAKREFERENCE) {
-                    for (int j = 0; j < constraints.length; j++) {
-                        ReferenceConstraint rc = (ReferenceConstraint) constraints[j];
-                        Name ntName = rc.getNodeTypeName();
+                    for (QValueConstraint constraint : constraints) {
+                        Name ntName = NameFactoryImpl.getInstance().create(constraint.getString());
                         if (!name.equals(ntName) && !ntdCache.containsKey(ntName)) {
                             String msg = "[" + name + "#" + pd.getName()
                                     + "] invalid "
-                                    + (pd.getRequiredType() == PropertyType.REFERENCE ? "REFERENCE" : "WEAKREFERENCE") 
+                                    + (pd.getRequiredType() == PropertyType.REFERENCE ? "REFERENCE" : "WEAKREFERENCE")
                                     + " value constraint '"
                                     + ntName + "' (unknown node type)";
                             log.debug(msg);

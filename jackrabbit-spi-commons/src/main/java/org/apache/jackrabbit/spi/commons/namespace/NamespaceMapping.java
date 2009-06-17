@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.namespace;
 
-import javax.jcr.NamespaceException;
-import java.util.Properties;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
+import java.util.Map;
+
+import javax.jcr.NamespaceException;
 
 /**
  * A Simple Namespace Mapping table. Mappings can be added
@@ -31,10 +29,10 @@ import java.util.Iterator;
 public class NamespaceMapping implements NamespaceResolver {
 
     /** local uris */
-    private final Properties prefixToURI = new Properties();
+    private final Map<String, String> prefixToURI = new HashMap<String, String>();
 
     /** local prefix */
-    private final Properties URIToPrefix = new Properties();
+    private final Map<String, String> URIToPrefix = new HashMap<String, String>();
 
     /** base */
     private final NamespaceResolver base;
@@ -45,6 +43,7 @@ public class NamespaceMapping implements NamespaceResolver {
 
     /**
      * Constructor
+     * @param base fallback resolver
      */
     public NamespaceMapping(NamespaceResolver base) {
         this.base = base;
@@ -56,7 +55,7 @@ public class NamespaceMapping implements NamespaceResolver {
      */
     public String getPrefix(String uri) throws NamespaceException {
         if (URIToPrefix.containsKey(uri)) {
-            return URIToPrefix.getProperty(uri);
+            return URIToPrefix.get(uri);
         } else if (base == null) {
             throw new NamespaceException("No prefix for URI '" + uri + "' declared.");
         } else {
@@ -69,7 +68,7 @@ public class NamespaceMapping implements NamespaceResolver {
      */
     public String getURI(String prefix) throws NamespaceException {
         if (prefixToURI.containsKey(prefix)) {
-            return prefixToURI.getProperty(prefix);
+            return prefixToURI.get(prefix);
         } else if (base == null) {
             throw new NamespaceException("No URI for prefix '" + prefix + "' declared.");
         } else {
@@ -79,6 +78,8 @@ public class NamespaceMapping implements NamespaceResolver {
 
     /**
      * Returns true if prefix is already mapped to some URI. Returns false otherwise.
+     * @param prefix prefix to check
+     * @return <code>true</code> if prefix is mapped
      */
     public boolean hasPrefix(String prefix) {
         return prefixToURI.containsKey(prefix);
@@ -87,9 +88,9 @@ public class NamespaceMapping implements NamespaceResolver {
     /**
      * Set a prefix == URI one-to-one mapping
      *
-     * @param prefix
-     * @param uri
-     * @throws NamespaceException
+     * @param prefix prefix to map
+     * @param uri uri to map
+     * @throws NamespaceException if an error occurs
      */
     public void setMapping(String prefix, String uri) throws NamespaceException {
         if (prefix == null) {
@@ -115,8 +116,8 @@ public class NamespaceMapping implements NamespaceResolver {
      * The returned Map is a copy of the internal Map.
      * @return Map
      */
-    public Map getPrefixToURIMapping() {
-        return new HashMap(prefixToURI);
+    public Map<String, String> getPrefixToURIMapping() {
+        return new HashMap<String, String>(prefixToURI);
     }
 
     /**
@@ -124,15 +125,12 @@ public class NamespaceMapping implements NamespaceResolver {
      * The returned Map is a copy of the internal Map.
      * @return Map
      */
-    public Map getURIToPrefixMapping() {
-        return new HashMap(URIToPrefix);
+    public Map<String, String> getURIToPrefixMapping() {
+        return new HashMap<String, String>(URIToPrefix);
     }
 
-     /**
-     * Override equals()
-      *
-     * @param obj
-     * @return boolean
+    /**
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -153,11 +151,9 @@ public class NamespaceMapping implements NamespaceResolver {
      */
     public String toString() {
         String s = "";
-        Set mapping = prefixToURI.entrySet();
-        for (Iterator i = mapping.iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
-            String prefix = (String) entry.getKey();
-            String uri = (String) entry.getValue();
+        for (Map.Entry<String, String> entry: prefixToURI.entrySet()) {
+            String prefix = entry.getKey();
+            String uri = entry.getValue();
             s += "'" + prefix + "' == '" + uri + "'\n";
         }
         return s;

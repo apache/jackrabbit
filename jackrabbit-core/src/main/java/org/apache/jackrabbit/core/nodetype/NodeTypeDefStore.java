@@ -16,14 +16,6 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
-import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-import org.apache.jackrabbit.spi.Name;
-
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +23,18 @@ import java.io.Reader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Map;
+
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
+import org.apache.jackrabbit.core.nodetype.xml.NodeTypeWriter;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilderImpl;
 
 /**
  * <code>NodeTypeDefStore</code> ...
@@ -39,13 +42,13 @@ import java.util.Iterator;
 public class NodeTypeDefStore {
 
     /** Map of node type names to node type definitions. */
-    private final HashMap ntDefs;
+    private final Map<Name, NodeTypeDef> ntDefs;
 
     /**
      * Empty default constructor.
      */
     public NodeTypeDefStore() throws RepositoryException {
-        ntDefs = new HashMap();
+        ntDefs = new HashMap<Name, NodeTypeDef>();
     }
 
     /**
@@ -57,8 +60,8 @@ public class NodeTypeDefStore {
             throws IOException, InvalidNodeTypeDefException,
             RepositoryException {
         NodeTypeDef[] types = NodeTypeReader.read(in);
-        for (int i = 0; i < types.length; i++) {
-            add(types[i]);
+        for (NodeTypeDef type : types) {
+            add(type);
         }
     }
 
@@ -75,9 +78,8 @@ public class NodeTypeDefStore {
             throws IOException, InvalidNodeTypeDefException {
         try {
             CompactNodeTypeDefReader r = new CompactNodeTypeDefReader(in, systemId);
-            Iterator iter = r.getNodeTypeDefs().iterator();
-            while (iter.hasNext()) {
-                add((NodeTypeDef) iter.next());
+            for (QNodeTypeDefinition qdef: r.getNodeTypeDefinitions()) {
+                add(new NodeTypeDef(qdef));
             }
         } catch (ParseException e) {
             throw new InvalidNodeTypeDefException("Unable to parse CND stream.", e);
@@ -92,8 +94,7 @@ public class NodeTypeDefStore {
      */
     public void store(OutputStream out, NamespaceRegistry registry)
             throws IOException, RepositoryException {
-        NodeTypeDef[] types = (NodeTypeDef[])
-            ntDefs.values().toArray(new NodeTypeDef[ntDefs.size()]);
+        NodeTypeDef[] types = ntDefs.values().toArray(new NodeTypeDef[ntDefs.size()]);
         NodeTypeWriter.write(out, types, registry);
     }
 

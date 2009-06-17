@@ -60,7 +60,7 @@ public class NodeTypeIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link NodeType}s
      */
-    public NodeTypeIteratorAdapter(Collection collection) {
+    public NodeTypeIteratorAdapter(Collection<NodeType> collection) {
         super(new RangeIteratorAdapter(collection));
     }
 

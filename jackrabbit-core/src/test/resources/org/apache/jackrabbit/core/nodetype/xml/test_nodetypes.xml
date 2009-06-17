@@ -172,6 +172,22 @@
         <valueConstraint>/test:testPath</valueConstraint>
       </valueConstraints>
     </propertyDefinition>
+    <propertyDefinition name="test:pathProperty1"
+                 requiredType="Path" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>/test:testPath/*</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
+    <propertyDefinition name="test:pathProperty2"
+                 requiredType="Path" autoCreated="false" mandatory="false"
+                 isFullTextSearchable="false" isQueryOrderable="true"
+                 onParentVersion="IGNORE" protected="false" multiple="false">
+      <valueConstraints>
+        <valueConstraint>test:testPath/*</valueConstraint>
+      </valueConstraints>
+    </propertyDefinition>
     <propertyDefinition name="test:referenceProperty"
                  requiredType="Reference" autoCreated="false" mandatory="false"
                  isFullTextSearchable="false" isQueryOrderable="true"

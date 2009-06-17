@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -646,7 +647,7 @@ public class EffectiveNodeType implements Cloneable {
             throw new ConstraintViolationException("the property is not multi-valued");
         }
 
-        ValueConstraint[] constraints = pd.getValueConstraints();
+        QValueConstraint[] constraints = pd.getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             // no constraints to check
             return;

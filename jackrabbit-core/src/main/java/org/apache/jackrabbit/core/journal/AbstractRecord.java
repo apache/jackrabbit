@@ -16,30 +16,32 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefWriter;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
-import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.uuid.Constants;
-import org.apache.jackrabbit.uuid.UUID;
-import org.apache.commons.collections.BidiMap;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
-
-import javax.jcr.NamespaceException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.List;
+import java.util.Collection;
+
+import javax.jcr.NamespaceException;
+
+import org.apache.commons.collections.BidiMap;
+import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
+import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
+import org.apache.jackrabbit.uuid.Constants;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Base implementation for a record.
@@ -73,6 +75,8 @@ public abstract class AbstractRecord implements Record {
 
     /**
      * Create a new instance of this class.
+     * @param nsResolver the namespace resolver
+     * @param resolver the name-path resolver
      */
     public AbstractRecord(NamespaceResolver nsResolver, NamePathResolver resolver) {
         this.nsResolver = nsResolver;
@@ -145,7 +149,7 @@ public abstract class AbstractRecord implements Record {
         try {
             StringWriter sw = new StringWriter();
             CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, nsResolver, resolver);
-            writer.write(ntd);
+            writer.write(ntd.getQNodeTypeDefinition());
             writer.close();
 
             writeString(sw.toString());
@@ -219,13 +223,13 @@ public abstract class AbstractRecord implements Record {
             if (index == -1) {
                 return null;
             } else {
-                return (NodeId) nodeIdIndex.getKey(new Integer(index));
+                return (NodeId) nodeIdIndex.getKey(index);
             }
         } else if (uuidType == UUID_LITERAL) {
             byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
             readFully(b);
             NodeId nodeId = new NodeId(new UUID(b));
-            nodeIdIndex.put(nodeId, new Integer(nodeIdIndex.size()));
+            nodeIdIndex.put(nodeId, nodeIdIndex.size());
             return nodeId;
         } else {
             String msg = "Unknown UUID type found: " + uuidType;
@@ -246,14 +250,13 @@ public abstract class AbstractRecord implements Record {
     public NodeTypeDef readNodeTypeDef() throws JournalException {
         try {
             StringReader sr = new StringReader(readString());
-
             CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(
                     sr, "(internal)", new NamespaceMapping(nsResolver));
-            List ntds = reader.getNodeTypeDefs();
+            Collection<QNodeTypeDefinition> ntds = reader.getNodeTypeDefinitions();
             if (ntds.size() != 1) {
                 throw new JournalException("Expected one node type definition: got " + ntds.size());
             }
-            return (NodeTypeDef) ntds.get(0);
+            return new NodeTypeDef(ntds.iterator().next());
         } catch (ParseException e) {
             String msg = "Parse error while reading node type definition.";
             throw new JournalException(msg, e);
@@ -269,10 +272,10 @@ public abstract class AbstractRecord implements Record {
     private int getOrCreateIndex(NodeId nodeId) {
         Integer index = (Integer) nodeIdIndex.get(nodeId);
         if (index == null) {
-            nodeIdIndex.put(nodeId, new Integer(nodeIdIndex.size()));
+            nodeIdIndex.put(nodeId, nodeIdIndex.size());
             return -1;
         } else {
-            return index.intValue();
+            return index;
         }
     }
 }

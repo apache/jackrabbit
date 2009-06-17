@@ -22,8 +22,11 @@ import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +52,7 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * @param propDef    property definition
      * @param ntMgr      node type manager
      * @param resolver   name resolver
-     * @param valueFactory
+     * @param valueFactory the value factory
      */
     PropertyDefinitionImpl(PropDef propDef, NodeTypeManagerImpl ntMgr,
                            NamePathResolver resolver, ValueFactory valueFactory) {
@@ -102,13 +105,19 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl
      * {@inheritDoc}
      */
     public String[] getValueConstraints() {
-        ValueConstraint[] constraints = ((PropDef) itemDef).getValueConstraints();
+        QValueConstraint[] constraints = ((PropDef) itemDef).getValueConstraints();
         if (constraints == null || constraints.length == 0) {
             return new String[0];
         }
         String[] vca = new String[constraints.length];
         for (int i = 0; i < constraints.length; i++) {
-            vca[i] = constraints[i].getDefinition(resolver);
+            try {
+                ValueConstraint vc = ValueConstraint.create(((PropDef) itemDef).getRequiredType(), constraints[i].getString());
+                vca[i] = vc.getDefinition(resolver);
+            } catch (InvalidConstraintException e) {
+                log.warn("Error during conversion of value constraint.", e);
+                vca[i] = constraints[i].getString();
+            }
         }
         return vca;
     }

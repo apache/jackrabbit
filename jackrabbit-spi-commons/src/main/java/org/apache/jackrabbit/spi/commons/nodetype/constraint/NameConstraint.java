@@ -67,23 +67,23 @@ class NameConstraint extends ValueConstraint {
      * qualified <code>Name</code> into a JCR name.
      *
      * @see ValueConstraint#getDefinition(NamePathResolver)
-     * @param resolver
+     * @param resolver name-path resolver
      */
     public String getDefinition(NamePathResolver resolver) {
         try {
             return resolver.getJCRName(name);
         } catch (NamespaceException e) {
             // should never get here, return raw definition as fallback
-            return getQualifiedDefinition();
+            return getString();
         }
     }
 
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.NAME:
@@ -91,7 +91,7 @@ class NameConstraint extends ValueConstraint {
                 if (!name.equals(n)) {
                     throw new ConstraintViolationException(n
                             + " does not satisfy the constraint '"
-                            + getQualifiedDefinition() + "'");
+                            + getString() + "'");
                 }
                 return;
 

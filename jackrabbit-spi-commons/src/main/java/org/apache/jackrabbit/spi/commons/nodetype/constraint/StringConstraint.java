@@ -50,9 +50,9 @@ class StringConstraint extends ValueConstraint {
     /**
      * @see ValueConstraint#check(QValue)
      */
-    void check(QValue value) throws ConstraintViolationException, RepositoryException {
+    public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
-            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+            throw new ConstraintViolationException("null value does not satisfy the constraint '" + getString() + "'");
         }
         switch (value.getType()) {
             case PropertyType.STRING:
@@ -60,7 +60,7 @@ class StringConstraint extends ValueConstraint {
                 String text = value.getString();
                 Matcher matcher = pattern.matcher(text);
                 if (!matcher.matches()) {
-                    throw new ConstraintViolationException("'" + text  + "' does not satisfy the constraint '" + getQualifiedDefinition() + "'");
+                    throw new ConstraintViolationException("'" + text  + "' does not satisfy the constraint '" + getString() + "'");
                 }
                 return;
 
