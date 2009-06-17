@@ -71,6 +71,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected QueryObjectModelFactory qf;
 
     /**
+     * The query manager for {@link #superuser}
+     */
+    protected QueryManager qm;
+
+    /**
      * Set-up the configuration values used for the test. Per default retrieves
      * a session, configures testRoot, and nodetype and checks if the query
      * language for the current language is available.<br>
@@ -82,8 +87,14 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
         jcrContains = superuser.getNamespacePrefix(NS_JCR_URI) + ":contains";
         jcrDeref = superuser.getNamespacePrefix(NS_JCR_URI) + ":deref";
-        QueryManager qm = superuser.getWorkspace().getQueryManager();
+        qm = superuser.getWorkspace().getQueryManager();
         qf = qm.getQOMFactory();
+    }
+
+    protected void tearDown() throws Exception {
+        qm = null;
+        qf = null;
+        super.tearDown();
     }
 
     /**

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.query.lucene.HierarchyResolver;
 import org.apache.jackrabbit.core.query.lucene.MultiColumnQueryHits;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.query.qom.ChildNodeJoinConditionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.DescendantNodeJoinConditionImpl;
@@ -74,7 +75,7 @@ public class Join implements MultiColumnQueryHits {
     /**
      * A buffer for joined score node rows.
      */
-    protected final List buffer = new LinkedList();
+    protected final List<ScoreNode[]> buffer = new LinkedList<ScoreNode[]>();
 
     /**
      * Creates a new join.
@@ -218,20 +219,22 @@ public class Join implements MultiColumnQueryHits {
                             || src1 == right && JoinType.RIGHT == joinType) {
                         outer = src1;
                         outerIdx = getIndex(outer, node.getSelector1QName());
-                        if (node.getSelector2QPath() != null) {
+                        Path selector2Path = node.getSelector2QPath();
+                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
+                            c = new SameNodeJoin(src2, node.getSelector2QName(), reader);
+                        } else {
                             c = new DescendantPathNodeJoin(src2, node.getSelector2QName(),
                                     node.getSelector2QPath(), hmgr);
-                        } else {
-                            c = new SameNodeJoin(src2, node.getSelector2QName(), reader);
                         }
                     } else {
                         outer = src2;
                         outerIdx = getIndex(outer, node.getSelector2QName());
-                        if (node.getSelector2QPath() != null) {
+                        Path selector2Path = node.getSelector2QPath();
+                        if (selector2Path == null || (selector2Path.getLength() == 1 && selector2Path.getNameElement().denotesCurrent())) {
+                            c = new SameNodeJoin(src1, node.getSelector1QName(), reader);
+                        } else {
                             c = new AncestorPathNodeJoin(src1, node.getSelector1QName(),
                                     node.getSelector2QPath(), hmgr);
-                        } else {
-                            c = new SameNodeJoin(src1, node.getSelector1QName(), reader);
                         }
                     }
                     return new Join(outer, outerIdx, isInner, c);
@@ -251,7 +254,7 @@ public class Join implements MultiColumnQueryHits {
      */
     public ScoreNode[] nextScoreNodes() throws IOException {
         if (!buffer.isEmpty()) {
-            return (ScoreNode[]) buffer.remove(0);
+            return buffer.remove(0);
         }
         do {
             // refill buffer
@@ -261,8 +264,7 @@ public class Join implements MultiColumnQueryHits {
             }
             ScoreNode[][] nodes = condition.getMatchingScoreNodes(sn[outerScoreNodeIndex]);
             if (nodes != null) {
-                for (int i = 0; i < nodes.length; i++) {
-                    ScoreNode[] node = nodes[i];
+                for (ScoreNode[] node : nodes) {
                     // create array with both outer and inner
                     ScoreNode[] tmp = new ScoreNode[sn.length + node.length];
                     System.arraycopy(sn, 0, tmp, 0, sn.length);
@@ -278,7 +280,7 @@ public class Join implements MultiColumnQueryHits {
             }
         } while (buffer.isEmpty());
 
-        return (ScoreNode[]) buffer.remove(0);
+        return buffer.remove(0);
     }
 
     /**

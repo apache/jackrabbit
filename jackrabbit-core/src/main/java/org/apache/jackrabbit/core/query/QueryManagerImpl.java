@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.jcr.Node;
@@ -31,7 +30,6 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.spi.commons.query.QueryTreeBuilderRegistry;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
@@ -39,17 +37,6 @@ import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
  * This class implements the {@link QueryManager} interface.
  */
 public class QueryManagerImpl implements QueryManager {
-
-    /**
-     * Defines all supported query languages
-     */
-    private static final String[] SUPPORTED_QUERIES = QueryTreeBuilderRegistry.getSupportedLanguages();
-
-    /**
-     * List of all supported query languages
-     */
-    private static final List SUPPORTED_QUERIES_LIST
-            = Collections.unmodifiableList(Arrays.asList(SUPPORTED_QUERIES));
 
     /**
      * The <code>Session</code> for this QueryManager.
@@ -72,17 +59,24 @@ public class QueryManagerImpl implements QueryManager {
     private final QueryObjectModelFactoryImpl qomFactory;
 
     /**
+     * The query factory which is responsible to create query instances base
+     * on the passed query language.
+     */
+    private final QueryFactory queryFactory;
+
+    /**
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>session</code>
      *
-     * @param session
-     * @param itemMgr
-     * @param searchMgr
+     * @param session   the session for this query manager.
+     * @param itemMgr   the item manager of the session.
+     * @param searchMgr the search manager of this workspace.
+     * @throws RepositoryException if an error occurs while initializing the
+     *                             query manager.
      */
-    public QueryManagerImpl(
-            final SessionImpl session,
-            final ItemManager itemMgr,
-            final SearchManager searchMgr)
+    public QueryManagerImpl(final SessionImpl session,
+                            final ItemManager itemMgr,
+                            final SearchManager searchMgr)
             throws RepositoryException {
         this.session = session;
         this.itemMgr = itemMgr;
@@ -95,6 +89,14 @@ public class QueryManagerImpl implements QueryManager {
                         session, qomTree, Query.JCR_SQL2);
             }
         };
+        this.queryFactory = new CompoundQueryFactory(Arrays.asList(
+                new QOMQueryFactory(qomFactory, session.getValueFactory()),
+                new AQTQueryFactory() {
+                    public Query createQuery(String statement, String language)
+                            throws InvalidQueryException, RepositoryException {
+                        return searchMgr.createQuery(session, itemMgr, statement, language);
+                    }
+                }));
     }
 
     /**
@@ -103,7 +105,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
-        return searchMgr.createQuery(session, itemMgr, statement, language);
+        return queryFactory.createQuery(statement, language);
     }
 
     /**
@@ -112,6 +114,7 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
+        // TODO: support SQL2 and QOM
         return searchMgr.createQuery(session, itemMgr, node);
     }
 
@@ -119,7 +122,8 @@ public class QueryManagerImpl implements QueryManager {
      * {@inheritDoc}
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
-        return (String[]) SUPPORTED_QUERIES_LIST.toArray(new String[SUPPORTED_QUERIES.length]);
+        List<String> languages = queryFactory.getSupportedLanguages();
+        return languages.toArray(new String[languages.size()]);
     }
 
     //---------------------------< JSR 283 >------------------------------------
