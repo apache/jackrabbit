@@ -29,7 +29,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -45,16 +44,16 @@ public class EffectiveNodeType implements Cloneable {
     private static Logger log = LoggerFactory.getLogger(EffectiveNodeType.class);
 
     // list of explicitly aggregated {i.e. merged) node types
-    private final TreeSet mergedNodeTypes;
+    private final TreeSet<Name> mergedNodeTypes;
     // list of implicitly aggregated {through inheritance) node types
-    private final TreeSet inheritedNodeTypes;
+    private final TreeSet<Name> inheritedNodeTypes;
     // list of all either explicitly (through aggregation) or implicitly
     // (through inheritance) included node types.
-    private final TreeSet allNodeTypes;
+    private final TreeSet<Name> allNodeTypes;
     // map of named item definitions (maps name to list of definitions)
-    private final HashMap namedItemDefs;
+    private final HashMap<Name, List<ItemDef>> namedItemDefs;
     // list of unnamed item definitions (i.e. residual definitions)
-    private final ArrayList unnamedItemDefs;
+    private final ArrayList<ItemDef> unnamedItemDefs;
 
     // flag indicating whether any included node type supports orderable child nodes
     private boolean orderableChildNodes;
@@ -65,11 +64,11 @@ public class EffectiveNodeType implements Cloneable {
      * private constructor.
      */
     private EffectiveNodeType() {
-        mergedNodeTypes = new TreeSet();
-        inheritedNodeTypes = new TreeSet();
-        allNodeTypes = new TreeSet();
-        namedItemDefs = new HashMap();
-        unnamedItemDefs = new ArrayList();
+        mergedNodeTypes = new TreeSet<Name>();
+        inheritedNodeTypes = new TreeSet<Name>();
+        allNodeTypes = new TreeSet<Name>();
+        namedItemDefs = new HashMap<Name, List<ItemDef>>();
+        unnamedItemDefs = new ArrayList<ItemDef>();
         orderableChildNodes = false;
         primaryItemName = null;
     }
@@ -92,7 +91,7 @@ public class EffectiveNodeType implements Cloneable {
      */
     static EffectiveNodeType create(NodeTypeDef ntd,
                                     EffectiveNodeTypeCache entCache,
-                                    Map ntdCache)
+                                    Map<Name, NodeTypeDef> ntdCache)
             throws NodeTypeConflictException, NoSuchNodeTypeException {
         // create empty effective node type instance
         EffectiveNodeType ent = new EffectiveNodeType();
@@ -105,35 +104,35 @@ public class EffectiveNodeType implements Cloneable {
         // map of all item definitions (maps id to definition)
         // used to effectively detect ambiguous child definitions where
         // ambiguity is defined in terms of definition identity
-        HashMap itemDefIds = new HashMap();
+        HashMap<Object, ItemDef> itemDefIds = new HashMap<Object, ItemDef>();
 
         NodeDef[] cnda = ntd.getChildNodeDefs();
-        for (int i = 0; i < cnda.length; i++) {
+        for (NodeDef aCnda : cnda) {
             // check if child node definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.containsKey(cnda[i].getId())) {
+            if (itemDefIds.containsKey(aCnda.getId())) {
                 // conflict
                 String msg;
-                if (cnda[i].definesResidual()) {
+                if (aCnda.definesResidual()) {
                     msg = ntName + " contains ambiguous residual child node definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for child node named "
-                            + cnda[i].getName();
+                            + aCnda.getName();
                 }
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
             } else {
-                itemDefIds.put(cnda[i].getId(), cnda[i]);
+                itemDefIds.put(aCnda.getId(), aCnda);
             }
-            if (cnda[i].definesResidual()) {
+            if (aCnda.definesResidual()) {
                 // residual node definition
-                ent.unnamedItemDefs.add(cnda[i]);
+                ent.unnamedItemDefs.add(aCnda);
             } else {
                 // named node definition
-                Name name = cnda[i].getName();
-                List defs = (List) ent.namedItemDefs.get(name);
+                Name name = aCnda.getName();
+                List<ItemDef> defs = ent.namedItemDefs.get(name);
                 if (defs == null) {
-                    defs = new ArrayList();
+                    defs = new ArrayList<ItemDef>();
                     ent.namedItemDefs.put(name, defs);
                 }
                 if (defs.size() > 0) {
@@ -141,9 +140,8 @@ public class EffectiveNodeType implements Cloneable {
                      * there already exists at least one definition with that
                      * name; make sure none of them is auto-create
                      */
-                    for (int j = 0; j < defs.size(); j++) {
-                        ItemDef def = (ItemDef) defs.get(j);
-                        if (cnda[i].isAutoCreated() || def.isAutoCreated()) {
+                    for (ItemDef def : defs) {
+                        if (aCnda.isAutoCreated() || def.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
                                     + name + "' in node type '" + ntName + "'";
@@ -152,36 +150,36 @@ public class EffectiveNodeType implements Cloneable {
                         }
                     }
                 }
-                defs.add(cnda[i]);
+                defs.add(aCnda);
             }
         }
         PropDef[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
+        for (PropDef aPda : pda) {
             // check if property definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.containsKey(pda[i].getId())) {
+            if (itemDefIds.containsKey(aPda.getId())) {
                 // conflict
                 String msg;
-                if (pda[i].definesResidual()) {
+                if (aPda.definesResidual()) {
                     msg = ntName + " contains ambiguous residual property definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for property named "
-                            + pda[i].getName();
+                            + aPda.getName();
                 }
                 log.debug(msg);
                 throw new NodeTypeConflictException(msg);
             } else {
-                itemDefIds.put(pda[i].getId(), pda[i]);
+                itemDefIds.put(aPda.getId(), aPda);
             }
-            if (pda[i].definesResidual()) {
+            if (aPda.definesResidual()) {
                 // residual property definition
-                ent.unnamedItemDefs.add(pda[i]);
+                ent.unnamedItemDefs.add(aPda);
             } else {
                 // named property definition
-                Name name = pda[i].getName();
-                List defs = (List) ent.namedItemDefs.get(name);
+                Name name = aPda.getName();
+                List<ItemDef> defs = ent.namedItemDefs.get(name);
                 if (defs == null) {
-                    defs = new ArrayList();
+                    defs = new ArrayList<ItemDef>();
                     ent.namedItemDefs.put(name, defs);
                 }
                 if (defs.size() > 0) {
@@ -189,9 +187,8 @@ public class EffectiveNodeType implements Cloneable {
                      * there already exists at least one definition with that
                      * name; make sure none of them is auto-create
                      */
-                    for (int j = 0; j < defs.size(); j++) {
-                        ItemDef def = (ItemDef) defs.get(j);
-                        if (pda[i].isAutoCreated() || def.isAutoCreated()) {
+                    for (ItemDef def : defs) {
+                        if (aPda.isAutoCreated() || def.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
                                     + name + "' in node type '" + ntName + "'";
@@ -200,7 +197,7 @@ public class EffectiveNodeType implements Cloneable {
                         }
                     }
                 }
-                defs.add(pda[i]);
+                defs.add(aPda);
             }
         }
 
@@ -217,8 +214,8 @@ public class EffectiveNodeType implements Cloneable {
             ent.orderableChildNodes = true;
         } else {
             Name[] nta = ent.getInheritedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                NodeTypeDef def = (NodeTypeDef) ntdCache.get(nta[i]);
+            for (Name aNta : nta) {
+                NodeTypeDef def = ntdCache.get(aNta);
                 if (def.hasOrderableChildNodes()) {
                     ent.orderableChildNodes = true;
                     break;
@@ -231,8 +228,8 @@ public class EffectiveNodeType implements Cloneable {
             ent.primaryItemName = ntd.getPrimaryItemName();
         } else {
             Name[] nta = ent.getInheritedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                NodeTypeDef def = (NodeTypeDef) ntdCache.get(nta[i]);
+            for (Name aNta : nta) {
+                NodeTypeDef def = ntdCache.get(aNta);
                 if (def.getPrimaryItemName() != null) {
                     ent.primaryItemName = def.getPrimaryItemName();
                     break;
@@ -256,7 +253,8 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Returns true if any of the included node types supports
-     * 'orderable child nodes'; returns alse otherwise.
+     * 'orderable child nodes'; returns false otherwise.
+     * @return <code>true</code> if this effective node type has orderable child nodes
      */
     public boolean hasOrderableChildNodes() {
         return orderableChildNodes;
@@ -267,53 +265,51 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     public Name[] getMergedNodeTypes() {
-        return (Name[]) mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
+        return mergedNodeTypes.toArray(new Name[mergedNodeTypes.size()]);
     }
 
     public Name[] getInheritedNodeTypes() {
-        return (Name[]) inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
+        return inheritedNodeTypes.toArray(new Name[inheritedNodeTypes.size()]);
     }
 
     public Name[] getAllNodeTypes() {
-        return (Name[]) allNodeTypes.toArray(new Name[allNodeTypes.size()]);
+        return allNodeTypes.toArray(new Name[allNodeTypes.size()]);
     }
 
     public ItemDef[] getAllItemDefs() {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            defs.addAll((List) iter.next());
+        ArrayList<ItemDef> defs = new ArrayList<ItemDef>(namedItemDefs.size() + unnamedItemDefs.size());
+        for (List<ItemDef> itemDefs : namedItemDefs.values()) {
+            defs.addAll(itemDefs);
         }
         defs.addAll(unnamedItemDefs);
         if (defs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
+        return defs.toArray(new ItemDef[defs.size()]);
     }
 
     public ItemDef[] getNamedItemDefs() {
         if (namedItemDefs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            defs.addAll((List) iter.next());
+        ArrayList<ItemDef> defs = new ArrayList<ItemDef>(namedItemDefs.size());
+        for (List<ItemDef> itemDefs : namedItemDefs.values()) {
+            defs.addAll(itemDefs);
         }
         if (defs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
+        return defs.toArray(new ItemDef[defs.size()]);
     }
 
     public ItemDef[] getUnnamedItemDefs() {
         if (unnamedItemDefs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        return (ItemDef[]) unnamedItemDefs.toArray(new ItemDef[unnamedItemDefs.size()]);
+        return unnamedItemDefs.toArray(new ItemDef[unnamedItemDefs.size()]);
     }
 
     public boolean hasNamedItemDef(Name name) {
@@ -321,99 +317,85 @@ public class EffectiveNodeType implements Cloneable {
     }
 
     public ItemDef[] getNamedItemDefs(Name name) {
-        List defs = (List) namedItemDefs.get(name);
+        List<ItemDef> defs = namedItemDefs.get(name);
         if (defs == null || defs.size() == 0) {
             return ItemDef.EMPTY_ARRAY;
         }
-        return (ItemDef[]) defs.toArray(new ItemDef[defs.size()]);
+        return defs.toArray(new ItemDef[defs.size()]);
     }
 
     public NodeDef[] getAllNodeDefs() {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(namedItemDefs.size() + unnamedItemDefs.size());
+        for (ItemDef def : unnamedItemDefs) {
             if (def.definesNode()) {
-                defs.add(def);
+                defs.add((NodeDef) def);
             }
         }
-        iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        for (List<ItemDef> list: namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (def.definesNode()) {
-                    defs.add(def);
+                    defs.add((NodeDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getNamedNodeDefs() {
         if (namedItemDefs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (def.definesNode()) {
-                    defs.add(def);
+                    defs.add((NodeDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getNamedNodeDefs(Name name) {
-        List list = (List) namedItemDefs.get(name);
+        List<ItemDef> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(list.size());
+        for (ItemDef def : list) {
             if (def.definesNode()) {
-                defs.add(def);
+                defs.add((NodeDef) def);
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getUnnamedNodeDefs() {
         if (unnamedItemDefs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(unnamedItemDefs.size());
+        for (ItemDef def : unnamedItemDefs) {
             if (def.definesNode()) {
-                defs.add(def);
+                defs.add((NodeDef) def);
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     public NodeDef[] getAutoCreateNodeDefs() {
@@ -422,110 +404,92 @@ public class EffectiveNodeType implements Cloneable {
         if (namedItemDefs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (def.definesNode() && def.isAutoCreated()) {
-                    defs.add(def);
+                    defs.add((NodeDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     public PropDef[] getAllPropDefs() {
         if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size() + unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(namedItemDefs.size() + unnamedItemDefs.size());
+        for (ItemDef def : unnamedItemDefs) {
             if (!def.definesNode()) {
-                defs.add(def);
+                defs.add((PropDef) def);
             }
         }
-        iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        for (List<ItemDef> list: namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (!def.definesNode()) {
-                    defs.add(def);
+                    defs.add((PropDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getNamedPropDefs() {
         if (namedItemDefs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (!def.definesNode()) {
-                    defs.add(def);
+                    defs.add((PropDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getNamedPropDefs(Name name) {
-        List list = (List) namedItemDefs.get(name);
+        List<ItemDef> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(list.size());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(list.size());
+        for (ItemDef def : list) {
             if (!def.definesNode()) {
-                defs.add(def);
+                defs.add((PropDef) def);
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getUnnamedPropDefs() {
         if (unnamedItemDefs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(unnamedItemDefs.size());
-        Iterator iter = unnamedItemDefs.iterator();
-        while (iter.hasNext()) {
-            ItemDef def = (ItemDef) iter.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(unnamedItemDefs.size());
+        for (ItemDef def : unnamedItemDefs) {
             if (!def.definesNode()) {
-                defs.add(def);
+                defs.add((PropDef) def);
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getAutoCreatePropDefs() {
@@ -534,22 +498,18 @@ public class EffectiveNodeType implements Cloneable {
         if (namedItemDefs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (!def.definesNode() && def.isAutoCreated()) {
-                    defs.add(def);
+                    defs.add((PropDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public PropDef[] getMandatoryPropDefs() {
@@ -558,22 +518,18 @@ public class EffectiveNodeType implements Cloneable {
         if (namedItemDefs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<PropDef> defs = new ArrayList<PropDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (!def.definesNode() && def.isMandatory()) {
-                    defs.add(def);
+                    defs.add((PropDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return PropDef.EMPTY_ARRAY;
         }
-        return (PropDef[]) defs.toArray(new PropDef[defs.size()]);
+        return defs.toArray(new PropDef[defs.size()]);
     }
 
     public NodeDef[] getMandatoryNodeDefs() {
@@ -582,22 +538,18 @@ public class EffectiveNodeType implements Cloneable {
         if (namedItemDefs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        ArrayList defs = new ArrayList(namedItemDefs.size());
-        Iterator iter = namedItemDefs.values().iterator();
-        while (iter.hasNext()) {
-            List list = (List) iter.next();
-            Iterator iter1 = list.iterator();
-            while (iter1.hasNext()) {
-                ItemDef def = (ItemDef) iter1.next();
+        ArrayList<NodeDef> defs = new ArrayList<NodeDef>(namedItemDefs.size());
+        for (List<ItemDef> list : namedItemDefs.values()) {
+            for (ItemDef def : list) {
                 if (def.definesNode() && def.isMandatory()) {
-                    defs.add(def);
+                    defs.add((NodeDef) def);
                 }
             }
         }
         if (defs.size() == 0) {
             return NodeDef.EMPTY_ARRAY;
         }
-        return (NodeDef[]) defs.toArray(new NodeDef[defs.size()]);
+        return defs.toArray(new NodeDef[defs.size()]);
     }
 
     /**
@@ -654,13 +606,13 @@ public class EffectiveNodeType implements Cloneable {
         }
         if (values != null && values.length > 0) {
             // check value constraints on every value
-            for (int i = 0; i < values.length; i++) {
+            for (InternalValue value : values) {
                 // constraints are OR-ed together
                 boolean satisfied = false;
                 ConstraintViolationException cve = null;
-                for (int j = 0; j < constraints.length; j++) {
+                for (QValueConstraint constraint : constraints) {
                     try {
-                        constraints[j].check(values[i]);
+                        constraint.check(value);
                         satisfied = true;
                         break;
                     } catch (ConstraintViolationException e) {
@@ -743,9 +695,9 @@ public class EffectiveNodeType implements Cloneable {
 
         // try named node definitions first
         ItemDef[] defs = getNamedItemDefs(name);
-        for (int i = 0; i < defs.length; i++) {
-            if (defs[i].definesNode()) {
-                NodeDef nd = (NodeDef) defs[i];
+        for (ItemDef def : defs) {
+            if (def.definesNode()) {
+                NodeDef nd = (NodeDef) def;
                 Name[] types = nd.getRequiredPrimaryTypes();
                 // node definition with that name exists
                 if (entTarget != null && types != null) {
@@ -764,8 +716,7 @@ public class EffectiveNodeType implements Cloneable {
         // no item with that name defined;
         // try residual node definitions
         NodeDef[] nda = getUnnamedNodeDefs();
-        for (int i = 0; i < nda.length; i++) {
-            NodeDef nd = nda[i];
+        for (NodeDef nd : nda) {
             if (entTarget != null && nd.getRequiredPrimaryTypes() != null) {
                 // check 'required primary types' constraint
                 if (!entTarget.includesNodeTypes(nd.getRequiredPrimaryTypes())) {
@@ -867,37 +818,33 @@ public class EffectiveNodeType implements Cloneable {
 
     private PropDef getMatchingPropDef(PropDef[] defs, int type) {
         PropDef match = null;
-        for (int i = 0; i < defs.length; i++) {
-            ItemDef def = defs[i];
-            if (!def.definesNode()) {
-                PropDef pd = (PropDef) def;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED
-                        || type == PropertyType.UNDEFINED
-                        || reqType == type) {
-                    if (match == null) {
-                        match = pd;
+        for (PropDef pd : defs) {
+            int reqType = pd.getRequiredType();
+            // match type
+            if (reqType == PropertyType.UNDEFINED
+                    || type == PropertyType.UNDEFINED
+                    || reqType == type) {
+                if (match == null) {
+                    match = pd;
+                } else {
+                    // check if this definition is a better match than
+                    // the one we've already got
+                    if (match.getRequiredType() != pd.getRequiredType()) {
+                        if (match.getRequiredType() == PropertyType.UNDEFINED) {
+                            // found better match
+                            match = pd;
+                        }
                     } else {
-                        // check if this definition is a better match than
-                        // the one we've already got
-                        if (match.getRequiredType() != pd.getRequiredType()) {
-                            if (match.getRequiredType() == PropertyType.UNDEFINED) {
-                                // found better match
-                                match = pd;
-                            }
-                        } else {
-                            if (match.isMultiple() && !pd.isMultiple()) {
-                                // found better match
-                                match = pd;
-                            }
+                        if (match.isMultiple() && !pd.isMultiple()) {
+                            // found better match
+                            match = pd;
                         }
                     }
-                    if (match.getRequiredType() != PropertyType.UNDEFINED
-                            && !match.isMultiple()) {
-                        // found best possible match, get outta here
-                        return match;
-                    }
+                }
+                if (match.getRequiredType() != PropertyType.UNDEFINED
+                        && !match.isMultiple()) {
+                    // found best possible match, get outta here
+                    return match;
                 }
             }
         }
@@ -907,25 +854,21 @@ public class EffectiveNodeType implements Cloneable {
     private PropDef getMatchingPropDef(PropDef[] defs, int type,
                                        boolean multiValued) {
         PropDef match = null;
-        for (int i = 0; i < defs.length; i++) {
-            ItemDef def = defs[i];
-            if (!def.definesNode()) {
-                PropDef pd = (PropDef) def;
-                int reqType = pd.getRequiredType();
-                // match type
-                if (reqType == PropertyType.UNDEFINED
-                        || type == PropertyType.UNDEFINED
-                        || reqType == type) {
-                    // match multiValued flag
-                    if (multiValued == pd.isMultiple()) {
-                        // found match
-                        if (pd.getRequiredType() != PropertyType.UNDEFINED) {
-                            // found best possible match, get outta here
-                            return pd;
-                        } else {
-                            if (match == null) {
-                                match = pd;
-                            }
+        for (PropDef pd : defs) {
+            int reqType = pd.getRequiredType();
+            // match type
+            if (reqType == PropertyType.UNDEFINED
+                    || type == PropertyType.UNDEFINED
+                    || reqType == type) {
+                // match multiValued flag
+                if (multiValued == pd.isMultiple()) {
+                    // found match
+                    if (pd.getRequiredType() != PropertyType.UNDEFINED) {
+                        // found best possible match, get outta here
+                        return pd;
+                    } else {
+                        if (match == null) {
+                            match = pd;
                         }
                     }
                 }
@@ -945,11 +888,11 @@ public class EffectiveNodeType implements Cloneable {
          */
         ItemDef[] defs = getNamedItemDefs(name);
         if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isMandatory()) {
+            for (ItemDef def : defs) {
+                if (def.isMandatory()) {
                     throw new ConstraintViolationException("can't remove mandatory item");
                 }
-                if (defs[i].isProtected()) {
+                if (def.isProtected()) {
                     throw new ConstraintViolationException("can't remove protected item");
                 }
             }
@@ -967,11 +910,11 @@ public class EffectiveNodeType implements Cloneable {
          */
         ItemDef[] defs = getNamedNodeDefs(name);
         if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isMandatory()) {
+            for (ItemDef def : defs) {
+                if (def.isMandatory()) {
                     throw new ConstraintViolationException("can't remove mandatory node");
                 }
-                if (defs[i].isProtected()) {
+                if (def.isProtected()) {
                     throw new ConstraintViolationException("can't remove protected node");
                 }
             }
@@ -989,11 +932,11 @@ public class EffectiveNodeType implements Cloneable {
          */
         ItemDef[] defs = getNamedPropDefs(name);
         if (defs != null) {
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].isMandatory()) {
+            for (ItemDef def : defs) {
+                if (def.isMandatory()) {
                     throw new ConstraintViolationException("can't remove mandatory property");
                 }
-                if (defs[i].isProtected()) {
+                if (def.isProtected()) {
                     throw new ConstraintViolationException("can't remove protected property");
                 }
             }
@@ -1011,7 +954,7 @@ public class EffectiveNodeType implements Cloneable {
     EffectiveNodeType merge(EffectiveNodeType other)
             throws NodeTypeConflictException {
         // create a clone of this instance and perform the merge on
-        // the 'clone' to avoid a potentially inconsistant state
+        // the 'clone' to avoid a potentially inconsistent state
         // of this instance if an exception is thrown during
         // the merge.
         EffectiveNodeType copy = (EffectiveNodeType) clone();
@@ -1036,10 +979,10 @@ public class EffectiveNodeType implements Cloneable {
             throws NodeTypeConflictException {
         Name[] nta = other.getAllNodeTypes();
         int includedCount = 0;
-        for (int i = 0; i < nta.length; i++) {
-            if (includesNodeType(nta[i])) {
+        for (Name aNta : nta) {
+            if (includesNodeType(aNta)) {
                 // redundant node type
-                log.debug("node type '" + nta[i] + "' is already contained.");
+                log.debug("node type '" + aNta + "' is already contained.");
                 includedCount++;
             }
         }
@@ -1050,19 +993,17 @@ public class EffectiveNodeType implements Cloneable {
 
         // named item definitions
         ItemDef[] defs = other.getNamedItemDefs();
-        for (int i = 0; i < defs.length; i++) {
-            ItemDef def = defs[i];
+        for (ItemDef def : defs) {
             if (includesNodeType(def.getDeclaringNodeType())) {
                 // ignore redundant definitions
                 continue;
             }
             Name name = def.getName();
-            List existingDefs = (List) namedItemDefs.get(name);
+            List<ItemDef> existingDefs = namedItemDefs.get(name);
             if (existingDefs != null) {
                 if (existingDefs.size() > 0) {
                     // there already exists at least one definition with that name
-                    for (int j = 0; j < existingDefs.size(); j++) {
-                        ItemDef existingDef = (ItemDef) existingDefs.get(j);
+                    for (ItemDef existingDef : existingDefs) {
                         // make sure none of them is auto-create
                         if (def.isAutoCreated() || existingDef.isAutoCreated()) {
                             // conflict
@@ -1110,7 +1051,7 @@ public class EffectiveNodeType implements Cloneable {
                     }
                 }
             } else {
-                existingDefs = new ArrayList();
+                existingDefs = new ArrayList<ItemDef>();
                 namedItemDefs.put(name, existingDefs);
             }
             existingDefs.add(def);
@@ -1118,15 +1059,12 @@ public class EffectiveNodeType implements Cloneable {
 
         // residual item definitions
         defs = other.getUnnamedItemDefs();
-        for (int i = 0; i < defs.length; i++) {
-            ItemDef def = defs[i];
+        for (ItemDef def : defs) {
             if (includesNodeType(def.getDeclaringNodeType())) {
                 // ignore redundant definitions
                 continue;
             }
-            Iterator iter = unnamedItemDefs.iterator();
-            while (iter.hasNext()) {
-                ItemDef existing = (ItemDef) iter.next();
+            for (ItemDef existing : unnamedItemDefs) {
                 // compare with existing definition
                 if (def.definesNode() == existing.definesNode()) {
                     if (!def.definesNode()) {
@@ -1168,42 +1106,33 @@ public class EffectiveNodeType implements Cloneable {
             }
             unnamedItemDefs.add(def);
         }
-        for (int i = 0; i < nta.length; i++) {
-            allNodeTypes.add(nta[i]);
-        }
+        allNodeTypes.addAll(Arrays.asList(nta));
 
         if (supertype) {
             // implicit merge as result of inheritance
 
             // add other merged node types as supertypes
             nta = other.getMergedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                inheritedNodeTypes.add(nta[i]);
-            }
+            inheritedNodeTypes.addAll(Arrays.asList(nta));
             // add supertypes of other merged node types as supertypes
             nta = other.getInheritedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                inheritedNodeTypes.add(nta[i]);
-            }
+            inheritedNodeTypes.addAll(Arrays.asList(nta));
         } else {
             // explicit merge
 
             // merge with other merged node types
             nta = other.getMergedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                mergedNodeTypes.add(nta[i]);
-            }
+            mergedNodeTypes.addAll(Arrays.asList(nta));
             // add supertypes of other merged node types as supertypes
             nta = other.getInheritedNodeTypes();
-            for (int i = 0; i < nta.length; i++) {
-                inheritedNodeTypes.add(nta[i]);
-            }
+            inheritedNodeTypes.addAll(Arrays.asList(nta));
         }
 
         // update 'orderable child nodes' attribute value (JCR-1947)
         if (other.hasOrderableChildNodes()) {
             orderableChildNodes = true;
         }
+
         // update 'primary item' attribute value (JCR-1947)
         if (primaryItemName == null && other.getPrimaryItemName() != null) {
             primaryItemName = other.getPrimaryItemName();
@@ -1216,11 +1145,9 @@ public class EffectiveNodeType implements Cloneable {
         clone.mergedNodeTypes.addAll(mergedNodeTypes);
         clone.inheritedNodeTypes.addAll(inheritedNodeTypes);
         clone.allNodeTypes.addAll(allNodeTypes);
-        Iterator iter = namedItemDefs.keySet().iterator();
-        while (iter.hasNext()) {
-            Object key = iter.next();
-            List list = (List) namedItemDefs.get(key);
-            clone.namedItemDefs.put(key, new ArrayList(list));
+        for (Name name : namedItemDefs.keySet()) {
+            List<ItemDef> list = namedItemDefs.get(name);
+            clone.namedItemDefs.put(name, new ArrayList<ItemDef>(list));
         }
         clone.unnamedItemDefs.addAll(unnamedItemDefs);
 
