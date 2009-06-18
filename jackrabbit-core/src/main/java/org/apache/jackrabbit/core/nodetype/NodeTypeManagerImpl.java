@@ -379,6 +379,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
             list.add(getNodeType(ntName));
@@ -391,6 +392,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
             NodeType nt = getNodeType(ntName);
@@ -406,6 +408,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Jack
      */
     public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         Name[] ntNames = ntReg.getRegisteredNodeTypes();
+        Arrays.sort(ntNames);
         ArrayList<NodeType> list = new ArrayList<NodeType>(ntNames.length);
         for (Name ntName : ntNames) {
             NodeType nt = getNodeType(ntName);
