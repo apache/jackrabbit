@@ -32,7 +32,7 @@ public abstract class AbstractNamespaceMappings
         implements NamespaceMappings, NamespaceResolver {
 
     /**
-     * The name resolver used to translate the qualified name to JCR name
+     * The name resolver used to translate the <code>Name</code>s to JCR name strings.
      */
     private final NamePathResolver resolver;
 

@@ -1383,7 +1383,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
      * @param ntd
      * @param entCache
      * @param ntdCache cache of 'known' node type definitions, used to resolve dependencies
-     * @param nsReg    namespace registry used for validating qualified names
+     * @param nsReg    namespace registry used for validatingatch names
      * @param lenient flag governing whether validation can be lenient or has to be strict
      * @return an effective node type representation of the specified <code>NodeTypeDef</code>
      * @throws InvalidNodeTypeDefException

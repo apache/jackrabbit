@@ -488,7 +488,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * namespace.
      *
      * @param name string name
-     * @return qualified name
+     * @return A <code>Name</code> object.
      */
     private Name getName(String name) {
         return NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, name);

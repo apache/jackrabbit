@@ -21,7 +21,7 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * Property identifier. An instance of this class identifies a single
- * property using the UUID of the parent node and the qualified name of
+ * property using the UUID of the parent node and the name of
  * the property. Once created a property identifier instance is immutable.
  */
 public class PropertyId extends ItemId {
@@ -32,7 +32,7 @@ public class PropertyId extends ItemId {
     /** id of the parent node. */
     private final NodeId parentId;
 
-    /** Qualified name of the property. */
+    /** Name of the property. */
     private final Name propName;
 
     /** the precalculated hash code */
@@ -42,7 +42,7 @@ public class PropertyId extends ItemId {
      * Creates a property identifier instance for the identified property.
      *
      * @param parentId the id of the parent node
-     * @param propName qualified name of the property
+     * @param propName Name of the property
      */
     public PropertyId(NodeId parentId, Name propName) {
         if (parentId == null) {
@@ -81,9 +81,9 @@ public class PropertyId extends ItemId {
     }
 
     /**
-     * Returns the qualified name of the property.
+     * Returns the <code>Name</code> of the property.
      *
-     * @return qualified name
+     * @return <code>Name</code> of the property.
      */
     public Name getName() {
         return propName;

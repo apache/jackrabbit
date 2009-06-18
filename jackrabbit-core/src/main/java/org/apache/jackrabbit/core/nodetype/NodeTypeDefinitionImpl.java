@@ -38,7 +38,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
     private static Logger log = LoggerFactory.getLogger(NodeTypeDefinitionImpl.class);
 
     private final NodeTypeDef ntd;
-    // resolver used to translate qualified names to JCR names
+    // resolver used to translate <code>Name</code>s to JCR name strings.
     private final NamePathResolver resolver;
     private final ValueFactory valueFactory;
 

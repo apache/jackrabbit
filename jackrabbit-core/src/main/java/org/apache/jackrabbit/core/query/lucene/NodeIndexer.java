@@ -738,7 +738,7 @@ public class NodeIndexer {
     /**
      * Adds the name value to the document as the named field. The name
      * value is converted to an indexable string treating the internal value
-     * as a qualified name and mapping the name space using the name space
+     * as a <code>Name</code> and mapping the name space using the name space
      * mappings with which this class has been created.
      *
      * @param doc           The document to which to add the field

@@ -1466,7 +1466,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the child node of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name The qualified name of the child node to retrieve.
+     * @param name The name of the child node to retrieve.
      * @return The child node with the specified <code>name</code>.
      * @throws ItemNotFoundException If no child node exists with the
      *                               specified name.
@@ -1480,7 +1480,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the child node of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name  The qualified name of the child node to retrieve.
+     * @param name The name of the child node to retrieve.
      * @param index The index of the child node to retrieve (in the case of same-name siblings).
      * @return The child node with the specified <code>name</code>.
      * @throws ItemNotFoundException If no child node exists with the
@@ -1512,7 +1512,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the child node exists and <code>false</code>
      * otherwise.
      *
-     * @param name The qualified name of the child node.
+     * @param name The name of the child node.
      * @return <code>true</code> if the child node exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */
@@ -1525,7 +1525,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the child node exists and <code>false</code>
      * otherwise.
      *
-     * @param name  The qualified name of the child node.
+     * @param name The name of the child node.
      * @param index The index of the child node (in the case of same-name siblings).
      * @return <code>true</code> if the child node exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
@@ -1549,7 +1549,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns the property of <code>this</code> node with the specified
      * <code>name</code>.
      *
-     * @param name The qualified name of the property to retrieve.
+     * @param name The name of the property to retrieve.
      * @return The property with the specified <code>name</code>.
      * @throws ItemNotFoundException If no property exists with the
      *                               specified name.
@@ -1573,7 +1573,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * Returns <code>true</code> if the property exists and <code>false</code>
      * otherwise.
      *
-     * @param name The qualified name of the property.
+     * @param name The name of the property.
      * @return <code>true</code> if the property exists; <code>false</code> otherwise.
      * @throws RepositoryException If an unspecified error occurs.
      */

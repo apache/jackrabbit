@@ -56,7 +56,8 @@ public class AMContext {
     private final HierarchyManager hierMgr;
 
     /**
-     * name and path resolver for resolving namespaces in qualified paths
+     * name and path resolver for resolving JCR name/path strings to internal
+     * Name/Path objects (and vice versa).
      */
     private final NamePathResolver resolver;
 

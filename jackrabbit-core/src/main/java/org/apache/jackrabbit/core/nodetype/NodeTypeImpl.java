@@ -51,7 +51,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     private final NodeTypeDef ntd;
     private final EffectiveNodeType ent;
     private final NodeTypeManagerImpl ntMgr;
-    // resolver used to translate qualified names to JCR names
+    // resolver used to translate translate <code>Name</code>s to JCR name strings.
     private final NamePathResolver resolver;
     // value factory used for type conversion
     private final ValueFactory valueFactory;
@@ -186,9 +186,9 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     }
 
     /**
-     * Returns the 'internal', i.e. the fully qualified name.
+     * Returns the <code>Name</code> of this node type.
      *
-     * @return the qualified name
+     * @return the name
      */
     public Name getQName() {
         return ntd.getName();
