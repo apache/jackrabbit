@@ -18,7 +18,7 @@ package org.apache.jackrabbit.test.api.query.qom;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>NotConstraintTest</code> contains tests that check NOT constraints.
@@ -32,7 +32,7 @@ public class NotConstraintTest extends AbstractQOMTest {
         n2.setProperty(propertyName2, "bar");
         superuser.save();
 
-        QueryResult result = qf.createQuery(
+        QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.descendantNode("s", testRootNode.getPath()),
@@ -42,7 +42,7 @@ public class NotConstraintTest extends AbstractQOMTest {
                 ),
                 null,
                 null
-        ).execute();
-        checkResult(result, new Node[]{n2});
+        );
+        checkQOM(qom, new Node[]{n2});
     }
 }

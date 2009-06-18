@@ -25,43 +25,45 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
- * <code>DescendantNodeTest</code>...
+ * <code>DescendantNodeTest</code> contains test cases related to QOM
+ * DescendantNode constraints.
  */
 public class DescendantNodeTest extends AbstractQOMTest {
 
     public void testDescendantNode() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.descendantNode("s", testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n});
+        checkQOM(qom, new Node[]{n});
     }
 
     public void testDescendantNodes() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
         Node n21 = n2.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.descendantNode("s", testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n1, n2, n21});
+        checkQOM(qom, new Node[]{n1, n2, n21});
     }
 
     public void testPathDoesNotExist() throws RepositoryException {
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.descendantNode("s", testRoot + "/" + nodeName1),
                 null, null);
-        checkResult(q.execute(), new Node[]{});
+        checkQOM(qom, new Node[]{});
     }
 
     public void testDescendantNodesDoNotMatchSelector()
             throws RepositoryException, NotExecutableException {
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator it = ntMgr.getPrimaryNodeTypes();
@@ -70,9 +72,9 @@ public class DescendantNodeTest extends AbstractQOMTest {
             NodeType nt = it.nextNodeType();
             if (!testNt.isNodeType(nt.getName())) {
                 // perform test
-                Query q = qf.createQuery(qf.selector(nt.getName(), "s"),
+                QueryObjectModel qom = qf.createQuery(qf.selector(nt.getName(), "s"),
                         qf.descendantNode("s", testRoot), null, null);
-                checkResult(q.execute(), new Node[]{});
+                checkQOM(qom, new Node[]{});
                 return;
             }
         }
@@ -89,15 +91,31 @@ public class DescendantNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISDESCENDANTNODE(s, [" + testPath + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISDESCENDANTNODE() with relative path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testSyntacticallyInvalidPath() throws RepositoryException {
+        String invalidPath = testRoot + "/" + nodeName1 + "[";
         try {
             Query q = qf.createQuery(qf.selector(testNodeType, "s"),
-                    qf.descendantNode("s", testRoot + "/" + nodeName1 +
-                    "["), null, null);
+                    qf.descendantNode("s", invalidPath), null, null);
             q.execute();
             fail("DescendantNode with syntactically invalid path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISDESCENDANTNODE(s, [" + invalidPath + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISDESCENDANTNODE() with syntactically invalid path argument must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }
@@ -108,7 +126,15 @@ public class DescendantNodeTest extends AbstractQOMTest {
             Query q = qf.createQuery(qf.selector(testNodeType, "s"),
                     qf.descendantNode("x", testRoot), null, null);
             q.execute();
-            fail("DescendantNode with an invalid selector name must throw InvalidQueryException");
+            fail("DescendantNode with an unknown selector name must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISDESCENDANTNODE(x, [" + testRoot + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISDESCENDANTNODE() with an unknown selector name must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }

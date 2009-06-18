@@ -248,7 +248,7 @@ public class Parser {
     private Constraint parseCondition() throws RepositoryException {
         Constraint a;
         if (readIf("NOT")) {
-            a = parseConstraint();
+            a = factory.not(parseConstraint());
         } else if (readIf("(")) {
             a = parseConstraint();
             read(")");

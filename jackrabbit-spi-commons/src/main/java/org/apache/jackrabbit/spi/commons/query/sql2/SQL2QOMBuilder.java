@@ -24,7 +24,6 @@ import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 /**
  * <code>SQL2QOMBuilder</code> implements QOM builder that understands
@@ -56,9 +55,15 @@ public class SQL2QOMBuilder implements QueryObjectModelBuilder {
         return new String[]{Query.JCR_SQL2};
     }
 
-    public String toString(QueryObjectModel qom, NameResolver resolver)
+    /**
+     * {@inheritDoc}
+     */
+    public String toString(QueryObjectModel qom)
             throws InvalidQueryException {
-        // TODO
-        return null;
+        try {
+            return QOMFormatter.format(qom);
+        } catch (RepositoryException e) {
+            throw new InvalidQueryException(e.getMessage(), e);
+        }
     }
 }

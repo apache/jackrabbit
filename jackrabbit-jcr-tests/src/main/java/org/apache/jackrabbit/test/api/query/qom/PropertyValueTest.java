@@ -18,8 +18,8 @@ package org.apache.jackrabbit.test.api.query.qom;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>PropertyValueTest</code> performs a test with property value
@@ -36,7 +36,7 @@ public class PropertyValueTest extends AbstractQOMTest {
         n2.setProperty(propertyName2, TEXT);
         superuser.save();
 
-        QueryResult result = qf.createQuery(
+        QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.childNode("s", testRoot),
@@ -45,10 +45,10 @@ public class PropertyValueTest extends AbstractQOMTest {
                                 QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
                                 qf.literal(vf.createValue(TEXT))
                         )
-                ), null, null).execute();
-        checkResult(result, new Node[]{n1});
+                ), null, null);
+        checkQOM(qom, new Node[]{n1});
 
-        result = qf.createQuery(
+        qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.childNode("s", testRoot),
@@ -57,7 +57,7 @@ public class PropertyValueTest extends AbstractQOMTest {
                                 QueryObjectModelFactory.JCR_OPERATOR_EQUAL_TO,
                                 qf.literal(vf.createValue(TEXT))
                         )
-                ), null, null).execute();
-        checkResult(result, new Node[]{n2});
+                ), null, null);
+        checkQOM(qom, new Node[]{n2});
     }
 }

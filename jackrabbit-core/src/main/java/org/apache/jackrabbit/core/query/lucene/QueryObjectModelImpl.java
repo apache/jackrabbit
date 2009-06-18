@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.core.ItemManager;
@@ -57,14 +58,17 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      * @param index   the search index.
      * @param propReg the property type registry.
      * @param qomTree the query object model tree.
+     * @throws InvalidQueryException if the QOM tree is invalid.
      */
     public QueryObjectModelImpl(SessionImpl session,
                                 ItemManager itemMgr,
                                 SearchIndex index,
                                 PropertyTypeRegistry propReg,
-                                QueryObjectModelTree qomTree) {
+                                QueryObjectModelTree qomTree)
+            throws InvalidQueryException {
         super(session, itemMgr, index, propReg);
         this.qomTree = qomTree;
+        checkNodeTypes();
         extractBindVariableNames();
     }
 
@@ -154,6 +158,28 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
             }, null);
         } catch (Exception e) {
             // will never happen
+        }
+    }
+
+    /**
+     * Checks if the selector node types are valid.
+     *
+     * @throws InvalidQueryException if one of the selector node types is
+     *                               unknown.
+     */
+    private void checkNodeTypes() throws InvalidQueryException {
+        try {
+            qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
+                public Object visit(SelectorImpl node, Object data) throws Exception {
+                    String ntName = node.getNodeTypeName();
+                    if (!session.getNodeTypeManager().hasNodeType(ntName)) {
+                        throw new Exception(ntName + " is not a known node type");
+                    }
+                    return super.visit(node, data);
+                }
+            }, null);
+        } catch (Exception e) {
+            throw new InvalidQueryException(e.getMessage());
         }
     }
 }

@@ -20,9 +20,9 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.query.Query;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>UpperLowerCaseTest</code> performs tests with upper- and lower-case
@@ -168,15 +168,16 @@ public class UpperLowerCaseTest extends AbstractQOMTest {
                               int type,
                               boolean[] matches) throws RepositoryException {
         for (int i = 0; i < literals.length; i++) {
-            Query query = createQuery(operand, toUpper, operator, vf.createValue(literals[i], type));
-            checkResult(query.execute(), matches[i] ? new Node[]{node} : new Node[0]);
+            QueryObjectModel qom = createQuery(operand, toUpper, operator, vf.createValue(literals[i], type));
+            checkQOM(qom, matches[i] ? new Node[]{node} : new Node[0]);
         }
     }
     
-    private Query createQuery(DynamicOperand operand,
-                              boolean toUpper,
-                              String operator,
-                              Value literal) throws RepositoryException {
+    private QueryObjectModel createQuery(DynamicOperand operand,
+                                         boolean toUpper,
+                                         String operator,
+                                         Value literal)
+            throws RepositoryException {
         if (toUpper) {
             operand = qf.upperCase(operand);
         } else {

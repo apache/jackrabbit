@@ -20,8 +20,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModelFactory;
-import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.RowIterator;
+import javax.jcr.query.Query;
 
 /**
  * <code>FullTextSearchScoreTest</code> contains fulltext search score tests.
@@ -41,7 +42,7 @@ public class FullTextSearchScoreTest extends AbstractQOMTest {
     }
 
     public void testOrdering() throws RepositoryException {
-        QueryResult result = qf.createQuery(
+        QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.fullTextSearch("s", null, "fox"),
@@ -49,21 +50,25 @@ public class FullTextSearchScoreTest extends AbstractQOMTest {
                 ),
                 new Ordering[]{qf.ascending(qf.fullTextSearchScore("s"))},
                 null
-        ).execute();
-
-        RowIterator rows = result.getRows();
-        double previousScore = Double.NaN;
-        while (rows.hasNext()) {
-            double score = rows.nextRow().getScore("s");
-            if (!Double.isNaN(previousScore)) {
-                assertTrue("wrong order", previousScore <= score);
+        );
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                RowIterator rows = query.execute().getRows();
+                double previousScore = Double.NaN;
+                while (rows.hasNext()) {
+                    double score = rows.nextRow().getScore("s");
+                    if (!Double.isNaN(previousScore)) {
+                        assertTrue("wrong order", previousScore <= score);
+                    }
+                    previousScore = score;
+                }
+                return null;
             }
-            previousScore = score;
-        }
+        });
     }
 
     public void testConstraint() throws RepositoryException {
-        QueryResult result = qf.createQuery(
+        QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.and(
@@ -78,14 +83,18 @@ public class FullTextSearchScoreTest extends AbstractQOMTest {
                 ),
                 new Ordering[]{qf.descending(qf.fullTextSearchScore("s"))},
                 null
-        ).execute();
-
-        RowIterator rows = result.getRows();
-        while (rows.hasNext()) {
-            double score = rows.nextRow().getScore("s");
-            if (!Double.isNaN(score)) {
-                assertTrue("wrong full text search score", Double.MIN_VALUE < score);
+        );
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                RowIterator rows = query.execute().getRows();
+                while (rows.hasNext()) {
+                    double score = rows.nextRow().getScore("s");
+                    if (!Double.isNaN(score)) {
+                        assertTrue("wrong full text search score", Double.MIN_VALUE < score);
+                    }
+                }
+                return null;
             }
-        }
+        });
     }
 }

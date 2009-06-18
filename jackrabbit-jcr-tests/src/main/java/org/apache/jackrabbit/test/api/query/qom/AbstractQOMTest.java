@@ -29,6 +29,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.query.qom.QueryObjectModel;
 
 import org.apache.jackrabbit.test.api.query.AbstractQueryTest;
 
@@ -51,6 +52,15 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
     protected void bindVariableValue(Query q, String var, Value value)
             throws RepositoryException {
         q.bindValue(var, value);
+    }
+
+    protected void checkResultOrder(QueryObjectModel qom,
+                                    String[] selectorNames,
+                                    Node[][] nodes)
+            throws RepositoryException {
+        checkResultOrder(qom.execute(), selectorNames, nodes);
+        checkResultOrder(qm.createQuery(qom.getStatement(), Query.JCR_SQL2).execute(),
+                selectorNames, nodes);
     }
 
     protected void checkResultOrder(QueryResult result,
@@ -84,6 +94,43 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         }
 
         assertEquals("wrong result order", expectedPaths, resultPaths);
+    }
+
+    /**
+     * Checks the query object model by executing it directly and matching the
+     * result against the given <code>nodes</code>. Then the QOM is executed
+     * again using {@link QueryObjectModel#getStatement()} with {@link
+     * Query#JCR_SQL2}.
+     *
+     * @param qom   the query object model to check.
+     * @param nodes the result nodes.
+     * @throws RepositoryException if an error occurs while executing the
+     *                             query.
+     */
+    protected void checkQOM(QueryObjectModel qom, Node[] nodes)
+            throws RepositoryException {
+        checkResult(qom.execute(), nodes);
+        checkResult(qm.createQuery(qom.getStatement(), Query.JCR_SQL2).execute(), nodes);
+    }
+
+    /**
+     * Checks the query object model by executing it directly and matching the
+     * result against the given <code>nodes</code>. Then the QOM is executed
+     * again using {@link QueryObjectModel#getStatement()} with
+     * {@link Query#JCR_SQL2}.
+     *
+     * @param qom           the query object model to check.
+     * @param selectorNames the selector names of the qom.
+     * @param nodes         the result nodes.
+     * @throws RepositoryException if an error occurs while executing the
+     *                             query.
+     */
+    protected void checkQOM(QueryObjectModel qom,
+                            String[] selectorNames,
+                            Node[][] nodes) throws RepositoryException {
+        checkResult(qom.execute(), selectorNames, nodes);
+        checkResult(qm.createQuery(qom.getStatement(), Query.JCR_SQL2).execute(),
+                selectorNames, nodes);
     }
 
     protected void checkResult(QueryResult result,
@@ -144,5 +191,28 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Calls back the <code>callable</code> first with the <code>qom</code> and
+     * then a JCR_SQL2 query created from {@link QueryObjectModel#getStatement()}.
+     *
+     * @param qom      a query object model.
+     * @param callable the callback.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected void forQOMandSQL2(QueryObjectModel qom, Callable callable)
+            throws RepositoryException {
+        List queries = new ArrayList();
+        queries.add(qom);
+        queries.add(qm.createQuery(qom.getStatement(), Query.JCR_SQL2));
+        for (Iterator it = queries.iterator(); it.hasNext();) {
+            callable.call((Query) it.next());
+        }
+    }
+
+    protected interface Callable {
+
+        public Object call(Query query) throws RepositoryException;
     }
 }

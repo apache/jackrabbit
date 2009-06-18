@@ -22,6 +22,7 @@ import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModel;
 
 import java.util.Calendar;
 import java.math.BigDecimal;
@@ -68,62 +69,62 @@ public class NodeLocalNameTest extends AbstractQOMTest {
     public void testBinaryLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.BINARY);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{node1});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{node1});
     }
 
     public void testDateLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Calendar.getInstance());
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testDoubleLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(Math.PI);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testDecimalLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(new BigDecimal(283));
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testLongLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(283);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testBooleanLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(true);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testNameLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.NAME);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{node1});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{node1});
     }
 
     public void testPathLiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue(
                 nodeLocalName, PropertyType.PATH);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{node1});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{node1});
 
         literal = superuser.getValueFactory().createValue(
                 node1.getPath(), PropertyType.PATH);
-        q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
 
         literal = superuser.getValueFactory().createValue(
                 nodeName1 + "/" + nodeName1, PropertyType.PATH);
-        q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testReferenceLiteral() throws RepositoryException {
@@ -132,8 +133,8 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         }
         superuser.save();
         Value literal = superuser.getValueFactory().createValue(node1);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testWeakReferenceLiteral() throws RepositoryException {
@@ -142,14 +143,14 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         }
         superuser.save();
         Value literal = superuser.getValueFactory().createValue(node1, true);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testURILiteral() throws RepositoryException {
         Value literal = superuser.getValueFactory().createValue("http://example.com", PropertyType.URI);
-        Query q = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
-        checkResult(q.execute(), new Node[]{});
+        QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
+        checkQOM(qom, new Node[]{});
     }
 
     public void testEqualTo() throws RepositoryException {
@@ -197,8 +198,8 @@ public class NodeLocalNameTest extends AbstractQOMTest {
                                             boolean matches)
             throws RepositoryException {
         Value value = superuser.getValueFactory().createValue(literal);
-        Query q = createQuery(operator, value);
-        checkResult(q.execute(), matches ? new Node[]{node1} : new Node[0]);
+        QueryObjectModel qom = createQuery(operator, value);
+        checkQOM(qom, matches ? new Node[]{node1} : new Node[0]);
     }
 
     private String createLexicographicallyGreater(String name) {
@@ -213,7 +214,7 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         return tmp.toString();
     }
 
-    private Query createQuery(String operator, Value literal)
+    private QueryObjectModel createQuery(String operator, Value literal)
             throws RepositoryException {
         return qf.createQuery(
                 qf.selector(testNodeType, "s"),

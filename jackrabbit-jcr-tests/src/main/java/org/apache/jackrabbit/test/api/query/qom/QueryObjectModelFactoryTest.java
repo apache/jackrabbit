@@ -175,10 +175,10 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#column(String, String, String)}
      */
     public void testColumn() throws RepositoryException {
-        Column col = qf.column(SELECTOR_NAME1, propertyName1, null);
+        Column col = qf.column(SELECTOR_NAME1, propertyName1, propertyName1);
         assertEquals("Wrong selector name", SELECTOR_NAME1, col.getSelectorName());
         assertEquals("Wrong property name", propertyName1, col.getPropertyName());
-        assertNull("Column name must be null", col.getColumnName());
+        assertEquals("Wrong column name", propertyName1, col.getColumnName());
     }
 
     /**
@@ -264,7 +264,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
         PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         Ordering ordering = qf.ascending(propValue);
-        Column column = qf.column(SELECTOR_NAME1, propertyName1, null);
+        Column column = qf.column(SELECTOR_NAME1, propertyName1, propertyName1);
         QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, new Column[]{column});
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);
@@ -311,7 +311,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         PropertyExistence propExist = qf.propertyExistence(SELECTOR_NAME1, propertyName1);
         PropertyValue propValue = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         Ordering ordering = qf.ascending(propValue);
-        Column column = qf.column(SELECTOR_NAME1, propertyName1, null);
+        Column column = qf.column(SELECTOR_NAME1, propertyName1, propertyName1);
         QueryObjectModel qom = qf.createQuery(selector, propExist,
                 new Ordering[]{ordering}, new Column[]{column});
         assertTrue("Not a selector source", qom.getSource() instanceof Selector);

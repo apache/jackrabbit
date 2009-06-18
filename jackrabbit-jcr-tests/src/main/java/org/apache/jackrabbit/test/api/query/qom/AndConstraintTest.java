@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test.api.query.qom;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Query;
 
 /**
  * <code>AndConstraintTest</code> contains tests that check AND constraints.
@@ -45,6 +46,13 @@ public class AndConstraintTest extends AbstractQOMTest {
                 null,
                 null
         ).execute();
+        checkResult(result, new Node[]{n1});
+
+        String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                "ISDESCENDANTNODE(s, [" + testRootNode.getPath() + "]) " +
+                "AND s.[" + propertyName1 + "] IS NOT NULL " +
+                "AND s.[" + propertyName2 + "] IS NOT NULL";
+        result = qm.createQuery(stmt, Query.JCR_SQL2).execute();
         checkResult(result, new Node[]{n1});
     }
 }

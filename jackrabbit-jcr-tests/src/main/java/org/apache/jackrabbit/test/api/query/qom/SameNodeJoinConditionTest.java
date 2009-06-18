@@ -18,7 +18,6 @@ package org.apache.jackrabbit.test.api.query.qom;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.JoinCondition;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelConstants;
@@ -38,19 +37,17 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
         n1 = testRootNode.addNode(nodeName1, testNodeType);
         n2 = n1.addNode(nodeName2, testNodeType);
         n2.addMixin(mixReferenceable);
-        testRootNode.save();
+        superuser.save();
     }
 
     public void testInnerJoin() throws RepositoryException {
-        QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, (String) null);
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{n1, n1}, {n2, n2}});
+        QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, null);
+        checkQOM(qom, new Node[][]{{n1, n1}, {n2, n2}});
     }
 
     public void testInnerJoinWithPath() throws RepositoryException {
         QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, nodeName2);
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{n2, n1}});
+        checkQOM(qom, new Node[][]{{n2, n1}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
@@ -63,14 +60,12 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                qf.descendantNode(LEFT, testRoot),
                null, null);
 
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{n1, null}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n1, null}, {n2, n2}});
     }
 
     public void testLeftOuterJoinWithPath() throws RepositoryException {
         QueryObjectModel qom = createQomQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, nodeName2);
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{n1, null}, {n2, n1}});
+        checkQOM(qom, new Node[][]{{n1, null}, {n2, n1}});
     }
 
     public void testRightOuterJoin() throws RepositoryException {
@@ -83,8 +78,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                 qf.descendantNode(RIGHT, testRoot),
                 null, null);
 
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{null, n1}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{null, n1}, {n2, n2}});
     }
 
     public void testRightOuterJoinWithPath() throws RepositoryException {
@@ -97,8 +91,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
                 qf.descendantNode(RIGHT, testRoot),
                 null, null);
 
-        QueryResult result = qom.execute();
-        checkResult(result, new Node[][]{{n2, n1}, {null, n2}});
+        checkQOM(qom, new Node[][]{{n2, n1}, {null, n2}});
     }
 
     //-----------------------------< utilities >--------------------------------

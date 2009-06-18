@@ -23,6 +23,7 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
+import javax.jcr.query.qom.QueryObjectModel;
 
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -33,24 +34,24 @@ public class SameNodeTest extends AbstractQOMTest {
 
     public void testSameNode() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.sameNode("s", testRoot + "/" + nodeName1), null, null);
-        checkResult(q.execute(), new Node[]{n});
+        checkQOM(qom, new Node[]{n});
     }
 
     public void testPathDoesNotExist() throws RepositoryException {
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.sameNode("s", testRoot + "/" + nodeName1),
                 null, null);
-        checkResult(q.execute(), new Node[]{});
+        checkQOM(qom, new Node[]{});
     }
 
     public void testChildNodesDoNotMatchSelector()
             throws RepositoryException, NotExecutableException {
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator it = ntMgr.getPrimaryNodeTypes();
@@ -59,9 +60,9 @@ public class SameNodeTest extends AbstractQOMTest {
             NodeType nt = it.nextNodeType();
             if (!testNt.isNodeType(nt.getName())) {
                 // perform test
-                Query q = qf.createQuery(qf.selector(nt.getName(), "s"),
+                QueryObjectModel qom = qf.createQuery(qf.selector(nt.getName(), "s"),
                         qf.sameNode("s", testRoot + "/" + nodeName1), null, null);
-                checkResult(q.execute(), new Node[]{});
+                checkQOM(qom, new Node[]{});
                 return;
             }
         }
@@ -78,15 +79,32 @@ public class SameNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s " +
+                    "WHERE ISSAMENODE(s, [" + testPath + "]";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISSAMENODE() with relative path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testSyntacticallyInvalidPath() throws RepositoryException {
+        String invalidPath = testRoot + "/" + nodeName1 + "[";
         try {
             Query q = qf.createQuery(qf.selector(testNodeType, "s"),
-                    qf.sameNode("s", testRoot + "/" + nodeName1 + "["),
+                    qf.sameNode("s", invalidPath),
                     null, null);
             q.execute();
             fail("SameNode with syntactically invalid path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s " +
+                    "WHERE ISSAMENODE(s, [" + invalidPath + "]";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISSAMENODE() with syntactically invalid path argument must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }
@@ -101,6 +119,13 @@ public class SameNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s " +
+                    "WHERE ISSAMENODE(x, [" + testRoot + "]";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISSAMENODE with an invalid selector name must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
-
 }
