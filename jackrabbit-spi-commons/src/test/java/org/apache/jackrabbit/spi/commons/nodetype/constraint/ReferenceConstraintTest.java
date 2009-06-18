@@ -38,7 +38,7 @@ public class ReferenceConstraintTest extends ValueConstraintTest {
         return PropertyType.REFERENCE;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
+    protected String[] getInvalidQDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
         return new String[] {"12345", "", "abc"};
     }
 
@@ -46,7 +46,7 @@ public class ReferenceConstraintTest extends ValueConstraintTest {
         return new String[] {"12345", "abc", "jcr:abc"};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return new String[] {
                 resolver.getQName("12345").toString(),
                 resolver.getQName("abc").toString(),
@@ -67,5 +67,14 @@ public class ReferenceConstraintTest extends ValueConstraintTest {
         // not executable
     }
 
-    // TODO: add more
+    public void testGetDefinition() throws RepositoryException {
+        String[] qDefs = getQDefinitions();
+        for (int i = 0; i < qDefs.length; i++) {
+            ValueConstraint vc = createValueConstraint(qDefs[i]);
+            String jcrConstraint = vc.getDefinition(resolver);
+
+            assertFalse(qDefs[i].equals(jcrConstraint));
+            assertEquals(resolver.getJCRName(ValueConstraint.NAME_FACTORY.create(qDefs[i])), jcrConstraint);
+        }
+    }
 }

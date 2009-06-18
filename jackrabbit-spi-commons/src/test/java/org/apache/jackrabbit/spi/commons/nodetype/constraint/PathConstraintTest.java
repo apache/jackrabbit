@@ -37,7 +37,7 @@ public class PathConstraintTest extends ValueConstraintTest {
         return PropertyType.PATH;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
+    protected String[] getInvalidQDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
         return new String[] {"12345", "*"};
     }
 
@@ -45,12 +45,12 @@ public class PathConstraintTest extends ValueConstraintTest {
         return new String[] {"/abc/*", "/", "abc/*", "/*", "/abc/def"};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return new String[] {
-                resolver.getQPath("/abc").getString() + "/*",
+                resolver.getQPath("/abc").getString() + PathConstraint.WILDCARD,
                 resolver.getQPath("/").getString(),
-                resolver.getQPath("abc").getString() + "/*",
-                resolver.getQPath("/").getString() + "*",
+                resolver.getQPath("abc").getString() + PathConstraint.WILDCARD,
+                PathConstraint.WILDCARD,
                 resolver.getQPath("/abc/def").getString()};
     }
 
@@ -65,5 +65,14 @@ public class PathConstraintTest extends ValueConstraintTest {
         return valueFactory.create(23);
     }
 
-    // TODO: add more
+    public void testGetDefinition() throws RepositoryException {
+        String[] qDefs = getQDefinitions();
+        for (int i = 0; i < qDefs.length; i++) {
+            ValueConstraint vc = createValueConstraint(qDefs[i]);
+            String jcrConstraint = vc.getDefinition(resolver);
+
+            assertFalse(qDefs[i].equals(jcrConstraint));
+            assertTrue(getDefinitions()[i].equals(jcrConstraint));
+        }
+    }
 }

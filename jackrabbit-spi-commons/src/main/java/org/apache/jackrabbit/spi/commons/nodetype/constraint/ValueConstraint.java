@@ -45,10 +45,10 @@ public abstract class ValueConstraint implements QValueConstraint {
     // TODO improve. don't rely on a specific factory impl
     static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
-    private final String qualifiedDefinition;
+    private final String definition;
 
-    protected ValueConstraint(String qualifiedDefinition) {
-        this.qualifiedDefinition = qualifiedDefinition;
+    protected ValueConstraint(String definition) {
+        this.definition = definition;
     }
 
     /**
@@ -60,49 +60,44 @@ public abstract class ValueConstraint implements QValueConstraint {
      * <code>ReferenceConstraint</code>) use the given <code>nsResolver</code>
      * to reflect the current mapping in the returned value.
      * In other words: subclasses, that need to make a conversion to JCR value
-     * must overwrite this and return a value that has all qualified names
-     * and path elements resolved.
+     * must overwrite this and return a value that has the <code>Name</code>s
+     * or <code>Path</code> properly resolved to their JCR representation.
      *
      * @return the definition of this constraint.
      * @see #getString ()
      * @param resolver name-path resolver
+     * @see NamePathResolver#getJCRName(org.apache.jackrabbit.spi.Name)
+     * @see NamePathResolver#getJCRPath(org.apache.jackrabbit.spi.Path) 
      */
     public String getDefinition(NamePathResolver resolver) {
-        return qualifiedDefinition;
+        return definition;
     }
 
+    //---------------------------------------------------< QValueConstraint >---
     /**
-     * By default the qualified definition is the same as the JCR definition.
-     *
-     * @return the internal definition String
-     */
+     * @see org.apache.jackrabbit.spi.QValueConstraint#getString()
+     */ 
     public String getString() {
-        return qualifiedDefinition;
+        return definition;
     }
 
+    //---------------------------------------------------< java.lang.Object >---
     /**
      * Same as {@link #getString()}
      * @return the internal definition String
+     * @see Object#toString()
      */
     public String toString() {
         return getString();
     }
 
     /**
-     * Check if the specified value matches the this constraint.
-     *
-     * @param value The value to be tested.
-     * @throws ConstraintViolationException If the specified value is
-     * <code>null</code> or does not matches the constraint.
-     * @throws RepositoryException If another error occurs.
+     * @see Object#equals(Object)
      */
-    public abstract void check(QValue value) throws ConstraintViolationException, RepositoryException;
-
-    //---------------------------------------------------< java.lang.Object >---
     public boolean equals(Object other) {
         return other == this
                 || other instanceof ValueConstraint
-                && qualifiedDefinition.equals(((ValueConstraint) other).qualifiedDefinition);
+                && definition.equals(((ValueConstraint) other).definition);
     }
 
     /**
@@ -112,120 +107,34 @@ public abstract class ValueConstraint implements QValueConstraint {
      * @see Object#hashCode()
      */
     public int hashCode() {
-        return qualifiedDefinition.hashCode();
+        return definition.hashCode();
     }
 
     //-----------------------------------< static factory and check methods >---
     /**
      * Create a new <code>ValueConstraint</code> from the String representation.
-     * Note, that the definition must be in the qualified format in case the type
-     * indicates {@link PropertyType#NAME}, {@link PropertyType#PATH} or {@link PropertyType#REFERENCE}
+     * Note, that the definition must be independant of session specific namespace
+     * mappings in case of the following constraint types:
+     * <ul><li>{@link PropertyType#NAME},</li>
+     * <li>{@link PropertyType#PATH} or</li>
+     * <li>{@link PropertyType#REFERENCE}</li>
+     * </ul>
      *
      * @param type required type
-     * @param qualifiedDefinition internal definition string
+     * @param definition The internal definition string.
      * @return a new value constraint
-     * @throws InvalidConstraintException if the constraint is not valid
+     * @throws InvalidConstraintException if the constraint is not valid.
+     * @see #create(int, String, NamePathResolver) for the corresponding
+     * method that allows to pass the JCR representation of a constraint
+     * definition.
      */
-    public static ValueConstraint create(int type, String qualifiedDefinition)
+    public static ValueConstraint create(int type, String definition)
         throws InvalidConstraintException {
-        if (qualifiedDefinition == null) {
+        if (definition == null) {
             throw new IllegalArgumentException("illegal definition (null)");
         }
         switch (type) {
             // constraints which are not qName sensitive
-            case PropertyType.STRING:
-            case PropertyType.URI:
-                return new StringConstraint(qualifiedDefinition);
-
-            case PropertyType.BOOLEAN:
-                return new BooleanConstraint(qualifiedDefinition);
-
-            case PropertyType.BINARY:
-                return new NumericConstraint(qualifiedDefinition);
-
-            case PropertyType.DATE:
-                return new DateConstraint(qualifiedDefinition);
-
-            case PropertyType.LONG:
-            case PropertyType.DOUBLE:
-            case PropertyType.DECIMAL:
-                return new NumericConstraint(qualifiedDefinition);
-
-            // qName sensitive constraints: create from qualified string
-            case PropertyType.NAME:
-                return NameConstraint.create(qualifiedDefinition);
-
-            case PropertyType.PATH:
-                return PathConstraint.create(qualifiedDefinition);
-
-            case PropertyType.REFERENCE:
-            case PropertyType.WEAKREFERENCE:
-                return ReferenceConstraint.create(qualifiedDefinition);
-
-            default:
-                throw new IllegalArgumentException("unknown/unsupported target type for constraint: "
-                        + PropertyType.nameFromValue(type));
-        }
-    }
-
-    /**
-     * Create a new <code>ValueConstraint</code> array from the String representation.
-     * Note, that the definition must be in the qualified format in case the type
-     * indicates {@link PropertyType#NAME}, {@link PropertyType#PATH} or {@link PropertyType#REFERENCE}
-     *
-     * @param type the required type
-     * @param qualifiedDefinition internal definition strings
-     * @return the array of constraints
-     * @throws InvalidConstraintException if one of the constraints is invalid
-     */
-    public static ValueConstraint[] create(int type, String[] qualifiedDefinition)
-            throws InvalidConstraintException {
-        if (qualifiedDefinition == null || qualifiedDefinition.length == 0) {
-            return ValueConstraint.EMPTY_ARRAY;
-        }
-        ValueConstraint[] ret = new ValueConstraint[qualifiedDefinition.length];
-        for (int i=0; i<ret.length; i++) {
-            ret[i] = ValueConstraint.create(type, qualifiedDefinition[i]);
-        }
-        return ret;
-    }
-
-    /**
-     * Create a new <code>ValueConstraint</code> array from the JCR representation.
-     *
-     * @param type the required type
-     * @param definition definition strings
-     * @param resolver name-path resolver
-     * @return the array of constraints
-     * @throws InvalidConstraintException if one of the constraints is invalid
-     */
-    public static ValueConstraint[] create(int type, String definition[], NamePathResolver resolver)
-            throws InvalidConstraintException {
-        if (definition == null || definition.length == 0) {
-            return ValueConstraint.EMPTY_ARRAY;
-        }
-        ValueConstraint[] ret = new ValueConstraint[definition.length];
-        for (int i=0; i<ret.length; i++) {
-            ret[i] = ValueConstraint.create(type, definition[i], resolver);
-        }
-        return ret;
-    }
-
-    /**
-     *
-     * @param type required type
-     * @param definition JCR definition
-     * @param resolver name-path resolver
-     * @return a new value constraint
-     * @throws InvalidConstraintException if the constraint is invalid
-     */
-    public static ValueConstraint create(int type, String definition,
-                                         NamePathResolver resolver)
-            throws InvalidConstraintException {
-        if (definition == null) {
-            throw new IllegalArgumentException("Illegal definition (null) for ValueConstraint.");
-        }
-        switch (type) {
             case PropertyType.STRING:
             case PropertyType.URI:
                 return new StringConstraint(definition);
@@ -245,14 +154,111 @@ public abstract class ValueConstraint implements QValueConstraint {
                 return new NumericConstraint(definition);
 
             case PropertyType.NAME:
-                return NameConstraint.create(definition, resolver);
+                return NameConstraint.create(definition);
 
             case PropertyType.PATH:
-                return PathConstraint.create(definition, resolver);
+                return PathConstraint.create(definition);
 
             case PropertyType.REFERENCE:
             case PropertyType.WEAKREFERENCE:
-                return ReferenceConstraint.create(definition, resolver);
+                return ReferenceConstraint.create(definition);
+
+            default:
+                throw new IllegalArgumentException("unknown/unsupported target type for constraint: "
+                        + PropertyType.nameFromValue(type));
+        }
+    }
+
+    /**
+     * Create a new <code>ValueConstraint</code> array from the String
+     * representation. Note, that the definition must be in the internal format
+     * in case of the following types:
+     * <ul><li>{@link PropertyType#NAME},</li>
+     * <li>{@link PropertyType#PATH} or</li>
+     * <li>{@link PropertyType#REFERENCE}</li>
+     * </ul>
+     *
+     * @param type the required type
+     * @param definition internal definition strings
+     * @return the array of constraints
+     * @throws InvalidConstraintException if one of the constraints is invalid
+     */
+    public static ValueConstraint[] create(int type, String[] definition)
+            throws InvalidConstraintException {
+        if (definition == null || definition.length == 0) {
+            return ValueConstraint.EMPTY_ARRAY;
+        }
+        ValueConstraint[] ret = new ValueConstraint[definition.length];
+        for (int i=0; i<ret.length; i++) {
+            ret[i] = ValueConstraint.create(type, definition[i]);
+        }
+        return ret;
+    }
+
+    /**
+     * Create a new <code>ValueConstraint</code> array from the specified JCR
+     * representations.
+     *
+     * @param type the required type
+     * @param jcrDefinition The definition strings as exposed through the JCR API.
+     * @param resolver name-path resolver
+     * @return the array of constraints
+     * @throws InvalidConstraintException if one of the constraints is invalid
+     */
+    public static ValueConstraint[] create(int type, String jcrDefinition[], NamePathResolver resolver)
+            throws InvalidConstraintException {
+        if (jcrDefinition == null || jcrDefinition.length == 0) {
+            return ValueConstraint.EMPTY_ARRAY;
+        }
+        ValueConstraint[] ret = new ValueConstraint[jcrDefinition.length];
+        for (int i=0; i<ret.length; i++) {
+            ret[i] = ValueConstraint.create(type, jcrDefinition[i], resolver);
+        }
+        return ret;
+    }
+
+    /**
+     *
+     * @param type required type
+     * @param jcrDefinition A JCR representation of a value constraint definition.
+     * @param resolver name-path resolver
+     * @return a new value constraint
+     * @throws InvalidConstraintException if the constraint is invalid
+     */
+    public static ValueConstraint create(int type, String jcrDefinition,
+                                         NamePathResolver resolver)
+            throws InvalidConstraintException {
+        if (jcrDefinition == null) {
+            throw new IllegalArgumentException("Illegal definition (null) for ValueConstraint.");
+        }
+        switch (type) {
+            case PropertyType.STRING:
+            case PropertyType.URI:
+                return new StringConstraint(jcrDefinition);
+
+            case PropertyType.BOOLEAN:
+                return new BooleanConstraint(jcrDefinition);
+
+            case PropertyType.BINARY:
+                return new NumericConstraint(jcrDefinition);
+
+            case PropertyType.DATE:
+                return new DateConstraint(jcrDefinition);
+
+            case PropertyType.LONG:
+            case PropertyType.DOUBLE:
+            case PropertyType.DECIMAL:
+                return new NumericConstraint(jcrDefinition);
+
+            case PropertyType.NAME:
+                return NameConstraint.create(jcrDefinition, resolver);
+
+            case PropertyType.PATH:
+                return PathConstraint.create(jcrDefinition, resolver);
+
+            case PropertyType.REFERENCE:
+            case PropertyType.WEAKREFERENCE:
+                return ReferenceConstraint.create(jcrDefinition, resolver);
 
             default:
                 throw new IllegalArgumentException("Unknown/unsupported target type for constraint: " + PropertyType.nameFromValue(type));

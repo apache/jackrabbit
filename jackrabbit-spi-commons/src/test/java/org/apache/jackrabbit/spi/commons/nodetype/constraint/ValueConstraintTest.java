@@ -57,18 +57,18 @@ public abstract class ValueConstraintTest extends TestCase {
 
     protected abstract int getType();
 
-    protected abstract String[] getInvalidQualifiedDefinitions() throws RepositoryException;
+    protected abstract String[] getInvalidQDefinitions() throws RepositoryException;
 
     protected abstract String[] getDefinitions() throws RepositoryException;
 
-    protected abstract String[] getQualifiedDefinitions() throws RepositoryException;
+    protected abstract String[] getQDefinitions() throws RepositoryException;
 
     protected abstract QValue[] createNonMatchingValues() throws RepositoryException;
 
     protected abstract QValue createOtherValueType() throws RepositoryException;
 
 
-    private ValueConstraint createValueConstraint(String qDefinition) throws RepositoryException {
+    protected ValueConstraint createValueConstraint(String qDefinition) throws RepositoryException {
         return ValueConstraint.create(getType(), qDefinition);
     }
 
@@ -95,7 +95,7 @@ public abstract class ValueConstraintTest extends TestCase {
     }
 
     public void testCreateValueConstraints2() throws RepositoryException {
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
             assertEquals(qDefs[i], vc.getString());
@@ -104,7 +104,7 @@ public abstract class ValueConstraintTest extends TestCase {
 
     public void testCreateInvalidValueConstraints() throws RepositoryException {
         try {
-            String[] invalidQDefs = getInvalidQualifiedDefinitions();
+            String[] invalidQDefs = getInvalidQDefinitions();
             for (int i = 0; i < invalidQDefs.length; i++) {
                 createValueConstraint(invalidQDefs[i]);
                 fail("Creating an invalid definition should throw InvalidConstraintException");
@@ -117,23 +117,25 @@ public abstract class ValueConstraintTest extends TestCase {
     }
 
     public void testGetDefinition() throws RepositoryException {
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
-            assertNotNull(vc.getDefinition(resolver));
+            String jcrConstraint = vc.getDefinition(resolver);
+            assertNotNull(jcrConstraint);
+            assertEquals(qDefs[i], jcrConstraint);
         }
     }
 
-    public void testGetQualifiedDefinition() throws RepositoryException {
-        String[] qDefs = getQualifiedDefinitions();
+    public void testGetString() throws RepositoryException {
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
-            assertNotNull(vc.getString());
+            assertEquals(qDefs[i], vc.getString());
         }
     }
 
     public void testCheckNullValue() throws RepositoryException {
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
             try {
@@ -148,7 +150,7 @@ public abstract class ValueConstraintTest extends TestCase {
     public void testCheckNonMatchingValue() throws RepositoryException {
         QValue[] nonMatching = createNonMatchingValues();
 
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             if (i >= nonMatching.length) {
                 break;
@@ -166,7 +168,7 @@ public abstract class ValueConstraintTest extends TestCase {
 
     public void testCheckWrongValueType() throws RepositoryException {
         QValue val = createOtherValueType();
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
             try {
@@ -179,7 +181,7 @@ public abstract class ValueConstraintTest extends TestCase {
     }
 
     public void testEquals() throws RepositoryException {
-        String[] qDefs = getQualifiedDefinitions();
+        String[] qDefs = getQDefinitions();
         for (int i = 0; i < qDefs.length; i++) {
             ValueConstraint vc = createValueConstraint(qDefs[i]);
             ValueConstraint vc2 = createValueConstraint(qDefs[i]);

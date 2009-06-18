@@ -43,7 +43,7 @@ public class BooleanConstraintTest extends ValueConstraintTest {
         return PropertyType.BOOLEAN;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() {
+    protected String[] getInvalidQDefinitions() {
         return new String[] {"test", "/abc/d", "12345"};
     }
 
@@ -51,7 +51,7 @@ public class BooleanConstraintTest extends ValueConstraintTest {
         return new String[] { Boolean.TRUE.toString()};
     }
 
-    protected String[] getQualifiedDefinitions() {
+    protected String[] getQDefinitions() {
         return getDefinitions();
     }
 

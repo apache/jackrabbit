@@ -37,7 +37,7 @@ public class DateConstraintTest extends ValueConstraintTest {
         return PropertyType.DATE;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() {
+    protected String[] getInvalidQDefinitions() {
         return new String[] {"abc", "-18", "1234567"};
     }
 
@@ -57,7 +57,7 @@ public class DateConstraintTest extends ValueConstraintTest {
         return new String[] {b.toString()};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return getDefinitions();
     }
 

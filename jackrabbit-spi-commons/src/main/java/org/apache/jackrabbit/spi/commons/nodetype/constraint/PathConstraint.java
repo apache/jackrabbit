@@ -23,6 +23,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
@@ -35,63 +36,72 @@ import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
  */
 class PathConstraint extends ValueConstraint {
 
+    static final String WILDCARD = Path.DELIMITER + NameConstants.ANY_NAME.toString();
+    static final String JCR_WILDCARD = "/*";
+    // TODO improve. don't rely on a specific factory impl
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+
     private final Path path;
     private final boolean deep;
 
-    static PathConstraint create(String qualifiedDefinition) throws InvalidConstraintException {
-        // constraint format: qualified absolute or relative path with optional trailing wildcard
-        boolean deep = qualifiedDefinition.endsWith("\t{}*");
-        Path path;
-        // TODO improve. don't rely on a specific factory impl
-        if (deep) {
-            path = PathFactoryImpl.getInstance().create(qualifiedDefinition.substring(0, qualifiedDefinition.length() - 4));
+    static PathConstraint create(String pathString) throws InvalidConstraintException {
+        // constraint format: String representation of an absolute or relative
+        // Path object with optionally having a trailing wildcard
+        if (WILDCARD.equals(pathString)) {
+            return new PathConstraint(pathString, PATH_FACTORY.getRootPath(), true);
         } else {
-            path = PathFactoryImpl.getInstance().create(qualifiedDefinition);
+            boolean deep = pathString.endsWith(WILDCARD);
+            Path path;
+            if (deep) {
+                path = PATH_FACTORY.create(pathString.substring(0, pathString.length() - WILDCARD.length()));
+            } else {
+                path = PATH_FACTORY.create(pathString);
+            }
+            return new PathConstraint(pathString, path, deep);
         }
-        return new PathConstraint(qualifiedDefinition, path, deep);
     }
 
-    static PathConstraint create(String definition, PathResolver resolver)
+    static PathConstraint create(String jcrPath, PathResolver resolver)
             throws InvalidConstraintException {
         try {
             // constraint format: absolute or relative path with optional
             // trailing wildcard
-            boolean deep = definition.endsWith("/*");
-            if (deep) {
-                // trim trailing wildcard before building path
-                if (definition.equals("/*")) {
-                    definition = "/";
-                } else {
-                    definition = definition.substring(0, definition.length() - 2);
+            boolean deep = jcrPath.endsWith(JCR_WILDCARD);
+            Path path;
+            if (JCR_WILDCARD.equals(jcrPath)) {
+                path = PATH_FACTORY.getRootPath();
+            } else {
+                if (deep) {
+                    // trim trailing wildcard before building path
+                    jcrPath = jcrPath.substring(0, jcrPath.length() - JCR_WILDCARD.length());
                 }
+                path = resolver.getQPath(jcrPath);
             }
-            Path path = resolver.getQPath(definition);
-            StringBuffer qualifiedDefinition = new StringBuffer(path.getString());
+            StringBuffer definition = new StringBuffer(path.getString());
             if (deep) {
-                qualifiedDefinition.append(Path.DELIMITER);
-                qualifiedDefinition.append(NameConstants.ANY_NAME);
+                definition.append(WILDCARD);
             }
-            return new PathConstraint(qualifiedDefinition.toString(), path, deep);
+            return new PathConstraint(definition.toString(), path, deep);
         } catch (NameException e) {
-            String msg = "Invalid path expression specified as value constraint: " + definition;
+            String msg = "Invalid path expression specified as value constraint: " + jcrPath;
             log.debug(msg);
             throw new InvalidConstraintException(msg, e);
         } catch (NamespaceException e) {
-            String msg = "Invalid path expression specified as value constraint: " + definition;
+            String msg = "Invalid path expression specified as value constraint: " + jcrPath;
             log.debug(msg);
             throw new InvalidConstraintException(msg, e);
         }
     }
 
-    private PathConstraint(String qualifiedDefinition, Path path, boolean deep) throws InvalidConstraintException {
-        super(qualifiedDefinition);
+    private PathConstraint(String pathString, Path path, boolean deep) throws InvalidConstraintException {
+        super(pathString);
         this.path = path;
         this.deep = deep;
     }
 
     /**
      * Uses {@link NamePathResolver#getJCRPath(Path)} to convert the
-     * qualified <code>Path</code> into a JCR path.
+     * <code>Path</code> present with this constraint into a JCR path.
      *
      * @see ValueConstraint#getDefinition(NamePathResolver)
      * @param resolver name-path resolver
@@ -113,7 +123,7 @@ class PathConstraint extends ValueConstraint {
     }
 
     /**
-     * @see ValueConstraint#check(QValue)
+     * @see org.apache.jackrabbit.spi.QValueConstraint#check(QValue)
      */
     public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {

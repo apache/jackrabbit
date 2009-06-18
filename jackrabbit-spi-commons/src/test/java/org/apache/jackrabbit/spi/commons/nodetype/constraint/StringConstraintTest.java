@@ -49,7 +49,7 @@ public class StringConstraintTest extends ValueConstraintTest {
         return PropertyType.STRING;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
+    protected String[] getInvalidQDefinitions() throws NamespaceException, IllegalNameException, MalformedPathException {
         return new String[] {"[abc"};
     }
 
@@ -57,7 +57,7 @@ public class StringConstraintTest extends ValueConstraintTest {
         return new String[] {"[abc] constraint", "abc"};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return getDefinitions();
     }
 
