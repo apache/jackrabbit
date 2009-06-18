@@ -1,6 +1,7 @@
 NodeTypeName
   nt:linkedFile
 Supertypes
+  nt:base
   nt:hierarchyNode
 IsMixin
   false

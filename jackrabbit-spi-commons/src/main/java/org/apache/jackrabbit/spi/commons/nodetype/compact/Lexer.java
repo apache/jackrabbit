@@ -51,6 +51,7 @@ public class Lexer {
     public static final String[] MANDATORY = new String[]{"mandatory", "man", "m"};
     public static final String[] PROTECTED = new String[]{"protected", "pro", "p"};
     public static final String[] MULTIPLE = new String[]{"multiple", "mul", "*"};
+    public static final String[] SNS = new String[]{"sns", "*", "multiple"};
     public static final String[] QUERYOPS = new String[]{"queryops", "qop"};
     public static final String[] NOFULLTEXT = new String[]{"nofulltext", "nof"};
     public static final String[] NOQUERYORDER = new String[]{"noqueryorder", "nqord"};
@@ -62,7 +63,8 @@ public class Lexer {
     public static final String[] IGNORE = new String[]{"IGNORE"};
     public static final String[] ABORT = new String[]{"ABORT"};
 
-    public static final String[] ATTRIBUTE;
+    public static final String[] PROP_ATTRIBUTE;
+    public static final String[] NODE_ATTRIBUTE;
     static {
         ArrayList<String> attr = new ArrayList<String>();
         attr.addAll(Arrays.asList(PRIMARY));
@@ -79,7 +81,20 @@ public class Lexer {
         attr.addAll(Arrays.asList(COMPUTE));
         attr.addAll(Arrays.asList(IGNORE));
         attr.addAll(Arrays.asList(ABORT));
-        ATTRIBUTE = attr.toArray(new String[attr.size()]);
+        PROP_ATTRIBUTE = attr.toArray(new String[attr.size()]);
+        attr = new ArrayList<String>();
+        attr.addAll(Arrays.asList(PRIMARY));
+        attr.addAll(Arrays.asList(AUTOCREATED));
+        attr.addAll(Arrays.asList(MANDATORY));
+        attr.addAll(Arrays.asList(PROTECTED));
+        attr.addAll(Arrays.asList(SNS));
+        attr.addAll(Arrays.asList(COPY));
+        attr.addAll(Arrays.asList(VERSION));
+        attr.addAll(Arrays.asList(INITIALIZE));
+        attr.addAll(Arrays.asList(COMPUTE));
+        attr.addAll(Arrays.asList(IGNORE));
+        attr.addAll(Arrays.asList(ABORT));
+        NODE_ATTRIBUTE = attr.toArray(new String[attr.size()]);
     }
 
     public static final String QUEROPS_EQUAL = "=";

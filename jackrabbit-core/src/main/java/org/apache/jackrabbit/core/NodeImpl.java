@@ -328,7 +328,8 @@ public class NodeImpl extends ItemImpl implements Node {
                genValues = new InternalValue[]{InternalValue.create(new UUID(hist.getRootVersion().getUUID()))};
            }
 */
-        } else if (nt.getQName().equals(NameConstants.NT_HIERARCHYNODE)) {
+        } else if (nt.getQName().equals(NameConstants.NT_HIERARCHYNODE)
+                || nt.getQName().equals(NameConstants.MIX_CREATED)) {
             // nt:hierarchyNode node type
             if (name.equals(NameConstants.JCR_CREATED)) {
                 // jcr:created property

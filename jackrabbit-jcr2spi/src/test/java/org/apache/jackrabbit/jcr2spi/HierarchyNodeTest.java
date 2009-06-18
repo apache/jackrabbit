@@ -64,7 +64,6 @@ public class HierarchyNodeTest extends AbstractJCRTest {
         resourceProps.add(jcrPrefix+":lastModified");
         resourceProps.add(jcrPrefix+":mimeType");
         resourceProps.add(jcrPrefix+":data");
-        resourceProps.add(jcrPrefix+":uuid");
 
         try {
             Node folder = testRootNode.addNode("folder", ntFolder);

@@ -61,7 +61,7 @@ public abstract class AbstractQValueFactory implements QValueFactory {
         Name nodeType = propertyDefinition.getDeclaringNodeType();
         Name name = propertyDefinition.getName();
 
-        if (NameConstants.NT_HIERARCHYNODE.equals(nodeType) && NameConstants.JCR_CREATED.equals(name)) {
+        if ((NameConstants.NT_HIERARCHYNODE.equals(nodeType) || NameConstants.MIX_CREATED.equals(nodeType))&& NameConstants.JCR_CREATED.equals(name)) {
             return new QValue[] { create(Calendar.getInstance()) };
         } else if (NameConstants.NT_RESOURCE.equals(nodeType) && NameConstants.JCR_LASTMODIFIED.equals(name)) {
             return new QValue[] { create(Calendar.getInstance()) };

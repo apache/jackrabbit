@@ -278,6 +278,8 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         }
 
         Node resource = node.addNode("myResource", "nt:resource");
+        // nt:resource not longer referenceable since JCR 2.0
+        resource.addMixin("mix:referenceable");
         resource.setProperty("jcr:encoding", ENCODING);
         resource.setProperty("jcr:mimeType", "text/plain");
         resource.setProperty(
