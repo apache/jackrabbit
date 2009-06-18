@@ -104,7 +104,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @see #isInitialized()
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler,
-                           Map sharedState, Map options) {
+                           Map<String,?> sharedState, Map<String,?> options) {
         // common jaas state variables
         this.callbackHandler = callbackHandler;
         this.subject = subject;
@@ -116,13 +116,16 @@ public abstract class AbstractLoginModule implements LoginModule {
             RepositoryCallback repositoryCb = new RepositoryCallback();
             callbackHandler.handle(new Callback[]{repositoryCb});
 
-            // retrieve the principal-provider configured for this module.
-            // if not configured -> retrieve the provider from the callback.
             PrincipalProviderRegistry registry = repositoryCb.getPrincipalProviderRegistry();
+            // check if the class name of a PrincipalProvider implementation
+            // is present with the module configuration.
             if (options.containsKey(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS)) {
-                principalProviderClassName = (String) options.get(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS);
-                principalProvider = registry.getProvider(principalProviderClassName);
-            } else if (principalProviderClassName != null) {
+                Object pcOption = options.get(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS);
+                if (pcOption != null) {
+                    principalProviderClassName = pcOption.toString();
+                }
+            }
+            if (principalProviderClassName != null) {
                 principalProvider = registry.getProvider(principalProviderClassName);
             }
             if (principalProvider == null) {
@@ -526,7 +529,9 @@ public abstract class AbstractLoginModule implements LoginModule {
                     } else if (creds instanceof GuestCredentials) {
                        credentials = creds;
                     }
-                    sharedState.put(KEY_CREDENTIALS, credentials);
+                    if (credentials != null) {
+                        sharedState.put(KEY_CREDENTIALS, credentials);
+                    }
                 }
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");
@@ -534,10 +539,17 @@ public abstract class AbstractLoginModule implements LoginModule {
                 log.error("Credentials-Callback failed: " + e.getMessage() + ": try Name-Callback");
             }
         }
-        // ask subject if still no credentials
+        // if still no credentials -> try to retrieve them from the subject.
         if (null == credentials) {
             // try if subject contains SimpleCredentials
             Set<SimpleCredentials> preAuthCreds = subject.getPublicCredentials(SimpleCredentials.class);
+            if (!preAuthCreds.isEmpty()) {
+                credentials = preAuthCreds.iterator().next();
+            }
+        }
+        if (null == credentials) {
+            // try if subject contains GuestCredentials
+            Set<GuestCredentials> preAuthCreds = subject.getPublicCredentials(GuestCredentials.class);
             if (!preAuthCreds.isEmpty()) {
                 credentials = preAuthCreds.iterator().next();
             }
