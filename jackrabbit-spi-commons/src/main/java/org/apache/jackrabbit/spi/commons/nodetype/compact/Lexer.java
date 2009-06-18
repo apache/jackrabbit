@@ -189,6 +189,14 @@ public class Lexer {
     }
 
     /**
+     * Returns the system id
+     * @return the system id
+     */
+    public String getSystemId() {
+        return systemId;
+    }
+
+    /**
      * Creates a failure exception including the current line number and systemid.
      * @param message message
      * @throws ParseException the created exception
