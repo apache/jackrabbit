@@ -34,7 +34,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilderImpl;
 
 /**
  * <code>NodeTypeDefStore</code> ...
@@ -133,13 +132,13 @@ public class NodeTypeDefStore {
      * @return
      */
     public NodeTypeDef get(Name name) {
-        return (NodeTypeDef) ntDefs.get(name);
+        return ntDefs.get(name);
     }
 
     /**
      * @return
      */
-    public Collection all() {
+    public Collection<NodeTypeDef> all() {
         return Collections.unmodifiableCollection(ntDefs.values());
     }
 }
