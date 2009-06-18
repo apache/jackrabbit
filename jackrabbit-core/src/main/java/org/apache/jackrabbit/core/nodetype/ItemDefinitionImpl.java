@@ -50,7 +50,8 @@ abstract class ItemDefinitionImpl implements ItemDefinition {
     protected final NodeTypeManagerImpl ntMgr;
 
     /**
-     * The name/path resolver used to translate qualified names to JCR names.
+     * The name/path resolver used to translate <code>Name</code>s to JCR name
+     * strings.
      */
     protected final NamePathResolver resolver;
 

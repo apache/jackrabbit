@@ -79,10 +79,10 @@ public class NamePathResolverImpl extends DefaultNamePathResolver {
 
         //-------------------------------------------------------< NameResolver >---
         /**
-         * Parses the prefixed JCR name and returns the resolved qualified name.
+         * Parses the prefixed JCR name and returns the resolved <code>Name</code> object.
          *
-         * @param name prefixed JCR name
-         * @return qualified name
+         * @param name The JCR name string.
+         * @return The corresponding <code>Name</code>.
          * @throws IllegalNameException if the JCR name format is invalid
          * @throws NamespaceException if the namespace prefix can not be resolved
          */
@@ -91,14 +91,14 @@ public class NamePathResolverImpl extends DefaultNamePathResolver {
         }
 
         /**
-         * Returns the prefixed JCR name for the given qualified name.
+         * Returns the qualified JCR name for the given <code>Name</code>.
          * Note, that the JCR prefix is always retrieved from the NamespaceResolver
          * even if the name is in the defaut namespace. This is a special treatement
          * for query specific implementation, which defines a prefix for all namespace
          * URIs including the default namespace.
          *
-         * @param name qualified name
-         * @return prefixed JCR name
+         * @param name A <code>Name</code> object.
+         * @return The corresponding qualified JCR name string.
          * @throws NamespaceException if the namespace URI can not be resolved
          */
         public String getJCRName(Name name) throws NamespaceException {

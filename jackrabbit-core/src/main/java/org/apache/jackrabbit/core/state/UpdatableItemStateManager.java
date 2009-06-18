@@ -53,7 +53,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * on the returned object to make it persistent.
      *
      * @param id           the id of the node
-     * @param nodeTypeName qualified node type name
+     * @param nodeTypeName The node type name
      * @param parentId     parent node's id
      * @return a node state
      * @throws IllegalStateException if the manager is not in edit mode.
@@ -66,7 +66,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * i.e. not yet existing state. Call {@link #store}
      * on the returned object to make it persistent.
      *
-     * @param propName   qualified property name
+     * @param propName   property name
      * @param parentId   parent node Id
      * @return a property state
      * @throws IllegalStateException if the manager is not in edit mode.

@@ -158,9 +158,9 @@ public final class EventImpl implements JackrabbitEvent, Event {
     //-----------------------------------------------------------< EventImpl >
 
     /**
-     * Returns the qualified path of this event.
+     * Returns the <code>Path</code> of this event.
      *
-     * @return qualified path
+     * @return path
      * @throws RepositoryException if the path can't be constructed
      */
     public Path getQPath() throws RepositoryException {
