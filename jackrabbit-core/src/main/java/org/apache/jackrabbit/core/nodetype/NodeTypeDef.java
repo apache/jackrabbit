@@ -106,7 +106,7 @@ public class NodeTypeDef implements Cloneable {
         for (NodeDef nd: nodeDefs) {
             qNodeDefs[i++] = ((NodeDefImpl) nd).getQNodeDefinition();
         }
-        QPropertyDefinition[] qPropDefs = new QPropertyDefinition[nodeDefs.size()];
+        QPropertyDefinition[] qPropDefs = new QPropertyDefinition[propDefs.size()];
         i=0;
         for (PropDef pd: propDefs) {
             qPropDefs[i++] = ((PropDefImpl) pd).getQPropertyDefinition();
