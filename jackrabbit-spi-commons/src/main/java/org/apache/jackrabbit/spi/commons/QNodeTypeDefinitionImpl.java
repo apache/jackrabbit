@@ -170,7 +170,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         this(resolver.getQName(def.getName()),
                 getNames(def.getDeclaredSupertypeNames(), resolver), null, def.isMixin(),
                 def.isAbstract(), def.isQueryable(), def.hasOrderableChildNodes(),
-                resolver.getQName(def.getPrimaryItemName()),
+                def.getPrimaryItemName() == null ? null : resolver.getQName(def.getPrimaryItemName()),
                 createQPropertyDefinitions(def.getDeclaredPropertyDefinitions(), resolver, qValueFactory),
                 createQNodeDefinitions(def.getDeclaredChildNodeDefinitions(), resolver));
     }
@@ -358,7 +358,9 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         QPropertyDefinition[] declaredPropDefs = new QPropertyDefinition[pds.length];
         for (int i = 0; i < pds.length; i++) {
             PropertyDefinition propDef = pds[i];
-            Name name = resolver.getQName(propDef.getName());
+            Name name = propDef.getName().equals(QItemDefinitionImpl.ANY_NAME.getLocalName())
+                    ? QItemDefinitionImpl.ANY_NAME
+                    : resolver.getQName(propDef.getName());
             Name declName = resolver.getQName(propDef.getDeclaringNodeType().getName());
             QValue[] defVls = ValueFormat.getQValues(propDef.getDefaultValues(), resolver, qValueFactory);
             String[] jcrConstraints = propDef.getValueConstraints();
@@ -387,9 +389,13 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
         QNodeDefinition[] declaredNodeDefs = new QNodeDefinition[nds.length];
         for (int i = 0; i < nds.length; i++) {
             NodeDefinition nodeDef = nds[i];
-            Name name = resolver.getQName(nodeDef.getName());
+            Name name = nodeDef.getName().equals(QItemDefinitionImpl.ANY_NAME.getLocalName())
+                    ? QItemDefinitionImpl.ANY_NAME
+                    : resolver.getQName(nodeDef.getName());
             Name declName = resolver.getQName(nodeDef.getDeclaringNodeType().getName());
-            Name defaultPrimaryType = resolver.getQName(nodeDef.getDefaultPrimaryTypeName());
+            Name defaultPrimaryType = nodeDef.getDefaultPrimaryTypeName() == null
+                    ? null
+                    : resolver.getQName(nodeDef.getDefaultPrimaryTypeName());
             Name[] requiredPrimaryTypes = getNames(nodeDef.getRequiredPrimaryTypeNames(), resolver);
 
             declaredNodeDefs[i] = new QNodeDefinitionImpl(
