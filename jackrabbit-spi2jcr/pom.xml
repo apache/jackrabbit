@@ -84,6 +84,7 @@
                 org.apache.jackrabbit.test.api.query.SetLimitTest
                 org.apache.jackrabbit.test.api.query.SetOffsetTest
                 org.apache.jackrabbit.test.api.query.qom
+                org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
               </value>
             </property>
