@@ -1,7 +1,6 @@
 NodeTypeName
   nt:folder
 Supertypes
-  nt:base
   nt:hierarchyNode
 IsMixin
   false
