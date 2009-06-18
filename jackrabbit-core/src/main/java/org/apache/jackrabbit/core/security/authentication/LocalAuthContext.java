@@ -72,7 +72,7 @@ public class LocalAuthContext implements AuthContext {
             throw new LoginException(e.getMessage());
         }
 
-        Map<String, String> state = new HashMap<String, String>();
+        Map<String, Object> state = new HashMap<String, Object>();
         Map<String, String> options = new HashMap<String, String>();
         Properties parameters = config.getParameters();
         Enumeration< ? > names = parameters.propertyNames();
