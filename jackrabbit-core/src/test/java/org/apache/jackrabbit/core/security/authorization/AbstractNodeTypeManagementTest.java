@@ -115,22 +115,7 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
                 getTestSession().refresh(false); // TODO: see JCR-1916
             }
 
-            /* for nt:folder set_property permission is required in addition
-               in order to be able to create jcr:created
-               TODO: check again with jsr 283 jcr:created was redesigned
-             */
             modifyPrivileges(childNode.getPath(), Privilege.JCR_NODE_TYPE_MANAGEMENT, true);
-            try {
-                childNode.setPrimaryType(ntName);
-                childNode.save();
-                fail("TestSession does not have sufficient privileges to change the primary type.");
-            } catch (AccessDeniedException e) {
-                // success
-                getTestSession().refresh(false); // TODO: see JCR-1916
-            }
-
-            // with complete write permission the call must succeed.
-            modifyPrivileges(childNode.getPath(), Privilege.JCR_MODIFY_PROPERTIES, true);
             childNode.setPrimaryType(ntName);
             childNode.save();
 
