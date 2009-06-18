@@ -137,7 +137,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl implements QPro
                 // in case of name and path constraint, the value must be
                 // converted to SPI values
                 // TODO: tobefixed. path-constraint may contain trailing *
-                vc.add(ValueConstraint.create(requiredType, qValue));
+                vc.add(ValueConstraint.create(requiredType, qValue, resolver));
             }
             valueConstraints = vc.toArray(new QValueConstraint[vc.size()]);
         }
