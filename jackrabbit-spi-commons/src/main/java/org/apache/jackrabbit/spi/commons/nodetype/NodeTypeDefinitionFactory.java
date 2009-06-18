@@ -44,8 +44,8 @@ import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 
 /**
- * <code>NodeTypeDefinitionFactory</code> can be used to convert the qualified
- * node type definitions to JCR {@link NodeTypeDefinition}s.
+ * <code>NodeTypeDefinitionFactory</code> can be used to convert the internal
+ * SPI node type definitions to JCR {@link NodeTypeDefinition}s.
  */
 public class NodeTypeDefinitionFactory {
 
@@ -57,8 +57,8 @@ public class NodeTypeDefinitionFactory {
      * Creates a new node type definition factory that operates on the given
      * sesion to create the templates.
      *
-     * @param session repository session
-     * @throws RepositoryException if an error occurs
+     * @param session repository session.
+     * @throws RepositoryException if an error occurs.
      */
     public NodeTypeDefinitionFactory(Session session)
             throws RepositoryException {
@@ -67,11 +67,12 @@ public class NodeTypeDefinitionFactory {
     }
 
     /**
-     * Create a new node type definitions from a qualified ones.
+     * Create a list of {@link NodeTypeDefinition JCR node type definitions}
+     * from a collection of {@link QNodeTypeDefinition}.
      *
-     * @param defs the qualified node type definitions
-     * @return the JCR node type definitions
-     * @throws RepositoryException if an error occurs
+     * @param defs the SPI node type definitions.
+     * @return the JCR node type definitions.
+     * @throws RepositoryException if an error occurs.
      */
     public List<NodeTypeDefinition> create(Collection<QNodeTypeDefinition> defs)
             throws RepositoryException {
@@ -83,11 +84,12 @@ public class NodeTypeDefinitionFactory {
     }
 
     /**
-     * Create a new node type definition from a qualified one.
+     * Create a new JCR node type definition from the given
+     * <code>QNodeTypeDefinition</code>.
      *
-     * @param qNtd the qualified node type definition
-     * @return the JCR node type definition
-     * @throws RepositoryException if an error occurs
+     * @param qNtd A SPI node type definition.
+     * @return the corresponding JCR node type definition.
+     * @throws RepositoryException if an error occurs.
      */
     @SuppressWarnings("unchecked")
     public NodeTypeDefinition create(QNodeTypeDefinition qNtd)
@@ -112,11 +114,11 @@ public class NodeTypeDefinitionFactory {
     }
 
     /**
-     * Create a new node definition from a qualified one.
+     * Create a new JCR node definition from the given <code>QNodeDefinition</code>.
      *
-     * @param qNd the qualified node definition
-     * @return the JCR node definition
-     * @throws RepositoryException if an error occurs
+     * @param qNd A node definition.
+     * @return The corresponding JCR node definition.
+     * @throws RepositoryException if an error occurs.
      */
     public NodeDefinition create(QNodeDefinition qNd)
             throws RepositoryException {
@@ -133,11 +135,11 @@ public class NodeTypeDefinitionFactory {
     }
 
     /**
-     * Create a new property definition from a qualified one.
+     * Create a new JCR property definition from the given <code>QPropertyDefinition</code>.
      *
-     * @param qPd the qualified propert definition
-     * @return the JCR property definition
-     * @throws RepositoryException if an error occurs
+     * @param qPd A SPI property definition.
+     * @return the corresponding JCR property definition.
+     * @throws RepositoryException if an error occurs.
      */
     public PropertyDefinition create(QPropertyDefinition qPd) throws RepositoryException {
         PropertyDefinitionTemplate pt = ntMgr.createPropertyDefinitionTemplate();

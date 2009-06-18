@@ -35,36 +35,36 @@ class ReferenceConstraint extends ValueConstraint {
 
     private final Name ntName;
 
-    static ReferenceConstraint create(String qualifiedDefinition) {
-        // constraint format: String representation of qualified name
-        return new ReferenceConstraint(qualifiedDefinition, NAME_FACTORY.create(qualifiedDefinition));
+    static ReferenceConstraint create(String nameString) {
+        // constraint format: String representation of Name object.
+        return new ReferenceConstraint(nameString, NAME_FACTORY.create(nameString));
     }
 
-    static ReferenceConstraint create(String definition, NameResolver resolver)
+    static ReferenceConstraint create(String jcrName, NameResolver resolver)
             throws InvalidConstraintException {
         // constraint format: JCR name in prefix form
         try {
-            Name name = resolver.getQName(definition);
+            Name name = resolver.getQName(jcrName);
             return new ReferenceConstraint(name.toString(), name);
         } catch (NameException e) {
-            String msg = "Invalid name constraint: " + definition;
+            String msg = "Invalid name constraint: " + jcrName;
             log.debug(msg);
             throw new InvalidConstraintException(msg, e);
         } catch (NamespaceException e) {
-            String msg = "Invalid name constraint: " + definition;
+            String msg = "Invalid name constraint: " + jcrName;
             log.debug(msg);
             throw new InvalidConstraintException(msg, e);
         }
     }
 
-    private ReferenceConstraint(String qualifiedDefinition, Name ntName) {
-        super(qualifiedDefinition);
+    private ReferenceConstraint(String nameString, Name ntName) {
+        super(nameString);
         this.ntName = ntName;
     }
 
     /**
-     * Uses {@link NamePathResolver#getJCRName(Name)} to convert the
-     * qualified <code>Name</code> into a JCR name.
+     * Uses {@link NamePathResolver#getJCRName(Name)} to convert the node type
+     * <code>Name</code> present with this constraint into a JCR name String.
      *
      * @see ValueConstraint#getDefinition(NamePathResolver)
      * @param resolver name-path resolver
@@ -79,7 +79,7 @@ class ReferenceConstraint extends ValueConstraint {
     }
 
     /**
-     * @see ValueConstraint#check(QValue)
+     * @see org.apache.jackrabbit.spi.QValueConstraint#check(QValue)
      */
     public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {
@@ -99,5 +99,4 @@ class ReferenceConstraint extends ValueConstraint {
                 throw new RepositoryException(msg);
         }
     }
-
 }

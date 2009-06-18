@@ -47,7 +47,7 @@ class BooleanConstraint extends ValueConstraint {
     }
 
     /**
-     * @see ValueConstraint#check(QValue)
+     * @see org.apache.jackrabbit.spi.QValueConstraint#check(QValue)
      */
     public void check(QValue value) throws ConstraintViolationException, RepositoryException {
         if (value == null) {

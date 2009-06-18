@@ -46,7 +46,7 @@ public class NumericConstraintTest extends ValueConstraintTest {
         return PropertyType.DOUBLE;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() throws RepositoryException {
+    protected String[] getInvalidQDefinitions() throws RepositoryException {
         return new String[] {"test", resolver.getQPath("/a/b/jcr:c").getString(), "true"};
     }
 
@@ -54,7 +54,7 @@ public class NumericConstraintTest extends ValueConstraintTest {
         return new String[] {"(25, 48.5)", "[0,27)", "(, 74)", "(73, 74.9]"};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return getDefinitions();
     }
 

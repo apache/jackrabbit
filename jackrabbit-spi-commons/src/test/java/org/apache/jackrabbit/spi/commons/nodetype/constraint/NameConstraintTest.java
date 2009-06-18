@@ -34,7 +34,7 @@ public class NameConstraintTest extends ValueConstraintTest {
         return PropertyType.NAME;
     }
 
-    protected String[] getInvalidQualifiedDefinitions() {
+    protected String[] getInvalidQDefinitions() {
         return new String[] {"12345", "", "abc"};
     }
 
@@ -42,7 +42,7 @@ public class NameConstraintTest extends ValueConstraintTest {
         return new String[] {"12345", "abc", "jcr:abc"};
     }
 
-    protected String[] getQualifiedDefinitions() throws RepositoryException {
+    protected String[] getQDefinitions() throws RepositoryException {
         return new String[] {
                 resolver.getQName("12345").toString(),
                 resolver.getQName("abc").toString(),
@@ -59,5 +59,14 @@ public class NameConstraintTest extends ValueConstraintTest {
         return valueFactory.create(resolver.getQPath("xyz"));
     }
 
-    // TODO: add more
+    public void testGetDefinition() throws RepositoryException {
+        String[] qDefs = getQDefinitions();
+        for (int i = 0; i < qDefs.length; i++) {
+            ValueConstraint vc = createValueConstraint(qDefs[i]);
+            String jcrConstraint = vc.getDefinition(resolver);
+
+            assertFalse(qDefs[i].equals(jcrConstraint));
+            assertEquals(resolver.getJCRName(ValueConstraint.NAME_FACTORY.create(qDefs[i])), jcrConstraint);
+        }
+    }
 }
