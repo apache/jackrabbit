@@ -83,7 +83,6 @@ public abstract class AbstractLoginModule implements LoginModule {
      * Initialize this LoginModule.<br> This abstract implementation, initalizes
      * the following fields for later use:
      * <ul>
-     * <li>{@link PrincipalManager} for group-membership resoultion</li>
      * <li>{@link PrincipalProvider} for user-{@link Principal} resolution.</li>
      * <li>{@link LoginModuleConfig#PARAM_ADMIN_ID} option is evaluated</li>
      * <li>{@link LoginModuleConfig#PARAM_ANONYMOUS_ID} option is evaluated</li>
@@ -320,7 +319,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * there is no principal set the login is considered as ignored.
      * <p/>
      * The implementation stores the principal associated to the UserID and all
-     * the Groups it is member of. {@link PrincipalManager#getGroupMembership(Principal)}
+     * the Groups it is member of.
      * An instance of (#link SimpleCredentials} containing only the UserID used
      * to login is set to the Subject's public Credentials.
      *
@@ -439,9 +438,7 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Handles the impersonation of given Credentials.<p />
-     * Current implementation takes {@link User} for the given Principal and
-     * delegates the check to {@link Impersonation#allows(javax.security.auth.Subject)} }
+     * Handles the impersonation of given Credentials.
      *
      * @param principal Principal to impersonate.
      * @param credentials Credentials used to create the impersonation subject.
