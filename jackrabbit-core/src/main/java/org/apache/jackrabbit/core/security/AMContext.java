@@ -29,7 +29,7 @@ import java.io.File;
  * context information for an <code>AccessManager</code>.
  *
  * @see AccessManager#init(AMContext)
- * @see AccessManager#init(AMContext, AccessControlProvider, WorkspaceAccessManager)
+ * @see AccessManager#init(AMContext, org.apache.jackrabbit.core.security.authorization.AccessControlProvider, org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager)
  */
 public class AMContext {
 
