@@ -23,6 +23,7 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.QueryObjectModelConstants;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
  * <code>SelectorTest</code>...
@@ -32,21 +33,34 @@ public class SelectorTest extends AbstractQOMTest {
     public void testSelector() throws RepositoryException {
         // make sure there's at least one node with this node type
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
-        Query q = qf.createQuery(
+        superuser.save();
+        QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"), null, null, null);
-        NodeIterator it = q.execute().getNodes();
-        while (it.hasNext()) {
-            assertTrue("Wrong node type", it.nextNode().isNodeType(testNodeType));
-        }
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                NodeIterator it = query.execute().getNodes();
+                while (it.hasNext()) {
+                    assertTrue("Wrong node type", it.nextNode().isNodeType(testNodeType));
+                }
+                return null;
+            }
+        });
     }
 
     public void testSyntacticallyInvalidName() throws RepositoryException {
+        String invalidNodeType = testNodeType + "[";
         try {
-            Query q = qf.createQuery(
-                    qf.selector(testNodeType + "[", "s"), null, null, null);
+            Query q = qf.createQuery(qf.selector(invalidNodeType, "s"),
+                    null, null, null);
             q.execute();
             fail("Selector with syntactically invalid name must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + invalidNodeType + "]";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("selectorName with syntactically invalid name must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }
@@ -63,10 +77,19 @@ public class SelectorTest extends AbstractQOMTest {
                 break;
             }
         }
-        Query q = qf.createQuery(qf.selector(ntName, "s"),
-                null, null, null);
-        assertFalse("Selector must not select nodes for unknown node type",
-                q.execute().getNodes().hasNext());
+        try {
+            qf.createQuery(qf.selector(ntName, "s"), null, null, null).execute();
+            fail("Selector with unknown node type must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + ntName + "] AS nt";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("Selector with unknown node type must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testDuplicateNodeType() throws RepositoryException {
@@ -83,6 +106,13 @@ public class SelectorTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS nt, [" +
+                    testNodeType + "] AS nt nt INNER JOIN nt ON ISDESCENDANTNODE(nt, nt)";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("selectorName with syntactically invalid name must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
-
 }

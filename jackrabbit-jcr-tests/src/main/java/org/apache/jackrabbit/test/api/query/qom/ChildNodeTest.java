@@ -25,43 +25,45 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.qom.QueryObjectModel;
 
 /**
- * <code>ChildNodeTest</code>...
+ * <code>ChildNodeTest</code> contains test cases that cover the QOM ChildNode
+ * condition.
  */
 public class ChildNodeTest extends AbstractQOMTest {
 
     public void testChildNode() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.childNode("s", testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n});
+        checkQOM(qom, new Node[]{n});
     }
 
     public void testChildNodes() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.childNode("s", testRoot), null, null);
-        checkResult(q.execute(), new Node[]{n1, n2, n3});
+        checkQOM(qom, new Node[]{n1, n2, n3});
     }
 
     public void testPathDoesNotExist() throws RepositoryException {
-        Query q = qf.createQuery(qf.selector(testNodeType, "s"),
+        QueryObjectModel qom = qf.createQuery(qf.selector(testNodeType, "s"),
                 qf.childNode("s", testRoot + "/" + nodeName1),
                 null, null);
-        checkResult(q.execute(), new Node[]{});
+        checkQOM(qom, new Node[]{});
     }
 
     public void testChildNodesDoNotMatchSelector()
             throws RepositoryException, NotExecutableException {
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        superuser.save();
 
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator it = ntMgr.getPrimaryNodeTypes();
@@ -70,9 +72,10 @@ public class ChildNodeTest extends AbstractQOMTest {
             NodeType nt = it.nextNodeType();
             if (!testNt.isNodeType(nt.getName())) {
                 // perform test
-                Query q = qf.createQuery(qf.selector(nt.getName(), "s"),
+                QueryObjectModel qom = qf.createQuery(
+                        qf.selector(nt.getName(), "s"),
                         qf.childNode("s", testRoot), null, null);
-                checkResult(q.execute(), new Node[]{});
+                checkQOM(qom, new Node[]{});
                 return;
             }
         }
@@ -89,15 +92,32 @@ public class ChildNodeTest extends AbstractQOMTest {
         } catch (InvalidQueryException e) {
             // expected
         }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISCHILDNODE(s, [" + testPath + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISCHILDNODE() with relative path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
     }
 
     public void testSyntacticallyInvalidPath() throws RepositoryException {
+        String invalidPath = testRoot + "/" + nodeName1 + "[";
         try {
             Query q = qf.createQuery(qf.selector(testNodeType, "s"),
-                    qf.childNode("s", testRoot + "/" + nodeName1 + "["),
+                    qf.childNode("s", invalidPath),
                     null, null);
             q.execute();
             fail("ChildNode with syntactically invalid path argument must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISCHILDNODE(s, [" + invalidPath + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISCHILDNODE() with syntactically invalid path argument must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }
@@ -108,10 +128,17 @@ public class ChildNodeTest extends AbstractQOMTest {
             Query q = qf.createQuery(qf.selector(testNodeType, "s"),
                     qf.childNode("x", testRoot), null, null);
             q.execute();
-            fail("ChildNode with an invalid selector name must throw InvalidQueryException");
+            fail("ChildNode with an unknown selector name must throw InvalidQueryException");
+        } catch (InvalidQueryException e) {
+            // expected
+        }
+        try {
+            String stmt = "SELECT * FROM [" + testNodeType + "] AS s WHERE " +
+                    "ISCHILDNODE(x, [" + testRoot + "])";
+            qm.createQuery(stmt, Query.JCR_SQL2).execute();
+            fail("ISCHILDNODE() with an unknown selector name must throw InvalidQueryException");
         } catch (InvalidQueryException e) {
             // expected
         }
     }
-
 }

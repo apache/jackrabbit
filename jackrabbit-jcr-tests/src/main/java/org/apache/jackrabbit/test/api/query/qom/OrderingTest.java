@@ -51,12 +51,12 @@ public class OrderingTest extends AbstractJoinTest {
                 qf.ascending(qf.propertyValue(RIGHT, propertyName2))
         };
         QueryObjectModel qom = createQuery(orderings);
-        checkResultOrder(qom.execute(), SELECTOR_NAMES, new Node[][]{{n2, n2}, {n1, n2}});
+        checkResultOrder(qom, SELECTOR_NAMES, new Node[][]{{n2, n2}, {n1, n2}});
 
         // descending
         orderings[0] = qf.descending(qf.propertyValue(RIGHT, propertyName2));
         qom = createQuery(orderings);
-        checkResultOrder(qom.execute(), SELECTOR_NAMES, new Node[][]{{n1, n2}, {n2, n2}});
+        checkResultOrder(qom, SELECTOR_NAMES, new Node[][]{{n1, n2}, {n2, n2}});
     }
 
     protected QueryObjectModel createQuery(Ordering[] orderings)

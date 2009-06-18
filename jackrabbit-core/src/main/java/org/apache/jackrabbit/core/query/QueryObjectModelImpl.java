@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilderRegistry;
 
 /**
  * <code>QueryObjectModelImpl</code>...
@@ -94,7 +95,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
         this.language = language;
         this.handler = handler;
         this.qomTree = qomTree;
-        this.statement = null; // TODO: format qomTree into a SQL2 statement
+        this.statement = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language).toString(this);
         this.query = handler.createExecutableQuery(session, itemMgr, qomTree);
         setInitialized();
     }

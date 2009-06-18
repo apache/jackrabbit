@@ -22,8 +22,6 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.ValueFactory;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-
 /**
  * <code>QueryObjectModelBuilder</code> defines an interface for building a
  * query object model from a string based query statement and vice versa.
@@ -68,12 +66,11 @@ public interface QueryObjectModelBuilder {
      * this <code>QueryObjectModelBuilder</code> can handle.
      *
      * @param qom      the query object model.
-     * @param resolver to resolve Names.
      * @return a String representation of the QOM.
      * @throws InvalidQueryException if the query object model cannot be
      *                               converted into a String representation due
      *                               to restrictions in this syntax.
      */
-    String toString(QueryObjectModel qom, NameResolver resolver)
+    String toString(QueryObjectModel qom)
             throws InvalidQueryException;
 }

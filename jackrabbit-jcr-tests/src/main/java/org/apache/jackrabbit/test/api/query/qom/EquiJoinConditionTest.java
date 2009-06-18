@@ -42,42 +42,42 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
         n2.setProperty(propertyName1, value);
         n2.setProperty(propertyName2, value);
         n2.addMixin(mixReferenceable);
-        testRootNode.save();
+        superuser.save();
     }
 
     public void testInnerJoin1() throws RepositoryException {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, c);
-        checkResult(qom.execute(), new Node[][]{{n1, n2}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n1, n2}, {n2, n2}});
     }
 
     public void testInnerJoin2() throws RepositoryException {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, c);
-        checkResult(qom.execute(), new Node[][]{{n2, n1}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n2, n1}, {n2, n2}});
     }
 
     public void testRightOuterJoin1() throws RepositoryException {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, c);
-        checkResult(qom.execute(), new Node[][]{{null, n1}, {n1, n2}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{null, n1}, {n1, n2}, {n2, n2}});
     }
 
     public void testRightOuterJoin2() throws RepositoryException {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, c);
-        checkResult(qom.execute(), new Node[][]{{n2, n1}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n2, n1}, {n2, n2}});
     }
 
     public void testLeftOuterJoin1() throws RepositoryException {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, c);
-        checkResult(qom.execute(), new Node[][]{{n1, n2}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n1, n2}, {n2, n2}});
     }
 
 
@@ -85,6 +85,6 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, c);
-        checkResult(qom.execute(), new Node[][]{{n1, null}, {n2, n1}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n1, null}, {n2, n1}, {n2, n2}});
     }
 }

@@ -40,19 +40,19 @@ public class ChildNodeJoinConditionTest extends AbstractJoinTest {
         n1 = testRootNode.addNode(nodeName1, testNodeType);
         n2 = n1.addNode(nodeName2, testNodeType);
         n2.addMixin(mixReferenceable);
-        testRootNode.save();
+        superuser.save();
     }
 
     public void testInnerJoin() throws RepositoryException {
         JoinCondition c = qf.childNodeJoinCondition(LEFT, RIGHT);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_INNER, c);
-        checkResult(qom.execute(), new Node[][]{{n2, n1}});
+        checkQOM(qom, new Node[][]{{n2, n1}});
     }
 
     public void testRightOuterJoin() throws RepositoryException {
         JoinCondition c = qf.childNodeJoinCondition(LEFT, RIGHT);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, c);
-        checkResult(qom.execute(), new Node[][]{{n2, n1}, {null, n2}});
+        checkQOM(qom, new Node[][]{{n2, n1}, {null, n2}});
     }
 
     public void testLeftOuterJoin() throws RepositoryException {
@@ -65,6 +65,6 @@ public class ChildNodeJoinConditionTest extends AbstractJoinTest {
         } else {
             result.add(new Node[]{n1, null});
         }
-        checkResult(qom.execute(), (Node[][]) result.toArray(new Node[result.size()][]));
+        checkQOM(qom, (Node[][]) result.toArray(new Node[result.size()][]));
     }
 }

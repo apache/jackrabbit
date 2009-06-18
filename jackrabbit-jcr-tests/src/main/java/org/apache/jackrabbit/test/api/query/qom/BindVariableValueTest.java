@@ -45,11 +45,13 @@ public class BindVariableValueTest extends AbstractQOMTest {
 
     private static final String URI_VALUE = "http://example.com/";
 
-    private Query query;
+    private Query qomQuery;
+
+    private Query sqlQuery;
 
     protected void setUp() throws Exception {
         super.setUp();
-        query = qf.createQuery(
+        qomQuery = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.childNode("s", testRoot),
@@ -59,16 +61,23 @@ public class BindVariableValueTest extends AbstractQOMTest {
                                 qf.bindVariable("v")
                         )
                 ), null, null);
+        sqlQuery = qm.createQuery(qomQuery.getStatement(), Query.JCR_SQL2);
     }
 
     protected void tearDown() throws Exception {
-        query = null;
+        qomQuery = null;
         super.tearDown();
     }
 
     public void testIllegalArgumentException() throws RepositoryException {
         try {
-            bindVariableValue(query, "x", vf.createValue(STRING_VALUE));
+            bindVariableValue(qomQuery, "x", vf.createValue(STRING_VALUE));
+            fail("Query.bindValue() must throw IllegalArgumentException for unknown variable name");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            bindVariableValue(sqlQuery, "x", vf.createValue(STRING_VALUE));
             fail("Query.bindValue() must throw IllegalArgumentException for unknown variable name");
         } catch (IllegalArgumentException e) {
             // expected
@@ -80,8 +89,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, STRING_VALUE);
         superuser.save();
 
-        bindVariableValue(query, "v", vf.createValue(STRING_VALUE));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", vf.createValue(STRING_VALUE));
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", vf.createValue(STRING_VALUE));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testDate() throws RepositoryException {
@@ -89,8 +101,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, DATE_VALUE);
         superuser.save();
 
-        bindVariableValue(query, "v", vf.createValue(DATE_VALUE));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(sqlQuery, "v", vf.createValue(DATE_VALUE));
+        checkResult(sqlQuery.execute(), new Node[]{n});
+
+        bindVariableValue(qomQuery, "v", vf.createValue(DATE_VALUE));
+        checkResult(qomQuery.execute(), new Node[]{n});
     }
 
     public void testLong() throws RepositoryException {
@@ -98,8 +113,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, LONG_VALUE);
         superuser.save();
 
-        bindVariableValue(query, "v", vf.createValue(LONG_VALUE));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", vf.createValue(LONG_VALUE));
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", vf.createValue(LONG_VALUE));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testDouble() throws RepositoryException {
@@ -107,8 +125,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, DOUBLE_VALUE);
         superuser.save();
 
-        bindVariableValue(query, "v", vf.createValue(DOUBLE_VALUE));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", vf.createValue(DOUBLE_VALUE));
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", vf.createValue(DOUBLE_VALUE));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testBoolean() throws RepositoryException {
@@ -116,8 +137,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, BOOLEAN_VALUE);
         superuser.save();
 
-        bindVariableValue(query, "v", vf.createValue(BOOLEAN_VALUE));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", vf.createValue(BOOLEAN_VALUE));
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", vf.createValue(BOOLEAN_VALUE));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testName() throws RepositoryException {
@@ -126,8 +150,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, name);
         superuser.save();
 
-        bindVariableValue(query, "v", name);
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", name);
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", name);
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testPath() throws RepositoryException {
@@ -136,8 +163,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, path);
         superuser.save();
 
-        bindVariableValue(query, "v", path);
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", path);
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", path);
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testReference() throws RepositoryException {
@@ -152,8 +182,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         superuser.save();
 
 
-        bindVariableValue(query, "v", vf.createValue(n));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", vf.createValue(n));
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", vf.createValue(n));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testWeakReference() throws RepositoryException {
@@ -167,9 +200,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, vf.createValue(n, true));
         superuser.save();
 
+        bindVariableValue(qomQuery, "v", vf.createValue(n, true));
+        checkResult(qomQuery.execute(), new Node[]{n});
 
-        bindVariableValue(query, "v", vf.createValue(n, true));
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(sqlQuery, "v", vf.createValue(n, true));
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testURI() throws RepositoryException {
@@ -178,8 +213,11 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, value);
         superuser.save();
 
-        bindVariableValue(query, "v", value);
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", value);
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", value);
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
     public void testDecimal() throws RepositoryException {
@@ -188,7 +226,10 @@ public class BindVariableValueTest extends AbstractQOMTest {
         n.setProperty(propertyName1, value);
         superuser.save();
 
-        bindVariableValue(query, "v", value);
-        checkResult(query.execute(), new Node[]{n});
+        bindVariableValue(qomQuery, "v", value);
+        checkResult(qomQuery.execute(), new Node[]{n});
+
+        bindVariableValue(sqlQuery, "v", value);
+        checkResult(sqlQuery.execute(), new Node[]{n});
     }
 }

@@ -48,6 +48,11 @@ public abstract class AbstractJoinTest extends AbstractQOMTest {
     
     //--------------------------< utilities >-----------------------------------
 
+    protected void checkQOM(QueryObjectModel qom, Node[][] nodes)
+            throws RepositoryException {
+        checkQOM(qom, SELECTOR_NAMES, nodes);
+    }
+
     protected void checkResult(QueryResult result, Node[][] nodes)
             throws RepositoryException {
         checkResult(result, SELECTOR_NAMES, nodes);

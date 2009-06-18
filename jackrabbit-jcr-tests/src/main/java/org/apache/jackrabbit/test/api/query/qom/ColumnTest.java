@@ -32,6 +32,7 @@ import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
+import javax.jcr.query.Query;
 
 /**
  * <code>ColumnTest</code> contains test cases related to QOM column.
@@ -61,22 +62,27 @@ public class ColumnTest extends AbstractQOMTest {
                 null,
                 null,
                 new Column[]{qf.column(SELECTOR_1, null, null)});
-        QueryResult result = qom.execute();
-        List names = new ArrayList(Arrays.asList(result.getColumnNames()));
-        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
-        NodeType nt = ntMgr.getNodeType(testNodeType);
-        PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
-        for (int i = 0; i < propDefs.length; i++) {
-            PropertyDefinition propDef = propDefs[i];
-            if (!propDef.isMultiple() && !propDef.getName().equals("*")) {
-                String columnName = SELECTOR_1 + "." + propDef.getName();
-                assertTrue("Missing column: " + columnName,
-                        names.remove(columnName));
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                QueryResult result = query.execute();
+                List names = new ArrayList(Arrays.asList(result.getColumnNames()));
+                NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
+                NodeType nt = ntMgr.getNodeType(testNodeType);
+                PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
+                for (int i = 0; i < propDefs.length; i++) {
+                    PropertyDefinition propDef = propDefs[i];
+                    if (!propDef.isMultiple() && !propDef.getName().equals("*")) {
+                        String columnName = SELECTOR_1 + "." + propDef.getName();
+                        assertTrue("Missing column: " + columnName,
+                                names.remove(columnName));
+                    }
+                }
+                for (Iterator it = names.iterator(); it.hasNext(); ) {
+                    fail(it.next() + " is not a property on node type " + testNodeType);
+                }
+                return null;
             }
-        }
-        for (Iterator it = names.iterator(); it.hasNext(); ) {
-            fail(it.next() + " is not a property on node type " + testNodeType);
-        }
+        });
     }
 
     /**
@@ -91,12 +97,17 @@ public class ColumnTest extends AbstractQOMTest {
                 null,
                 null,
                 new Column[]{qf.column(SELECTOR_1, propertyName1, propertyName1)});
-        QueryResult result = qom.execute();
-        List names = new ArrayList(Arrays.asList(result.getColumnNames()));
-        assertTrue("Missing column: " + propertyName1, names.remove(propertyName1));
-        for (Iterator it = names.iterator(); it.hasNext(); ) {
-            fail(it.next() + " was not declared as a column");
-        }
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                QueryResult result = query.execute();
+                List names = new ArrayList(Arrays.asList(result.getColumnNames()));
+                assertTrue("Missing column: " + propertyName1, names.remove(propertyName1));
+                for (Iterator it = names.iterator(); it.hasNext(); ) {
+                    fail(it.next() + " was not declared as a column");
+                }
+                return null;
+            }
+        });
     }
 
     public void testMultiColumn() throws RepositoryException {
@@ -104,8 +115,8 @@ public class ColumnTest extends AbstractQOMTest {
         n.setProperty(propertyName1, TEST_VALUE);
         superuser.save();
 
-        String columnName1 = SELECTOR_1 + "." + propertyName1;
-        String columnName2 = SELECTOR_2 + "." + propertyName1;
+        final String columnName1 = SELECTOR_1 + "." + propertyName1;
+        final String columnName2 = SELECTOR_2 + "." + propertyName1;
         QueryObjectModel qom = qf.createQuery(
                 qf.join(
                         qf.selector(testNodeType, SELECTOR_1),
@@ -120,10 +131,15 @@ public class ColumnTest extends AbstractQOMTest {
                         qf.column(SELECTOR_2, propertyName1, columnName2)
                 }
         );
-        RowIterator rows = qom.execute().getRows();
-        assertTrue("empty result", rows.hasNext());
-        Row r = rows.nextRow();
-        assertEquals("unexpected value", TEST_VALUE, r.getValue(columnName1).getString());
-        assertEquals("unexpected value", TEST_VALUE, r.getValue(columnName2).getString());
+        forQOMandSQL2(qom, new Callable() {
+            public Object call(Query query) throws RepositoryException {
+                RowIterator rows = query.execute().getRows();
+                assertTrue("empty result", rows.hasNext());
+                Row r = rows.nextRow();
+                assertEquals("unexpected value", TEST_VALUE, r.getValue(columnName1).getString());
+                assertEquals("unexpected value", TEST_VALUE, r.getValue(columnName2).getString());
+                return null;
+            }
+        });
     }
 }
