@@ -62,9 +62,19 @@ public class NameConstants {
     public static final Name JCR_CREATED = FACTORY.create(Name.NS_JCR_URI, "created");
 
     /**
+     * jcr:createdBy
+     */
+    public static final Name JCR_CREATEDBY = FACTORY.create(Name.NS_JCR_URI, "createdBy");
+
+    /**
      * jcr:lastModified
      */
     public static final Name JCR_LASTMODIFIED = FACTORY.create(Name.NS_JCR_URI, "lastModified");
+
+    /**
+     * jcr:lastModifiedBy
+     */
+    public static final Name JCR_LASTMODIFIEDBY = FACTORY.create(Name.NS_JCR_URI, "lastModifiedBy");
 
     /**
      * jcr:encoding
@@ -85,6 +95,41 @@ public class NameConstants {
      * jcr:content
      */
     public static final Name JCR_CONTENT = FACTORY.create(Name.NS_JCR_URI, "content");
+
+    /**
+     * jcr:etag
+     */
+    public static final Name JCR_ETAG = FACTORY.create(Name.NS_JCR_URI, "etag");
+
+    /**
+     * jcr:protocol
+     */
+    public static final Name JCR_PROTOCOL = FACTORY.create(Name.NS_JCR_URI, "protocol");
+
+    /**
+     * jcr:host
+     */
+    public static final Name JCR_HOST = FACTORY.create(Name.NS_JCR_URI, "host");
+
+    /**
+     * jcr:port
+     */
+    public static final Name JCR_PORT = FACTORY.create(Name.NS_JCR_URI, "port");
+
+    /**
+     * jcr:repository
+     */
+    public static final Name JCR_REPOSITORY = FACTORY.create(Name.NS_JCR_URI, "repository");
+
+    /**
+     * jcr:workspace
+     */
+    public static final Name JCR_WORKSPACE = FACTORY.create(Name.NS_JCR_URI, "workspace");
+
+    /**
+     * jcr:id
+     */
+    public static final Name JCR_ID = FACTORY.create(Name.NS_JCR_URI, "id");
 
     //--------------------------------------< xml related item name constants >
 
@@ -385,6 +430,41 @@ public class NameConstants {
      * nt:folder
      */
     public static final Name NT_FOLDER = FACTORY.create(Name.NS_NT_URI, "folder");
+
+    /**
+     * mix:created
+     */
+    public static final Name MIX_CREATED = FACTORY.create(Name.NS_MIX_URI, "created");
+
+    /**
+     * mix:lastModified
+     */
+    public static final Name MIX_LASTMODIFIED = FACTORY.create(Name.NS_MIX_URI, "lastModified");
+
+    /**
+     * mix:title
+     */
+    public static final Name MIX_TITLE = FACTORY.create(Name.NS_MIX_URI, "title");
+
+    /**
+     * mix:language
+     */
+    public static final Name MIX_LANGUAGE = FACTORY.create(Name.NS_MIX_URI, "language");
+
+    /**
+     * mix:mimeType
+     */
+    public static final Name MIX_MIMETYPE = FACTORY.create(Name.NS_MIX_URI, "mimeType");
+
+    /**
+     * mix:etag
+     */
+    public static final Name MIX_ETAG = FACTORY.create(Name.NS_MIX_URI, "etag");
+
+    /**
+     * nt:address
+     */
+    public static final Name NT_ADDRESS = FACTORY.create(Name.NS_NT_URI, "address");
 
     /**
      * nt:query

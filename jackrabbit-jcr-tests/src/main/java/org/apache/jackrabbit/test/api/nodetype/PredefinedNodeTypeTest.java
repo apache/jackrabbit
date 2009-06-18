@@ -289,6 +289,9 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             String name = supertypes[i].getName();
             if (name.startsWith("nt:") ||
                     name.equals("mix:simpleVersionable") ||
+                    name.equals("mix:created") ||
+                    name.equals("mix:mimeType") ||
+                    name.equals("mix:lastModified") ||
                     (name.equals("mix:referenceable") &&
                         (typeName.equals("mix:versionable") ||
                             typeName.equals("mix:shareable") ||

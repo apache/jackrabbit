@@ -1542,7 +1542,8 @@ public class BatchedItemOperations extends ItemValidator {
                 }
                 genValues = values.toArray(new InternalValue[values.size()]);
             }
-        } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)) {
+        } else if (NameConstants.NT_HIERARCHYNODE.equals(declaringNT)
+                || NameConstants.MIX_CREATED.equals(declaringNT)) {
             // nt:hierarchyNode node type
             if (NameConstants.JCR_CREATED.equals(name)) {
                 // jcr:created property

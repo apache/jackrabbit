@@ -506,7 +506,7 @@ public class CompactNodeTypeDefReader {
     private void doPropertyAttributes(QPropertyDefinitionBuilder pd,
                                       QNodeTypeDefinitionBuilder ntd)
             throws ParseException {
-        while (currentTokenEquals(Lexer.ATTRIBUTE)) {
+        while (currentTokenEquals(Lexer.PROP_ATTRIBUTE)) {
             if (currentTokenEquals(Lexer.PRIMARY)) {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
@@ -705,7 +705,7 @@ public class CompactNodeTypeDefReader {
     private void doChildNodeAttributes(QNodeDefinitionBuilder nd,
                                        QNodeTypeDefinitionBuilder ntd)
             throws ParseException {
-        while (currentTokenEquals(Lexer.ATTRIBUTE)) {
+        while (currentTokenEquals(Lexer.NODE_ATTRIBUTE)) {
             if (currentTokenEquals(Lexer.PRIMARY)) {
                 if (ntd.getPrimaryItemName() != null) {
                     String name = null;
@@ -723,7 +723,7 @@ public class CompactNodeTypeDefReader {
                 nd.setMandatory(true);
             } else if (currentTokenEquals(Lexer.PROTECTED)) {
                 nd.setProtected(true);
-            } else if (currentTokenEquals(Lexer.MULTIPLE)) {
+            } else if (currentTokenEquals(Lexer.SNS)) {
                 nd.setAllowsSameNameSiblings(true);
             } else if (currentTokenEquals(Lexer.COPY)) {
                 nd.setOnParentVersion(OnParentVersionAction.COPY);
