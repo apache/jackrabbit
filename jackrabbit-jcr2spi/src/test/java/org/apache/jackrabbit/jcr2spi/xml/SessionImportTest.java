@@ -19,6 +19,7 @@ package org.apache.jackrabbit.jcr2spi.xml;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.uuid.UUID;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -31,6 +32,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.NodeType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -152,12 +155,30 @@ public class SessionImportTest extends AbstractJCRTest {
      * @throws IOException
      * @throws RepositoryException
      */
-    public void testEmptyMixins2() throws IOException, RepositoryException {
+    public void testEmptyMixins2() throws IOException, RepositoryException, NotExecutableException {
         /*
-        JSR 170: nt:resource includes mix:referenceable
-        TODO: tests needs to be adjusted for JSR 283 (-> define test-property)
+        look for a a node type that includes mix:referenceable but isn't any
+        of the known internal nodetypes that ev. cannot be created through a
+        session-import
         */
-        String referenceableNt = "nt:resource";
+        String referenceableNt = null;
+        NodeTypeIterator it = superuser.getWorkspace().getNodeTypeManager().getPrimaryNodeTypes();
+        while (it.hasNext() && referenceableNt == null) {
+            NodeType nt = it.nextNodeType();
+            String ntName = nt.getName();
+            if (nt.isNodeType(mixReferenceable) &&
+                    !nt.isAbstract() &&
+                    // TODO: improve....
+                    // ignore are built-in nodetypes (mostly version related)
+                    !ntName.startsWith("nt:") &&
+                    // also skip all internal node types...
+                    !ntName.startsWith("rep:")) {
+                referenceableNt = ntName;
+            }
+        }
+        if (referenceableNt == null) {
+            throw new NotExecutableException("No primary type found that extends from mix:referenceable.");
+        }
         /*
         TODO: retrieve valid jcr:uuid value from test-properties.
         */
