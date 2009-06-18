@@ -16,17 +16,22 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 import javax.jcr.Session;
+import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
@@ -150,7 +155,43 @@ public class CompactNodeTypeDefReader {
     private final QNodeTypeDefinitionsBuilder builder;
 
     /**
-     * Creates a new CND reader and parses the given stream it directly.
+     * Convenience method that creates a new CND reader and parses the given
+     * file directly.
+     *
+     * @param file A CND file
+     * @return a new 'parsed' reader object
+     * @throws ParseException if an error occurs
+     * @throws IOException if an I/O error occurs.
+     */
+    public static CompactNodeTypeDefReader read(File file)
+            throws ParseException, IOException {
+        InputStream in = null;
+        Reader r = null;
+        try {
+            in = new FileInputStream(file);
+            r = new InputStreamReader(in, "utf8");
+            return new CompactNodeTypeDefReader(r, file.getPath());
+        } finally {
+            if (r != null) {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Creates a new CND reader and parses the given stream directly.
      *
      * @param r a reader to the CND
      * @param systemId a informative id of the given stream
@@ -212,6 +253,14 @@ public class CompactNodeTypeDefReader {
         this.resolver = new DefaultNamePathResolver(nsMapping);
         nextToken();
         parse();
+    }
+
+    /**
+     * Returns the previously assigned system id
+     * @return the system id
+     */
+    public String getSystemId() {
+        return lexer.getSystemId();
     }
 
     /**
