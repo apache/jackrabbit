@@ -83,7 +83,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     private static final Logger log = LoggerFactory.getLogger(DefaultSecurityManager.class);
 
     /**
-     *
+     * Flag indicating if the security manager was properly initialized.
      */
     private boolean initialized;
 
@@ -171,10 +171,10 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
         // build AuthContextProvider based on appName + optional LoginModuleConfig
         authContextProvider = new AuthContextProvider(config.getAppName(), loginModConf);
-        if (authContextProvider.isJAAS()) {
-            log.info("init: use JAAS login-configuration for " + config.getAppName());
-        } else if (authContextProvider.isLocal()) {
+        if (authContextProvider.isLocal()) {
             log.info("init: use Repository Login-Configuration for " + config.getAppName());
+        } else if (authContextProvider.isJAAS()) {
+            log.info("init: use JAAS login-configuration for " + config.getAppName());
         } else {
             String msg = "Neither JAAS nor RepositoryConfig contained a valid Configuriation for " + config.getAppName();
             log.error(msg);

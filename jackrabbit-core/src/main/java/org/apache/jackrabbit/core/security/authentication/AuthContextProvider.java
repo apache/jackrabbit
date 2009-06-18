@@ -95,10 +95,10 @@ public class AuthContextProvider {
 
         CallbackHandler cbHandler = new CallbackHandlerImpl(credentials, session, principalProviderRegistry, adminId, anonymousId);
 
-        if (isJAAS()) {
-            return new JAASAuthContext(appName, cbHandler, subject);
-        } else if (isLocal()) {
+        if (isLocal()) {
             return new LocalAuthContext(config, cbHandler, subject);
+        } else if (isJAAS()) {
+            return new JAASAuthContext(appName, cbHandler, subject);
         } else {
             throw new RepositoryException("No Login-Configuration");
         }
@@ -108,23 +108,23 @@ public class AuthContextProvider {
      * @return true if a application entry is available in a JAAS- {@link Configuration}
      */
     public boolean isJAAS() {
-        if (!initialized) {
+        if (!isLocal() && !initialized) {
             AppConfigurationEntry[] entries = getJAASConfig();
-            isJAAS = null != entries && entries.length > 0;
+            isJAAS = entries != null && entries.length > 0;
             initialized = true;
         }
         return isJAAS;
     }
 
     /**
-     * @return true if {@link #isJAAS()} is false and a login-module is configured
+     * @return true if a login-module is configured.
      */
     public boolean isLocal() {
-        return !(isJAAS() || config == null);
+        return config != null;
     }
 
     /**
-     * @return options configured for the LoginModules to use
+     * @return options configured for the LoginModules to use.
      */
     public Properties[] getModuleConfig() {
         Properties[] props = new Properties[0];
