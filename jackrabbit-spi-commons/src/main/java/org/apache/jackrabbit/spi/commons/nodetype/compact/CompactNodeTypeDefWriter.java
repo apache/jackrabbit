@@ -26,10 +26,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
 
@@ -39,12 +42,16 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueConstraint;
+import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.query.qom.Operator;
+import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.ISO9075;
 
@@ -61,8 +68,6 @@ import org.apache.jackrabbit.util.ISO9075;
  *     mandatory autocreated protected multiple VERSION
  */
 public class CompactNodeTypeDefWriter {
-
-    // TODO: valueFactory not needed any more -> remove from constructor and write calls...
 
     /**
      * the indention string
@@ -95,6 +100,30 @@ public class CompactNodeTypeDefWriter {
     private final Set<String> usedNamespaces = new HashSet<String>();
 
     /**
+     * Creates a new nodetype writer based on a session
+     *
+     * @param out the underlaying writer
+     * @param s repository session
+     * @param includeNS if <code>true</code> all used namespace decl. are also
+     *                  written to the writer
+     */
+    public CompactNodeTypeDefWriter(Writer out, Session s, boolean includeNS) {
+        this(out, new SessionNamespaceResolver(s), new DefaultNamePathResolver(s), includeNS);
+    }
+
+    /**
+     * Creates a new nodetype writer based on a namespace resolver
+     *
+     * @param out the underlaying writer
+     * @param r the naespace resolver
+     * @param includeNS if <code>true</code> all used namespace decl. are also
+     *                  written to the writer
+     */
+    public CompactNodeTypeDefWriter(Writer out, NamespaceResolver r, boolean includeNS) {
+        this(out, r, new DefaultNamePathResolver(r), includeNS);
+    }
+
+    /**
      * Creates a new nodetype writer that does not include namepsaces.
      *
      * @param out the underlaying writer
@@ -114,6 +143,7 @@ public class CompactNodeTypeDefWriter {
      * @param r the naespace resolver
      * @param npResolver name-path resolver
      * @param includeNS if <code>true</code> all used namespace decl. are also
+     *                  written to the writer
      */
     public CompactNodeTypeDefWriter(Writer out,
                                     NamespaceResolver r,
@@ -168,7 +198,7 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
-     * Write one QNodeTypeDefinition to this writer
+     * Write a collection of QNodeTypeDefinitions to this writer
      *
      * @param defs node type definitions
      * @throws IOException if an I/O error occurs
@@ -176,6 +206,20 @@ public class CompactNodeTypeDefWriter {
     public void write(Collection<QNodeTypeDefinition> defs) throws IOException {
         for (QNodeTypeDefinition def : defs) {
             write(def);
+        }
+    }
+
+    /**
+     * Write one NodeTypeDefinition to this writer
+     *
+     * @param nt node type definition
+     * @throws IOException if an I/O error occurs
+     */
+    public void write(NodeTypeDefinition nt) throws IOException {
+        try {
+            write(new QNodeTypeDefinitionImpl(nt, npResolver, QValueFactoryImpl.getInstance()));
+        } catch (RepositoryException e) {
+            throw new IOException("Error during internal conversion of nodetype definition:" + e.toString());
         }
     }
 
@@ -214,11 +258,20 @@ public class CompactNodeTypeDefWriter {
      * @throws IOException if an I/O error occurs
      */
     private void writeSupertypes(QNodeTypeDefinition ntd) throws IOException {
-        String delim = " > ";
+        // get ordered list of supertypes, omitting nt:Base
+        TreeSet<Name> supertypes = new TreeSet<Name>();
         for (Name name : ntd.getSupertypes()) {
-            out.write(delim);
-            out.write(resolve(name));
-            delim = ", ";
+            if (!name.equals(NameConstants.NT_BASE)) {
+                supertypes.add(name);
+            }
+        }
+        if (!supertypes.isEmpty()) {
+            String delim = " > ";
+            for (Name name : supertypes) {
+                out.write(delim);
+                out.write(resolve(name));
+                delim = ", ";
+            }
         }
     }
 

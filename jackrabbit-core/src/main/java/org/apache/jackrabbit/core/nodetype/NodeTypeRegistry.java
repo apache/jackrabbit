@@ -1460,14 +1460,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         if (supertypes.length > 0) {
             try {
                 EffectiveNodeType est = getEffectiveNodeType(supertypes, entCache, ntdCache);
-                // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !NameConstants.NT_BASE.equals(ntd.getName())
-                        && !est.includesNodeType(NameConstants.NT_BASE)) {
-                    String msg = "[" + name + "] all primary node types except"
-                            + " nt:base itself must be (directly or indirectly) derived from nt:base";
-                    log.debug(msg);
-                    throw new InvalidNodeTypeDefException(msg);
-                }
                 // check whether specified node type definition overrides
                 // a supertypes's primaryItem -> illegal (JCR-1947)
                 if (ntd.getPrimaryItemName() != null
@@ -1476,6 +1468,16 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
 
+                }
+                // make sure that all primary types except nt:base extend from nt:base
+                if (!ntd.isMixin() && !NameConstants.NT_BASE.equals(ntd.getName())
+                        && !est.includesNodeType(NameConstants.NT_BASE)) {
+                    // auto-subtype from nt:base
+                    Name[] s = new Name[supertypes.length + 1];
+                    System.arraycopy(supertypes, 0 ,s, 1, supertypes.length);
+                    s[0] = NameConstants.NT_BASE;
+                    supertypes = s;
+                    ntd.setSupertypes(s);
                 }
             } catch (NodeTypeConflictException ntce) {
                 String msg = "[" + name + "] failed to validate supertypes";

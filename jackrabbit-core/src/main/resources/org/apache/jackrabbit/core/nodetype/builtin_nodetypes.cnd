@@ -43,7 +43,7 @@
  * This abstract node type serves as the supertype of nt:file and nt:folder.
  * @since 1.0
  */
-[nt:hierarchyNode] > nt:base, mix:created
+[nt:hierarchyNode] > mix:created
   // abstract (currently fails due to JCR-2159)
 
 /**
@@ -70,7 +70,7 @@
  *
  * @since 1.0
  */
-[nt:linkedFile] > nt:base, nt:hierarchyNode
+[nt:linkedFile] > nt:hierarchyNode
   primaryitem jcr:content
   - jcr:content (REFERENCE) mandatory
 
@@ -83,7 +83,7 @@
  *
  * @since 1.0
  */
-[nt:folder] > nt:base, nt:hierarchyNode
+[nt:folder] > nt:hierarchyNode
   + * (nt:hierarchyNode) VERSION
 
 /**
@@ -92,7 +92,7 @@
  *
  * @since 1.0
  */
-[nt:resource] > nt:base, mix:mimeType, mix:lastModified
+[nt:resource] > mix:mimeType, mix:lastModified
   primaryitem jcr:data
   - jcr:data (BINARY) mandatory
   
@@ -331,7 +331,7 @@
 /**
  * @since 1.0
  */
-[nt:versionHistory] > nt:base, mix:referenceable
+[nt:versionHistory] > mix:referenceable
   - jcr:versionableUuid (STRING) mandatory autocreated protected ABORT
     /** @since 2.0 */
   - jcr:copiedFrom (WEAKREFERENCE) protected ABORT < 'nt:version'
@@ -348,7 +348,7 @@
 /**
  * @since 1.0
  */
-[nt:version] > nt:base, mix:referenceable
+[nt:version] > mix:referenceable
   - jcr:created (DATE) mandatory autocreated protected ABORT
   - jcr:predecessors (REFERENCE) protected multiple ABORT < 'nt:version'
   - jcr:successors (REFERENCE) protected multiple ABORT < 'nt:version'
@@ -359,7 +359,7 @@
 /**
  * @since 1.0
  */
-[nt:frozenNode] > nt:base, mix:referenceable
+[nt:frozenNode] > mix:referenceable
   orderable
   - jcr:frozenPrimaryType (NAME) mandatory autocreated protected ABORT
   - jcr:frozenMixinTypes (NAME) protected multiple ABORT
@@ -377,13 +377,13 @@
 /**
  * @since 2.0
  */
-[nt:activity] > nt:base, mix:referenceable
+[nt:activity] > mix:referenceable
   - jcr:activityTitle (STRING) mandatory autocreated PROTECTED
 
 /**
  * @since 2.0
  */
-[nt:configuration] > nt:base, mix:versionable
+[nt:configuration] > mix:versionable
   - jcr:root (REFERENCE) mandatory autocreated protected
 
 //------------------------------------------------------------------------------
@@ -557,7 +557,7 @@
 // User Management 
 // -----------------------------------------------------------------------------
 
-[rep:Authorizable] > nt:base, mix:referenceable
+[rep:Authorizable] > mix:referenceable
   abstract
   + * (rep:Authorizable) = rep:Authorizable protected VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected VERSION
@@ -577,7 +577,7 @@
 
 [rep:Group] > rep:Authorizable
 
-[rep:AuthorizableFolder] > nt:base, mix:referenceable
+[rep:AuthorizableFolder] > mix:referenceable
   + * (rep:Authorizable) = rep:User protected VERSION
   + * (rep:AuthorizableFolder) = rep:AuthorizableFolder protected VERSION
 
