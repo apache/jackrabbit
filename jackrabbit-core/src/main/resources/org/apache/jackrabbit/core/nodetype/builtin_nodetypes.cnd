@@ -31,7 +31,7 @@
  * @since 1.0
  */
 [nt:base]
-  // abstract (currently fails due to JCR-2159)
+  // abstract (currently causes test-case failures, see JCR-2159)
   - jcr:primaryType (NAME) mandatory autocreated protected COMPUTE
   - jcr:mixinTypes (NAME) protected multiple COMPUTE
 
@@ -44,7 +44,7 @@
  * @since 1.0
  */
 [nt:hierarchyNode] > mix:created
-  // abstract (currently fails due to JCR-2159)
+  // abstract (currently causes test-case failures, see JCR-2159)
 
 /**
  * Nodes of this node type may be used to represent files. This node type inherits
@@ -378,7 +378,7 @@
  * @since 2.0
  */
 [nt:activity] > mix:referenceable
-  - jcr:activityTitle (STRING) mandatory autocreated PROTECTED
+  - jcr:activityTitle (STRING) mandatory autocreated protected
 
 /**
  * @since 2.0
@@ -457,8 +457,8 @@
  * @since 1.0
  */
 [nt:query]
-  - jcr:statement (string)
-  - jcr:language (string)
+  - jcr:statement (STRING)
+  - jcr:language (STRING)
 
 //------------------------------------------------------------------------------
 // L I F E C Y C L E   M A N A G E M E N T
