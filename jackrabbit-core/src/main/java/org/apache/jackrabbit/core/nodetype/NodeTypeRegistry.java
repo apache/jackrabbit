@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -391,6 +393,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         /**
          * validate new node type definition
          */
+        checkNtBaseSubtyping(ntd, registeredNTDefs);
         validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
         /**
@@ -1210,6 +1213,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             throw new InvalidNodeTypeDefException(msg);
         }
 
+        checkNtBaseSubtyping(ntd, registeredNTDefs);
         EffectiveNodeType ent =
                 validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
 
@@ -1264,9 +1268,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     private void internalRegister(Collection<NodeTypeDef> ntDefs, boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {
 
-        // create working copies of current ent & ntd caches:
-        // cache of pre-built aggregations of node types
-        EffectiveNodeTypeCache tmpENTCache = (EffectiveNodeTypeCache) entCache.clone();
         // map of node type names and node type definitions
         Map<Name, NodeTypeDef> tmpNTDefCache = new HashMap<Name, NodeTypeDef>(registeredNTDefs);
 
@@ -1283,6 +1284,14 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             tmpNTDefCache.put(ntd.getName(), ntd);
         }
 
+        // check if all node type defs have proper nt:base subtyping
+        for (NodeTypeDef ntd : ntDefs) {
+            checkNtBaseSubtyping(ntd, tmpNTDefCache);
+        }
+
+        // create working copies of current ent & ntd caches:
+        // cache of pre-built aggregations of node types
+        EffectiveNodeTypeCache tmpENTCache = (EffectiveNodeTypeCache) entCache.clone();
         for (NodeTypeDef ntd : ntDefs) {
             EffectiveNodeType ent = validateNodeTypeDef(ntd, tmpENTCache,
                     tmpNTDefCache, nsReg, lenient);
@@ -1353,6 +1362,57 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             // make sure namespace uri denotes a registered namespace
             nsReg.getPrefix(name.getNamespaceURI());
         }
+    }
+
+    /**
+     * Checks if the given node type def has the correct supertypes in respect
+     * to nt:base. all mixin nodetypes must not have a nt:base, the primary
+     * ones only if they don't inherit it from another supertype.
+     *
+     * @param ntd the node type def to check
+     * @param ntdCache cache for lookup
+     * @return <code>true</code> if the ntd was modified
+     */
+    private static boolean checkNtBaseSubtyping(NodeTypeDef ntd, Map<Name, NodeTypeDef> ntdCache) {
+        if (NameConstants.NT_BASE.equals(ntd.getName())) {
+            return false;
+        }
+        Set<Name> supertypes = new TreeSet<Name>(Arrays.asList(ntd.getSupertypes()));
+        if (supertypes.isEmpty()) {
+            return false;
+        }
+        boolean modified;
+        if (ntd.isMixin()) {
+            // if mixin, remove possible nt:base supertype
+            modified = supertypes.remove(NameConstants.NT_BASE);
+        } else {
+            // check if all supertypes (except nt:base) are mixins
+            boolean allMixins = true;
+            for (Name name: supertypes) {
+                if (!name.equals(NameConstants.NT_BASE)) {
+                    NodeTypeDef def = ntdCache.get(name);
+                    if (def != null && !def.isMixin()) {
+                        allMixins = false;
+                        break;
+                    }
+                }
+            }
+            if (allMixins) {
+                // ntd is a primary node type and has only mixins as supertypes,
+                // so it needs a nt:base
+                modified = supertypes.add(NameConstants.NT_BASE);
+            } else {
+                // ntd is a primary node type and at least one of the supertypes
+                // is too, so ensure that no nt:base is added. note that the
+                // trivial case, where there would be no supertype left is handled
+                // in the NodeTypeDef directly
+                modified = supertypes.remove(NameConstants.NT_BASE);
+            }
+        }
+        if (modified) {
+            ntd.setSupertypes(supertypes.toArray(new Name[supertypes.size()]));
+        }
+        return modified;
     }
 
     /**
@@ -1447,16 +1507,6 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                     log.debug(msg);
                     throw new InvalidNodeTypeDefException(msg);
 
-                }
-                // make sure that all primary types except nt:base extend from nt:base
-                if (!ntd.isMixin() && !NameConstants.NT_BASE.equals(ntd.getName())
-                        && !est.includesNodeType(NameConstants.NT_BASE)) {
-                    // auto-subtype from nt:base
-                    Name[] s = new Name[supertypes.length + 1];
-                    System.arraycopy(supertypes, 0 ,s, 1, supertypes.length);
-                    s[0] = NameConstants.NT_BASE;
-                    supertypes = s;
-                    ntd.setSupertypes(s);
                 }
             } catch (NodeTypeConflictException ntce) {
                 String msg = "[" + name + "] failed to validate supertypes";
@@ -1676,6 +1726,10 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
             Name[] reqTypes = cnd.getRequiredPrimaryTypes();
             if (reqTypes != null && reqTypes.length > 0) {
                 for (Name rpt : reqTypes) {
+                    // skip nt:base required types
+                    if (NameConstants.NT_BASE.equals(rpt)) {
+                        continue;
+                    }
                     checkNamespace(rpt, nsReg);
                     referenceToSelf = false;
                     /**
