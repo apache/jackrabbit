@@ -48,13 +48,13 @@ public class OrderingTest extends AbstractJoinTest {
     public void testMultipleSelectors() throws RepositoryException {
         // ascending
         Ordering[] orderings = new Ordering[]{
-                qf.ascending(qf.propertyValue(RIGHT, propertyName2))
+                qf.ascending(qf.propertyValue(LEFT, propertyName2))
         };
         QueryObjectModel qom = createQuery(orderings);
         checkResultOrder(qom, SELECTOR_NAMES, new Node[][]{{n2, n2}, {n1, n2}});
 
         // descending
-        orderings[0] = qf.descending(qf.propertyValue(RIGHT, propertyName2));
+        orderings[0] = qf.descending(qf.propertyValue(LEFT, propertyName2));
         qom = createQuery(orderings);
         checkResultOrder(qom, SELECTOR_NAMES, new Node[][]{{n1, n2}, {n2, n2}});
     }
