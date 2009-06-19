@@ -73,7 +73,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     //-------------------------------------------------< AccessControlUtils >---
     /**
-     * @see AccessControlUtils#isAcItem(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)
      */
     public boolean isAcItem(Path absPath) throws RepositoryException {
         Path.Element[] elems = absPath.getElements();
@@ -86,7 +86,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlUtils#isAcItem(ItemImpl)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(ItemImpl)
      */
     public boolean isAcItem(ItemImpl item) throws RepositoryException {
         NodeImpl n = ((item.isNode()) ? (NodeImpl) item : (NodeImpl) item.getParent());
@@ -95,7 +95,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     //----------------------------------------------< AccessControlProvider >---
     /**
-     * @see AccessControlProvider#init(javax.jcr.Session, java.util.Map)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(javax.jcr.Session, java.util.Map)
      */
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
@@ -164,7 +164,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#getEffectivePolicies(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath)
             throws ItemNotFoundException, RepositoryException {
@@ -186,7 +186,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#getEditor(Session)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEditor(Session)
      */
     public AccessControlEditor getEditor(Session editingSession) {
         checkInitialized();
@@ -204,7 +204,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#compilePermissions(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
     public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
@@ -218,7 +218,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#canAccessRoot(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
      */
     public boolean canAccessRoot(Set principals) throws RepositoryException {
         checkInitialized();
@@ -308,7 +308,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         //--------------------------------------------------< EventListener >---
         /**
-         * @see EventListener#onEvent(EventIterator)
+         * @see javax.jcr.observation.EventListener#onEvent(EventIterator)
          */
         public synchronized void onEvent(EventIterator events) {
             try {

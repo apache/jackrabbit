@@ -83,7 +83,7 @@ import java.util.Arrays;
  * ACL items inherit the ACL from node they defined the ACL for.</li>
  * </ul>
  *
- * @see AccessControlProvider for additional information.
+ * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider for additional information.
  */
 public class ACLProvider extends AbstractAccessControlProvider implements AccessControlConstants {
 
@@ -133,7 +133,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
     //----------------------------------------------< AccessControlProvider >---
     /**
-     * @see AccessControlProvider#init(Session, Map)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(Session, Map)
      */
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
@@ -150,7 +150,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#getEffectivePolicies(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
      * @param absPath
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
@@ -174,7 +174,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#getEditor(Session)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEditor(Session)
      */
     public AccessControlEditor getEditor(Session session) {
         checkInitialized();
@@ -182,7 +182,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#compilePermissions(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
     public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
@@ -196,7 +196,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * @see AccessControlProvider#canAccessRoot(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
      */
     public boolean canAccessRoot(Set principals) throws RepositoryException {
         checkInitialized();
@@ -535,7 +535,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         //--------------------------------------------------< EventListener >---
         /**
-         * @see EventListener#onEvent(EventIterator)
+         * @see javax.jcr.observation.EventListener#onEvent(EventIterator)
          */
         public synchronized void onEvent(EventIterator events) {
             // only invalidate cache if any of the events affects the

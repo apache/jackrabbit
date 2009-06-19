@@ -241,7 +241,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
     //--------------------------------------------------< AccessControlList >---
     /**
-     * @see AccessControlList#getAccessControlEntries()
+     * @see javax.jcr.security.AccessControlList#getAccessControlEntries()
      */
     public AccessControlEntry[] getAccessControlEntries()
             throws RepositoryException {
@@ -249,7 +249,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     }
 
     /**
-     * @see AccessControlList#addAccessControlEntry(Principal, Privilege[])
+     * @see javax.jcr.security.AccessControlList#addAccessControlEntry(Principal, Privilege[])
      */
     public boolean addAccessControlEntry(Principal principal,
                                          Privilege[] privileges)
@@ -258,7 +258,7 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
     }
 
     /**
-     * @see AccessControlList#removeAccessControlEntry(AccessControlEntry)
+     * @see javax.jcr.security.AccessControlList#removeAccessControlEntry(AccessControlEntry)
      */
     public void removeAccessControlEntry(AccessControlEntry ace)
             throws AccessControlException, RepositoryException {
