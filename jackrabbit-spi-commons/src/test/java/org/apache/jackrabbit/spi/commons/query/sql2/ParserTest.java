@@ -55,7 +55,7 @@ public class ParserTest extends TestCase {
             return null;
         }
 
-    };
+    }
 
     protected void setUp() throws Exception {
         super.setUp();

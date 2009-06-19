@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DescendantNodeTest.class);
         suite.addTestSuite(EquiJoinConditionTest.class);
         suite.addTestSuite(FullTextSearchScoreTest.class);
+        suite.addTestSuite(GetQueryTest.class);
         suite.addTestSuite(LengthTest.class);
         suite.addTestSuite(NodeLocalNameTest.class);
         suite.addTestSuite(NodeNameTest.class);

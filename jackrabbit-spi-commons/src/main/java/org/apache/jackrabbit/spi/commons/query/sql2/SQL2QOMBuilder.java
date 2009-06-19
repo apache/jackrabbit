@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.spi.commons.query.sql2;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.InvalidQueryException;
@@ -27,9 +31,19 @@ import org.apache.jackrabbit.spi.commons.query.QueryObjectModelBuilder;
 
 /**
  * <code>SQL2QOMBuilder</code> implements QOM builder that understands
- * {@link Query#JCR_SQL2}.
+ * {@link Query#JCR_SQL2} and {@link Query#JCR_JQOM}. <code>JCR_JQOM</code>
+ * might be surprising, but JSR 283 says that the serialization format of
+ * <code>JCR_JQOM</code> is <code>JCR_SQL2</code>. This is important when
+ * a JQOM is stored on a node as a serialized String and a language property
+ * set to <code>JCR_JQOM</code>.
  */
 public class SQL2QOMBuilder implements QueryObjectModelBuilder {
+
+    /**
+     * Supports {@link Query#JCR_JQOM} and {@link Query#JCR_SQL2}.
+     */
+    private static final List<String> SUPPORTED = new ArrayList<String>(
+            Arrays.asList(Query.JCR_JQOM, Query.JCR_SQL2));
 
     /**
      * {@inheritDoc}
@@ -45,14 +59,14 @@ public class SQL2QOMBuilder implements QueryObjectModelBuilder {
      * {@inheritDoc}
      */
     public boolean canHandle(String language) {
-        return Query.JCR_SQL2.equals(language);
+        return SUPPORTED.contains(language);
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getSupportedLanguages() {
-        return new String[]{Query.JCR_SQL2};
+        return SUPPORTED.toArray(new String[SUPPORTED.size()]);
     }
 
     /**

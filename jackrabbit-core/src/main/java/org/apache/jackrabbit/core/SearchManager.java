@@ -85,11 +85,6 @@ public class SearchManager implements SynchronousEventListener {
     public static final String NS_XS_URI = "http://www.w3.org/2001/XMLSchema";
 
     /**
-     * Name of the parameter that indicates the query implementation class.
-     */
-    private static final String PARAM_QUERY_IMPL = "queryClass";
-
-    /**
      * The search configuration.
      */
     private final SearchConfig config;
@@ -274,9 +269,12 @@ public class SearchManager implements SynchronousEventListener {
      *
      * @param session   the session of the user executing the query.
      * @param itemMgr   the item manager of the user executing the query. Needed
-     *                  to return <code>Node</code> instances in the result set.
+     *                  to return <code>Node</code> instances in the result
+     *                  set.
      * @param statement the actual query statement.
      * @param language  the syntax of the query statement.
+     * @param node      a nt:query node where the query was read from or
+     *                  <code>null</code> if it is not a stored query.
      * @return a <code>Query</code> instance to execute.
      * @throws InvalidQueryException if the query is malformed or the
      *                               <code>language</code> is unknown.
@@ -285,10 +283,11 @@ public class SearchManager implements SynchronousEventListener {
     public Query createQuery(SessionImpl session,
                              ItemManager itemMgr,
                              String statement,
-                             String language)
+                             String language,
+                             Node node)
             throws InvalidQueryException, RepositoryException {
         AbstractQueryImpl query = createQueryInstance();
-        query.init(session, itemMgr, handler, statement, language);
+        query.init(session, itemMgr, handler, statement, language, node);
         return query;
     }
 
@@ -298,6 +297,8 @@ public class SearchManager implements SynchronousEventListener {
      * @param session   the session of the user executing the query.
      * @param qomTree   the query object model tree, representing the query.
      * @param langugage the original language of the query statement.
+     * @param node      a nt:query node where the query was read from or
+     *                  <code>null</code> if it is not a stored query.
      * @return the query object model for the query.
      * @throws InvalidQueryException the the query object model tree is
      *                               considered invalid by the query handler
@@ -306,32 +307,12 @@ public class SearchManager implements SynchronousEventListener {
      */
     public QueryObjectModel createQueryObjectModel(SessionImpl session,
                                                    QueryObjectModelTree qomTree,
-                                                   String langugage)
+                                                   String langugage,
+                                                   Node node)
             throws InvalidQueryException, RepositoryException {
         QueryObjectModelImpl qom = new QueryObjectModelImpl();
-        qom.init(session, session.getItemManager(), handler, qomTree, langugage);
+        qom.init(session, session.getItemManager(), handler, qomTree, langugage, node);
         return qom;
-    }
-
-    /**
-     * Creates a query object from a node that can be executed on the workspace.
-     *
-     * @param session the session of the user executing the query.
-     * @param itemMgr the item manager of the user executing the query. Needed
-     *                to return <code>Node</code> instances in the result set.
-     * @param node a node of type nt:query.
-     * @return a <code>Query</code> instance to execute.
-     * @throws InvalidQueryException if <code>absPath</code> is not a valid
-     *                               persisted query (that is, a node of type nt:query)
-     * @throws RepositoryException   if any other error occurs.
-     */
-    public Query createQuery(SessionImpl session,
-                             ItemManager itemMgr,
-                             Node node)
-            throws InvalidQueryException, RepositoryException {
-        AbstractQueryImpl query = createQueryInstance();
-        query.init(session, itemMgr, handler, node);
-        return query;
     }
 
     /**
@@ -372,11 +353,11 @@ public class SearchManager implements SynchronousEventListener {
         long time = System.currentTimeMillis();
 
         // nodes that need to be removed from the index.
-        final Set removedNodes = new HashSet();
+        final Set<NodeId> removedNodes = new HashSet<NodeId>();
         // nodes that need to be added to the index.
-        final Map addedNodes = new HashMap();
+        final Map<NodeId, EventImpl> addedNodes = new HashMap<NodeId, EventImpl>();
         // property events
-        List propEvents = new ArrayList();
+        List<EventImpl> propEvents = new ArrayList<EventImpl>();
 
         while (events.hasNext()) {
             EventImpl e = (EventImpl) events.nextEvent();
@@ -407,8 +388,7 @@ public class SearchManager implements SynchronousEventListener {
         }
 
         // sort out property events
-        for (int i = 0; i < propEvents.size(); i++) {
-            EventImpl e = (EventImpl) propEvents.get(i);
+        for (EventImpl e : propEvents) {
             NodeId nodeId = e.getParentId();
             if (e.getType() == Event.PROPERTY_ADDED) {
                 if (addedNodes.put(nodeId, e) == null) {
@@ -452,7 +432,7 @@ public class SearchManager implements SynchronousEventListener {
                 } catch (ItemStateException ise) {
                     // check whether this item state change originated from
                     // an external event
-                    EventImpl e = (EventImpl) addedNodes.get(id);
+                    EventImpl e = addedNodes.get(id);
                     if (e == null || !e.isExternal()) {
                         log.error("Unable to index node " + id + ": does not exist");
                     } else {
