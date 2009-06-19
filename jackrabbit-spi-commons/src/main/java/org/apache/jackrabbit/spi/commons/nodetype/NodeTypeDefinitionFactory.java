@@ -95,12 +95,12 @@ public class NodeTypeDefinitionFactory {
     public NodeTypeDefinition create(QNodeTypeDefinition qNtd)
             throws RepositoryException {
         NodeTypeTemplate nt = ntMgr.createNodeTypeTemplate();
-        nt.setName(resolver.getJCRName(qNtd.getName()));
+        nt.setName(getJCRName(qNtd.getName()));
         nt.setDeclaredSuperTypeNames(getJCRNames(qNtd.getSupertypes()));
         nt.setAbstract(qNtd.isAbstract());
         nt.setMixin(qNtd.isMixin());
         nt.setOrderableChildNodes(qNtd.hasOrderableChildNodes());
-        nt.setPrimaryItemName(resolver.getJCRName(qNtd.getPrimaryItemName()));
+        nt.setPrimaryItemName(getJCRName(qNtd.getPrimaryItemName()));
         nt.setQueryable(qNtd.isQueryable());
         List nodeDefs = nt.getNodeDefinitionTemplates();
         for (QNodeDefinition qNd: qNtd.getChildNodeDefs()) {
@@ -123,13 +123,13 @@ public class NodeTypeDefinitionFactory {
     public NodeDefinition create(QNodeDefinition qNd)
             throws RepositoryException {
         NodeDefinitionTemplate nt = ntMgr.createNodeDefinitionTemplate();
-        nt.setName(resolver.getJCRName(qNd.getName()));
+        nt.setName(getJCRName(qNd.getName()));
         nt.setAutoCreated(qNd.isAutoCreated());
         nt.setMandatory(qNd.isMandatory());
         nt.setOnParentVersion(qNd.getOnParentVersion());
         nt.setProtected(qNd.isProtected());
         nt.setSameNameSiblings(qNd.allowsSameNameSiblings());
-        nt.setDefaultPrimaryTypeName(resolver.getJCRName(qNd.getDefaultPrimaryType()));
+        nt.setDefaultPrimaryTypeName(getJCRName(qNd.getDefaultPrimaryType()));
         nt.setRequiredPrimaryTypeNames(getJCRNames(qNd.getRequiredPrimaryTypes()));
         return nt;
     }
@@ -143,7 +143,7 @@ public class NodeTypeDefinitionFactory {
      */
     public PropertyDefinition create(QPropertyDefinition qPd) throws RepositoryException {
         PropertyDefinitionTemplate pt = ntMgr.createPropertyDefinitionTemplate();
-        pt.setName(resolver.getJCRName(qPd.getName()));
+        pt.setName(getJCRName(qPd.getName()));
         pt.setAutoCreated(qPd.isAutoCreated());
         pt.setMandatory(qPd.isMandatory());
         pt.setOnParentVersion(qPd.getOnParentVersion());
@@ -157,11 +157,21 @@ public class NodeTypeDefinitionFactory {
     }
 
     private String[] getJCRNames(Name[] names) throws NamespaceException {
+        if (names == null) {
+            return null;
+        }
         String[] ret = new String[names.length];
         for (int i=0; i<names.length; i++) {
             ret[i] = resolver.getJCRName(names[i]);
         }
         return ret;
+    }
+
+    private String getJCRName(Name name) throws NamespaceException {
+        if (name == null) {
+            return null;
+        }
+        return resolver.getJCRName(name);
     }
 
     private String[] createValueConstraints(int type, QValueConstraint[] qv)
@@ -179,6 +189,9 @@ public class NodeTypeDefinitionFactory {
     }
 
     private Value[] createValues(QValue[] qv) {
+        if (qv == null){
+            return null;
+        }
         Value[] ret = new Value[qv.length];
         for (int i=0; i<ret.length; i++) {
             ret[i] = new QValueValue(qv[i], resolver);
