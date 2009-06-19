@@ -147,7 +147,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
             }
         }
 
-        String stmt = testPath + "//element(*, nt:resource)[jcr:contains(., 'fox')]";
+        String stmt = testPath + "//element(*, nt:resource)[jcr:contains(., 'fox')] order by @jcr:score descending";
         Query q = qm.createQuery(stmt, Query.XPATH);
         assertEquals(num, q.execute().getNodes().getSize());
     }
