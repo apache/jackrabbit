@@ -304,12 +304,12 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
 
     //--------------------------------------------------------------------------
     /**
-     *
+     * The access control entry of a principalbased ACL.
      */
     class Entry extends AccessControlEntryImpl {
 
         /**
-         *
+         * The path of the Node this entry applies to.
          */
         private final String nodePath;
 
