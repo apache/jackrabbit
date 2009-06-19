@@ -102,7 +102,7 @@ public class JackrabbitIndexSearcher
             hits = ((JackrabbitQuery) query).execute(this, session, sort);
         }
         if (hits == null) {
-            if (sort == null) {
+            if (sort.getSort().length == 0) {
                 hits = new LuceneQueryHits(reader, this, query);
             } else {
                 hits = new SortedLuceneQueryHits(
