@@ -124,6 +124,23 @@ import org.apache.jackrabbit.util.ISO9075;
 public class CompactNodeTypeDefReader {
 
     /**
+     * Default namespace mappings
+     */
+    public static final NamespaceMapping NS_DEFAULTS;
+    static {
+        try {
+            NS_DEFAULTS = new NamespaceMapping();
+            NS_DEFAULTS.setMapping(Name.NS_EMPTY_PREFIX, Name.NS_DEFAULT_URI);
+            NS_DEFAULTS.setMapping(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+            NS_DEFAULTS.setMapping(Name.NS_MIX_PREFIX, Name.NS_MIX_URI);
+            NS_DEFAULTS.setMapping(Name.NS_NT_PREFIX, Name.NS_NT_URI);
+            NS_DEFAULTS.setMapping(Name.NS_REP_PREFIX, Name.NS_REP_URI);
+        } catch (NamespaceException e) {
+            throw new InternalError(e.toString());
+        }
+    }
+    
+    /**
      * the list of parsed QNodeTypeDefinition
      */
     private final List<QNodeTypeDefinition> nodeTypeDefs
@@ -199,7 +216,7 @@ public class CompactNodeTypeDefReader {
      */
     public CompactNodeTypeDefReader(Reader r, String systemId)
             throws ParseException {
-        this(r, systemId, new NamespaceMapping(), null);
+        this(r, systemId, null, null);
     }
 
     /**
@@ -215,7 +232,7 @@ public class CompactNodeTypeDefReader {
     public CompactNodeTypeDefReader(Reader r, String systemId,
                                     QNodeTypeDefinitionsBuilder builder)
             throws ParseException {
-        this(r, systemId, new NamespaceMapping(), builder);
+        this(r, systemId, null, builder);
     }
 
     /**
@@ -249,7 +266,9 @@ public class CompactNodeTypeDefReader {
                 ? new QNodeTypeDefinitionsBuilderImpl()
                 : builder;
         lexer = new Lexer(r, systemId);
-        this.nsMapping = mapping;
+        this.nsMapping = mapping == null
+                ? new NamespaceMapping(NS_DEFAULTS)
+                : mapping;
         this.resolver = new DefaultNamePathResolver(nsMapping);
         nextToken();
         parse();
