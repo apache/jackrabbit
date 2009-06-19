@@ -32,6 +32,7 @@ import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * This class implements the {@link QueryManager} interface.
@@ -59,12 +60,6 @@ public class QueryManagerImpl implements QueryManager {
     private final QueryObjectModelFactoryImpl qomFactory;
 
     /**
-     * The query factory which is responsible to create query instances base
-     * on the passed query language.
-     */
-    private final QueryFactory queryFactory;
-
-    /**
      * Creates a new <code>QueryManagerImpl</code> for the passed
      * <code>session</code>
      *
@@ -86,17 +81,9 @@ public class QueryManagerImpl implements QueryManager {
             protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                     throws InvalidQueryException, RepositoryException {
                 return searchMgr.createQueryObjectModel(
-                        session, qomTree, Query.JCR_SQL2);
+                        session, qomTree, Query.JCR_JQOM, null);
             }
         };
-        this.queryFactory = new CompoundQueryFactory(Arrays.asList(
-                new QOMQueryFactory(qomFactory, session.getValueFactory()),
-                new AQTQueryFactory() {
-                    public Query createQuery(String statement, String language)
-                            throws InvalidQueryException, RepositoryException {
-                        return searchMgr.createQuery(session, itemMgr, statement, language);
-                    }
-                }));
     }
 
     /**
@@ -105,7 +92,8 @@ public class QueryManagerImpl implements QueryManager {
     public Query createQuery(String statement, String language)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
-        return queryFactory.createQuery(statement, language);
+        QueryFactory qf = new QueryFactoryImpl(language);
+        return qf.createQuery(statement, language);
     }
 
     /**
@@ -114,15 +102,21 @@ public class QueryManagerImpl implements QueryManager {
     public Query getQuery(Node node)
             throws InvalidQueryException, RepositoryException {
         sanityCheck();
-        // TODO: support SQL2 and QOM
-        return searchMgr.createQuery(session, itemMgr, node);
+        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
+            throw new InvalidQueryException("node is not of type nt:query");
+        }
+        String statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
+        String language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
+
+        QueryFactory qf = new QueryFactoryImpl(node, language);
+        return qf.createQuery(statement, language);
     }
 
     /**
      * {@inheritDoc}
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
-        List<String> languages = queryFactory.getSupportedLanguages();
+        List<String> languages = new QueryFactoryImpl(Query.JCR_JQOM).getSupportedLanguages();
         return languages.toArray(new String[languages.size()]);
     }
 
@@ -160,6 +154,32 @@ public class QueryManagerImpl implements QueryManager {
     private void sanityCheck() throws RepositoryException {
         if (!session.isLive()) {
             throw new RepositoryException("corresponding session has been closed");
+        }
+    }
+
+    private class QueryFactoryImpl extends CompoundQueryFactory {
+
+        public QueryFactoryImpl(String language) {
+            this(null, language);
+        }
+
+        public QueryFactoryImpl(final Node node, final String language) {
+            super(Arrays.asList(
+                new QOMQueryFactory(new QueryObjectModelFactoryImpl(
+                        session, session.getValueFactory()) {
+                    protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
+                            throws InvalidQueryException, RepositoryException {
+                        return searchMgr.createQueryObjectModel(
+                                session, qomTree, language, node);
+                    }
+                }, session.getValueFactory()),
+                new AQTQueryFactory() {
+                    public Query createQuery(String statement,
+                                             String language)
+                            throws InvalidQueryException, RepositoryException {
+                        return searchMgr.createQuery(session, itemMgr, statement, language, node);
+                    }
+                }));
         }
     }
 }

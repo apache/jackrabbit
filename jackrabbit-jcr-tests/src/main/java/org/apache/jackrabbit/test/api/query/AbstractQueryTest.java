@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Abstract base class for query test cases.
@@ -340,5 +341,16 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         else {
             return '"' + identifier + '"';
         }
+    }
+
+    /**
+     * @param language a query language.
+     * @return <code>true</code> if <code>language</code> is supported;
+     *         <code>false</code> otherwise.
+     * @throws RepositoryException if an error occurs.
+     */
+    protected boolean isSupportedLanguage(String language)
+            throws RepositoryException {
+        return Arrays.asList(qm.getSupportedQueryLanguages()).contains(language);
     }
 }

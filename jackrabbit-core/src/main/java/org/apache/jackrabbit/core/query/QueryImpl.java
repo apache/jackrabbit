@@ -35,7 +35,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.version.VersionException;
 import java.text.NumberFormat;
@@ -103,50 +102,16 @@ public class QueryImpl extends AbstractQueryImpl {
                      ItemManager itemMgr,
                      QueryHandler handler,
                      String statement,
-                     String language) throws InvalidQueryException {
+                     String language,
+                     Node node) throws InvalidQueryException {
         checkNotInitialized();
         this.session = session;
         this.statement = statement;
         this.language = language;
         this.handler = handler;
+        this.node = node;
         this.query = handler.createExecutableQuery(session, itemMgr, statement, language);
         setInitialized();
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public void init(SessionImpl session,
-                     ItemManager itemMgr,
-                     QueryHandler handler,
-                     Node node)
-            throws InvalidQueryException, RepositoryException {
-        checkNotInitialized();
-        this.session = session;
-        this.node = node;
-        this.handler = handler;
-
-        if (!node.isNodeType(session.getJCRName(NameConstants.NT_QUERY))) {
-            throw new InvalidQueryException("node is not of type nt:query");
-        }
-        statement = node.getProperty(session.getJCRName(NameConstants.JCR_STATEMENT)).getString();
-        language = node.getProperty(session.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
-        query = handler.createExecutableQuery(session, itemMgr, statement, language);
-        setInitialized();
-    }
-
-    /**
-     * @inheritDoc
-     * <p/>
-     * Throws an {@link UnsupportedOperationException}.
-     */
-    public void init(SessionImpl session,
-                     ItemManager itemMgr,
-                     QueryHandler handler,
-                     QueryObjectModelTree qomTree,
-                     String language)
-            throws InvalidQueryException, RepositoryException {
-        throw new UnsupportedOperationException("not a prepared query");
     }
 
     /**
