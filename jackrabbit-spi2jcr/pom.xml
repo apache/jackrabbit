@@ -70,6 +70,7 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.test.api.observation.EventJournalTest
+                org.apache.jackrabbit.test.api.query.GetLanguageTest#testJCRQOM
                 org.apache.jackrabbit.test.api.query.OrderByDateTest
                 org.apache.jackrabbit.test.api.query.OrderByDoubleTest
                 org.apache.jackrabbit.test.api.query.OrderByLongTest
