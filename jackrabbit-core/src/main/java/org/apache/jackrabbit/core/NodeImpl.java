@@ -4637,7 +4637,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         throw new RepositoryException("invalid property name: " + name, e);
                     }
                     ArrayList<PropertyId> filteredList = new ArrayList<PropertyId>(idList.size());
-                    for (PropertyId propId : filteredList) {
+                    for (PropertyId propId : idList) {
                         if (propId.getName().equals(qName)) {
                             filteredList.add(propId);
                         }
@@ -4682,13 +4682,27 @@ public class NodeImpl extends ItemImpl implements Node {
                 Node n = nit.nextNode();
                 for (PropertyIterator pit = n.getProperties(); pit.hasNext();) {
                     Property p = pit.nextProperty();
-                    if (p.getType() == PropertyType.WEAKREFERENCE
-                            && p.getString().equals(getIdentifier())) {
-                        if (name != null) {
-                            if (name.equals(p.getName())) {
-                                l.add(p);
+                    if (name != null && !name.equals(p.getName())) {
+                        continue;
+                    }
+                    if (p.getType() == PropertyType.WEAKREFERENCE) {
+                        boolean containsId = false;
+                        if (p.isMultiple()) {
+                            // multi-valued
+                            Value[] v = p.getValues();
+                            for (int i = 0; i < v.length; i++) {
+                                if (getIdentifier().equals(v[i].getString())) {
+                                    containsId = true;
+                                    break;
+                                }
                             }
                         } else {
+                            // single-valued
+                            if (getIdentifier().equals(p.getString())) {
+                                containsId = true;
+                            }
+                        }
+                        if (containsId) {
                             l.add(p);
                         }
                     }
