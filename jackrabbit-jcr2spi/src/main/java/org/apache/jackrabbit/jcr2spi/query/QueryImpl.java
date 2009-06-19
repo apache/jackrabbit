@@ -101,23 +101,29 @@ public class QueryImpl implements Query {
     /**
      * The name/value pairs collected upon calls to {@link #bindValue(String, Value)}.
      */
-    private final Map<String, QValue> boundValues = new HashMap();
+    private final Map<String, QValue> boundValues = new HashMap<String, QValue>();
 
     /**
      * Creates a new query.
      *
-     * @param session          the session that created this query.
+     * @param session     the session that created this query.
      * @param mgrProvider the manager provider.
-     * @param itemMgr          the item manager of that session.
-     * @param wspManager       the workspace manager that belongs to the
-     *                         session.
-     * @param statement        the query statement.
-     * @param language         the language of the query statement.
+     * @param itemMgr     the item manager of that session.
+     * @param wspManager  the workspace manager that belongs to the session.
+     * @param statement   the query statement.
+     * @param language    the language of the query statement.
+     * @param node        the node from where the query was read or
+     *                    <code>null</code> if this query is not a stored
+     *                    query.
      * @throws InvalidQueryException if the query is invalid.
      */
-    public QueryImpl(Session session, ManagerProvider mgrProvider,
-                     ItemManager itemMgr, WorkspaceManager wspManager,
-                     String statement, String language)
+    public QueryImpl(Session session,
+                     ManagerProvider mgrProvider,
+                     ItemManager itemMgr,
+                     WorkspaceManager wspManager,
+                     String statement,
+                     String language,
+                     Node node)
             throws InvalidQueryException, RepositoryException {
         this.session = session;
         this.mgrProvider = mgrProvider;
@@ -125,44 +131,8 @@ public class QueryImpl implements Query {
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
-        this.wspManager.checkQueryStatement(
-                statement, language, getNamespaceMappings());
-    }
-
-    /**
-     * Creates a query from a node.
-     *
-     * @param session    the session that created this query.
-     * @param mgrProvider the manager provider.
-     * @param itemMgr    the item manager of that session.
-     * @param wspManager the workspace manager that belongs to the session.
-     * @param node       the node from where to read the query.
-     * @throws InvalidQueryException if the query is invalid.
-     * @throws RepositoryException   if another error occurs while reading from
-     *                               the node.
-     */
-    public QueryImpl(Session session, ManagerProvider mgrProvider,
-                     ItemManager itemMgr, WorkspaceManager wspManager,
-                     Node node)
-        throws InvalidQueryException, RepositoryException {
-
-        this.session = session;
-        this.mgrProvider = mgrProvider;
-        this.itemManager = itemMgr;
+        this.wspManager.checkQueryStatement(statement, language, getNamespaceMappings());
         this.node = node;
-        this.wspManager = wspManager;
-
-        NamePathResolver resolver = mgrProvider.getNamePathResolver();
-        if (!node.isNodeType(resolver.getJCRName(NameConstants.NT_QUERY))) {
-            throw new InvalidQueryException("Node is not of type nt:query");
-        }
-        if (node.getSession() != session) {
-            throw new InvalidQueryException("Node belongs to a different session.");
-        }
-        statement = node.getProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT)).getString();
-        language = node.getProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
-        this.wspManager.checkQueryStatement(
-                statement, language, getNamespaceMappings());
     }
 
     /**
