@@ -70,4 +70,9 @@ public class SlowQueryHandler extends AbstractQueryHandler {
             throws InvalidQueryException {
         return null;
     }
+
+    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
+            throws RepositoryException {
+        return null;
+    }
 }

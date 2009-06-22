@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -30,9 +32,11 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * This class implements the {@link QueryManager} interface.
@@ -131,6 +135,31 @@ public class QueryManagerImpl implements QueryManager {
      */
     public QueryObjectModelFactory getQOMFactory() {
         return qomFactory;
+    }
+
+    //-------------------------< Jackrabbit internal >--------------------------
+
+    /**
+     * Returns the ids of the nodes that refer to the <code>node</code> by weak
+     * references.
+     *
+     * @param node the target node.
+     * @return the referring nodes.
+     * @throws RepositoryException if an error occurs.
+     */
+    public Iterable<Node> getWeaklyReferringNodes(Node node)
+            throws RepositoryException {
+        sanityCheck();
+        List<Node> nodes = new ArrayList<Node>();
+        try {
+            NodeId nodeId = new NodeId(UUID.fromString(node.getIdentifier()));
+            for (NodeId id : searchMgr.getWeaklyReferringNodes(nodeId)) {
+                nodes.add(session.getNodeById(id));
+            }
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        }
+        return nodes;
     }
 
     //------------------------< testing only >----------------------------------

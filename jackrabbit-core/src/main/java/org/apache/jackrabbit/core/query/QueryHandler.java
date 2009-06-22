@@ -131,5 +131,17 @@ public interface QueryHandler {
      * @return the name of the query class to use.
      */
     String getQueryClass();
-    
+
+    /**
+     * Returns the ids of the nodes that refer to the node with <code>id</code>
+     * by weak references.
+     *
+     * @param id the id of the target node.
+     * @return the ids of the referring nodes.
+     * @throws RepositoryException if an error occurs.
+     * @throws IOException         if an error occurs while reading from the
+     *                             index.
+     */
+    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
+            throws RepositoryException, IOException;
 }

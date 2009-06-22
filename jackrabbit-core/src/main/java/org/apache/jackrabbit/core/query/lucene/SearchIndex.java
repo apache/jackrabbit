@@ -60,6 +60,9 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.SortComparatorSource;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
@@ -691,6 +694,38 @@ public class SearchIndex extends AbstractQueryHandler {
                 getContext().getPropertyTypeRegistry(), qomTree);
         query.setRespectDocumentOrder(documentOrder);
         return query;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
+            throws RepositoryException, IOException {
+        final List<Integer> docs = new ArrayList<Integer>();
+        final List<NodeId> ids = new ArrayList<NodeId>();
+        final IndexReader reader = getIndexReader();
+        try {
+            IndexSearcher searcher = new IndexSearcher(reader);
+            try {
+                Query q = new TermQuery(new Term(
+                        FieldNames.WEAK_REFS, id.getUUID().toString()));
+                searcher.search(q, new HitCollector() {
+                    public void collect(int doc, float score) {
+                        docs.add(doc);
+                    }
+                });
+            } finally {
+                searcher.close();
+            }
+            for (Integer doc : docs) {
+                Document d = reader.document(doc, FieldSelectors.UUID);
+                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
+                ids.add(new NodeId(uuid));
+            }
+        } finally {
+            Util.closeOrRelease(reader);
+        }
+        return ids;
     }
 
     /**

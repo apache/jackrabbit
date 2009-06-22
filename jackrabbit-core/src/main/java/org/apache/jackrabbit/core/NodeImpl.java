@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
@@ -95,6 +97,7 @@ import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.LabelVersionSelector;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.version.VersionSelector;
+import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -103,6 +106,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ChildrenCollectorFilter;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
@@ -4660,53 +4664,53 @@ public class NodeImpl extends ItemImpl implements Node {
      * {@inheritDoc}
      */
     public PropertyIterator getWeakReferences() throws RepositoryException {
-        return getWeakReferences(null);
+        // check state of this instance
+        sanityCheck();
+
+        Value ref = getSession().getValueFactory().createValue(this, true);
+        List<Property> props = new ArrayList<Property>();
+        QueryManagerImpl qm = (QueryManagerImpl) session.getWorkspace().getQueryManager();
+        for (Node n : qm.getWeaklyReferringNodes(this)) {
+            for (PropertyIterator it = n.getProperties(); it.hasNext(); ) {
+                Property p = it.nextProperty();
+                if (p.getType() == PropertyType.WEAKREFERENCE) {
+                    Collection<Value> refs;
+                    if (p.isMultiple()) {
+                        refs = Arrays.asList(p.getValues());
+                    } else {
+                        refs = Collections.singleton(p.getValue());
+                    }
+                    if (refs.contains(ref)) {
+                        props.add(p);
+                    }
+                }
+            }
+        }
+        return new PropertyIteratorAdapter(props);
     }
 
     /**
      * {@inheritDoc}
      */
     public PropertyIterator getWeakReferences(String name) throws RepositoryException {
+        if (name == null) {
+            return getWeakReferences();
+        }
+
         // check state of this instance
         sanityCheck();
 
-        // TODO tweak query implemention in order to support WEAKREFERENCE reverse lookup
         try {
+            StringBuilder stmt = new StringBuilder();
+            stmt.append("//*[@").append(ISO9075.encode(name));
+            stmt.append(" = '").append(data.getId()).append("']");
             Query q = session.getWorkspace().getQueryManager().createQuery(
-                    "//*[jcr:contains(., '" + data.getId() + "')]",
-                    //"//*[@*='" + data.getId() + "']",
-                    Query.XPATH);
+                    stmt.toString(), Query.XPATH);
             QueryResult result = q.execute();
             ArrayList<Property> l = new ArrayList<Property>();
             for (NodeIterator nit = result.getNodes(); nit.hasNext();) {
                 Node n = nit.nextNode();
-                for (PropertyIterator pit = n.getProperties(); pit.hasNext();) {
-                    Property p = pit.nextProperty();
-                    if (name != null && !name.equals(p.getName())) {
-                        continue;
-                    }
-                    if (p.getType() == PropertyType.WEAKREFERENCE) {
-                        boolean containsId = false;
-                        if (p.isMultiple()) {
-                            // multi-valued
-                            Value[] v = p.getValues();
-                            for (int i = 0; i < v.length; i++) {
-                                if (getIdentifier().equals(v[i].getString())) {
-                                    containsId = true;
-                                    break;
-                                }
-                            }
-                        } else {
-                            // single-valued
-                            if (getIdentifier().equals(p.getString())) {
-                                containsId = true;
-                            }
-                        }
-                        if (containsId) {
-                            l.add(p);
-                        }
-                    }
-                }
+                l.add(n.getProperty(name));
             }
             if (l.isEmpty()) {
                 return PropertyIteratorAdapter.EMPTY;
