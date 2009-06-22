@@ -1032,7 +1032,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public QueryInfo executeQuery(SessionInfo sessionInfo,
                                   String statement,
                                   String language,
-                                  Map namespaces) throws RepositoryException {
+                                  Map<String, String> namespaces) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);
@@ -1043,7 +1043,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);

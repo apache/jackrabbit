@@ -122,5 +122,5 @@ public interface QNodeTypeDefinition {
      *
      * @return a collection of node type <code>Name</code>s
      */
-    public Collection getDependencies();
+    public Collection<Name> getDependencies();
 }

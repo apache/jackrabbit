@@ -32,9 +32,9 @@ import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
-import org.apache.jackrabbit.spi.commons.nodetype.compact.QNodeTypeDefinitionsBuilderImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
 
 import javax.jcr.RepositoryException;
@@ -80,13 +80,13 @@ import java.util.HashMap;
  */
 public abstract class AbstractReadableRepositoryService extends AbstractRepositoryService {
 
-    protected static final Set WRITE_ACTIONS = new HashSet(Arrays.asList(
-            new String[]{"add_node", "set_property", "remove"}));
+    protected static final Set<String> WRITE_ACTIONS = new HashSet<String>(
+            Arrays.asList("add_node", "set_property", "remove"));
 
     /**
      * The repository descriptors.
      */
-    protected final Map descriptors;
+    protected final Map<String, String> descriptors;
 
     /**
      * The fixed set of namespaces known to the repository service.
@@ -96,7 +96,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * The fixed set of node type definitions known to the repository service.
      */
-    protected final Map nodeTypeDefs = new HashMap();
+    protected final Map<Name, QNodeTypeDefinition> nodeTypeDefs = new HashMap<Name, QNodeTypeDefinition>();
 
     /**
      * The node definition of the root node.
@@ -106,7 +106,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * The list of workspaces that this repository service exposes.
      */
-    protected final List wspNames;
+    protected final List<String> wspNames;
 
     /**
      * Creates a new <code>AbstractReadableRepositoryService</code>.
@@ -120,22 +120,20 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * @throws RepositoryException if the namespace mappings are invalid.
      * @throws ParseException      if an error occurs while parsing the CND.
      */
-    public AbstractReadableRepositoryService(Map descriptors,
-                                             Map namespaces,
+    public AbstractReadableRepositoryService(Map<String, String> descriptors,
+                                             Map<String, String> namespaces,
                                              Reader cnd,
-                                             List wspNames)
+                                             List<String> wspNames)
             throws RepositoryException, ParseException {
-        this.descriptors = Collections.unmodifiableMap(new HashMap(descriptors));
-        for (Iterator it = namespaces.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            this.namespaces.setMapping((String) entry.getKey(),
-                    (String) entry.getValue());
+        this.descriptors = Collections.unmodifiableMap(new HashMap<String, String>(descriptors));
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+            this.namespaces.setMapping(entry.getKey(), entry.getValue());
         }
         CompactNodeTypeDefReader reader = new CompactNodeTypeDefReader(cnd, "", this.namespaces);
         for (QNodeTypeDefinition def : reader.getNodeTypeDefinitions()) {
             nodeTypeDefs.put(def.getName(), def);
         }
-        this.wspNames = Collections.unmodifiableList(new ArrayList(wspNames));
+        this.wspNames = Collections.unmodifiableList(new ArrayList<String>(wspNames));
     }
 
     //---------------------------< subclass responsibility >--------------------
@@ -264,7 +262,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * This default implementation returns an iterator over the item infos
      * returned by the call to {@link #getNodeInfo(SessionInfo, NodeId)}.
      */
-    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws
             ItemNotFoundException, RepositoryException {
         return Collections.singleton(getNodeInfo(sessionInfo, nodeId)).iterator();
     }
@@ -275,7 +273,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * This default implementation returns the descriptors that were passed
      * to the constructor of this repository service.
      */
-    public Map getRepositoryDescriptors() throws RepositoryException {
+    public Map<String, String> getRepositoryDescriptors() throws RepositoryException {
         return descriptors;
     }
 
@@ -289,7 +287,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     public String[] getWorkspaceNames(SessionInfo sessionInfo) throws
             RepositoryException {
         checkSessionInfo(sessionInfo);
-        return (String[]) wspNames.toArray(new String[wspNames.size()]);
+        return wspNames.toArray(new String[wspNames.size()]);
     }
 
     //-------------------------< access control >-------------------------------
@@ -305,8 +303,8 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
                              String[] actions) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         // deny all but read
-        for (int i = 0; i < actions.length; i++) {
-            if (WRITE_ACTIONS.contains(actions[i])) {
+        for (String action : actions) {
+            if (WRITE_ACTIONS.contains(action)) {
                 return false;
             }
         }
@@ -319,7 +317,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * This default implementation first calls {@link #checkSessionInfo(SessionInfo)}
      * with the <code>sessionInfo</code>,
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws
             RepositoryException {
         checkSessionInfo(sessionInfo);
         return nodeTypeDefs.values().iterator();
@@ -332,15 +330,14 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * is not a valid node type definition then a {@link RepositoryException}
      * is thrown.
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames)
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames)
             throws RepositoryException {
         checkSessionInfo(sessionInfo);
-        List ntDefs = new ArrayList();
-        for (int i = 0; i < nodetypeNames.length; i++) {
-            Object def = nodeTypeDefs.get(nodetypeNames[i]);
+        List<QNodeTypeDefinition> ntDefs = new ArrayList<QNodeTypeDefinition>();
+        for (Name nodetypeName : nodetypeNames) {
+            QNodeTypeDefinition def = nodeTypeDefs.get(nodetypeName);
             if (def == null) {
-                throw new RepositoryException("unknown node type: "
-                        + nodetypeNames[i]);
+                throw new RepositoryException("unknown node type: " + nodetypeName);
             }
             ntDefs.add(def);
         }
@@ -399,7 +396,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
      * URL mapping that was provided in the constructor of this repository
      * service.
      */
-    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws
+    public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws
             RepositoryException {
         checkSessionInfo(sessionInfo);
         return namespaces.getPrefixToURIMapping();
@@ -596,23 +593,29 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     }
 
     /**
-     * @throws UnsupportedRepositoryOperationException always.
+     * @throws UnsupportedRepositoryOperationException
+     *          always.
      */
-    public Iterator merge(SessionInfo sessionInfo,
-                          NodeId nodeId,
-                          String srcWorkspaceName,
-                          boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public Iterator<NodeId> merge(SessionInfo sessionInfo,
+                                  NodeId nodeId,
+                                  String srcWorkspaceName,
+                                  boolean bestEffort) throws
+            NoSuchWorkspaceException, AccessDeniedException, MergeException,
+            LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
     /**
-     * @throws UnsupportedRepositoryOperationException always.
+     * @throws UnsupportedRepositoryOperationException
+     *          always.
      */
-    public Iterator merge(SessionInfo sessionInfo,
-                          NodeId nodeId,
-                          String srcWorkspaceName,
-                          boolean bestEffort,
-                          boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    public Iterator<NodeId> merge(SessionInfo sessionInfo,
+                                  NodeId nodeId,
+                                  String srcWorkspaceName,
+                                  boolean bestEffort,
+                                  boolean isShallow) throws
+            NoSuchWorkspaceException, AccessDeniedException, MergeException,
+            LockException, InvalidItemStateException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 
@@ -784,7 +787,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     }
 
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement,
-                                  String language, Map namespaces, long limit,
+                                  String language, Map<String, String> namespaces, long limit,
                                   long offset, Map<String, QValue> values) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
