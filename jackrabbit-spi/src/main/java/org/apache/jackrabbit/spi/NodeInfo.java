@@ -68,7 +68,7 @@ public interface NodeInfo extends ItemInfo {
      * node based on this info object or an empty array if the node is not
      * referenceable or no references exist.
      * @see PropertyInfo#getId()
-     * @deprecated Use {@link RepositoryService#getReferences(SessionInfo, NodeId, boolean)} instead.
+     * @deprecated Use {@link RepositoryService#getReferences(SessionInfo, NodeId, Name, boolean)} instead.
      */
     public PropertyId[] getReferences();
 
@@ -76,7 +76,7 @@ public interface NodeInfo extends ItemInfo {
      * @return {@link PropertyId Id}s of children properties
      * @see PropertyInfo#getId()
      */
-    public Iterator getPropertyIds();
+    public Iterator<PropertyId> getPropertyIds();
 
     /**
      * Return the all <code>ChildInfo</code>s of the node represent by
@@ -94,5 +94,5 @@ public interface NodeInfo extends ItemInfo {
      * case {@link RepositoryService#getChildInfos(SessionInfo, NodeId)} will
      * be used to load the <code>ChildInfo</code>s.
      */
-    public Iterator getChildInfos();
+    public Iterator<ChildInfo> getChildInfos();
 }

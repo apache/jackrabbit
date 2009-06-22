@@ -1678,7 +1678,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#executeQuery(SessionInfo, String, String, Map)
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws RepositoryException {
         SearchMethod method = null;
         try {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -1705,7 +1705,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#executeQuery(SessionInfo, String, String,java.util.Map,long,long,java.util.Map
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
         SearchMethod method = null;
         try {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());

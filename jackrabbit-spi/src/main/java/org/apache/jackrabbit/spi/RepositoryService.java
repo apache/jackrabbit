@@ -121,7 +121,7 @@ public interface RepositoryService {
      * @see javax.jcr.Repository#getDescriptorKeys()
      * @see javax.jcr.Repository#getDescriptor(String)
      */
-    public Map getRepositoryDescriptors() throws RepositoryException;
+    public Map<String, String> getRepositoryDescriptors() throws RepositoryException;
 
     //-----------------------------------< SessionInfo creation and release >---
     /**
@@ -289,7 +289,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
      */
-    public Iterator getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an Iterator of <code>ChildInfo</code>s present on the
@@ -302,7 +302,7 @@ public interface RepositoryService {
      * @throws ItemNotFoundException
      * @throws RepositoryException
      */
-    public Iterator getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
+    public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns the {@link PropertyId Id}s of the properties that are referencing
@@ -724,7 +724,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#merge(String, boolean)
      */
-    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * Merge the node identified by the given <code>NodeId</code> and its subtree
@@ -746,7 +746,7 @@ public interface RepositoryService {
      * @see javax.jcr.version.VersionManager#merge(String, String, boolean, boolean)
      * @since JCR 2.0
      */
-    public Iterator merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
+    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException;
 
     /**
      * Resolve an existing merge conflict present with the node identified by
@@ -881,7 +881,7 @@ public interface RepositoryService {
      *                               statement.
      * @see javax.jcr.query.QueryManager#createQuery(String, String)
      */
-    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException;
+    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws InvalidQueryException, RepositoryException;
 
     /**
      * Execute the given query statement with the specified query language. The
@@ -898,7 +898,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws RepositoryException;
 
     /**
      * Execute the given query statement with the specified query language. The
@@ -919,7 +919,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
     /**
@@ -1059,7 +1059,7 @@ public interface RepositoryService {
      * @see javax.jcr.NamespaceRegistry#getPrefixes()
      * @see javax.jcr.NamespaceRegistry#getURIs()
      */
-    public Map getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
+    public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Returns the namespace URI for the given namespace <code>prefix</code>.
@@ -1127,7 +1127,7 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
 
     /**
      * Retrieve <code>QNodeTypeDefinition</code>s for the given names. The
@@ -1149,7 +1149,7 @@ public interface RepositoryService {
      * @see javax.jcr.nodetype.NodeTypeManager#getPrimaryNodeTypes()
      * @see javax.jcr.nodetype.NodeTypeManager#getNodeType(String)
      */
-    public Iterator getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException;
 
     /**
      * Registers the node types with the specified <code>QNodeTypeDefinition</code>s.

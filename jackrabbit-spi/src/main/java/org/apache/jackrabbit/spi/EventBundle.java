@@ -31,7 +31,7 @@ public interface EventBundle {
      *
      * @return the {@link Event events} of this bundle.
      */
-    public Iterator getEvents();
+    public Iterator<Event> getEvents();
 
     /**
      * Returns <code>true</code> if this event bundle is associated with a
