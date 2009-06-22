@@ -141,7 +141,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ValueFactoryTest.class);
 
         // JCR 2.0
-        
+
+        //// new node types
+        suite.addTestSuite(GetWeakReferencesTest.class);
+
         //// new Session features
         
         suite.addTestSuite(SessionRemoveItemTest.class);
