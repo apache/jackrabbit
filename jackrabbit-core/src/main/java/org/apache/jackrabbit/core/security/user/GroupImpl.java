@@ -168,7 +168,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @throws RepositoryException If an error occurs while collecting the members.
      */
     private Collection getMembers(boolean includeIndirect) throws RepositoryException {
-        PropertyIterator itr = getNode().getWeakReferences();
+        PropertyIterator itr = getNode().getWeakReferences(getSession().getJCRName(P_GROUPS));
         Collection members = new HashSet((int) itr.getSize());
         while (itr.hasNext()) {
             NodeImpl n = (NodeImpl) itr.nextProperty().getParent();
@@ -182,6 +182,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
             } else if (n.isNodeType(NT_REP_USER)) {
                 User user = userManager.createUser(n);
                 members.add(user);
+            } else {
+                // weak-ref property 'rep:groups' that doesn't reside under an
+                // authorizable node -> doesn't represent a member of this group.
+                log.debug("Undefined reference to group '" + getID() + "' -> Not included in member set.");
             }
         }
         return members;
