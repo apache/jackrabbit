@@ -333,7 +333,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             return false;
         }
 
-        Value toRemove = getSession().getValueFactory().createValue(group.getNode());
+        Value toRemove = getSession().getValueFactory().createValue(group.getNode(), true);
         PropertyImpl property = node.getProperty(P_GROUPS);
         List valList = new ArrayList(Arrays.asList(property.getValues()));
         if (valList.remove(toRemove)) {
