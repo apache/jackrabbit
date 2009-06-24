@@ -596,6 +596,10 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                                 }
                             }
                             break;
+                        case Event.NODE_MOVED:
+                            // protected ac nodes cannot be moved around
+                            // -> nothing to do TODO check again
+                            break;
                         default:
                             // illegal event-type: should never occur. ignore
                     }

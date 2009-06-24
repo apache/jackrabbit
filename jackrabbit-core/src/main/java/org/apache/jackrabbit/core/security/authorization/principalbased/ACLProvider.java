@@ -321,6 +321,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                     switch (ev.getType()) {
                         case Event.NODE_ADDED:
                         case Event.NODE_REMOVED:
+                        case Event.NODE_MOVED:
                             reload = acPaths.contains(Text.getRelativeParent(path, 2));
                             break;
                         case Event.PROPERTY_ADDED:
@@ -328,6 +329,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                         case Event.PROPERTY_REMOVED:
                             reload = acPaths.contains(Text.getRelativeParent(path, 3));
                             break;
+
                         default:
                             // illegal event-type: should never occur. ignore
                             break;
