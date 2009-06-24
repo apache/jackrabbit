@@ -33,6 +33,9 @@
   <!--
       Search index and the file system it uses.
   -->
-  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SlowQueryHandler"/>
+  <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SlowQueryHandler">
+    <param name="path" value="${wsp.home}/index" />
+    <param name="directoryManagerClass" value="org.apache.jackrabbit.core.query.lucene.directory.RAMDirectoryManager"/>
+  </SearchIndex>
 </Workspace>
 

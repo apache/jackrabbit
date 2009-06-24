@@ -18,23 +18,14 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-
-import org.apache.jackrabbit.core.query.AbstractQueryHandler;
-import org.apache.jackrabbit.core.query.ExecutableQuery;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.ItemManager;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>SlowQueryHandler</code> implements a dummy query handler for testing
  * purpose.
  */
-public class SlowQueryHandler extends AbstractQueryHandler {
+public class SlowQueryHandler extends SearchIndex {
 
     protected void doInit() throws IOException {
         // sleep for 10 seconds then try to read from the item state manager
@@ -46,33 +37,6 @@ public class SlowQueryHandler extends AbstractQueryHandler {
         }
         NodeId id = new NodeId(UUID.randomUUID());
         getContext().getItemStateManager().hasItemState(id);
-    }
-
-    public void addNode(NodeState node) throws RepositoryException, IOException {
-    }
-
-    public void deleteNode(NodeId id) throws IOException {
-    }
-
-    public void close() throws IOException {
-    }
-
-    public ExecutableQuery createExecutableQuery(SessionImpl session,
-                                                 ItemManager itemMgr, String statement,
-                                                 String language)
-            throws InvalidQueryException {
-        return null;
-    }
-
-    public ExecutableQuery createExecutableQuery(SessionImpl session,
-                                                 ItemManager itemMgr,
-                                                 QueryObjectModelTree qomTree)
-            throws InvalidQueryException {
-        return null;
-    }
-
-    public Iterable<NodeId> getWeaklyReferringNodes(NodeId id)
-            throws RepositoryException {
-        return null;
+        super.doInit();
     }
 }
