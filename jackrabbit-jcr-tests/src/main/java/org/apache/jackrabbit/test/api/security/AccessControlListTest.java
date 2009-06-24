@@ -146,10 +146,6 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             assertTrue("An ACE must contain at least a single privilege", privs != null && privs.length > 0);
         }
     }
-    
-    public void testFoo() {
-        throw new RuntimeException("LALALA");
-    }
 
     public void testAddAccessControlEntry() throws NotExecutableException, RepositoryException {
         checkCanModifyAc(path);
