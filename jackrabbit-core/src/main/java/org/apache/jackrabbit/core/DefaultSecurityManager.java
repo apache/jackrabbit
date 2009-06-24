@@ -126,7 +126,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * key = name of the workspace,
      * value = {@link AccessControlProvider}
      */
-    private final Map acProviders = new HashMap();
+    private final Map<String, AccessControlProvider> acProviders = new HashMap();
 
     /**
      * the AccessControlProviderFactory
@@ -184,12 +184,12 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         Properties[] moduleConfig = authContextProvider.getModuleConfig();
 
         // retrieve default-ids (admin and anomymous) from login-module-configuration.
-        for (int i = 0; i < moduleConfig.length; i++) {
-            if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
-                adminId = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
+        for (Properties props : moduleConfig) {
+            if (props.containsKey(LoginModuleConfig.PARAM_ADMIN_ID)) {
+                adminId = props.getProperty(LoginModuleConfig.PARAM_ADMIN_ID);
             }
-            if (moduleConfig[i].containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
-                anonymousId = moduleConfig[i].getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
+            if (props.containsKey(LoginModuleConfig.PARAM_ANONYMOUS_ID)) {
+                anonymousId = props.getProperty(LoginModuleConfig.PARAM_ANONYMOUS_ID);
             }
         }
         // fallback:
@@ -228,8 +228,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         // 2) create registry instance
         principalProviderRegistry = new ProviderRegistryImpl(defaultPP);
         // 3) register all configured principal providers.
-        for (int i = 0; i < moduleConfig.length; i++) {
-            principalProviderRegistry.registerProvider(moduleConfig[i]);
+        for (Properties props : moduleConfig) {
+            principalProviderRegistry.registerProvider(props);
         }
 
         // create the principal manager for the security workspace
@@ -244,7 +244,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     public void dispose(String workspaceName) {
         checkInitialized();
         synchronized (acProviders) {
-            AccessControlProvider prov = (AccessControlProvider) acProviders.remove(workspaceName);
+            AccessControlProvider prov = acProviders.remove(workspaceName);
             if (prov != null) {
                 prov.close();
             }
@@ -257,9 +257,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     public void close() {
         checkInitialized();
         synchronized (acProviders) {
-            Iterator itr = acProviders.values().iterator();
+            Iterator<AccessControlProvider> itr = acProviders.values().iterator();
             while (itr.hasNext()) {
-                ((AccessControlProvider) itr.next()).close();
+                itr.next().close();
             }
             acProviders.clear();
         }
@@ -289,7 +289,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             throw e;
         } catch (Exception e) {
             // wrap in RepositoryException
-            String msg = "Failed to instantiate AccessManager (" + amConfig.getClassName() + ")";
+            String clsName = (amConfig == null) ? "-- missing access manager configuration --" : amConfig.getClassName();
+            String msg = "Failed to instantiate AccessManager (" + clsName + ")";
             log.error(msg, e);
             throw new RepositoryException(msg, e);
         }
@@ -411,7 +412,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             throws NoSuchWorkspaceException, RepositoryException {
         checkInitialized();
         synchronized (acProviders) {
-            AccessControlProvider provider = (AccessControlProvider) acProviders.get(workspaceName);
+            AccessControlProvider provider = acProviders.get(workspaceName);
             if (provider == null) {
                 SystemSession systemSession = repository.getSystemSession(workspaceName);
                 WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
