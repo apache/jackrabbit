@@ -27,6 +27,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +36,11 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ItemNotFoundException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 /**
  * <code>AccessManagerTest</code>...
@@ -109,8 +112,6 @@ public class AccessManagerTest extends AbstractJCRTest {
         acMgr.checkPermission(id, AccessManager.READ | AccessManager.WRITE | AccessManager.REMOVE  + 1);
     }
 
-/*
-// TODO: uncomment as soon as SimpleAccessManager is replaced
     public void testCheckPermissionWithUnknowId() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         AccessManager acMgr = getAccessManager(s);
@@ -123,7 +124,6 @@ public class AccessManagerTest extends AbstractJCRTest {
             // ok
         }
     }
-*/
 
     public void testIsGranted() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
@@ -210,8 +210,6 @@ public class AccessManagerTest extends AbstractJCRTest {
         }
     }
 
-/*
-// TODO: uncomment as soon as SimpleAccessManager is replaced
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         try {
@@ -227,7 +225,6 @@ public class AccessManagerTest extends AbstractJCRTest {
         s.logout();
         }
     }
-*/
 
     public void testIsGrantedWithRelativePath() throws NotExecutableException {
         AccessManager acMgr = getAccessManager(superuser);
