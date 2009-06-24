@@ -186,11 +186,12 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
             NodeResolver nr = createNodeResolver(currentUser.getNode().getSession());
 
             NodeIterator result = nr.findNodes(propName, "blub", UserConstants.NT_REP_USER, false);
-            assertTrue(result.getSize() == 1);
-            assertTrue(result.nextNode().isSame(currentUser.getNode()));
+            assertTrue("expected result", result.hasNext());
+            assertEquals(currentUser.getNode().getPath(), result.nextNode().getPath());
+            assertFalse("expected no more results", result.hasNext());
 
             result = nr.findNodes(propName, "blub", UserConstants.NT_REP_AUTHORIZABLE, false);
-            assertTrue(result.getSize() > 1);
+            assertTrue(getSize(result) > 1);
 
         } finally {
             currentUser.removeProperty(propertyName1);
