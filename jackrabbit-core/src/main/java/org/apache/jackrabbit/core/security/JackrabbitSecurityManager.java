@@ -73,7 +73,7 @@ public interface JackrabbitSecurityManager {
      *
      * @param session
      * @return PrincipalManager for the given <code>session</code>.
-     * @throws UnsupportedRepositoryOperationException If principal management
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If principal management
      * is not supported.
      * @throws RepositoryException if an error occurs
      */
@@ -84,7 +84,7 @@ public interface JackrabbitSecurityManager {
      *
      * @param session
      * @return UserManager for the given <code>session</code>.
-     * @throws UnsupportedRepositoryOperationException If user management is
+     * @throws javax.jcr.UnsupportedRepositoryOperationException If user management is
      * not supported.
      * @throws RepositoryException
      */
