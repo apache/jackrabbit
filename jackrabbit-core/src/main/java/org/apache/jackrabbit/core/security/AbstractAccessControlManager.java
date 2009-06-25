@@ -132,6 +132,16 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         return new JackrabbitAccessControlPolicy[0];
     }
 
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(java.security.Principal)
+     */
+    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+
+        log.debug("Implementation does not provide applicable policies -> returning empty array.");
+        return new JackrabbitAccessControlPolicy[0];
+    }
+    
     //--------------------------------------------------------------------------
     /**
      * Check if this manager has been properly initialized.

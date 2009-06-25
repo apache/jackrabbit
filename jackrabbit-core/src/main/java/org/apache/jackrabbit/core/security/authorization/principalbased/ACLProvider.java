@@ -23,9 +23,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.UnmodifiableAccessControlList;
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.ItemImpl;
@@ -37,6 +35,8 @@ import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.Privilege;
 import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlException;
+
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +67,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private static Logger log = LoggerFactory.getLogger(ACLProvider.class);
 
     // TODO: add means to show effective-policy to a user.
+    private static final AccessControlPolicy effectivePolicy = EffectivePrincipalBasedPolicy.getInstance();
 
     private ACLEditor editor;
     private NodeImpl acRoot;
@@ -122,38 +123,23 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
                 PrincipalManager pMgr = session.getPrincipalManager();
                 AccessControlManager acMgr = session.getAccessControlManager();
+
+                // initial default permissions for the administrators group                
                 Principal administrators;
                 String pName = SecurityConstants.ADMINISTRATORS_NAME;
                 if (pMgr.hasPrincipal(pName)) {
                     administrators = pMgr.getPrincipal(pName);
+                    installDefaultPermissions(administrators,
+                        new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)},
+                        restrictions, editor);
                 } else {
-                    log.warn("Administrators principal group is missing.");
-                    administrators = new PrincipalImpl(pName);
-                }
-                AccessControlPolicy[] acls = editor.editAccessControlPolicies(administrators);
-                ACLTemplate acl = (ACLTemplate) acls[0];
-                if (acl.isEmpty()) {
-                    log.debug("... Privilege.ALL for administrators principal.");
-                    acl.addEntry(administrators,
-                            new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)},
-                            true, restrictions);
-                    editor.setPolicy(acl.getPath(), acl);
-                } else {
-                    log.debug("... policy for administrators principal already present.");
+                    log.warn("Administrators principal group is missing -> Not adding default permissions.");
                 }
 
-                Principal everyone = pMgr.getEveryone();
-                acls = editor.editAccessControlPolicies(everyone);
-                acl = (ACLTemplate) acls[0];
-                if (acl.isEmpty()) {
-                    log.debug("... Privilege.READ for everyone principal.");
-                    acl.addEntry(everyone,
-                            new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)},
-                            true, restrictions);
-                    editor.setPolicy(acl.getPath(), acl);
-                } else {
-                    log.debug("... policy for everyone principal already present.");
-                }
+                // initialize default permissions for the everyone group
+                installDefaultPermissions(pMgr.getEveryone(),
+                        new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)},
+                        restrictions, editor);
 
                 session.save();
             } catch (RepositoryException e) {
@@ -163,26 +149,36 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
     }
 
+    private static void installDefaultPermissions(Principal principal, Privilege[] privs, Map restrictions, AccessControlEditor editor) throws RepositoryException, AccessControlException {
+        AccessControlPolicy[] acls = editor.editAccessControlPolicies(principal);
+        if (acls.length > 0) {
+            ACLTemplate acl = (ACLTemplate) acls[0];
+            if (acl.isEmpty()) {
+                acl.addEntry(principal, privs, true, restrictions);
+                editor.setPolicy(acl.getPath(), acl);
+            } else {
+                log.debug("... policy for principal '"+principal.getName()+"' already present.");
+            }
+        } else {
+            log.debug("... policy for principal  '"+principal.getName()+"'  already present.");
+        }
+    }
+
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath)
             throws ItemNotFoundException, RepositoryException {
         /*
-           TODO review
            since the per-node effect of the policies is defined by the
-           rep:nodePath restriction, returning the principal-based
-           policy at 'absPath' probably doesn't reveal what the caller expects.
-           Maybe it would be better not to return an empty array as
-           {@link AccessControlManager#getEffectivePolicies(String)
-           is defined to express a best-effor estimate only.
+           rep:nodePath restriction present with the individual access control
+           entries, returning the principal-based policy at 'absPath' (which for
+           most nodes in the repository isn't available anyway) doesn't
+           provide the desired information.
+           As tmp. solution some default policy is returned indicating.
+           TODO: add proper evalution and return a set of ACLs that take effect on the node at abspath
         */
-        AccessControlPolicy[] tmpls = editor.getPolicies(session.getJCRPath(absPath));
-        AccessControlPolicy[] effectives = new AccessControlPolicy[tmpls.length];
-        for (int i = 0; i < tmpls.length; i++) {
-            effectives[i] = new UnmodifiableAccessControlList((ACLTemplate) tmpls[i]);
-        }
-        return effectives;
+        return new AccessControlPolicy[] {effectivePolicy};
     }
 
     /**
@@ -445,6 +441,20 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 }
             }
             return new AbstractCompiledPermissions.Result(allows, denies, allowPrivileges, denyPrivileges);
+        }
+    }
+
+    /**
+     * Dummy effective policy 
+     */
+    private static final class EffectivePrincipalBasedPolicy implements AccessControlPolicy {
+
+        private static EffectivePrincipalBasedPolicy INSTANCE = new EffectivePrincipalBasedPolicy();
+        private EffectivePrincipalBasedPolicy() {
+        }
+
+        private static EffectivePrincipalBasedPolicy getInstance() {
+            return INSTANCE;
         }
     }
 }

@@ -45,24 +45,7 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
-        // first try if there is a new applicable policy
-        AccessControlPolicyIterator it = acM.getApplicablePolicies(path);
-        while (it.hasNext()) {
-            AccessControlPolicy acp = it.nextAccessControlPolicy();
-            if (acp instanceof ACLTemplate) {
-                return (ACLTemplate) acp;
-            }
-        }
-        // try if there is an acl that has been set before:
-        AccessControlPolicy[] pcls = acM.getPolicies(path);
-        for (int i = 0; i < pcls.length; i++) {
-            AccessControlPolicy policy = pcls[i];
-            if (policy instanceof ACLTemplate) {
-                return (ACLTemplate) policy;
-            }
-        }
-        // no applicable or existing ACLTemplate to edit -> not executable.
-        throw new NotExecutableException("ACLTemplate expected.");
+        return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
     protected Map getRestrictions(Session s, String path) {

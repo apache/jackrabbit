@@ -385,6 +385,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         return editor.editAccessControlPolicies(principal);
     }
 
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlManager#getApplicablePolicies(Principal)
+     */
+    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException {
+        checkInitialized();
+        if (editor == null) {
+            throw new UnsupportedRepositoryOperationException("Editing of access control policies is not supported.");
+        }
+        return editor.getPolicies(principal);
+    }
     //---------------------------------------< AbstractAccessControlManager >---
     /**
      * @see AbstractAccessControlManager#checkInitialized()

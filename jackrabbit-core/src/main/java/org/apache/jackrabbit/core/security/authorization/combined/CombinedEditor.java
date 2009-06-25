@@ -48,21 +48,35 @@ class CombinedEditor implements AccessControlEditor {
      * @see AccessControlEditor#getPolicies(String)
      */
     public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        List templates = new ArrayList(editors.length);
+        List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
         for (int i = 0; i < editors.length; i++) {
             AccessControlPolicy[] ts = editors[i].getPolicies(nodePath);
-            if (ts.length > 0) {
+            if (ts != null && ts.length > 0) {
                 templates.addAll(Arrays.asList(ts));
             }
         }
-        return (AccessControlPolicy[]) templates.toArray(new AccessControlPolicy[templates.size()]);
+        return templates.toArray(new AccessControlPolicy[templates.size()]);
+    }
+
+    /**
+     * @see AccessControlEditor#getPolicies(Principal)
+     */
+    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
+        List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
+        for (int i = 0; i < editors.length; i++) {
+            JackrabbitAccessControlPolicy[] ts = editors[i].getPolicies(principal);
+            if (ts != null && ts.length > 0) {
+                templates.addAll(Arrays.asList(ts));
+            }
+        }
+        return templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
-        List templates = new ArrayList(editors.length);
+        List<AccessControlPolicy> templates = new ArrayList<AccessControlPolicy>();
         for (int i = 0; i < editors.length; i++) {
             try {
                 templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(nodePath)));
@@ -71,14 +85,14 @@ class CombinedEditor implements AccessControlEditor {
                 // ignore.
             }
         }
-        return (AccessControlPolicy[]) templates.toArray(new AccessControlPolicy[templates.size()]);
+        return templates.toArray(new AccessControlPolicy[templates.size()]);
     }
 
     /**
      * @see AccessControlEditor#editAccessControlPolicies(Principal)
      */
     public JackrabbitAccessControlPolicy[] editAccessControlPolicies(Principal principal) throws RepositoryException {
-        List templates = new ArrayList();
+        List<JackrabbitAccessControlPolicy> templates = new ArrayList<JackrabbitAccessControlPolicy>();
         for (int i = 0; i < editors.length; i++) {
             try {
                 templates.addAll(Arrays.asList(editors[i].editAccessControlPolicies(principal)));
@@ -87,7 +101,7 @@ class CombinedEditor implements AccessControlEditor {
                 // ignore.
             }
         }
-        return (JackrabbitAccessControlPolicy[]) templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
+        return templates.toArray(new JackrabbitAccessControlPolicy[templates.size()]);
     }
 
     /**
