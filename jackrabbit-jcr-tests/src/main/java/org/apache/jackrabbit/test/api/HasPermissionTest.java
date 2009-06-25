@@ -41,14 +41,18 @@ public class HasPermissionTest extends AbstractJCRTest {
         superuser.save();
 
         Session readOnly = helper.getReadOnlySession();
-        String path = n.getPath();
+        try {
+            String path = n.getPath();
 
-        assertTrue(readOnly.hasPermission(path, Session.ACTION_READ));
-        assertFalse(readOnly.hasPermission(path + "newNode", Session.ACTION_ADD_NODE));
-        assertFalse(readOnly.hasPermission(path, Session.ACTION_REMOVE));
-        assertFalse(readOnly.hasPermission(path, Session.ACTION_SET_PROPERTY));
-        assertFalse(readOnly.hasPermission(path, ACTION_ALL));
-        assertFalse(readOnly.hasPermission(path, Session.ACTION_REMOVE + "," + Session.ACTION_SET_PROPERTY));
+            assertTrue(readOnly.hasPermission(path, Session.ACTION_READ));
+            assertFalse(readOnly.hasPermission(path + "newNode", Session.ACTION_ADD_NODE));
+            assertFalse(readOnly.hasPermission(path, Session.ACTION_REMOVE));
+            assertFalse(readOnly.hasPermission(path, Session.ACTION_SET_PROPERTY));
+            assertFalse(readOnly.hasPermission(path, ACTION_ALL));
+            assertFalse(readOnly.hasPermission(path, Session.ACTION_REMOVE + "," + Session.ACTION_SET_PROPERTY));
+        } finally {
+            readOnly.logout();
+        }
     }
 
     /**
@@ -63,12 +67,15 @@ public class HasPermissionTest extends AbstractJCRTest {
 
         String path = n.getPath();
         Session rwSession = helper.getReadWriteSession();
-
-        assertTrue(rwSession.hasPermission(path, Session.ACTION_READ));
-        assertTrue(rwSession.hasPermission(path + "newNode", Session.ACTION_ADD_NODE));
-        assertTrue(rwSession.hasPermission(path, Session.ACTION_REMOVE));
-        assertTrue(rwSession.hasPermission(path, Session.ACTION_SET_PROPERTY));
-        assertTrue(rwSession.hasPermission(path, ACTION_ALL));
+        try {
+            assertTrue(rwSession.hasPermission(path, Session.ACTION_READ));
+            assertTrue(rwSession.hasPermission(path + "newNode", Session.ACTION_ADD_NODE));
+            assertTrue(rwSession.hasPermission(path, Session.ACTION_REMOVE));
+            assertTrue(rwSession.hasPermission(path, Session.ACTION_SET_PROPERTY));
+            assertTrue(rwSession.hasPermission(path, ACTION_ALL));
+        } finally {
+            rwSession.logout();
+        }
     }
 
 
