@@ -1009,35 +1009,39 @@ public class XATest extends AbstractJCRTest {
         assertNull("session must get a null lock token", lock.getLockToken());
 
         Session other = helper.getSuperuserSession();
-        // start new Transaction and try to add lock token
-        utx = new UserTransactionImpl(other);
-        utx.begin();
-
-        Node otherNode = other.getNodeByUUID(uuid);
-        assertTrue("Node not locked", otherNode.isLocked());
         try {
+            // start new Transaction and try to add lock token
+            utx = new UserTransactionImpl(other);
+            utx.begin();
+
+            Node otherNode = other.getNodeByUUID(uuid);
+            assertTrue("Node not locked", otherNode.isLocked());
+            try {
+                otherNode.setProperty(propertyName1, "foo");
+                fail("Lock exception should be thrown");
+            } catch (LockException e) {
+                // expected
+            }
+
+            // add lock token
+            other.addLockToken(lockToken);
+
+            // refresh Lock Info
+            lock = otherNode.getLock();
+
+            // assert: session must hold lock token
+            assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));
+
+            otherNode.unlock();
+
+            assertFalse("Node is locked", otherNode.isLocked());
+
             otherNode.setProperty(propertyName1, "foo");
-            fail("Lock exception should be thrown");
-        } catch (LockException e) {
-            // expected
+            other.save();
+            utx.commit();
+        } finally {
+            other.logout();
         }
-
-        // add lock token
-        other.addLockToken(lockToken);
-
-        // refresh Lock Info
-        lock = otherNode.getLock();
-
-        // assert: session must hold lock token
-        assertTrue("session must hold lock token", containsLockToken(other, lock.getLockToken()));
-
-        otherNode.unlock();
-
-        assertFalse("Node is locked", otherNode.isLocked());
-
-        otherNode.setProperty(propertyName1, "foo");
-        other.save();
-        utx.commit();
     }
 
     /**
