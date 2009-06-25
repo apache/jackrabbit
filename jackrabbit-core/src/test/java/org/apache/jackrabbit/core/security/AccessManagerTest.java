@@ -37,6 +37,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.NoSuchWorkspaceException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -114,14 +115,15 @@ public class AccessManagerTest extends AbstractJCRTest {
 
     public void testCheckPermissionWithUnknowId() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
-        AccessManager acMgr = getAccessManager(s);
-
         NodeId id = new NodeId(UUID.randomUUID());
         try {
+            AccessManager acMgr = getAccessManager(s);
             acMgr.checkPermission(id, AccessManager.READ);
             fail("AccessManager.checkPermission should throw ItemNotFoundException with a random (unknown) item id.");
         } catch (ItemNotFoundException e) {
             // ok
+        } finally {
+            s.logout();
         }
     }
 
@@ -213,16 +215,18 @@ public class AccessManagerTest extends AbstractJCRTest {
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
         Session s = helper.getReadOnlySession();
         try {
-        List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
-        String testName = "anyWorkspace";
-        int i = 0;
-        while (all.contains(testName)) {
-            testName = "anyWorkspace" + i;
-            i++;
-        }
-        assertFalse(getAccessManager(s).canAccess(testName));
+            List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
+            String testName = "anyWorkspace";
+            int i = 0;
+            while (all.contains(testName)) {
+                testName = "anyWorkspace" + i;
+                i++;
+            }
+            assertFalse(getAccessManager(s).canAccess(testName));
+        } catch (NoSuchWorkspaceException e) {
+            // fine as well.
         } finally {
-        s.logout();
+            s.logout();
         }
     }
 
