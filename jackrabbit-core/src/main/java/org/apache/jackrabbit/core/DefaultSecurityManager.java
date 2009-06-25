@@ -299,8 +299,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     /**
      * @see JackrabbitSecurityManager#getPrincipalManager(Session)
      */
-    public synchronized PrincipalManager getPrincipalManager(Session session)
-            throws RepositoryException {
+    public PrincipalManager getPrincipalManager(Session session) throws RepositoryException {
         checkInitialized();
         if (session == securitySession) {
             return systemPrincipalManager;
@@ -411,17 +410,22 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     private AccessControlProvider getAccessControlProvider(String workspaceName)
             throws NoSuchWorkspaceException, RepositoryException {
         checkInitialized();
-        synchronized (acProviders) {
-            AccessControlProvider provider = acProviders.get(workspaceName);
-            if (provider == null) {
-                SystemSession systemSession = repository.getSystemSession(workspaceName);
-                WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
-                WorkspaceSecurityConfig secConf = (conf == null) ?  null : conf.getSecurityConfig();
+        AccessControlProvider provider = acProviders.get(workspaceName);
+        if (provider == null || !provider.isLive()) {
+            SystemSession systemSession = repository.getSystemSession(workspaceName);
+            // mark this session as 'active' so the workspace does not get disposed
+            // by the workspace-janitor until the garbage collector is done
+            // TODO: review again... this workaround is now used in several places.
+            repository.onSessionCreated(systemSession);
+            
+            WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
+            WorkspaceSecurityConfig secConf = (conf == null) ?  null : conf.getSecurityConfig();
+            synchronized (acProviders) {
                 provider = acProviderFactory.createProvider(systemSession, secConf);
                 acProviders.put(workspaceName, provider);
             }
-            return provider;
         }
+        return provider;
     }
 
     /**
@@ -496,13 +500,8 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
          * {@inheritDoc}
          */
         public boolean grants(Set principals, String workspaceName) throws RepositoryException {
-            try {
-                AccessControlProvider prov = getAccessControlProvider(workspaceName);
-                return prov.canAccessRoot(principals);
-            } catch (NoSuchWorkspaceException e) {
-                // no such workspace -> return false.
-                return false;
-            }
+            AccessControlProvider prov = getAccessControlProvider(workspaceName);
+            return prov.canAccessRoot(principals);
         }
     }
 }

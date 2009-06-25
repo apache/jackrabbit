@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -30,7 +33,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Map;
@@ -47,16 +49,7 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
-        if (acM instanceof JackrabbitAccessControlManager) {
-            AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
-            for (int i = 0; i < policies.length; i++) {
-                if (policies[i] instanceof ACLTemplate) {
-                    ACLTemplate acl = (ACLTemplate) policies[i];
-                    return acl;
-                }
-            }
-        }
-        throw new NotExecutableException();
+        return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
     protected Map getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
@@ -77,6 +70,37 @@ public class WriteTest extends AbstractWriteTest {
         Node folder = n.addNode("afolder", "nt:folder");
 
         assertFalse(folder.hasProperty("jcr:created"));
+    }
+
+    public void testEditor() throws NotExecutableException, RepositoryException {
+        UserManager uMgr = getUserManager(superuser);
+        User u = uMgr.createUser("t", "t");
+        Principal p = u.getPrincipal();
+        try {
+            JackrabbitAccessControlManager acMgr = (JackrabbitAccessControlManager) getAccessControlManager(superuser);
+            JackrabbitAccessControlPolicy[] acls = acMgr.getApplicablePolicies(p);
+
+            assertEquals(1, acls.length);
+            assertTrue(acls[0] instanceof ACLTemplate);
+
+            // access again
+            acls = acMgr.getApplicablePolicies(p);
+
+            assertEquals(1, acls.length);            
+            assertEquals(1, acMgr.getApplicablePolicies(acls[0].getPath()).getSize());
+
+            assertEquals(0, acMgr.getPolicies(p).length);
+            assertEquals(0, acMgr.getPolicies(acls[0].getPath()).length);
+
+            acMgr.setPolicy(acls[0].getPath(), acls[0]);
+
+            assertEquals(0, acMgr.getApplicablePolicies(p).length);
+            assertEquals(1, acMgr.getPolicies(p).length);
+            assertEquals(1, acMgr.getPolicies(acls[0].getPath()).length);
+        } finally {
+            u.remove();
+        }
+
     }
     // TODO: add specific tests with other restrictions
 }

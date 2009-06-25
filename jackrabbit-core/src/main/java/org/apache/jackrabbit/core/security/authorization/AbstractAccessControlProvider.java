@@ -183,4 +183,11 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         checkInitialized();
         initialized = false;
     }
+
+    /**
+     * @see AccessControlProvider#isLive()
+     */
+    public boolean isLive() {
+        return initialized && session.isLive();
+    }
 }

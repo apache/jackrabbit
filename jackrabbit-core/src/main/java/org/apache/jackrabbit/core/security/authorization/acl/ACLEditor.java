@@ -93,7 +93,6 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     //------------------------------------------------< AccessControlEditor >---
     /**
      * @see AccessControlEditor#getPolicies(String)
-     * @param nodePath
      */
     public AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
@@ -107,8 +106,20 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     /**
+     * Always returns an empty array as no applicable policies are exposed.
+     * 
+     * @see AccessControlEditor#getPolicies(Principal)
+     */
+    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
+        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
+            throw new AccessControlException("Unknown principal.");
+        }
+        // TODO: impl. missing
+        return new JackrabbitAccessControlPolicy[0];
+    }
+
+    /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
-     * @param nodePath
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);

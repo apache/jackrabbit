@@ -105,6 +105,21 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     }
 
     /**
+     * @see AccessControlEditor#getPolicies(Principal)
+     */
+    public JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException {
+        if (!session.getPrincipalManager().hasPrincipal(principal.getName())) {
+            throw new AccessControlException("Cannot edit access control: " + principal.getName() +" isn't a known principal.");
+        }
+        JackrabbitAccessControlPolicy acl = getACL(principal);
+        if (acl == null) {
+            return new JackrabbitAccessControlPolicy[0];
+        } else {
+            return new JackrabbitAccessControlPolicy[] {acl};
+        }
+    }
+
+    /**
      * @see AccessControlEditor#editAccessControlPolicies(String)
      */
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
@@ -119,6 +134,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                     throw new AccessControlException("Access control modification not allowed at " + nodePath);
                 }
                 acNode = createAcNode(nodePath);
+            }
+
+            if (!isAccessControlled(acNode)) {
                 return new AccessControlPolicy[] {createTemplate(acNode)};
             } // else: acl has already been set before -> use getPolicies instead
         }
@@ -142,7 +160,15 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         } else {
             acNode = (NodeImpl) session.getNode(nPath);
         }
-        return new JackrabbitAccessControlPolicy[] {createTemplate(acNode)};
+        if (!isAccessControlled(acNode)) {
+            return new JackrabbitAccessControlPolicy[] {createTemplate(acNode)};
+        } else {
+            // policy child node has already been created -> set policy has
+            // been called before for this principal and getPolicy is used
+            // to retrieve the ACL template.
+            // no additional applicable policies present.
+            return new JackrabbitAccessControlPolicy[0];
+        }
     }
 
     /**

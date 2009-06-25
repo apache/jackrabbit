@@ -166,9 +166,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         if (acls.isEmpty()) {
             // no access control information can be retrieved for the specified
             // node, since neither the node nor any of its parents is access
-            // controlled -> build a default policy.
+            // controlled.
             log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
-            acls.add(new UnmodifiableAccessControlList(Collections.EMPTY_LIST));
         }
         return (AccessControlList[]) acls.toArray(new AccessControlList[acls.size()]);
     }
@@ -274,31 +273,34 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             log.debug("Install initial ACL:...");
             String rootPath = session.getRootNode().getPath();
             AccessControlPolicy[] acls = editor.editAccessControlPolicies(rootPath);
-            ACLTemplate acl = (ACLTemplate) acls[0];
+            if (acls.length > 0) {
+                ACLTemplate acl = (ACLTemplate) acls[0];
+                
+                PrincipalManager pMgr = session.getPrincipalManager();
+                AccessControlManager acMgr = session.getAccessControlManager();
 
-            PrincipalManager pMgr = session.getPrincipalManager();
-            AccessControlManager acMgr = session.getAccessControlManager();
+                log.debug("... Privilege.ALL for administrators.");
+                Principal administrators;
+                String pName = SecurityConstants.ADMINISTRATORS_NAME;
+                if (pMgr.hasPrincipal(pName)) {
+                    administrators = pMgr.getPrincipal(pName);
+                } else {
+                    log.warn("Administrators principal group is missing.");
+                    administrators = new PrincipalImpl(pName);
+                }
+                Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
+                acl.addAccessControlEntry(administrators, privs);
 
-            log.debug("... Privilege.ALL for administrators.");
-            Principal administrators;
-            String pName = SecurityConstants.ADMINISTRATORS_NAME;
-            if (pMgr.hasPrincipal(pName)) {
-                administrators = pMgr.getPrincipal(pName);
+                Principal everyone = pMgr.getEveryone();
+                log.debug("... Privilege.READ for everyone.");
+                privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
+                acl.addAccessControlEntry(everyone, privs);
+
+                editor.setPolicy(rootPath, acl);
+                session.save();
             } else {
-                log.warn("Administrators principal group is missing.");
-                administrators = new PrincipalImpl(pName);
+                log.warn("No applicable ACL available for the root node -> skip initialization of the root node's ACL.");
             }
-            Privilege[] privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_ALL)};
-            acl.addAccessControlEntry(administrators, privs);
-
-            Principal everyone = pMgr.getEveryone();
-            log.debug("... Privilege.READ for everyone.");
-            privs = new Privilege[]{acMgr.privilegeFromName(Privilege.JCR_READ)};
-            acl.addAccessControlEntry(everyone, privs);
-
-            editor.setPolicy(rootPath, acl);
-            session.save();
-
         } catch (RepositoryException e) {
             log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
             session.getRootNode().refresh(false);

@@ -72,6 +72,15 @@ public interface AccessControlProvider {
     void close();
 
     /**
+     * Returns <code>true</code>, if this provider is still alive and able to
+     * evaluate permissions; <code>false</code> otherwise.
+     *
+     * @return <code>true</code>, if this provider is still alive and able to
+     * evaluate permissions; <code>false</code> otherwise.
+     */
+    boolean isLive();
+
+    /**
      * Returns the effective policies for the node at the given absPath.
      *
      * @param absPath an absolute path.

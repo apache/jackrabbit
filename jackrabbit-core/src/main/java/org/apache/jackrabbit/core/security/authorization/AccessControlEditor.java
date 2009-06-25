@@ -57,6 +57,26 @@ public interface AccessControlEditor {
     AccessControlPolicy[] getPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException;
 
     /**
+     * Retrieves the policies that have been applied before for the given
+     * <code>principal</code>. In contrast to {@link #editAccessControlPolicies}
+     * this method returns an empty array if no policy has been applied before
+     * by calling {@link #setPolicy}). Still the returned policies are detached from
+     * the <code>AccessControlProvider</code> and are only an external representation.
+     * Modification will therefore not take effect, until they are written back to
+     * the editor and persisted.
+     *
+     * @param principal  Principal for which the editable policies should be
+     * returned.
+     * @return the policies applied so far or an empty array if no
+     * policy has been applied before.
+     * @throws AccessControlException if the specified principal does not exist,
+     * if this implementation cannot provide policies for individual principals or
+     * if same other access control related exception occurs.
+     * @throws RepositoryException if an error occurs
+     */
+    JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessControlException, RepositoryException;
+
+    /**
      * Retrieves the editable policies for the Node identified by the given
      * <code>nodePath</code> that are applicable but have not yet have been set.<br>
      * The AccessControlPolicy objects returned are detached from the underlying

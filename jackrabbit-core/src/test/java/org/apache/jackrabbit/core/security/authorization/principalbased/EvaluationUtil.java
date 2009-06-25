@@ -59,7 +59,17 @@ class EvaluationUtil {
     static JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException,
             AccessDeniedException, NotExecutableException {
         if (acM instanceof JackrabbitAccessControlManager) {
+            // first try applicable policies
             AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
+            for (int i = 0; i < policies.length; i++) {
+                if (policies[i] instanceof ACLTemplate) {
+                    ACLTemplate acl = (ACLTemplate) policies[i];
+                    return acl;
+                }
+            }
+
+            // second existing policies
+            policies = ((JackrabbitAccessControlManager) acM).getPolicies(principal);
             for (int i = 0; i < policies.length; i++) {
                 if (policies[i] instanceof ACLTemplate) {
                     ACLTemplate acl = (ACLTemplate) policies[i];

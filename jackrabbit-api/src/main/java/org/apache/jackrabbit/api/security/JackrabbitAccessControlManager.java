@@ -30,7 +30,8 @@ import java.security.Principal;
 public interface JackrabbitAccessControlManager extends AccessControlManager {
 
     /**
-     * Returns the editable policies for the specified <code>principal</code>.
+     * Returns the applicable policies for the specified <code>principal</code>
+     * or an empty array if no additional policies can be applied.
      *
      * @param principal A principal known to the editing session.
      * @return array of policies for the specified <code>principal</code>. Note
@@ -46,4 +47,19 @@ public interface JackrabbitAccessControlManager extends AccessControlManager {
      * @see JackrabbitAccessControlPolicy#getPath()
      */
     JackrabbitAccessControlPolicy[] getApplicablePolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Returns the <code>AccessControlPolicy</code> objects that have been set
+     * for the given <code>principal</code> or an empty array if no policy has
+     * been set. This method reflects the binding state, including transient
+     * policy modifications.
+     *
+     * @param principal
+     * @return
+     * @throws AccessDeniedException
+     * @throws AccessControlException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws RepositoryException
+     */
+    JackrabbitAccessControlPolicy[] getPolicies(Principal principal) throws AccessDeniedException, AccessControlException, UnsupportedRepositoryOperationException, RepositoryException;
 }
