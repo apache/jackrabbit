@@ -1667,12 +1667,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    public void checkQueryStatement(SessionInfo sessionInfo,
+    public String[] checkQueryStatement(SessionInfo sessionInfo,
                                     String statement,
                                     String language,
                                     Map namespaces)
             throws InvalidQueryException, RepositoryException {
         // TODO implement
+        return new String[0];
     }
 
     /**

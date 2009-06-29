@@ -294,15 +294,16 @@ public class WorkspaceManager
      * @param language   the query language.
      * @param namespaces the locally remapped namespaces which might be used in
      *                   the query statement.
+     * @return the bind variable names.
      * @throws InvalidQueryException if the query statement is invalid.
      * @throws RepositoryException   if an error occurs while checking the query
      *                               statement.
      */
-    public void checkQueryStatement(String statement,
-                                    String language,
-                                    Map namespaces)
+    public String[] checkQueryStatement(String statement,
+                                        String language,
+                                        Map namespaces)
             throws InvalidQueryException, RepositoryException {
-        service.checkQueryStatement(sessionInfo, statement, language, namespaces);
+        return service.checkQueryStatement(sessionInfo, statement, language, namespaces);
     }
 
     /**
