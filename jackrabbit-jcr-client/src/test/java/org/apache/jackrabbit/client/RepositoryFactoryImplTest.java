@@ -314,11 +314,8 @@ public class RepositoryFactoryImplTest extends TestCase {
             return new String[0];
         }
 
-        public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException {
-        }
-
-        public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws RepositoryException {
-            return null;
+        public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map namespaces) throws InvalidQueryException, RepositoryException {
+            return new String[0];
         }
 
         public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
