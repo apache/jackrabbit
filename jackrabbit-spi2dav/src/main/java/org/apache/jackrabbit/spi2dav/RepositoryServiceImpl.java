@@ -1676,33 +1676,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#executeQuery(SessionInfo, String, String, Map)
-     */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws RepositoryException {
-        SearchMethod method = null;
-        try {
-            String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
-            SearchInfo sInfo = new SearchInfo(language,
-                    Namespace.EMPTY_NAMESPACE, statement, namespaces);
-            method = new SearchMethod(uri, sInfo);
-            getClient(sessionInfo).executeMethod(method);
-            method.checkSuccess();
-
-            MultiStatus ms = method.getResponseBodyAsMultiStatus();
-            NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            return new QueryInfoImpl(ms, idFactory, resolver, valueFactory, getQValueFactory());
-        } catch (IOException e) {
-            throw new RepositoryException(e);
-        } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
-        }  finally {
-            if (method != null) {
-                method.releaseConnection();
-            }
-        }
-    }
-
-    /**
      * @see RepositoryService#executeQuery(SessionInfo, String, String,java.util.Map,long,long,java.util.Map
      */
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
@@ -1711,9 +1684,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
             SearchInfo sInfo = new SearchInfo(language,
                     Namespace.EMPTY_NAMESPACE, statement, namespaces);
-            
-            sInfo.setNumberResults(limit);
-            sInfo.setOffset(offset);
+
+            if (limit != -1) {
+                sInfo.setNumberResults(limit);
+            }
+            if (offset != -1) {
+                sInfo.setOffset(offset);
+            }
 
             if (!(values == null || values.isEmpty())) {
                 throw new UnsupportedOperationException("Implementation missing:  JCR-2107");

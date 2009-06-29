@@ -555,17 +555,6 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
     }
 
     public QueryInfo executeQuery(final SessionInfo sessionInfo, final String statement,
-            final String language, final Map<String, String> namespaces) throws RepositoryException {
-
-        return (QueryInfo) execute(new Callable() {
-            public Object call() throws RepositoryException {
-                return service.executeQuery(unwrap(sessionInfo), statement, language, namespaces);
-            }
-        }, "executeQuery(SessionInfo, String, String, Map)",
-                new Object[]{unwrap(sessionInfo), statement, language, namespaces});
-    }
-
-    public QueryInfo executeQuery(final SessionInfo sessionInfo, final String statement,
                                   final String language, final Map<String, String> namespaces, final long limit, final long offset, final Map<String, QValue> values) throws RepositoryException {
 
         return (QueryInfo) execute(new Callable() {
