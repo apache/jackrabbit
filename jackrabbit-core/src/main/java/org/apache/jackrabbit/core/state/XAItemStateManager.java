@@ -83,30 +83,39 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     private VirtualItemStateProvider virtualProvider;
 
     /**
-     * Creates a new instance of this class.
-     *
-     * @param sharedStateMgr shared state manager
-     * @param factory        event state collection factory
-     */
-    public XAItemStateManager(SharedItemStateManager sharedStateMgr,
-                              EventStateCollectionFactory factory, ItemStateCacheFactory cacheFactory) {
-        this(sharedStateMgr, factory, DEFAULT_ATTRIBUTE_NAME, cacheFactory);
-    }
-
-    /**
      * Creates a new instance of this class with a custom attribute name.
      *
      * @param sharedStateMgr shared state manager
      * @param factory        event state collection factory
-     * @param attributeName  attribute name
+     * @param attributeName  the attribute name, if {@code null} then a default name is used
      */
-    public XAItemStateManager(SharedItemStateManager sharedStateMgr,
+    private XAItemStateManager(SharedItemStateManager sharedStateMgr,
                               EventStateCollectionFactory factory,
                               String attributeName,
                               ItemStateCacheFactory cacheFactory) {
         super(sharedStateMgr, factory, cacheFactory);
+        if (attributeName != null) {
+            this.attributeName = attributeName;
+        } else {
+            this.attributeName = DEFAULT_ATTRIBUTE_NAME;
+        }
+    }
 
-        this.attributeName = attributeName;
+    /**
+     * Creates a new {@code XAItemStateManager} instance and registers it as an {@link ItemStateListener}
+     * with the given {@link SharedItemStateManager}. 
+     * 
+     * @param sharedStateMgr the {@link SharedItemStateManager}
+     * @param factory the {@link EventStateCollectionFactory}
+     * @param attributeName the attribute name, if {@code null} then a default name is used
+     * @param cacheFactory the {@link ItemStateCacheFactory}
+     * @return a new {@code XAItemStateManager} instance
+     */
+    public static XAItemStateManager createInstance(SharedItemStateManager sharedStateMgr,
+            EventStateCollectionFactory factory, String attributeName, ItemStateCacheFactory cacheFactory) {
+        XAItemStateManager mgr = new XAItemStateManager(sharedStateMgr, factory, attributeName, cacheFactory);
+        sharedStateMgr.addListener(mgr);
+        return mgr;
     }
 
     /**

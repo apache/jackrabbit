@@ -203,7 +203,7 @@ public class VersionManagerImpl extends AbstractVersionManager
 
             sharedStateMgr = createItemStateManager(pMgr, storageId, ntReg, cacheFactory, ismLocking);
 
-            stateMgr = new LocalItemStateManager(sharedStateMgr, escFactory, cacheFactory);
+            stateMgr = LocalItemStateManager.createInstance(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
 
             NodeState nodeState = (NodeState) stateMgr.getItemState(storageId);
