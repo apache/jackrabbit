@@ -18,6 +18,8 @@ package org.apache.jackrabbit.jcr2spi.query;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -102,6 +104,12 @@ public class QueryImpl implements Query {
     private final Map<String, QValue> boundValues = new HashMap<String, QValue>();
 
     /**
+     * The names of the bind variables as returned by the SPI implementation
+     * after checking the query statement.
+     */
+    private final Collection<String> varNames;
+
+    /**
      * Creates a new query.
      *
      * @param session     the session that created this query.
@@ -129,7 +137,8 @@ public class QueryImpl implements Query {
         this.statement = statement;
         this.language = language;
         this.wspManager = wspManager;
-        this.wspManager.checkQueryStatement(statement, language, getNamespaceMappings());
+        this.varNames = Arrays.asList(this.wspManager.checkQueryStatement(
+                statement, language, getNamespaceMappings()));
         this.node = node;
     }
 
@@ -215,6 +224,9 @@ public class QueryImpl implements Query {
      * @see Query#bindValue(String, Value)
      */
     public void bindValue(String varName, Value value) throws RepositoryException {
+        if (!varNames.contains(varName)) {
+            throw new IllegalArgumentException(varName + " is not a known bind variable name in this query");
+        }
         if (value == null) {
             boundValues.remove(varName);
         } else {

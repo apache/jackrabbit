@@ -774,7 +774,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
         return new String[0];
     }
 
-    public void checkQueryStatement(SessionInfo sessionInfo, String statement,
+    public String[] checkQueryStatement(SessionInfo sessionInfo, String statement,
                                     String language, Map namespaces) throws
             InvalidQueryException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();

@@ -86,6 +86,13 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.Query;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.And;
+import javax.jcr.query.qom.Or;
+import javax.jcr.query.qom.Not;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.BindVariableValue;
+import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.Lock;
 import javax.jcr.version.VersionException;
@@ -1017,13 +1024,14 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public void checkQueryStatement(SessionInfo sessionInfo,
+    public String[] checkQueryStatement(SessionInfo sessionInfo,
                                     String statement,
                                     String language,
                                     Map namespaces)
             throws InvalidQueryException, RepositoryException {
-        createQuery(getSessionInfoImpl(sessionInfo).getSession(), statement,
-                language, namespaces);
+        Query q = createQuery(getSessionInfoImpl(sessionInfo).getSession(),
+                statement, language, namespaces);
+        return getBindVariableNames(q);
     }
 
     /**
@@ -1788,5 +1796,37 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
         // if we get here simply run as is
         return call.run();
+    }
+
+    private String[] getBindVariableNames(Query query) {
+        List<String> names = new ArrayList<String>();
+        if (query instanceof QueryObjectModel) {
+            QueryObjectModel qom = (QueryObjectModel) query;
+            collectBindVariableNames(qom.getConstraint(), names);
+        } else {
+            // TODO: use when available
+            // names.addAll(Arrays.asList(q.getBindVariableNames()));
+        }
+        return names.toArray(new String[names.size()]);
+    }
+
+    private void collectBindVariableNames(Constraint c, List<String> names) {
+        if (c instanceof And) {
+            collectBindVariableNames(((And) c).getConstraint1(), names);
+            collectBindVariableNames(((And) c).getConstraint2(), names);
+        } else if (c instanceof Or) {
+            collectBindVariableNames(((Or) c).getConstraint1(), names);
+            collectBindVariableNames(((Or) c).getConstraint2(), names);
+        } else if (c instanceof Not) {
+            collectBindVariableNames(((Not) c).getConstraint(), names);
+        } else if (c instanceof Comparison) {
+            collectBindVariableNames((Comparison) c, names);
+        }
+    }
+
+    private void collectBindVariableNames(Comparison c, List<String> names) {
+        if (c.getOperand2() instanceof BindVariableValue) {
+            names.add(((BindVariableValue) c.getOperand2()).getBindVariableName());
+        }
     }
 }

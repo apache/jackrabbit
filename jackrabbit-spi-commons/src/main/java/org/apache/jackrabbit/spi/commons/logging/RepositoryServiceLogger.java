@@ -542,13 +542,12 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getSupportedQueryLanguages(SessionInfo)", new Object[]{unwrap(sessionInfo)});
     }
 
-    public void checkQueryStatement(final SessionInfo sessionInfo, final String statement,
+    public String[] checkQueryStatement(final SessionInfo sessionInfo, final String statement,
             final String language, final Map<String, String> namespaces) throws RepositoryException {
 
-        execute(new Callable() {
+        return (String[]) execute(new Callable() {
             public Object call() throws RepositoryException {
-                service.checkQueryStatement(unwrap(sessionInfo), statement, language, namespaces);
-                return null;
+                return service.checkQueryStatement(unwrap(sessionInfo), statement, language, namespaces);
             }
         }, "checkQueryStatement(SessionInfo, String, String, Map)",
                 new Object[]{unwrap(sessionInfo), statement, language, namespaces});

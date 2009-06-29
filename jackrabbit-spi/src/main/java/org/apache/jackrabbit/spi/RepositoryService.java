@@ -868,20 +868,22 @@ public interface RepositoryService {
 
     /**
      * Checks if the query <code>statement</code> is valid according to the
-     * specified query <code>language</code>.
+     * specified query <code>language</code> and returns the bind variable
+     * names found in the query statement.
      *
      * @param sessionInfo the session info.
      * @param statement   the query statement to check.
      * @param language    the query language.
      * @param namespaces  the locally re-mapped namespace which may be used in
      *                    the query <code>statement</code>.
+     * @return the bind variable names.
      * @throws InvalidQueryException if the query statement is invalid or the
      *                               language is not supported.
      * @throws RepositoryException   if an error occurs while checking the
      *                               statement.
      * @see javax.jcr.query.QueryManager#createQuery(String, String)
      */
-    public void checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws InvalidQueryException, RepositoryException;
+    public String[] checkQueryStatement(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws InvalidQueryException, RepositoryException;
 
     /**
      * Execute the given query statement with the specified query language. The
