@@ -88,15 +88,13 @@ public class QueryImpl implements Query {
 
     /**
      * The maximum result size
-     * TODO: review default value
      */
-    private long limit = Long.MAX_VALUE;
+    private long limit = -1;
 
     /**
      * The offset in the total result set
-     * TODO: review default value
      */
-    private long offset = 0;
+    private long offset = -1;
 
     /**
      * The name/value pairs collected upon calls to {@link #bindValue(String, Value)}.
@@ -151,11 +149,10 @@ public class QueryImpl implements Query {
      * @return namespace mappings (prefix -&gt; uri)
      * @throws RepositoryException if a repository error occurs
      */
-    private Map getNamespaceMappings() throws RepositoryException {
-        Map mappings = new HashMap();
-        String[] prefixes = session.getNamespacePrefixes();
-        for (int i = 0; i < prefixes.length; i++) {
-            mappings.put(prefixes[i], session.getNamespaceURI(prefixes[i]));
+    private Map<String, String> getNamespaceMappings() throws RepositoryException {
+        Map<String, String> mappings = new HashMap<String, String>();
+        for (String prefix : session.getNamespacePrefixes()) {
+            mappings.put(prefix, session.getNamespaceURI(prefix));
         }
         return mappings;
     }

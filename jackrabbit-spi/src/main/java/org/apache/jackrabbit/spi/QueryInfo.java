@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * <code>QueryInfo</code> is the the return value of
- * {@link RepositoryService#executeQuery(SessionInfo, String, String, Map)}
+ * {@link RepositoryService#executeQuery(SessionInfo, String, String, Map, long, long, Map)} 
  * which is used to run a query on the <code>RepositoryService</code>. It
  * provides access to the rows of the query result as well as to the column
  * names.

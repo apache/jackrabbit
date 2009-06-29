@@ -889,37 +889,31 @@ public interface RepositoryService {
      * to namespace uri in order to be able to properly resolve prefix:localname
      * patterns present within the query statement.
      *
-     * @param sessionInfo
-     * @param statement the query statement to be execute.
-     * @param language the query language used to parse the query <code>statement</code>.
-     * @param namespaces the locally re-mapped namespace which may be used in
-     * the query <code>statement</code>.
-     * @return
-     * @throws javax.jcr.RepositoryException
-     * @see javax.jcr.query.Query#execute()
-     */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces) throws RepositoryException;
-
-    /**
-     * Execute the given query statement with the specified query language. The
-     * additional <code>namespaces</code> parameter provides a mapping of prefix
-     * to namespace uri in order to be able to properly resolve prefix:localname
-     * patterns present within the query statement.
-     *
-     * @param sessionInfo
-     * @param statement the query statement to be execute.
-     * @param language the query language used to parse the query <code>statement</code>.
-     * @param namespaces the locally re-mapped namespace which may be used in
-     * the query <code>statement</code>.
-     * @param limit The maximum result size.
-     * @param offset The offset in the total result set.
-     * @param values A Map of name/value pairs collected upon calls to
-     * {@link javax.jcr.query.Query#bindValue(String, javax.jcr.Value)}.
+     * @param sessionInfo the session info that wants to execute the query.
+     * @param statement   the query statement to be execute.
+     * @param language    the query language used to parse the query
+     *                    <code>statement</code>.
+     * @param namespaces  the locally re-mapped namespace which may be used in
+     *                    the query <code>statement</code>.
+     * @param limit       The maximum result size or <code>-1</code> is no
+     *                    maximum is set.
+     * @param offset      The offset in the total result set or <code>-1</code>
+     *                    is no offset is set.
+     * @param values      A Map of name/value pairs collected upon calls to
+     *                    {@link javax.jcr.query.Query#bindValue(String,
+     *                    javax.jcr.Value)}.
      * @return The query info.
-     * @throws javax.jcr.RepositoryException
+     * @throws RepositoryException if an error occurs.
      * @see javax.jcr.query.Query#execute()
      */
-    public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException;
+    public QueryInfo executeQuery(SessionInfo sessionInfo,
+                                  String statement,
+                                  String language,
+                                  Map<String, String> namespaces,
+                                  long limit,
+                                  long offset,
+                                  Map<String, QValue> values)
+            throws RepositoryException;
 
     //--------------------------------------------------------< Observation >---
     /**
