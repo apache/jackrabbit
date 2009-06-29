@@ -148,6 +148,7 @@ public class NodeTypeDefinitionFactory {
         pt.setMandatory(qPd.isMandatory());
         pt.setOnParentVersion(qPd.getOnParentVersion());
         pt.setProtected(qPd.isProtected());
+        pt.setRequiredType(qPd.getRequiredType());
         pt.setMultiple(qPd.isMultiple());
         pt.setFullTextSearchable(qPd.isFullTextSearchable());
         pt.setValueConstraints(createValueConstraints(qPd.getRequiredType(), qPd.getValueConstraints()));
