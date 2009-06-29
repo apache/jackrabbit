@@ -122,6 +122,7 @@ public interface ItemResourceConstants {
     public static final DavPropertyName JCR_ISNEW = DavPropertyName.create("isnew", NAMESPACE);
     public static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create("ismodified", NAMESPACE);
     public static final DavPropertyName JCR_DEFINITION = DavPropertyName.create("definition", NAMESPACE);
+    public static final DavPropertyName JCR_SELECTOR_NAME = DavPropertyName.create("selectorName", NAMESPACE);
 
     // property names used for resources representing jcr-nodes
     public static final DavPropertyName JCR_PRIMARYNODETYPE = DavPropertyName.create(XML_PRIMARYNODETYPE, NAMESPACE);

@@ -43,5 +43,5 @@ public interface QueryInfo {
      * the query result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
-    public Name[] getColumnNames();
+    public String[] getColumnNames();
 }

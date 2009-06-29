@@ -70,21 +70,13 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.test.api.observation.EventJournalTest
-                org.apache.jackrabbit.test.api.query.GetLanguageTest#testJCRQOM
-                org.apache.jackrabbit.test.api.query.OrderByDateTest
-                org.apache.jackrabbit.test.api.query.OrderByDoubleTest
-                org.apache.jackrabbit.test.api.query.OrderByLongTest
-                org.apache.jackrabbit.test.api.query.OrderByStringTest
-                org.apache.jackrabbit.test.api.query.OrderByLengthTest
-                org.apache.jackrabbit.test.api.query.OrderByLocalNameTest
-                org.apache.jackrabbit.test.api.query.OrderByLowerCaseTest
-                org.apache.jackrabbit.test.api.query.OrderByNameTest
-                org.apache.jackrabbit.test.api.query.OrderByUpperCaseTest
-                org.apache.jackrabbit.test.api.query.OrderByDecimalTest
-                org.apache.jackrabbit.test.api.query.OrderByURITest
-                org.apache.jackrabbit.test.api.query.SetLimitTest
-                org.apache.jackrabbit.test.api.query.SetOffsetTest
-                org.apache.jackrabbit.test.api.query.qom
+                org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest#testIllegalArgumentException
+                org.apache.jackrabbit.test.api.query.qom.ChildNodeJoinConditionTest
+                org.apache.jackrabbit.test.api.query.qom.DescendantNodeJoinConditionTest
+                org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest
+                org.apache.jackrabbit.test.api.query.qom.SameNodeJoinConditionTest
+                org.apache.jackrabbit.test.api.query.qom.OrderingTest#testMultipleSelectors
+                org.apache.jackrabbit.test.api.query.qom.ColumnTest#testMultiColumn
                 org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
               </value>
