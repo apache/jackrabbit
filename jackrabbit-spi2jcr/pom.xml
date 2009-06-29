@@ -71,12 +71,6 @@
                 org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testRegisteredNamespaceVisibility
                 org.apache.jackrabbit.test.api.observation.EventJournalTest
                 org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest#testIllegalArgumentException
-                org.apache.jackrabbit.test.api.query.qom.ChildNodeJoinConditionTest
-                org.apache.jackrabbit.test.api.query.qom.DescendantNodeJoinConditionTest
-                org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest
-                org.apache.jackrabbit.test.api.query.qom.SameNodeJoinConditionTest
-                org.apache.jackrabbit.test.api.query.qom.OrderingTest#testMultipleSelectors
-                org.apache.jackrabbit.test.api.query.qom.ColumnTest#testMultiColumn
                 org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
               </value>

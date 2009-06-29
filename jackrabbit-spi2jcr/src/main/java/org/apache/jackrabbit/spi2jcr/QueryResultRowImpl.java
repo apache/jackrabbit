@@ -109,27 +109,33 @@ class QueryResultRowImpl implements QueryResultRow {
     }
 
     public NodeId getNodeId(Name selectorName) {
-        NodeId id = nodeIds.get(selectorName);
-        if (id == null) {
+        if (nodeIds.containsKey(selectorName)) {
+            return nodeIds.get(selectorName);
+        } else {
             if (nodeIds.size() == 1) {
                 return nodeIds.values().iterator().next();
             } else {
                 throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
             }
         }
-        return id;
     }
 
     public double getScore(Name selectorName) {
-        Double score = scores.get(selectorName);
-        if (score == null) {
+        Double score;
+        if (scores.containsKey(selectorName)) {
+            score = scores.get(selectorName);
+        } else {
             if (scores.size() == 1) {
-                return scores.values().iterator().next();
+                score = scores.values().iterator().next();
             } else {
                 throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
             }
         }
-        return score;
+        if (score == null) {
+            return Double.NaN;
+        } else {
+            return score;
+        }
     }
 
     /**
