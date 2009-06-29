@@ -205,8 +205,8 @@ public class QueryImpl implements Query {
             String ntName = resolver.getJCRName(NameConstants.NT_QUERY);
             Node queryNode = session.getRootNode().addNode(relPath, ntName);
             // set properties
-            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE), language);
-            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT), statement);
+            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE), getLanguage());
+            queryNode.setProperty(resolver.getJCRName(NameConstants.JCR_STATEMENT), getStatement());
             node = queryNode;
             return node;
         } catch (NameException e) {
