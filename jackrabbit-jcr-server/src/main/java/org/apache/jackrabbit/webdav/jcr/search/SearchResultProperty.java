@@ -33,7 +33,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,18 +47,24 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
     private static final String COLUMN = "column";
 
     private final String[] columnNames;
+    private final String[] selectorNames;
     private final Value[] values;
 
     /**
      * Creates a new <code>SearchResultProperty</code>.
      *
-     * @param columnNames the column names of the search row represented by this
-     * dav property.
-     * @param values the values present in the columns
+     * @param columnNames   the column names of the search row represented by
+     *                      this dav property.
+     * @param selectorNames the selecotr names of the row represented by this
+     *                      dav property.
+     * @param values        the values present in the columns
      */
-    public SearchResultProperty(String[] columnNames, Value[] values) {
+    public SearchResultProperty(String[] columnNames,
+                                String[] selectorNames,
+                                Value[] values) {
         super(SEARCH_RESULT_PROPERTY, true);
         this.columnNames = columnNames;
+        this.selectorNames = selectorNames;
         this.values = values;
     }
 
@@ -79,35 +84,39 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
 	    throw new IllegalArgumentException("SearchResultProperty may only be created from a property named " + SEARCH_RESULT_PROPERTY.toString());
 	}
 
-        List colList = new ArrayList();
-        List valList = new ArrayList();
+        List<String> colList = new ArrayList<String>();
+        List<String> selList = new ArrayList<String>();
+        List<Value> valList = new ArrayList<Value>();
         Object propValue = property.getValue();
         if (propValue instanceof List) {
-            Iterator elemIt = ((List)propValue).iterator();
-            while (elemIt.hasNext()) {
-                Object el = elemIt.next();
-                if (el instanceof Element) {
-                    parseColumnElement((Element)el, colList, valList, valueFactory);
+            for (Object o : ((List) propValue)) {
+                if (o instanceof Element) {
+                    parseColumnElement((Element) o, colList, selList, valList, valueFactory);
                 }
             }
         } else if (propValue instanceof Element) {
-            parseColumnElement((Element)property.getValue(), colList, valList, valueFactory);
+            parseColumnElement((Element)property.getValue(), colList, selList, valList, valueFactory);
         } else {
             throw new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
         }
 
-        columnNames = (String[]) colList.toArray(new String[colList.size()]);
-        values = (Value[]) valList.toArray(new Value[valList.size()]);
+        columnNames = colList.toArray(new String[colList.size()]);
+        selectorNames = selList.toArray(new String[selList.size()]);
+        values = valList.toArray(new Value[valList.size()]);
     }
 
-    private void parseColumnElement(Element columnElement, List columnNames,
-                                    List values, ValueFactory valueFactory)
+    private void parseColumnElement(Element columnElement,
+                                    List<String> columnNames,
+                                    List<String> selectorNames,
+                                    List<Value> values,
+                                    ValueFactory valueFactory)
         throws ValueFormatException, RepositoryException {
         if (!DomUtil.matches(columnElement, COLUMN, ItemResourceConstants.NAMESPACE)) {
             log.debug("dcr:column element expected within search result.");
             return;
         }
         columnNames.add(DomUtil.getChildText(columnElement, JCR_NAME.getName(), JCR_NAME.getNamespace()));
+        selectorNames.add(DomUtil.getChildText(columnElement, JCR_SELECTOR_NAME.getName(), JCR_SELECTOR_NAME.getNamespace()));
 
         Value jcrValue;
         Element valueElement = DomUtil.getChildElement(columnElement, JCR_VALUE.getName(), JCR_VALUE.getNamespace());
@@ -129,6 +138,13 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      */
     public String[] getColumnNames() {
         return columnNames;
+    }
+
+    /**
+     * @return the selector name for each of the columns in the result property.
+     */
+    public String[] getSelectorNames() {
+        return selectorNames;
     }
 
     /**
@@ -154,7 +170,8 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
 
     /**
      * Return the xml representation of this webdav property. For every value in
-     * the query result row a dcr:name, dcr:value and dcr:type element is created.
+     * the query result row a dcr:name, dcr:value, dcr:type and an optional
+     * dcr:selectorName element is created.
      * Example:
      * <pre>
      * -----------------------------------------------------------
@@ -162,6 +179,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      * -----------------------------------------------------------
      *   value     |   xxx   |   111   |  /aNode    |    1
      *   type      |    1    |    3    |     8      |    3
+     *   sel-name  |         |         |     S      |    S
      * -----------------------------------------------------------
      * </pre>
      * results in:
@@ -178,10 +196,12 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
      *    &lt;dcr:column&gt;
      *       &lt;dcr:name&gt;jcr:path&lt;dcr:name/&gt;
      *       &lt;dcr:value dcr:type="Path"&gt;/aNode&lt;dcr:value/&gt;
+     *       &lt;dcr:selectorName&gt;S&lt;dcr:selectorName/&gt;
      *    &lt;/dcr:column&gt;
      *    &lt;dcr:column&gt;
      *       &lt;dcr:name&gt;jcr:score&lt;dcr:name/&gt;
      *       &lt;dcr:value dcr:type="Long"&gt;1&lt;dcr:value/&gt;
+     *       &lt;dcr:selectorName&gt;S&lt;dcr:selectorName/&gt;
      *    &lt;/dcr:column&gt;
      * &lt;/dcr:search-result-property&gt;
      * </pre>
@@ -192,6 +212,7 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
         Element elem = getName().toXml(document);
         for (int i = 0; i < columnNames.length; i++) {
             String propertyName = columnNames[i];
+            String selectorName = selectorNames[i];
             Value propertyValue = values[i];
 
             Element columnEl = DomUtil.addChildElement(elem, COLUMN, ItemResourceConstants.NAMESPACE);
@@ -205,6 +226,9 @@ public class SearchResultProperty extends AbstractDavProperty implements ItemRes
                 } catch (RepositoryException e) {
                     log.error(e.toString());
                 }
+            }
+            if (selectorName != null) {
+                DomUtil.addChildElement(columnEl, JCR_SELECTOR_NAME.getName(), JCR_SELECTOR_NAME.getNamespace(), selectorName);
             }
         }
         return elem;

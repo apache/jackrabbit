@@ -1690,7 +1690,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            return new QueryInfoImpl(ms, sessionInfo, uriResolver, resolver, valueFactory, getQValueFactory());
+            return new QueryInfoImpl(ms, idFactory, resolver, valueFactory, getQValueFactory());
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1725,7 +1725,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             MultiStatus ms = method.getResponseBodyAsMultiStatus();
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            return new QueryInfoImpl(ms, sessionInfo, uriResolver, resolver, valueFactory, getQValueFactory());
+            return new QueryInfoImpl(ms, idFactory, resolver, valueFactory, getQValueFactory());
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {

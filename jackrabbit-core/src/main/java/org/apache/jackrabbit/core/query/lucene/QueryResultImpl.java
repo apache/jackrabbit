@@ -269,7 +269,7 @@ public abstract class QueryResultImpl implements QueryResult {
             maxResultSize = limit;
         }
 
-        if (resultNodes.size() >= maxResultSize) {
+        if (resultNodes.size() >= maxResultSize && selectorNames != null) {
             // we already have them all
             return;
         }

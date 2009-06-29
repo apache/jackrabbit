@@ -24,18 +24,27 @@ package org.apache.jackrabbit.spi;
 public interface QueryResultRow {
 
     /**
-     * Returns {@link NodeId} of node this result row represents.
+     * Returns {@link NodeId} of node for a given <code>selectorname</code> this
+     * result row represents.
      *
-     * @return node id of the <code>Node</code> this result row represents.
+     * @param selectorName the name of a selector or <code>null</code> for the
+     *                     default selector.
+     * @return node id of the <code>Node</code> this result row represents or
+     *         <code>null</code> if there is no node present in this row for the
+     *         given selector name.
+     * @see javax.jcr.query.Row#getNode()
+     * @see javax.jcr.query.Row#getNode(String)
      */
-    public NodeId getNodeId();
+    public NodeId getNodeId(Name selectorName);
 
     /**
-     * Returns score of this result row.
+     * Returns score for the given <code>selectorName</code> of this result row.
      *
-     * @return score of this result row.
+     * @param selectorName the name of a selector or <code>null</code> for the
+     *                     default selector.
+     * @return score for the given selector in this result row.
      */
-    public double getScore();
+    public double getScore(Name selectorName);
 
     /**
      * Returns an array of <code>QValue</code>s.

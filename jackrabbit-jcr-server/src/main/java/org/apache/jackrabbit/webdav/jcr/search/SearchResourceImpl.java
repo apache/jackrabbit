@@ -37,6 +37,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.ValueFactory;
+import javax.jcr.PropertyType;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -45,6 +47,9 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * <code>SearchResourceImpl</code>...
@@ -70,9 +75,9 @@ public class SearchResourceImpl implements SearchResource {
         try {
             QueryManager qMgr = getRepositorySession().getWorkspace().getQueryManager();
             String[] langs = qMgr.getSupportedQueryLanguages();
-            for (int i = 0; i < langs.length; i++) {
+            for (String lang : langs) {
                 // todo: define proper namespace
-                qgs.addQueryLanguage(langs[i], Namespace.EMPTY_NAMESPACE);
+                qgs.addQueryLanguage(lang, Namespace.EMPTY_NAMESPACE);
             }
         } catch (RepositoryException e) {
             log.debug(e.getMessage());
@@ -138,11 +143,11 @@ public class SearchResourceImpl implements SearchResource {
         Query q;
         if (sInfo != null) {
             // apply namespace mappings to session
-            Map namespaces = sInfo.getNamespaces();
+            Map<String, String> namespaces = sInfo.getNamespaces();
             try {
-                for (Iterator it = namespaces.keySet().iterator(); it.hasNext(); ) {
-                    String prefix = (String) it.next();
-                    String uri = (String) namespaces.get(prefix);
+                for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+                    String prefix = entry.getKey();
+                    String uri = entry.getValue();
                     session.setNamespacePrefix(prefix, uri);
                 }
                 q = qMgr.createQuery(sInfo.getQuery(), sInfo.getLanguageName());
@@ -155,8 +160,7 @@ public class SearchResourceImpl implements SearchResource {
                 }
             } finally {
                 // reset namespace mappings
-                for (Iterator it = namespaces.values().iterator(); it.hasNext(); ) {
-                    String uri = (String) it.next();
+                for (String uri : namespaces.values()) {
                     try {
                         session.setNamespacePrefix(nsReg.getPrefix(uri), uri);
                     } catch (RepositoryException e) {
@@ -175,7 +179,7 @@ public class SearchResourceImpl implements SearchResource {
                 q.storeAsNode(itemPath);
             } catch (RepositoryException e) {
                 // ItemExistsException should never occur.
-                new JcrDavException(e);
+                throw new JcrDavException(e);
             }
         }
         return q;
@@ -187,46 +191,181 @@ public class SearchResourceImpl implements SearchResource {
      * @param qResult <code>QueryResult</code> as obtained from {@link javax.jcr.query.Query#execute()}.
      * @return <code>MultiStatus</code> object listing the query result in
      * Webdav compatible form.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs.
      */
     private MultiStatus queryResultToMultiStatus(QueryResult qResult)
             throws RepositoryException {
         MultiStatus ms = new MultiStatus();
 
-        String[] columnNames = qResult.getColumnNames();
+        List<String> columnNames = new ArrayList<String>();
+        columnNames.addAll(Arrays.asList(qResult.getColumnNames()));
         StringBuffer responseDescription = new StringBuffer();
         String delim = "";
-        for (int i = 0; i < columnNames.length; i++) {
+        for (String columnName : columnNames) {
             responseDescription.append(delim);
-            responseDescription.append(ISO9075.encode(columnNames[i]));
+            responseDescription.append(ISO9075.encode(columnName));
             delim = " ";
         }
         ms.setResponseDescription(responseDescription.toString());
 
+        ValueFactory vf = getRepositorySession().getValueFactory();
+        List<RowValue> descr = new ArrayList<RowValue>();
+        for (Iterator<String> it = columnNames.iterator(); it.hasNext(); ) {
+            String columnName = it.next();
+            if (!isPathOrScore(columnName)) {
+                descr.add(new PlainValue(columnName, null, vf));
+            } else {
+                it.remove();
+            }
+        }
+        // add path and score for each selector
+        List<String> sn = new ArrayList<String>();
+        // TODO
+        // sn.addAll(Arrays.asList(qResult.getSelectorNames()));
+        if (sn.isEmpty()) {
+            sn.add(null); // default selector
+        }
+        for (String selectorName : sn) {
+            descr.add(new PathValue(JcrConstants.JCR_PATH, selectorName, vf));
+            columnNames.add(JcrConstants.JCR_PATH);
+            descr.add(new ScoreValue(JcrConstants.JCR_SCORE, selectorName, vf));
+            columnNames.add(JcrConstants.JCR_SCORE);
+        }
+        String[] selectorNames = createSelectorNames(descr);
+        String[] colNames = columnNames.toArray(new String[columnNames.size()]);
         RowIterator rowIter = qResult.getRows();
         while (rowIter.hasNext()) {
             Row row = rowIter.nextRow();
-            Value[] values = row.getValues();
+            List<Value> values = new ArrayList<Value>();
+            for (RowValue rv : descr) {
+                values.add(rv.getValue(row));
+            }
 
-            // get the jcr:path column indicating the node path and build
+            // get the path for the first selector and build
             // a webdav compliant resource path of it.
-            String itemPath = row.getValue(JcrConstants.JCR_PATH).getString();
+            String itemPath = row.getPath();
             // create a new ms-response for this row of the result set
             DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
             String href = loc.getHref(true);
             MultiStatusResponse resp = new MultiStatusResponse(href, null);
             // build the s-r-property
-            SearchResultProperty srp = new SearchResultProperty(columnNames, values);
+            SearchResultProperty srp = new SearchResultProperty(colNames,
+                    selectorNames, values.toArray(new Value[values.size()]));
             resp.add(srp);
             ms.addResponse(resp);
         }
         return ms;
     }
 
+    private static String[] createSelectorNames(Iterable<RowValue> rows)
+            throws RepositoryException {
+        List<String> sn = new ArrayList<String>();
+        for (RowValue rv : rows) {
+            sn.add(rv.getSelectorName());
+        }
+        return sn.toArray(new String[sn.size()]);
+    }
+
     /**
-     * @return
+     * @param columnName a column name.
+     * @return <code>true</code> if <code>columnName</code> is either
+     *         <code>jcr:path</code> or <code>jcr:score</code>;
+     *         <code>false</code> otherwise.
+     */
+    private static boolean isPathOrScore(String columnName) {
+        return JcrConstants.JCR_PATH.equals(columnName)
+                || JcrConstants.JCR_SCORE.equals(columnName);
+    }
+
+    /**
+     * @return the session associated with this resource.
      */
     private Session getRepositorySession() {
         return session.getRepositorySession();
+    }
+
+    private interface RowValue {
+
+        public Value getValue(Row row) throws RepositoryException;
+
+        public String getColumnName() throws RepositoryException;
+
+        public String getSelectorName() throws RepositoryException;
+    }
+
+    private static final class PlainValue extends SelectorValue {
+
+        public PlainValue(String columnName,
+                          String selectorName,
+                          ValueFactory vf) {
+            super(columnName, selectorName, vf);
+        }
+
+        public Value getValue(Row row) throws RepositoryException {
+            return row.getValue(columnName);
+        }
+    }
+
+    private static abstract class SelectorValue implements RowValue {
+
+        protected final String columnName;
+
+        protected final String selectorName;
+
+        protected final ValueFactory vf;
+
+        public SelectorValue(String columnName,
+                             String selectorName,
+                             ValueFactory vf) {
+            this.columnName = columnName;
+            this.selectorName = selectorName;
+            this.vf = vf;
+        }
+
+        public String getColumnName() throws RepositoryException {
+            return columnName;
+        }
+
+        public String getSelectorName() throws RepositoryException {
+            return selectorName;
+        }
+    }
+
+    private static final class ScoreValue extends SelectorValue {
+
+        public ScoreValue(String columnName,
+                          String selectorName,
+                          ValueFactory vf) {
+            super(columnName, selectorName, vf);
+        }
+
+        public Value getValue(Row row) throws RepositoryException {
+            double score;
+            if (selectorName != null) {
+                score = row.getScore(selectorName);
+            } else {
+                score = row.getScore();
+            }
+            return vf.createValue(score);
+        }
+    }
+
+    private static final class PathValue extends SelectorValue {
+
+        public PathValue(String columnName,
+                         String selectorName,
+                         ValueFactory vf) {
+            super(columnName, selectorName, vf);
+        }
+
+        public Value getValue(Row row) throws RepositoryException {
+            String path;
+            if (selectorName != null) {
+                path = row.getPath(selectorName);
+            } else {
+                path = row.getPath();
+            }
+            return vf.createValue(path, PropertyType.PATH);
+        }
     }
 }

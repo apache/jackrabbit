@@ -25,19 +25,20 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QueryResultRow;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
+import org.apache.jackrabbit.jcr2spi.ItemManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 
 /**
  * Implements the {@link javax.jcr.query.RowIterator} interface returned by
@@ -53,7 +54,7 @@ class RowIteratorImpl implements RowIterator {
     /**
      * The column names.
      */
-    private final Name[] columnNames;
+    private final String[] columnNames;
 
     /**
      * The <code>NamePathResolver</code> of the user <code>Session</code>.
@@ -66,6 +67,16 @@ class RowIteratorImpl implements RowIterator {
     private final ValueFactory vFactory;
 
     /**
+     * The item manager.
+     */
+    private final ItemManager itemMgr;
+
+    /**
+     * The hierarchy manager.
+     */
+    private final HierarchyManager hmgr;
+
+    /**
      * Creates a new <code>RowIteratorImpl</code> that iterates over the result
      * nodes.
      *
@@ -73,12 +84,18 @@ class RowIteratorImpl implements RowIterator {
      * @param resolver  <code>NameResolver</code> of the user
      *                  <code>Session</code>.
      * @param vFactory  the JCR value factory.
+     * @param itemMgr   the item manager.
+     * @param hmgr      the hierarchy manager.
      */
-    RowIteratorImpl(QueryInfo queryInfo, NamePathResolver resolver, ValueFactory vFactory) {
+    RowIteratorImpl(QueryInfo queryInfo, NamePathResolver resolver,
+                    ValueFactory vFactory, ItemManager itemMgr,
+                    HierarchyManager hmgr) {
         this.rows = queryInfo.getRows();
         this.columnNames = queryInfo.getColumnNames();
         this.resolver = resolver;
         this.vFactory = vFactory;
+        this.itemMgr = itemMgr;
+        this.hmgr = hmgr;
     }
 
     //--------------------------------------------------------< RowIterator >---
@@ -180,10 +197,10 @@ class RowIteratorImpl implements RowIterator {
         private Value[] values;
 
         /**
-         * Map of select property <code>Name</code>s. Key: Name, Value:
+         * Map of select property names. Key: String, Value:
          * Integer, which refers to the array index in {@link #values}.
          */
-        private Map propertyMap;
+        private Map<String, Integer> propertyMap;
 
         /**
          * Creates a new <code>RowImpl</code> instance based on a SPI result
@@ -242,15 +259,14 @@ class RowIteratorImpl implements RowIterator {
         public Value getValue(String propertyName) throws ItemNotFoundException, RepositoryException {
             if (propertyMap == null) {
                 // create the map first
-                Map tmp = new HashMap();
+                Map<String, Integer> tmp = new HashMap<String, Integer>();
                 for (int i = 0; i < columnNames.length; i++) {
-                    tmp.put(columnNames[i], new Integer(i));
+                    tmp.put(columnNames[i], i);
                 }
                 propertyMap = tmp;
             }
             try {
-                Name prop = resolver.getQName(propertyName);
-                Integer idx = (Integer) propertyMap.get(prop);
+                Integer idx = propertyMap.get(propertyName);
                 if (idx == null) {
                     throw new ItemNotFoundException(propertyName);
                 }
@@ -258,7 +274,7 @@ class RowIteratorImpl implements RowIterator {
                 if (values == null) {
                     getValues();
                 }
-                return values[idx.intValue()];
+                return values[idx];
             } catch (NameException e) {
                 throw new RepositoryException(e.getMessage(), e);
             }
@@ -268,50 +284,69 @@ class RowIteratorImpl implements RowIterator {
          * @see Row#getNode()
          */
         public Node getNode() throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            return getNode(row.getNodeId(null));
         }
 
         /**
          * @see Row#getNode(String)
          */
         public Node getNode(String selectorName) throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            return getNode(row.getNodeId(resolver.getQName(selectorName)));
         }
 
         /**
          * @see Row#getPath()
          */
         public String getPath() throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            String path = null;
+            Node n = getNode();
+            if (n != null) {
+                path = n.getPath();
+            }
+            return path;
         }
 
         /**
          * @see Row#getPath(String)
          */
         public String getPath(String selectorName) throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            String path = null;
+            Node n = getNode(selectorName);
+            if (n != null) {
+                path = n.getPath();
+            }
+            return path;
         }
 
         /**
          * @see Row#getScore()
          */
         public double getScore() throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            return row.getScore(null);
         }
 
         /**
          * @see Row#getScore(String)
          */
         public double getScore(String selectorName) throws RepositoryException {
-            // TODO
-            throw new UnsupportedRepositoryOperationException("JCR-1104");
+            return row.getScore(resolver.getQName(selectorName));
         }
 
+        /**
+         * Returns the node with the given <code>id</code> or <code>null</code>
+         * if <code>id</code> is <code>null</code>.
+         *
+         * @param id a node id or <code>null</code>.
+         * @return the node with the given id or <code>null</code>.
+         * @throws RepositoryException if an error occurs while retrieving the
+         *                             node.
+         */
+        private Node getNode(NodeId id) throws RepositoryException {
+            Node node = null;
+            if (id != null) {
+                node = (Node) itemMgr.getItem(hmgr.getNodeEntry(id));
+            }
+            return node;
+        }
     }
-
 }
