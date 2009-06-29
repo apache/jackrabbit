@@ -121,11 +121,16 @@ public class SetValueBinaryTest extends AbstractJCRTest {
     public void testBinarySessionJcr2() throws RepositoryException, IOException {
         property1.setValue(value);
         superuser.save();
-        InputStream in = property1.getValue().getBinary().getStream();
+        Binary bin = property1.getValue().getBinary();
         try {
-            compareStream(data, in);
+            InputStream in = bin.getStream();
+            try {
+                compareStream(data, in);
+            } finally {
+                in.close();
+            }
         } finally {
-            in.close();
+            bin.dispose();
         }
     }
 
@@ -155,14 +160,18 @@ public class SetValueBinaryTest extends AbstractJCRTest {
      */
     public void testBinaryParentJcr2() throws RepositoryException, IOException {
         Binary bin = value.getBinary();
-        property1.setValue(bin);
-        node.save();
-        bin = property1.getValue().getBinary();
-        InputStream in = bin.getStream();
         try {
-            compareStream(data, in);
+            property1.setValue(bin);
+            node.save();
+            bin = property1.getValue().getBinary();
+            InputStream in = bin.getStream();
+            try {
+                compareStream(data, in);
+            } finally {
+                in.close();
+            }
         } finally {
-            in.close();
+            bin.dispose();
         }
     }
 
