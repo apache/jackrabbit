@@ -45,6 +45,11 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.query.qom.Source;
+import javax.jcr.query.qom.Join;
+import javax.jcr.query.qom.Selector;
+import javax.jcr.query.qom.QueryObjectModel;
+
 import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
@@ -92,9 +97,7 @@ public class SearchResourceImpl implements SearchResource {
      */
     public MultiStatus search(SearchInfo sInfo) throws DavException {
         try {
-            Query q = getQuery(sInfo);
-            QueryResult qR = q.execute();
-            return queryResultToMultiStatus(qR);
+            return queryResultToMultiStatus(getQuery(sInfo));
 
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
@@ -188,13 +191,14 @@ public class SearchResourceImpl implements SearchResource {
     /**
      * Build a <code>MultiStatus</code> object from the specified query result.
      *
-     * @param qResult <code>QueryResult</code> as obtained from {@link javax.jcr.query.Query#execute()}.
+     * @param query the query to execute.
      * @return <code>MultiStatus</code> object listing the query result in
      * Webdav compatible form.
      * @throws RepositoryException if an error occurs.
      */
-    private MultiStatus queryResultToMultiStatus(QueryResult qResult)
+    private MultiStatus queryResultToMultiStatus(Query query)
             throws RepositoryException {
+        QueryResult qResult = query.execute();
         MultiStatus ms = new MultiStatus();
 
         List<String> columnNames = new ArrayList<String>();
@@ -220,11 +224,7 @@ public class SearchResourceImpl implements SearchResource {
         }
         // add path and score for each selector
         List<String> sn = new ArrayList<String>();
-        // TODO
-        // sn.addAll(Arrays.asList(qResult.getSelectorNames()));
-        if (sn.isEmpty()) {
-            sn.add(null); // default selector
-        }
+        collectSelectorNames(query, qResult, sn);
         for (String selectorName : sn) {
             descr.add(new PathValue(JcrConstants.JCR_PATH, selectorName, vf));
             columnNames.add(JcrConstants.JCR_PATH);
@@ -367,5 +367,36 @@ public class SearchResourceImpl implements SearchResource {
             }
             return vf.createValue(path, PropertyType.PATH);
         }
+    }
+
+    private static void collectSelectorNames(Query query,
+                                             QueryResult result,
+                                             List<String> sn) {
+        if (query instanceof QueryObjectModel) {
+            QueryObjectModel qom = (QueryObjectModel) query;
+            collectSelectorNames(qom.getSource(), sn);
+        } else {
+            // TODO
+            // sn.addAll(Arrays.asList(qResult.getSelectorNames()));
+            // TODO: remove once getSelectorNames() is available
+            sn.add(null); // default selector
+        }
+    }
+
+    private static void collectSelectorNames(Source source, List<String> sn) {
+        if (source instanceof Join) {
+            collectSelectorNames((Join) source, sn);
+        } else {
+            collectSelectorNames((Selector) source, sn);
+        }
+    }
+
+    private static void collectSelectorNames(Join join, List<String> sn) {
+        collectSelectorNames(join.getLeft(), sn);
+        collectSelectorNames(join.getRight(), sn);
+    }
+
+    private static void collectSelectorNames(Selector s, List<String> sn) {
+        sn.add(s.getSelectorName());
     }
 }

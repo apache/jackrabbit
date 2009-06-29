@@ -27,9 +27,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
+import javax.jcr.query.Query;
+import javax.jcr.query.qom.QueryObjectModel;
+import javax.jcr.query.qom.Source;
+import javax.jcr.query.qom.Join;
+import javax.jcr.query.qom.Selector;
 import javax.jcr.RepositoryException;
 import javax.jcr.RangeIterator;
 import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * <code>QueryInfoImpl</code> implements a <code>QueryInfo</code> based on a
@@ -75,6 +82,7 @@ class QueryInfoImpl implements QueryInfo {
     /**
      * Creates a new query info based on a given <code>result</code>.
      *
+     * @param query         the JCR query.
      * @param result        the JCR query result.
      * @param idFactory     the id factory.
      * @param resolver      the name path resolver.
@@ -82,7 +90,8 @@ class QueryInfoImpl implements QueryInfo {
      * @throws RepositoryException if an error occurs while reading from
      *                             <code>result</code>.
      */
-    public QueryInfoImpl(QueryResult result,
+    public QueryInfoImpl(Query query,
+                         QueryResult result,
                          IdFactoryImpl idFactory,
                          NamePathResolver resolver,
                          QValueFactory qValueFactory)
@@ -92,12 +101,7 @@ class QueryInfoImpl implements QueryInfo {
         this.resolver = resolver;
         this.qValueFactory = qValueFactory;
         this.columnNames = result.getColumnNames();
-        // TODO
-        String[] sn = new String[0]; //result.getSelectorNames();
-        this.selectorNames = new Name[sn.length];
-        for (int i = 0; i < sn.length; i++) {
-            selectorNames[i] = resolver.getQName(sn[i]);
-        }
+        this.selectorNames = getSelectorNames(query, result, resolver);
     }
 
     /**
@@ -130,5 +134,41 @@ class QueryInfoImpl implements QueryInfo {
         String[] names = new String[columnNames.length];
         System.arraycopy(columnNames, 0, names, 0, columnNames.length);
         return names;
+    }
+
+    private static Name[] getSelectorNames(Query query,
+                                           QueryResult result,
+                                           NamePathResolver resolver)
+            throws RepositoryException {
+        List<String> sn = new ArrayList<String>();
+        if (query instanceof QueryObjectModel) {
+            QueryObjectModel qom = (QueryObjectModel) query;
+            collectSelectorNames(qom.getSource(), sn);
+        } else {
+            // TODO
+            // sn.addAll(Arrays.asList(result.getSelectorNames()));
+        }
+        Name[] selectorNames = new Name[sn.size()];
+        for (int i = 0; i < sn.size(); i++) {
+            selectorNames[i] = resolver.getQName(sn.get(i));
+        }
+        return selectorNames;
+    }
+
+    private static void collectSelectorNames(Source source, List<String> sn) {
+        if (source instanceof Join) {
+            collectSelectorNames((Join) source, sn);
+        } else {
+            collectSelectorNames((Selector) source, sn);
+        }
+    }
+
+    private static void collectSelectorNames(Join join, List<String> sn) {
+        collectSelectorNames(join.getLeft(), sn);
+        collectSelectorNames(join.getRight(), sn);
+    }
+
+    private static void collectSelectorNames(Selector s, List<String> sn) {
+        sn.add(s.getSelectorName());
     }
 }

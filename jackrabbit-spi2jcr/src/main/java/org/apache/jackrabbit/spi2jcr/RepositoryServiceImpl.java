@@ -1036,7 +1036,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         Query query = createQuery(sInfo.getSession(), statement,
                 language, namespaces);
-        return new QueryInfoImpl(query.execute(), idFactory,
+        return new QueryInfoImpl(query, query.execute(), idFactory,
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
 
@@ -1050,13 +1050,12 @@ public class RepositoryServiceImpl implements RepositoryService {
         query.setLimit(limit);
         query.setOffset(offset);
         if (values != null && !values.isEmpty()) {
-            for (Iterator<String> it = values.keySet().iterator(); it.hasNext();) {
-                String varName = it.next();
-                Value value = ValueFormat.getJCRValue(values.get(varName), sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory());
-                query.bindValue(varName, value);
+            for (Map.Entry<String, QValue> entry : values.entrySet()) {
+                Value value = ValueFormat.getJCRValue(entry.getValue(), sInfo.getNamePathResolver(), sInfo.getSession().getValueFactory());
+                query.bindValue(entry.getKey(), value);
             }
         }
-        return new QueryInfoImpl(query.execute(), idFactory,
+        return new QueryInfoImpl(query, query.execute(), idFactory,
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
 
