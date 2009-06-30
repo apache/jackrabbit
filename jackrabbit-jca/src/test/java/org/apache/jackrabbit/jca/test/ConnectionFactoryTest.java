@@ -16,17 +16,19 @@
  */
 package org.apache.jackrabbit.jca.test;
 
-import org.apache.jackrabbit.api.XASession;
-import org.apache.jackrabbit.jca.JCAConnectionRequestInfo;
-import org.apache.jackrabbit.jca.JCARepositoryHandle;
-import org.apache.jackrabbit.jca.JCASessionHandle;
+import java.io.Serializable;
+import java.util.HashSet;
 
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.naming.Referenceable;
 import javax.resource.spi.ManagedConnection;
-import java.io.Serializable;
-import java.util.HashSet;
+
+import org.apache.jackrabbit.api.XASession;
+import org.apache.jackrabbit.jca.JCAConnectionRequestInfo;
+import org.apache.jackrabbit.jca.JCARepositoryHandle;
+import org.apache.jackrabbit.jca.JCASessionHandle;
 
 /**
  * This case executes tests on the connection factory.
@@ -117,6 +119,19 @@ public final class ConnectionFactoryTest
         Session session = repository.login(JCR_SUPERUSER);
         assertTrue(session instanceof XASession);
         session.logout();
+    }
+    
+    /**
+     * Tests if a NoSuchWorkspaceException is thrown if a wrong workspace name is given to login
+     */
+    public void testExceptionHandling() throws Exception {
+        Object cf = mcf.createConnectionFactory();
+        Repository repository = (Repository) cf;
+        try {
+            repository.login(JCR_SUPERUSER, "xxx");
+        } catch (Exception e) {
+            assertTrue(e instanceof NoSuchWorkspaceException);
+        }
     }
 
 }
