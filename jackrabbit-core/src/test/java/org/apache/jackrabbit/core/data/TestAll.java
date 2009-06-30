@@ -32,6 +32,7 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("Data tests");
+        suite.addTestSuite(LazyFileInputStreamTest.class);
         suite.addTestSuite(OpenFilesTest.class);
         suite.addTestSuite(DataStoreTest.class);
         suite.addTestSuite(NodeTypeTest.class);

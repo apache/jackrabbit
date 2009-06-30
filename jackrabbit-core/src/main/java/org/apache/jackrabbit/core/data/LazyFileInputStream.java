@@ -17,13 +17,12 @@
 package org.apache.jackrabbit.core.data;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.commons.io.input.AutoCloseInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This input stream delays opening the file until the first byte is read, and
@@ -32,7 +31,10 @@ import org.slf4j.LoggerFactory;
  */
 public class LazyFileInputStream extends AutoCloseInputStream {
 
-    private static Logger log = LoggerFactory.getLogger(LazyFileInputStream.class);
+    /**
+     * The file descriptor to use.
+     */
+    protected final FileDescriptor fd;
 
     /**
      * The file to read from.
@@ -47,83 +49,119 @@ public class LazyFileInputStream extends AutoCloseInputStream {
     protected boolean opened;
 
     /**
-     * Create a lazy input stream for the given file.
+     * Creates a new <code>LazyFileInputStream</code> for the given file. If the
+     * file is unreadable, a FileNotFoundException is thrown.
      * The file is not opened until the first byte is read from the stream.
-     * 
+     *
      * @param file the file
+     * @throws java.io.FileNotFoundException
      */
-    public LazyFileInputStream(File file) throws FileNotFoundException {
+    public LazyFileInputStream(File file)
+            throws FileNotFoundException {
         super(null);
         if (!file.canRead()) {
             throw new FileNotFoundException(file.getPath());
-        }        
+        }
         this.file = file;
+        this.fd = null;
+    }
+
+    /**
+     * Creates a new <code>LazyFileInputStream</code> for the given file
+     * descriptor.
+     * The file is not opened until the first byte is read from the stream.
+     *
+     * @param fdObj
+     */
+    public LazyFileInputStream(FileDescriptor fd) {
+        super(null);
+        this.file = null;
+        this.fd = fd;
+    }
+
+    /**
+     * Creates a new <code>LazyFileInputStream</code> for the given file. If the
+     * file is unreadable, a FileNotFoundException is thrown.
+     *
+     * @param name
+     * @throws java.io.FileNotFoundException
+     */
+    public LazyFileInputStream(String name) throws FileNotFoundException {
+        this(new File(name));
     }
 
     /**
      * Open the stream if required.
-     * 
-     * @throws IOException
+     *
+     * @throws java.io.IOException
      */
-    protected void openStream() throws IOException {
+    protected void open() throws IOException {
         if (!opened) {
             opened = true;
-            in = new FileInputStream(file);
+            if (fd != null) {
+                in = new FileInputStream(fd);
+            } else {
+                in = new FileInputStream(file);
+            }
         }
     }
-    
+
     public int read() throws IOException {
-        openStream();
+        open();
         return super.read();
     }
 
-    public int read(byte[] b) throws IOException {
-        return read(b, 0, b.length);
-    }
-
-    public int read(byte[] b, int off, int len) throws IOException {
-        openStream();
-        return super.read(b, off, len);
+    public int available() throws IOException {
+        open();
+        return super.available();
     }
 
     public void close() throws IOException {
         // make sure the file is not opened afterwards
         opened = true;
-        super.close();
-    }
-
-    public long skip(long n) throws IOException {
-        openStream();
-        return super.skip(n);
-    }
-
-    public int available() throws IOException {
-        openStream();
-        return super.available();
-    }
-
-    public void mark(int readlimit) {
-        try {
-            openStream();
-        } catch (IOException e) {
-            log.info("Error getting underlying stream: ", e);
+        
+        // only close the file if it was in fact opened
+        if (in != null) {
+            super.close();
         }
-        super.mark(readlimit);
     }
 
-    public void reset() throws IOException {
-        openStream();
+    public synchronized void reset() throws IOException {
+        open();
         super.reset();
     }
 
     public boolean markSupported() {
         try {
-            openStream();
+            open();
         } catch (IOException e) {
-            log.info("Error getting underlying stream: ", e);
-            return false;
+            throw new IllegalStateException(e.toString());
         }
         return super.markSupported();
+    }
+
+    public synchronized void mark(int readlimit) {
+        try {
+            open();
+        } catch (IOException e) {
+            throw new IllegalStateException(e.toString());
+        }
+        super.mark(readlimit);
+    }
+
+    public long skip(long n) throws IOException {
+        open();
+        return super.skip(n);
+    }
+
+    public int read(byte[] b) throws IOException {
+        open();
+        return super.read(b, 0, b.length);
+    }
+
+    public int read(byte[] b, int off, int len) throws IOException {
+        open();
+        return super.read(b, off, len);
     }
 
 }
