@@ -46,10 +46,10 @@ public class NameFactoryImpl implements NameFactory {
     public Name create(String namespaceURI, String localName) throws IllegalArgumentException {
         // NOTE: an empty localName and/or URI is valid (e.g. the root node name)
         if (namespaceURI == null) {
-            throw new IllegalArgumentException("invalid namespaceURI specified");
+            throw new IllegalArgumentException("No namespaceURI specified");
         }
         if (localName == null) {
-            throw new IllegalArgumentException("invalid localName specified");
+            throw new IllegalArgumentException("No localName specified");
         }
         return (Name) cache.get(new NameImpl(namespaceURI, localName));
     }
@@ -59,17 +59,20 @@ public class NameFactoryImpl implements NameFactory {
      */
     public Name create(String nameString) throws IllegalArgumentException {
         if (nameString == null || "".equals(nameString)) {
-            throw new IllegalArgumentException("Invalid Name literal.");
+            throw new IllegalArgumentException("No Name literal specified");
         }
         if (nameString.charAt(0) != '{') {
-            throw new IllegalArgumentException("Invalid Name literal");
+            throw new IllegalArgumentException(
+                    "Invalid Name literal: " + nameString);
         }
         int i = nameString.indexOf('}');
         if (i == -1) {
-            throw new IllegalArgumentException("Invalid Name literal");
+            throw new IllegalArgumentException(
+                    "Invalid Name literal: " + nameString);
         }
         if (i == nameString.length() - 1) {
-            throw new IllegalArgumentException("Invalid Name literal");
+            throw new IllegalArgumentException(
+                    "Invalid Name literal: " + nameString);
         }
         return (Name) cache.get(new NameImpl(
                 nameString.substring(1, i), nameString.substring(i + 1)));
@@ -228,4 +231,5 @@ public class NameFactoryImpl implements NameFactory {
             return new NameImpl(namespaceURI, localName);
         }
     }
+
 }

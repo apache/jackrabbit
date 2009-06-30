@@ -68,7 +68,8 @@ public class PathFactoryImpl implements PathFactory {
      */
     public Path create(Path parent, Path relPath, boolean normalize) throws IllegalArgumentException, RepositoryException {
         if (relPath.isAbsolute()) {
-            throw new IllegalArgumentException("relPath is not a relative path");
+            throw new IllegalArgumentException(
+                    "relPath is not a relative path: " + relPath);
         }
         List l = new ArrayList();
         l.addAll(Arrays.asList(parent.getElements()));
@@ -130,7 +131,8 @@ public class PathFactoryImpl implements PathFactory {
      */
     public Path create(Name name, int index) throws IllegalArgumentException {
         if (index < Path.INDEX_UNDEFINED) {
-            throw new IllegalArgumentException("Index must not be negative: " + index);
+            throw new IllegalArgumentException(
+                    "Index must not be negative: " + name + "[" + index + "]");
         }
         Path.Element elem = createElement(name, index);
         return new Builder(new Path.Element[]{elem}).getPath();
@@ -148,7 +150,7 @@ public class PathFactoryImpl implements PathFactory {
      */
     public Path create(String pathString) throws IllegalArgumentException {
         if (pathString == null || "".equals(pathString)) {
-            throw new IllegalArgumentException("Invalid Path literal");
+            throw new IllegalArgumentException("No Path literal specified");
         }
         // split into path elements
         int lastPos = 0;
@@ -191,14 +193,16 @@ public class PathFactoryImpl implements PathFactory {
      */
     public Path.Element createElement(Name name, int index) throws IllegalArgumentException {
         if (index < Path.INDEX_UNDEFINED) {
-            throw new IllegalArgumentException("The index may not be negative.");
+            throw new IllegalArgumentException(
+                    "The index may not be negative: " + name + "[" + index + "]");
         } else if (name == null) {
             throw new IllegalArgumentException("The name must not be null");
         } else if (name.equals(PARENT_NAME)
                 || name.equals(CURRENT_NAME)
                 || name.equals(ROOT_NAME)) {
             throw new IllegalArgumentException(
-                    "Special path elements (root, '.' and '..') can not have an explicit index.");
+                    "Special path elements (root, '.' and '..') can not have an explicit index: "
+                    + name + "[" + index + "]");
         } else {
             return new Element(name, index);
         }
@@ -371,7 +375,8 @@ public class PathFactoryImpl implements PathFactory {
                 return this;
             }
             if (!isAbsolute()) {
-                throw new RepositoryException("Only an absolute path can be canonicalized.");
+                throw new RepositoryException(
+                        "Only an absolute path can be canonicalized: "  + this);
             }
             return getNormalizedPath();
         }
@@ -386,7 +391,9 @@ public class PathFactoryImpl implements PathFactory {
 
             // make sure both paths are absolute
             if (!isAbsolute() || !other.isAbsolute()) {
-                throw new RepositoryException("Cannot compute relative path from relative paths");
+                throw new RepositoryException(
+                        "Cannot compute relative path from relative paths: "
+                        + this + " vs. " + other);
             }
 
             // make sure we're comparing canonical paths
@@ -432,7 +439,8 @@ public class PathFactoryImpl implements PathFactory {
          */
         public Path getAncestor(int degree) throws IllegalArgumentException, PathNotFoundException {
             if (degree < 0) {
-                throw new IllegalArgumentException("degree must be >= 0");
+                throw new IllegalArgumentException(
+                        "degree must be >= 0: " + this);
             } else if (degree == 0) {
                 return this.getNormalizedPath();
             }
@@ -441,7 +449,8 @@ public class PathFactoryImpl implements PathFactory {
                 Path.Element[] normElems = getNormalizedPath().getElements();
                 int length = normElems.length - degree;
                 if (length < 1) {
-                    throw new PathNotFoundException("no such ancestor path of degree " + degree);
+                    throw new PathNotFoundException(
+                            "no ancestor at degree " + degree + ": " + this);
                 }
                 Path.Element[] ancestorElements = new Element[length];
                 System.arraycopy(normElems, 0, ancestorElements, 0, length);
@@ -495,7 +504,9 @@ public class PathFactoryImpl implements PathFactory {
                 throw new IllegalArgumentException("null argument");
             }
             if (isAbsolute() != other.isAbsolute()) {
-                throw new IllegalArgumentException("Cannot compare a relative path with an absolute path");
+                throw new IllegalArgumentException(
+                        "Cannot compare a relative path with an absolute path: "
+                        + this + " vs. " + other);
             }
 
             if (getDepth() != other.getDepth()) {
@@ -524,7 +535,9 @@ public class PathFactoryImpl implements PathFactory {
             }
             // make sure both paths are either absolute or relative
             if (isAbsolute() != other.isAbsolute()) {
-                throw new IllegalArgumentException("Cannot compare a relative path with an absolute path");
+                throw new IllegalArgumentException(
+                        "Cannot compare a relative path with an absolute path: "
+                        + this + " vs. " + other);
             }
 
             int delta = other.getDepth() - getDepth();
@@ -552,7 +565,9 @@ public class PathFactoryImpl implements PathFactory {
                 throw new IllegalArgumentException();
             }
             if (!isNormalized()) {
-                throw new RepositoryException("Cannot extract sub-Path from a non-normalized Path.");
+                throw new RepositoryException(
+                        "Cannot extract sub-Path from a non-normalized Path: "
+                        + this);
             }
             Path.Element[] dest = new Path.Element[to-from];
             System.arraycopy(elements, from, dest, 0, dest.length);
@@ -965,4 +980,5 @@ public class PathFactoryImpl implements PathFactory {
             return new PathImpl(elements, isNormalized);
         }
     }
+
 }
