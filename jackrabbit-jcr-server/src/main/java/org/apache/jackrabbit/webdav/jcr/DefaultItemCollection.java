@@ -903,7 +903,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve primary nodetype property: " + e.getMessage());
+                log.error("Failed to retrieve primary nodetype property.", e);
             }
             try {
                 Item primaryItem = n.getPrimaryItem();
