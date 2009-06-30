@@ -98,7 +98,9 @@ public final class JCARepositoryHandle
             return (Session) cm.allocateConnection(mcf, cri);
         } catch (ResourceException e) {
             Throwable cause = e.getCause();
-
+            if (cause == null) {
+                cause = e.getLinkedException();
+            }
             if (cause instanceof LoginException) {
                 throw (LoginException) cause;
             } else if (cause instanceof NoSuchWorkspaceException) {
