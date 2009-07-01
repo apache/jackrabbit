@@ -97,4 +97,24 @@ public class GetWeakReferencesTest extends AbstractJCRTest {
         assertEquals("wrong weak reference property", referring.getProperty(propertyName1).getPath(), p.getPath());
         assertFalse("no more weak references expected", it.hasNext());
     }
+
+    public void testNonReferenceable() throws RepositoryException, NotExecutableException {
+        Node nonReferenceable = null;
+        if (testRootNode.isNodeType(mixReferenceable)) {
+            Node child = testRootNode.addNode(nodeName1, testNodeType);
+            superuser.save();
+            if (!child.isNodeType(mixReferenceable)) {
+                nonReferenceable = child;
+            }
+        } else {
+            nonReferenceable = testRootNode;
+        }
+
+        if (nonReferenceable == null) {
+            throw new NotExecutableException("Test node is referenceable.");
+        }
+
+        // getWeakReferences must return an empty iterator and must not throw.
+        assertFalse(nonReferenceable.getWeakReferences().hasNext());
+    }
 }

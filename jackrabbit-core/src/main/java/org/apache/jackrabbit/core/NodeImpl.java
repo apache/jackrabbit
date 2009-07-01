@@ -4667,6 +4667,11 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        // shortcut if node isn't referenceable
+        if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            return PropertyIteratorAdapter.EMPTY;
+        }
+
         Value ref = getSession().getValueFactory().createValue(this, true);
         List<Property> props = new ArrayList<Property>();
         QueryManagerImpl qm = (QueryManagerImpl) session.getWorkspace().getQueryManager();
@@ -4700,6 +4705,11 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
+        // shortcut if node isn't referenceable
+        if (!isNodeType(NameConstants.MIX_REFERENCEABLE)) {
+            return PropertyIteratorAdapter.EMPTY;
+        }
+        
         try {
             StringBuilder stmt = new StringBuilder();
             stmt.append("//*[@").append(ISO9075.encode(name));
