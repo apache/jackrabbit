@@ -84,6 +84,7 @@
           <excludes>
             <exclude>src/test/resources/jaas.config</exclude>
             <exclude>src/test/resources/testdata.xml</exclude>
+            <exclude>*.log</exclude>
           </excludes>
         </configuration>
       </plugin>
