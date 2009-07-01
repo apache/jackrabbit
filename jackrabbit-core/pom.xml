@@ -123,6 +123,7 @@
             <exclude>src/test/resources/**/*.txt</exclude>
             <exclude>src/test/resources/**/*.cnd</exclude>
             <exclude>repository/**</exclude>
+            <exclude>*.log</exclude>
           </excludes>
         </configuration>
       </plugin>
