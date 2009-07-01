@@ -269,10 +269,19 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
 
     private NodeImpl createAcNode(String acPath) throws RepositoryException {
         String[] segms = Text.explode(acPath, '/', false);
+        StringBuilder currentPath = new StringBuilder();
         NodeImpl node = (NodeImpl) session.getRootNode();
         for (int i = 0; i < segms.length; i++) {
+            if (i > 0) {
+                currentPath.append('/').append(segms[i]);
+            }
             Name nName = session.getQName(segms[i]);
-            Name ntName = (i < segms.length - 1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
+            Name ntName;
+            if (denotesPrincipalPath(currentPath.toString())) {
+                ntName = NT_REP_PRINCIPAL_ACCESS_CONTROL;
+            } else {
+                ntName = (i < segms.length - 1) ? NT_REP_ACCESS_CONTROL : NT_REP_PRINCIPAL_ACCESS_CONTROL;
+            }
             if (node.hasNode(nName)) {
                 NodeImpl n = node.getNode(nName);
                 if (!n.isNodeType(ntName)) {
@@ -285,6 +294,25 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             }
         }
         return node;
+    }
+
+    private boolean denotesPrincipalPath(final String path) {
+        if (path == null || path.length() == 0) {
+            return false;
+        }
+        ItemBasedPrincipal princ = new ItemBasedPrincipal() {
+            public String getPath() throws RepositoryException {
+                return path;
+            }
+            public String getName() {
+                return Text.getName(path);
+            }
+        };
+        try {
+            return session.getUserManager().getAuthorizable(princ) != null;
+        } catch (RepositoryException e) {
+            return false;
+        }
     }
 
     /**
