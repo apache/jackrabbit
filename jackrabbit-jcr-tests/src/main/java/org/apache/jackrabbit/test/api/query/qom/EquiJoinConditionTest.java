@@ -41,7 +41,7 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
         n2 = n1.addNode(nodeName2, testNodeType);
         n2.setProperty(propertyName1, value);
         n2.setProperty(propertyName2, value);
-        n2.addMixin(mixReferenceable);
+        ensureMixinType(n2, mixReferenceable);
         superuser.save();
     }
 

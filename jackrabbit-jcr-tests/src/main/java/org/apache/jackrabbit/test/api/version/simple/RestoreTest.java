@@ -888,12 +888,11 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the restore of the OPV=Version child nodes.
      * @throws RepositoryException
      */
-    public void testRestoreName() throws RepositoryException {
+    public void testRestoreName() throws RepositoryException,
+            NotExecutableException {
         // V1.0 of versionableNode has no child
         Node child1 = versionableNode.addNode(nodeName4);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         versionableNode.getSession().save();
         // create v1.0 of child
         Version v1Child = child1.checkin();
@@ -929,12 +928,11 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the restore of the OPV=Version child nodes.
      * @throws RepositoryException
      */
-    public void testRestoreNameJcr2() throws RepositoryException {
+    public void testRestoreNameJcr2() throws RepositoryException,
+            NotExecutableException {
         // V1.0 of versionableNode has no child
         Node child1 = versionableNode.addNode(nodeName4);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         versionableNode.getSession().save();
         // create v1.0 of child
         Version v1Child = child1.checkin();
@@ -970,21 +968,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder() throws RepositoryException {
+    public void testRestoreOrder() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         child1.checkin();
         child2.checkin();
@@ -1014,21 +1009,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrderJcr2() throws RepositoryException {
+    public void testRestoreOrderJcr2() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1058,21 +1050,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrderJcr2_2() throws RepositoryException {
+    public void testRestoreOrderJcr2_2() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1102,21 +1091,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrderJcr2_3() throws RepositoryException {
+    public void testRestoreOrderJcr2_3() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1146,21 +1132,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrderJcr2_4() throws RepositoryException {
+    public void testRestoreOrderJcr2_4() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1190,21 +1173,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder2() throws RepositoryException {
+    public void testRestoreOrder2() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         child1.checkin();
         child2.checkin();
@@ -1234,21 +1214,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder2Jcr2() throws RepositoryException {
+    public void testRestoreOrder2Jcr2() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1278,21 +1255,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder2Jcr2_2() throws RepositoryException {
+    public void testRestoreOrder2Jcr2_2() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1322,21 +1296,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder2Jcr2_3() throws RepositoryException {
+    public void testRestoreOrder2Jcr2_3() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());
@@ -1366,21 +1337,18 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
-    public void testRestoreOrder2Jcr2_4() throws RepositoryException {
+    public void testRestoreOrder2Jcr2_4() throws RepositoryException,
+            NotExecutableException {
         // create a test-root that has orderable child nodes
         Node testRoot = versionableNode.addNode(nodeName4, "nt:unstructured");
-        testRoot.addMixin(mixVersionable);
+        ensureMixinType(testRoot, mixVersionable);
         versionableNode.getSession().save();
 
         // create children of vNode and checkin
         Node child1 = testRoot.addNode(nodeName1);
-        if (!child1.isNodeType(mixVersionable)) {
-            child1.addMixin(mixVersionable);
-        }
+        ensureMixinType(child1, mixVersionable);
         Node child2 = testRoot.addNode(nodeName2);
-        if (!child2.isNodeType(mixVersionable)) {
-            child2.addMixin(mixVersionable);
-        }
+        ensureMixinType(child2, mixVersionable);
         testRoot.getSession().save();
         versionManager.checkin(child1.getPath());
         versionManager.checkin(child2.getPath());

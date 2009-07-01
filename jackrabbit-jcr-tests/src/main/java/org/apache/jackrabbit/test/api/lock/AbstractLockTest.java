@@ -52,7 +52,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         super.setUp();
         
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
-        lockedNode.addMixin(mixLockable);
+        ensureMixinType(lockedNode, mixLockable);
         childNode = lockedNode.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -75,11 +75,10 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     protected abstract boolean isSessionScoped();
     protected abstract boolean isDeep();
 
-    protected void assertLockable(Node n) throws RepositoryException {
-        if (!n.isNodeType(mixLockable)) {
-            n.addMixin(mixLockable);
-            n.getSession().save();
-        }
+    protected void assertLockable(Node n)
+            throws RepositoryException, NotExecutableException {
+        ensureMixinType(n, mixLockable);
+        n.getSession().save();
     }
 
     protected long getTimeoutHint() throws RepositoryException {
@@ -412,7 +411,8 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         }
     }
 
-    public void testRemoveMixLockableFromLockedNode() throws RepositoryException {
+    public void testRemoveMixLockableFromLockedNode() throws RepositoryException,
+            NotExecutableException {
         try {
             lockedNode.removeMixin(mixLockable);
             lockedNode.save();
@@ -439,8 +439,8 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertTrue(msg, lockedNode.hasProperty(jcrlockIsDeep));
         } finally {
             // ev. re-add the mixin in order to be able to unlock the node
-            if (lockedNode.isLocked() && !lockedNode.isNodeType(mixLockable)) {
-                lockedNode.addMixin(mixLockable);
+            if (lockedNode.isLocked()) {
+                ensureMixinType(lockedNode, mixLockable);
                 lockedNode.save();
             }
         }

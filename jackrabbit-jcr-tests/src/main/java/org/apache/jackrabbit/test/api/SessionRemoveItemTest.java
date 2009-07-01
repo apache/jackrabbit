@@ -91,14 +91,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
     }
 
     public void testRemoveLockedNode() throws RepositoryException, NotExecutableException {
-        if (!removeNode.isNodeType(mixLockable)) {
-            if (removeNode.canAddMixin(mixLockable)) {
-                removeNode.addMixin(mixLockable);
-                removeNode.save();
-            } else {
-                throw new NotExecutableException("Cannot make test node lockable.");
-            }
-        }
+        ensureMixinType(removeNode, mixLockable);
+        removeNode.save();
 
         // make sure the test node is locked.
         removeNode.lock(true, true);
@@ -123,14 +117,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
         Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();
 
-        if (!removeNode.isNodeType(mixLockable)) {
-            if (removeNode.canAddMixin(mixLockable)) {
-                removeNode.addMixin(mixLockable);
-                removeNode.save();
-            } else {
-                throw new NotExecutableException("Cannot make test node lockable.");
-            }
-        }
+        ensureMixinType(removeNode, mixLockable);
+        removeNode.save();
 
         // make sure the test node is locked.
         removeNode.lock(true, true);
@@ -167,14 +155,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
         Property childP = removeNode.setProperty(propertyName2, v);
         removeNode.save();
 
-        if (!removeNode.isNodeType(mixVersionable)) {
-            if (removeNode.canAddMixin(mixVersionable)) {
-                removeNode.addMixin(mixVersionable);
-                removeNode.save();
-            } else {
-                throw new NotExecutableException("Cannot make test node versionable.");
-            }
-        }
+        ensureMixinType(removeNode, mixVersionable);
+        removeNode.save();
 
         removeNode.checkin();
         try {

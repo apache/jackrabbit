@@ -36,7 +36,7 @@ public class SameNodeJoinConditionTest extends AbstractJoinTest {
         super.setUp();
         n1 = testRootNode.addNode(nodeName1, testNodeType);
         n2 = n1.addNode(nodeName2, testNodeType);
-        n2.addMixin(mixReferenceable);
+        ensureMixinType(n2, mixReferenceable);
         superuser.save();
     }
 

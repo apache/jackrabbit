@@ -25,6 +25,8 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.lock.LockException;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>WorkspaceCloneTest</code> contains tests for cloning nodes between
  * workspace.
@@ -53,12 +55,13 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
      * If successful, the changes are persisted immediately, there is no need to
      * call save.
      */
-    public void testCloneNodesTwice() throws RepositoryException {
+    public void testCloneNodesTwice() throws RepositoryException,
+            NotExecutableException {
         // clone referenceable node below non-referenceable node
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
         Node folder = node1.addNode(nodeName3);
-        folder.addMixin(mixReferenceable);
+        ensureMixinType(folder, mixReferenceable);
         node1.save();
         workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
         workspaceW2.clone(workspace.getName(), node1.getPath(), dstAbsPath, true);
@@ -169,7 +172,8 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
     /**
      * A LockException is thrown if a lock prevents the copy.
      */
-    public void testCloneNodesLocked() throws RepositoryException {
+    public void testCloneNodesLocked()
+            throws RepositoryException, NotExecutableException {
         // we assume repository supports locking
         String dstAbsPath = node2W2.getPath() + "/" + node1.getName();
 
@@ -177,10 +181,8 @@ public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
         Node lockTarget = (Node) rwSessionW2.getItem(node2W2.getPath());
 
         // add mixin "lockable" to be able to lock the node
-        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
-            lockTarget.addMixin(mixLockable);
-            lockTarget.getParent().save();
-        }
+        ensureMixinType(lockTarget, mixLockable);
+        lockTarget.getParent().save();
 
         // lock dst parent node using other session
         lockTarget.lock(true, true);

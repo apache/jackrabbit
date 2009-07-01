@@ -152,15 +152,7 @@ public class SetValueReferenceTest extends AbstractJCRTest {
      *                                referenceable nodes.
      */
     private void ensureReferenceable(Node n) throws RepositoryException, NotExecutableException {
-        if (n.isNodeType(mixReferenceable)) {
-            return;
-        }
-        if (n.canAddMixin(mixReferenceable)) {
-            n.addMixin(mixReferenceable);
-            // some implementations may require a save after addMixin()
-            n.getSession().save();
-        } else {
-            throw new NotExecutableException("Node is not referenceable: " + n.getPath());
-        }
+        ensureMixinType(n, mixReferenceable);
+        n.getSession().save();
     }
 }

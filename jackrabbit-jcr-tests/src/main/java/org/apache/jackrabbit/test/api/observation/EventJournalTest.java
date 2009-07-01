@@ -26,6 +26,8 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventJournal;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>EventJournalTest</code> performs EventJournal tests.
  */
@@ -107,11 +109,9 @@ public class EventJournalTest extends AbstractObservationTest {
         checkJournal(new String[]{n1.getPath(), n2.getPath()}, new String[0]);
     }
 
-    public void testUUID() throws RepositoryException {
+    public void testUUID() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1);
-        if (!n1.isNodeType(mixReferenceable)) {
-            n1.addMixin(mixReferenceable);
-        }
+        ensureMixinType(n1, mixReferenceable);
         superuser.save();
 
         Node n2 = n1.addNode(nodeName2);

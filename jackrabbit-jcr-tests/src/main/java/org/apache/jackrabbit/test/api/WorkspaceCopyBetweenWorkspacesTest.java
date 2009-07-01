@@ -165,10 +165,8 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
         Node lockTarget = (Node) rwSessionW2.getItem(node2W2.getPath());
 
         // add mixin "lockable" to be able to lock the node
-        if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
-            lockTarget.addMixin(mixLockable);
-            lockTarget.getParent().save();
-        }
+        ensureMixinType(lockTarget, mixLockable);
+        lockTarget.getParent().save();
 
         // lock dst parent node using other session
         lockTarget.lock(true, true);

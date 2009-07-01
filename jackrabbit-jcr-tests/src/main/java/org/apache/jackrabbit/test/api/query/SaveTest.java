@@ -133,13 +133,7 @@ public class SaveTest extends AbstractJCRTest {
         // create a node that is versionable
         Node versionable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        if (!versionable.isNodeType(mixVersionable)) {
-            if (versionable.canAddMixin(mixVersionable)) {
-                versionable.addMixin(mixVersionable);
-            } else {
-                fail("Node " + nodeName1 + " is not versionable and does not allow to add mix:versionable");
-            }
-        }
+        ensureMixinType(versionable, mixVersionable);
         testRootNode.save();
         versionable.checkin();
 
@@ -191,13 +185,7 @@ public class SaveTest extends AbstractJCRTest {
         // create a node that is lockable
         Node lockable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        if (!lockable.isNodeType(mixLockable)) {
-            if (lockable.canAddMixin(mixLockable)) {
-                lockable.addMixin(mixLockable);
-            } else {
-                fail("Node " + nodeName1 + " is not lockable and does not allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(lockable, mixLockable);
         testRootNode.save();
         lockable.lock(false, true);
 

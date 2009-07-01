@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.version;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
@@ -132,11 +133,10 @@ public class AbstractVersionTest extends AbstractJCRTest {
      * @return versionable node.
      * @throws RepositoryException
      */
-    protected Node createVersionableNode(Node parent, String name, NodeType nodetype) throws RepositoryException {
+    protected Node createVersionableNode(Node parent, String name, NodeType nodetype)
+            throws RepositoryException, NotExecutableException {
         Node versionableNode = parent.addNode(name, nodetype.getName());
-        if (!nodetype.isNodeType(mixVersionable)) {
-            versionableNode.addMixin(mixVersionable);
-        }
+        ensureMixinType(versionableNode, mixVersionable);
         parent.save();
 
         return versionableNode;

@@ -49,9 +49,7 @@ public class LockTest extends AbstractJCRTest {
     public void testAddRemoveLockToken() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n, mixLockable)) {
-            n.addMixin(mixLockable);
-        }
+        ensureMixinType(n, mixLockable);
         testRootNode.save();
 
         // lock node and get lock token
@@ -107,9 +105,7 @@ public class LockTest extends AbstractJCRTest {
     public void testNodeLocked() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // lock node
@@ -147,13 +143,9 @@ public class LockTest extends AbstractJCRTest {
     public void testGetNode() throws Exception {
         // create new node with a sub node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n1Sub = n1.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1Sub, mixLockable)) {
-            n1Sub.addMixin(mixLockable);
-        }
+        ensureMixinType(n1Sub, mixLockable);
         testRootNode.save();
 
         // lock node
@@ -177,9 +169,7 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLockOwnerProperty() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // lock node
@@ -205,9 +195,7 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLockOwner() throws Exception {
         // create new node and lock it
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // lock node
@@ -227,9 +215,7 @@ public class LockTest extends AbstractJCRTest {
     public void testShallowLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
         testRootNode.save();
 
@@ -252,19 +238,9 @@ public class LockTest extends AbstractJCRTest {
 
         // create a node that is lockable and versionable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(node, mixLockable)) {
-            node.addMixin(mixLockable);
-        }
+        ensureMixinType(node, mixLockable);
         // try to make it versionable if it is not
-        if (!node.isNodeType(mixVersionable)) {
-            if (node.canAddMixin(mixVersionable)) {
-                node.addMixin(mixVersionable);
-            } else {
-                throw new NotExecutableException("Node " + nodeName1 + " is " +
-                        "not versionable and does not allow to add " +
-                        "mix:versionable");
-            }
-        }
+        ensureMixinType(node, mixVersionable);
         testRootNode.save();
 
         node.checkin();
@@ -292,13 +268,9 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixLockable)) {
-            n2.addMixin(mixLockable);
-        }
+        ensureMixinType(n2, mixLockable);
         testRootNode.save();
 
         // lock parent node
@@ -320,13 +292,9 @@ public class LockTest extends AbstractJCRTest {
     public void testParentChildDeepLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixLockable)) {
-            n2.addMixin(mixLockable);
-        }
+        ensureMixinType(n2, mixLockable);
         testRootNode.save();
 
         // lock child node
@@ -344,16 +312,12 @@ public class LockTest extends AbstractJCRTest {
     /**
      * Test Lock.isDeep()
      */
-    public void testIsDeep() throws RepositoryException {
+    public void testIsDeep() throws RepositoryException, NotExecutableException {
         // create two lockable nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixLockable)) {
-            n2.addMixin(mixLockable);
-        }
+        ensureMixinType(n2, mixLockable);
         testRootNode.save();
 
         // lock node 1 "undeeply"
@@ -372,16 +336,13 @@ public class LockTest extends AbstractJCRTest {
     /**
      * Test Lock.isSessionScoped()
      */
-    public void testIsSessionScoped() throws RepositoryException {
+    public void testIsSessionScoped() throws RepositoryException,
+            NotExecutableException {
         // create two lockable nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixLockable)) {
-            n2.addMixin(mixLockable);
-        }
+        ensureMixinType(n2, mixLockable);
         testRootNode.save();
 
         // lock node 1 session-scoped
@@ -405,9 +366,7 @@ public class LockTest extends AbstractJCRTest {
     public void testLogout() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // create new session
@@ -447,9 +406,7 @@ public class LockTest extends AbstractJCRTest {
     public void testLockTransfer() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // create new session
@@ -490,9 +447,7 @@ public class LockTest extends AbstractJCRTest {
     public void testOpenScopedLocks() throws Exception {
         // add node
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         testRootNode.save();
 
         // create new session
@@ -524,9 +479,7 @@ public class LockTest extends AbstractJCRTest {
     public void testRefresh() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n, mixLockable)) {
-            n.addMixin(mixLockable);
-        }
+        ensureMixinType(n, mixLockable);
         testRootNode.save();
 
         // lock node and get lock token
@@ -551,9 +504,7 @@ public class LockTest extends AbstractJCRTest {
     public void testRefreshNotLive() throws Exception {
         // create new node
         Node n = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n, mixLockable)) {
-            n.addMixin(mixLockable);
-        }
+        ensureMixinType(n, mixLockable);
         testRootNode.save();
 
         // lock node and get lock token
@@ -583,13 +534,9 @@ public class LockTest extends AbstractJCRTest {
     public void testGetLock() throws Exception {
         // create new nodes
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixLockable)) {
-            n1.addMixin(mixLockable);
-        }
+        ensureMixinType(n1, mixLockable);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixLockable)) {
-            n2.addMixin(mixLockable);
-        }
+        ensureMixinType(n2, mixLockable);
         testRootNode.save();
 
         // deep lock parent node
@@ -612,10 +559,8 @@ public class LockTest extends AbstractJCRTest {
 
         // set up versionable and lockable node
         Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(testNode, mixLockable)) {
-            testNode.addMixin(mixLockable);
-        }
-        testNode.addMixin(mixVersionable);
+        ensureMixinType(testNode, mixLockable);
+        ensureMixinType(testNode, mixVersionable);
         testRootNode.save();
 
         // lock and check-in
@@ -691,13 +636,9 @@ public class LockTest extends AbstractJCRTest {
 
         // create two nodes, parent and child
         Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(testNode1, mixLockable)) {
-            testNode1.addMixin(mixLockable);
-        }
+        ensureMixinType(testNode1, mixLockable);
         Node testNode2 = testNode1.addNode(nodeName2, testNodeType);
-        if (needsMixin(testNode2, mixLockable)) {
-            testNode2.addMixin(mixLockable);
-        }
+        ensureMixinType(testNode2, mixLockable);
         testRootNode.save();
 
         // lock child node
@@ -737,8 +678,8 @@ public class LockTest extends AbstractJCRTest {
             throw new NotExecutableException("Node does not seem to allow same name siblings");
         }
 
-        n1.addMixin("mix:lockable");
-        n2.addMixin("mix:lockable");
+        ensureMixinType(n1, mixLockable);
+        ensureMixinType(n2, mixLockable);
         session.save();
 
         // lock both nodes
@@ -778,17 +719,11 @@ public class LockTest extends AbstractJCRTest {
         // create three lockable nodes with same name
         try {
             Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-            if (needsMixin(testNode, mixLockable)) {
-                testNode.addMixin(mixLockable);
-            }
+            ensureMixinType(testNode, mixLockable);
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            if (needsMixin(testNode, mixLockable)) {
-                testNode.addMixin(mixLockable);
-            }
+            ensureMixinType(testNode, mixLockable);
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            if (needsMixin(testNode, mixLockable)) {
-                testNode.addMixin(mixLockable);
-            }
+            ensureMixinType(testNode, mixLockable);
             testRootNode.save();
             return testNode;
         }

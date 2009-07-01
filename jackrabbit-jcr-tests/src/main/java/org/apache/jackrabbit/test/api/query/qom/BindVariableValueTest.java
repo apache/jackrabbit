@@ -26,6 +26,8 @@ import javax.jcr.PropertyType;
 import javax.jcr.query.Query;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>BindVariableValueTest</code>...
  */
@@ -170,14 +172,13 @@ public class BindVariableValueTest extends AbstractQOMTest {
         checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
-    public void testReference() throws RepositoryException {
+    public void testReference() throws RepositoryException,
+            NotExecutableException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
 
-        if (!n.isNodeType(mixReferenceable)) {
-            n.addMixin(mixReferenceable);
-            superuser.save();
-        }
+        ensureMixinType(n, mixReferenceable);
+        superuser.save();
         n.setProperty(propertyName1, n);
         superuser.save();
 
@@ -189,14 +190,13 @@ public class BindVariableValueTest extends AbstractQOMTest {
         checkResult(sqlQuery.execute(), new Node[]{n});
     }
 
-    public void testWeakReference() throws RepositoryException {
+    public void testWeakReference() throws RepositoryException,
+            NotExecutableException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
 
-        if (!n.isNodeType(mixReferenceable)) {
-            n.addMixin(mixReferenceable);
-            superuser.save();
-        }
+        ensureMixinType(n, mixReferenceable);
+        superuser.save();
         n.setProperty(propertyName1, vf.createValue(n, true));
         superuser.save();
 
