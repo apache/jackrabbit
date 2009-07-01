@@ -394,7 +394,7 @@ class ACLTemplate implements JackrabbitAccessControlList {
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map)
      */
     public boolean addEntry(Principal principal, Privilege[] privileges,
-                            boolean isAllow, Map restrictions)
+                            boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
         if (restrictions != null && !restrictions.isEmpty()) {
             throw new AccessControlException("This AccessControlList does not allow for additional restrictions.");
