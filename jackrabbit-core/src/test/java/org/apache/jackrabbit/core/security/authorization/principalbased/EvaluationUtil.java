@@ -48,6 +48,12 @@ class EvaluationUtil {
                             return true;
                         }
                     }
+                    policies = ((JackrabbitAccessControlManager) acMgr).getPolicies(princ);
+                    for (int i = 0; i < policies.length; i++) {
+                        if (policies[i] instanceof ACLTemplate) {
+                            return true;
+                        }
+                    }
                 } catch (RepositoryException e) {
                     // ignore
                 }
