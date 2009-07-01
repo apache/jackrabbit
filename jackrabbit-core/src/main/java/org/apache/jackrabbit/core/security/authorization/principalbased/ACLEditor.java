@@ -45,6 +45,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.PropertyType;
+import javax.jcr.NodeIterator;
 import java.security.Principal;
 
 /**
@@ -183,22 +184,22 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         if (acNode == null) {
             throw new PathNotFoundException("No such node " + nodePath);
         }
+
         // write the entries to the node
-        /*
-         in order to assert that the parent (ac-controlled node) gets
-         modified an existing ACL node is removed first and the recreated.
-         this also asserts that all ACEs are cleared without having to
-         access and removed the explicitely
-        */
         NodeImpl aclNode;
         if (acNode.hasNode(N_POLICY)) {
             aclNode = acNode.getNode(N_POLICY);
-            removeItem(aclNode);
+            // remove all existing aces
+            for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
+                NodeImpl aceNode = (NodeImpl) aceNodes.nextNode();
+                removeItem(aceNode);
+            }
+        } else {
+            /* doesn't exist yet -> create */
+            aclNode = addNode(acNode, N_POLICY, NT_REP_ACL);
         }
-        /* now (re) create it */
-        aclNode = addNode(acNode, N_POLICY, NT_REP_ACL);
 
-        /* add all entries defined on the template */
+        /* add all new entries defined on the template */
         AccessControlEntry[] aces = acl.getAccessControlEntries();
         for (int i = 0; i < aces.length; i++) {
             JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) aces[i];
@@ -227,6 +228,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 setProperty(aceNode, pName, value);
             }
         }
+
+        // mark the parent modified.
+        markModified((NodeImpl) aclNode.getParent());
     }
 
     /**

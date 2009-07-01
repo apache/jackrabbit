@@ -130,6 +130,10 @@ public abstract class ProtectedItemModifier {
         itemImpl.internalRemove(true);
     }
 
+    protected void markModified(NodeImpl parentImpl) throws RepositoryException {
+        parentImpl.getOrCreateTransientItemState();
+    }
+
     private void checkPermission(ItemImpl item, int perm) throws RepositoryException {
         if (perm > Permission.NONE) {
             SessionImpl sImpl = (SessionImpl) item.getSession();
