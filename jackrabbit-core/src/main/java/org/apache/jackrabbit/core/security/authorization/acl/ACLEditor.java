@@ -41,6 +41,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.NodeIterator;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
@@ -158,17 +159,17 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         checkValidPolicy(nodePath, policy);
 
         NodeImpl aclNode = getAclNode(nodePath);
-        /* in order to assert that the parent (ac-controlled node) gets modified
-           an existing ACL node is removed first and the recreated.
-           this also asserts that all ACEs are cleared without having to
-           access and removed the explicitely
-         */
         if (aclNode != null) {
-            removeItem(aclNode);
+            // remove all existing aces
+            for (NodeIterator aceNodes = aclNode.getNodes(); aceNodes.hasNext();) {
+                NodeImpl aceNode = (NodeImpl) aceNodes.nextNode();
+                removeItem(aceNode);
+            }
+        } else {
+            // create the acl node
+            aclNode = createAclNode(nodePath);
         }
-        // now (re) create it
-        aclNode = createAclNode(nodePath);
-
+        
         AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
             JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) entries[i];
@@ -189,6 +190,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             Value[] names = getPrivilegeNames(pvlgs, vf);
             setProperty(aceNode, P_PRIVILEGES, names);
         }
+
+        // mark the parent modified.
+        markModified(((NodeImpl)aclNode.getParent()));
     }
 
     /**
