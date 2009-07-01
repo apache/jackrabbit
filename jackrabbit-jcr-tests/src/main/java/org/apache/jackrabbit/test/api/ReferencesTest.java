@@ -206,4 +206,24 @@ public class ReferencesTest extends AbstractJCRTest {
             fail("too many referers: " + iter.nextProperty().getPath());
         }
     }
+
+    public void testNonReferenceable() throws RepositoryException, NotExecutableException {
+        Node nonReferenceable = null;
+        if (testRootNode.isNodeType(mixReferenceable)) {
+            Node child = testRootNode.addNode(nodeName1, testNodeType);
+            superuser.save();
+            if (!child.isNodeType(mixReferenceable)) {
+                nonReferenceable = child;
+            }
+        } else {
+            nonReferenceable = testRootNode;
+        }
+
+        if (nonReferenceable == null) {
+            throw new NotExecutableException("Test node is referenceable.");
+        }
+
+        // getReferences must return an empty iterator and must not throw.        
+        assertFalse(nonReferenceable.getReferences().hasNext());
+    }
 }
