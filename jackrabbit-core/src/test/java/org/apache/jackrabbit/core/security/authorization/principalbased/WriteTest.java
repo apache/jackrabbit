@@ -24,7 +24,10 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractWriteTest;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,10 +76,12 @@ public class WriteTest extends AbstractWriteTest {
     }
 
     public void testEditor() throws NotExecutableException, RepositoryException {
-        UserManager uMgr = getUserManager(superuser);
-        User u = uMgr.createUser("t", "t");
-        Principal p = u.getPrincipal();
+        User u = null;
         try {
+            UserManager uMgr = getUserManager(superuser);
+            u = uMgr.createUser("t", "t");
+            Principal p = u.getPrincipal();
+
             JackrabbitAccessControlManager acMgr = (JackrabbitAccessControlManager) getAccessControlManager(superuser);
             JackrabbitAccessControlPolicy[] acls = acMgr.getApplicablePolicies(p);
 
@@ -98,8 +103,47 @@ public class WriteTest extends AbstractWriteTest {
             assertEquals(1, acMgr.getPolicies(p).length);
             assertEquals(1, acMgr.getPolicies(acls[0].getPath()).length);
         } finally {
-            u.remove();
+            superuser.refresh(false);
+            if (u != null) {
+                u.remove();
+            }
         }
+    }
+
+    public void testEditor2() throws NotExecutableException, RepositoryException {
+        User u = null;
+        User u2 = null;
+
+        try {
+            UserManager uMgr = getUserManager(superuser);
+
+            u = uMgr.createUser("t", "t");
+            u2 = uMgr.createUser("tt", "tt", new TestPrincipal("tt"), "t/tt");
+
+            Principal p = u.getPrincipal();
+            Principal p2 = u2.getPrincipal();
+
+            if (p instanceof ItemBasedPrincipal && p2 instanceof ItemBasedPrincipal &&
+                    Text.isDescendant(((ItemBasedPrincipal) p).getPath(), ((ItemBasedPrincipal) p2).getPath())) {
+
+                JackrabbitAccessControlManager acMgr = (JackrabbitAccessControlManager) getAccessControlManager(superuser);
+
+                JackrabbitAccessControlPolicy[] acls = acMgr.getApplicablePolicies(p2);
+                acMgr.setPolicy(acls[0].getPath(), acls[0]);
+
+                acls = acMgr.getApplicablePolicies(p);
+                String path = acls[0].getPath();
+
+                Node n = superuser.getNode(path);
+                assertEquals("rep:PrincipalAccessControl", n.getPrimaryNodeType().getName());
+            } else {
+                throw new NotExecutableException();
+            }
+        } finally {
+            superuser.refresh(false);
+            if (u2 != null) u2.remove();
+            if (u != null) u.remove();
+     }
 
     }
     // TODO: add specific tests with other restrictions
