@@ -416,7 +416,7 @@ public abstract class AbstractSession implements Session {
      * {@link Item#remove()} on the item removed by {@link #getItem(String)}.
      *
      * @see Session#removeItem(String)
-     * @param absolute path of the item to be removed
+     * @param absPath An absolute path of the item to be removed
      * @throws RepositoryException if the item can not be removed
      */
     public void removeItem(String absPath) throws RepositoryException {
