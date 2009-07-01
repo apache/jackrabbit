@@ -206,41 +206,67 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     protected NodeId resolveRelativeNodePath(String relPath)
             throws RepositoryException {
+
+        Path p = resolveRelativePath(relPath);
+        return getNodeId(p);
+    }
+
+    /**
+     * Resolve a relative path given as string into a <code>Path</code>. If
+     * a <code>NameException</code> occurs, it will be rethrown embedded
+     * into a <code>RepositoryException</code>
+     *
+     * @param relPath relative path
+     * @return <code>Path</code> object
+     * @throws RepositoryException if an error occurs
+     */
+    private Path resolveRelativePath(String relPath) throws RepositoryException {
         try {
-            /**
-             * first check if relPath is just a name (in which case we don't
-             * have to build & resolve absolute path)
-             */
-            Path p = session.getQPath(relPath);
-            if (p.getLength() == 1) {
-                Path.Element pe = p.getNameElement();
-                if (pe.denotesName()) {
-                    // check if node entry exists
-                    NodeState thisState = data.getNodeState();
-                    int index = pe.getIndex();
-                    if (index == 0) {
-                        index = 1;
-                    }
-                    ChildNodeEntry cne =
-                            thisState.getChildNodeEntry(pe.getName(), index);
-                    if (cne != null) {
-                        return cne.getId();
-                    } else {
-                        // there's no child node with that name
-                        return null;
-                    }
-                }
-            }
-            /**
-             * build and resolve absolute path
-             */
-            p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
-            return session.getHierarchyManager().resolveNodePath(p);
+            return session.getQPath(relPath);
         } catch (NameException e) {
             String msg = "failed to resolve path " + relPath + " relative to " + this;
             log.debug(msg);
             throw new RepositoryException(msg, e);
         }
+    }
+
+    /**
+     * Returns the id of the node at <code>p</code> or <code>null</code>
+     * if no node exists at <code>p</code>.
+     * <p/>
+     * Note that access rights are not checked.
+     *
+     * @param p relative path of a (possible) node
+     * @return the id of the node at <code>p</code> or
+     *         <code>null</code> if no node exists at <code>p</code>
+     * @throws RepositoryException if <code>relPath</code> is not a valid
+     *                             relative path
+     */
+    private NodeId getNodeId(Path p) throws RepositoryException {
+        if (p.getLength() == 1) {
+            Path.Element pe = p.getNameElement();
+            if (pe.denotesName()) {
+                // check if node entry exists
+                NodeState thisState = data.getNodeState();
+                int index = pe.getIndex();
+                if (index == 0) {
+                    index = 1;
+                }
+                ChildNodeEntry cne =
+                        thisState.getChildNodeEntry(pe.getName(), index);
+                if (cne != null) {
+                    return cne.getId();
+                } else {
+                    // there's no child node with that name
+                    return null;
+                }
+            }
+        }
+        /**
+         * build and resolve absolute path
+         */
+        p = PathFactoryImpl.getInstance().create(getPrimaryPath(), p, true);
+        return session.getHierarchyManager().resolveNodePath(p);
     }
 
     /**
@@ -2627,17 +2653,28 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public Node getNode(String relPath)
             throws PathNotFoundException, RepositoryException {
+
         // check state of this instance
         sanityCheck();
-        NodeId id = resolveRelativeNodePath(relPath);
+
+        Path p = resolveRelativePath(relPath);
+        NodeId id = getNodeId(p);
         if (id == null) {
             throw new PathNotFoundException(relPath);
         }
+
+        // determine parent as mandated by path
+        NodeId parentId = null;
+        if (!p.denotesRoot()) {
+            parentId = getNodeId(p.getAncestor(1));
+        }
         try {
-            if (data.getNodeState().hasChildNodeEntry(id)) {
-                return itemMgr.getNode(id, getNodeId());
+            if (parentId == null) {
+                return (NodeImpl) itemMgr.getItem(id);
             }
-            return (NodeImpl) itemMgr.getItem(id);
+            // if the node is shareable, it now returns the node with the right
+            // parent
+            return itemMgr.getNode(id, parentId);
         } catch (AccessDeniedException ade) {
             throw new PathNotFoundException(relPath);
         } catch (ItemNotFoundException infe) {

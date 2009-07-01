@@ -430,14 +430,19 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public ItemImpl getItem(Path path)
-            throws PathNotFoundException, AccessDeniedException, RepositoryException {
+    public ItemImpl getItem(Path path) throws PathNotFoundException,
+            AccessDeniedException, RepositoryException {
         ItemId id = hierMgr.resolvePath(path);
         if (id == null) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
         try {
-            return getItem(id, path);
+            ItemImpl item = getItem(id, path);
+            // Test, if this item is a shareable node.
+            if (item.isNode() && ((NodeImpl) item).isShareable()) {
+                return getNode(path);
+            }
+            return item;
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
@@ -450,14 +455,23 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    public NodeImpl getNode(Path path)
-            throws PathNotFoundException, AccessDeniedException, RepositoryException {
+    public NodeImpl getNode(Path path) throws PathNotFoundException,
+            AccessDeniedException, RepositoryException {
         NodeId id = hierMgr.resolveNodePath(path);
         if (id == null) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
+        NodeId parentId = null;
+        if (!path.denotesRoot()) {
+            parentId = hierMgr.resolveNodePath(path.getAncestor(1));
+        }
         try {
-            return (NodeImpl) getItem(id, path);
+            if (parentId == null) {
+                return (NodeImpl) getItem(id, path);
+            }
+            // if the node is shareable, it now returns the node with the right
+            // parent
+            return getNode(id, parentId);
         } catch (ItemNotFoundException infe) {
             throw new PathNotFoundException(safeGetJCRPath(path));
         }
