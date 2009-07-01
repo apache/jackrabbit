@@ -121,9 +121,8 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
                     n = (NodeImpl) authItem;
                 }
             }
-        }
-        // another Principal -> search
-        if (n == null) {
+        } else {
+            // another Principal -> search
             String name = principal.getName();
             n = (NodeImpl) authResolver.findNode(P_PRINCIPAL_NAME, name, NT_REP_AUTHORIZABLE);
         }
