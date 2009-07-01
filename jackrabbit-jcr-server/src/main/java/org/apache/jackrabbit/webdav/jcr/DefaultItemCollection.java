@@ -80,8 +80,6 @@ import org.apache.jackrabbit.webdav.ordering.OrderingType;
 import org.apache.jackrabbit.webdav.ordering.Position;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -220,7 +218,6 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param property
      * @throws DavException
      * @see #setProperty(DavProperty)
-     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
      */
     private void internalSetProperty(DavProperty property) throws DavException {
         if (!exists()) {
@@ -294,7 +291,6 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param propertyName
      * @throws DavException
      * @see #removeProperty(DavPropertyName)
-     * @see #alterProperties(DavPropertySet, DavPropertyNameSet)
      */
     private void internalRemoveProperty(DavPropertyName propertyName) throws DavException {
         if (!exists()) {
@@ -331,7 +327,6 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param changeList
      * @return
      * @throws DavException
-     * @see DavResource#alterProperties(org.apache.jackrabbit.webdav.property.DavPropertySet, org.apache.jackrabbit.webdav.property.DavPropertyNameSet)
      */
     public MultiStatusResponse alterProperties(List changeList) throws DavException {
         Iterator it = changeList.iterator();
@@ -903,7 +898,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     properties.add(new DefaultDavProperty(JCR_UUID, n.getUUID(), true));
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve primary nodetype property.", e);
+                log.error("Failed to retrieve node-specific property: " + e);
             }
             try {
                 Item primaryItem = n.getPrimaryItem();
