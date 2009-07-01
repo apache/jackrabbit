@@ -132,7 +132,8 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         } // else: no-node at all or no acl-node present.
     }
 
-    AccessControlEntry createEntry(Principal princ, Privilege[] privileges, boolean allow, Map restrictions) throws RepositoryException {
+    AccessControlEntry createEntry(Principal princ, Privilege[] privileges,
+                                   boolean allow, Map<String, Value> restrictions) throws RepositoryException {
         if (!principal.equals(princ)) {
             throw new AccessControlException("Invalid principal. Expected: " + principal);
         }
@@ -146,13 +147,13 @@ class ACLTemplate implements JackrabbitAccessControlList, AccessControlConstants
         }
 
         // make sure the nodePath restriction is of type PATH
-        Value v = (Value) restrictions.get(jcrNodePathName);
+        Value v = restrictions.get(jcrNodePathName);
         if (v.getType() != PropertyType.PATH) {
             v = valueFactory.createValue(v.getString(), PropertyType.PATH);
             restrictions.put(jcrNodePathName, v);
         }
         // ... and glob is of type STRING.
-        v = (Value) restrictions.get(jcrGlobName);
+        v = restrictions.get(jcrGlobName);
         if (v != null && v.getType() != PropertyType.STRING) {
             v = valueFactory.createValue(v.getString(), PropertyType.STRING);
             restrictions.put(jcrGlobName, v);

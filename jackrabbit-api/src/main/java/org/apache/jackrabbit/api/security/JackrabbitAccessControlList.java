@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.api.security;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
@@ -108,5 +109,5 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * @see AccessControlList#addAccessControlEntry(Principal, Privilege[])
      */
     boolean addEntry(Principal principal, Privilege[] privileges,
-                     boolean isAllow, Map restrictions) throws AccessControlException, RepositoryException;
+                     boolean isAllow, Map<String, Value> restrictions) throws AccessControlException, RepositoryException;
 }
