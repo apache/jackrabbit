@@ -64,11 +64,10 @@ public class LockManagerTest extends AbstractJCRTest {
         super.tearDown();
     }
 
-    private void assertLockable(Node n) throws RepositoryException {
-        if (!n.isNodeType(mixLockable)) {
-            n.addMixin(mixLockable);
-            n.getSession().save();
-        }
+    private void assertLockable(Node n) throws RepositoryException,
+            NotExecutableException {
+        ensureMixinType(n, mixLockable);
+        n.getSession().save();
     }
 
    private static LockManager getLockManager(Session session) throws RepositoryException {
@@ -100,7 +99,8 @@ public class LockManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testLockWithPendingChanges() throws RepositoryException {
+    public void testLockWithPendingChanges() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         // transient modification
@@ -113,14 +113,16 @@ public class LockManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testNullOwnerHint() throws RepositoryException {
+    public void testNullOwnerHint() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         Lock l = lockMgr.lock(testPath, true, true, Long.MAX_VALUE, null);
         assertNotNull(l.getLockOwner());
     }
 
-    public void testGetLockTokens() throws RepositoryException {
+    public void testGetLockTokens() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         boolean sessionScoped = false;
@@ -132,7 +134,8 @@ public class LockManagerTest extends AbstractJCRTest {
                 containsLockToken(superuser.getLockTokens(), ltoken));
     }
 
-    public void testGetLockTokensAfterUnlock() throws RepositoryException {
+    public void testGetLockTokensAfterUnlock() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         boolean sessionScoped = false;
@@ -146,7 +149,8 @@ public class LockManagerTest extends AbstractJCRTest {
                 containsLockToken(superuser.getLockTokens(), ltoken));
     }
 
-    public void testGetLockTokensSessionScoped() throws RepositoryException {
+    public void testGetLockTokensSessionScoped() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         List tokensBefore = Arrays.asList(lockMgr.getLockTokens());
@@ -160,7 +164,8 @@ public class LockManagerTest extends AbstractJCRTest {
                 tokensBefore, Arrays.asList(superuser.getLockTokens()));
     }
 
-    public void testAddLockToken() throws RepositoryException {
+    public void testAddLockToken() throws RepositoryException,
+            NotExecutableException {
         assertLockable(testNode);
 
         boolean sessionScoped = false;
@@ -180,7 +185,8 @@ public class LockManagerTest extends AbstractJCRTest {
         }
     }
 
-    public void testAddLockTokenToAnotherSession() throws RepositoryException {
+    public void testAddLockTokenToAnotherSession() throws RepositoryException,
+            NotExecutableException {
         // TODO: for 283 add config option for simultaneous tokens....
         
         assertLockable(testNode);

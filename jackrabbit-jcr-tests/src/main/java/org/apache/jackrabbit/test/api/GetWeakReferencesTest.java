@@ -38,12 +38,7 @@ public class GetWeakReferencesTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         target = testRootNode.addNode(nodeName1, testNodeType);
-        if (!target.isNodeType(mixReferenceable)) {
-            if (!target.canAddMixin(mixReferenceable)) {
-                throw new NotExecutableException("cannot add mix:referenceable to node");
-            }
-            target.addMixin(mixReferenceable);
-        }
+        ensureMixinType(target, mixReferenceable);
         referring = testRootNode.addNode(nodeName2, testNodeType);
         superuser.save();
     }

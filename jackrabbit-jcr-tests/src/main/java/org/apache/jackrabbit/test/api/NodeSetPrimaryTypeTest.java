@@ -211,13 +211,7 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
         // create a node that is lockable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        if (!node.isNodeType(mixLockable)) {
-            if (node.canAddMixin(mixLockable)) {
-                node.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(node, mixLockable);
         testRootNode.save();
 
         String primaryTypeName = getPrimaryTypeName(session, node);
@@ -266,14 +260,7 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
         // create a node that is versionable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
-        if (!node.isNodeType(mixVersionable)) {
-            if (node.canAddMixin(mixVersionable)) {
-                node.addMixin(mixVersionable);
-            } else {
-                throw new NotExecutableException("Node " + nodeName1 + " is not versionable and does not " +
-                        "allow to add mix:versionable");
-            }
-        }
+        ensureMixinType(node, mixVersionable);
         superuser.save();
 
         String primaryTypeName = getPrimaryTypeName(session, node);

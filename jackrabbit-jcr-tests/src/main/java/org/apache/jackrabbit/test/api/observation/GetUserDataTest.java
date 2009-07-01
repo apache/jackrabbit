@@ -56,7 +56,7 @@ public class GetUserDataTest extends AbstractObservationTest {
         checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
 
         final Node n1 = testRootNode.addNode(nodeName1);
-        n1.addMixin(mixVersionable);
+        ensureMixinType(n1, mixVersionable);
         testRootNode.save();
 
         runWithUserData(new Callable() {

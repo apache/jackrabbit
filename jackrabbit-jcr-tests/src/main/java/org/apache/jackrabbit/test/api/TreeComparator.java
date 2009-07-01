@@ -240,11 +240,9 @@ class TreeComparator extends AbstractJCRTest {
             pt.setProperty(sc.pathTestProperty, superuser.getValueFactory().createValue("paths/dont/have/to/point/anywhere", PropertyType.PATH));
             // Reference: Note that I only check if the node exists. We do not specify what happens with
             // the UUID during serialization.
-            if (!referenceable.isNodeType(mixReferenceable)) {
-                referenceable.addMixin(mixReferenceable);
-                // some implementations may require a save after addMixin()
-                session.save();
-            }
+            ensureMixinType(referenceable, mixReferenceable);
+            // some implementations may require a save after addMixin()
+            session.save();
 
             pt.setProperty(sc.referenceTestProperty, referenceable);
 

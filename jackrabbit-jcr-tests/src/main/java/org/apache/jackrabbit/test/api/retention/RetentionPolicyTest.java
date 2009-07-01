@@ -305,13 +305,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
     private Node getLockedChildNode() throws NotExecutableException, RepositoryException {
         checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
-        if (!child.isNodeType(mixLockable)) {
-            if (child.canAddMixin(mixLockable)) {
-                child.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException();
-            }
-        }
+        ensureMixinType(child, mixLockable);
         testRootNode.save();
         child.lock(false, true); // session-scoped lock clean upon superuser-logout.
         return child;
@@ -378,13 +372,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
     private Node getVersionableChildNode() throws NotExecutableException, RepositoryException {
         checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
-        if (!child.isNodeType(mixVersionable)) {
-            if (child.canAddMixin(mixVersionable)) {
-                child.addMixin(mixVersionable);
-            } else {
-                throw new NotExecutableException();
-            }
-        }
+        ensureMixinType(child, mixVersionable);
         testRootNode.save();
         return child;
     }

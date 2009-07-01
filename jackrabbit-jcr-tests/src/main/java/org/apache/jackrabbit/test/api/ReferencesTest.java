@@ -40,9 +40,7 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testReferences() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixReferenceable)) {
-            n1.addMixin(mixReferenceable);
-        }
+        ensureMixinType(n1, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
@@ -117,9 +115,7 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testReferenceTarget() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixReferenceable)) {
-            n1.addMixin(mixReferenceable);
-        }
+        ensureMixinType(n1, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();
@@ -146,13 +142,9 @@ public class ReferencesTest extends AbstractJCRTest {
      */
     public void testAlterReference() throws RepositoryException, NotExecutableException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        if (needsMixin(n1, mixReferenceable)) {
-            n1.addMixin(mixReferenceable);
-        }
+        ensureMixinType(n1, mixReferenceable);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        if (needsMixin(n2, mixReferenceable)) {
-            n2.addMixin(mixReferenceable);
-        }
+        ensureMixinType(n2, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
         testRootNode.save();

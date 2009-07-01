@@ -657,14 +657,7 @@ public class NodeTest extends AbstractJCRTest {
         // create a node that is lockable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        if (!node.isNodeType(mixLockable)) {
-            if (node.canAddMixin(mixLockable)) {
-                node.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
-                        "allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(node, mixLockable);
         testRootNode.save();
 
         // remove first slash of path to get rel path to root
@@ -705,14 +698,7 @@ public class NodeTest extends AbstractJCRTest {
         // create a node that is lockable
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
-        if (!node.isNodeType(mixLockable)) {
-            if (node.canAddMixin(mixLockable)) {
-                node.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException("Node " + nodeName1 + " is not lockable and does not " +
-                        "allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(node, mixLockable);
         // create a child node
         Node subNode = node.addNode(nodeName2, testNodeType);
         testRootNode.save();

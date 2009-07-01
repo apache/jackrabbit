@@ -123,13 +123,7 @@ public class SerializationTest extends AbstractJCRTest {
      */
     protected Node initVersioningException(boolean returnParent) throws RepositoryException, NotExecutableException, IOException {
         Node vNode = testRootNode.addNode(nodeName1, testNodeType);
-        if (!vNode.isNodeType(mixVersionable)) {
-            if (vNode.canAddMixin(mixVersionable)) {
-                vNode.addMixin(mixVersionable);
-            } else {
-                throw new NotExecutableException("NodeType: " + testNodeType + " is not versionable");
-            }
-        }
+        ensureMixinType(vNode, mixVersionable);
         Node vChild = vNode.addNode(nodeName2, testNodeType);
         session.save();
         vNode.checkin();
@@ -215,7 +209,7 @@ public class SerializationTest extends AbstractJCRTest {
         if (isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             //A LockException is thrown if a lock prevents the addition of the subtree.
             Node lNode = testRootNode.addNode(nodeName1);
-            lNode.addMixin(mixLockable);
+            ensureMixinType(lNode, mixLockable);
             testRootNode.save();
             Lock lock = lNode.lock(true, true);
             session.removeLockToken(lock.getLockToken());   //remove the token, so the lock is for me, too

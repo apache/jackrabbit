@@ -22,6 +22,8 @@ import javax.jcr.observation.Event;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * Tests if locking a node triggers property added events for jcr:lockOwner
  * and jcr:lockIsDeep.
@@ -44,7 +46,8 @@ public class LockingTest extends AbstractObservationTest {
      * Tests if locking a node triggers property added events for the properties
      * jcr:lockOwner and jcr:lockIsDeep.
      */
-    public void testAddLockToNode() throws RepositoryException {
+    public void testAddLockToNode() throws RepositoryException,
+            NotExecutableException {
         Node lockable = createLockable(nodeName1, testNodeType);
         testRootNode.save();
         EventResult result = new EventResult(log);
@@ -76,7 +79,8 @@ public class LockingTest extends AbstractObservationTest {
      * Tests if unlocking a node triggers property removed events for the
      * properties jcr:lockOwner and jcr:lockIsDeep.
      */
-    public void testRemoveLockFromNode() throws RepositoryException {
+    public void testRemoveLockFromNode() throws RepositoryException,
+            NotExecutableException {
         Node lockable = createLockable(nodeName1, testNodeType);
         testRootNode.save();
         // lock the node
@@ -111,11 +115,9 @@ public class LockingTest extends AbstractObservationTest {
      * @return the lockable node
      */
     private Node createLockable(String nodeName, String nodeType)
-            throws RepositoryException {
+            throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName, nodeType);
-        if (needsMixin(n, mixLockable)) {
-            n.addMixin(mixLockable);
-        }
+        ensureMixinType(n, mixLockable);
         return n;
     }
 }

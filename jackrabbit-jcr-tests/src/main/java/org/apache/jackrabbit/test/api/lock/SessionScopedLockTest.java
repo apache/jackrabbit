@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api.lock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -50,7 +51,8 @@ public class SessionScopedLockTest extends AbstractLockTest {
     /**
      * Test locks are released when session logs out
      */
-    public void testImplicitUnlock() throws RepositoryException {
+    public void testImplicitUnlock() throws RepositoryException,
+            NotExecutableException {
         Session other = helper.getReadWriteSession();
         try {
             Node testNode = (Node) other.getItem(testRootNode.getPath());
@@ -73,7 +75,8 @@ public class SessionScopedLockTest extends AbstractLockTest {
     /**
      * Test locks are released when session logs out
      */
-    public void testImplicitUnlock2() throws RepositoryException {
+    public void testImplicitUnlock2() throws RepositoryException,
+            NotExecutableException {
         Session other = helper.getReadWriteSession();
         try {
             Node testNode = (Node) other.getItem(testRootNode.getPath());

@@ -374,7 +374,8 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         setUpNodeWithUndefinedProperty(false);
 
         Node referenceableNode = testRootNode.addNode(nodeName2);
-        referenceableNode.addMixin(mixReferenceable);
+        ensureMixinType(referenceableNode, mixReferenceable);
+
         // some implementations may require a save after addMixin()
         testRootNode.save();
 

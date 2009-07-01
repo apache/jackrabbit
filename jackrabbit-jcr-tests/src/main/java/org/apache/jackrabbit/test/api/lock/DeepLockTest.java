@@ -49,8 +49,9 @@ public class DeepLockTest extends AbstractLockTest {
         assertTrue("Lock.getNode() must return the lock holding node even if lock is obtained from child node.", lock.getNode().isSame(lockedNode));
     }
 
-    public void testParentChildDeepLock() throws RepositoryException {
-        childNode.addMixin(mixLockable);
+    public void testParentChildDeepLock()
+            throws RepositoryException, NotExecutableException {
+        ensureMixinType(childNode, mixLockable);
         testRootNode.save();
 
         // try to lock child node
@@ -73,7 +74,7 @@ public class DeepLockTest extends AbstractLockTest {
         Node parent = lockedNode.getParent();
         if (!parent.isNodeType(mixLockable)) {
             try {
-                parent.addMixin(mixLockable);
+                ensureMixinType(parent, mixLockable);
                 parent.save();
             } catch (RepositoryException e) {
                 throw new NotExecutableException();
@@ -96,14 +97,8 @@ public class DeepLockTest extends AbstractLockTest {
 
     public void testShallowLockAboveLockedChild() throws RepositoryException, NotExecutableException {
         Node parent = lockedNode.getParent();
-        if (!parent.isNodeType(mixLockable)) {
-            try {
-                parent.addMixin(mixLockable);
-                parent.save();
-            } catch (RepositoryException e) {
-                throw new NotExecutableException();
-            }
-        }
+        ensureMixinType(parent, mixLockable);
+        parent.save();
 
         try {
             // creating a shallow lock on the parent must succeed.

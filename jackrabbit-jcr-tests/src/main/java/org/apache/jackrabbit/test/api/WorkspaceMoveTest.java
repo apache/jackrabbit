@@ -24,6 +24,8 @@ import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>WorkspaceMoveTest</code> contains tests for copying nodes in one
  * workspace.
@@ -137,7 +139,8 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
     /**
      * A LockException is thrown if a lock prevents the copy.
      */
-    public void testMoveNodesLocked() throws RepositoryException {
+    public void testMoveNodesLocked() throws RepositoryException,
+            NotExecutableException {
         // we assume repository supports locking
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
 
@@ -149,10 +152,8 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
             Node lockTarget = (Node) otherSession.getItem(node2.getPath());
 
             // add mixin "lockable" to be able to lock the node
-            if (!lockTarget.getPrimaryNodeType().isNodeType(mixLockable)) {
-                lockTarget.addMixin(mixLockable);
-                lockTarget.getParent().save();
-            }
+            ensureMixinType(lockTarget, mixLockable);
+            lockTarget.getParent().save();
 
             // lock dst parent node using other session
             lockTarget.lock(true, true);

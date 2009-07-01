@@ -442,11 +442,11 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
 
             // create a referenceable node satisfying the constraint
             nodeSatisfied = testRootNode.addNode(nodeName3, nodeTypeSatisfied);
-            nodeSatisfied.addMixin(mixReferenceable);
+            ensureMixinType(nodeSatisfied, mixReferenceable);
 
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
-            nodeNotSatisfied.addMixin(mixReferenceable);
+            ensureMixinType(nodeNotSatisfied, mixReferenceable);
 
             // some implementations may require a save after addMixin()
             testRootNode.save();
@@ -814,11 +814,11 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
 
             // create a referenceable node satisfying the constraint
             nodeSatisfied = testRootNode.addNode(nodeName3, nodeTypeSatisfied);
-            nodeSatisfied.addMixin(mixReferenceable);
+            ensureMixinType(nodeSatisfied, mixReferenceable);
 
             // create a referenceable node not satisfying the constraint
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
-            nodeNotSatisfied.addMixin(mixReferenceable);
+            ensureMixinType(nodeNotSatisfied, mixReferenceable);
 
             // some implementations may require a save after addMixin()
             testRootNode.save();

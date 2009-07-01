@@ -479,14 +479,7 @@ public class MergeNodeTest extends AbstractMergeTest {
         }
 
         // try to make nodeToMerge lockable if it is not
-        if (!nodeToMerge.isNodeType(mixLockable)) {
-            if (nodeToMerge.canAddMixin(mixLockable)) {
-                nodeToMerge.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException("Node " + nodeToMerge.getName() + " is not lockable and " +
-                        "does not allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(nodeToMerge, mixLockable);
         nodeToMerge.getParent().save();
 
         // lock the node
@@ -525,14 +518,7 @@ public class MergeNodeTest extends AbstractMergeTest {
         }
 
         // try to make nodeToMerge lockable if it is not
-        if (!nodeToMerge.isNodeType(mixLockable)) {
-            if (nodeToMerge.canAddMixin(mixLockable)) {
-                nodeToMerge.addMixin(mixLockable);
-            } else {
-                throw new NotExecutableException("Node " + nodeToMerge.getName() + " is not lockable and " +
-                        "does not allow to add mix:lockable");
-            }
-        }
+        ensureMixinType(nodeToMerge, mixLockable);
         nodeToMerge.getParent().getSession().save();
 
         // lock the node

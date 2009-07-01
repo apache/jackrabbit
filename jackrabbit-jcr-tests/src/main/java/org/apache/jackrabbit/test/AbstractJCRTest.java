@@ -736,7 +736,28 @@ public abstract class AbstractJCRTest extends JUnitTest {
             throw new NotExecutableException("Repository does not support node type " + nodetype);
         }
     }
-    
+
+    /**
+     * Ensures that the given <code>node</code> is of the given mixin type.
+     *
+     * @param node  a node.
+     * @param mixin the name of a mixin type.
+     * @throws NotExecutableException if the node is not of type mixin and the
+     *                                mixin cannot be added.
+     * @throws RepositoryException    if an error occurs.
+     */
+    protected void ensureMixinType(Node node, String mixin)
+            throws NotExecutableException, RepositoryException {
+        if (!node.isNodeType(mixin)) {
+            if (node.canAddMixin(mixin)) {
+                node.addMixin(mixin);
+            } else {
+                throw new NotExecutableException(node.getPath() +
+                        " does not support adding " + mixin);
+            }
+        }
+    }
+
     /**
      * Checks whether the node already has the specified mixin node type
      */

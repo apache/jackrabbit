@@ -108,14 +108,8 @@ public class LengthTest extends AbstractQOMTest {
     }
 
     public void testReferenceLength() throws RepositoryException, NotExecutableException {
-        try {
-            if (!node.isNodeType(mixReferenceable)) {
-                node.addMixin(mixReferenceable);
-                superuser.save();
-            }
-        } catch (RepositoryException e) {
-            throw new NotExecutableException("Cannot add mix:referenceable to node");
-        }
+        ensureMixinType(node, mixReferenceable);
+        superuser.save();
         node.setProperty(propertyName1, node);
         superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
@@ -123,14 +117,8 @@ public class LengthTest extends AbstractQOMTest {
 
     public void testWeakReferenceLength()
             throws RepositoryException, NotExecutableException {
-        try {
-            if (!node.isNodeType(mixReferenceable)) {
-                node.addMixin(mixReferenceable);
-                superuser.save();
-            }
-        } catch (RepositoryException e) {
-            throw new NotExecutableException("Cannot add mix:referenceable to node");
-        }
+        ensureMixinType(node, mixReferenceable);
+        superuser.save();
         node.setProperty(propertyName1, vf.createValue(node, true));
         superuser.save();
         checkOperators(propertyName1, node.getProperty(propertyName1).getLength());
@@ -219,14 +207,8 @@ public class LengthTest extends AbstractQOMTest {
     }
 
     public void testLengthReferenceLiteral() throws RepositoryException, NotExecutableException {
-        try {
-            if (!node.isNodeType(mixReferenceable)) {
-                node.addMixin(mixReferenceable);
-                superuser.save();
-            }
-        } catch (RepositoryException e) {
-            throw new NotExecutableException("Cannot add mix:referenceable to node");
-        }
+        ensureMixinType(node, mixReferenceable);
+        superuser.save();
         try {
             executeQueries(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(node));
             fail("Reference literal cannot be converted to long");
@@ -236,14 +218,8 @@ public class LengthTest extends AbstractQOMTest {
     }
 
     public void testLengthWeakReferenceLiteral() throws RepositoryException, NotExecutableException {
-        try {
-            if (!node.isNodeType(mixReferenceable)) {
-                node.addMixin(mixReferenceable);
-                superuser.save();
-            }
-        } catch (RepositoryException e) {
-            throw new NotExecutableException("Cannot add mix:referenceable to node");
-        }
+        ensureMixinType(node, mixReferenceable);
+        superuser.save();
         try {
             executeQueries(propertyName1, QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, vf.createValue(node, true));
             fail("Reference literal cannot be converted to long");

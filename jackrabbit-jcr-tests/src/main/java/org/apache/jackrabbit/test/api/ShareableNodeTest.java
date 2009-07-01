@@ -43,11 +43,14 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  * Tests features available with shareable nodes.
  */
 public class ShareableNodeTest extends AbstractJCRTest {
-    
+
+    private String mixShareable;
+
     protected void setUp() throws Exception {
         super.setUp();
         checkSupportedOption(Repository.OPTION_SHAREABLE_NODES_SUPPORTED);
-        ensureKnowsNodeType(superuser, "mix:shareable");
+        ensureKnowsNodeType(superuser, mixShareable);
+        mixShareable = superuser.getNamespacePrefix(NS_MIX_URI) + ":shareable";
     }
 
     protected void tearDown() throws Exception {
@@ -70,7 +73,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -100,7 +103,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -130,7 +133,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -160,7 +163,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -189,7 +192,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -220,7 +223,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -250,7 +253,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -272,7 +275,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         Node b = a.addNode("b");
         testRootNode.save();
 
-        b.addMixin("mix:shareable");
+        ensureMixinType(b, mixShareable);
         b.save();
     }
 
@@ -287,7 +290,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // make b1 shareable
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -296,7 +299,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
                 a2.getPath() + "/b2", false);
 
         // make a2 versionable
-        a2.addMixin("mix:versionable");
+        ensureMixinType(a2, mixVersionable);
         a2.save();
 
         // check in version and check out again
@@ -331,7 +334,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -365,7 +368,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -395,7 +398,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -427,7 +430,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -457,7 +460,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -493,7 +496,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -532,7 +535,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         Workspace workspace = b1.getSession().getWorkspace();
@@ -558,7 +561,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -594,7 +597,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -638,7 +641,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -692,7 +695,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -749,7 +752,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -806,7 +809,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -864,7 +867,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -913,14 +916,14 @@ public class ShareableNodeTest extends AbstractJCRTest {
     public void testLock() throws Exception {
         // setup parent nodes and first child
         Node a1 = testRootNode.addNode("a1");
-        a1.addMixin("mix:lockable");
+        ensureMixinType(a1, mixLockable);
         Node a2 = testRootNode.addNode("a2");
         Node b1 = a1.addNode("b1");
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
-        b1.addMixin("mix:lockable");
+        ensureMixinType(b1, mixShareable);
+        ensureMixinType(b1, mixLockable);
         b1.save();
 
         // add child c
@@ -968,7 +971,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // make b1 shareable
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -981,7 +984,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         b1.save();
 
         // make a2 versionable
-        a2.addMixin("mix:versionable");
+        ensureMixinType(a2, mixVersionable);
         a2.save();
 
         // check in version and check out again
@@ -1031,7 +1034,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         }
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone (2nd attempt, with mix:shareable)
@@ -1051,7 +1054,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1080,12 +1083,12 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b.addMixin("mix:shareable");
+        ensureMixinType(b, mixShareable);
         b.save();
 
         try {
             // remove mixin
-            b.removeMixin("mix:shareable");
+            b.removeMixin(mixShareable);
             b.save();
             fail("Removing mix:shareable should fail.");
         } catch (UnsupportedRepositoryOperationException e) {
@@ -1105,7 +1108,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1115,7 +1118,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
         // add new referenceable child
         Node c = b1.addNode("c");
-        c.addMixin(mixReferenceable);
+        ensureMixinType(c, mixReferenceable);
         b1.save();
 
         String sql = "SELECT * FROM nt:unstructured WHERE jcr:uuid = '"+c.getUUID()+"'";
@@ -1144,7 +1147,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         Workspace workspace = b1.getSession().getWorkspace();
@@ -1170,7 +1173,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b.addMixin("mix:shareable");
+        ensureMixinType(b, mixShareable);
         b.save();
 
         // move
@@ -1197,7 +1200,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b.addMixin("mix:shareable");
+        ensureMixinType(b, mixShareable);
         b.save();
 
         // move
@@ -1227,7 +1230,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1262,7 +1265,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1300,7 +1303,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1334,7 +1337,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b1.addMixin("mix:shareable");
+        ensureMixinType(b1, mixShareable);
         b1.save();
 
         // clone
@@ -1377,7 +1380,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // add mixin
-        b.addMixin("mix:shareable");
+        ensureMixinType(b, mixShareable);
         b.save();
 
         Workspace workspace = b.getSession().getWorkspace();
@@ -1402,7 +1405,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
        Node a1 = testRootNode.addNode("a1");
        Node a2 = a1.addNode("a2");
        Node b1 = a1.addNode("b1");
-       b1.addMixin("mix:shareable");
+       ensureMixinType(b1, mixShareable);
        testRootNode.save();
 
        //now we have a shareable node N with path a1/b1

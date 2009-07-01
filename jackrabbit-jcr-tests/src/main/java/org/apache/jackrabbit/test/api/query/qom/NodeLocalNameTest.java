@@ -27,6 +27,8 @@ import javax.jcr.query.qom.QueryObjectModel;
 import java.util.Calendar;
 import java.math.BigDecimal;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>NodeLocalNameTest</code> checks if conversion of literals is correctly
  * performed and operators work as specified.
@@ -127,20 +129,18 @@ public class NodeLocalNameTest extends AbstractQOMTest {
         checkQOM(qom, new Node[]{});
     }
 
-    public void testReferenceLiteral() throws RepositoryException {
-        if (!node1.isNodeType(mixReferenceable)) {
-            node1.addMixin(mixReferenceable);
-        }
+    public void testReferenceLiteral() throws RepositoryException,
+            NotExecutableException {
+        ensureMixinType(node1, mixReferenceable);
         superuser.save();
         Value literal = superuser.getValueFactory().createValue(node1);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);
         checkQOM(qom, new Node[]{});
     }
 
-    public void testWeakReferenceLiteral() throws RepositoryException {
-        if (!node1.isNodeType(mixReferenceable)) {
-            node1.addMixin(mixReferenceable);
-        }
+    public void testWeakReferenceLiteral() throws RepositoryException,
+            NotExecutableException {
+        ensureMixinType(node1, mixReferenceable);
         superuser.save();
         Value literal = superuser.getValueFactory().createValue(node1, true);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO, literal);

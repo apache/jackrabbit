@@ -21,6 +21,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionManager;
 
+import org.apache.jackrabbit.test.NotExecutableException;
+
 /**
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}.
  *
@@ -70,9 +72,10 @@ public class FrozenNodeTest extends AbstractVersionTest {
     /**
      * @throws RepositoryException
      */
-    public void testFrozenUUUID() throws RepositoryException {
+    public void testFrozenUUUID() throws RepositoryException,
+            NotExecutableException {
         // make versionable node referenceable
-        versionableNode.addMixin(mixReferenceable);
+        ensureMixinType(versionableNode, mixReferenceable);
         versionableNode.getSession().save();
         VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
         String path = versionableNode.getPath();
@@ -86,9 +89,10 @@ public class FrozenNodeTest extends AbstractVersionTest {
     /**
      * @throws RepositoryException
      */
-    public void testFrozenChildUUUID() throws RepositoryException {
+    public void testFrozenChildUUUID() throws RepositoryException,
+            NotExecutableException {
         Node n1 = versionableNode.addNode("child");
-        n1.addMixin(mixReferenceable);
+        ensureMixinType(n1, mixReferenceable);
         versionableNode.getSession().save();
         VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
         String path = versionableNode.getPath();
