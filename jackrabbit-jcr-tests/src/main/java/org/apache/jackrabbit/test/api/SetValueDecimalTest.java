@@ -37,8 +37,8 @@ import javax.jcr.PathNotFoundException;
  * with name {@link #propertyName1}.
  *
  * @test
- * @sources SetValueDoubleTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueDoubleTest
+ * @sources SetValueDecimalTest.java
+ * @executeClass org.apache.jackrabbit.test.api.SetValueDecimalTest
  * @keywords level2
  */
 public class SetValueDecimalTest extends AbstractJCRTest {
@@ -84,8 +84,18 @@ public class SetValueDecimalTest extends AbstractJCRTest {
      * Test the persistence of a property modified with an decimal parameter and
      * saved from the Session
      */
-    public void testDoubleSession() throws RepositoryException {
+    public void testDoubleValueSession() throws RepositoryException {
         property1.setValue(value);
+        superuser.save();
+        assertEquals("Decimal node property not saved", value.getDecimal(), property1.getValue().getDecimal());
+    }
+
+    /**
+     * Test the persistence of a property modified with an decimal parameter and
+     * saved from the Session
+     */
+    public void testDoubleSession() throws RepositoryException {
+        property1.setValue(value.getDecimal());
         superuser.save();
         assertEquals("Decimal node property not saved", value.getDecimal(), property1.getValue().getDecimal());
     }
