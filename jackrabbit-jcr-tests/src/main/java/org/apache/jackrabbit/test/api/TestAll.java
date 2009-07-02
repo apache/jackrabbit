@@ -94,6 +94,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(SetPropertyBooleanTest.class);
         suite.addTestSuite(SetPropertyCalendarTest.class);
+        suite.addTestSuite(SetPropertyDecimalTest.class);
         suite.addTestSuite(SetPropertyDoubleTest.class);
         suite.addTestSuite(SetPropertyInputStreamTest.class);
         suite.addTestSuite(SetPropertyLongTest.class);
