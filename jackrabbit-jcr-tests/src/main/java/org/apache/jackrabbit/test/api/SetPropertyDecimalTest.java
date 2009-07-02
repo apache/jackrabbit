@@ -48,7 +48,6 @@ public class SetPropertyDecimalTest extends AbstractJCRTest {
     }
 
     protected void tearDown() throws Exception {
-        testNode = null;
         super.tearDown();
     }
 

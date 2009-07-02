@@ -84,6 +84,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SetValueBinaryTest.class);
         suite.addTestSuite(SetValueBooleanTest.class);
         suite.addTestSuite(SetValueDateTest.class);
+        suite.addTestSuite(SetValueDecimalTest.class);
         suite.addTestSuite(SetValueDoubleTest.class);
         suite.addTestSuite(SetValueLongTest.class);
         suite.addTestSuite(SetValueReferenceTest.class);
