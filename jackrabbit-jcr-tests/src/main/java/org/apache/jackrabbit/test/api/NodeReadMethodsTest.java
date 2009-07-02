@@ -433,6 +433,152 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     }
 
     /**
+     * Test getNodes(String[] namePattern) with all possible patterns. Tested
+     * node: root
+     * @throws NotExecutableException is thrown when root node has no sub
+     * nodes.
+     */
+    public void testGetNodesNamePatternArray()
+            throws NotExecutableException, RepositoryException {
+
+        // get root node and build an ArrayList of its sub nodes
+        Node node = testRootNode;
+        if (!node.hasNodes()) {
+            throw new NotExecutableException("Workspace does not have sufficient content for this test. " +
+                    "Root node must have at least one child node.");
+        }
+        NodeIterator allNodesIt = node.getNodes();
+        ArrayList allNodes = new ArrayList();
+        while (allNodesIt.hasNext()) {
+            Node n = allNodesIt.nextNode();
+            allNodes.add(n);
+        }
+
+        // test if an empty NodeIterator is returned
+        // when the pattern is not matching any child node
+        String pattern0 = "";
+        NodeIterator nodes0 = node.getNodes(new String[] { pattern0 });
+        try {
+            nodes0.nextNode();
+            fail("An empty NodeIterator must be returned if pattern does" +
+                    "not match any child node.");
+        } catch (NoSuchElementException e) {
+            // success
+        }
+
+        // all further tests are using root's first sub node
+        Node firstNode = (Node) allNodes.get(0);
+
+        // test pattern "*"
+        String pattern1 = "*";
+        String assertString1 = "node.getNodes(\"" + pattern1 + "\"): ";
+        NodeIterator nodes1 = node.getNodes(new String[] { pattern1 });
+        // test if the number of found nodes is correct
+        assertEquals(assertString1 + "number of nodes found: ",
+                allNodes.size(),
+                getSize(nodes1));
+
+        // test pattern "nodeName"
+        String pattern2 = firstNode.getName();
+        String assertString2 = "node.getNodes(\"" + pattern2 + "\"): ";
+        // test if the names of the found nodes are matching the pattern
+        NodeIterator nodes2 = node.getNodes(new String[] { pattern2 });
+        while (nodes2.hasNext()) {
+            Node n = nodes2.nextNode();
+            assertEquals(assertString2 + "name comparison failed: ",
+                    firstNode.getName(),
+                    n.getName());
+        }
+        // test if the number of found nodes is correct
+        int numExpected2 = 0;
+        for (int i = 0; i < allNodes.size(); i++) {
+            Node n = (Node) allNodes.get(i);
+            if (n.getName().equals(firstNode.getName())) {
+                numExpected2++;
+            }
+        }
+        assertEquals(assertString2 + "number of nodes found: ",
+                numExpected2,
+                getSize(nodes2));
+
+
+        // test pattern "nodeName|nodeName"
+        String pattern3 = firstNode.getName() + "|" + firstNode.getName();
+        String assertString3 = "node.getNodes(\"" + pattern3 + "\"): ";
+        // test if the names of the found nodes are matching the pattern
+        NodeIterator nodes3 = node.getNodes(pattern3);
+        while (nodes3.hasNext()) {
+            Node n = nodes3.nextNode();
+            assertEquals(assertString2 + "name comparison failed: ",
+                    firstNode.getName(),
+                    n.getName());
+        }
+        // test if the number of found nodes is correct
+        int numExpected3 = 0;
+        for (int i = 0; i < allNodes.size(); i++) {
+            Node n = (Node) allNodes.get(i);
+            if (n.getName().equals(firstNode.getName())) {
+                numExpected3++;
+            }
+        }
+        assertEquals(assertString3 + "number of nodes found: ",
+                numExpected3,
+                getSize(nodes3));
+
+
+        // test pattern "nodeName", "nodeName"
+        String pattern4 = firstNode.getName() + "," + firstNode.getName();
+        String assertString4 = "node.getNodes(\"" + pattern4 + "\"): ";
+        // test if the names of the found nodes are matching the pattern
+        NodeIterator nodes4 = node.getNodes(new String[] { firstNode.getName(), firstNode.getName() });
+        while (nodes4.hasNext()) {
+            Node n = nodes4.nextNode();
+            assertEquals(assertString2 + "name comparison failed: ",
+                    firstNode.getName(),
+                    n.getName());
+        }
+        // test if the number of found nodes is correct
+        int numExpected4 = 0;
+        for (int i = 0; i < allNodes.size(); i++) {
+            Node n = (Node) allNodes.get(i);
+            if (n.getName().equals(firstNode.getName())) {
+                numExpected4++;
+            }
+        }
+        assertEquals(assertString4 + "number of nodes found: ",
+                numExpected4,
+                getSize(nodes4));
+
+
+        // test pattern "*odeNam*"
+        if (firstNode.getName().length() > 2) {
+            String name = firstNode.getName();
+            String shortenName = name.substring(1, name.length() - 1);
+            String pattern5 = "*" + shortenName + "*";
+            String assertString5 = "node.getNodes(\"" + pattern5 + "\"): ";
+            // test if the names of the found nodes are matching the pattern
+            NodeIterator nodes5 = node.getNodes(new String[] { pattern5 });
+            while (nodes5.hasNext()) {
+                Node n = nodes5.nextNode();
+                assertTrue(assertString5 + "name comparison failed: *" +
+                        shortenName + "* not found in " + n.getName(),
+                        n.getName().indexOf(shortenName) != -1);
+            }
+            // test if the number of found nodes is correct
+            int numExpected5 = 0;
+            for (int i = 0; i < allNodes.size(); i++) {
+                Node n = (Node) allNodes.get(i);
+                if (n.getName().indexOf(shortenName) != -1) {
+                    numExpected5++;
+                }
+            }
+            assertEquals(assertString5 + "number of nodes found: ",
+                    numExpected5,
+                    getSize(nodes5));
+        }
+    }
+
+    /**
      * Test if getProperty(String relPath) returns the correct node and if a
      * PathNotFoundException is thrown when property at relPath does not exist
      */
