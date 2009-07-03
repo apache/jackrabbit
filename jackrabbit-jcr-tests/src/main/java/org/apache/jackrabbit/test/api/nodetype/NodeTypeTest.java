@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -213,6 +214,9 @@ public class NodeTypeTest extends AbstractJCRTest {
             assertTrue("all declared supertypes must be supertypes: "
                     + (new HashSet(declaredSupertypeNames).removeAll(supertypeNames)),
                     supertypeNames.containsAll(declaredSupertypeNames));
+            
+            assertEquals("getDeclaredSuperTypes and getDeclaredSuperTypeNames must be consistent",
+                    declaredSupertypeNames, new HashSet(Arrays.asList(type.getDeclaredSupertypeNames())));
         }
     }
 
