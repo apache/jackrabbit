@@ -72,7 +72,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
      */
     public void addLockToken(String lockToken) throws LockException, RepositoryException {
         if (!lockTokens.contains(lockToken)) {
-            systemLockMgr.lockTokenAdded(session, lockToken);
+            systemLockMgr.addLockToken(session, lockToken);
         } else {
             log.debug("Lock token already present with session -> no effect.");
         }
@@ -83,7 +83,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
      */
     public void removeLockToken(String lockToken) throws LockException, RepositoryException {
         if (lockTokens.contains(lockToken)) {
-            systemLockMgr.lockTokenRemoved(session, lockToken);
+            systemLockMgr.removeLockToken(session, lockToken);
         } else {
             throw new LockException("Lock token " + lockToken + " not present with session.");
         }
@@ -179,9 +179,7 @@ public class SessionLockManager implements javax.jcr.lock.LockManager {
             if (!systemLockMgr.holdsLock(node)) {
                 throw new LockException("Node not locked: " + node);
             }
-            if (!systemLockMgr.isLockHolder(session, node)) {
-                throw new LockException("Node not locked by session: " + node);
-            }
+            systemLockMgr.checkUnlock(session, node);
             systemLockMgr.unlock(node);
         }
     }
