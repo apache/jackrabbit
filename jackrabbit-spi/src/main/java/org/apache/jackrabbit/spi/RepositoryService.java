@@ -1031,6 +1031,29 @@ public interface RepositoryService {
             throws RepositoryException, InterruptedException;
 
     /**
+     * Returns events from the <code>EventJournal</code> after a given point in
+     * time. The returned event bundle may only contain events up to a given
+     * time. In order to retrieve more events a client must call this method
+     * again with the timestamp from the last event bundle. An empty bundle
+     * indicates that there are no more events.
+     *
+     * @param sessionInfo the session info.
+     * @param filter      the event filter to apply. Please note: the
+     *                    <code>noLocal</code> flag is ignored.
+     * @param after       retrieve events that occurred after the given
+     *                    timestamp.
+     * @return the event bundle.
+     * @throws RepositoryException if an error occurs.
+     * @throws UnsupportedRepositoryOperationException
+     *                             if the underlying implementation does not
+     *                             support event journaling.
+     */
+    public EventBundle getEvents(SessionInfo sessionInfo,
+                                 EventFilter filter,
+                                 long after)
+            throws RepositoryException, UnsupportedRepositoryOperationException;
+
+    /**
      * Indicates that the passed subscription is no longer needed.
      * <p/>
      * <b>Note on thread-safety:</b> it is permissible to call this methods

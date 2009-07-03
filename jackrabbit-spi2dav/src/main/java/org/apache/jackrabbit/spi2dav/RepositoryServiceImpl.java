@@ -1760,6 +1760,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
+     * @see RepositoryService#getEvents(SessionInfo, EventFilter,long) 
+     */
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter,
+                                   long after) throws
+            RepositoryException, UnsupportedRepositoryOperationException {
+        // TODO
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
      * @see RepositoryService#createSubscription(SessionInfo, EventFilter[])
      */
     public Subscription createSubscription(SessionInfo sessionInfo,
