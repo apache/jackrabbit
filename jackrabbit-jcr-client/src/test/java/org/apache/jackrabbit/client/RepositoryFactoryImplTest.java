@@ -337,6 +337,10 @@ public class RepositoryFactoryImplTest extends TestCase {
             return new EventBundle[0];
         }
 
+        public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after) throws RepositoryException, UnsupportedRepositoryOperationException {
+            return null;
+        }
+
         public void dispose(Subscription subscription) throws RepositoryException {
         }
 
