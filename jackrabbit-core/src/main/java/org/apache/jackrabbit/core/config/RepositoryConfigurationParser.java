@@ -419,8 +419,21 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
             throws ConfigurationException {
+    	
         Element root = parseXML(xml);
-
+        return parseWorkspaceConfig(root);
+    }
+    
+    /**
+     * Parse workspace config.
+     * 
+     * @param root root element of the workspace configuration
+     * 
+     * @see #parseWorkspaceConfig(InputSource)
+     */
+    protected WorkspaceConfig parseWorkspaceConfig(Element root)
+    		throws ConfigurationException {
+    	
         // Workspace home directory
         String home = getVariables().getProperty(WORKSPACE_HOME_VARIABLE);
 
