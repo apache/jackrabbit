@@ -30,7 +30,7 @@ abstract class AbstractLockInfo implements LockInfo {
      * Constant for the undefined or infinite timeout.
      */
     static final long TIMEOUT_INFINITE = Long.MAX_VALUE;
-    
+
     /**
      * Constant for the expired timeout.
      */
@@ -112,26 +112,26 @@ abstract class AbstractLockInfo implements LockInfo {
     public NodeId getId() {
         return lockToken.getId();
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public boolean isLockHolder(Session session) {
-    	return lockHolder == session;
+        return lockHolder == session;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public String getLockOwner() {
-    	return lockOwner;
+        return lockOwner;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public boolean isDeep() {
-    	return deep;
+        return deep;
     }
 
     /**
@@ -151,24 +151,24 @@ abstract class AbstractLockInfo implements LockInfo {
     public void setLockHolder(SessionImpl lockHolder) {
         this.lockHolder = lockHolder;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public String getLockToken(Session session) {
-    	if (isLockHolder(session)) {
+        if (isLockHolder(session)) {
             return lockToken.toString();
         }
         return null;
     }
-    
+
     /**
      * Return the lock token.
-     * 
+     *
      * @return lock token
      */
     public String getLockToken() {
-    	return lockToken.toString();
+        return lockToken.toString();
     }
 
     /**

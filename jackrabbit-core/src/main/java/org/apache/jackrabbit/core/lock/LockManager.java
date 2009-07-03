@@ -149,12 +149,12 @@ public interface LockManager {
      * @throws LockException if write access to the specified path is not allowed
      * @throws RepositoryException if some other error occurs
      */
-    void checkUnlock(Session session, NodeImpl node) 
-    		throws LockException, RepositoryException;
-    
+    void checkUnlock(Session session, NodeImpl node) throws LockException,
+            RepositoryException;
+
     /**
      * Invoked by a session to inform that a lock token has been added.
-     * 
+     *
      * @param session session that has a added lock token
      * @param lt added lock token
      * @throws LockException
