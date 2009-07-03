@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons;
 
 import org.apache.jackrabbit.spi.EventBundle;
+import org.apache.jackrabbit.spi.Event;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,7 +36,7 @@ public class EventBundleImpl implements EventBundle, Serializable {
     /**
      * The events in this bundle.
      */
-    private final Collection events;
+    private final Collection<Event> events;
 
     /**
      * Creates a new event bundle with <code>events</code>.
@@ -43,7 +44,7 @@ public class EventBundleImpl implements EventBundle, Serializable {
      * @param events   the events for this bundle.
      * @param isLocal  if this events were created due to a local change.
      */
-    public EventBundleImpl(Collection events, boolean isLocal) {
+    public EventBundleImpl(Collection<Event> events, boolean isLocal) {
         this.events = events;
         this.isLocal = isLocal;
     }
@@ -51,7 +52,7 @@ public class EventBundleImpl implements EventBundle, Serializable {
     /**
      * {@inheritDoc}
      */
-    public Iterator getEvents() {
+    public Iterator<Event> getEvents() {
         return events.iterator();
     }
 
@@ -60,5 +61,14 @@ public class EventBundleImpl implements EventBundle, Serializable {
      */
     public boolean isLocal() {
         return isLocal;
+    }
+
+    //-----------------------------< Iterable >---------------------------------
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator<Event> iterator() {
+        return getEvents();
     }
 }

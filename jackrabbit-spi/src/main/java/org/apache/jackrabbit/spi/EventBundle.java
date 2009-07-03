@@ -24,7 +24,7 @@ import java.util.Iterator;
  * <code>EventIterator</code> an <code>EventBundle</code> allows to retrieve
  * the events multiple times using the {@link #getEvents} method.
  */
-public interface EventBundle {
+public interface EventBundle extends Iterable<Event> {
 
     /**
      * Returns the events of this bundle.

@@ -44,5 +44,5 @@ public interface InternalEventListener {
      * @return an unmodifiable collection of {@link EventFilter}s currently
      * in use by this event listener.
      */
-    public Collection getEventFilters();
+    public Collection<EventFilter> getEventFilters();
 }

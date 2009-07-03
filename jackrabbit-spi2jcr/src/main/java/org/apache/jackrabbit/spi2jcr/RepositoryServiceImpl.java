@@ -39,7 +39,9 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
+import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -83,6 +85,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.EventJournal;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.Query;
@@ -1095,6 +1098,37 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException("Unknown subscription implementation: "
                     + subscription.getClass().getName());
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public EventBundle getEvents(SessionInfo sessionInfo,
+                                   EventFilter filter,
+                                   long after)
+            throws RepositoryException, UnsupportedRepositoryOperationException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        EventJournal journal = sInfo.getSession().getWorkspace().getObservationManager().getEventJournal();
+        if (journal == null) {
+            throw new UnsupportedRepositoryOperationException();
+        }
+        EventFactory factory = new EventFactory(sInfo.getSession(),
+                sInfo.getNamePathResolver(), idFactory, qValueFactory);
+        journal.skipTo(after);
+        List<Event> events = new ArrayList<Event>();
+        int batchSize = 1024;
+        boolean distinctDates = true;
+        long lastDate = Long.MIN_VALUE;
+        while (journal.hasNext() && (batchSize > 0 || !distinctDates)) {
+            Event e = factory.fromJCREvent(journal.nextEvent());
+            if (filter.accept(e, false)) {
+                distinctDates = lastDate != e.getDate();
+                lastDate = e.getDate();
+                events.add(e);
+                batchSize--;
+            }
+        }
+        return new EventBundleImpl(events, false);
     }
 
     /**

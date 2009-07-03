@@ -615,6 +615,18 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         return result;
     }
 
+    public EventBundle getEvents(final SessionInfo sessionInfo,
+                                 final EventFilter filter,
+                                 final long after) throws RepositoryException,
+            UnsupportedRepositoryOperationException {
+        return (EventBundle) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getEvents(sessionInfo, filter, after);
+            }
+        }, "getEvents(SessionInfo, EventFilter, long)",
+                new Object[]{unwrap(sessionInfo), filter, after});
+    }
+
     public void updateEventFilters(final Subscription subscription, final EventFilter[] eventFilters)
             throws RepositoryException {
 

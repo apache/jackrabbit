@@ -726,6 +726,15 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     /**
      * @throws UnsupportedRepositoryOperationException always.
      */
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter,
+                                   long after) throws
+            RepositoryException, UnsupportedRepositoryOperationException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
     public void dispose(Subscription subscription) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }

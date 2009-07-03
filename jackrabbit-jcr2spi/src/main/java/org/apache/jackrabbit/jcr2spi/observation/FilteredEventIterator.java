@@ -22,27 +22,21 @@ import java.util.NoSuchElementException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 
-import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.EventFilter;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
+ * Implements an event iterator that converts SPI events into JCR events and
+ * filters out the ones that are not accepted by an {@link EventFilter}.
  */
 class FilteredEventIterator implements EventIterator {
-
-    /**
-     * Logger instance for this class
-     */
-    private static final Logger log = LoggerFactory.getLogger(FilteredEventIterator.class);
 
     /**
      * The actual {@link org.apache.jackrabbit.spi.Event}s fired by the repository service
      * (unfiltered).
      */
-    private final Iterator actualEvents;
+    protected final Iterator<org.apache.jackrabbit.spi.Event> actualEvents;
 
     /**
      * For filtering the {@link javax.jcr.observation.Event}s.
@@ -77,20 +71,22 @@ class FilteredEventIterator implements EventIterator {
     /**
      * Creates a new <code>FilteredEventIterator</code>.
      *
-     * @param events     the {@link org.apache.jackrabbit.spi.Event}s as a
-     *                   bundle.
-     * @param filter     only event that pass the filter will be dispatched to
- *                   the event listener.
-     * @param resolver
-     * @param idFactory
+     * @param events    the {@link org.apache.jackrabbit.spi.Event}s as an
+     *                  iterator.
+     * @param isLocal   whether the events were caused by the local session.
+     * @param filter    only event that pass the filter will be dispatched to
+     *                  the event listener.
+     * @param resolver  the name path resolver.
+     * @param idFactory the id factory.
      */
-    public FilteredEventIterator(EventBundle events,
+    public FilteredEventIterator(Iterator<org.apache.jackrabbit.spi.Event> events,
+                                 boolean isLocal,
                                  EventFilter filter,
                                  NamePathResolver resolver,
                                  IdFactory idFactory) {
-        this.actualEvents = events.getEvents();
+        this.actualEvents = events;
         this.filter = filter;
-        this.isLocal = events.isLocal();
+        this.isLocal = isLocal;
         this.resolver = resolver;
         this.idFactory = idFactory;
         fetchNext();
@@ -177,7 +173,7 @@ class FilteredEventIterator implements EventIterator {
         org.apache.jackrabbit.spi.Event event;
         next = null;
         while (next == null && actualEvents.hasNext()) {
-            event = (org.apache.jackrabbit.spi.Event) actualEvents.next();
+            event = actualEvents.next();
             next = filter.accept(event, isLocal) ? new EventImpl(event, resolver, idFactory) : null;
         }
     }

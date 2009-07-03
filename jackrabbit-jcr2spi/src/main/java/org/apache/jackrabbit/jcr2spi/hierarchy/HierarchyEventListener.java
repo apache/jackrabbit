@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.ItemId;
 
 import javax.jcr.RepositoryException;
 import java.util.Collection;
@@ -44,7 +45,7 @@ public class HierarchyEventListener implements InternalEventListener {
     private static Logger log = LoggerFactory.getLogger(HierarchyEventListener.class);
 
     private final HierarchyManager hierarchyMgr;
-    private final Collection eventFilter;
+    private final Collection<EventFilter> eventFilter;
 
     public HierarchyEventListener(WorkspaceManager wspManager,
                                   HierarchyManager hierarchyMgr,
@@ -59,14 +60,18 @@ public class HierarchyEventListener implements InternalEventListener {
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }
-            this.eventFilter = (filter == null) ? Collections.EMPTY_LIST : Collections.singletonList(filter);
+            if (filter == null) {
+                this.eventFilter = Collections.emptyList();
+            } else {
+                this.eventFilter = Collections.singletonList(filter);
+            }
             try {
                 wspManager.addEventListener(this);
             } catch (RepositoryException e) {
                 // spi does not support observation, or another error occurred.
             }
         } else {
-            this.eventFilter = Collections.EMPTY_LIST;
+            this.eventFilter = Collections.emptyList();
         }
     }
 
@@ -74,7 +79,7 @@ public class HierarchyEventListener implements InternalEventListener {
     /**
      * @see InternalEventListener#getEventFilters()
      */
-    public Collection getEventFilters() {
+    public Collection<EventFilter> getEventFilters() {
         return eventFilter;
     }
 
@@ -84,7 +89,7 @@ public class HierarchyEventListener implements InternalEventListener {
      * since workspace operations are reported as local changes as well and
      * might have invoked changes (autocreated items etc.).
      *
-     * @param eventBundle
+     * @param eventBundle the events.
      * @see InternalEventListener#onEvent(EventBundle)
      */
     public void onEvent(EventBundle eventBundle) {
@@ -99,9 +104,9 @@ public class HierarchyEventListener implements InternalEventListener {
      * Retrieve the workspace state(s) affected by the given event and refresh
      * them accordingly.
      *
-     * @param events
+     * @param events the events to process.
      */
-    private void pushEvents(Collection events) {
+    private void pushEvents(Collection<Event> events) {
         if (events.isEmpty()) {
             log.debug("Empty event bundle");
             return;
@@ -110,9 +115,9 @@ public class HierarchyEventListener implements InternalEventListener {
         // TODO: handle new 283 event types and clean add/remove that is also present as move-event.
 
         // collect set of removed node ids
-        Set removedEvents = new HashSet();
+        Set<ItemId> removedEvents = new HashSet<ItemId>();
         // separately collect the add events
-        Set addEvents = new HashSet();
+        Set<Event> addEvents = new HashSet<Event>();
 
         for (Iterator it = events.iterator(); it.hasNext();) {
             Event event = (Event) it.next();
@@ -170,8 +175,7 @@ public class HierarchyEventListener implements InternalEventListener {
         }
 
         /* process all other events (removal, property changed) */
-        for (Iterator it = events.iterator(); it.hasNext(); ) {
-            Event event = (Event) it.next();
+        for (Event event : events) {
             int type = event.getType();
 
             NodeId parentId = event.getParentId();
@@ -211,9 +215,9 @@ public class HierarchyEventListener implements InternalEventListener {
         }
     }
 
-    private static Collection getEventCollection(EventBundle eventBundle) {
-        List evs = new ArrayList();
-        for (Iterator it = eventBundle.getEvents(); it.hasNext();) {
+    private static Collection<Event> getEventCollection(EventBundle eventBundle) {
+        List<Event> evs = new ArrayList<Event>();
+        for (Iterator<Event> it = eventBundle.getEvents(); it.hasNext();) {
            evs.add(it.next());
         }
         return evs;

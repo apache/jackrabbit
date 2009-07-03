@@ -395,6 +395,22 @@ public class WorkspaceManager
     }
 
     /**
+     * Returns the events from the journal that occurred after a given date.
+     *
+     * @param filter the event filter to apply.
+     * @param after  a date in milliseconds.
+     * @return the events as a bundle.
+     * @throws RepositoryException if an error occurs.
+     * @throws UnsupportedRepositoryOperationException
+     *                             if the implementation does not support
+     *                             journaled observation.
+     */
+    public EventBundle getEvents(EventFilter filter, long after)
+            throws RepositoryException, UnsupportedRepositoryOperationException {
+        return service.getEvents(sessionInfo, filter, after);
+    }
+
+    /**
      *
      * @param userData
      * @throws RepositoryException
