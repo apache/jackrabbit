@@ -171,7 +171,7 @@ public class XALockManager implements LockManager, InternalXAResource {
                 throw new LockException("Node locked.");
             }
         } else {
-        	lockMgr.checkLock(node);
+            lockMgr.checkLock(node);
         }
     }
 
@@ -182,29 +182,29 @@ public class XALockManager implements LockManager, InternalXAResource {
             throws LockException, RepositoryException {
 
         if (isInXA()) {
-	        SessionImpl sessionImpl = (SessionImpl) session;
-	        checkLock(sessionImpl.getItemManager().getNode(path));
+            SessionImpl sessionImpl = (SessionImpl) session;
+            checkLock(sessionImpl.getItemManager().getNode(path));
         } else {
-        	lockMgr.checkLock(path, session);
+            lockMgr.checkLock(path, session);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public void checkUnlock(Session session, NodeImpl node)
-    		throws LockException, RepositoryException {
+            throws LockException, RepositoryException {
 
         if (isInXA()) {
             AbstractLockInfo info = xaEnv.getLockInfo(node);
             if (info == null || !info.getId().equals(node.getId())) {
-    	        throw new LockException("Node not locked: " + node);
+                throw new LockException("Node not locked: " + node);
             }
-    	    if (!info.isLockHolder(session)) {
-    	        throw new LockException("Node not locked by session: " + node);
-    	    }
+            if (!info.isLockHolder(session)) {
+                throw new LockException("Node not locked by session: " + node);
+            }
         } else {
-        	lockMgr.checkUnlock(session, node);
+            lockMgr.checkUnlock(session, node);
         }
     }
 

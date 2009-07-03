@@ -56,14 +56,14 @@ class XAEnvironment {
     /**
      * Map of locked nodes, indexed by their (internal) id.
      */
-    private final Map<NodeId, XALockInfo> lockedNodesMap = 
-    		new HashMap<NodeId, XALockInfo>();
+    private final Map<NodeId, XALockInfo> lockedNodesMap =
+            new HashMap<NodeId, XALockInfo>();
 
     /**
      * Map of unlocked nodes, indexed by their (internal) id.
      */
-    private final Map<NodeId, XALockInfo> unlockedNodesMap = 
-    		new HashMap<NodeId, XALockInfo>();
+    private final Map<NodeId, XALockInfo> unlockedNodesMap =
+            new HashMap<NodeId, XALockInfo>();
 
     /**
      * List of lock/unlock operations.
@@ -245,7 +245,7 @@ class XAEnvironment {
      */
     public AbstractLockInfo[] getLockInfos(SessionImpl session)
             throws RepositoryException {
-    	
+
         ArrayList<AbstractLockInfo> result = new ArrayList<AbstractLockInfo>();
 
         // get lock informations from global lock manager first
@@ -266,9 +266,9 @@ class XAEnvironment {
 
     /**
      * Add lock token to this environment.
-     * @param session 
+     * @param session
      * @param lt lock token
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     public void addLockToken(SessionImpl session, String lt) throws RepositoryException {
         try {
@@ -276,9 +276,9 @@ class XAEnvironment {
             NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.getId());
             AbstractLockInfo info = getLockInfo(node);
             if (info != null) {
-            	if (info.isLockHolder(session)) {
-            		// nothing to do
-            	} else if (info.getLockHolder() == null) {
+                if (info.isLockHolder(session)) {
+                    // nothing to do
+                } else if (info.getLockHolder() == null) {
                     info.setLockHolder(session);
                 } else {
                     String msg = "Cannot add lock token: lock already held by other session.";
@@ -297,9 +297,9 @@ class XAEnvironment {
 
     /**
      * Remove lock token from this environment.
-     * @param session 
+     * @param session
      * @param lt lock token
-     * @throws RepositoryException 
+     * @throws RepositoryException
      */
     public void removeLockToken(SessionImpl session, String lt) throws RepositoryException {
         try {
@@ -308,10 +308,10 @@ class XAEnvironment {
             NodeImpl node = (NodeImpl) session.getItemManager().getItem(lockToken.getId());
             AbstractLockInfo info = getLockInfo(node);
             if (info != null) {
-            	if (info.isLockHolder(session)) {
+                if (info.isLockHolder(session)) {
                     info.setLockHolder(null);
-            	} else if (info.getLockHolder() == null) {
-            		// nothing to do
+                } else if (info.getLockHolder() == null) {
+                    // nothing to do
                 } else {
                     String msg = "Cannot remove lock token: lock held by other session.";
                     log.warn(msg);
@@ -447,9 +447,10 @@ class XAEnvironment {
          * @param lockOwner     owner of lock
          */
         public XALockInfo(NodeImpl node, LockToken lockToken,
-        				  boolean sessionScoped, boolean deep, String lockOwner) {
+                          boolean sessionScoped, boolean deep, String lockOwner) {
 
-            this(node, lockToken, sessionScoped, deep, lockOwner, TIMEOUT_INFINITE);
+            this(node, lockToken, sessionScoped, deep, lockOwner,
+                    TIMEOUT_INFINITE);
         }
 
         /**

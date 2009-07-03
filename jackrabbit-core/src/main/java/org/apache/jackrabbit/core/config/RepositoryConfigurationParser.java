@@ -105,7 +105,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     public static final String DATA_STORE_ELEMENT = "DataStore";
 
     /** Name of the repository lock mechanism configuration element. */
-    public static final String REPOSITORY_LOCK_MECHANISM_ELEMENT = 
+    public static final String REPOSITORY_LOCK_MECHANISM_ELEMENT =
         "RepositoryLockMechanism";
 
     /** Name of the persistence manager configuration element. */
@@ -263,7 +263,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
         // Optional data store factory
         DataStoreFactory dsf = getDataStoreFactory(root, home);
-        
+
         RepositoryLockMechanismFactory rlf = getRepositoryLockMechanismFactory(root);
 
         return new RepositoryConfig(home, securityConfig, fsf,
@@ -419,21 +419,21 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     public WorkspaceConfig parseWorkspaceConfig(InputSource xml)
             throws ConfigurationException {
-    	
+
         Element root = parseXML(xml);
         return parseWorkspaceConfig(root);
     }
-    
+
     /**
      * Parse workspace config.
-     * 
+     *
      * @param root root element of the workspace configuration
-     * 
+     *
      * @see #parseWorkspaceConfig(InputSource)
      */
     protected WorkspaceConfig parseWorkspaceConfig(Element root)
-    		throws ConfigurationException {
-    	
+            throws ConfigurationException {
+
         // Workspace home directory
         String home = getVariables().getProperty(WORKSPACE_HOME_VARIABLE);
 
@@ -757,11 +757,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <p/>
      * <code>RepositoryLockMechanism</code> is a
      * {@link #parseBeanConfig(Element,String) bean configuration} element.
-     * 
+     *
      * @param root the root configuration element
      * @return repository lock mechanism factory
      * @throws ConfigurationException if the configuration is broken
-     */    
+     */
     protected RepositoryLockMechanismFactory getRepositoryLockMechanismFactory(final Element root) {
         return new RepositoryLockMechanismFactory() {
             public RepositoryLockMechanism getRepositoryLockMechanism() throws RepositoryException {

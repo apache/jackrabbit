@@ -246,7 +246,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
 
         lockMap.traverse(new PathMap.ElementVisitor() {
             public void elementVisited(PathMap.Element element) {
-            	AbstractLockInfo info = (AbstractLockInfo) element.get();
+                AbstractLockInfo info = (AbstractLockInfo) element.get();
                 if (!info.isSessionScoped()) {
                     list.add(info);
                 }
@@ -260,7 +260,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             writer = new BufferedWriter(
                     new OutputStreamWriter(locksFile.getOutputStream()));
             for (int i = 0; i < list.size(); i++) {
-            	AbstractLockInfo info = list.get(i);
+                AbstractLockInfo info = list.get(i);
                 writer.write(info.getLockToken());
                 writer.newLine();
             }
@@ -603,7 +603,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         LockInfo info = (LockInfo) element.get();
         if (info != null) {
             if (element.hasPath(path) || info.isDeep()) {
-            	checkLock(info, session);
+                checkLock(info, session);
             }
         }
     }
@@ -614,16 +614,16 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * lock holder itself.
      * <p/>
      * Default implementation allows access to the lock holder only.
-     * 
+     *
      * @param info info to check
      * @param session session
      * @throws LockException if write access to the specified path is not allowed
      * @throws RepositoryException if some other error occurs
      */
-    protected void checkLock(LockInfo info, Session session) 
-    		throws LockException, RepositoryException {
-    	
-    	if (!info.isLockHolder(session)) {
+    protected void checkLock(LockInfo info, Session session)
+            throws LockException, RepositoryException {
+
+        if (!info.isLockHolder(session)) {
             throw new LockException("Node locked.");
         }
     }
@@ -632,19 +632,19 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * {@inheritDoc}
      */
     public void checkUnlock(Session session, NodeImpl node)
-    		throws LockException, RepositoryException {
+            throws LockException, RepositoryException {
 
-	    // check whether node is locked by this session
-	    PathMap.Element element = lockMap.map(
-	    		getPath((SessionImpl) session, node.getId()), true);
-	    if (element == null) {
-	        throw new LockException("Node not locked: " + node);
-	    }
-	    AbstractLockInfo info = (AbstractLockInfo) element.get();
-	    if (info == null) {
-	        throw new LockException("Node not locked: " + node);
-	    }
-	    checkUnlock(info, session);
+        // check whether node is locked by this session
+        PathMap.Element element = lockMap.map(getPath((SessionImpl) session,
+                node.getId()), true);
+        if (element == null) {
+            throw new LockException("Node not locked: " + node);
+        }
+        AbstractLockInfo info = (AbstractLockInfo) element.get();
+        if (info == null) {
+            throw new LockException("Node not locked: " + node);
+        }
+        checkUnlock(info, session);
     }
 
     /**
@@ -653,20 +653,21 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
      * itself.
      * <p/>
      * Default implementation allows unlocking to the lock holder only.
-     * 
+     *
      * @param info info to check
      * @param session session
      * @throws LockException if unlocking is denied
      * @throws RepositoryException if some other error occurs
      */
     protected void checkUnlock(LockInfo info, Session session)
-    		throws LockException, RepositoryException {
-    	
-	    if (!info.isLockHolder(session)) {
-	        throw new LockException("Node not locked by session: " + info.getId());
-	    }
+            throws LockException, RepositoryException {
+
+        if (!info.isLockHolder(session)) {
+            throw new LockException("Node not locked by session: "
+                    + info.getId());
+        }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -680,9 +681,9 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
                 if (info != null) {
-                	if (info.isLockHolder(session)) {
-                		// nothing to do
-                	} else if (info.getLockHolder() == null) {
+                    if (info.isLockHolder(session)) {
+                        // nothing to do
+                    } else if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
                         if (info instanceof InternalLockInfo) {
                             session.addListener((InternalLockInfo) info);
@@ -706,22 +707,22 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     /**
      * {@inheritDoc}
      */
-    public void removeLockToken(SessionImpl session, String lt) 
-    		throws LockException, RepositoryException {
-    	
+    public void removeLockToken(SessionImpl session, String lt)
+            throws LockException, RepositoryException {
+
         try {
             LockToken lockToken = LockToken.parse(lt);
 
-            NodeImpl node = (NodeImpl)
-                this.sysSession.getItemManager().getItem(lockToken.getId());
+            NodeImpl node = (NodeImpl) this.sysSession.getItemManager()
+                    .getItem(lockToken.getId());
             PathMap.Element element = lockMap.map(node.getPrimaryPath(), true);
             if (element != null) {
                 AbstractLockInfo info = (AbstractLockInfo) element.get();
                 if (info != null) {
-                	if (info.isLockHolder(session)) {
+                    if (info.isLockHolder(session)) {
                         info.setLockHolder(null);
-                	} else if (info.getLockHolder() == null) {
-                		// nothing to do
+                    } else if (info.getLockHolder() == null) {
+                        // nothing to do
                     } else {
                         String msg = "Cannot remove lock token: lock held by other session.";
                         log.warn(msg);
@@ -1068,7 +1069,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         // save away non-empty children
         element.traverse(new PathMap.ElementVisitor() {
             public void elementVisited(PathMap.Element element) {
-            	AbstractLockInfo info = (AbstractLockInfo) element.get();
+                AbstractLockInfo info = (AbstractLockInfo) element.get();
                 infos.add(info);
             }
         }, false);
@@ -1079,10 +1080,10 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
         // now re-insert at appropriate location or throw away if node
         // does no longer exist
         for (int i = 0; i < infos.size(); i++) {
-        	AbstractLockInfo info = infos.get(i);
+            AbstractLockInfo info = infos.get(i);
             try {
-                NodeImpl node = (NodeImpl) sysSession.getItemManager().
-                        getItem(info.getId());
+                NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(
+                        info.getId());
                 lockMap.put(node.getPrimaryPath(), info);
             } catch (RepositoryException e) {
                 info.setLive(false);
@@ -1195,7 +1196,7 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
                                 boolean deep, String lockOwner, long timeoutHint) {
             super(lockToken, sessionScoped, deep, lockOwner, timeoutHint);
         }
-        
+
         /**
          * {@inheritDoc}
          * <p/>

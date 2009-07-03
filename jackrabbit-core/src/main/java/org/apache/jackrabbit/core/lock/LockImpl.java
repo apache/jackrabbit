@@ -138,7 +138,7 @@ class LockImpl implements javax.jcr.lock.Lock {
      */
     public boolean isLockOwningSession() {
         try {
-        	return info.isLockHolder(node.getSession());
+            return info.isLockHolder(node.getSession());
         } catch (RepositoryException e) {
             return false;
         }
