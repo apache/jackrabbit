@@ -24,21 +24,27 @@ import javax.jcr.RepositoryException;
 /**
  * Extension to standard lock implementation that works in XA environment.
  */
-class XALock extends LockImpl {
+class XALockImpl extends LockImpl {
 
     /**
      * XA lock manager.
      */
     private final XALockManager lockMgr;
+    
+    /**
+     * Abstract lock info.
+     */
+    private final AbstractLockInfo info;
 
     /**
      * Create a new instance of this class.
      * @param info lock information
      * @param node node holding lock
      */
-    public XALock(XALockManager lockMgr, AbstractLockInfo info, Node node) {
+    public XALockImpl(XALockManager lockMgr, AbstractLockInfo info, Node node) {
         super(info, node);
 
+        this.info = info;
         this.lockMgr = lockMgr;
     }
 
