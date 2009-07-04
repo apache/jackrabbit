@@ -313,7 +313,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         // test if login as testuser -> item at path must not exist.
         Session s = null;
         try {
-            s = helper.getRepository().login(creds);
+            s = getHelper().getRepository().login(creds);
             assertFalse(s.itemExists(path));
         } finally {
             if (s != null) {
@@ -915,7 +915,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         testUser = null;
 
         // try to retrieve the acl again
-        Session s = helper.getSuperuserSession();
+        Session s = getHelper().getSuperuserSession();
         try {
             AccessControlManager acMgr = getAccessControlManager(s);
             acMgr.getPolicies(acPath);

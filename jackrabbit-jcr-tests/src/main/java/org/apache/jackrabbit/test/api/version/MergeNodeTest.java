@@ -486,7 +486,7 @@ public class MergeNodeTest extends AbstractMergeTest {
         // remove first slash of path to get rel path to root
         String pathRelToRoot = nodeToMerge.getPath().substring(1);
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(false, false);
@@ -525,7 +525,7 @@ public class MergeNodeTest extends AbstractMergeTest {
         // remove first slash of path to get rel path to root
         String pathRelToRoot = nodeToMerge.getPath().substring(1);
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.getSession().getWorkspace().getLockManager().lock(node2.getPath(), false, false, 60, "");

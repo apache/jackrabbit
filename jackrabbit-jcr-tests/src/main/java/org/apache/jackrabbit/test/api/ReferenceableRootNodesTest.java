@@ -48,8 +48,8 @@ public class ReferenceableRootNodesTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = helper.getReadOnlySession();
-        sessionW2 = helper.getReadOnlySession(workspaceName);
+        session = getHelper().getReadOnlySession();
+        sessionW2 = getHelper().getReadOnlySession(workspaceName);
 
         String wspName = session.getWorkspace().getName();
         boolean sameWsp = (wspName == null) ? workspaceName == null : wspName.equals(workspaceName);

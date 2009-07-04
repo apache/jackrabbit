@@ -70,7 +70,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
         }
 
         for (int i = 0; i < names.length && i < 1; i++) {
-            Session s = helper.getSuperuserSession(names[i]);
+            Session s = getHelper().getSuperuserSession(names[i]);
             try {
                 Method m = r.getClass().getDeclaredMethod("getWorkspaceInfo", new Class[] { String.class });
                 m.setAccessible(true);

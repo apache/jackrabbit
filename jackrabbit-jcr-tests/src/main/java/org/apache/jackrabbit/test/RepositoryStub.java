@@ -170,7 +170,7 @@ public abstract class RepositoryStub {
      * @return a <code>RepositoryStub</code> implementation.
      * @throws RepositoryStubException
      */
-    static synchronized RepositoryStub getInstance(Map configuration)
+    public static synchronized RepositoryStub getInstance(Map configuration)
         throws RepositoryStubException {
         Properties props = null;
         RepositoryStub stub = null;

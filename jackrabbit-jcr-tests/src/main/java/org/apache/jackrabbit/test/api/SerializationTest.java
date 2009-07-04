@@ -519,7 +519,7 @@ public class SerializationTest extends AbstractJCRTest {
         session.logout();
         superuser = null; //so tearDown won't fail
 
-        session = helper.getReadWriteSession();
+        session = getHelper().getReadWriteSession();
         treeComparator.setSession(session);
         treeComparator.compare(treeComparator.CHECK_EMPTY);
     }
@@ -542,7 +542,7 @@ public class SerializationTest extends AbstractJCRTest {
         session.logout();
         superuser = null; //so tearDown won't fail
 
-        session = helper.getReadWriteSession();
+        session = getHelper().getReadWriteSession();
         treeComparator.setSession(session);
         treeComparator.compare(treeComparator.CHECK_EMPTY);
     }

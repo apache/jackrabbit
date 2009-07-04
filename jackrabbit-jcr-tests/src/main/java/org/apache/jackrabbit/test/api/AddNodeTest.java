@@ -211,7 +211,7 @@ public class AddNodeTest extends AbstractJCRTest {
         defaultRootNode.save();
 
         // use a different session to verify if the node is there
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         try {
             session.getItem(testNode.getPath());
         } finally {
@@ -235,7 +235,7 @@ public class AddNodeTest extends AbstractJCRTest {
         superuser.save();
 
         // use a different session to verify if the node is there
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         try {
             session.getItem(testNode.getPath());
         } finally {

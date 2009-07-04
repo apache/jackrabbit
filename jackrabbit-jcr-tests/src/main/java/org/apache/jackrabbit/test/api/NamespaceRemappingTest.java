@@ -57,7 +57,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         nsr = session.getWorkspace().getNamespaceRegistry();
     }
 
@@ -226,7 +226,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
         assertEquals(after, session.getNamespacePrefix(NS_JCR_URI));
 
         // Check whether the mapping affects another session
-        Session another = helper.getReadOnlySession();
+        Session another = getHelper().getReadOnlySession();
         try {
             assertEquals(
                     "Local namespace changes must not affect other sessions",

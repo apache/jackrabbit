@@ -45,7 +45,7 @@ public class RSessionAccessControlPolicyTest extends AbstractAccessControlTest {
         superuser.save();
         path = n.getPath();
 
-        readOnlySession = helper.getReadOnlySession();
+        readOnlySession = getHelper().getReadOnlySession();
         testAcMgr = getAccessControlManager(readOnlySession);
     }
 

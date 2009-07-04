@@ -148,8 +148,8 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
 
     //-------------------------< internal helper >------------------------------
 
-    private static void checkRepository(Repository r) throws RepositoryException {
-        r.login(helper.getSuperuserCredentials()).logout();
+    private void checkRepository(Repository r) throws RepositoryException {
+        r.login(getHelper().getSuperuserCredentials()).logout();
     }
 
     private static void setProperties() {

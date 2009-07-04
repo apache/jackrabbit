@@ -55,7 +55,7 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
     public void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         Workspace ws = session.getWorkspace();
         nsr = ws.getNamespaceRegistry();
     }

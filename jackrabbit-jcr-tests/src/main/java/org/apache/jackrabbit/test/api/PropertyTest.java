@@ -58,7 +58,7 @@ public class PropertyTest extends AbstractJCRTest {
         testRootNode.save();
 
         // accuire the same property through a different session
-        Session session = helper.getSuperuserSession();
+        Session session = getHelper().getSuperuserSession();
         try {
             Property prop2 = session.getProperty(prop1.getPath());
 

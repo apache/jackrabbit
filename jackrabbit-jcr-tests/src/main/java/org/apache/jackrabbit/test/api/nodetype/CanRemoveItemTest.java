@@ -49,7 +49,7 @@ public class CanRemoveItemTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
     }
 
     /**

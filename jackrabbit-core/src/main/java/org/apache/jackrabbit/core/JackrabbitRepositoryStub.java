@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
@@ -80,9 +82,24 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
     private final Properties settings;
 
     /**
-     * The repository instance.
+     * Map of repository instances. Key = repository home, value = repository
+     * instance.
      */
-    private Repository repository;
+    private static final Map<String, Repository> REPOSITORY_INSTANCES = new HashMap<String, Repository>();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            public void run() {
+                synchronized (REPOSITORY_INSTANCES) {
+                    for (Repository repo : REPOSITORY_INSTANCES.values()) {
+                        if (repo instanceof RepositoryImpl) {
+                            ((RepositoryImpl) repo).shutdown();
+                        }
+                    }
+                }
+            }
+        }));
+    }
 
     private static Properties getStaticProperties() {
         Properties properties = new Properties();
@@ -129,33 +146,27 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
      */
     public synchronized Repository getRepository()
             throws RepositoryStubException {
-        if (repository == null) {
-            try {
-                String dir = settings.getProperty(PROP_REPOSITORY_HOME);
-                if (dir == null) {
-                    dir = new File("target", "repository").getPath();
-                }
-
-                String xml = settings.getProperty(PROP_REPOSITORY_CONFIG);
-                if (xml == null) {
-                    xml = new File(dir, "repository.xml").getPath();
-                }
-
-                repository = createRepository(dir, xml);
-                Session session = repository.login(superuser);
-                try {
-                    prepareTestContent(session);
-                } finally {
-                    session.logout();
-                }
-            } catch (Exception e) {
-                RepositoryStubException exception =
-                    new RepositoryStubException("Failed to start repository");
-                exception.initCause(e);
-                throw exception;
+        try {
+            String dir = settings.getProperty(PROP_REPOSITORY_HOME);
+            if (dir == null) {
+                dir = new File("target", "repository").getAbsolutePath();
+            } else {
+                dir = new File(dir).getAbsolutePath();
             }
+
+            String xml = settings.getProperty(PROP_REPOSITORY_CONFIG);
+            if (xml == null) {
+                xml = new File(dir, "repository.xml").getPath();
+            }
+
+            return getOrCreateRepository(dir, xml);
+
+        } catch (Exception e) {
+            RepositoryStubException exception =
+                    new RepositoryStubException("Failed to start repository");
+            exception.initCause(e);
+            throw exception;
         }
-        return repository;
     }
 
     protected Repository createRepository(String dir, String xml)
@@ -178,6 +189,25 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
 
         RepositoryConfig config = RepositoryConfig.create(xml, dir);
         return RepositoryImpl.create(config);
+    }
+
+    protected Repository getOrCreateRepository(String dir, String xml)
+            throws Exception {
+        synchronized (REPOSITORY_INSTANCES) {
+            Repository repo = REPOSITORY_INSTANCES.get(dir);
+            if (repo == null) {
+                repo = createRepository(dir, xml);
+                Session session = repo.login(superuser);
+                try {
+                    prepareTestContent(session);
+                } finally {
+                    session.logout();
+                }
+
+                REPOSITORY_INSTANCES.put(dir, repo);
+            }
+            return repo;
+        }
     }
 
     private void prepareTestContent(Session session)

@@ -24,19 +24,11 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
-import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.core.TestRepository;
-import org.apache.jackrabbit.test.JCRTestResult;
-import org.apache.jackrabbit.test.LogPrintWriter;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import junit.framework.TestCase;
-import junit.framework.TestResult;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Jackrabbit-specific test cases for the document view XML format.
@@ -44,23 +36,7 @@ import junit.framework.TestResult;
  * @see org.apache.jackrabbit.test.api.ExportDocViewTest
  * @see org.apache.jackrabbit.test.api.DocumentViewImportTest
  */
-public class DocumentViewTest extends TestCase {
-
-    /** Logger instance for this class. */
-    private static final Logger log = LoggerFactory.getLogger(DocumentViewTest.class);
-
-    /** Test session. */
-    private Session session;
-
-    /**
-     * Use a {@link org.apache.jackrabbit.test.JCRTestResult} to suppress test
-     * case failures of known issues.
-     *
-     * @param testResult the test result.
-     */
-    public void run(TestResult testResult) {
-        super.run(new JCRTestResult(testResult, new LogPrintWriter(log)));
-    }
+public class DocumentViewTest extends AbstractJCRTest {
 
     /**
      * Sets up the test fixture.
@@ -69,9 +45,8 @@ public class DocumentViewTest extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        session = TestRepository.getInstance().login();
         JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
-            session.getWorkspace().getNodeTypeManager();
+            superuser.getWorkspace().getNodeTypeManager();
         try {
             manager.getNodeType("DocViewMultiValueTest");
         } catch (NoSuchNodeTypeException e) {
@@ -90,7 +65,6 @@ public class DocumentViewTest extends TestCase {
     protected void tearDown() throws Exception {
         // TODO: Unregister the MultiValueTestType node type once Jackrabbit
         // supports node type removal.
-        session.logout();
         super.tearDown();
     }
 
@@ -108,7 +82,7 @@ public class DocumentViewTest extends TestCase {
                 + " xmlns:jcr=\"http://www.jcp.org/jcr/1.0\""
                 + " xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\"/>";
             InputStream input = new ByteArrayInputStream(xml.getBytes("UTF-8"));
-            session.importXML(
+            superuser.importXML(
                     "/", input, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         } catch (ValueFormatException e) {
             fail("JCR-369: IllegalNameException when importing document view"
@@ -127,15 +101,15 @@ public class DocumentViewTest extends TestCase {
         String message = "JCR-325: docview roundtripping does not work with"
             + " multivalue non-string properties";
 
-        Node root = session.getRootNode();
+        Node root = superuser.getRootNode();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         Node node = root.addNode("multi-value-test", "DocViewMultiValueTest");
         node.setProperty("test", new String[] {"true", "false"});
-        session.exportDocumentView("/multi-value-test", buffer, true, true);
-        session.refresh(false); // Discard the transient multi-value-test node
+        superuser.exportDocumentView("/multi-value-test", buffer, true, true);
+        superuser.refresh(false); // Discard the transient multi-value-test node
 
-        session.importXML(
+        superuser.importXML(
                 "/", new ByteArrayInputStream(buffer.toByteArray()),
                 ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         try {

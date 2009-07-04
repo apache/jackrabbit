@@ -66,8 +66,8 @@ abstract class AbstractWorkspaceCopyBetweenTest extends AbstractWorkspaceCopyTes
 
         // init second workspace
         String otherWspName = getOtherWorkspaceName();
-        superuserW2 = helper.getSuperuserSession(otherWspName);
-        rwSessionW2 = helper.getReadWriteSession(otherWspName);
+        superuserW2 = getHelper().getSuperuserSession(otherWspName);
+        rwSessionW2 = getHelper().getReadWriteSession(otherWspName);
         workspaceW2 = superuserW2.getWorkspace();
 
         initNodesW2();

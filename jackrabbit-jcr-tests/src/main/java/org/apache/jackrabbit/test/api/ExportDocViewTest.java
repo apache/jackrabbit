@@ -121,7 +121,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         isReadOnly = true;
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         workspace = session.getWorkspace();
         nsr = workspace.getNamespaceRegistry();
         file = File.createTempFile("docViewExportTest", ".xml");

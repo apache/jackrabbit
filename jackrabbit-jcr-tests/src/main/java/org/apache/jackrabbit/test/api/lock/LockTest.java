@@ -115,7 +115,7 @@ public class LockTest extends AbstractJCRTest {
         assertTrue("Lock must be live", lock.isLive());
 
         // create new session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
 
         try {
             // get same node
@@ -370,7 +370,7 @@ public class LockTest extends AbstractJCRTest {
         testRootNode.save();
 
         // create new session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
 
         Lock lock;
         try {
@@ -410,7 +410,7 @@ public class LockTest extends AbstractJCRTest {
         testRootNode.save();
 
         // create new session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
 
         try {
             // get node created above
@@ -451,7 +451,7 @@ public class LockTest extends AbstractJCRTest {
         testRootNode.save();
 
         // create new session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
 
         try {
             // get node created above

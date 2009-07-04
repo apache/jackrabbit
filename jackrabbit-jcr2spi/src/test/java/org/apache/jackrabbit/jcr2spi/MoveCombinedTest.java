@@ -33,7 +33,7 @@ public class MoveCombinedTest extends AbstractMoveTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        testSession = helper.getReadOnlySession();
+        testSession = getHelper().getReadOnlySession();
     }
 
     protected void tearDown() throws Exception {

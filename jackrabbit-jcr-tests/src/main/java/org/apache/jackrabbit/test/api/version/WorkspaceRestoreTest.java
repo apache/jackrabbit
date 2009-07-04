@@ -73,7 +73,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
             fail("Failed to create a second versionable node: " + e.getMessage());
         }
         try {
-            wSuperuser = helper.getSuperuserSession(workspaceName);
+            wSuperuser = getHelper().getSuperuserSession(workspaceName);
         } catch (RepositoryException e) {
             fail("Failed to retrieve superuser session for second workspace '" + workspaceName + "': " + e.getMessage());
         }

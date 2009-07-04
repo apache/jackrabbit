@@ -41,7 +41,7 @@ public class SQLPathTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         // check precondition for this test
         if (testRootNode.hasNodes()) {
             for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {

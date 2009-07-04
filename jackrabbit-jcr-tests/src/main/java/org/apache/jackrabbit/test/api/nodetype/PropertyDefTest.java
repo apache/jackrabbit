@@ -87,7 +87,7 @@ public class PropertyDefTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         // re-fetch testRootNode with read-only session
         testRootNode = (Node) session.getItem(testRoot);

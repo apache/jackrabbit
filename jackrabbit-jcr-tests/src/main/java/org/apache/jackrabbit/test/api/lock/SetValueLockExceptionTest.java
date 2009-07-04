@@ -144,7 +144,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
         }
 
         // another session
-        Session session = helper.getReadWriteSession();
+        Session session = getHelper().getReadWriteSession();
         try {
             Node node = (Node) session.getItem(testNode.getPath());
             Property prop = null;

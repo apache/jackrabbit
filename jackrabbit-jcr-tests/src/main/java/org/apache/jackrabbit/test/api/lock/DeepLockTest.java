@@ -115,7 +115,7 @@ public class DeepLockTest extends AbstractLockTest {
     }
 
     public void testRemoveLockedChild() throws RepositoryException {
-        Session otherSession = helper.getReadWriteSession();
+        Session otherSession = getHelper().getReadWriteSession();
         try {
             Node child = (Node) otherSession.getItem(childNode.getPath());
             child.remove();

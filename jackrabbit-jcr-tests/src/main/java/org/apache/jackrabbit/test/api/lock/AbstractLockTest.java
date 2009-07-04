@@ -183,7 +183,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      * A locked node must also be locked if accessed by some other session.
      */
     public void testLockVisibility() throws RepositoryException {
-        Session otherSession = helper.getReadWriteSession();
+        Session otherSession = getHelper().getReadWriteSession();
         try {
             Node ln = (Node) otherSession.getItem(lockedNode.getPath());
             assertTrue("Locked node must also be locked for another session", ln.isLocked());
@@ -211,7 +211,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         assertTrue("Session must be lock owner", lockedNode.getLock().isLockOwningSession());
         assertTrue("Session must be lock owner", lockMgr.getLock(lockedNode.getPath()).isLockOwningSession());
 
-        Session otherSession = helper.getReadOnlySession();
+        Session otherSession = getHelper().getReadOnlySession();
         try {
             Lock lck = otherSession.getNode(lockedNode.getPath()).getLock();
             assertFalse("Session must not be lock owner", lck.isLockOwningSession());
@@ -222,7 +222,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             otherSession.logout();
         }
 
-        Session otherAdmin = helper.getSuperuserSession();
+        Session otherAdmin = getHelper().getSuperuserSession();
         try {
             Lock lck = otherAdmin.getNode(lockedNode.getPath()).getLock();
             assertFalse("Other Session for the same userID must not be lock owner", lck.isLockOwningSession());
@@ -314,7 +314,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
      * @throws NotExecutableException
      */
     public void testUnlockByOtherSession() throws RepositoryException, NotExecutableException {
-        Session otherSession = helper.getReadWriteSession();
+        Session otherSession = getHelper().getReadWriteSession();
         try {
             getLockManager(otherSession).unlock(lockedNode.getPath());
             fail("Another session must not be allowed to unlock.");

@@ -270,7 +270,7 @@ public class SessionTest extends AbstractJCRTest {
         String pathRelToRoot = lockableNode.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -318,7 +318,7 @@ public class SessionTest extends AbstractJCRTest {
         superuser.save();
 
         // get moved tree root node with session 2
-        Session testSession = helper.getReadWriteSession();
+        Session testSession = getHelper().getReadWriteSession();
         try {
             testSession.getItem(destParentNode.getPath() + "/" + nodeName2);
             // node found
@@ -346,7 +346,7 @@ public class SessionTest extends AbstractJCRTest {
         superuser.save();
 
         // use a different session to verify if the node is there
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             s.getItem(newNode.getPath());
             // throws PathNotFoundException if item was not saved
@@ -387,7 +387,7 @@ public class SessionTest extends AbstractJCRTest {
         // check if the child node was created properly
 
         // get a reference with a second session to the modified node
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             Node newNodeSession2 = (Node) s.getItem(newNode.getPath());
             // check if child is there
@@ -449,7 +449,7 @@ public class SessionTest extends AbstractJCRTest {
         nodeSession1.addNode(nodeName2, testNodeType);
 
         // get the new node with a different session
-        Session testSession = helper.getReadWriteSession();
+        Session testSession = getHelper().getReadWriteSession();
         try {
             Node nodeSession2 = (Node) testSession.getItem(nodeSession1.getPath());
 
@@ -503,7 +503,7 @@ public class SessionTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = helper.getReadWriteSession();
+        Session session2 = getHelper().getReadWriteSession();
 
         try {
             // get the second node
@@ -563,7 +563,7 @@ public class SessionTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = helper.getReadWriteSession();
+        Session session2 = getHelper().getReadWriteSession();
 
         try {
             // get the second node

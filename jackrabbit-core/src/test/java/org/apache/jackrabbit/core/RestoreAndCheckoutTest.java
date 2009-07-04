@@ -32,7 +32,7 @@ public class RestoreAndCheckoutTest extends AbstractJCRTest {
 	private static final int NODES_COUNT = 10;
 
 	public void testRestoreAndCheckout() throws RepositoryException {
-		Session session = helper.getSuperuserSession();
+		Session session = getHelper().getSuperuserSession();
 		
 		Node rootNode = session.getRootNode();
 		Node myRoot = rootNode.addNode("myRoot");

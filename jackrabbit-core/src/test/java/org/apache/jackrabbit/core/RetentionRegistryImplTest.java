@@ -133,7 +133,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testReadRetentionFromFile() throws RepositoryException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistryImpl re = new RetentionRegistryImpl(s, createFileSystem());
         try {
             assertTrue(re.hasEffectiveRetention(s.getQPath(childNPath), false));
@@ -223,7 +223,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testRemoveHold() throws RepositoryException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             Hold[] holds = retentionMgr.getHolds(childNPath);
@@ -242,7 +242,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testRemoveRetentionPolicy() throws RepositoryException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.removeRetentionPolicy(childNPath);
@@ -259,7 +259,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testAddHold() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         Hold h = null;
         try {
@@ -281,7 +281,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testAddMultipleHold() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.addHold(childN2.getPath(), getHoldName(), false);
@@ -310,7 +310,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testSetRetentionPolicy() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.setRetentionPolicy(childN2.getPath(), getApplicableRetentionPolicy("test2"));
@@ -329,7 +329,7 @@ public class RetentionRegistryImplTest extends AbstractRetentionTest {
     }
 
     public void testChangeRetentionPolicy() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) helper.getSuperuserSession();
+        SessionImpl s = (SessionImpl) getHelper().getSuperuserSession();
         RetentionRegistry re = s.getRetentionRegistry();
         try {
             retentionMgr.setRetentionPolicy(childN2.getPath(), getApplicableRetentionPolicy("test2"));

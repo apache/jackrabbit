@@ -46,7 +46,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        otherSession = helper.getSuperuserSession();
+        otherSession = getHelper().getSuperuserSession();
 
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         lockedNode.addMixin(mixLockable);

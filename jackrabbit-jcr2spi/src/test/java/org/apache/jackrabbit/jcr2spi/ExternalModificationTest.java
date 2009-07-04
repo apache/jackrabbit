@@ -47,7 +47,7 @@ public class ExternalModificationTest extends AbstractJCRTest {
         refNode.addMixin(mixReferenceable);
         testRootNode.save();
 
-        testSession = helper.getReadWriteSession();
+        testSession = getHelper().getReadWriteSession();
     }
 
     protected void tearDown() throws Exception {

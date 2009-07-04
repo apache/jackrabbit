@@ -188,8 +188,8 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         deleteMyNodes();
 
-        Credentials cred = helper.getSuperuserCredentials();
-        Session s2 = helper.getRepository().login(cred);
+        Credentials cred = getHelper().getSuperuserCredentials();
+        Session s2 = getHelper().getRepository().login(cred);
         root = s2.getRootNode();
         Node node2 = root.addNode("node3");
         Node n = node2.addNode("nodeWithBlob");

@@ -273,7 +273,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
 
         Session s2 = null;
         try {
-            s2 = helper.getSuperuserSession();
+            s2 = getHelper().getSuperuserSession();
             List plcs = Arrays.asList(getAccessControlManager(s2).getPolicies(path));
             // TODO: check again if policies can be compared with equals!
             assertTrue("Policy must be visible to another superuser session.", plcs.contains(policy));

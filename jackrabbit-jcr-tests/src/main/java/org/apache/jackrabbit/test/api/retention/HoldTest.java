@@ -230,7 +230,7 @@ public class HoldTest extends AbstractRetentionTest {
     }
 
     public void testReadOnlySession() throws NotExecutableException, RepositoryException {
-        javax.jcr.Session s = helper.getReadOnlySession();
+        javax.jcr.Session s = getHelper().getReadOnlySession();
         try {
             RetentionManager rmgr = getRetentionManager(s);
             try {
@@ -256,7 +256,7 @@ public class HoldTest extends AbstractRetentionTest {
         List holdsBefore = Arrays.asList(retentionMgr.getHolds(child.getPath()));
 
         // get another session.
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        javax.jcr.Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);            
             rmgr.addHold(child.getPath(), getHoldName(), false);
@@ -284,7 +284,7 @@ public class HoldTest extends AbstractRetentionTest {
         Hold h = retentionMgr.addHold(child.getPath(), getHoldName(), false);
         testRootNode.save();
 
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        javax.jcr.Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             Hold[] holds = rmgr.getHolds(child.getPath());
@@ -324,7 +324,7 @@ public class HoldTest extends AbstractRetentionTest {
         child.checkin();
 
         // get another session.
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        javax.jcr.Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.addHold(child.getPath(), getHoldName(), false);
@@ -356,7 +356,7 @@ public class HoldTest extends AbstractRetentionTest {
         // checkin on the parent node make the hold-containing node checked-in.
         vn.checkin();
 
-        javax.jcr.Session otherS = helper.getSuperuserSession();
+        javax.jcr.Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             Hold[] holds = rmgr.getHolds(n.getPath());

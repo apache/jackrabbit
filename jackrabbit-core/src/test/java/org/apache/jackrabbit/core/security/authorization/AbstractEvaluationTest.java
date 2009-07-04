@@ -111,7 +111,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     protected Session getTestSession() throws RepositoryException {
         if (testSession == null) {
-            testSession = helper.getRepository().login(creds);
+            testSession = getHelper().getRepository().login(creds);
         }
         return testSession;
     }

@@ -22,32 +22,27 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
-import org.apache.jackrabbit.core.TestRepository;
 import org.apache.jackrabbit.uuid.UUID;
-
-import junit.framework.TestCase;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * Test cases for the {@link WorkspaceImporter} class.
  */
-public class WorkspaceImporterTest extends TestCase {
-
-    private Session session;
+public class WorkspaceImporterTest extends AbstractJCRTest {
 
     private Node root;
 
     protected void setUp() throws Exception {
-        session = TestRepository.getInstance().login();
-        root = session.getRootNode().addNode("WorkspaceImporterTest");
-        session.save();
+        super.setUp();
+        root = superuser.getRootNode().addNode("WorkspaceImporterTest");
+        superuser.save();
     }
 
     protected void tearDown() throws Exception {
         root.remove();
-        session.save();
-        session.logout();
+        superuser.save();
+        super.tearDown();
     }
 
     /**
@@ -81,7 +76,7 @@ public class WorkspaceImporterTest extends TestCase {
                 + "<sv:value>" + uuid + "</sv:value></sv:property>"
                 + "</sv:node>"
                 + "</sv:node>";
-            session.getWorkspace().importXML(
+            superuser.getWorkspace().importXML(
                     root.getPath(),
                     new ByteArrayInputStream(xml.getBytes("UTF-8")),
                     ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);

@@ -29,7 +29,7 @@ public class GuestLoginTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        guest = helper.getRepository().login(new GuestCredentials());
+        guest = getHelper().getRepository().login(new GuestCredentials());
     }
 
     protected void tearDown() throws Exception {

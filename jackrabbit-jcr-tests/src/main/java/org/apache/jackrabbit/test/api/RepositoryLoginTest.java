@@ -45,9 +45,9 @@ public class RepositoryLoginTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        credentials = helper.getReadOnlyCredentials();
+        credentials = getHelper().getReadOnlyCredentials();
         workspaceName = superuser.getWorkspace().getName();
-        repository = helper.getRepository();
+        repository = getHelper().getRepository();
     }
 
     /**
@@ -58,7 +58,7 @@ public class RepositoryLoginTest extends AbstractJCRTest {
     public void testNoSuchWorkspaceException()
             throws RepositoryException {
 
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         String name;
         try {
             name = getNonExistingWorkspaceName(session);
@@ -68,7 +68,7 @@ public class RepositoryLoginTest extends AbstractJCRTest {
         }
 
         try {
-            session = helper.getRepository().login(credentials, name);
+            session = getHelper().getRepository().login(credentials, name);
             fail("login with a not available workspace name must throw a " +
                     "NoSuchWorkspaceException");
         } catch (NoSuchWorkspaceException e) {

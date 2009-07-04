@@ -51,7 +51,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     /**
      * Helper object to access repository transparently
      */
-    public static RepositoryHelper helper = new RepositoryHelper();
+    private static RepositoryHelper helper = new RepositoryHelper();
 
     /**
      * Namespace URI for jcr prefix.
@@ -330,7 +330,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
             fail("Property '" + RepositoryStub.PROP_WORKSPACE_NAME + "' is not defined.");
         }
 
-        superuser = helper.getSuperuserSession();
+        superuser = getHelper().getSuperuserSession();
 
         // setup some common names
         jcrPrimaryType = superuser.getNamespacePrefix(NS_JCR_URI) + ":primaryType";
@@ -396,7 +396,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         } else if (isSupported(Repository.LEVEL_2_SUPPORTED)) {
             testRootNode = cleanUpTestRoot(superuser);
             // also clean second workspace
-            Session s = helper.getSuperuserSession(workspaceName);
+            Session s = getHelper().getSuperuserSession(workspaceName);
             try {
                 cleanUpTestRoot(s);
             } finally {
@@ -443,6 +443,13 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
+     * @return the repository helper instance that is associated with this test.
+     */
+    protected RepositoryHelper getHelper() {
+        return helper;
+    }
+
+    /**
      * Returns the value of the configuration property with <code>propName</code>.
      * The sequence how configuration properties are read is the follwoing:
      * <ol>
@@ -475,28 +482,28 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
 
         // 1) test case specific property first
-        String value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
+        String value = getHelper().getProperty(RepositoryStub.PROP_PREFIX + "."
                 + testClassName + "." + testCaseName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // 2) check test class property
-        value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
+        value = getHelper().getProperty(RepositoryStub.PROP_PREFIX + "."
                 + testClassName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // 3) check package property
-        value = helper.getProperty(RepositoryStub.PROP_PREFIX + "."
+        value = getHelper().getProperty(RepositoryStub.PROP_PREFIX + "."
                 + testPackName + "." + propName);
         if (value != null) {
             return value;
         }
 
         // finally try global property
-        return helper.getProperty(RepositoryStub.PROP_PREFIX + "." + propName);
+        return getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + propName);
     }
 
     /**
@@ -621,7 +628,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @throws RepositoryException if an error occurs.
      */
     protected boolean isSupported(String descriptorKey) throws RepositoryException {
-        return "true".equals(helper.getRepository().getDescriptor(descriptorKey));
+        return "true".equals(getHelper().getRepository().getDescriptor(descriptorKey));
     }
 
     /**
@@ -633,7 +640,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @throws NotExecutableException If the feature is not supported.
      */
     protected void checkSupportedOption(String descriptorKey) throws RepositoryException, NotExecutableException {
-        String value = helper.getRepository().getDescriptor(descriptorKey);
+        String value = getHelper().getRepository().getDescriptor(descriptorKey);
         if (value == null || ! Boolean.valueOf(value).booleanValue()) {
             throw new NotExecutableException (
                     "Repository feature not supported: " + descriptorKey);

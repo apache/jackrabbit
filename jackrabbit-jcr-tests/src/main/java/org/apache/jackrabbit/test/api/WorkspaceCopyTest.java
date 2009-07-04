@@ -93,7 +93,7 @@ public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {
      * sufficient access permissions to complete the operation.
      */
     public void testCopyNodesAccessDenied() throws RepositoryException {
-        Session readOnlySuperuser = helper.getReadOnlySession();
+        Session readOnlySuperuser = getHelper().getReadOnlySession();
         try {
             String dstAbsPath = node2.getPath() + "/" + node1.getName();
             try {
@@ -144,7 +144,7 @@ public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {
         String dstAbsPath = node2.getPath() + "/" + node1.getName();
 
         // get other session
-        Session otherSession = helper.getReadWriteSession();
+        Session otherSession = getHelper().getReadWriteSession();
 
         try {
             // get lock target node in destination wsp through other session

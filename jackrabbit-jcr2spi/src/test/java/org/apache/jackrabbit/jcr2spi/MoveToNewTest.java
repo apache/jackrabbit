@@ -183,7 +183,7 @@ public class MoveToNewTest extends AbstractJCRTest {
 
         testRootNode.save();
 
-        Session readOnly = helper.getReadOnlySession();
+        Session readOnly = getHelper().getReadOnlySession();
         try {
             Node trn = (Node) readOnly.getItem(testRootNode.getPath());
             NodeIterator it = trn.getNodes(nodeName1);

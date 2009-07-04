@@ -75,7 +75,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         grID = groupAdmin.getID();
 
         // create a session for the grou-admin user.
-        uSession = helper.getRepository().login(creds);
+        uSession = getHelper().getRepository().login(creds);
     }
 
     protected void tearDown() throws Exception {

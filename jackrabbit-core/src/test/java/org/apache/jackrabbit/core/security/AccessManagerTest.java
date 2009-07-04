@@ -70,7 +70,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     // TODO: add specific tests for 'AC-read/modify' privileges
 
     public void testCheckPermissionReadOnlySession() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             AccessManager acMgr = getAccessManager(s);
 
@@ -114,7 +114,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testCheckPermissionWithUnknowId() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         NodeId id = new NodeId(UUID.randomUUID());
         try {
             AccessManager acMgr = getAccessManager(s);
@@ -128,7 +128,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testIsGranted() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             AccessManager acMgr = getAccessManager(s);
 
@@ -142,7 +142,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testIsGrantedOnProperty() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             AccessManager acMgr = getAccessManager(s);
 
@@ -157,7 +157,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testIsGrantedOnNewNode() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadWriteSession();
+        Session s = getHelper().getReadWriteSession();
         try {
             AccessManager acMgr = getAccessManager(s);
 
@@ -173,7 +173,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testCanAccess() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             String wspName = s.getWorkspace().getName();
 
@@ -184,7 +184,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testCanAccessAllAvailable() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             String[] wspNames = s.getWorkspace().getAccessibleWorkspaceNames();
             for (int i = 0; i < wspNames.length; i++) {
@@ -196,7 +196,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testCanAccessDeniedWorkspace() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             Set allAccessibles = new HashSet(Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames()));
             Set sWorkspaceNames = new HashSet(Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames()));
@@ -213,7 +213,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testCanAccessNotExistingWorkspace() throws RepositoryException, NotExecutableException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             List all = Arrays.asList(s.getWorkspace().getAccessibleWorkspaceNames());
             String testName = "anyWorkspace";
@@ -261,7 +261,7 @@ public class AccessManagerTest extends AbstractJCRTest {
     }
 
     public void testIsGrantedReadOnlySession() throws NotExecutableException, RepositoryException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             AccessManager acMgr = getAccessManager(s);
             Path p = PathFactoryImpl.getInstance().getRootPath();

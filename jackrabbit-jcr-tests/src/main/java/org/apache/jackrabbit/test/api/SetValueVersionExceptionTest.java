@@ -58,7 +58,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
 
         value = session.getValueFactory().createValue("abc");
         values = new Value[] {value};

@@ -72,7 +72,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testRegisteredNamespaceVisibility() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
+        Session otherSession = getHelper().getReadOnlySession();
         try {
             NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
@@ -111,7 +111,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testReRegisteredNamespace2() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
+        Session otherSession = getHelper().getReadOnlySession();
         try {
             NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
@@ -135,7 +135,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     public void testReRegisteredNamespaceVisibility() throws RepositoryException {
-        Session otherSession = helper.getReadOnlySession();
+        Session otherSession = getHelper().getReadOnlySession();
         try {
             NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 
@@ -169,7 +169,7 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
         String prefix = getUnusedPrefix();
         String uri = getUnusedURI();
 
-        Session otherSession = helper.getReadOnlySession();
+        Session otherSession = getHelper().getReadOnlySession();
         try {
             NamespaceRegistry other = otherSession.getWorkspace().getNamespaceRegistry();
 

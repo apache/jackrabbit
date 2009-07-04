@@ -70,7 +70,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
                 throw new NotExecutableException("No supported privileges at absPath " + path);
             }
 
-            testPrincipal = helper.getKnownPrincipal(superuser);
+            testPrincipal = getHelper().getKnownPrincipal(superuser);
             
             // remember existing entries for test-principal -> later restore.
             privilegesToRestore = currentPrivileges(getList(acMgr, path), testPrincipal);
@@ -313,7 +313,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     public void testAddAccessControlEntryInvalidPrincipal() throws NotExecutableException, RepositoryException {
         checkCanModifyAc(path);
         try {
-            Principal invalidPrincipal = helper.getUnknownPrincipal(superuser);
+            Principal invalidPrincipal = getHelper().getUnknownPrincipal(superuser);
             AccessControlList acl = getList(acMgr, path);
             acl.addAccessControlEntry(invalidPrincipal, privs);
             fail("Adding an entry with an unknown principal must throw AccessControlException.");

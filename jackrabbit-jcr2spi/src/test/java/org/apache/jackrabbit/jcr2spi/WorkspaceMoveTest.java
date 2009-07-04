@@ -58,7 +58,7 @@ public class WorkspaceMoveTest extends MoveTest {
         }
 
         // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor
-        if ("1.0".equals(helper.getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
+        if ("1.0".equals(getHelper().getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
             try {
                 // move the node
                 doMove(moveNode.getPath(), destProperty.getPath());
@@ -85,7 +85,7 @@ public class WorkspaceMoveTest extends MoveTest {
         // TODO: fix 2.0 behaviour according to the OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED descriptor        
         // workspace-move the node (must succeed)
         doMove(moveNode.getPath(), destProperty.getPath());
-         if ("1.0".equals(helper.getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
+         if ("1.0".equals(getHelper().getRepository().getDescriptor(Repository.SPEC_VERSION_DESC))) {
              try {
                  // saving transient new property must fail
                  destParentNode.save();
