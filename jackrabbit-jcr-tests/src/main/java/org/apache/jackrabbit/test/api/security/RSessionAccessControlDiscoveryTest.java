@@ -40,7 +40,7 @@ public class RSessionAccessControlDiscoveryTest extends AbstractAccessControlTes
     protected void setUp() throws Exception {
         super.setUp();
 
-        readOnlySession = helper.getReadOnlySession();
+        readOnlySession = getHelper().getReadOnlySession();
         testAcMgr = getAccessControlManager(readOnlySession);
         testPath = testRootNode.getPath();
     }

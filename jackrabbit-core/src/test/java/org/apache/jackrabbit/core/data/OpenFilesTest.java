@@ -34,7 +34,7 @@ public class OpenFilesTest extends AbstractJCRTest {
      * Test opening a large number of streams.
      */
     public void testStreams() throws RepositoryException {
-        Session session = helper.getReadWriteSession();
+        Session session = getHelper().getReadWriteSession();
         try {
             Node test = session.getRootNode().addNode("test");
             ValueFactory vf = session.getValueFactory();

@@ -38,7 +38,7 @@ public class SessionGarbageCollectedTest extends AbstractJCRTest {
         Error error = null;
         try {
             for (int i = 0;; i++) {
-                Session s = helper.getReadWriteSession();
+                Session s = getHelper().getReadWriteSession();
                 // eat  a lot of memory so it gets garbage collected quickly
                 // (or quickly runs out of memory)
                 Node n = s.getRootNode().addNode("n" + i);

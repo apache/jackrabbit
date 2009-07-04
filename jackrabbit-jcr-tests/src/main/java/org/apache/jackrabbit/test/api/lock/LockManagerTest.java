@@ -195,7 +195,7 @@ public class LockManagerTest extends AbstractJCRTest {
         Lock l = lockMgr.lock(testPath, true, sessionScoped, Long.MAX_VALUE, null);
         String ltoken = l.getLockToken();
 
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         try {
             LockManager otherLockMgr = getLockManager(other);
             assertFalse(containsLockToken(otherLockMgr, ltoken));
@@ -320,7 +320,7 @@ public class LockManagerTest extends AbstractJCRTest {
         Lock l = lockMgr.lock(testPath, true, sessionScoped, Long.MAX_VALUE, null);
         String ltoken = l.getLockToken();
 
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         LockManager otherLockMgr = getLockManager(other);
         try {
             lockMgr.removeLockToken(ltoken);
@@ -348,7 +348,7 @@ public class LockManagerTest extends AbstractJCRTest {
         Lock l = lockMgr.lock(testPath, true, sessionScoped, Long.MAX_VALUE, null);
         String ltoken = l.getLockToken();
 
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         LockManager otherLockMgr = getLockManager(other);
         try {
             lockMgr.removeLockToken(ltoken);
@@ -372,7 +372,7 @@ public class LockManagerTest extends AbstractJCRTest {
         Lock l = lockMgr.lock(testPath, true, sessionScoped, Long.MAX_VALUE, null);
         String ltoken = l.getLockToken();
 
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         LockManager otherLockMgr = getLockManager(other);
         try {
             lockMgr.removeLockToken(ltoken);

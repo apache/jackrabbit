@@ -40,7 +40,7 @@ public class HasPermissionTest extends AbstractJCRTest {
         Node n = testRootNode.addNode(nodeName2, testNodeType);
         superuser.save();
 
-        Session readOnly = helper.getReadOnlySession();
+        Session readOnly = getHelper().getReadOnlySession();
         try {
             String path = n.getPath();
 
@@ -66,7 +66,7 @@ public class HasPermissionTest extends AbstractJCRTest {
         superuser.save();
 
         String path = n.getPath();
-        Session rwSession = helper.getReadWriteSession();
+        Session rwSession = getHelper().getReadWriteSession();
         try {
             assertTrue(rwSession.hasPermission(path, Session.ACTION_READ));
             assertTrue(rwSession.hasPermission(path + "newNode", Session.ACTION_ADD_NODE));

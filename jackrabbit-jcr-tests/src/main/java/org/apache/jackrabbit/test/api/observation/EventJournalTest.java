@@ -81,7 +81,7 @@ public class EventJournalTest extends AbstractObservationTest {
         journal.skipTo(System.currentTimeMillis());
         assertFalse(journal.hasNext());
 
-        Session session = helper.getSuperuserSession(workspaceName);
+        Session session = getHelper().getSuperuserSession(workspaceName);
         try {
             Node rootNode = session.getRootNode();
             if (rootNode.hasNode(nodeName1)) {

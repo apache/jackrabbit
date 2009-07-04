@@ -122,7 +122,7 @@ public class NodeUUIDTest extends AbstractJCRTest {
         superuser.save();
 
         // get the moving node with session 2
-        Session testSession = helper.getReadWriteSession();
+        Session testSession = getHelper().getReadWriteSession();
         try {
             Node refTargetNodeSession2 = (Node) testSession.getItem(refTargetNode.getPath());
 

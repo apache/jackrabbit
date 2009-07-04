@@ -72,7 +72,7 @@ public class ValueFactoryTest extends AbstractJCRTest {
 
     public void setUp() throws Exception {
         super.setUp();
-        session = helper.getReadWriteSession();
+        session = getHelper().getReadWriteSession();
         try {
             valueFactory = session.getValueFactory();
         } catch (UnsupportedRepositoryOperationException e) {

@@ -390,7 +390,7 @@ public class UserManagerImplTest extends AbstractUserTest {
     }
 
     public void testCleanup() throws RepositoryException, NotExecutableException {
-        Session s = helper.getSuperuserSession();
+        Session s = getHelper().getSuperuserSession();
         try {
             UserManager umgr = getUserManager(s);
             s.logout();
@@ -415,7 +415,7 @@ public class UserManagerImplTest extends AbstractUserTest {
         String[] workspaceNames = superuser.getWorkspace().getAccessibleWorkspaceNames();
 
         for (int i = 0; i < workspaceNames.length; i++) {
-            Session s = helper.getSuperuserSession(workspaceNames[i]);
+            Session s = getHelper().getSuperuserSession(workspaceNames[i]);
             try {
                 UserManager umgr = getUserManager(s);
                 s.logout();

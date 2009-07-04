@@ -51,7 +51,7 @@ public class SkipDeniedNodesTest extends AbstractAccessControlTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        anonymous = helper.getReadOnlySession();
+        anonymous = getHelper().getReadOnlySession();
 
         n1 = testRootNode.addNode(nodeName1);
         n1.setProperty(propertyName1, "a");

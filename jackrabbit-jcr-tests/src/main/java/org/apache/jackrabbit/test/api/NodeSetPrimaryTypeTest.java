@@ -70,7 +70,7 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
                     assertEquals("Node.getPrimaryNodeType must reflect the changes made.", ntName, node.getPrimaryNodeType().getName());
                     assertEquals("The value of the jcr:primaryType property must change upon setPrimaryType.", ntName, node.getProperty(jcrPrimaryType).getString());
 
-                    otherSession = helper.getReadOnlySession();
+                    otherSession = getHelper().getReadOnlySession();
                     assertEquals("Node.getPrimaryNodeType must reflect the changes made.", ntName, otherSession.getNode(node.getPath()).getPrimaryNodeType().getName());
                     assertEquals("The value of the jcr:primaryType property must change upon setPrimaryType.", ntName, otherSession.getNode(node.getPath()).getProperty(jcrPrimaryType).getString());
 
@@ -223,7 +223,7 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);

@@ -43,7 +43,7 @@ public class GetSupportedQueryLanguagesTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         testRootNode = session.getRootNode().getNode(testPath);
     }
 

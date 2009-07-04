@@ -37,7 +37,7 @@ public class WorkspaceInitTest extends AbstractJCRTest {
             Thread t = new Thread(new Runnable() {
                 public void run() {
                     try {
-                        helper.getSuperuserSession("workspace-init-test").logout();
+                        getHelper().getSuperuserSession("workspace-init-test").logout();
                     } catch (RepositoryException e) {
                         throw new RuntimeException(e);
                     }

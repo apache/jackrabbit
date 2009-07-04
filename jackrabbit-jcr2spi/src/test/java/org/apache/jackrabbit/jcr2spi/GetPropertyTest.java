@@ -56,7 +56,7 @@ public class GetPropertyTest extends AbstractJCRTest {
 
         testRootNode.save();
 
-        readOnly = helper.getReadOnlySession();
+        readOnly = getHelper().getReadOnlySession();
     }
 
     protected void tearDown() throws Exception {
@@ -190,7 +190,7 @@ public class GetPropertyTest extends AbstractJCRTest {
         Property p3 = sib3.setProperty(propertyName1, "sib3-prop");
         testRootNode.save();
 
-        Session s = helper.getReadWriteSession();
+        Session s = getHelper().getReadWriteSession();
         try {
             Node sibNode = (Node) s.getItem(sib2.getPath());
             sibNode.remove();
@@ -229,7 +229,7 @@ public class GetPropertyTest extends AbstractJCRTest {
     }
 
     public void testGetPropertyOfRemovedAncestor() throws RepositoryException {
-        Session rw = helper.getReadWriteSession();
+        Session rw = getHelper().getReadWriteSession();
         try {
             // add modification to a property.
             Property p = (Property) rw.getItem(prop1Path);

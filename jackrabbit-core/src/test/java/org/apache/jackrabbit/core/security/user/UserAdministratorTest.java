@@ -76,7 +76,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         uAdministrators.addMember(other);
 
         // create a session for the other user.
-        otherSession = helper.getRepository().login(otherCreds);
+        otherSession = getHelper().getRepository().login(otherCreds);
     }
 
     protected void tearDown() throws Exception {

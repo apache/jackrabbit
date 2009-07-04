@@ -43,7 +43,7 @@ public class CheckPermissionTest extends AbstractJCRTest {
         testRootNode.addNode(nodeName2, testNodeType);
         superuser.save();
 
-        Session readOnly = helper.getReadOnlySession();
+        Session readOnly = getHelper().getReadOnlySession();
         try {
             permissionCheckReadOnly(readOnly);
             permissionCheckReadWrite(superuser);

@@ -55,7 +55,7 @@ public class NodeTest extends AbstractJCRTest {
         super.setUp();
 
         // login to second workspace
-        superuserW2 = helper.getSuperuserSession(workspaceName);
+        superuserW2 = getHelper().getSuperuserSession(workspaceName);
     }
 
     /**
@@ -470,7 +470,7 @@ public class NodeTest extends AbstractJCRTest {
         defaultRootNode.save();
 
         // use a different session to verify if the node is there
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         try {
             testNode = (Node) session.getItem(testNode.getPath());
         } finally {
@@ -494,7 +494,7 @@ public class NodeTest extends AbstractJCRTest {
         superuser.save();
 
         // use a different session to verify if the node is there
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         try {
             testNode = (Node) session.getItem(testNode.getPath());
         } finally {
@@ -558,7 +558,7 @@ public class NodeTest extends AbstractJCRTest {
         superuser.save();
 
         // get the node with session 2
-        Session testSession = helper.getReadWriteSession();
+        Session testSession = getHelper().getReadWriteSession();
         try {
             Node defaultTestNodeSession2 = (Node) testSession.getItem(defaultTestNode.getPath());
 
@@ -664,7 +664,7 @@ public class NodeTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -707,7 +707,7 @@ public class NodeTest extends AbstractJCRTest {
         // remove first slash of path to get rel path to root
         String pathRelToRoot = node.getPath().substring(1);
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);
@@ -783,7 +783,7 @@ public class NodeTest extends AbstractJCRTest {
         testRootNode.save();
 
         // accuire the same node with a different session
-        Session session = helper.getReadOnlySession();
+        Session session = getHelper().getReadOnlySession();
         try {
             Node testNode2 = (Node) session.getItem(testNode1.getPath());
 
@@ -902,7 +902,7 @@ public class NodeTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = helper.getReadWriteSession();
+        Session session2 = getHelper().getReadWriteSession();
 
         try {
             // get the second node
@@ -961,7 +961,7 @@ public class NodeTest extends AbstractJCRTest {
         testNode1Session1.addNode(nodeName2, testNodeType);
 
         // get session 2
-        Session session2 = helper.getReadWriteSession();
+        Session session2 = getHelper().getReadWriteSession();
 
         try {
             // get the second node
@@ -1016,7 +1016,7 @@ public class NodeTest extends AbstractJCRTest {
         nodeSession1.addNode(nodeName2, testNodeType);
 
         // get the new node with a different session
-        Session testSession = helper.getReadWriteSession();
+        Session testSession = getHelper().getReadWriteSession();
         try {
             Node nodeSession2 = (Node) testSession.getItem(nodeSession1.getPath());
 
@@ -1077,7 +1077,7 @@ public class NodeTest extends AbstractJCRTest {
         defaultRootNode.save();
 
         // get the new node with a different session
-        Session testSession = helper.getReadOnlySession();
+        Session testSession = getHelper().getReadOnlySession();
         try {
             testSession.getItem(testNode.getPath());
         } finally {

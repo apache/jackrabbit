@@ -68,7 +68,7 @@ public class NodeTypeTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
         manager = session.getWorkspace().getNodeTypeManager();
         rootNode = session.getRootNode();
     }

@@ -77,8 +77,8 @@ public class NodeImplTest extends AbstractJCRTest {
         }
     }
 
-    private static Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) helper.getReadOnlySession();
+    private Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
+        SessionImpl s = (SessionImpl) getHelper().getReadOnlySession();
         try {
             for (Iterator it = s.getSubject().getPrincipals().iterator(); it.hasNext();) {
                 Principal p = (Principal) it.next();
@@ -108,7 +108,7 @@ public class NodeImplTest extends AbstractJCRTest {
         changeReadPermission(principal, n, false);
         changeReadPermission(principal, testNode, true);
 
-        Session readOnly = helper.getReadOnlySession();
+        Session readOnly = getHelper().getReadOnlySession();
         try {
             NodeImpl tn = (NodeImpl) readOnly.getItem(testNode.getPath());
             assertTrue(tn.internalIsCheckedOut());

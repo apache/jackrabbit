@@ -46,7 +46,7 @@ public class RSessionAccessControlTest extends AbstractJCRTest {
         testPropertyPath = p.getPath();
         testRootNode.save();
 
-        readOnlySession = helper.getReadOnlySession();
+        readOnlySession = getHelper().getReadOnlySession();
     }
 
     protected void tearDown() throws Exception {

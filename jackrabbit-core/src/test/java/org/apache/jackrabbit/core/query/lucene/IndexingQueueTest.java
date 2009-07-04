@@ -113,7 +113,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
-                    session = helper.getSuperuserSession(WORKSPACE_NAME);
+                    session = getHelper().getSuperuserSession(WORKSPACE_NAME);
                 } catch (RepositoryException e) {
                     throw new RuntimeException(e);
                 }

@@ -43,7 +43,7 @@ public class RetentionPolicyEffectTest extends AbstractRetentionTest {
         childP = testRootNode.setProperty(propertyName1, v);
         superuser.save();
 
-        otherS = helper.getSuperuserSession();
+        otherS = getHelper().getSuperuserSession();
     }
 
     protected void tearDown() throws Exception {

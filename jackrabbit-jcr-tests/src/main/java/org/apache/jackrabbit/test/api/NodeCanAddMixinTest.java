@@ -66,7 +66,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         String pathRelToRoot = node.getPath().substring(1);
 
         // access node through another session to lock it
-        Session session2 = helper.getSuperuserSession();
+        Session session2 = getHelper().getSuperuserSession();
         try {
             Node node2 = session2.getRootNode().getNode(pathRelToRoot);
             node2.lock(true, true);

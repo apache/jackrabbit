@@ -234,7 +234,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
     }
 
     public void testReadOnlySession() throws NotExecutableException, RepositoryException {
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             RetentionManager rmgr = getRetentionManager(s);
             try {
@@ -258,7 +258,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         String childPath = getLockedChildNode().getPath();
 
         // get another session.
-        Session otherS = helper.getSuperuserSession();
+        Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
@@ -282,7 +282,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         retentionMgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
         testRootNode.save();
 
-        Session otherS = helper.getSuperuserSession();
+        Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.removeRetentionPolicy(childPath);
@@ -318,7 +318,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         String childPath = child.getPath();
 
         // get another session.
-        Session otherS = helper.getSuperuserSession();
+        Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.setRetentionPolicy(childPath, getApplicableRetentionPolicy());
@@ -347,7 +347,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         superuser.save();
         child.checkin();
 
-        Session otherS = helper.getSuperuserSession();
+        Session otherS = getHelper().getSuperuserSession();
         try {
             RetentionManager rmgr = getRetentionManager(otherS);
             rmgr.removeRetentionPolicy(child.getPath());
@@ -402,7 +402,7 @@ public class RetentionPolicyTest extends AbstractRetentionTest {
         Node childN = testRootNode.addNode(nodeName2);
         superuser.save();
 
-        Session otherS = helper.getSuperuserSession();
+        Session otherS = getHelper().getSuperuserSession();
         try {
             retentionMgr.setRetentionPolicy(testNodePath, getApplicableRetentionPolicy());
             superuser.save();

@@ -189,7 +189,7 @@ public class SaveTest extends AbstractJCRTest {
         testRootNode.save();
         lockable.lock(false, true);
 
-        Session readWrite = helper.getReadWriteSession();
+        Session readWrite = getHelper().getReadWriteSession();
         try {
             Query query = readWrite.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);

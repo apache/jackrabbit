@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.nodetype.xml;
 import junit.framework.AssertionFailedError;
 
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
-import org.apache.jackrabbit.core.TestRepository;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
@@ -39,7 +38,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.version.OnParentVersionAction;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -236,46 +234,40 @@ public class TestAll extends AbstractJCRTest {
 
     /** Test for namespace registration on node type import. */
     public void testImportXMLNodeTypes() throws Exception {
-        Session session = TestRepository.getInstance().login();
         try {
-            session.getNamespacePrefix("test-namespace2");
+            superuser.getNamespacePrefix("test-namespace2");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             // Namespace testns2 not yet registered
             JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
-                session.getWorkspace().getNodeTypeManager();
+                superuser.getWorkspace().getNodeTypeManager();
             ntm.registerNodeTypes(
                     TestAll.class.getResourceAsStream(TEST_NS_XML_NODETYPES),
                     JackrabbitNodeTypeManager.TEXT_XML);
             try {
-                session.getNamespacePrefix("test-namespace2");
+                superuser.getNamespacePrefix("test-namespace2");
             } catch (NamespaceException e2) {
                 fail("xml test2 namespace not registered");
             }
-        } finally {
-            session.logout();
         }
     }
 
     /** Test for namespace registration on node type import. */
     public void testImportCNDNodeTypes() throws Exception {
-        Session session = TestRepository.getInstance().login();
         try {
-            session.getNamespacePrefix("test-namespace3");
+            superuser.getNamespacePrefix("test-namespace3");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             JackrabbitNodeTypeManager ntm = (JackrabbitNodeTypeManager)
-                session.getWorkspace().getNodeTypeManager();
+                superuser.getWorkspace().getNodeTypeManager();
             ntm.registerNodeTypes(
                     TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES),
                     JackrabbitNodeTypeManager.TEXT_X_JCR_CND);
             try {
-                session.getNamespacePrefix("test-namespace3");
+                superuser.getNamespacePrefix("test-namespace3");
             } catch (NamespaceException e2) {
                 fail("cnd test3 namespace not registered");
             }
-        } finally {
-            session.logout();
         }
     }
 

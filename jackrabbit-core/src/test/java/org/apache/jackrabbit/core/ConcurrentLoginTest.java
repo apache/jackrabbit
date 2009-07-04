@@ -50,10 +50,10 @@ public class ConcurrentLoginTest extends AbstractJCRTest {
         for (int i = 0; i < NUM_THREADS; i++) {
             testRunner.add(new Thread(new Runnable() {
                 public void run() {
-                    Credentials cred = helper.getSuperuserCredentials();
+                    Credentials cred = getHelper().getSuperuserCredentials();
                     for (int i = 0; i < NUM_LOGINS_PER_THREAD; i++) {
                         try {
-                            Session s = helper.getRepository().login(cred);
+                            Session s = getHelper().getRepository().login(cred);
                             // immediately logout
                             s.logout();
                         } catch (Exception e) {

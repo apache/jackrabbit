@@ -30,7 +30,7 @@ public abstract class ConcurrentModificationBase extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
-        session = helper.getSuperuserSession();
+        session = getHelper().getSuperuserSession();
     }
 
     protected void tearDown() throws Exception {

@@ -109,7 +109,7 @@ public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBet
      * sufficient access permissions to complete the operation.
      */
     public void testCopyNodesAccessDenied() throws RepositoryException {
-        Session readOnlySuperuser = helper.getReadOnlySession();
+        Session readOnlySuperuser = getHelper().getReadOnlySession();
         try {
             String dstAbsPath = node2.getPath() + "/" + node1.getName();
             try {

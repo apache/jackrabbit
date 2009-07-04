@@ -61,7 +61,7 @@ public class ExportImportTest extends AbstractJCRTest {
     }
     
     private void doTestExportImportLargeText(char[] chars) throws RepositoryException {
-        Session session = helper.getReadWriteSession();
+        Session session = getHelper().getReadWriteSession();
         try {
             Node root = session.getRootNode();
             clean(root);
@@ -111,7 +111,7 @@ public class ExportImportTest extends AbstractJCRTest {
     }
 
     private void doTestExportImportBinary(int len) throws RepositoryException {
-        Session session = helper.getReadWriteSession();
+        Session session = getHelper().getReadWriteSession();
         try {
             Node root = session.getRootNode();
             clean(root);

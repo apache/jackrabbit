@@ -53,7 +53,7 @@ public class SessionScopedLockTest extends AbstractLockTest {
      */
     public void testImplicitUnlock() throws RepositoryException,
             NotExecutableException {
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         try {
             Node testNode = (Node) other.getItem(testRootNode.getPath());
             Node lockedNode = testNode.addNode(nodeName1, testNodeType);
@@ -77,7 +77,7 @@ public class SessionScopedLockTest extends AbstractLockTest {
      */
     public void testImplicitUnlock2() throws RepositoryException,
             NotExecutableException {
-        Session other = helper.getReadWriteSession();
+        Session other = getHelper().getReadWriteSession();
         try {
             Node testNode = (Node) other.getItem(testRootNode.getPath());
             Node lockedNode = testNode.addNode(nodeName1, testNodeType);

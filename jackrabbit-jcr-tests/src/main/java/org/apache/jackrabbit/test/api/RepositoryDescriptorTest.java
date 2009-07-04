@@ -65,7 +65,7 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
     }
 
     /**

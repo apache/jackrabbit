@@ -66,7 +66,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         isReadOnly = true;
         super.setUp();
 
-        session = helper.getReadOnlySession();
+        session = getHelper().getReadOnlySession();
 
         testRootNode = session.getRootNode().getNode(testPath);
         NodeIterator nodes = testRootNode.getNodes();
@@ -230,7 +230,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testIsSame() throws RepositoryException {
         // access same node through different session
-        Session s = helper.getReadOnlySession();
+        Session s = getHelper().getReadOnlySession();
         try {
             Item otherTestNode = s.getRootNode().getNode(testPath);
             assertTrue("isSame(Item item) must return true for the same " +

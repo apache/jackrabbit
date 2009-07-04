@@ -158,7 +158,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 null,
                 new String[]{testNodeType},
                 false);
-        Session s = helper.getSuperuserSession();
+        Session s = getHelper().getSuperuserSession();
         try {
             Node n = (Node) s.getItem(n1.getPath());
             n.addNode(nodeName3, ntBase);

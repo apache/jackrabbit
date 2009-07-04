@@ -189,7 +189,7 @@ public final class ReferencesTest extends AbstractJCRTest {
      * @throws RepositoryException on error
      */
     private Session createSession() throws RepositoryException {
-        return helper.getSuperuserSession();
+        return getHelper().getSuperuserSession();
     }
 
     private void saveAndlogout(Session... sessions) throws RepositoryException {

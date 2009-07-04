@@ -51,10 +51,10 @@ public class XATest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        otherSuperuser = helper.getSuperuserSession();
+        otherSuperuser = getHelper().getSuperuserSession();
 
         // clean testroot on second workspace
-        Session s2 = helper.getSuperuserSession(workspaceName);
+        Session s2 = getHelper().getSuperuserSession(workspaceName);
         try {
             Node root = s2.getRootNode();
             if (root.hasNode(testPath)) {
@@ -129,7 +129,7 @@ public class XATest extends AbstractJCRTest {
         }
 
         // assertion: node does not exist in other session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
 
         try {
             otherSuperuser.getNodeByUUID(n.getUUID());
@@ -185,7 +185,7 @@ public class XATest extends AbstractJCRTest {
         assertTrue(testRootNode.hasProperty(propertyName1));
 
         // assertion: property does not exist in other session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node otherRootNode = otherSuperuser.getRootNode().getNode(testPath);
         assertFalse(otherRootNode.hasProperty(propertyName1));
 
@@ -230,7 +230,7 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // check property value
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
         assertEquals(n.getProperty(propertyName1).getString(), "1");
         otherSuperuser.logout();
@@ -338,7 +338,7 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // check property value
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
         assertEquals(n.getProperty(propertyName1).getString(), "1");
         otherSuperuser.logout();
@@ -370,7 +370,7 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // check property value
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
         assertFalse("Property must be deleted.", n.hasProperty(propertyName1));
         otherSuperuser.logout();
@@ -404,7 +404,7 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // check property value
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node n = (Node) otherSuperuser.getItem(testRootNode.getPath());
         assertFalse("Property must be deleted.", n.hasProperty(propertyName1));
         otherSuperuser.logout();
@@ -578,7 +578,7 @@ public class XATest extends AbstractJCRTest {
         testRootNode.save();
 
         // remove referenced node in other session
-        Session otherSuperuser = helper.getSuperuserSession();
+        Session otherSuperuser = getHelper().getSuperuserSession();
         Node otherRootNode = otherSuperuser.getRootNode().getNode(testPath);
         otherSuperuser.getNodeByUUID(n2.getUUID()).remove();
         otherRootNode.save();
@@ -751,7 +751,7 @@ public class XATest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testLockCommit() throws Exception {
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         try {
             // add node that is both lockable and referenceable, save
             Node n = testRootNode.addNode(nodeName1);
@@ -792,7 +792,7 @@ public class XATest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testLockUnlockCommit() throws Exception {
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         try {
             // add node that is both lockable and referenceable, save
             Node n = testRootNode.addNode(nodeName1);
@@ -835,7 +835,7 @@ public class XATest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testLockRollback() throws Exception {
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         try {
             // add node that is both lockable and referenceable, save
             Node n = testRootNode.addNode(nodeName1);
@@ -879,7 +879,7 @@ public class XATest extends AbstractJCRTest {
      * @throws Exception
      */
     public void testLockTwice() throws Exception {
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         try {
             // add node that is both lockable and referenceable, save
             Node n = testRootNode.addNode(nodeName1);
@@ -949,12 +949,12 @@ public class XATest extends AbstractJCRTest {
         utx.commit();
 
         // Check if it is locked in other session
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         Node nOther = other.getNodeByUUID(n.getUUID());
         assertTrue(nOther.isLocked());
 
         // Check if it is also locked in other transaction
-        Session other2 = helper.getSuperuserSession();
+        Session other2 = getHelper().getSuperuserSession();
         // start new Transaction and try to add locktoken
         utx = new UserTransactionImpl(other2);
         utx.begin();
@@ -1008,7 +1008,7 @@ public class XATest extends AbstractJCRTest {
 
         assertNull("session must get a null lock token", lock.getLockToken());
 
-        Session other = helper.getSuperuserSession();
+        Session other = getHelper().getSuperuserSession();
         try {
             // start new Transaction and try to add lock token
             utx = new UserTransactionImpl(other);
@@ -1389,7 +1389,7 @@ public class XATest extends AbstractJCRTest {
      */
     public void testXAVersionsThoroughly() throws Exception {
         Session s1 = superuser;
-        Session s2 = helper.getSuperuserSession(workspaceName);
+        Session s2 = getHelper().getSuperuserSession(workspaceName);
 
         // add node and save
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
@@ -1654,7 +1654,7 @@ public class XATest extends AbstractJCRTest {
     public void testSetProperty() throws Exception {
         final String testNodePath = testPath + "/" + Math.random();
 
-        Session session = helper.getSuperuserSession();
+        Session session = getHelper().getSuperuserSession();
         try {
             // Add node
             doTransactional(new Operation() {
@@ -1689,7 +1689,7 @@ public class XATest extends AbstractJCRTest {
     public void testDeleteNode() throws Exception {
         final String testNodePath = testPath + "/" + Math.random();
 
-        Session session = helper.getSuperuserSession();
+        Session session = getHelper().getSuperuserSession();
         try {
             for (int i = 1; i <= 3; i++) {
                 // Add parent node
