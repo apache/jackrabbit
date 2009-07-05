@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.test;
 
-import junit.framework.TestSuite;
-
 /**
  * Test suite that includes all the JCR API tests
  */
-public class JCRTestSuite extends TestSuite {
+public class JCRTestSuite extends ConcurrentTestSuite {
 
     public JCRTestSuite() {
         super("JCR API tests");

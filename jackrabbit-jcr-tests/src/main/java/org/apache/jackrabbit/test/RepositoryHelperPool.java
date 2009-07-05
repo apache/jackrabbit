@@ -14,31 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.lucene;
-
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+package org.apache.jackrabbit.test;
 
 /**
- * Test suite that includes all testcases for the Search module.
+ * <code>RepositoryHelperPool</code> defines a pool of repository helper instances.
  */
-public class TestAll extends TestCase {
+public interface RepositoryHelperPool {
 
     /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
+     * Borrows a repository helper instance.
      *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
+     * @return a repository helper.
+     * @throws InterruptedException if this thread is interrupted while waiting
+     *                              for a repository helper.
      */
-    public static Test suite() {
-        TestSuite suite = new ConcurrentTestSuite("Search tests");
+    public RepositoryHelper borrowHelper() throws InterruptedException;
 
-        suite.addTestSuite(IndexingQueueTest.class);
-        suite.addTestSuite(DecimalConvertTest.class);
-
-        return suite;
-    }
+    /**
+     * Returns the given repository helper to the pool.
+     *
+     * @param helper the repository helper to return.
+     */
+    public void returnHelper(RepositoryHelper helper);
 }

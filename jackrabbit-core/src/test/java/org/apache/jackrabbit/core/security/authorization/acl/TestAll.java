@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,7 +35,7 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("security.authorization.acl tests");
+        TestSuite suite = new ConcurrentTestSuite("security.authorization.acl tests");
 
         suite.addTestSuite(ACLTemplateTest.class);
         suite.addTestSuite(EntryTest.class);

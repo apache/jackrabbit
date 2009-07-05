@@ -23,11 +23,22 @@ import java.util.Iterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.core.query.lucene.SlowQueryHandler;
 
 /**
  * <code>WorkspaceInitTest</code>...
  */
 public class WorkspaceInitTest extends AbstractJCRTest {
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        SlowQueryHandler.setInitializationDelay(10 * 1000);
+    }
+
+    protected void tearDown() throws Exception {
+        SlowQueryHandler.setInitializationDelay(0);
+        super.tearDown();
+    }
 
     public void testIdleTime() throws Exception {
         // simply access the workspace, which will cause

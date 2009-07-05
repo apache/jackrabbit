@@ -49,9 +49,9 @@ import java.util.Arrays;
 public abstract class AbstractJCRTest extends JUnitTest {
 
     /**
-     * Helper object to access repository transparently
+     * Pool of helper objects to access repository transparently
      */
-    private static RepositoryHelper helper = new RepositoryHelper();
+    private static final RepositoryHelperPool HELPER_POOL = new RepositoryHelperPoolImpl();
 
     /**
      * Namespace URI for jcr prefix.
@@ -72,6 +72,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * Namespace URI for sv prefix
      */
     public static final String NS_SV_URI = "http://www.jcp.org/jcr/sv/1.0";
+
+    /**
+     * The repository helper for this test.
+     */
+    private RepositoryHelper helper;
 
     /**
      * JCR Name jcr:primaryType using the namespace resolver of the current session.
@@ -439,7 +444,17 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @param testResult the test result.
      */
     public void run(TestResult testResult) {
-        super.run(new JCRTestResult(testResult, log));
+        try {
+            helper = HELPER_POOL.borrowHelper();
+            try {
+                super.run(new JCRTestResult(testResult, log));
+            } finally {
+                HELPER_POOL.returnHelper(helper);
+                helper = null;
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
