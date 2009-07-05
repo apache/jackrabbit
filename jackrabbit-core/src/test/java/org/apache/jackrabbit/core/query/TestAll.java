@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query;
 
 import org.apache.jackrabbit.core.query.lucene.hits.ArrayHitsTest;
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -35,7 +36,7 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("Search tests");
+        TestSuite suite = new ConcurrentTestSuite("Search tests");
 
         suite.addTestSuite(SimpleQueryTest.class);
         suite.addTestSuite(FulltextQueryTest.class);

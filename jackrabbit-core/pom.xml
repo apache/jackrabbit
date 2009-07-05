@@ -49,6 +49,9 @@
                 <copy todir="${project.build.directory}/repository">
                   <fileset dir="${basedir}/src/test/repository"/>
                 </copy>
+                <copy todir="${project.build.directory}/repository-2">
+                  <fileset dir="${basedir}/src/test/repository"/>
+                </copy>
               </tasks>
             </configuration>
             <goals>

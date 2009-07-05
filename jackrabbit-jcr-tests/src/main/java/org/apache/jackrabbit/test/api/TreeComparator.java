@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.test.api;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.Item;
@@ -35,6 +33,8 @@ import javax.jcr.nodetype.NodeType;
 import java.util.Calendar;
 import java.io.ByteArrayInputStream;
 
+import junit.framework.Assert;
+
 /**
  * <code>TreeComparator</code> compares two trees. This allows re-use for
  * different tests, and it allows to test a function on any tree, not just a
@@ -43,7 +43,8 @@ import java.io.ByteArrayInputStream;
  * TreeComparator also creates an example tree that contains as many features as
  * possible.
  */
-class TreeComparator extends AbstractJCRTest {
+class TreeComparator extends Assert {
+
     public SerializationContext sc;
 
     public final boolean WORKSPACE = true;
@@ -64,16 +65,9 @@ class TreeComparator extends AbstractJCRTest {
 
     public TreeComparator(SerializationContext sc, Session s) throws Exception {
         this.sc = sc;
-        setUp();
         session = s;
         workspace = session.getWorkspace();
         init();
-    }
-
-    public void tearDown() throws Exception {
-        session = null;
-        workspace = null;
-        super.tearDown();
     }
 
     public void setSession(Session session) {
@@ -132,13 +126,13 @@ class TreeComparator extends AbstractJCRTest {
         try {
             Node src = (Node) session.getItem(sourceFolder);
             Node root = src.addNode(sc.rootNodeName);
-            root.addNode(nodeName1);
-            root.addNode(nodeName2, testNodeType);
+            root.addNode(sc.nodeName1);
+            root.addNode(sc.nodeName2, sc.testNodeType);
             byte[] byteArray = {(byte) 0, (byte) 255, (byte) 167, (byte) 100, (byte) 21, (byte) 6, (byte) 19, (byte) 71, (byte) 221};
-            root.setProperty(propertyName1, new ByteArrayInputStream(byteArray));
-            root.setProperty(nodeName3, "hello");
+            root.setProperty(sc.propertyName1, new ByteArrayInputStream(byteArray));
+            root.setProperty(sc.nodeName3, "hello");
         } catch (Exception e) {
-            log.println("Error while creating example tree: " + e.getMessage());
+            sc.log("Error while creating example tree: " + e.getMessage());
         }
         if (save) {
             try {
@@ -181,7 +175,7 @@ class TreeComparator extends AbstractJCRTest {
             rootNode.addNode(sc.orderChildrenTestNode);
             rootNode.addNode(sc.namespaceTestNode);
         } catch (RepositoryException e) {
-            log.println("Error while creating example tree: " + e.getMessage());
+            sc.log("Error while creating example tree: " + e.getMessage());
         }
 
         // Add nodes with mixin types
@@ -205,14 +199,14 @@ class TreeComparator extends AbstractJCRTest {
                 // try saving, because some exceptions are trown only at save time
                 session.save();
             } catch (RepositoryException e) {
-                log.println("Cannot create node with mixin node type: " + e);
+                sc.log("Cannot create node with mixin node type: " + e);
                 // if saving failed for a node, then remove it again (or else the next save will fail on it)
                 try {
                     if (n != null) {
                         n.remove();
                     }
                 } catch (RepositoryException e1) {
-                    log.println("Could not remove node: " + e);
+                    sc.log("Could not remove node: " + e);
                 }
             }
         }
@@ -235,12 +229,12 @@ class TreeComparator extends AbstractJCRTest {
             // Boolean
             pt.setProperty(sc.booleanTestProperty, true);
             // Name
-            pt.setProperty(sc.nameTestProperty, superuser.getValueFactory().createValue(jcrPrimaryType, PropertyType.NAME));
+            pt.setProperty(sc.nameTestProperty, session.getValueFactory().createValue(sc.jcrPrimaryType, PropertyType.NAME));
             // Path
-            pt.setProperty(sc.pathTestProperty, superuser.getValueFactory().createValue("paths/dont/have/to/point/anywhere", PropertyType.PATH));
+            pt.setProperty(sc.pathTestProperty, session.getValueFactory().createValue("paths/dont/have/to/point/anywhere", PropertyType.PATH));
             // Reference: Note that I only check if the node exists. We do not specify what happens with
             // the UUID during serialization.
-            ensureMixinType(referenceable, mixReferenceable);
+            sc.ensureMixinType(referenceable, sc.mixReferenceable);
             // some implementations may require a save after addMixin()
             session.save();
 
@@ -259,7 +253,7 @@ class TreeComparator extends AbstractJCRTest {
             mvp.setProperty(sc.multiValueTestProperty, s);
             session.save();
         } catch (RepositoryException e) {
-            log.println("Could not create multi-value property: " + e);
+            sc.log("Could not create multi-value property: " + e);
         }
 
         // Save to the workspace. Note that export is from session anyway.
@@ -372,7 +366,7 @@ class TreeComparator extends AbstractJCRTest {
      */
     public void compareNodes(Node a, Node b) {
         try {
-            log.println("Comparing " + a.getPath() + " to " + b.getPath());
+            sc.log("Comparing " + a.getPath() + " to " + b.getPath());
         } catch (RepositoryException e) {
             fail("Nodes not available: " + e.getMessage());
         }
@@ -380,8 +374,8 @@ class TreeComparator extends AbstractJCRTest {
         // check primary node type
         String primaryTypeA = null, primaryTypeB = null;
         try {
-            primaryTypeA = a.getProperty(jcrPrimaryType).getName();
-            primaryTypeB = b.getProperty(jcrPrimaryType).getName();
+            primaryTypeA = a.getProperty(sc.jcrPrimaryType).getName();
+            primaryTypeB = b.getProperty(sc.jcrPrimaryType).getName();
         } catch (RepositoryException e) {
             fail("Primary node type not available: " + e);
         }
@@ -563,7 +557,7 @@ class TreeComparator extends AbstractJCRTest {
             n = (Node) session.getItem(sc.testroot);
             showTree(n, 0);
         } catch (RepositoryException e) {
-            log.println("Cannot display tree diagnostics: " + e);
+            sc.log("Cannot display tree diagnostics: " + e);
         }
     }
 
@@ -571,17 +565,19 @@ class TreeComparator extends AbstractJCRTest {
      * Recursive display of source and target tree
      */
     public void showTree(Node n, int level) throws RepositoryException {
+        StringBuffer sb = new StringBuffer();
         for (int t = 0; t < level; t++) {
-            log.print("-");
+            sb.append("-");
         }
-        log.print(n.getName() + " ");
-        log.print(n.getPrimaryNodeType().getName() + " [ ");
+        sb.append(n.getName() + " ");
+        sb.append(n.getPrimaryNodeType().getName() + " [ ");
         PropertyIterator pi = n.getProperties();
         while (pi.hasNext()) {
             Property p = (Property) pi.next();
-            log.print(p.getName() + " ");
+            sb.append(p.getName() + " ");
         }
-        log.println("]");
+        sb.append("]");
+        sc.log(sb.toString());
 
         NodeIterator ni = n.getNodes();
         while (ni.hasNext()) {

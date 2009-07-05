@@ -27,16 +27,22 @@ import org.apache.jackrabbit.uuid.UUID;
  */
 public class SlowQueryHandler extends SearchIndex {
 
+    private static long INITIALIZATION_DELAY = 0;
+
     protected void doInit() throws IOException {
         // sleep for 10 seconds then try to read from the item state manager
         // the repository.xml is configured with a 5 second maxIdleTime
         try {
-            Thread.sleep(10 * 1000);
+            Thread.sleep(INITIALIZATION_DELAY);
         } catch (InterruptedException e) {
             // ignore
         }
         NodeId id = new NodeId(UUID.randomUUID());
         getContext().getItemStateManager().hasItemState(id);
         super.doInit();
+    }
+
+    public static void setInitializationDelay(long delay) {
+        INITIALIZATION_DELAY = delay;
     }
 }

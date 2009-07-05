@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -28,7 +30,7 @@ public class TestAll extends TestCase {
      * @return a <code>Test</code> suite that executes all test in this package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("core.security.user tests");
+        TestSuite suite = new ConcurrentTestSuite("core.security.user tests");
 
         suite.addTestSuite(UserManagerImplTest.class);
         suite.addTestSuite(AuthorizableImplTest.class);
