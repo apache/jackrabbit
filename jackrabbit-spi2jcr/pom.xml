@@ -72,6 +72,7 @@
                 org.apache.jackrabbit.test.api.ShareableNodeTest
                 org.apache.jackrabbit.test.api.version.simple
                 org.apache.jackrabbit.test.api.NodeReadMethodsTest#testGetPropertiesNamePatternArray
+                org.apache.jackrabbit.test.api.version.ActivitiesTest#testCreateRemoveActivity
               </value>
             </property>
           </systemProperties>

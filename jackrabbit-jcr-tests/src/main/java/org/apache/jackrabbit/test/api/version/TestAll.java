@@ -66,6 +66,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MergeNodeTest.class);
         suite.addTestSuite(MergeNonVersionableSubNodeTest.class);
         suite.addTestSuite(MergeSubNodeTest.class);
+        
+        // JCR 2.0
+
+        suite.addTestSuite(ActivitiesTest.class);
 
         return suite;
     }
