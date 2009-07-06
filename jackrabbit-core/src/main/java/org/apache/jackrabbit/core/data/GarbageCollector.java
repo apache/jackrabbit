@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import EDU.oswego.cs.dl.util.concurrent.SynchronizedBoolean;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -87,7 +87,7 @@ public class GarbageCollector {
     private final Session[] sessionList;
     private final SessionListener sessionListener;
     
-    private final AtomicBoolean closed = new AtomicBoolean();
+    private final SynchronizedBoolean closed = new SynchronizedBoolean(false);
 
     private boolean persistenceManagerScan;
 
@@ -374,7 +374,7 @@ public class GarbageCollector {
      * Cleanup resources used internally by this instance.
      */
     public void close() {
-        if (!closed.getAndSet(true)) {
+        if (!closed.set(true)) {
             for (int i = 0; i < sessionList.length; i++) {
                 sessionList[i].logout();
             }
