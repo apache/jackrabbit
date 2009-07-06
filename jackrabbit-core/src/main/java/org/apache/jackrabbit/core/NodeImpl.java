@@ -4795,7 +4795,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         ArrayList props = new ArrayList();
         // traverse children using a special filtering 'collector'
-        accept(new ChildrenCollectorFilter(nameGlobs, props, true, false, 1));
+        accept(new ChildrenCollectorFilter(nameGlobs, props, false, true, 1));
         return new PropertyIteratorAdapter(props);
     }
 
