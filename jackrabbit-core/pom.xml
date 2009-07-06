@@ -92,7 +92,7 @@
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
                 org.apache.jackrabbit.test.api.NodeReadMethodsTest#testGetPropertiesNamePatternArray
-                org.apache.jackrabbit.test.api.version.ActivitiesTest#testCreateRemoveActivity
+                org.apache.jackrabbit.test.api.version.ActivitiesTest#testActivitiesPath
               </value>
             </property>
           </systemProperties>
