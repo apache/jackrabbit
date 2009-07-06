@@ -251,7 +251,7 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
         }
         NodeId actId = actNode.getNodeId();
         session.getVersionManager().removeActivity(session, actId);
-        if (currentActivity.equals(actId)) {
+        if (actId.equals(currentActivity)) {
             currentActivity = null;
         }
     }
