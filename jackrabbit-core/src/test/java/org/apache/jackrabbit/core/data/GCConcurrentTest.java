@@ -78,6 +78,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
         Thread.sleep(10);
         gc.setStop(true);
         Thread.sleep(10);
+        gcThread.join();
         gc.throwException();
     }
 
