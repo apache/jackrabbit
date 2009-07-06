@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.commons.iterator;
 
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -33,18 +32,12 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
         implements EventIterator {
 
     /**
-     * Date associated with this iterator.
-     */
-    private final long date;
-
-    /**
      * Creates an adapter for the given {@link RangeIterator}.
      *
      * @param iterator iterator of {@link Event}s
      */
     public EventIteratorAdapter(EventIterator iterator) {
         super(iterator);
-        this.date = iterator.getDate();
     }
 
     /**
@@ -52,9 +45,8 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Event}s
      */
-    public EventIteratorAdapter(RangeIterator iterator, long date) {
+    public EventIteratorAdapter(RangeIterator iterator) {
         super(iterator);
-        this.date = date;
     }
 
     /**
@@ -62,9 +54,8 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param iterator iterator of {@link Event}s.
      */
-    public EventIteratorAdapter(Iterator iterator, long date) {
+    public EventIteratorAdapter(Iterator iterator) {
         super(new RangeIteratorAdapter(iterator));
-        this.date = date;
     }
 
     /**
@@ -72,9 +63,8 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      *
      * @param collection collection of {@link Event}s
      */
-    public EventIteratorAdapter(Collection collection, long date) {
+    public EventIteratorAdapter(Collection collection) {
         super(new RangeIteratorAdapter(collection));
-        this.date = date;
     }
 
     //-------------------------------------------------------< EventIterator >
@@ -87,15 +77,6 @@ public class EventIteratorAdapter extends RangeIteratorDecorator
      */
     public Event nextEvent() throws NoSuchElementException {
         return (Event) next();
-    }
-
-    /**
-     * Returns the date associated with this iterator.
-     *
-     * @return date associated with this iterator, or <code>null</code> 
-     */
-    public long getDate() {
-        return date;
     }
 
 }
