@@ -113,14 +113,6 @@ class FilteredEventIterator implements EventIterator {
     }
 
     /**
-     * @see javax.jcr.observation.EventIterator#getDate()
-     */
-    public long getDate() {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2108. Implementation Missing");
-    }
-
-    /**
      * {@inheritDoc}
      */
     public void skip(long skipNum) {

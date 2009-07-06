@@ -95,11 +95,6 @@ public class EventJournalImpl implements EventJournal {
         return (javax.jcr.observation.Event) next();
     }
 
-    public long getDate() {
-        // TODO
-        throw new RuntimeException("Not implemented, see JCR-2086");
-    }
-
     /**
      * {@inheritDoc}
      */

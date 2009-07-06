@@ -176,11 +176,6 @@ public class EventJournalImpl implements EventJournal {
         return next;
     }
 
-    public long getDate() {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2086");
-    }
-
     //------------------------< RangeIterator >---------------------------------
 
     /**

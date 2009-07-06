@@ -125,11 +125,6 @@ class FilteredEventIterator implements javax.jcr.observation.EventIterator {
         }
     }
 
-    public long getDate() {
-        // TODO
-        throw new RuntimeException("Not implemented yet, see JCR-2086");
-    }
-
     /**
      * Always returns <code>-1</code>.
      *
