@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(IndexingQueueTest.class);
         suite.addTestSuite(DecimalConvertTest.class);
+        suite.addTestSuite(IndexingAggregateTest.class);
 
         return suite;
     }
