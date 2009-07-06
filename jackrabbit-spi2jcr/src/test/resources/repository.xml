@@ -24,10 +24,7 @@
 -->
 <Repository>
     <Cluster id="node1">
-        <Journal class="org.apache.jackrabbit.core.journal.FileJournal">
-            <param name="revision" value="${rep.home}/repository/revision"/>
-            <param name="directory" value="${rep.home}/repository/journal"/>
-        </Journal>
+        <Journal class="org.apache.jackrabbit.core.journal.MemoryJournal"/>
     </Cluster>
 
     <!--

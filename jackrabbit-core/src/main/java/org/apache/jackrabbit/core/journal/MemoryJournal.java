@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Collections;
 
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
@@ -55,7 +57,7 @@ public class MemoryJournal extends AbstractJournal {
     /**
      * List of records.
      */
-    private ArrayList records = new ArrayList();
+    private List<MemoryRecord> records = Collections.synchronizedList(new ArrayList<MemoryRecord>());
 
     /**
      * Set the read delay, i.e. the time in ms to wait before returning
@@ -167,7 +169,7 @@ public class MemoryJournal extends AbstractJournal {
      *
      * @param records array list that should back up this memory journal
      */
-    public void setRecords(ArrayList records) {
+    public void setRecords(List<MemoryRecord> records) {
         this.records = records;
     }
 
@@ -324,7 +326,7 @@ public class MemoryJournal extends AbstractJournal {
                 JournalException {
 
             int index = (int) revision;
-            MemoryRecord record = (MemoryRecord) records.get(index);
+            MemoryRecord record = records.get(index);
 
             checkState();
 

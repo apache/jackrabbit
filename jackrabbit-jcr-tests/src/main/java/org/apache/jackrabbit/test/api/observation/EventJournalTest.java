@@ -42,7 +42,7 @@ public class EventJournalTest extends AbstractObservationTest {
 
     public void testSkipToNow() throws RepositoryException {
         // skip everything
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
         assertFalse(journal.hasNext());
     }
 
@@ -68,7 +68,7 @@ public class EventJournalTest extends AbstractObservationTest {
     }
 
     public void testLiveJournal() throws RepositoryException {
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
         assertFalse(journal.hasNext());
 
         testRootNode.addNode(nodeName1);
@@ -78,7 +78,7 @@ public class EventJournalTest extends AbstractObservationTest {
     }
 
     public void testWorkspaceSeparation() throws RepositoryException {
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
         assertFalse(journal.hasNext());
 
         Session session = getHelper().getSuperuserSession(workspaceName);
@@ -102,7 +102,7 @@ public class EventJournalTest extends AbstractObservationTest {
         Node n2 = n1.addNode(nodeName2);
 
         journal = obsMgr.getEventJournal();
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -117,7 +117,7 @@ public class EventJournalTest extends AbstractObservationTest {
         Node n2 = n1.addNode(nodeName2);
 
         journal = obsMgr.getEventJournal();
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -130,7 +130,7 @@ public class EventJournalTest extends AbstractObservationTest {
         obsMgr.setUserData(data);
 
         journal = obsMgr.getEventJournal();
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -142,7 +142,7 @@ public class EventJournalTest extends AbstractObservationTest {
         Node n1 = testRootNode.addNode(nodeName1);
 
         journal = getEventJournal(Event.PROPERTY_ADDED, testRoot, true, null, null);
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -155,8 +155,7 @@ public class EventJournalTest extends AbstractObservationTest {
         Node n2 = n1.addNode(nodeName2);
 
         journal = getEventJournal(ALL_TYPES, n1.getPath(), true, null, null);
-        journal.skipTo(System.currentTimeMillis());
-
+        skipToNow();
         superuser.save();
 
         checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
@@ -167,7 +166,7 @@ public class EventJournalTest extends AbstractObservationTest {
         Node n2 = n1.addNode(nodeName2);
 
         journal = getEventJournal(ALL_TYPES, testRoot, false, null, null);
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -180,7 +179,7 @@ public class EventJournalTest extends AbstractObservationTest {
 
         journal = getEventJournal(ALL_TYPES, testRoot, true, null,
                 new String[]{"nt:folder"});
-        journal.skipTo(System.currentTimeMillis());
+        skipToNow();
 
         superuser.save();
 
@@ -188,6 +187,18 @@ public class EventJournalTest extends AbstractObservationTest {
     }
     
     //-------------------------------< internal >-------------------------------
+
+    private void skipToNow() {
+        long now = System.currentTimeMillis();
+        journal.skipTo(now);
+        while (now == System.currentTimeMillis()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+    }
 
     private EventJournal getEventJournal(int eventTypes, String absPath, boolean isDeep, String[] uuid, String[] nodeTypeName) throws RepositoryException {
         return superuser.getWorkspace().getObservationManager().getEventJournal(eventTypes, absPath, isDeep, uuid, nodeTypeName);
