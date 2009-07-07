@@ -314,7 +314,7 @@ class ChildNodeEntries implements List, Cloneable {
         return result;
     }
 
-    //-------------------------------------------< unmodifiable List view >
+    //-----------------------------------------------< unmodifiable List view >
     public boolean contains(Object o) {
         if (o instanceof ChildNodeEntry) {
             return entries.containsKey(((ChildNodeEntry) o).getId());
@@ -447,7 +447,32 @@ class ChildNodeEntries implements List, Cloneable {
         throw new UnsupportedOperationException();
     }
 
-    //------------------------------------------------< Cloneable support >
+    //-------------------------------------------< java.lang.Object overrides >
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof ChildNodeEntries) {
+            ChildNodeEntries other = (ChildNodeEntries) obj;
+            return (nameMap.equals(other.nameMap)
+                    && entries.equals(other.entries)
+                    && shared == other.shared);
+        }
+        return false;
+    }
+
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    public int hashCode() {
+        return 0;
+    }
+
+    //----------------------------------------------------< Cloneable support >
 
     /**
      * Returns a shallow copy of this <code>ChildNodeEntries</code> instance;
@@ -502,7 +527,7 @@ class ChildNodeEntries implements List, Cloneable {
         }
     }
 
-    //----------------------------------------------------< inner classes >
+    //--------------------------------------------------------< inner classes >
     class EntriesIterator implements ListIterator {
 
         private final OrderedMapIterator mapIter;
