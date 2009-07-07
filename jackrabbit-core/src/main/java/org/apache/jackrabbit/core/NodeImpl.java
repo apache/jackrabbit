@@ -297,6 +297,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
         // compute system generated values
         NodeTypeImpl nt = (NodeTypeImpl) def.getDeclaringNodeType();
+        // TODO JCR-2116: Built-In Node Types; => adapt to JCR 2.0 built-in node types (mix:created, etc)
         if (nt.getQName().equals(NameConstants.MIX_REFERENCEABLE)) {
             // mix:referenceable node type
             if (name.equals(NameConstants.JCR_UUID)) {
@@ -1126,10 +1127,10 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         Set remainingMixins = new HashSet(state.getMixinTypeNames());
         // remove name of target mixin
         remainingMixins.remove(mixinName);
-        EffectiveNodeType entRemaining;
+        EffectiveNodeType entResulting;
         try {
             // build effective node type representing primary type including remaining mixin's
-            entRemaining = ntReg.getEffectiveNodeType(
+            entResulting = ntReg.getEffectiveNodeType(
                     state.getNodeTypeName(), remainingMixins);
         } catch (NodeTypeConflictException e) {
             throw new ConstraintViolationException(e.getMessage(), e);
@@ -1143,7 +1144,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         NodeTypeImpl mixin = ntMgr.getNodeType(mixinName);
         if ((NameConstants.MIX_REFERENCEABLE.equals(mixinName)
                 || mixin.isDerivedFrom(NameConstants.MIX_REFERENCEABLE))
-                && !entRemaining.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
+                && !entResulting.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
             // removing this mixin would effectively remove mix:referenceable:
             // make sure no references exist
             PropertyIterator iter = getReferences();
@@ -1159,7 +1160,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
          */
         if ((NameConstants.MIX_LOCKABLE.equals(mixinName)
                 || mixin.isDerivedFrom(NameConstants.MIX_LOCKABLE))
-                && !entRemaining.includesNodeType(NameConstants.MIX_LOCKABLE)
+                && !entResulting.includesNodeType(NameConstants.MIX_LOCKABLE)
                 && isLocked()) {
             throw new ConstraintViolationException(mixinName + " can not be removed: the node is locked.");
         }
@@ -1180,8 +1181,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             return;
         }
 
-        // walk through properties and child nodes and remove those that have
-        // been defined by the specified mixin type
+        // walk through properties and child nodes and remove those that aren't
+        // accomodated by the resulting new effective node type (see JCR-2130)
         boolean success = false;
         try {
             // use temp set to avoid ConcurrentModificationException
@@ -1192,11 +1193,60 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 // check if property has been defined by mixin type (or one of its supertypes)
                 PropertyDefinition def = ntMgr.getPropertyDefinition(propState.getDefinitionId());
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
-                if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                    // the remaining effective node type doesn't include the
-                    // node type that declared this property, it is thus safe
-                    // to remove it
-                    removeChildProperty(propName);
+                if (!entResulting.includesNodeType(declaringNT.getQName())) {
+                    // the resulting effective node type doesn't include the
+                    // node type that declared this property
+
+                    // try to find new applicable definition first and
+                    // redefine property if possible (JCR-2130)
+                    try {
+                        PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
+                        if (prop.getDefinition().isProtected()) {
+                            // remove 'orphaned' protected properties immediately
+                            removeChildProperty(propName);
+                            continue;
+                        }
+                        PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
+                                propName, propState.getType(),
+                                propState.isMultiValued(), false);
+                        if (pdi.getRequiredType() != PropertyType.UNDEFINED
+                                && pdi.getRequiredType() != propState.getType()) {
+                            // value conversion required
+                            if (propState.isMultiValued()) {
+                                // convert value
+                                Value[] values =
+                                        ValueHelper.convert(
+                                                prop.getValues(),
+                                                pdi.getRequiredType(),
+                                                session.getValueFactory());
+                                // redefine property
+                                prop.onRedefine(pdi.unwrap().getId());
+                                // set converted values
+                                prop.setValue(values);
+                            } else {
+                                // convert value
+                                Value value =
+                                        ValueHelper.convert(
+                                                prop.getValue(),
+                                                pdi.getRequiredType(),
+                                                session.getValueFactory());
+                                // redefine property
+                                prop.onRedefine(pdi.unwrap().getId());
+                                // set converted values
+                                prop.setValue(value);
+                            }
+                        } else {
+                            // redefine property
+                            prop.onRedefine(pdi.unwrap().getId());
+                        }
+                    } catch (ValueFormatException vfe) {
+                        // value conversion failed, remove it
+                        removeChildProperty(propName);
+                    } catch (ConstraintViolationException cve) {
+                        // no suitable definition found for this property,
+                        // remove it
+                        removeChildProperty(propName);
+                    }
                 }
             }
             // use temp array to avoid ConcurrentModificationException
@@ -1208,11 +1258,27 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 NodeDefinition def = ntMgr.getNodeDefinition(nodeState.getDefinitionId());
                 // check if node has been defined by mixin type (or one of its supertypes)
                 NodeTypeImpl declaringNT = (NodeTypeImpl) def.getDeclaringNodeType();
-                if (!entRemaining.includesNodeType(declaringNT.getQName())) {
-                    // the remaining effective node type doesn't include the
-                    // node type that declared this child node, it is thus safe
-                    // to remove it
-                    removeChildNode(entry.getName(), entry.getIndex());
+                if (!entResulting.includesNodeType(declaringNT.getQName())) {
+                    // the resulting effective node type doesn't include the
+                    // node type that declared this child node
+
+                    try {
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
+                        if (node.getDefinition().isProtected()) {
+                            // remove 'orphaned' protected child node immediately
+                            removeChildNode(entry.getName(), entry.getIndex());
+                            continue;
+                        }
+                        NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
+                                entry.getName(),
+                                nodeState.getNodeTypeName());
+                        // redefine node
+                        node.onRedefine(ndi.unwrap().getId());
+                    } catch (ConstraintViolationException cve) {
+                        // no suitable definition found for this child node,
+                        // remove it
+                        removeChildNode(entry.getName(), entry.getIndex());
+                    }
                 }
             }
             success = true;
@@ -4705,6 +4771,11 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     // redefine property if possible
                     try {
                         PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
+                        if (prop.getDefinition().isProtected()) {
+                            // remove 'orphaned' protected properties immediately
+                            removeChildProperty(propName);
+                            continue;
+                        }
                         PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
                                 propName, propState.getType(),
                                 propState.isMultiValued(), false);
@@ -4767,11 +4838,16 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     // try to find new applicable definition first and
                     // redefine node if possible
                     try {
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
+                        if (node.getDefinition().isProtected()) {
+                            // remove 'orphaned' protected child node immediately
+                            removeChildNode(entry.getName(), entry.getIndex());
+                            continue;
+                        }
                         NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                         // redefine node
-                        NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
                         node.onRedefine(ndi.unwrap().getId());
                         // update collection of added definitions
                         addedDefs.remove(ndi.unwrap());
