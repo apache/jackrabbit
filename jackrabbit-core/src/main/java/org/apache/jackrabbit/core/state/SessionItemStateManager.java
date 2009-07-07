@@ -177,12 +177,7 @@ public class SessionItemStateManager
             return getTransientItemState(id);
         }
 
-        // check if there's persistent state for the specified item
-        if (stateMgr.hasItemState(id)) {
-            return stateMgr.getItemState(id);
-        }
-
-        throw new NoSuchItemStateException(id.toString());
+        return stateMgr.getItemState(id);
     }
 
     /**
