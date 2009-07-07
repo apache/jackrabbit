@@ -17,14 +17,12 @@
 package org.apache.jackrabbit.test.api.nodetype;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeTemplate;
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.version.OnParentVersionAction;
@@ -41,8 +39,8 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  */
 public class NodeTypeCreationTest extends AbstractJCRTest {
 
-    private static String ns = "urn:uuid:" + UUID.randomUUID();
-
+    private static String ns = "http://example.org/jcr-tck/";
+    
     private NodeTypeManager ntm;
     
     /**
@@ -81,7 +79,9 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
     public void testPropertyDefinitionTemplate() throws Exception {
         PropertyDefinitionTemplate pdt = createBooleanPropTemplate();
         
-        assertEquals("{" + ns + "}" + "boolean", pdt.getName()); // TODO - this should return a JCR name, not an expanded name, right? See JCR-2192.
+        String pref = superuser.getNamespacePrefix(ns);
+        
+        assertEquals(pref + ":" + "boolean", pdt.getName());
         assertEquals(false, pdt.isAutoCreated());
         assertEquals(false, pdt.isMandatory());
         assertEquals(OnParentVersionAction.IGNORE, pdt.getOnParentVersion());
