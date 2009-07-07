@@ -2183,7 +2183,7 @@ public class RepositoryImpl extends AbstractRepository
                 getItemStateProvider().externalUpdate(external, esc);
             } catch (IllegalStateException e) {
                 String msg = "Unable to deliver events: " + e.getMessage();
-                throw new RepositoryException(msg);
+                throw new RepositoryException(msg, e);
             }
         }
 
