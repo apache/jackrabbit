@@ -1000,7 +1000,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * @return local item state manager
      */
     protected LocalItemStateManager createItemStateManager(SharedItemStateManager shared) {
-        return new LocalItemStateManager(shared, this, rep.getItemStateCacheFactory());
+        return LocalItemStateManager.createInstance(shared, this, rep.getItemStateCacheFactory());
     }
 
     //------------------------------------------< EventStateCollectionFactory >

@@ -106,7 +106,7 @@ public class XAVersionManager extends AbstractVersionManager
         super(ntReg);
         this.vMgr = vMgr;
         this.session = session;
-        this.stateMgr = new XAItemStateManager(vMgr.getSharedStateMgr(),
+        this.stateMgr = XAItemStateManager.createInstance(vMgr.getSharedStateMgr(),
                 this, CHANGE_LOG_ATTRIBUTE_NAME, cacheFactory);
 
         NodeState state;
