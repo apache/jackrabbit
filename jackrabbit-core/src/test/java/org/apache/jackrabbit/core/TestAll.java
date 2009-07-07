@@ -41,6 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(RetentionRegistryImplTest.class);
         suite.addTestSuite(InvalidDateTest.class);
         suite.addTestSuite(SessionGarbageCollectedTest.class);
+        suite.addTestSuite(ReferencesTest.class);
 
         return suite;
     }
