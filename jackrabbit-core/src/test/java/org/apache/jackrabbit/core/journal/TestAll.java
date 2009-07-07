@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
 
         suite.addTestSuite(FileJournalTest.class);
+        suite.addTestSuite(LockableFileRevisionTest.class);
 
         return suite;
     }
