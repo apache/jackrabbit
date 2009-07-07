@@ -77,7 +77,7 @@ class LockableFileRevision {
      *
      * @param shared whether to allow other readers or not
      */
-    public void lock(boolean shared) throws JournalException {
+    public synchronized void lock(boolean shared) throws JournalException {
         if (lock == null) {
             try {
                 raf = new RandomAccessFile(file, shared ? "r" : "rw");
@@ -103,7 +103,7 @@ class LockableFileRevision {
     /**
      * Unlock underlying file.
      */
-    public void unlock() {
+    public synchronized void unlock() {
         if (lock != null && --locks == 0) {
             try {
                 lock.release();
