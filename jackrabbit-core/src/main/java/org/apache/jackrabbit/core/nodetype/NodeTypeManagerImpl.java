@@ -916,7 +916,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     ValueConstraint[] qconstraints = new ValueConstraint[constraints.length];
                     for (int j = 0; j < constraints.length; j++) {
                         try {
-                            qconstraints[j] = ValueConstraint.create(type, constraints[i], session);
+                            qconstraints[j] = ValueConstraint.create(type, constraints[j], session);
                         } catch (InvalidConstraintException e) {
                             throw new InvalidNodeTypeDefinitionException(
                                     "Invalid value constraint " + constraints[i], e);
@@ -930,7 +930,7 @@ public class NodeTypeManagerImpl implements JackrabbitNodeTypeManager,
                     InternalValue[] qvalues = new InternalValue[values.length];
                     for (int j = 0; j < values.length; j++) {
                         try {
-                            qvalues[j] = InternalValue.create(values[i], session);
+                            qvalues[j] = InternalValue.create(values[j], session);
                         } catch (ValueFormatException e) {
                             throw new InvalidNodeTypeDefinitionException(
                                     "Invalid default value format", e);
