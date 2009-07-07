@@ -39,6 +39,7 @@ import org.apache.jackrabbit.core.config.SecurityManagerConfig;
 import org.apache.jackrabbit.core.config.VersioningConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.fs.BasedFileSystem;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -1145,6 +1146,15 @@ public class RepositoryImpl extends AbstractRepository
                 storeRepProps(repProps);
             } catch (RepositoryException e) {
                 log.error("failed to persist repository properties", e);
+            }
+        }
+        
+        if (dataStore != null) {
+            try {
+                // close the datastore
+                dataStore.close();
+            } catch (DataStoreException e) {
+                log.error("error while closing datastore", e);
             }
         }
 
