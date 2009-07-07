@@ -115,14 +115,15 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>rat-maven-plugin</artifactId>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
             <exclude>src/main/javadoc/**/*.uxf</exclude>
             <exclude>src/test/repository/**</exclude>
             <exclude>src/test/resources/**/*.txt</exclude>
             <exclude>src/test/resources/**/*.cnd</exclude>
+            <exclude>repository/**</exclude>
           </excludes>
         </configuration>
       </plugin>
