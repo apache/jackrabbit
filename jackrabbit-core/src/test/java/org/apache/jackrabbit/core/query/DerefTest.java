@@ -137,6 +137,17 @@ public class DerefTest extends AbstractQueryTest {
                 new Node[]{microsoft});
     }
 
+    public void testDerefInPredicate() throws RepositoryException {
+        executeXPathQuery(testPath + "/people//*[jcr:deref(@worksfor, '*')/@ceo='McNealy']",
+                new Node[]{andrew, eric});
+
+        executeXPathQuery("//*[people/jcr:deref(@worksfor, '*')/@ceo='McNealy']",
+                new Node[]{testRootNode});
+
+//        executeXPathQuery("//*[jcr:contains(people/jcr:deref(@worksfor, '*'),'ballmer')]",
+//                new Node[]{testRootNode});
+    }
+
     /**
      * Checks if jcr:deref works when dereferencing into the version storage.
      */

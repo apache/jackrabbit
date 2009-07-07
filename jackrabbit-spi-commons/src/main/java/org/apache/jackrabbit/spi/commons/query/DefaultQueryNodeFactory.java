@@ -89,7 +89,7 @@ public class DefaultQueryNodeFactory implements QueryNodeFactory {
      */
     public RelationQueryNode createRelationQueryNode(QueryNode parent,
                                                      int operation) {
-        return new RelationQueryNode(parent, operation);
+        return new RelationQueryNode(parent, operation, this);
     }
 
     /**

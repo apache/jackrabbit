@@ -16,6 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -26,25 +33,17 @@ import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
-import org.apache.jackrabbit.spi.Name;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 /**
- * Implements a lucene <code>Query</code> which returns the nodes selected by
- * a reference property of the context node.
+ * Implements a Lucene <code>Query</code> which returns the nodes which have a 
+ * reference property which matches the nodes of the subquery.
  */
-class DerefQuery extends Query {
+public class PredicateDerefQuery extends Query {
 
     /**
      * The context query
      */
-    private final Query contextQuery;
+    private final Query subQuery;
 
     /**
      * The name of the reference property.
@@ -70,27 +69,27 @@ class DerefQuery extends Query {
     /**
      * The scorer of the context query
      */
-    private Scorer contextScorer;
+    private Scorer subQueryScorer;
 
     /**
      * The scorer of the name test query
      */
     private Scorer nameTestScorer;
-
     /**
      * Creates a new <code>DerefQuery</code> based on a <code>context</code>
      * query.
      *
      * @param context the context for this query.
+     * @param subQuery TODO
      * @param refProperty the name of the reference property.
      * @param nameTest a name test or <code>null</code> if any node is
      *  selected.
      * @param version the index format version.
      * @param nsMappings the namespace mappings.
      */
-    DerefQuery(Query context, String refProperty, Name nameTest,
-               IndexFormatVersion version, NamespaceMappings nsMappings) {
-        this.contextQuery = context;
+    PredicateDerefQuery(Query subQuery, String refProperty,
+               Name nameTest, IndexFormatVersion version, NamespaceMappings nsMappings) {
+        this.subQuery = subQuery;
         this.refProperty = refProperty;
         this.nameTest = nameTest;
         this.version = version;
@@ -108,22 +107,23 @@ class DerefQuery extends Query {
     }
 
     /**
-     * Always returns 'DerefQuery'.
+     * Returns PredicateDerefQuery(subQuery, referenceNodeProperty, nameTest)
      *
      * @param field the name of a field.
      * @return 'DerefQuery'.
      */
     public String toString(String field) {
         StringBuffer sb = new StringBuffer();
-        sb.append("DerefQuery(");
-        sb.append(refProperty);
-        sb.append(", ");
-        sb.append(contextQuery);
+        sb.append("PredicateDerefQuery(");
+        sb.append(subQuery);
         sb.append(", ");
         sb.append(nameTest);
+        sb.append(", ");
+        sb.append(refProperty);
         sb.append(")");
         return sb.toString();
     }
+
 
     /**
      * {@inheritDoc}
@@ -136,11 +136,11 @@ class DerefQuery extends Query {
      * {@inheritDoc}
      */
     public Query rewrite(IndexReader reader) throws IOException {
-        Query cQuery = contextQuery.rewrite(reader);
-        if (cQuery == contextQuery) {
+        Query cQuery = subQuery.rewrite(reader);
+        if (cQuery == subQuery) {
             return this;
         } else {
-            return new DerefQuery(cQuery, refProperty, nameTest, version, nsMappings);
+            return new PredicateDerefQuery(subQuery, refProperty, nameTest, version, nsMappings);
         }
     }
 
@@ -172,7 +172,7 @@ class DerefQuery extends Query {
          * @return this <code>DerefQuery</code>.
          */
         public Query getQuery() {
-            return DerefQuery.this;
+            return PredicateDerefQuery.this;
         }
 
         /**
@@ -203,7 +203,7 @@ class DerefQuery extends Query {
          * @throws IOException if an error occurs while reading from the index.
          */
         public Scorer scorer(IndexReader reader) throws IOException {
-            contextScorer = contextQuery.weight(searcher).scorer(reader);
+            subQueryScorer = subQuery.weight(searcher).scorer(reader);
             if (nameTest != null) {
                 nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader);
             }
@@ -233,6 +233,11 @@ class DerefQuery extends Query {
         /**
          * BitSet storing the id's of selected documents
          */
+        private final BitSet subQueryHits;
+        
+        /**
+         * BitSet storing the id's of selected documents
+         */
         private final BitSet hits;
 
         /**
@@ -240,6 +245,7 @@ class DerefQuery extends Query {
          */
         private List uuids = null;
 
+        
         /**
          * The next document id to return
          */
@@ -255,6 +261,7 @@ class DerefQuery extends Query {
             super(similarity);
             this.reader = reader;
             this.hits = new BitSet(reader.maxDoc());
+            this.subQueryHits = new BitSet(reader.maxDoc());
         }
 
         /**
@@ -299,23 +306,54 @@ class DerefQuery extends Query {
             throw new UnsupportedOperationException();
         }
 
+
         /**
-         * 1. do context query
-         * 2. go through each document from the query
-         * 3. find reference property UUIDs
-         * 4. Use UUIDs to find document number
-         * 5. Use the name test to filter the documents
+         * Perform the sub query
+         * For each reference property UUID
+         *      - find document number
+         *      - if document # is in subquery bitset add to bit set
+         * Use the name test to filter the documents
          * @throws IOException
          */
         private void calculateChildren() throws IOException {
             if (uuids == null) {
                 uuids = new ArrayList();
-                contextScorer.score(new HitCollector() {
+//                subQueryHits.clear();
+//                hits.clear();
+                subQueryScorer.score(new HitCollector() {
                     public void collect(int doc, float score) {
-                        hits.set(doc);
+                        subQueryHits.set(doc);
                     }
                 });
 
+                TermDocs termDocs = reader.termDocs(new Term(FieldNames.PROPERTIES_SET, refProperty));
+                String prefix = FieldNames.createNamedValue(refProperty, "");
+                while (termDocs.next()) {
+                    int doc = termDocs.doc();
+                     
+                    String[] values = reader.document(doc).getValues(FieldNames.PROPERTIES);
+                    if (values == null) {
+                        // no reference properties at all on this node
+                        continue;
+                    }
+                    for (int v = 0; v < values.length; v++) {
+                        if (values[v].startsWith(prefix)) {
+                            String uuid = values[v].substring(prefix.length());
+                            
+                            TermDocs node = reader.termDocs(new Term(FieldNames.UUID, uuid));
+                            try {
+                                while (node.next()) {
+                                    if (subQueryHits.get(node.doc())) {
+                                        hits.set(doc);
+                                    }
+                                }
+                            } finally {
+                                node.close();
+                            }
+                        }
+                    }
+                }
+                
                 // collect nameTest hits
                 final BitSet nameTestHits = new BitSet();
                 if (nameTestScorer != null) {
@@ -326,34 +364,6 @@ class DerefQuery extends Query {
                     });
                 }
 
-                // retrieve uuids of target nodes
-                String prefix = FieldNames.createNamedValue(refProperty, "");
-                for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
-                    String[] values = reader.document(i).getValues(FieldNames.PROPERTIES);
-                    if (values == null) {
-                        // no reference properties at all on this node
-                        continue;
-                    }
-                    for (int v = 0; v < values.length; v++) {
-                        if (values[v].startsWith(prefix)) {
-                            uuids.add(values[v].substring(prefix.length()));
-                        }
-                    }
-                }
-
-                // collect the doc ids of all target nodes. we reuse the existing
-                // bitset.
-                hits.clear();
-                for (Iterator it = uuids.iterator(); it.hasNext();) {
-                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, (String) it.next()));
-                    try {
-                        while (node.next()) {
-                            hits.set(node.doc());
-                        }
-                    } finally {
-                        node.close();
-                    }
-                }
                 // filter out the target nodes that do not match the name test
                 // if there is any name test at all.
                 if (nameTestScorer != null) {

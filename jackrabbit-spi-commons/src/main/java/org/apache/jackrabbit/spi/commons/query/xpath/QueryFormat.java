@@ -345,29 +345,13 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
 
             StringBuffer propPath = new StringBuffer();
             // only encode if not position function
-            Path relPath = node.getRelativePath();
+            PathQueryNode relPath = node.getRelativePath();
             if (relPath == null) {
                 propPath.append(".");
-            } else if (relPath.getNameElement().getName().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+            } else if (relPath.getNumOperands() > 0 && relPath.getPathSteps()[0].getNameTest().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
                 propPath.append(resolver.getJCRName(XPathQueryBuilder.FN_POSITION_FULL));
             } else {
-                Path.Element[] elements = relPath.getElements();
-                String slash = "";
-                for (int i = 0; i < elements.length; i++) {
-                    propPath.append(slash);
-                    slash = "/";
-                    if (i == elements.length - 1 && node.getOperation() != OPERATION_SIMILAR) {
-                        propPath.append("@");
-                    }
-                    if (elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                        propPath.append("*");
-                    } else {
-                        propPath.append(resolver.getJCRName(encode(elements[i].getName())));
-                    }
-                    if (elements[i].getIndex() != 0) {
-                        propPath.append("[").append(elements[i].getIndex()).append("]");
-                    }
-                }
+                visit(relPath, data);
             }
 
             // surround name with property function

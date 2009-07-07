@@ -406,14 +406,14 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
         StringBuffer sb = (StringBuffer) data;
         try {
             StringBuffer propName = new StringBuffer();
-            Path relPath = node.getRelativePath();
+            PathQueryNode relPath = node.getRelativePath();
             if (relPath == null) {
                 propName.append(".");
-            } else if (relPath.getLength() > 1) {
+            } else if (relPath.getPathSteps().length > 1) {
                 exceptions.add(new InvalidQueryException("Child axis not supported in SQL"));
                 return data;
             } else {
-                appendName(relPath.getNameElement().getName(), resolver, propName);
+                visit(relPath, data);
             }
             // surround name with property function
             node.acceptOperands(this, propName);

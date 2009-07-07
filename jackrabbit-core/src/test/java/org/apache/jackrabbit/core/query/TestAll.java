@@ -60,6 +60,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(IndexFormatVersionTest.class);
         suite.addTestSuite(IndexingRuleTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
+        suite.addTestSuite(ParentNodeTest.class);
 
         return suite;
     }

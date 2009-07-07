@@ -26,7 +26,7 @@ import javax.jcr.RepositoryException;
 /**
  * Defines an abstract query node for nodes that have child nodes.
  */
-public abstract class NAryQueryNode extends QueryNode {
+public abstract class NAryQueryNode<T extends QueryNode> extends QueryNode {
 
     /**
      * Empty result.
@@ -36,7 +36,7 @@ public abstract class NAryQueryNode extends QueryNode {
     /**
      * The list of operands / children
      */
-    protected List operands = null;
+    protected List<T> operands = null;
 
     /**
      * Creates a new <code>NAryQueryNode</code> with a reference to a parent
@@ -55,10 +55,10 @@ public abstract class NAryQueryNode extends QueryNode {
      * @param parent   the parent node.
      * @param operands child nodes of this <code>NAryQueryNode</code>.
      */
-    public NAryQueryNode(QueryNode parent, QueryNode[] operands) {
+    public NAryQueryNode(QueryNode parent, T[] operands) {
         super(parent);
         if (operands.length > 0) {
-            this.operands = new ArrayList();
+            this.operands = new ArrayList<T>();
             this.operands.addAll(Arrays.asList(operands));
         }
     }
@@ -68,9 +68,9 @@ public abstract class NAryQueryNode extends QueryNode {
      *
      * @param operand the child {@link QueryNode} to add.
      */
-    public void addOperand(QueryNode operand) {
+    public void addOperand(T operand) {
         if (operands == null) {
-            operands = new ArrayList();
+            operands = new ArrayList<T>();
         }
         operands.add(operand);
     }
@@ -83,7 +83,7 @@ public abstract class NAryQueryNode extends QueryNode {
      *  and has been removed; <code>false</code> if this node does not contain
      *  <code>operand</code> as a child node.
      */
-    public boolean removeOperand(QueryNode operand) {
+    public boolean removeOperand(T operand) {
         if (operands == null) {
             return false;
         }
@@ -108,7 +108,7 @@ public abstract class NAryQueryNode extends QueryNode {
         if (operands == null) {
             return new QueryNode[0];
         } else {
-            return (QueryNode[]) operands.toArray(new QueryNode[operands.size()]);
+            return operands.toArray(new QueryNode[operands.size()]);
         }
     }
 
@@ -131,16 +131,16 @@ public abstract class NAryQueryNode extends QueryNode {
      * @param visitor the visitor to call back.
      * @param data    arbitrary data for the visitor.
      * @return the return values of the <code>visitor.visit()</code> calls.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs.
      */
     public Object[] acceptOperands(QueryNodeVisitor visitor, Object data) throws RepositoryException {
         if (operands == null) {
             return EMPTY;
         }
 
-        List result = new ArrayList(operands.size());
-        for (int i = 0; i < operands.size(); i++) {
-            Object r = ((QueryNode) operands.get(i)).accept(visitor, data);
+        List<Object> result = new ArrayList<Object>(operands.size());
+        for (T operand : operands) {
+            Object r = operand.accept(visitor, data);
             if (r != null) {
                 result.add(r);
             }
@@ -166,9 +166,8 @@ public abstract class NAryQueryNode extends QueryNode {
         if (operands == null) {
             return false;
         }
-        for (Iterator iter = operands.iterator(); iter.hasNext();) {
-            QueryNode queryNode = (QueryNode) iter.next();
-            if (queryNode.needsSystemTree()) {
+        for (T operand : operands) {
+            if (operand.needsSystemTree()) {
                 return true;
             }
         }
