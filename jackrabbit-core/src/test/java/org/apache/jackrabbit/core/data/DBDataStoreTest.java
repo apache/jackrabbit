@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.data;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Random;
 
 import junit.framework.TestCase;
@@ -53,13 +51,10 @@ public class DBDataStoreTest extends TestCase {
     }
 
     protected void tearDown() {
-        store.close();
 
         try {
-            // TODO: This should automatically be done by DbDataStore.close()
-            DriverManager.getConnection(
-                    "jdbc:derby:target/test-db-datastore/db;shutdown=true");
-        } catch (SQLException expected) {
+            store.close();
+        } catch (DataStoreException expected) {
         }
     }
 
@@ -75,7 +70,7 @@ public class DBDataStoreTest extends TestCase {
             try {
                 assertNotNull(stream);
                 for (int j = 0; j < data.length; j++) {
-                    assertEquals(((int) data[j]) & 0xff, stream.read());
+                    assertEquals((data[j]) & 0xff, stream.read());
                 }
                 assertEquals(-1, stream.read());
             } finally {
@@ -95,7 +90,7 @@ public class DBDataStoreTest extends TestCase {
         // verify the contents of all the streams, reading them in parallel
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < streams.length; j++) {
-                assertEquals(((int) data[i]) & 0xff, streams[j].read());
+                assertEquals((data[i]) & 0xff, streams[j].read());
             }
         }
 
