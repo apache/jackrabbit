@@ -210,7 +210,12 @@ public abstract class AbstractJournal implements Journal {
                 } else {
                     RecordConsumer consumer = getConsumer(record.getProducerId());
                     if (consumer != null) {
-                        consumer.consume(record);
+                        try {
+                            consumer.consume(record);
+                        } catch (IllegalStateException e) {
+                            log.error("Could not synchronize to revision: " + record.getRevision() + " due illegal state of RecordConsumer.");
+                            return;
+                        }
                     }
                 }
                 stopRevision = record.getRevision();

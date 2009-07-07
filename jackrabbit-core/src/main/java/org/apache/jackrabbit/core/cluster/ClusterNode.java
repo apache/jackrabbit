@@ -855,6 +855,9 @@ public class ClusterNode implements Runnable,
         } catch (RepositoryException e) {
             String msg = "Unable to deliver update events: " + e.getMessage();
             log.error(msg);
+            if (e.getCause() instanceof IllegalStateException) {
+                throw (IllegalStateException) e.getCause();
+            }
         }
     }
 
@@ -890,6 +893,9 @@ public class ClusterNode implements Runnable,
         } catch (RepositoryException e) {
             String msg = "Unable to deliver lock event: " + e.getMessage();
             log.error(msg);
+            if (e.getCause() instanceof IllegalStateException) {
+                throw (IllegalStateException) e.getCause();
+            }
         }
     }
 
