@@ -73,6 +73,7 @@
                 org.apache.jackrabbit.test.api.version.simple
                 org.apache.jackrabbit.test.api.NodeReadMethodsTest#testGetPropertiesNamePatternArray
                 org.apache.jackrabbit.test.api.version.ActivitiesTest
+                org.apache.jackrabbit.test.api.nodetype.NodeTypeCreationTest#testPropertyDefinitionTemplate
               </value>
             </property>
           </systemProperties>
