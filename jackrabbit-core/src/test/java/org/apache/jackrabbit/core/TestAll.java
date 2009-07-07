@@ -43,6 +43,14 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SessionGarbageCollectedTest.class);
         suite.addTestSuite(ReferencesTest.class);
 
+        // test related to NodeStateMerger
+        suite.addTestSuite(ConcurrentAddRemoveMoveTest.class);
+        suite.addTestSuite(ConcurrentAddRemovePropertyTest.class);
+        suite.addTestSuite(ConcurrentMixinModificationTest.class);
+        suite.addTestSuite(ConcurrentModificationWithSNSTest.class);
+        suite.addTestSuite(ConcurrentMoveTest.class);
+        suite.addTestSuite(ConcurrentReorderTest.class);
+
         return suite;
     }
 }
