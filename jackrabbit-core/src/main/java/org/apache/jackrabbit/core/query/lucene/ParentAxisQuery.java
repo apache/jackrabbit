@@ -124,7 +124,13 @@ class ParentAxisQuery extends Query {
      * @return 'ParentAxisQuery'.
      */
     public String toString(String field) {
-        return "ParentAxisQuery";
+        StringBuffer sb = new StringBuffer();
+        sb.append("ParentAxisQuery(");
+        sb.append(contextQuery);
+        sb.append(", ");
+        sb.append(nameTest);
+        sb.append(")");
+        return sb.toString();
     }
 
     //-----------------------< ParentAxisWeight >-------------------------------

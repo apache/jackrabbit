@@ -205,14 +205,14 @@ public class QueryTreeDump implements QueryNodeVisitor {
         buffer.append(PADDING, 0, indent);
         buffer.append("+ RelationQueryNode: Op: ");
         buffer.append(QueryConstants.OPERATION_NAMES.getName(node.getOperation()));
-        buffer.append(" Prop=");
-        Path relPath = node.getRelativePath();
+        buffer.append(" Prop=[");
+        PathQueryNode relPath = node.getRelativePath();
         if (relPath == null) {
             buffer.append(relPath);
         } else {
-            appendPath(relPath, buffer);
+            visit(relPath, buffer);
         }
-        buffer.append(" Type=").append(QueryConstants.TYPE_NAMES.getName(node.getValueType()));
+        buffer.append("] Type=").append(QueryConstants.TYPE_NAMES.getName(node.getValueType()));
         if (node.getValueType() == QueryConstants.TYPE_DATE) {
             buffer.append(" Value=").append(node.getDateValue());
         } else if (node.getValueType() == QueryConstants.TYPE_DOUBLE) {

@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 /**
  * Implements a query node that defines a path restriction.
  */
-public class PathQueryNode extends NAryQueryNode {
+public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
 
     /**
      * Flag indicating whether this path is absolute.
@@ -101,7 +101,7 @@ public class PathQueryNode extends NAryQueryNode {
         if (operands == null) {
             return EMPTY;
         } else {
-            return (LocationStepQueryNode[]) operands.toArray(new LocationStepQueryNode[operands.size()]);
+            return operands.toArray(new LocationStepQueryNode[operands.size()]);
         }
     }
 

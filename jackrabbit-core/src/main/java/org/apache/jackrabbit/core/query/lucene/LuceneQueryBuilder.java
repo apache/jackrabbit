@@ -41,11 +41,11 @@ import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
 import org.apache.jackrabbit.spi.commons.query.DerefQueryNode;
@@ -68,11 +68,11 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.XMLChar;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.queryParser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,6 +88,16 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * Logger for this class
      */
     private static final Logger log = LoggerFactory.getLogger(LuceneQueryBuilder.class);
+
+    /**
+     * The path factory instance.
+     */
+    private static final PathFactory PATH_FACTORY = PathFactoryImpl.getInstance();
+
+    /**
+     * The name of a parent path element.
+     */
+    private static final Name PARENT_ELEMENT_NAME = PATH_FACTORY.getParentElement().getName();
 
     /**
      * Root node of the abstract query tree
@@ -494,6 +504,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         NameQuery nameTest = null;
         if (node.getNameTest() != null) {
+            if (node.getNameTest().equals(PARENT_ELEMENT_NAME)) {
+                andQuery.add(new ParentAxisQuery(context, null, indexFormatVersion, nsMappings), Occur.MUST);
+                return andQuery;
+            }
             nameTest = new NameQuery(node.getNameTest(), indexFormatVersion, nsMappings);
         }
 
@@ -587,6 +601,16 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
     }
 
     public Object visit(RelationQueryNode node, Object data) throws RepositoryException {
+        PathQueryNode relPath = node.getRelativePath();
+        if (relPath == null
+                && node.getOperation() != QueryConstants.OPERATION_SIMILAR
+                && node.getOperation() != QueryConstants.OPERATION_SPELLCHECK) {
+            exceptions.add(new InvalidQueryException("@* not supported in predicate"));
+            return data;
+        }
+        LocationStepQueryNode[] steps = relPath.getPathSteps();
+        Name propertyName = steps[steps.length - 1].getNameTest();
+        
         Query query;
         String[] stringValues = new String[1];
         switch (node.getValueType()) {
@@ -608,7 +632,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         || node.getOperation() == QueryConstants.OPERATION_NE_GENERAL
                         || node.getOperation() == QueryConstants.OPERATION_NE_VALUE) {
                     // only use coercing on non-range operations
-                    Name propertyName = node.getRelativePath().getNameElement().getName();
                     stringValues = getStringValues(propertyName, node.getStringValue());
                 } else {
                     stringValues[0] = node.getStringValue();
@@ -620,13 +643,6 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             default:
                 throw new IllegalArgumentException("Unknown relation type: "
                         + node.getValueType());
-        }
-
-        if (node.getRelativePath() == null
-                && node.getOperation() != QueryConstants.OPERATION_SIMILAR
-                && node.getOperation() != QueryConstants.OPERATION_SPELLCHECK) {
-            exceptions.add(new InvalidQueryException("@* not supported in predicate"));
-            return data;
         }
 
         // get property transformation
@@ -642,37 +658,24 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }, null);
 
-        Path relPath = node.getRelativePath();
         if (node.getOperation() == QueryConstants.OPERATION_SIMILAR) {
             // this is a bit ugly:
-            // add the name of a dummy property because relPath actually
+            // use the name of a dummy property because relPath actually
             // references a property. whereas the relPath of the similar
             // operation references a node
-            PathBuilder builder;
-            if (relPath == null) {
-                builder = new PathBuilder();
-            } else {
-                builder = new PathBuilder(relPath);
-            }
-            builder.addLast(NameConstants.JCR_PRIMARYTYPE);
-            try {
-                relPath = builder.getPath();
-            } catch (MalformedPathException e) {
-                // will never happen
-            }
+            propertyName = NameConstants.JCR_PRIMARYTYPE;
         }
         String field = "";
         try {
-            field = resolver.getJCRName(relPath.getNameElement().getName());
+            field = resolver.getJCRName(propertyName);
         } catch (NamespaceException e) {
             // should never happen
             exceptions.add(e);
         }
 
         // support for fn:name()
-        Name propName = relPath.getNameElement().getName();
-        if (propName.getNamespaceURI().equals(SearchManager.NS_FN_URI)
-                && propName.getLocalName().equals("name()")) {
+        if (propertyName.getNamespaceURI().equals(SearchManager.NS_FN_URI)
+                && propertyName.getLocalName().equals("name()")) {
             if (node.getValueType() != QueryConstants.TYPE_STRING) {
                 exceptions.add(new InvalidQueryException("Name function can "
                         + "only be used in conjunction with a string literal"));
@@ -864,39 +867,113 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
 
-        if (relPath.getLength() > 1) {
+        if (steps.length > 1) {
             // child axis in relation
-            Path.Element[] elements = relPath.getElements();
             // elements.length - 1 = property name
             // elements.length - 2 = last child axis name test
-            for (int i = elements.length - 2; i >= 0; i--) {
+            boolean selectParent = true; 
+            for (int i = steps.length - 2; i >= 0; i--) {
+                LocationStepQueryNode step = steps[i];
                 Name name = null;
-                if (!elements[i].getName().equals(RelationQueryNode.STAR_NAME_TEST)) {
-                    name = elements[i].getName();
+                if (!RelationQueryNode.STAR_NAME_TEST.equals(steps[i].getNameTest())) {
+                    name = steps[i].getNameTest();
                 }
-                if (i == elements.length - 2) {
-                    // join name test with property query if there is one
-                    if (name != null) {
-                        Query nameTest = new NameQuery(name,
-                                indexFormatVersion, nsMappings);
-                        BooleanQuery and = new BooleanQuery();
-                        and.add(query, Occur.MUST);
-                        and.add(nameTest, Occur.MUST);
-                        query = and;
-                    } else {
-                        // otherwise the query can be used as is
+                if (i == steps.length - 2) {
+                    if (step instanceof DerefQueryNode) {
+                        query = createPredicateDeref(query, (DerefQueryNode) step, data);
+                        if (steps.length == 2) {
+                            selectParent = false;
+                        }
+                    } else if (step instanceof LocationStepQueryNode) {
+                        // join name test with property query if there is one
+                        if (name != null) {
+                            if (!name.equals(PARENT_ELEMENT_NAME)) {
+                                Query nameTest = new NameQuery(name,
+                                        indexFormatVersion, nsMappings);
+                                BooleanQuery and = new BooleanQuery();
+                                and.add(query, Occur.MUST);
+                                and.add(nameTest, Occur.MUST);
+    
+                                query = and;
+                            } else {
+                                // If we're searching the parent, we want to return the child axis,
+                                // not the parent because this is part of the predicate. For instance,
+                                // if the query is //child[../base], this part of the code is operating
+                                // on the "../base" portion. So we want to return all the child nodes
+                                // of "base", which will then be matched against the non predicate part.
+                                query = new ChildAxisQuery(sharedItemMgr,
+                                                           query,
+                                                           null,
+                                                           indexFormatVersion,
+                                                           nsMappings);
+                                selectParent = false;
+                            }
+                        } else {
+                            // otherwise the query can be used as is
+                        }
                     }
+                } else if (name != null && name.equals(PARENT_ELEMENT_NAME)) {
+                    // We need to select one of the properties if we haven't already.
+                    if (selectParent) { 
+                        query = new ParentAxisQuery(query, null,
+                                                    indexFormatVersion, nsMappings);
+
+                        selectParent = false;
+                    }
+
+                    // See the note above on searching parents
+                    query = new ChildAxisQuery(sharedItemMgr,
+                                               query,
+                                               null,
+                                               indexFormatVersion,
+                                               nsMappings);
                 } else {
-                    query = new ParentAxisQuery(query, name,
-                            indexFormatVersion, nsMappings);
+                    if (step instanceof LocationStepQueryNode) {
+                        query = new ParentAxisQuery(query, name, indexFormatVersion, nsMappings);
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
                 }
             }
             // finally select the parent of the selected nodes
-            query = new ParentAxisQuery(query, null,
-                    indexFormatVersion, nsMappings);
+            if (selectParent) {
+                query = new ParentAxisQuery(query, null, indexFormatVersion, nsMappings);
+            }
         }
 
         return query;
+    }
+    
+    public Query createPredicateDeref(Query subQuery, DerefQueryNode node, Object data) throws RepositoryException {
+        Query context = (Query) data;
+        
+        if (context == null) {
+            exceptions.add(new IllegalArgumentException("Unsupported query"));
+        }
+
+        try {
+            String refProperty = resolver.getJCRName(node.getRefProperty());
+
+            context = new PredicateDerefQuery(subQuery, refProperty, node.getNameTest(),
+                    indexFormatVersion, nsMappings);
+
+            // attach predicates
+            Object[] predicates = node.acceptOperands(this, data);
+            if (predicates.length > 0) {
+                BooleanQuery andQuery = new BooleanQuery();
+                for (int i = 0; i < predicates.length; i++) {
+                    andQuery.add((Query) predicates[i], Occur.MUST);
+                }
+                andQuery.add(context, Occur.MUST);
+                context = andQuery;
+            }
+            
+        } catch (NamespaceException e) {
+            // should never happen
+            exceptions.add(e);
+        }
+
+        return context;
     }
 
     public Object visit(OrderQueryNode node, Object data) {
