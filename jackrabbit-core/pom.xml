@@ -91,7 +91,6 @@
               <name>known.issues</name>
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue
-                org.apache.jackrabbit.test.api.NodeReadMethodsTest#testGetPropertiesNamePatternArray
                 org.apache.jackrabbit.test.api.version.ActivitiesTest#testActivitiesPath
                 org.apache.jackrabbit.test.api.nodetype.NodeTypeCreationTest#testPropertyDefinitionTemplate
               </value>
