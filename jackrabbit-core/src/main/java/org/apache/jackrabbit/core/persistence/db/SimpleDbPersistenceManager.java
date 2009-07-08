@@ -96,6 +96,18 @@ import javax.jcr.RepositoryException;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *   &lt;/PersistenceManager&gt;
  * </pre>
+ * The following is a fragment from a sample configuration using Ingres:
+ * <pre>
+ *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager"&gt;
+ *       &lt;param name="driver" value="com.ingres.jdbc.IngresDriver"/&gt;
+ *       &lt;param name="url" value="jdbc:ingres://localhost:II7/test"/&gt;
+ *       &lt;param name="schema" value="ingres"/&gt;
+ *       &lt;param name="user" value="ingres"/&gt;
+ *       &lt;param name="password" value="ingres"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="${wsp.name}_"/&gt;
+ *       &lt;param name="externalBLOBs" value="false"/&gt;
+ *   &lt;/PersistenceManager&gt;
+ * </pre>
  * The following is a fragment from a sample configuration using PostgreSQL:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager"&gt;

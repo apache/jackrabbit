@@ -77,6 +77,17 @@ import javax.jcr.RepositoryException;
  *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
  *   &lt;/FileSystem&gt;
  * </pre>
+ * The following is a fragment from a sample configuration using Ingres:
+ * <pre>
+ *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
+ *       &lt;param name="driver" value="com.ingres.jdbc.IngresDriver"/&gt;
+ *       &lt;param name="url" value="jdbc:ingres://localhost:II7/test"/&gt;
+ *       &lt;param name="schema" value="ingres"/&gt;
+ *       &lt;param name="user" value="ingres"/&gt;
+ *       &lt;param name="password" value="ingres"/&gt;
+ *       &lt;param name="schemaObjectPrefix" value="rep_"/&gt;
+ *   &lt;/FileSystem&gt;
+ * </pre>
  * The following is a fragment from a sample configuration using PostgreSQL:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;
