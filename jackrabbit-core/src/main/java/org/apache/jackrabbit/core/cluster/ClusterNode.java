@@ -132,6 +132,15 @@ public class ClusterNode implements Runnable,
     private final Latch stopLatch = new Latch();
 
     /**
+     * Sync counter, used to avoid repeated sync() calls from piling up.
+     * Only updated within the critical section guarded by {@link #syncLock}.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1753">JCR-1753</a>
+     */
+    private volatile int syncCount = 0;
+
+    /**
      * Status flag, one of {@link #NONE}, {@link #STARTED} or {@link #STOPPED}.
      */
     private int status;
@@ -304,6 +313,8 @@ public class ClusterNode implements Runnable,
      * @throws ClusterException if an error occurs
      */
     public void sync() throws ClusterException {
+        int count = syncCount;
+
         try {
             syncLock.acquire();
         } catch (InterruptedException e) {
@@ -312,7 +323,12 @@ public class ClusterNode implements Runnable,
         }
 
         try {
-            journal.sync();
+            // JCR-1753: Only synchronize if no other thread already did so
+            // while we were waiting to acquire the syncLock.
+            if (count == syncCount) {
+                journal.sync();
+                syncCount++;
+            }
         } catch (JournalException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
         } finally {
