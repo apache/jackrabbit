@@ -202,7 +202,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
+    public CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -216,7 +216,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
      */
-    public boolean canAccessRoot(Set principals) throws RepositoryException {
+    public boolean canAccessRoot(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return true;
@@ -233,15 +233,15 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private class CompiledPermissionImpl extends AbstractCompiledPermissions
             implements SynchronousEventListener {
 
-        private final Set principals;
-        private final Set acPaths;
-        private ACLProvider.Entries entries;
+        private final Set<Principal> principals;
+        private final Set<String> acPaths;
+        private List<AccessControlEntry> entries;
 
         /**
          * @param principals
          * @throws RepositoryException
          */
-        private CompiledPermissionImpl(Set principals) throws RepositoryException {
+        private CompiledPermissionImpl(Set<Principal> principals) throws RepositoryException {
             this(principals, true);
         }
 
@@ -249,7 +249,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * @param principals
          * @throws RepositoryException
          */
-        private CompiledPermissionImpl(Set principals, boolean listenToEvents) throws RepositoryException {
+        private CompiledPermissionImpl(Set<Principal> principals, boolean listenToEvents) throws RepositoryException {
 
             this.principals = principals;
             acPaths = new HashSet(principals.size());
@@ -282,11 +282,67 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             Result result;
             if (session.itemExists(jcrPath)) {
                 Item item = session.getItem(jcrPath);
-                result = entries.getResult(item, item.getPath(), isAcItem);
+                result = getResult(item, item.getPath(), isAcItem);
             } else {
-                result = entries.getResult(null, jcrPath, isAcItem);
+                result = getResult(null, jcrPath, isAcItem);
             }
             return result;
+        }
+
+
+        /**
+         * Loop over all entries and evaluate allows/denies for those matching
+         * the given jcrPath.
+         *
+         * @param target Existing target item for which the permissions will be
+         * evaluated or <code>null</code>.
+         * @param targetPath Path used for the evaluation; pointing to an
+         * existing or non-existing item.
+         * @param isAcItem
+         * @return
+         * @throws RepositoryException
+         */
+        private Result getResult(Item target,
+                                 String targetPath,
+                                 boolean isAcItem) throws RepositoryException {
+            int allows = Permission.NONE;
+            int denies = Permission.NONE;
+            int allowPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
+            int denyPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
+            int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
+            int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
+
+            String parentPath = Text.getRelativeParent(targetPath, 1);
+            for (AccessControlEntry entry : entries) {
+                if (!(entry instanceof ACLTemplate.Entry)) {
+                    log.warn("Unexpected AccessControlEntry instance -> ignore");
+                    continue;
+                }
+                ACLTemplate.Entry entr = (ACLTemplate.Entry) entry;
+                int privs = entr.getPrivilegeBits();
+
+                if (!"".equals(parentPath) && entr.matches(parentPath)) {
+                    if (entr.isAllow()) {
+                        parentAllows |= Permission.diff(privs, parentDenies);
+                    } else {
+                        parentDenies |= Permission.diff(privs, parentAllows);
+                    }
+                }
+
+                boolean matches = (target != null) ? entr.matches(target) : entr.matches(targetPath);
+                if (matches) {
+                    if (entr.isAllow()) {
+                        allowPrivileges |= Permission.diff(privs, denyPrivileges);
+                        int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
+                        allows |= Permission.diff(permissions, denies);
+                    } else {
+                        denyPrivileges |= Permission.diff(privs, allowPrivileges);
+                        int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
+                        denies |= Permission.diff(permissions, allows);
+                    }
+                }
+            }
+            return new Result(allows, denies, allowPrivileges, denyPrivileges);
         }
 
         //--------------------------------------------< CompiledPermissions >---
@@ -348,14 +404,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * @return
          * @throws RepositoryException
          */
-        private ACLProvider.Entries reload() throws RepositoryException {
+        private List<AccessControlEntry> reload() throws RepositoryException {
             // reload the paths
             acPaths.clear();
 
             // acNodes must be ordered in the same order as the principals
             // in order to obtain proper acl-evalution in case the given
             // principal-set is ordered.
-            List allACEs = new ArrayList();
+            List<AccessControlEntry> allACEs = new ArrayList<AccessControlEntry>();
             // build acl-hierarchy assuming that principal-order determines the
             // acl-inheritance.
             for (Iterator it = principals.iterator(); it.hasNext();) {
@@ -371,79 +427,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 }
             }
 
-            return new ACLProvider.Entries(allACEs);
+            return allACEs;
         }
     }
 
     //--------------------------------------------------------------------------
-    /**
-     * Utility class that raps a list of access control entries and evaluates
-     * them for a specified item/path.
-     */
-    private class Entries {
-
-        private final List entries;
-
-        /**
-         *
-         * @param entries
-         */
-        private Entries(List entries) {
-            this.entries = entries;
-        }
-
-        /**
-         * Loop over all entries and evaluate allows/denies for those matching
-         * the given jcrPath.
-         *
-         * @param target Existing target item for which the permissions will be
-         * evaluated or <code>null</code>.
-         * @param targetPath Path used for the evaluation; pointing to an
-         * existing or non-existing item.
-         * @param isAcItem
-         * @return
-         * @throws RepositoryException
-         */
-        private AbstractCompiledPermissions.Result getResult(Item target,
-                                                             String targetPath,
-                                                             boolean isAcItem) throws RepositoryException {
-            int allows = Permission.NONE;
-            int denies = Permission.NONE;
-            int allowPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-            int denyPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-            int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
-            int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
-
-            String parentPath = Text.getRelativeParent(targetPath, 1);
-            for (Iterator it = entries.iterator(); it.hasNext() && allows != Permission.ALL;) {
-                ACLTemplate.Entry entr = (ACLTemplate.Entry) it.next();
-                int privs = entr.getPrivilegeBits();
-
-                if (!"".equals(parentPath) && entr.matches(parentPath)) {
-                    if (entr.isAllow()) {
-                        parentAllows |= Permission.diff(privs, parentDenies);
-                    } else {
-                        parentDenies |= Permission.diff(privs, parentAllows);
-                    }
-                }
-
-                boolean matches = (target != null) ? entr.matches(target) : entr.matches(targetPath);
-                if (matches) {
-                    if (entr.isAllow()) {
-                        allowPrivileges |= Permission.diff(privs, denyPrivileges);
-                        int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
-                        allows |= Permission.diff(permissions, denies);
-                    } else {
-                        denyPrivileges |= Permission.diff(privs, allowPrivileges);
-                        int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
-                        denies |= Permission.diff(permissions, allows);
-                    }
-                }
-            }
-            return new AbstractCompiledPermissions.Result(allows, denies, allowPrivileges, denyPrivileges);
-        }
-    }
-
     /**
      * Dummy effective policy 
      */
