@@ -714,15 +714,18 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                                           boolean fix, Collection<NodePropBundle> modifications) {
         //log.info(name + ": checking bundle '" + id + "'");
 
+        // skip all system nodes except root node
+        if (id.toString().endsWith("babecafebabe")
+                && !id.toString().equals("cafebabe-cafe-babe-cafe-babecafebabe")) {
+            return;
+        }
+
         // look at the node's children
         Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
 
             // skip check for system nodes (root, system root, version storage, node types)
             if (entry.getId().toString().endsWith("babecafebabe")) {
-                continue;
-            }
-            if (id.toString().endsWith("babecafebabe")) {
                 continue;
             }
 
