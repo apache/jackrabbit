@@ -501,31 +501,6 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 numExpected2,
                 getSize(nodes2));
 
-
-        // test pattern "nodeName|nodeName"
-        String pattern3 = firstNode.getName() + "|" + firstNode.getName();
-        String assertString3 = "node.getNodes(\"" + pattern3 + "\"): ";
-        // test if the names of the found nodes are matching the pattern
-        NodeIterator nodes3 = node.getNodes(pattern3);
-        while (nodes3.hasNext()) {
-            Node n = nodes3.nextNode();
-            assertEquals(assertString2 + "name comparison failed: ",
-                    firstNode.getName(),
-                    n.getName());
-        }
-        // test if the number of found nodes is correct
-        int numExpected3 = 0;
-        for (int i = 0; i < allNodes.size(); i++) {
-            Node n = (Node) allNodes.get(i);
-            if (n.getName().equals(firstNode.getName())) {
-                numExpected3++;
-            }
-        }
-        assertEquals(assertString3 + "number of nodes found: ",
-                numExpected3,
-                getSize(nodes3));
-
-
         // test pattern "nodeName", "nodeName"
         String pattern4 = firstNode.getName() + "," + firstNode.getName();
         String assertString4 = "node.getNodes(\"" + pattern4 + "\"): ";
@@ -801,30 +776,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 numExpected2,
                 getSize(properties2));
 
-
         // test: getProperties("propertyName|propertyName")
-        String pattern3 = firstProperty.getName() + "|" + firstProperty.getName();
-        String assertString3 = "node.getProperties(\"" + pattern3 + "\"): ";
-        // test if the names of the found properties are matching the pattern
-        PropertyIterator properties3 = node.getProperties(new String[] { pattern3 });
-        while (properties3.hasNext()) {
-            Property p = properties3.nextProperty();
-            assertEquals(assertString2 + "name comparison failed: ",
-                    firstProperty.getName(),
-                    p.getName());
-        }
-        // test if the number of found properties is correct
-        int numExpected3 = 0;
-        for (int i = 0; i < allProperties.size(); i++) {
-            Property p = (Property) allProperties.get(i);
-            if (p.getName().equals(firstProperty.getName())) {
-                numExpected3++;
-            }
-        }
-        assertEquals(assertString3 + "number of properties found: ",
-                numExpected3,
-                getSize(properties3));
-
         // test: getProperties("propertyName", "propertyName")
         String pattern4 = firstProperty.getName() + "," + firstProperty.getName();
         String assertString4 = "node.getProperties(\"" + pattern4 + "\"): ";
