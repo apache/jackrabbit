@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api.query;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.util.ISO9075;
 
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
@@ -67,6 +68,14 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected String jcrDeref;
 
     /**
+     * The string /${jcrRoot}${testRoot} with all components of the test path
+     * properly escaped for XPath.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-714">JCR-714</a>
+     */
+    protected String xpathRoot;
+
+    /**
      * The query object model factory for {@link #superuser}.
      */
     protected QueryObjectModelFactory qf;
@@ -88,6 +97,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         jcrRoot = superuser.getNamespacePrefix(NS_JCR_URI) + ":root";
         jcrContains = superuser.getNamespacePrefix(NS_JCR_URI) + ":contains";
         jcrDeref = superuser.getNamespacePrefix(NS_JCR_URI) + ":deref";
+        xpathRoot = "/" + jcrRoot + ISO9075.encodePath(testRoot);
         qm = superuser.getWorkspace().getQueryManager();
         qf = qm.getQOMFactory();
     }

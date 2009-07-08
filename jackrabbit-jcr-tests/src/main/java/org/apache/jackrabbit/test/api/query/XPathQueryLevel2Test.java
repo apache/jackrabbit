@@ -129,11 +129,9 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      *         and excluding with a word
      */
     private Statement getFullTextStatement() {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot);
-        tmp.append("/*[").append(jcrContains);
-        tmp.append("(., '\"quick brown\" -cat')]");
-        return new Statement(tmp.toString(), Query.XPATH);
+        String xpath =
+            xpathRoot + "/*[" + jcrContains + "(., '\"quick brown\" -cat')]";
+        return new Statement(xpath, Query.XPATH);
     }
 
     /**
@@ -141,24 +139,20 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
      *         property
      */
     private Statement getMultiValueStatement() {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot);
-        tmp.append("/*[@").append(propertyName2).append(" = 'two'");
-        tmp.append(" and @").append(propertyName1).append(" = 'existence']");
-        return new Statement(tmp.toString(), Query.XPATH);
+        String xpath =
+            xpathRoot + "/*[@" + propertyName2 + " = 'two' and @"
+            + propertyName1 + " = 'existence']";
+        return new Statement(xpath, Query.XPATH);
     }
 
     /**
      * @return Statement selecting nodes by its range in {@link #propertyName1}
      */
     private Statement getRangeStatement() {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot);
-        tmp.append("/*[@");
-        tmp.append(propertyName1);
-        tmp.append(" <= 'b' and @");
-        tmp.append(propertyName1);
-        tmp.append(" > 'a']");
-        return new Statement(tmp.toString(), Query.XPATH);
+        String xpath =
+            xpathRoot + "/*[@" + propertyName1 + " <= 'b' and @"
+            + propertyName1 + " > 'a']";
+        return new Statement(xpath, Query.XPATH);
     }
+
 }

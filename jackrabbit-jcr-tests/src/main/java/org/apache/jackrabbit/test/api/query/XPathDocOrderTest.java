@@ -53,14 +53,12 @@ public class XPathDocOrderTest extends AbstractQueryTest {
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderPositionFunction() throws Exception {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot).append("/*");
-        tmp.append("[position()=2]");
+        String xpath = xpathRoot + "/*[position()=2]";
         String resultPath = "";
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
     }
 
     /**
@@ -70,14 +68,12 @@ public class XPathDocOrderTest extends AbstractQueryTest {
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderPositionIndex() throws Exception {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot).append("/*");
-        tmp.append("[2]");
+        String xpath = xpathRoot + "/*[2]";
         String resultPath = "";
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
     }
 
     /**
@@ -86,14 +82,12 @@ public class XPathDocOrderTest extends AbstractQueryTest {
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderLastFunction() throws Exception {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot).append("/*");
-        tmp.append("[position()=last()]");
+        String xpath = xpathRoot + "/*[position()=last()]";
         String resultPath = "";
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext();) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
     }
 
     /**
@@ -102,11 +96,9 @@ public class XPathDocOrderTest extends AbstractQueryTest {
      * For configuration description see {@link XPathDocOrderTest}.
      */
     public void testDocOrderFirstFunction() throws Exception {
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot).append("/*");
-        tmp.append("[first()]");
+        String xpath = xpathRoot + "/*[first()]";
         String resultPath = testRootNode.getNodes().nextNode().getPath();
-        docOrderTest(new Statement(tmp.toString(), Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
     }
 
     //-----------------------------< internal >---------------------------------

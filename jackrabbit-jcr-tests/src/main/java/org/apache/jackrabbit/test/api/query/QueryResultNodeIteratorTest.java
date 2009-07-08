@@ -54,7 +54,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      *          if getSize() returns -1 (unavailable).
      */
     public void testGetSize() throws RepositoryException, NotExecutableException {
-        NodeIterator it = execute(testPath + "//*", Query.XPATH).getNodes();
+        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
         long size = testRootNode.getNodes().getSize();
         if (size != -1) {
             long count = 0;
@@ -72,7 +72,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * Tests the method <code>NodeIterator.getPosition()</code>.
      */
     public void testGetPosition() throws RepositoryException {
-        QueryResult rs = execute(testPath + "//*", Query.XPATH);
+        QueryResult rs = execute(xpathRoot + "//*", Query.XPATH);
 
         // getPosition initially returns 0
         NodeIterator it = rs.getNodes();
@@ -91,7 +91,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * <code>NodeIterator</code>.
      */
     public void testGetPositionEmptyIterator() throws RepositoryException {
-        QueryResult rs = execute(testPath + "/" + nodeName4, Query.XPATH);
+        QueryResult rs = execute(xpathRoot + "/" + nodeName4, Query.XPATH);
 
         NodeIterator it = rs.getNodes();
         assertFalse("NodeIterator must be empty.", it.hasNext());
@@ -105,7 +105,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * available.
      */
     public void testNoSuchElementException() throws RepositoryException {
-        NodeIterator it = execute(testPath + "//*", Query.XPATH).getNodes();
+        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
         while (it.hasNext()) {
             it.nextNode();
         }
@@ -121,7 +121,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * Tests if {@link javax.jcr.NodeIterator#skip(long)} works correctly.
      */
     public void testSkip() throws RepositoryException {
-        String query = testPath + "//*";
+        String query = xpathRoot + "//*";
         QueryResult rs = execute(query, Query.XPATH);
         NodeIterator it = rs.getNodes();
 
