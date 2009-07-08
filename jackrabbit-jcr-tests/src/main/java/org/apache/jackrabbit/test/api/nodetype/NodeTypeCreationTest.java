@@ -40,6 +40,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class NodeTypeCreationTest extends AbstractJCRTest {
 
     private static String ns = "http://example.org/jcr-tck/";
+    private static String propname = "{" + ns + "}" + "boolean";
     
     private NodeTypeManager ntm;
     
@@ -80,9 +81,7 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
     public void testPropertyDefinitionTemplate() throws Exception {
         PropertyDefinitionTemplate pdt = createBooleanPropTemplate();
         
-        String pref = superuser.getNamespacePrefix(ns);
-        
-        assertEquals(pref + ":" + "boolean", pdt.getName());
+        assertEquals(propname, pdt.getName());
         assertEquals(false, pdt.isAutoCreated());
         assertEquals(false, pdt.isMandatory());
         assertEquals(OnParentVersionAction.IGNORE, pdt.getOnParentVersion());
@@ -100,8 +99,6 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
     
     
     private PropertyDefinitionTemplate createBooleanPropTemplate() throws RepositoryException {
-        String propname = "{" + ns + "}" + "boolean";
-        
         PropertyDefinitionTemplate pdt = ntm.createPropertyDefinitionTemplate();
         pdt.setName(propname);
         pdt.setAutoCreated(false);
