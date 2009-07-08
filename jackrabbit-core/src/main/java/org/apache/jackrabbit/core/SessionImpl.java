@@ -65,6 +65,8 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
+import org.apache.jackrabbit.core.cluster.ClusterException;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.lock.LockManager;
@@ -110,6 +112,19 @@ import org.xml.sax.InputSource;
  */
 public class SessionImpl extends AbstractSession
         implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
+
+    /**
+     * Name of the session attribute that controls whether the
+     * {@link #refresh(boolean)} method will cause the repository to
+     * synchronize itself to changes in other cluster nodes. This cluster
+     * synchronization is enabled by default, unless an attribute with this
+     * name is set (any non-null value) for this session.
+     *
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1753">JCR-1753</a>
+     */
+    public static final String DISABLE_CLUSTER_SYNC_ON_REFRESH =
+        "org.apache.jackrabbit.disableClusterSyncOnRefresh";
 
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
@@ -915,12 +930,39 @@ public class SessionImpl extends AbstractSession
         // check sanity of this session
         sanityCheck();
 
+        // JCR-1753: Ensure that we are up to date with cluster changes
+        ClusterNode cluster = rep.getClusterNode();
+        if (cluster != null && clusterSyncOnRefresh()) {
+            try {
+                cluster.sync();
+            } catch (ClusterException e) {
+                throw new RepositoryException(
+                        "Unable to synchronize with the cluster", e);
+            }
+        }
+
         if (!keepChanges) {
             // optimization
             itemStateMgr.disposeAllTransientItemStates();
             return;
         }
         getItemManager().getRootNode().refresh(keepChanges);
+    }
+
+    /**
+     * Checks whether the {@link #refresh(boolean)} method should cause
+     * cluster synchronization.
+     * <p>
+     * Subclasses can override this method to implement alternative
+     * rules on when cluster synchronization should be done.
+     *
+     * @return <code>true</code> if the {@link #DISABLE_CLUSTER_SYNC_ON_REFRESH}
+     *         attribute is <em>not</em> set, <code>false</code> otherwise
+     * @since Apache Jackrabbit 1.6
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1753">JCR-1753</a>
+     */
+    protected boolean clusterSyncOnRefresh() {
+        return getAttribute(DISABLE_CLUSTER_SYNC_ON_REFRESH) == null;
     }
 
     /**
