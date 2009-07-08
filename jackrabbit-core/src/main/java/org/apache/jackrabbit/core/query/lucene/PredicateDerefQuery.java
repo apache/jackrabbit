@@ -140,7 +140,7 @@ public class PredicateDerefQuery extends Query {
         if (cQuery == subQuery) {
             return this;
         } else {
-            return new PredicateDerefQuery(subQuery, refProperty, nameTest, version, nsMappings);
+            return new PredicateDerefQuery(cQuery, refProperty, nameTest, version, nsMappings);
         }
     }
 
