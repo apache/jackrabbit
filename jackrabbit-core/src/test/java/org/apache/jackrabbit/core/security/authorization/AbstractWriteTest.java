@@ -40,6 +40,9 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * <code>AbstractEvaluationTest</code>...
@@ -922,6 +925,32 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         } finally {
             s.logout();
         }
+    }
+
+    public void testSingleDenyAfterAllAllowed() throws
+            NotExecutableException, RepositoryException {
+
+        /* add 'all' privilege for testSession at path. */
+        Privilege[] allPrivileges = privilegesFromName(Privilege.JCR_ALL);
+        givePrivileges(path, allPrivileges, getRestrictions(superuser, path));
+
+        /* deny a single privilege */
+        Privilege[] lockPrivileges = privilegesFromName(Privilege.JCR_LOCK_MANAGEMENT);
+        withdrawPrivileges(path, lockPrivileges, getRestrictions(superuser, path));
+
+        /* test permissions. expected result:
+           - testSession cannot lock at 'path'
+           - testSession doesn't have ALL privilege at path
+         */
+        Session testSession = getTestSession();
+        AccessControlManager acMgr = testSession.getAccessControlManager();
+
+        assertFalse(acMgr.hasPrivileges(path, allPrivileges));
+        assertFalse(acMgr.hasPrivileges(path, lockPrivileges));
+
+        List<Privilege> remainingprivs = new ArrayList<Privilege>(Arrays.asList(allPrivileges[0].getAggregatePrivileges()));
+        remainingprivs.remove(lockPrivileges[0]);
+        assertTrue(acMgr.hasPrivileges(path, remainingprivs.toArray(new Privilege[remainingprivs.size()])));
     }
 
     private static Node findPolicyNode(Node start) throws RepositoryException {

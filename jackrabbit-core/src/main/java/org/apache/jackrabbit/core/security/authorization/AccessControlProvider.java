@@ -24,6 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.Map;
 import java.util.Set;
+import java.security.Principal;
 
 /**
  * The AccessControlProvider is used to provide access control policy and entry
@@ -116,7 +117,7 @@ public interface AccessControlProvider {
      * specified set of principals.
      * @throws RepositoryException If an error occurs.
      */
-    CompiledPermissions compilePermissions(Set principals) throws RepositoryException;
+    CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if the given set of principals can access the
@@ -130,5 +131,5 @@ public interface AccessControlProvider {
      * <code>false</code> otherwise.
      * @throws RepositoryException If an error occurs.
      */
-    boolean canAccessRoot(Set principals) throws RepositoryException;
+    boolean canAccessRoot(Set<Principal> principals) throws RepositoryException;
 }

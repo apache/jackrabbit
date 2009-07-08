@@ -183,7 +183,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
-    public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
+    public CompiledPermissions compilePermissions(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
@@ -197,7 +197,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
      */
-    public boolean canAccessRoot(Set principals) throws RepositoryException {
+    public boolean canAccessRoot(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
         if (isAdminOrSystem(principals)) {
             return true;
@@ -338,14 +338,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          */
         private boolean readAllowed;
 
-        private AclPermissions(Set principals) throws RepositoryException {
+        private AclPermissions(Set<Principal> principals) throws RepositoryException {
             this(principals, true);
         }
 
-        private AclPermissions(Set principals, boolean listenToEvents) throws RepositoryException {
+        private AclPermissions(Set<Principal> principals, boolean listenToEvents) throws RepositoryException {
             principalNames = new ArrayList(principals.size());
-            for (Iterator it = principals.iterator(); it.hasNext();) {
-                principalNames.add(((Principal) it.next()).getName());
+            for (Principal princ : principals) {
+                principalNames.add(princ.getName());
             }
             jcrReadPrivilegeName = session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ).getName();
 
@@ -382,8 +382,9 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * this shortcut is not possible.
          *
          * @param principalnames
+         * @return true if read is allowed everywhere.
          */
-        private boolean isReadAllowed(Collection principalnames) {
+        private boolean isReadAllowed(Collection<String> principalnames) {
             boolean isReadAllowed = false;
             if (initializedWithDefaults) {
                 try {
@@ -478,7 +479,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
             int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
 
-            while (entries.hasNext() && allows != privAll) {
+            while (entries.hasNext()) {
                 ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
                 // Determine if the ACE is defined on the node at absPath (locally):
                 // Except for READ-privileges the permissions must be determined
@@ -616,6 +617,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         }
     }
 
+    //--------------------------------------------------------------------------
+    /**
+     * Inner class used to collect ACEs for a given set of principals throughout
+     * the node hierarchy.
+     */
     private class Entries {
 
         private final ListOrderedMap principalNamesToEntries;
