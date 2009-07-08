@@ -1181,8 +1181,7 @@ public class DatabaseFileSystem implements FileSystem {
                     // Skip comments and empty lines
                     if (!sql.startsWith("#") && sql.length() > 0) {
                         // replace prefix variable
-                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
-                        // execute sql stmt
+                        sql = createSchemaSql(sql);
                         stmt.executeUpdate(sql);
                     }
                     // read next sql stmt
@@ -1193,6 +1192,14 @@ public class DatabaseFileSystem implements FileSystem {
                 closeStatement(stmt);
             }
         }
+    }
+
+    /**
+     * Replace wildcards.
+     */
+    protected String createSchemaSql(String sql) {
+        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+        return sql;
     }
 
     /**

@@ -1021,7 +1021,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                     // Skip comments and empty lines
                     if (!sql.startsWith("#") && sql.length() > 0) {
                         // replace prefix variable
-                        sql = Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
+                        sql = createSchemaSql(sql);
                         // execute sql stmt
                         stmt.executeUpdate(sql);
                     }
@@ -1035,6 +1035,17 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                 closeStatement(stmt);
             }
         }
+    }
+
+    /**
+     * Replace wildcards and return the expanded SQL statement.
+     *
+     * @param sql The SQL with embedded wildcards.
+     * @return The SQL with no wildcards present.
+     */
+    protected String createSchemaSql(String sql) {
+       // replace prefix variable
+        return Text.replace(sql, SCHEMA_OBJECT_PREFIX_VARIABLE, schemaObjectPrefix);
     }
 
     /**
