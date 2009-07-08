@@ -564,7 +564,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 connectionManager.setAutoReconnect(true);
             }
         } while(blockOnConnectionLoss || trials > 0);
-        throw new ItemStateException(lastException.getMessage());
+        throw new ItemStateException(lastException.getMessage(), lastException);
     }
 
     /**
