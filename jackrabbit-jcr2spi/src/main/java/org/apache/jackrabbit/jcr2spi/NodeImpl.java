@@ -519,7 +519,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkStatus();
         List properties = new ArrayList();
         // traverse child properties using a filtering item visitor
-        accept(new ChildrenCollectorFilter(nameGlobs, properties, true, false, 1));
+        accept(new ChildrenCollectorFilter(nameGlobs, properties, false, true, 1));
         return new PropertyIteratorAdapter(properties);
     }
 
