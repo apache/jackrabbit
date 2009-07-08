@@ -44,13 +44,8 @@ public class XPathOrderByTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         isReadOnly = true;
         super.setUp();
-        StringBuffer tmp = new StringBuffer("/");
-        tmp.append(jcrRoot).append(testRoot);
-        tmp.append("/*[@");
-        tmp.append(propertyName1);
-        tmp.append("] order by @");
-        tmp.append(propertyName1);
-        baseStatement = tmp.toString();
+        baseStatement =
+            xpathRoot + "/*[@" + propertyName1 + "] order by @" + propertyName1;
     }
 
     /**

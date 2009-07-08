@@ -258,9 +258,10 @@ class AbstractOrderByTest extends AbstractQueryTest {
     protected String createXPath() throws RepositoryException {
         List languages = Arrays.asList(superuser.getWorkspace().getQueryManager().getSupportedQueryLanguages());
         if (languages.contains(Query.XPATH)) {
-            return "/" + jcrRoot + testRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
+            return xpathRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
         } else {
             return null;
         }
     }
+
 }
