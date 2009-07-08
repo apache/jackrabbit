@@ -59,7 +59,7 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         super.tearDown();
     }
 
-    public void testNodeTypeTemplate() throws Exception {
+    public void testNewNodeTypeTemplate() throws Exception {
         
         String ntname = "{" + ns + "}" + "littlemixin";
         
@@ -71,6 +71,7 @@ public class NodeTypeCreationTest extends AbstractJCRTest {
         ntt.setMixin(true);
         ntt.setOrderableChildNodes(false);
         ntt.setQueryable(false);
+        ntt.setPrimaryItemName(null);
         
         List pdefs = ntt.getPropertyDefinitionTemplates();
         pdefs.add(createBooleanPropTemplate());
