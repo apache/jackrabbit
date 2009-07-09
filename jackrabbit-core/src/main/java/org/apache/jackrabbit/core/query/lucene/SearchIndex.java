@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -592,7 +591,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException         if an error occurs while updating the index.
      */
-    public void updateNodes(Iterator<NodeId> remove, NodeStateIterator add)
+    public void updateNodes(Iterator<NodeId> remove, Iterator<NodeState> add)
             throws RepositoryException, IOException {
         checkOpen();
 
@@ -609,7 +608,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
         Collection<Document> addCollection = new ArrayList<Document>();
         while (add.hasNext()) {
-            NodeState state = add.nextNodeState();
+            NodeState state = add.next();
             if (state != null) {
                 UUID uuid = state.getNodeId().getUUID();
                 addedUUIDs.add(uuid);

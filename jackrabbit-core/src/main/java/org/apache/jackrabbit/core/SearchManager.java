@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.jcr.NamespaceException;
@@ -49,7 +48,6 @@ import org.apache.jackrabbit.core.query.QueryHandlerContext;
 import org.apache.jackrabbit.core.query.QueryObjectModelImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -425,8 +423,8 @@ public class SearchManager implements SynchronousEventListener {
             }
         }
 
-        NodeStateIterator addedStates = new NodeStateIterator() {
-            private final Iterator iter = addedNodes.keySet().iterator();
+        Iterator<NodeState> addedStates = new Iterator<NodeState>() {
+            private final Iterator<NodeId> iter = addedNodes.keySet().iterator();
 
             public void remove() {
                 throw new UnsupportedOperationException();
@@ -437,10 +435,6 @@ public class SearchManager implements SynchronousEventListener {
             }
 
             public NodeState next() {
-                return nextNodeState();
-            }
-
-            public NodeState nextNodeState() {
                 NodeState item = null;
                 NodeId id = (NodeId) iter.next();
                 try {
