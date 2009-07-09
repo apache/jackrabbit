@@ -1,11 +1,11 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha3
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha4
 
 Introduction
 ------------
 
-This is the second alpha release of Apache Jackrabbit 2.0. This release
-implements a pre-release version of the JCR 2.0 API, specified by the
-Java Specification Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
+This is an alpha release of Apache Jackrabbit 2.0. This release implements
+a pre-release version of the JCR 2.0 API, specified by the Java Specification
+Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
 
 The purpose of this alpha release is to allow people to test and review
 the new JCR 2.0 features before they are finalized. Feedback to both the
@@ -45,35 +45,33 @@ Jackrabbit releases, please see the Jackrabbit issue tracker at
 JCR 2.0 feature completeness
 ----------------------------
 
-The following 38 top level JCR 2.0 implementation issues are being tracked in
+The following 39 top level JCR 2.0 implementation issues are being tracked in
 the Jackrabbit issue tracker. Most of them have already been partially
 implemented, but the issue will only be marked as resolved once no more
 related work is needed.
 
-Open (16 issues)
+Open (14 issues)
   [JCR-1565] JSR 283 lifecycle management
   [JCR-1588] JSR 283: Access Control
   [JCR-1590] JSR 283: Locking
-  [JCR-1608] JSR 283: Workspace Management
+  [JCR-1591] JSR 283: NodeType Management
   [JCR-1712] JSR 283: JCR Names
   [JCR-1974] JSR 283: Evaluate Capabilities
   [JCR-2058] JSR 283: VersionManager and new versioning methods
   [JCR-2062] JSR 283: Repository Compliance
-  [JCR-2076] JSR 283: QOM and SQL2
   [JCR-2085] test case (TCK) maintenance for JCR 2.0
-  [JCR-2086] JSR 283: Implementation of EventIterator.getDate
   [JCR-2092] make spi query code compatible with JCR 2.0
   [JCR-2116] JSR 283: Built-In Node Types
-  [JCR-2117] JSR 283: adopt CND syntax changes
   [JCR-2137] Use type StaticOperand for fullTextSearchExpression
   [JCR-2140] JSR 283: Baselines
+  [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
 
-Resolved (22 issues)
+Resolved (25 issues)
   [JCR-1564] JSR 283 namespace handling
   [JCR-1589] JSR 283: Retention & Hold Management
-  [JCR-1591] JSR 283: NodeType Management
   [JCR-1592] JSR 283: Activities
   [JCR-1593] JSR 283: Simple versioning
+  [JCR-1608] JSR 283: Workspace Management
   [JCR-1609] JSR 283: new Property Types
   [JCR-1834] JSR 283: Create RepositoryFactory implementation
   [JCR-1839] JSR 283: Introduce Event.getDate()
@@ -88,9 +86,12 @@ Resolved (22 issues)
   [JCR-2061] JSR 283: References and Dereferencing of Property Values
   [JCR-2074] JSR 283: New Event Types
   [JCR-2075] JSR 283: Identifier based event filtering
+  [JCR-2076] JSR 283: QOM and SQL2
+  [JCR-2086] JSR 283: Implementation of EventIterator.getDate
   [JCR-2090] JSR 283: new methods on NodeType
   [JCR-2091] Searchability settings in PropertyDefinition
   [JCR-2093] Implement QueryObjectModelFactory.fullTextSearch() in ...
+  [JCR-2117] JSR 283: adopt CND syntax changes
 
 Release Contents
 ----------------
@@ -127,4 +128,3 @@ the Foundation's intellectual property framework limits the legal exposure
 of its 2,500+ contributors.
 
 For more information, visit http://www.apache.org/
-
