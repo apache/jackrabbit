@@ -717,7 +717,7 @@ public class SearchIndex extends AbstractQueryHandler {
             IndexSearcher searcher = new IndexSearcher(reader);
             try {
                 Query q = new TermQuery(new Term(
-                        FieldNames.WEAK_REFS, id.getUUID().toString()));
+                        FieldNames.WEAK_REFS, id.toString()));
                 searcher.search(q, new HitCollector() {
                     public void collect(int doc, float score) {
                         docs.add(doc);

@@ -645,7 +645,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     }
                     while (entries.hasNext()) {
                         NodeId childId = ((ChildNodeEntry) entries.next()).getId();
-                        Term uuidTerm = new Term(FieldNames.UUID, childId.getUUID().toString());
+                        Term uuidTerm = new Term(FieldNames.UUID, childId.toString());
                         TermDocs docs = reader.termDocs(uuidTerm);
                         try {
                             if (docs.next()) {

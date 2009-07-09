@@ -169,7 +169,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
      */
     private String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
-        char[] chars = id.getUUID().toString().toCharArray();
+        char[] chars = id.toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < nodePathTemplate.length(); i++) {
             char ch = nodePathTemplate.charAt(i);
@@ -224,7 +224,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check uuid
-        if (!state.getNodeId().getUUID().toString().equals(walker.getAttribute(UUID_ATTRIBUTE))) {
+        if (!state.getNodeId().toString().equals(walker.getAttribute(UUID_ATTRIBUTE))) {
             String msg = "invalid serialized state: uuid mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -563,13 +563,13 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     writer = new BufferedWriter(osw);
                 }
 
-                String parentId = (state.getParentId() == null) ? "" : state.getParentId().getUUID().toString();
+                String parentId = (state.getParentId() == null) ? "" : state.getParentId().toString();
                 String encodedNodeType = Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString());
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODE_ELEMENT + " "
-                        + UUID_ATTRIBUTE + "=\"" + id.getUUID() + "\" "
+                        + UUID_ATTRIBUTE + "=\"" + id + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + parentId + "\" "
-                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
+                        + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "
                         + NODETYPE_ATTRIBUTE + "=\"" + encodedNodeType + "\">\n");
 
@@ -601,7 +601,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     ChildNodeEntry entry = (ChildNodeEntry) iter.next();
                     writer.write("\t\t<" + NODE_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\" "
-                            + UUID_ATTRIBUTE + "=\"" + entry.getId().getUUID().toString() + "\">\n");
+                            + UUID_ATTRIBUTE + "=\"" + entry.getId() + "\">\n");
                     writer.write("\t\t</" + NODE_ELEMENT + ">\n");
                 }
                 writer.write("\t</" + NODES_ELEMENT + ">\n");
@@ -655,7 +655,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + PROPERTY_ELEMENT + " "
                         + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getName().toString()) + "\" "
-                        + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId().getUUID() + "\" "
+                        + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId() + "\" "
                         + MULTIVALUED_ATTRIBUTE + "=\"" + Boolean.toString(state.isMultiValued()) + "\" "
                         + DEFINITIONID_ATTRIBUTE + "=\"" + state.getDefinitionId().toString() + "\" "
                         + MODCOUNT_ATTRIBUTE + "=\"" + state.getModCount() + "\" "

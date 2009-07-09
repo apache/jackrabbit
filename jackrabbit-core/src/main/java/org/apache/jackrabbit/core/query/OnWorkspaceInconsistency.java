@@ -58,9 +58,9 @@ public abstract class OnWorkspaceInconsistency {
             log.error("Node {} ({}) has missing child '{}' ({})",
                     new Object[]{
                         resolver.getJCRPath(path),
-                        node.getNodeId().getUUID().toString(),
+                        node.getNodeId(),
                         resolver.getJCRName(child.getName()),
-                        child.getId().getUUID().toString()
+                        child.getId()
                     });
             throw exception;
         }

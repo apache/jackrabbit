@@ -156,7 +156,7 @@ public abstract class AbstractBundlePersistenceManager implements
         if (buf == null) {
             buf = new StringBuffer();
         }
-        char[] chars = id.getUUID().toString().toCharArray();
+        char[] chars = id.toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {
@@ -469,7 +469,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 state.setType(PropertyType.STRING);
                 state.setDefinitionId(idJcrUUID);
                 state.setMultiValued(false);
-                state.setValues(new InternalValue[]{InternalValue.create(id.getParentId().getUUID().toString())});
+                state.setValues(new InternalValue[]{InternalValue.create(id.getParentId().toString())});
             } else if (id.getName().equals(NameConstants.JCR_PRIMARYTYPE)) {
                 state = createNew(id);
                 state.setType(PropertyType.NAME);

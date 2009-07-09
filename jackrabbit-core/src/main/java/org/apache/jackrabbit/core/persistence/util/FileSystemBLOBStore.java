@@ -55,7 +55,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
         // the blobId is an absolute file system path
         StringBuffer sb = new StringBuffer();
         sb.append(FileSystem.SEPARATOR_CHAR);
-        char[] chars = id.getParentId().getUUID().toString().toCharArray();
+        char[] chars = id.getParentId().toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {

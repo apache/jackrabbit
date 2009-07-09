@@ -82,7 +82,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
 
     private static String buildNodeFolderPath(NodeId id) {
         StringBuffer sb = new StringBuffer();
-        char[] chars = id.getUUID().toString().toCharArray();
+        char[] chars = id.toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {
             if (chars[i] == '-') {
@@ -205,7 +205,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 Serializer.deserialize(state, in);
                 return state;
             } catch (Exception e) {
-                String msg = "failed to read node state: " + id.getUUID();
+                String msg = "failed to read node state: " + id;
                 log.debug(msg);
                 throw new ItemStateException(msg, e);
             } finally {
