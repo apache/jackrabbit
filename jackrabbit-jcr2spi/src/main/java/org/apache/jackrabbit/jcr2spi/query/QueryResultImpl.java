@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
@@ -60,11 +61,10 @@ class QueryResultImpl implements QueryResult {
         this.queryInfo = queryInfo;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    // TODO: JCR-2201: Implement QueryResult.getSelectorNames()
     public String[] getSelectorNames() throws RepositoryException {
-        return queryInfo.getColumnNames();
+        throw new UnsupportedRepositoryOperationException(
+                "JCR-2201: Implement QueryResult.getSelectorNames()");
     }
 
     /**
