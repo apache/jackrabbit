@@ -48,7 +48,7 @@ public abstract class NodeResolverTest extends AbstractJCRTest {
         nodeResolver = createNodeResolver(superuser);
     }
 
-    private static UserImpl getCurrentUser(Session session) throws NotExecutableException, RepositoryException {
+    protected static UserImpl getCurrentUser(Session session) throws NotExecutableException, RepositoryException {
         if (!(session instanceof JackrabbitSession)) {
             throw new NotExecutableException();
         }
