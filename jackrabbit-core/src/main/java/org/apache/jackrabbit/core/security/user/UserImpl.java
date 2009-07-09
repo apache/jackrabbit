@@ -34,35 +34,20 @@ import java.security.Principal;
 /**
  * UserImpl
  */
-class UserImpl extends AuthorizableImpl implements User {
+public class UserImpl extends AuthorizableImpl implements User {
 
     private final String id;
 
     private Principal principal;
     private Impersonation impersonation;
 
-    private UserImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
+    protected UserImpl(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
         super(node, userManager);
 
         id = node.getProperty(P_USERID).getString();
     }
 
     //--------------------------------------------------------------------------
-    /**
-     * @param node
-     * @param userManager
-     * @return
-     * @throws RepositoryException
-     */
-    static User create(NodeImpl node, UserManagerImpl userManager) throws RepositoryException {
-        if (node == null || !node.isNodeType(NT_REP_USER)) {
-            throw new IllegalArgumentException();
-        }
-        if (!Text.isDescendant(USERS_PATH, node.getPath())) {
-            throw new IllegalArgumentException("User has to be within the User Path");
-        }
-        return new UserImpl(node, userManager);
-    }
 
     /**
      *

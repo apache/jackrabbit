@@ -55,10 +55,10 @@ public abstract class ProtectedItemModifier {
 
     protected ProtectedItemModifier(int permission) {
         Class cl = getClass();
-        if (!(cl.equals(UserManagerImpl.class) ||
-              cl.equals(RetentionManagerImpl.class) ||
-              cl.equals(ACLEditor.class) ||
-              cl.equals(org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class))) {
+        if (!(UserManagerImpl.class.isAssignableFrom(cl) ||
+              RetentionManagerImpl.class.isAssignableFrom(cl) ||
+              ACLEditor.class.isAssignableFrom(cl) ||
+              org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class.isAssignableFrom(cl))) {
             throw new IllegalArgumentException("Only UserManagerImpl, RetentionManagerImpl and ACLEditor may extend from the ProtectedItemModifier");
         }
         this.permission = permission;

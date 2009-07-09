@@ -48,7 +48,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractLoginModule.class);
 
-    private User user;
+    protected User user;
     private UserManager userManager;
 
     /**
