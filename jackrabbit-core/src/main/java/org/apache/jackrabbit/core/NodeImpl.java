@@ -339,7 +339,7 @@ public class NodeImpl extends ItemImpl implements Node {
             if (name.equals(NameConstants.JCR_UUID)) {
                 // jcr:uuid property
                 genValues = new InternalValue[]{
-                        InternalValue.create(thisState.getNodeId().getUUID().toString())
+                        InternalValue.create(thisState.getNodeId().toString())
                 };
             }
 /*

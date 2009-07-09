@@ -193,7 +193,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
             Set sortedDocs = new TreeSet();
             try {
                 while ((node = hits.nextScoreNode()) != null) {
-                    String uuid = node.getNodeId().getUUID().toString();
+                    String uuid = node.getNodeId().toString();
                     Term id = new Term(FieldNames.UUID, uuid);
                     TermDocs tDocs = reader.termDocs(id);
                     try {

@@ -112,7 +112,7 @@ public class NodeReferencesId implements Serializable {
             return true;
         }
         if (obj instanceof NodeReferencesId) {
-            return targetId.getUUID().equals(((NodeReferencesId) obj).targetId.getUUID());
+            return targetId.equals(((NodeReferencesId) obj).targetId);
         }
         return false;
     }

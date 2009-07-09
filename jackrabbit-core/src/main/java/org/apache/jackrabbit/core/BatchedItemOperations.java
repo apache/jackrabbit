@@ -288,8 +288,8 @@ public class BatchedItemOperations extends ItemValidator {
         NodeId destParentId = destParentState.getNodeId();
         if (destParentId.equals(srcId) || hierMgr.isAncestor(srcId, destParentId)) {
             String msg =
-                "Cloning Node with id " + srcId.getUUID()
-                + " to parent with id " + destParentId.getUUID()
+                "Cloning Node with id " + srcId
+                + " to parent with id " + destParentId
                 + " would create a share cycle.";
             log.debug(msg);
             throw new RepositoryException(msg);
@@ -299,7 +299,7 @@ public class BatchedItemOperations extends ItemValidator {
         if (!srcState.addShare(destParentState.getNodeId())) {
             String msg =
                 "Adding a shareable node with id ("
-                + destParentState.getNodeId().getUUID()
+                + destParentState.getNodeId()
                 + ") twice to the same parent is not supported.";
             log.debug(msg);
             throw new UnsupportedRepositoryOperationException(msg);
@@ -1530,7 +1530,7 @@ public class BatchedItemOperations extends ItemValidator {
             if (NameConstants.JCR_UUID.equals(name)) {
                 // jcr:uuid property
                 genValues = new InternalValue[]{InternalValue.create(
-                        parent.getNodeId().getUUID().toString())};
+                        parent.getNodeId().toString())};
             }
         } else if (NameConstants.NT_BASE.equals(declaringNT)) {
             // nt:base node type
@@ -1927,7 +1927,7 @@ public class BatchedItemOperations extends ItemValidator {
             if (def.getDeclaringNodeType().equals(NameConstants.MIX_REFERENCEABLE)
                     && propName.equals(NameConstants.JCR_UUID)) {
                 // set correct value of jcr:uuid property
-                newState.setValues(new InternalValue[]{InternalValue.create(parentId.getUUID().toString())});
+                newState.setValues(new InternalValue[]{InternalValue.create(parentId.toString())});
             } else {
                 InternalValue[] newValues = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {

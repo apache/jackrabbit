@@ -185,7 +185,7 @@ public class NodeIndexer {
         // special fields
         // UUID
         doc.add(new Field(
-                FieldNames.UUID, node.getNodeId().getUUID().toString(),
+                FieldNames.UUID, node.getNodeId().toString(),
                 Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
         try {
             // parent UUID

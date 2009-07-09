@@ -846,7 +846,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         NodeId id = hmgr.resolveNodePath(session.getQPath(node.getStringValue()));
                         if (id != null) {
-                            query = new SimilarityQuery(id.getUUID().toString(), analyzer);
+                            query = new SimilarityQuery(id.toString(), analyzer);
                         } else {
                             query = new BooleanQuery();
                         }
