@@ -312,7 +312,7 @@ public class ItemStateBinding {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(UUID.fromString(id).getRawBytes());
+            out.write(new NodeId(id).getRawBytes());
         }
     }
 
@@ -377,7 +377,7 @@ public class ItemStateBinding {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(id.getUUID().getRawBytes());
+            out.write(id.getRawBytes());
         }
     }
 
