@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
@@ -187,8 +186,8 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            UUID parentUuid = readUUID(in);
-            log.debug("ParentUUID: " + parentUuid);
+            NodeId parentId = readID(in);
+            log.debug("ParentUUID: " + parentId);
         } catch (IOException e) {
             log.error("Error while reading ParentUUID: " + e);
             return false;
@@ -231,11 +230,11 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            UUID cneUUID = readUUID(in);
-            while (cneUUID != null) {
+            NodeId cneId = readID(in);
+            while (cneId != null) {
                 Name cneName = readQName(in);
-                log.debug("ChildNodentry: " + cneUUID + ":" + cneName);
-                cneUUID = readUUID(in);
+                log.debug("ChildNodentry: " + cneId + ":" + cneName);
+                cneId = readID(in);
             }
         } catch (IOException e) {
             log.error("Error while reading child node entry: " + e);
@@ -397,7 +396,7 @@ public class BundleBinding extends ItemStateBinding {
                     break;
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
-                    val = InternalValue.create(readUUID(in));
+                    val = InternalValue.create(readID(in));
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,
@@ -548,8 +547,8 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     try {
-                        UUID uuid = readUUID(in);
-                        log.debug("  reference: " + uuid);
+                        NodeId id = readID(in);
+                        log.debug("  reference: " + id);
                     } catch (IOException e) {
                         log.error("Error while reading reference value: " + e);
                         return false;
@@ -721,7 +720,7 @@ public class BundleBinding extends ItemStateBinding {
                     break;
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
-                    writeUUID(out, val.getUUID());
+                    writeID(out, val.getNodeId());
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,

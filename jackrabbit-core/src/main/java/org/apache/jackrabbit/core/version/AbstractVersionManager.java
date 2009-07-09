@@ -546,7 +546,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
             // check for jcr:activity
             if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
-                NodeId actId = new NodeId(node.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue().getUUID());
+                NodeId actId = node.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue().getNodeId();
                 InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
                 act.addVersion(v);
             }

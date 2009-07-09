@@ -47,6 +47,16 @@ public class NodeId extends ItemId {
     }
 
     /**
+     * Creates a node identifier from the given UUID string.
+     *
+     * @param uuid UUID string
+     * @throws IllegalArgumentException if the UUID string is invalid
+     */
+    public NodeId(String uuid) throws IllegalArgumentException {
+        this(new UUID(uuid));
+    }
+
+    /**
      * Returns <code>true</code> as this class represents a node identifier,
      * not a property identifier.
      *

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.value;
 
 import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
@@ -25,7 +26,6 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,9 +93,9 @@ public final class InternalValueFactory extends AbstractQValueFactory {
                 case PropertyType.URI:
                     return InternalValue.create(URI.create(value));
                 case PropertyType.REFERENCE:
-                    return InternalValue.create(new UUID(value));
+                    return InternalValue.create(new NodeId(value));
                 case PropertyType.WEAKREFERENCE:
-                    return InternalValue.create(new UUID(value), true);
+                    return InternalValue.create(new NodeId(value), true);
                 case PropertyType.BINARY:
                     return InternalValue.create(value.getBytes("UTF-8"));
                 // default: invalid type specified -> see below.

@@ -145,8 +145,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
             if (values != null) {
                 InternalVersion[] versions = new InternalVersion[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    NodeId vId = new NodeId(values[i].getUUID());
-                    versions[i] = versionHistory.getVersion(vId);
+                    versions[i] = versionHistory.getVersion(values[i].getNodeId());
                 }
                 return versions;
             } else {
@@ -179,8 +178,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         if (values != null) {
             InternalVersion[] versions = new InternalVersion[values.length];
             for (int i = 0; i < values.length; i++) {
-                NodeId vId = new NodeId(values[i].getUUID());
-                versions[i] = versionHistory.getVersion(vId);
+                versions[i] = versionHistory.getVersion(values[i].getNodeId());
             }
             return versions;
         } else {
@@ -196,8 +194,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     public InternalVersion getLinearPredecessor() {
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null && values.length > 0) {
-            NodeId vId = new NodeId(values[0].getUUID());
-            return versionHistory.getVersion(vId);
+            return versionHistory.getVersion(values[0].getNodeId());
         } else {
             return null;
         }
@@ -264,7 +261,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {
             values[i] = InternalValue.create(
-                    ((InternalVersion) cessors.get(i)).getId().getUUID());
+                    ((InternalVersion) cessors.get(i)).getId());
         }
         node.setPropertyValues(propname, PropertyType.STRING, values);
         if (store) {
@@ -427,8 +424,8 @@ class InternalVersionImpl extends InternalVersionItemImpl
         InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
         if (values != null) {
             for (InternalValue value : values) {
-                NodeId vId = new NodeId(value.getUUID());
-                InternalVersionImpl v = (InternalVersionImpl) versionHistory.getVersion(vId);
+                InternalVersionImpl v = (InternalVersionImpl)
+                        versionHistory.getVersion(value.getNodeId());
                 v.internalAddSuccessor(this, false);
             }
         }
@@ -462,10 +459,11 @@ class InternalVersionImpl extends InternalVersionItemImpl
      */
     public InternalActivityImpl getActivity() throws RepositoryException {
         if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
-            NodeId actId = new NodeId(node.getPropertyValue(NameConstants.JCR_ACTIVITY).getUUID());
-            return (InternalActivityImpl) vMgr.getItem(actId);
+            InternalValue value = node.getPropertyValue(NameConstants.JCR_ACTIVITY);
+            return (InternalActivityImpl) vMgr.getItem(value.getNodeId());
         } else {
             return null;
         }
     }
+
 }

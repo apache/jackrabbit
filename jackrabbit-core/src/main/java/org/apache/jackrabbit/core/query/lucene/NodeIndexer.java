@@ -30,7 +30,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.document.Document;
@@ -319,12 +318,12 @@ public class NodeIndexer {
                 break;
             case PropertyType.REFERENCE:
                 if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, value.getUUID(), false);
+                    addReferenceValue(doc, fieldName, value.getNodeId(), false);
                 }
                 break;
             case PropertyType.WEAKREFERENCE:
                 if (isIndexed(name)) {
-                    addReferenceValue(doc, fieldName, value.getUUID(), true);
+                    addReferenceValue(doc, fieldName, value.getNodeId(), true);
                 }
                 break;
             case PropertyType.PATH:
@@ -583,8 +582,7 @@ public class NodeIndexer {
      * @param weak          Flag indicating whether it's a WEAKREFERENCE (true) or a REFERENCE (flase)
      */
     protected void addReferenceValue(Document doc, String fieldName, Object internalValue, boolean weak) {
-        UUID value = (UUID) internalValue;
-        String uuid = value.toString();
+        String uuid = internalValue.toString();
         doc.add(createFieldWithoutNorms(fieldName, uuid,
                 weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE));
         doc.add(new Field(FieldNames.PROPERTIES,

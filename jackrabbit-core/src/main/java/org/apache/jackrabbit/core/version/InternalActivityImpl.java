@@ -30,7 +30,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Implements a internal representation of an activity node.
@@ -103,9 +102,9 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
             InternalValue[] vs = node.getPropertyValues(NameConstants.REP_VERSIONS);
             versions = new InternalValue[vs.length+1];
             System.arraycopy(vs, 0, versions, 0, vs.length);
-            versions[vs.length] = InternalValue.create(v.getId().getUUID());
+            versions[vs.length] = InternalValue.create(v.getId());
         } else {
-            versions = new InternalValue[]{InternalValue.create(v.getId().getUUID())};
+            versions = new InternalValue[]{InternalValue.create(v.getId())};
         }
         node.setPropertyValues(NameConstants.REP_VERSIONS, PropertyType.REFERENCE, versions);
         node.store();
@@ -119,9 +118,9 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
     public void removeVersion(InternalVersionImpl v) throws RepositoryException {
         List<InternalValue> versions = new LinkedList<InternalValue>();
         if (node.hasProperty(NameConstants.REP_VERSIONS)) {
-            UUID vUUID = v.getId().getUUID();
+            NodeId vId = v.getId();
             for (InternalValue ref: node.getPropertyValues(NameConstants.REP_VERSIONS)) {
-                if (!ref.getUUID().equals(vUUID)) {
+                if (!vId.equals(ref.getNodeId())) {
                     versions.add(ref);
                 }
             }
@@ -142,8 +141,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
         if (node.hasProperty(NameConstants.REP_VERSIONS)) {
             InternalVersion best = null;
             for (InternalValue ref: node.getPropertyValues(NameConstants.REP_VERSIONS)) {
-                NodeId versionId = new NodeId(ref.getUUID());
-                InternalVersion v = history.getVersion(versionId);
+                InternalVersion v = history.getVersion(ref.getNodeId());
                 if (v != null) {
                     // currently we assume that the last version is the best
                     best = v;
@@ -162,10 +160,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
         Map<NodeId, InternalVersion> changeset = new HashMap<NodeId, InternalVersion>();
         if (node.hasProperty(NameConstants.REP_VERSIONS)) {
             for (InternalValue ref: node.getPropertyValues(NameConstants.REP_VERSIONS)) {
-                // currently we rely on the fact that the latest version is
-                // also the last in the references
-                NodeId versionId = new NodeId(ref.getUUID());
-                InternalVersion v = vMgr.getVersion(versionId);
+                InternalVersion v = vMgr.getVersion(ref.getNodeId());
                 changeset.put(v.getVersionHistory().getId(), v);
             }
         }

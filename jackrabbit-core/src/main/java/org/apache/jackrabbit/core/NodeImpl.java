@@ -1368,15 +1368,6 @@ public class NodeImpl extends ItemImpl implements Node {
     }
 
     /**
-     * Returns the (internal) uuid of this node.
-     *
-     * @return the uuid of this node
-     */
-    public UUID internalGetUUID() {
-        return ((NodeId) id).getUUID();
-    }
-
-    /**
      * Checks various pre-conditions that are common to all
      * <code>setProperty()</code> methods. The checks performed are:
      * <ul>
@@ -1635,8 +1626,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @param nodeName     name of the new node
      * @param nodeTypeName name of the new node's node type or <code>null</code>
      *                     if it should be determined automatically
-     * @param uuid         uuid of the new node or <code>null</code> if a new
-     *                     uuid should be assigned
+     * @param id           id of the new node or <code>null</code> if a new
+     *                     id should be assigned
      * @return the newly added node
      * @throws ItemExistsException
      * @throws NoSuchNodeTypeException
@@ -1646,7 +1637,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws RepositoryException
      */
     public synchronized NodeImpl addNode(Name nodeName, Name nodeTypeName,
-                                         UUID uuid)
+                                         NodeId id)
             throws ItemExistsException, NoSuchNodeTypeException, VersionException,
             ConstraintViolationException, LockException, RepositoryException {
         // check state of this instance
@@ -1660,7 +1651,7 @@ public class NodeImpl extends ItemImpl implements Node {
         if (nodeTypeName != null) {
             nt = session.getNodeTypeManager().getNodeType(nodeTypeName);
         }
-        return internalAddChildNode(nodeName, nt, uuid == null ? null : new NodeId(uuid));
+        return internalAddChildNode(nodeName, nt, id);
     }
 
     /**
@@ -1990,7 +1981,7 @@ public class NodeImpl extends ItemImpl implements Node {
         existing.remove();
 
         // create new child node
-        NodeImpl node = addNode(nodeName, nodeTypeName, id.getUUID());
+        NodeImpl node = addNode(nodeName, nodeTypeName, id);
         if (mixinNames != null) {
             for (int i = 0; i < mixinNames.length; i++) {
                 node.addMixin(mixinNames[i]);
@@ -3034,7 +3025,7 @@ public class NodeImpl extends ItemImpl implements Node {
             throw new UnsupportedRepositoryOperationException();
         }
 
-        return internalGetUUID().toString();
+        return getNodeId().toString();
     }
 
     /**
@@ -3359,7 +3350,9 @@ public class NodeImpl extends ItemImpl implements Node {
         try {
             internalSetProperty(NameConstants.JCR_ISCHECKEDOUT, InternalValue.create(false));
             if (isFull) {
-                internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(new UUID(v.getUUID())));
+                internalSetProperty(
+                        NameConstants.JCR_BASEVERSION,
+                        InternalValue.create(new NodeId(v.getUUID())));
                 internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
                 if (hasProperty(NameConstants.JCR_ACTIVITY)) {
                     removeChildProperty(NameConstants.JCR_ACTIVITY);
@@ -3413,11 +3406,11 @@ public class NodeImpl extends ItemImpl implements Node {
                 Version baseVersion = session.getVersionManager().checkout(this);
                 props[1] = internalSetProperty(NameConstants.JCR_PREDECESSORS,
                         new InternalValue[]{
-                                InternalValue.create(new UUID(baseVersion.getUUID()))
+                                InternalValue.create(new NodeId(baseVersion.getUUID()))
                         });
                 if (activity != null) {
                     props[2] = internalSetProperty(NameConstants.JCR_ACTIVITY,
-                            InternalValue.create(activity.getNodeId().getUUID()));
+                            InternalValue.create(activity.getNodeId()));
                 }
             }
             if (hasPendingChanges) {
@@ -3569,7 +3562,7 @@ public class NodeImpl extends ItemImpl implements Node {
             try {
                 // check if versionable node exists
                 InternalFrozenNode fn = ((VersionImpl) version).getInternalFrozenNode();
-                node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                node = (NodeImpl) session.getNodeById(fn.getFrozenId());
                 if (removeExisting) {
                     try {
                         Path relative = session.getQPath(relPath);
@@ -3579,7 +3572,7 @@ public class NodeImpl extends ItemImpl implements Node {
                         // move to respective location
                         session.move(node.getPath(), session.getJCRPath(dstPath));
                         // need to refetch ?
-                        node = (NodeImpl) session.getNodeByUUID(fn.getFrozenUUID());
+                        node = (NodeImpl) session.getNodeById(fn.getFrozenId());
                     } catch (NameException e) {
                         throw new RepositoryException(e);
                     }
@@ -3885,9 +3878,9 @@ public class NodeImpl extends ItemImpl implements Node {
                 Value[] vals = getProperty(NameConstants.JCR_PREDECESSORS).getValues();
                 InternalValue[] v = new InternalValue[vals.length + 1];
                 for (int i = 0; i < vals.length; i++) {
-                    v[i] = InternalValue.create(UUID.fromString(vals[i].getString()));
+                    v[i] = InternalValue.create(new NodeId(vals[i].getString()));
                 }
-                v[vals.length] = InternalValue.create(UUID.fromString(version.getUUID()));
+                v[vals.length] = InternalValue.create(new NodeId(version.getUUID()));
                 internalSetProperty(NameConstants.JCR_PREDECESSORS, v);
             }
 
@@ -3932,7 +3925,7 @@ public class NodeImpl extends ItemImpl implements Node {
             int i = 0;
             while (iter.hasNext()) {
                 String uuid = iter.next();
-                vals[i++] = InternalValue.create(UUID.fromString(uuid));
+                vals[i++] = InternalValue.create(new NodeId(uuid));
             }
             internalSetProperty(NameConstants.JCR_MERGEFAILED, vals);
         }
@@ -4013,10 +4006,10 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
-        // get frozen uuid
-        UUID uuid = frozen.getFrozenUUID();
+        // get frozen id
+        NodeId id = frozen.getFrozenId();
 
-        NodeImpl node = internalAddChildNode(name, nt, new NodeId(uuid));
+        NodeImpl node = internalAddChildNode(name, nt, id);
 
         // get frozen mixin
         // todo: also respect mixing types on creation?
@@ -4057,10 +4050,10 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeTypeManagerImpl ntMgr = session.getNodeTypeManager();
         NodeTypeImpl nt = ntMgr.getNodeType(frozen.getFrozenPrimaryType());
 
-        // get frozen uuid
-        UUID uuid = frozen.getFrozenUUID();
+        // get frozen id
+        NodeId id = frozen.getFrozenId();
 
-        NodeImpl node = internalAddNode(relPath, nt, new NodeId(uuid));
+        NodeImpl node = internalAddNode(relPath, nt, id);
 
         // get frozen mixin
         // todo: also respect mixing types on creation?
@@ -4327,8 +4320,9 @@ public class NodeImpl extends ItemImpl implements Node {
 
         if (isFull) {
             // 2. N's jcr:baseVersion property will be changed to point to V.
-            UUID uuid = ((NodeId) version.getId()).getUUID();
-            internalSetProperty(NameConstants.JCR_BASEVERSION, InternalValue.create(uuid));
+            internalSetProperty(
+                    NameConstants.JCR_BASEVERSION,
+                    InternalValue.create((NodeId) version.getId()));
 
             // 4. N's jcr:predecessor property is set to null
             internalSetProperty(NameConstants.JCR_PREDECESSORS, InternalValue.EMPTY_ARRAY, PropertyType.REFERENCE);
@@ -4362,8 +4356,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check uuid
         if (isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-            UUID uuid = freeze.getFrozenUUID();
-            if (!internalGetUUID().equals(uuid)) {
+            if (!getNodeId().equals(freeze.getFrozenId())) {
                 throw new ItemExistsException("Unable to restore version of " + this + ". UUID changed.");
             }
         }
@@ -4435,10 +4428,10 @@ public class NodeImpl extends ItemImpl implements Node {
             } else if (n.getDefinition().getOnParentVersion() == OnParentVersionAction.VERSION) {
                 // only remove, if node to be restored does not contain child,
                 // or if restored child is not versionable
-                UUID vhUUID = n.hasProperty(NameConstants.JCR_VERSIONHISTORY)
-                        ? new UUID(n.getProperty(NameConstants.JCR_VERSIONHISTORY).getString())
+                NodeId vhId = n.hasProperty(NameConstants.JCR_VERSIONHISTORY)
+                        ? new NodeId(n.getProperty(NameConstants.JCR_VERSIONHISTORY).getString())
                         : null;
-                if (vhUUID == null || !freeze.hasFrozenHistory(vhUUID)) {
+                if (vhId == null || !freeze.hasFrozenHistory(vhId)) {
                     n.internalRemove(true);
                 }
             }
@@ -4451,9 +4444,9 @@ public class NodeImpl extends ItemImpl implements Node {
             if (child instanceof InternalFrozenNode) {
                 InternalFrozenNode f = (InternalFrozenNode) child;
                 // check for existing
-                if (f.getFrozenUUID() != null) {
+                if (f.getFrozenId() != null) {
                     try {
-                        NodeImpl existing = (NodeImpl) session.getNodeByUUID(f.getFrozenUUID());
+                        NodeImpl existing = (NodeImpl) session.getNodeById(f.getFrozenId());
                         // check if one of this restore trees node
                         if (removeExisting) {
                             existing.remove();

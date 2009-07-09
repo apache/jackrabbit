@@ -833,7 +833,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                 Version[] restored = null;
                 for (VersionImpl v : toRestore.values()) {
                     try {
-                        NodeImpl node = (NodeImpl) session.getNodeByUUID(v.getInternalFrozenNode().getFrozenUUID());
+                        NodeImpl node = (NodeImpl) session.getNodeById(v.getInternalFrozenNode().getFrozenId());
                         restored = node.internalRestore(v, vsel, removeExisting);
                         // remove restored versions from set
                         for (Version r : restored) {
