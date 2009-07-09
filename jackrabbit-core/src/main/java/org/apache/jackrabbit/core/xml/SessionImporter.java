@@ -112,7 +112,7 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(), null);
             // remember uuid mapping
             if (node.isNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
+                refTracker.mappedId(nodeInfo.getId(), node.getNodeId());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             // if conflicting node is shareable, then clone it
@@ -290,11 +290,11 @@ public class SessionImporter implements Importer {
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
                     Value val = values[i];
-                    UUID original = UUID.fromString(val.getString());
-                    UUID adjusted = refTracker.getMappedUUID(original);
+                    NodeId original = new NodeId(UUID.fromString(val.getString()));
+                    NodeId adjusted = refTracker.getMappedId(original);
                     if (adjusted != null) {
                         newVals[i] = session.getValueFactory().createValue(
-                                session.getNodeByUUID(adjusted),
+                                session.getNodeByUUID(adjusted.getUUID()),
                                 prop.getType() != PropertyType.REFERENCE);
                     } else {
                         // reference doesn't need adjusting, just copy old value
@@ -304,10 +304,10 @@ public class SessionImporter implements Importer {
                 prop.setValue(newVals);
             } else {
                 Value val = prop.getValue();
-                UUID original = UUID.fromString(val.getString());
-                UUID adjusted = refTracker.getMappedUUID(original);
+                NodeId original = new NodeId(UUID.fromString(val.getString()));
+                NodeId adjusted = refTracker.getMappedId(original);
                 if (adjusted != null) {
-                    prop.setValue(session.getNodeByUUID(adjusted));
+                    prop.setValue(session.getNodeById(adjusted).getUUID());
                 }
             }
         }
