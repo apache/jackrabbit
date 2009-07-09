@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.retention;
 
 import javax.jcr.retention.RetentionPolicy;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;

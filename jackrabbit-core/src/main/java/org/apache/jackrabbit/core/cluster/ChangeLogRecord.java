@@ -28,7 +28,7 @@ import java.util.HashMap;
 import javax.jcr.Session;
 import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.Record;

@@ -21,7 +21,7 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * This interface defines the internal activity.

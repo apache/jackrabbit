@@ -28,7 +28,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 
 /**

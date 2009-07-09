@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.ItemId;
-
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 
 /**
  * Registers changes made to states and references and consolidates

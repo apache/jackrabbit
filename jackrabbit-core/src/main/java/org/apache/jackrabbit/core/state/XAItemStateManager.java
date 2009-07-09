@@ -16,27 +16,28 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.TransactionException;
-import org.apache.jackrabbit.core.TransactionContext;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+
+import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.iterators.FilterIterator;
 import org.apache.jackrabbit.core.InternalXAResource;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.TransactionContext;
+import org.apache.jackrabbit.core.TransactionException;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.uuid.UUID;
-import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.PropertyType;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.IdentityHashMap;
-import java.util.Collections;
 
 /**
  * Extension to <code>LocalItemStateManager</code> that remembers changes on

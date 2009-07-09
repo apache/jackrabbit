@@ -36,14 +36,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
@@ -61,7 +59,7 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
@@ -1052,7 +1050,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
+    public synchronized Iterable<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException, RepositoryException {
         ResultSet rs = null;
         try {
@@ -1077,7 +1075,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             Statement stmt = connectionManager.executeStmt(sql, keys, false, maxCount);
             rs = stmt.getResultSet();
-            ArrayList<UUID> result = new ArrayList<UUID>();
+            ArrayList<NodeId> result = new ArrayList<NodeId>();
             while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {
                 UUID current;
                 if (getStorageModel() == SM_BINARY_KEYS) {
@@ -1093,9 +1091,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         continue;
                     }
                 }
-                result.add(current);
+                result.add(new NodeId(current));
             }
-            return new ListNodeIdIterator(result);
+            return result;
         } catch (SQLException e) {
             String msg = "getAllNodeIds failed.";
             log.error(msg, e);
@@ -1596,40 +1594,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // closing the database resources of this blobstore is left to the
             // owning BundleDbPersistenceManager
         }
-    }
-
-    /**
-     * Iterator over an in-memory list of node ids.
-     * This helper class is used by {@link BundleDbPersistenceManager#getAllNodeIds}.
-     */
-    private class ListNodeIdIterator implements NodeIdIterator {
-
-        private final ArrayList<UUID> list;
-        private int pos;
-
-        ListNodeIdIterator(ArrayList<UUID> list) {
-            this.list = list;
-        }
-
-        public NodeId nextNodeId() throws NoSuchElementException {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-            return new NodeId(list.get(pos++));
-        }
-
-        public boolean hasNext() {
-            return pos < list.size();
-        }
-
-        public Object next() {
-            return nextNodeId();
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
     }
 
 }

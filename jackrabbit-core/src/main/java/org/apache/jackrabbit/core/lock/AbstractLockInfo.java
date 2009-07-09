@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.lock;
 
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import javax.jcr.Session;
 

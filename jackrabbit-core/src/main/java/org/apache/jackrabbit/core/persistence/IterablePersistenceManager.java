@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.RepositoryException;
@@ -42,7 +41,7 @@ public interface IterablePersistenceManager extends PersistenceManager {
      * @throws ItemStateException if an error while loading occurs.
      * @throws RepositoryException if a repository exception occurs
      */
-    NodeIdIterator getAllNodeIds(NodeId after, int maxCount)
+    Iterable<NodeId> getAllNodeIds(NodeId after, int maxCount)
             throws ItemStateException, RepositoryException;
 
 }

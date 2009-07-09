@@ -18,8 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.NameFactory;
 

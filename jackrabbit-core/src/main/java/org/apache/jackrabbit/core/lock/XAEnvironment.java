@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.lock;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

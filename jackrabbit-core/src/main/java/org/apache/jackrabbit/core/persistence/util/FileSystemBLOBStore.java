@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.persistence.util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;

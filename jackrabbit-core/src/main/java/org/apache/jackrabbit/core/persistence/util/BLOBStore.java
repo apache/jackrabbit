@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.PropertyId;
 
 import java.io.InputStream;
 

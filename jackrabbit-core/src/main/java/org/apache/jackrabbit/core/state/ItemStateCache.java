@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 
 /**
  * An <code>ItemStateCache</code> maintains a cache of <code>ItemState</code>

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * <code>ChildNodeEntry</code> specifies the name, index (in the case of

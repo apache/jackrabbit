@@ -23,8 +23,8 @@ import java.util.List;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.UpdateEvent;
 import org.apache.jackrabbit.core.observation.EventState;

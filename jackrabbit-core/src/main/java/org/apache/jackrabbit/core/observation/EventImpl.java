@@ -22,7 +22,7 @@ import java.util.Iterator;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import javax.jcr.observation.Event;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;

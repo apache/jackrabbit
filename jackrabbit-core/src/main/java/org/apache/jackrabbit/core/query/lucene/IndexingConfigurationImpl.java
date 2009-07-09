@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
 import org.apache.jackrabbit.core.nodetype.xml.AdditionalNamespaceResolver;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;

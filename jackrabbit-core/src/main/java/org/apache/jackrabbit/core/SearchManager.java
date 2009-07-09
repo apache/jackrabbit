@@ -38,6 +38,7 @@ import javax.jcr.query.qom.QueryObjectModel;
 import org.apache.jackrabbit.core.config.SearchConfig;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
@@ -457,25 +458,7 @@ public class SearchManager implements SynchronousEventListener {
                 return item;
             }
         };
-        NodeIdIterator removedIds = new NodeIdIterator() {
-            private final Iterator iter = removedNodes.iterator();
-
-            public NodeId nextNodeId() throws NoSuchElementException {
-                return (NodeId) iter.next();
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            public boolean hasNext() {
-                return iter.hasNext();
-            }
-
-            public Object next() {
-                return nextNodeId();
-            }
-        };
+        Iterator<NodeId> removedIds = removedNodes.iterator();
 
         if (removedNodes.size() > 0 || addedNodes.size() > 0) {
             try {

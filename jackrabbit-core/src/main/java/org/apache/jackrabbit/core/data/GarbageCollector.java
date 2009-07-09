@@ -16,9 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
@@ -217,9 +216,7 @@ public class GarbageCollector {
 
     private void scanPersistenceManagers() throws ItemStateException, RepositoryException {
         for (IterablePersistenceManager pm : pmList) {
-            NodeIdIterator it = pm.getAllNodeIds(null, 0);
-            while (it.hasNext()) {
-                NodeId id = it.nextNodeId();
+            for (NodeId id : pm.getAllNodeIds(null, 0)) {
                 if (callback != null) {
                     callback.beforeScanning(null);
                 }

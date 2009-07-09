@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
