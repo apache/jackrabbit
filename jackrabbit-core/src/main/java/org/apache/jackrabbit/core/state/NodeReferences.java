@@ -16,13 +16,14 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.NodeId;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.id.PropertyId;
 
 /**
  * <code>NodeReferences</code> represents the references (i.e. properties of

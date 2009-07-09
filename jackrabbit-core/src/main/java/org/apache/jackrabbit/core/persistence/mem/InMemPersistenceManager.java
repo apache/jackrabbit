@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.mem;
 
-import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;

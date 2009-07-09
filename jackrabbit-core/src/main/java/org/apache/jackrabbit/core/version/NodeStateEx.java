@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;

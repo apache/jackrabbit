@@ -20,13 +20,19 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -35,9 +41,6 @@ import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.RepositoryException;
 
 /**
  * <code>HierarchyManagerImpl</code> ...

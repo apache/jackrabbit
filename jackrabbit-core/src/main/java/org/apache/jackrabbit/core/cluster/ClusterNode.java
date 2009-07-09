@@ -26,7 +26,7 @@ import java.util.Map;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.WorkspaceRecord.CreateWorkspaceAction;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.config.ConfigurationException;

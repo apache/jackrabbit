@@ -36,6 +36,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.PropDefId;
 import org.apache.jackrabbit.core.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;

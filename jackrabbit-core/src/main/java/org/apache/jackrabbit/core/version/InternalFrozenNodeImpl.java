@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;

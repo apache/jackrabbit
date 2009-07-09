@@ -23,7 +23,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
@@ -32,7 +32,7 @@ import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;

@@ -25,7 +25,7 @@ import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.jackrabbit.core.BatchedItemOperations;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;

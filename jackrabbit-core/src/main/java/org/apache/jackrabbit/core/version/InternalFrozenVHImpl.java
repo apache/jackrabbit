@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.RepositoryException;

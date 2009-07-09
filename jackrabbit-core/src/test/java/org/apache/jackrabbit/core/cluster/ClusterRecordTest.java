@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.cluster;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.LockEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NamespaceEvent;
 import org.apache.jackrabbit.core.cluster.SimpleEventListener.NodeTypeEvent;

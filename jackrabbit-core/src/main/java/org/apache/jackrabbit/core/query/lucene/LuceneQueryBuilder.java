@@ -33,7 +33,7 @@ import javax.jcr.query.InvalidQueryException;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManagerImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SearchManager;
 import org.apache.jackrabbit.core.SessionImpl;

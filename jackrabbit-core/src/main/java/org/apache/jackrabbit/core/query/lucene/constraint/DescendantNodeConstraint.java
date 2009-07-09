@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.query.lucene.ScoreNode;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * <code>DescendantNodeConstraint</code> implements a descendant node

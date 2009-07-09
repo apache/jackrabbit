@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state;
+package org.apache.jackrabbit.core.id;
 
-import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.Serializable;

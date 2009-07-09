@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * This interface defines the base for all internal versioning items. Internal

@@ -19,13 +19,13 @@ package org.apache.jackrabbit.core.persistence;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;

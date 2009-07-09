@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.security;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;

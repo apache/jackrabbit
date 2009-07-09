@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.version;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 

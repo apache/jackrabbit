@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;

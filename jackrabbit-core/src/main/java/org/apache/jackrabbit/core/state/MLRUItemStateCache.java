@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.state;
 import java.util.Iterator;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

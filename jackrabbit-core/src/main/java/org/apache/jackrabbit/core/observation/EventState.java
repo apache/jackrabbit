@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.PropertyId;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.spi.Path;

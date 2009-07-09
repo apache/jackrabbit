@@ -16,8 +16,7 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
@@ -86,12 +85,10 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 log("PM: " + pm.getClass().getName());
 
                 log("All nodes in one step");
-                NodeIdIterator it = apm.getAllNodeIds(null, 0);
                 NodeId after = null;
                 NodeId first = null;
-                while (it.hasNext()) {
-                    NodeId id = it.nextNodeId();
-                    log("  " + id.toString());
+                for (NodeId id : apm.getAllNodeIds(null, 0)) {
+                    log("  " + id);
                     if (first == null) {
                         // initialize first node id
                         first = id;
@@ -107,13 +104,13 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 log("All nodes using batches");
                 while (true) {
                     log(" bigger than: " + after);
-                    it = apm.getAllNodeIds(after, 2);
+                    Iterator<NodeId> it = apm.getAllNodeIds(after, 2).iterator();
                     if (!it.hasNext()) {
                         break;
                     }
                     while (it.hasNext()) {
-                        NodeId id = it.nextNodeId();
-                        log("    " + id.toString());
+                        NodeId id = it.next();
+                        log("    " + id);
                         assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                         after = id;
                     }
@@ -123,10 +120,8 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
                 for (int j = 0; j < 50; j++) {
                     after = new NodeId(UUID.randomUUID());
                     log(" bigger than: " + after);
-                    it = apm.getAllNodeIds(after, 2);
-                    while (it.hasNext()) {
-                        NodeId id = it.nextNodeId();
-                        log("    " + id.toString());
+                    for (NodeId id : apm.getAllNodeIds(after, 2)) {
+                        log("    " + id);
                         assertFalse(id.getUUID().compareTo(after.getUUID()) == 0);
                         after = id;
                     }

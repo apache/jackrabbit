@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 
 /**
  * The <code>ItemStateManager</code> interface provides methods for retrieving

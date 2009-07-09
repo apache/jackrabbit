@@ -18,8 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
@@ -77,6 +76,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.File;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -592,7 +592,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException         if an error occurs while updating the index.
      */
-    public void updateNodes(NodeIdIterator remove, NodeStateIterator add)
+    public void updateNodes(Iterator<NodeId> remove, NodeStateIterator add)
             throws RepositoryException, IOException {
         checkOpen();
 
@@ -602,7 +602,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
         Collection<UUID> removeCollection = new ArrayList<UUID>();
         while (remove.hasNext()) {
-            UUID uuid = remove.nextNodeId().getUUID();
+            UUID uuid = remove.next().getUUID();
             removeCollection.add(uuid);
             removedUUIDs.add(uuid);
         }

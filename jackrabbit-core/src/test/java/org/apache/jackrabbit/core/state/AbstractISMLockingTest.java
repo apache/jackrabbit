@@ -16,17 +16,19 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import junit.framework.TestCase;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.ItemId;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Iterator;
+import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>AbstractISMLockingTest</code> contains test cases for the ISMLocking requirements.

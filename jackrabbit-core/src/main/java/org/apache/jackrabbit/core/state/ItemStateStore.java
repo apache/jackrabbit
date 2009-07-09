@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 
 import java.util.Set;
 import java.util.Collection;

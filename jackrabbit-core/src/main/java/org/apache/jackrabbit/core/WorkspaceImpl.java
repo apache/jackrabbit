@@ -41,6 +41,8 @@ import javax.jcr.version.VersionManager;
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.commons.AbstractWorkspace;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.SessionLockManager;
 import org.apache.jackrabbit.core.observation.EventStateCollection;

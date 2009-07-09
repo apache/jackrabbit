@@ -16,13 +16,23 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -32,13 +42,6 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * Implementation of a <code>HierarchyManager</code> that caches paths of

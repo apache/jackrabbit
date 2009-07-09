@@ -16,20 +16,23 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.AccessDeniedException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.ArrayList;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates

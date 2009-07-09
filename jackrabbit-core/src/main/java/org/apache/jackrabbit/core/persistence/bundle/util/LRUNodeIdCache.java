@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import org.apache.commons.collections.map.LinkedMap;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

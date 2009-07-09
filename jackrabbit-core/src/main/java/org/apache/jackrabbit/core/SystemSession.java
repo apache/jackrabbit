@@ -16,26 +16,28 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.core.config.WorkspaceConfig;
-import org.apache.jackrabbit.core.security.AMContext;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
-import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
-import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlPolicy;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
-import javax.jcr.PathNotFoundException;
-import javax.security.auth.Subject;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.Privilege;
+import javax.security.auth.Subject;
+
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.security.AMContext;
+import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * A <code>SystemSession</code> ...

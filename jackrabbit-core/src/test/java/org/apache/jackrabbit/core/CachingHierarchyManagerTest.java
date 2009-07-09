@@ -19,24 +19,27 @@ package org.apache.jackrabbit.core;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import junit.framework.TestCase;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.uuid.UUID;
-
-import junit.framework.TestCase;
 
 public class CachingHierarchyManagerTest extends TestCase {
 

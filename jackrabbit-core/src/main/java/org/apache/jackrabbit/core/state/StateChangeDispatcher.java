@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.lang.ref.Reference;

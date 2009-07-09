@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import org.apache.jackrabbit.core.id.ItemId;
+
 /**
  * The <code>ItemLifeCycleListener</code> interface allows an implementing
  * object to be informed about changes on an <code>Item</code> instance.

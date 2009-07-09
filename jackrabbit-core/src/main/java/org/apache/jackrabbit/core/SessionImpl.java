@@ -69,6 +69,7 @@ import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.GarbageCollector;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;

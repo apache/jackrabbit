@@ -16,35 +16,36 @@
  */
 package org.apache.jackrabbit.core;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.NamespaceException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.version.VersionException;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.lock.LockManager;
-import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
-import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.lock.LockException;
-import javax.jcr.version.VersionException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.ItemDefinition;
 
 /**
  * Utility class for validating an item against constraints

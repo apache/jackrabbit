@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;

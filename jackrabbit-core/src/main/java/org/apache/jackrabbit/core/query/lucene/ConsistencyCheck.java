@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.uuid.UUID;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;

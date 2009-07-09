@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
-import org.apache.jackrabbit.core.ItemId;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;

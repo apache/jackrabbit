@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;

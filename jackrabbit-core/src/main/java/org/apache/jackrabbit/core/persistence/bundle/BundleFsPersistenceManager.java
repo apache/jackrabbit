@@ -31,11 +31,10 @@ import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.NodeIdIterator;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.uuid.UUID;
@@ -48,7 +47,6 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
@@ -504,12 +502,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public NodeIdIterator getAllNodeIds(NodeId bigger, int maxCount)
+    public Iterable<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException {
         ArrayList<NodeId> list = new ArrayList<NodeId>();
         try {
             getListRecursive(list, "", bigger == null ? null : bigger.getUUID(), maxCount);
-            return new FileNodeIdIterator(list);
+            return list;
         } catch (FileSystemException e) {
             String msg = "failed to read node list: " + bigger + ": " + e;
             log.error(msg);
@@ -570,39 +568,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             getListRecursive(list, path + FileSystem.SEPARATOR + dirs[i],
                     bigger, maxCount);
         }
-    }
-
-    /**
-     * Iterator over all node ids in this persistence manager.
-     */
-    private static class FileNodeIdIterator implements NodeIdIterator {
-
-        private final ArrayList<NodeId> list;
-        private int pos;
-
-        FileNodeIdIterator(ArrayList<NodeId> list) {
-            this.list = list;
-        }
-
-        public NodeId nextNodeId() throws NoSuchElementException {
-            if (pos < list.size()) {
-                return (NodeId) list.get(pos++);
-            }
-            throw new NoSuchElementException();
-        }
-
-        public boolean hasNext() {
-            return pos < list.size();
-        }
-
-        public Object next() {
-            return nextNodeId();
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
     }
 
 }

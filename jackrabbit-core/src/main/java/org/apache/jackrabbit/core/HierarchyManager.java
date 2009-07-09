@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * The <code>HierarchyManager</code> interface ...

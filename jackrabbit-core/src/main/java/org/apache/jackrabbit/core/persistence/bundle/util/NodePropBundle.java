@@ -25,8 +25,8 @@ import java.util.Set;
 
 import javax.jcr.PropertyType;
 
-import org.apache.jackrabbit.core.NodeId;
-import org.apache.jackrabbit.core.PropertyId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.value.InternalValue;

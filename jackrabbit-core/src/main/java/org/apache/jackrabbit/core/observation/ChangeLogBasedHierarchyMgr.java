@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.observation;
 
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
-import org.apache.jackrabbit.core.NodeId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -27,7 +27,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.state.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 
