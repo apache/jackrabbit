@@ -20,7 +20,6 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.NodeStateIterator;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 import javax.jcr.RepositoryException;
@@ -80,7 +79,7 @@ public interface QueryHandler {
      * @throws RepositoryException if an error occurs while indexing a node.
      * @throws IOException if an error occurs while updating the index.
      */
-    void updateNodes(Iterator<NodeId> remove, NodeStateIterator add)
+    void updateNodes(Iterator<NodeId> remove, Iterator<NodeState> add)
             throws RepositoryException, IOException;
 
     /**
