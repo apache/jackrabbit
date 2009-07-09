@@ -16,51 +16,48 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
- * Simple helper class that can be used to keep track of uuid mappings
- * (e.g. if the uuid of an imported or copied node is mapped to a new uuid)
+ * Simple helper class that can be used to keep track of node id mappings
+ * (e.g. if the id of an imported or copied node is mapped to a new id)
  * and processed (e.g. imported or copied) reference properties that might
- * need correcting depending on the uuid mappings.
+ * need correcting depending on the id mappings.
  */
 public class ReferenceChangeTracker {
+
     /**
-     * mapping <original uuid> to <new uuid> of mix:referenceable nodes
+     * mapping from original id to new id of mix:referenceable nodes
      */
-    private final HashMap<UUID, UUID> uuidMap = new HashMap<UUID, UUID>();
+    private final Map<NodeId, NodeId> idMap = new HashMap<NodeId, NodeId>();
+
     /**
      * list of processed reference properties that might need correcting
      */
     private final ArrayList<Object> references = new ArrayList<Object>();
 
     /**
-     * Creates a new instance.
-     */
-    public ReferenceChangeTracker() {
-    }
-
-    /**
      * Resets all internal state.
      */
     public void clear() {
-        uuidMap.clear();
+        idMap.clear();
         references.clear();
     }
 
     /**
-     * Store the given uuid mapping for later lookup using
-     * <code>{@link #getMappedUUID(UUID)}</code>.
+     * Store the given id mapping for later lookup using
+     * <code>{@link #getMappedId(NodeId)}</code>.
      *
-     * @param oldUUID old uuid
-     * @param newUUID new uuid
+     * @param oldId old node id
+     * @param newId new node id
      */
-    public void mappedUUID(UUID oldUUID, UUID newUUID) {
-        uuidMap.put(oldUUID, newUUID);
+    public void mappedId(NodeId oldId, NodeId newId) {
+        idMap.put(oldId, newId);
     }
 
     /**
@@ -74,15 +71,15 @@ public class ReferenceChangeTracker {
     }
 
     /**
-     * Returns the new UUID to which <code>oldUUID</code> has been mapped
+     * Returns the new node id to which <code>oldId</code> has been mapped
      * or <code>null</code> if no such mapping exists.
      *
-     * @param oldUUID old uuid
-     * @return mapped new uuid or <code>null</code> if no such mapping exists
-     * @see #mappedUUID(UUID, UUID)
+     * @param oldId old node id
+     * @return mapped new id or <code>null</code> if no such mapping exists
+     * @see #mappedId(NodeId, NodeId)
      */
-    public UUID getMappedUUID(UUID oldUUID) {
-        return uuidMap.get(oldUUID);
+    public NodeId getMappedId(NodeId oldId) {
+        return idMap.get(oldId);
     }
 
     /**

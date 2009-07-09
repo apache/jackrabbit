@@ -451,10 +451,10 @@ public class BatchedItemOperations extends ItemValidator {
             InternalValue[] newVals = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
                 InternalValue val = values[i];
-                UUID original = val.getUUID();
-                UUID adjusted = refTracker.getMappedUUID(original);
+                NodeId original = new NodeId(val.getUUID());
+                NodeId adjusted = refTracker.getMappedId(original);
                 if (adjusted != null) {
-                    newVals[i] = InternalValue.create(adjusted);
+                    newVals[i] = InternalValue.create(adjusted.getUUID());
                     modified = true;
                 } else {
                     // reference doesn't need adjusting, just copy old value
@@ -1693,7 +1693,7 @@ public class BatchedItemOperations extends ItemValidator {
                     id = new NodeId(UUID.randomUUID());
                     if (referenceable) {
                         // remember uuid mapping
-                        refTracker.mappedUUID(srcState.getNodeId().getUUID(), id.getUUID());
+                        refTracker.mappedId(srcState.getNodeId(), id);
                     }
                     break;
                 case CLONE:
@@ -1778,9 +1778,8 @@ public class BatchedItemOperations extends ItemValidator {
                  * UUID instead of copying the whole subtree.
                  */
                 if (srcChildState.isShareable()) {
-                    UUID uuid = refTracker.getMappedUUID(srcChildState.getNodeId().getUUID());
-                    if (uuid != null) {
-                        NodeId mappedId = new NodeId(uuid);
+                    NodeId mappedId = refTracker.getMappedId(srcChildState.getNodeId());
+                    if (mappedId != null) {
                         if (stateMgr.hasItemState(mappedId)) {
                             NodeState destState = (NodeState) stateMgr.getItemState(mappedId);
                             if (!destState.isShareable()) {

@@ -36,7 +36,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +155,7 @@ public class WorkspaceImporter implements Importer {
             // remember uuid mapping
             EffectiveNodeType ent = itemOps.getEffectiveNodeType(node);
             if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                refTracker.mappedUUID(nodeInfo.getId().getUUID(), node.getNodeId().getUUID());
+                refTracker.mappedId(nodeInfo.getId(), node.getNodeId());
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             // if existing node is shareable, then instead of failing, create
@@ -607,11 +606,11 @@ public class WorkspaceImporter implements Importer {
                 InternalValue[] newVals = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
                     InternalValue val = values[i];
-                    UUID original = val.getUUID();
-                    UUID adjusted = refTracker.getMappedUUID(original);
+                    NodeId original = new NodeId(val.getUUID());
+                    NodeId adjusted = refTracker.getMappedId(original);
                     if (adjusted != null) {
                         newVals[i] = InternalValue.create(
-                                adjusted,
+                                adjusted.getUUID(),
                                 prop.getType() != PropertyType.REFERENCE);
                         modified = true;
                     } else {
