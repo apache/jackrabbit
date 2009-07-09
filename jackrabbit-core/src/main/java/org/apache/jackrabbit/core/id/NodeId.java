@@ -22,7 +22,7 @@ import org.apache.jackrabbit.uuid.UUID;
  * Node identifier. An instance of this class identifies a node using its UUID.
  * Once created a node identifier instance is immutable.
  */
-public class NodeId extends ItemId {
+public class NodeId extends ItemId implements Comparable<NodeId> {
 
     /** Serial version UID of this class. */
     static final long serialVersionUID = 7380115476447060008L;
@@ -95,6 +95,27 @@ public class NodeId extends ItemId {
         return new NodeId(new UUID(s));
     }
 
+    /**
+     * Returns a (new) array containing the raw bytes that make up this UUID.
+     *
+     * @return raw bytes of the UUID
+     */
+    public byte[] getRawBytes() {
+        return uuid.getRawBytes();
+    }
+
+    //----------------------------------------------------------< Comparable >
+
+    /**
+     * Compares this node id to the given other identifier.
+     *
+     * @param that the other identifier for the comparison
+     * @return result of comparison
+     */
+    public int compareTo(NodeId that) {
+        return uuid.compareTo(that.uuid);
+    }
+
     //-------------------------------------------< java.lang.Object overrides >
     /**
      * {@inheritDoc}
@@ -126,4 +147,5 @@ public class NodeId extends ItemId {
     public int hashCode() {
         return hashCode;
     }
+
 }

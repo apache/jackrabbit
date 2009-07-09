@@ -129,7 +129,7 @@ public abstract class AbstractRecord implements Record {
                 writeInt(index);
             } else {
                 writeByte(UUID_LITERAL);
-                write(nodeId.getUUID().getRawBytes());
+                write(nodeId.getRawBytes());
             }
         }
     }

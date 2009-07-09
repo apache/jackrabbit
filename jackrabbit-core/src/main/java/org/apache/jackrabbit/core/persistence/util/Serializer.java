@@ -80,7 +80,7 @@ public final class Serializer {
         if (state.getParentId() == null) {
             out.write(NULL_UUID_PLACEHOLDER_BYTES);
         } else {
-            out.write(state.getParentId().getUUID().getRawBytes());
+            out.write(state.getParentId().getRawBytes());
         }
         // definitionId
         out.writeUTF(state.getDefinitionId().toString());
@@ -105,7 +105,7 @@ public final class Serializer {
         for (Iterator<ChildNodeEntry> iter = collChildren.iterator(); iter.hasNext();) {
             ChildNodeEntry entry = iter.next();
             out.writeUTF(entry.getName().toString());   // name
-            out.write(entry.getId().getUUID().getRawBytes());    // uuid
+            out.write(entry.getId().getRawBytes());    // uuid
         }
     }
 
