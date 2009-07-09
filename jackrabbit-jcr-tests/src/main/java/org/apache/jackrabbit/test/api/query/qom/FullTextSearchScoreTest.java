@@ -45,7 +45,7 @@ public class FullTextSearchScoreTest extends AbstractQOMTest {
         QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.and(
-                        qf.fullTextSearch("s", null, "fox"),
+                        qf.fullTextSearch("s", null, qf.literal(vf.createValue("fox"))),
                         qf.descendantNode("s", testRootNode.getPath())
                 ),
                 new Ordering[]{qf.ascending(qf.fullTextSearchScore("s"))},
@@ -72,7 +72,7 @@ public class FullTextSearchScoreTest extends AbstractQOMTest {
                 qf.selector(testNodeType, "s"),
                 qf.and(
                         qf.and(
-                                qf.fullTextSearch("s", null, "fox"),
+                                qf.fullTextSearch("s", null, qf.literal(vf.createValue("fox"))),
                                 qf.comparison(
                                         qf.fullTextSearchScore("s"),
                                         QueryObjectModelFactory.JCR_OPERATOR_GREATER_THAN,

@@ -46,8 +46,8 @@ public class ParserTest extends TestCase {
 
     static class QOMF extends QueryObjectModelFactoryImpl  {
 
-        public QOMF(NamePathResolver resolver, ValueFactory factory) {
-            super(resolver, factory);
+        public QOMF(NamePathResolver resolver) {
+            super(resolver);
         }
 
         protected QueryObjectModel createQuery(QueryObjectModelTree qomTree) throws InvalidQueryException,
@@ -60,8 +60,8 @@ public class ParserTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         NamePathResolver resolver = new DefaultNamePathResolver(new DummyNamespaceResolver());
+        QueryObjectModelFactoryImpl factory = new QOMF(resolver);
         ValueFactory vf = new ValueFactoryQImpl(QValueFactoryImpl.getInstance(), resolver);
-        QueryObjectModelFactoryImpl factory = new QOMF(resolver, vf);
         parser = new Parser(factory, vf);
     }
 

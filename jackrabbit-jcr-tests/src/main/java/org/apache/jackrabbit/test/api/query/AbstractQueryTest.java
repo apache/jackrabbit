@@ -30,6 +30,8 @@ import javax.jcr.Value;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Session;
+import javax.jcr.ValueFactory;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -81,6 +83,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected QueryObjectModelFactory qf;
 
     /**
+     * The value factory for creating literals for the query object model.
+     */
+    protected ValueFactory vf;
+
+    /**
      * The query manager for {@link #superuser}
      */
     protected QueryManager qm;
@@ -100,11 +107,13 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         xpathRoot = "/" + jcrRoot + ISO9075.encodePath(testRoot);
         qm = superuser.getWorkspace().getQueryManager();
         qf = qm.getQOMFactory();
+        vf = superuser.getValueFactory();
     }
 
     protected void tearDown() throws Exception {
         qm = null;
         qf = null;
+        vf = null;
         super.tearDown();
     }
 

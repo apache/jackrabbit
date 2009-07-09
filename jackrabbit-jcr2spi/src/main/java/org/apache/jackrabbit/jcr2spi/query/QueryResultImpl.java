@@ -63,6 +63,13 @@ class QueryResultImpl implements QueryResult {
     /**
      * {@inheritDoc}
      */
+    public String[] getSelectorNames() throws RepositoryException {
+        return queryInfo.getColumnNames();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public String[] getColumnNames() throws RepositoryException {
         return queryInfo.getColumnNames();
     }

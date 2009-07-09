@@ -10,10 +10,10 @@ observation, and more. Typical applications that use content
 repositories include content management, document management,
 and records management systems.
 
-Jackrabbit is currently based on the Proposed Final Draft (PFD) version
-of the JCR 2.0 API defined by the Java Specification Request 283
-(JSR 283, http://jcp.org/en/jsr/detail?id=283). Version 1.0 of the
-JCR API was specified by JSR 170.
+Jackrabbit is currently based on a pre-release version of the JCR 2.0 API
+defined by the Java Specification Request 283 (JSR 283,
+http://jcp.org/en/jsr/detail?id=283). Version 1.0 of the JCR API was
+specified by JSR 170.
 
 Apache Jackrabbit is a project of the Apache Software Foundation.
 
@@ -25,7 +25,7 @@ jcr-2.0-b18.xml files from https://issues.apache.org/jira/browse/JCR-1104
 and install them to your local Maven repository:
 
     mvn install:install-file \
-        -Dfile=jcr-2.0-b18.jar -DpomFile=jcr-2.0-b18.xml
+        -Dfile=jcr-2.0-b19.jar -DpomFile=jcr-2.0-b19.xml
 
 Once you've installed the jar, you can build Jackrabbit like this:
 
@@ -89,4 +89,3 @@ Credits
 
 See http://jackrabbit.apache.org/jackrabbit-team.html for the list of 
 Jackrabbit committers and main contributors.
-

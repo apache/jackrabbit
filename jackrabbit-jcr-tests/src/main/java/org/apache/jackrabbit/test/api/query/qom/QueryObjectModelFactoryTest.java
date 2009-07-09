@@ -373,7 +373,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
      */
     public void testFullTextSearch() throws RepositoryException {
-        FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, propertyName1, FULLTEXT_SEARCH_EXPR);
+        FullTextSearch ftSearch = qf.fullTextSearch(
+                SELECTOR_NAME1, propertyName1,
+                qf.literal(vf.createValue(FULLTEXT_SEARCH_EXPR)));
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertEquals("Wrong propertyName", propertyName1, ftSearch.getPropertyName());
         // TODO is there some way to check the contents of a StaticOperand?
@@ -387,7 +389,9 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
      * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
      */
     public void testFullTextSearchAllProperties() throws RepositoryException {
-        FullTextSearch ftSearch = qf.fullTextSearch(SELECTOR_NAME1, null, FULLTEXT_SEARCH_EXPR);
+        FullTextSearch ftSearch = qf.fullTextSearch(
+                SELECTOR_NAME1, null,
+                qf.literal(vf.createValue(FULLTEXT_SEARCH_EXPR)));
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertNull("Property name must be null", ftSearch.getPropertyName());
         // TODO is there some way to check the contents of a StaticOperand?

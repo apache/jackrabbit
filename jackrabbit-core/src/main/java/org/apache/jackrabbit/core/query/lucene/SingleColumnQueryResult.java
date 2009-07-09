@@ -85,4 +85,5 @@ public class SingleColumnQueryResult extends QueryResultImpl {
     protected ExcerptProvider createExcerptProvider() throws IOException {
         return index.createExcerptProvider(query);
     }
+
 }
