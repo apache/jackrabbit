@@ -112,7 +112,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * configuration. If the config entry is missing a default id is used (see
      * {@link SecurityConstants#ADMIN_ID}).
      */
-    private String adminId;
+    protected String adminId;
 
     /**
      * The user id of the anonymous user. The value is retrieved from
@@ -126,7 +126,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * key = name of the workspace,
      * value = {@link AccessControlProvider}
      */
-    private final Map<String, AccessControlProvider> acProviders = new HashMap();
+    private final Map<String, AccessControlProvider> acProviders = new HashMap<String, AccessControlProvider>();
 
     /**
      * the AccessControlProviderFactory
@@ -203,7 +203,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         }
 
         // create the system userManager and make sure the system-users exist.
-        systemUserManager = new UserManagerImpl(securitySession, adminId);
+        systemUserManager = createUserManager(securitySession);
         createSystemUsers(systemUserManager, adminId, anonymousId);
 
         // init default ac-provider-factory
@@ -236,6 +236,20 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         systemPrincipalManager = new PrincipalManagerImpl(securitySession, principalProviderRegistry.getProviders());
 
         initialized = true;
+    }
+
+    /**
+     * Creates a {@link UserManagerImpl} for the given session. May be overridden
+     * to return a custom implementation.
+     *
+     * @param session session
+     * @return user manager
+     * @throws RepositoryException if an error occurs
+     */
+    protected UserManagerImpl createUserManager(SessionImpl session)
+            throws RepositoryException {
+
+        return new UserManagerImpl(session, adminId);
     }
 
     /**
@@ -324,10 +338,10 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                 SessionImpl sImpl = (SessionImpl) session;
                 UserManagerImpl uMgr;
                 if (workspaceName.equals(sImpl.getWorkspace().getName())) {
-                    uMgr = new UserManagerImpl(sImpl, adminId);
+                    uMgr = createUserManager(sImpl);
                 } else {
                     SessionImpl s = (SessionImpl) sImpl.createSession(workspaceName);
-                    uMgr = new UserManagerImpl(s, adminId);
+                    uMgr = createUserManager(s);
                     sImpl.addListener(uMgr);
                 }
                 return uMgr;
@@ -359,15 +373,16 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         */
         String uid = null;
         // try simple access to userID over SimpleCredentials first.
-        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
+        Iterator<SimpleCredentials> creds = subject.getPublicCredentials(
+                SimpleCredentials.class).iterator();
         if (creds.hasNext()) {
-            SimpleCredentials sc = (SimpleCredentials) creds.next();
+            SimpleCredentials sc = creds.next();
             uid = sc.getUserID();
         } else {
             // no SimpleCredentials: retrieve authorizables corresponding to
             // a non-group principal. the first one present is used to determine
             // the userID.
-            for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
+            for (Iterator<Principal> it = subject.getPrincipals().iterator(); it.hasNext();) {
                 Principal p = (Principal) it.next();
                 if (!(p instanceof Group)) {
                     Authorizable authorz = systemUserManager.getAuthorizable(p);
@@ -417,7 +432,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             // by the workspace-janitor until the garbage collector is done
             // TODO: review again... this workaround is now used in several places.
             repository.onSessionCreated(systemSession);
-            
+
             WorkspaceConfig conf = repository.getConfig().getWorkspaceConfig(workspaceName);
             WorkspaceSecurityConfig secConf = (conf == null) ?  null : conf.getSecurityConfig();
             synchronized (acProviders) {

@@ -207,7 +207,7 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
             throw new IllegalArgumentException("Cannot create user: null password.");
         }
         if (!isValidPrincipal(principal)) {
-            throw new IllegalArgumentException("Cannot create user: Principal may not be null and must have a valid name.");            
+            throw new IllegalArgumentException("Cannot create user: Principal may not be null and must have a valid name.");
         }
         if (getAuthorizable(userID) != null) {
             throw new AuthorizableExistsException("User for '" + userID + "' already exists");
@@ -362,10 +362,29 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
      * @throws RepositoryException
      */
     User createUser(NodeImpl userNode) throws RepositoryException {
-        User user = UserImpl.create(userNode, this);
+        if (userNode == null || !userNode.isNodeType(NT_REP_USER)) {
+            throw new IllegalArgumentException();
+        }
+        if (!Text.isDescendant(USERS_PATH, userNode.getPath())) {
+            throw new IllegalArgumentException("User has to be within the User Path");
+        }
+        User user = doCreateUser(userNode);
         idPathMap.put(user.getID(), userNode.getPath());
         return user;
     }
+
+    /**
+     * Build the user object from the given user node. May be overridden to
+     * return a custom implementation.
+     *
+     * @param node user node
+     * @return user object
+     * @throws RepositoryException if an error occurs
+     */
+    protected User doCreateUser(NodeImpl node) throws RepositoryException {
+        return new UserImpl(node, this);
+    }
+
 
     /**
      * Build the Group object from the given group node.
@@ -464,7 +483,7 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
     private static boolean isValidPrincipal(Principal principal) {
         return principal != null && principal.getName() != null && principal.getName().length() > 0;
     }
-    
+
     private static String getParentPath(String hint, String root) {
         StringBuffer b = new StringBuffer();
         if (hint == null || !hint.startsWith(root)) {
@@ -520,7 +539,7 @@ public class UserManagerImpl extends ProtectedItemModifier implements UserManage
     }
 
     /**
-     * @see SessionListener#loggedOut(org.apache.jackrabbit.core.SessionImpl) 
+     * @see SessionListener#loggedOut(org.apache.jackrabbit.core.SessionImpl)
      */
     public void loggedOut(SessionImpl session) {
         // clear the map

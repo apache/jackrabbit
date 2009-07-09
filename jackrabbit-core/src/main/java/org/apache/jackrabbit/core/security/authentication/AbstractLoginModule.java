@@ -524,9 +524,7 @@ public abstract class AbstractLoginModule implements LoginModule {
                 callbackHandler.handle(new Callback[]{callback});
                 Credentials creds = callback.getCredentials();
                 if (null != creds) {
-                    if (creds instanceof SimpleCredentials) {
-                       credentials = creds;
-                    } else if (creds instanceof GuestCredentials) {
+                    if (supportsCredentials(creds)) {
                        credentials = creds;
                     }
                     if (credentials != null) {
@@ -555,6 +553,20 @@ public abstract class AbstractLoginModule implements LoginModule {
             }
         }
         return credentials;
+    }
+
+    /**
+     * Return a flag indicating whether the credentials are supported by
+     * this login module. Default implementation supports
+     * {@link SimpleCredentials} and {@link GuestCredentials}.
+     *
+     * @param creds credentials
+     * @return <code>true</code> if the credentials are supported;
+     *         <code>false</code> otherwise
+     */
+    protected boolean supportsCredentials(Credentials creds) {
+        return creds instanceof SimpleCredentials ||
+            creds instanceof GuestCredentials;
     }
 
     /**
