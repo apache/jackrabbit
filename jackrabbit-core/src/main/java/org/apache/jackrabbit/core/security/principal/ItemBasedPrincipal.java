@@ -21,7 +21,7 @@ import javax.jcr.RepositoryException;
 /**
  * <code>ItemBasedPrincipal</code> is a <code>Principal</code> that is
  * persisted as item within the repository. In addition to the methods
- * inherited from the {@link Principal} interface it therefore provides
+ * inherited from the {@link java.security.Principal} interface it therefore provides
  * a {@link #getPath()} method.
  */
 public interface ItemBasedPrincipal extends JackrabbitPrincipal {
