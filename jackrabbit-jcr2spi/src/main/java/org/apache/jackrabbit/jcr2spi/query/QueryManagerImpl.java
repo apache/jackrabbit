@@ -116,8 +116,7 @@ public class QueryManagerImpl implements QueryManager {
         String language = node.getProperty(resolver.getJCRName(NameConstants.JCR_LANGUAGE)).getString();
 
         if (Query.JCR_JQOM.equals(language)) {
-            QueryObjectModelFactory qomFactory = new QOMFactory(
-                    node, resolver, valueFactory);
+            QueryObjectModelFactory qomFactory = new QOMFactory(node, resolver);
             QueryObjectModelBuilder builder = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language);
             return builder.createQueryObjectModel(statement, qomFactory, valueFactory);
         } else {
@@ -137,7 +136,7 @@ public class QueryManagerImpl implements QueryManager {
      * @see QueryManager#getQOMFactory()
      */
     public QueryObjectModelFactory getQOMFactory() {
-        return new QOMFactory(null, mgrProvider.getNamePathResolver(), valueFactory);
+        return new QOMFactory(null, mgrProvider.getNamePathResolver());
     }
 
     //------------------------------------------------------------< private >---
@@ -158,10 +157,8 @@ public class QueryManagerImpl implements QueryManager {
 
         private final Node node;
 
-        public QOMFactory(Node node,
-                          NamePathResolver resolver,
-                          ValueFactory factory) {
-            super(resolver, factory);
+        public QOMFactory(Node node, NamePathResolver resolver) {
+            super(resolver);
             this.node = node;
         }
 

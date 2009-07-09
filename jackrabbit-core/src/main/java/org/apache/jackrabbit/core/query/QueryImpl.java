@@ -195,6 +195,12 @@ public class QueryImpl extends AbstractQueryImpl {
         }
     }
 
+    // TODO: JCR-2200: Implement Query.getBindVariableNames()
+    public String[] getBindVariableNames() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException(
+                "JCR-2200: Implement Query.getBindVariableNames()");
+    }
+
     /**
      * Binds the given <code>value</code> to the variable named
      * <code>varName</code>.
@@ -267,5 +273,5 @@ public class QueryImpl extends AbstractQueryImpl {
             throw new IllegalStateException("not initialized");
         }
     }
-}
 
+}

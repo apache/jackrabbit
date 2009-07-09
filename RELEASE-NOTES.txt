@@ -45,12 +45,12 @@ Jackrabbit releases, please see the Jackrabbit issue tracker at
 JCR 2.0 feature completeness
 ----------------------------
 
-The following 39 top level JCR 2.0 implementation issues are being tracked in
+The following 41 top level JCR 2.0 implementation issues are being tracked in
 the Jackrabbit issue tracker. Most of them have already been partially
 implemented, but the issue will only be marked as resolved once no more
 related work is needed.
 
-Open (14 issues)
+Open (16 issues)
   [JCR-1565] JSR 283 lifecycle management
   [JCR-1588] JSR 283: Access Control
   [JCR-1590] JSR 283: Locking
@@ -65,6 +65,8 @@ Open (14 issues)
   [JCR-2137] Use type StaticOperand for fullTextSearchExpression
   [JCR-2140] JSR 283: Baselines
   [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
+  [JCR-2200] Implement Query.getBindVariableNames()
+  [JCR-2201] Implement QueryResult.getSelectorNames()
 
 Resolved (25 issues)
   [JCR-1564] JSR 283 namespace handling

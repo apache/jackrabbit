@@ -180,5 +180,10 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
                 throws IllegalArgumentException, RepositoryException {
             throw new UnsupportedOperationException();
         }
+
+        public String[] getBindVariableNames() throws RepositoryException {
+            throw new UnsupportedOperationException();
+        }
+
     }
 }

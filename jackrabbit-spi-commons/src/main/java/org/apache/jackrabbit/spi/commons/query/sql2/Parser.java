@@ -139,9 +139,9 @@ public class Parser {
     private String readName() throws RepositoryException {
         if (readIf("[")) {
             if (currentTokenType == VALUE) {
-                String s = readString();
+                Value value = readString();
                 read("]");
-                return s;
+                return value.getString();
             } else {
                 int level = 1;
                 StringBuilder buff = new StringBuilder();
@@ -330,16 +330,20 @@ public class Parser {
             if (readIf(".")) {
                 if (readIf("*")) {
                     read(",");
-                    c = factory.fullTextSearch(name, null, readString());
+                    c = factory.fullTextSearch(
+                            name, null, factory.literal(readString()));
                 } else {
                     String selector = name;
                     name = readName();
                     read(",");
-                    c = factory.fullTextSearch(selector, name, readString());
+                    c = factory.fullTextSearch(
+                            selector, name, factory.literal(readString()));
                 }
             } else {
                 read(",");
-                c = factory.fullTextSearch(getOnlySelectorName(), name, readString());
+                c = factory.fullTextSearch(
+                        getOnlySelectorName(), name,
+                        factory.literal(readString()));
             }
         } else if ("ISSAMENODE".equalsIgnoreCase(functionName)) {
             String name = readName();
@@ -635,13 +639,13 @@ public class Parser {
         return s;
     }
 
-    private String readString() throws RepositoryException {
+    private Value readString() throws RepositoryException {
         if (currentTokenType != VALUE) {
             throw getSyntaxError("string value");
         }
-        String s = currentValue.getString();
+        Value value = currentValue;
         read();
-        return s;
+        return value;
     }
 
     private void addExpected(String token) {

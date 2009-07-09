@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import java.io.IOException;
@@ -179,6 +180,12 @@ public abstract class QueryResultImpl implements QueryResult {
             }
             this.columns.put(cn, column);
         }
+    }
+
+    // TODO: JCR-2201: Implement QueryResult.getSelectorNames()
+    public String[] getSelectorNames() throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException(
+                "JCR-2201: Implement QueryResult.getSelectorNames()");
     }
 
     /**

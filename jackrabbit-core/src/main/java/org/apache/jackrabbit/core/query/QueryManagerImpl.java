@@ -80,8 +80,7 @@ public class QueryManagerImpl implements QueryManager {
         this.session = session;
         this.itemMgr = itemMgr;
         this.searchMgr = searchMgr;
-        this.qomFactory = new QueryObjectModelFactoryImpl(
-                session, session.getValueFactory()) {
+        this.qomFactory = new QueryObjectModelFactoryImpl(session) {
             protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                     throws InvalidQueryException, RepositoryException {
                 return searchMgr.createQueryObjectModel(
@@ -194,8 +193,7 @@ public class QueryManagerImpl implements QueryManager {
 
         public QueryFactoryImpl(final Node node, final String language) {
             super(Arrays.asList(
-                new QOMQueryFactory(new QueryObjectModelFactoryImpl(
-                        session, session.getValueFactory()) {
+                new QOMQueryFactory(new QueryObjectModelFactoryImpl(session) {
                     protected QueryObjectModel createQuery(QueryObjectModelTree qomTree)
                             throws InvalidQueryException, RepositoryException {
                         return searchMgr.createQueryObjectModel(
