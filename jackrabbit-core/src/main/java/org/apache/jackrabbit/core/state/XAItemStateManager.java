@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
@@ -377,14 +378,14 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         // apply changes from change log
         ChangeLog changes = getChangeLog();
         if (changes != null) {
-            UUID uuid = id.getTargetId().getUUID();
+            NodeId target = id.getTargetId();
             // check removed reference properties
             for (Iterator it = filterReferenceProperties(changes.deletedStates());
                  it.hasNext(); ) {
                 PropertyState prop = (PropertyState) it.next();
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
-                    if (values[i].getUUID().equals(uuid)) {
+                    if (values[i].getNodeId().equals(target)) {
                         refs.removeReference(prop.getPropertyId());
                         break;
                     }
@@ -396,7 +397,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 PropertyState prop = (PropertyState) it.next();
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
-                    if (values[i].getUUID().equals(uuid)) {
+                    if (values[i].getNodeId().equals(target)) {
                         refs.addReference(prop.getPropertyId());
                         break;
                     }
@@ -414,7 +415,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                         // remove if one of the old values references the node
                         InternalValue[] values = old.getValues();
                         for (int i = 0; i < values.length; i++) {
-                            if (values[i].getUUID().equals(uuid)) {
+                            if (values[i].getNodeId().equals(target)) {
                                 refs.removeReference(old.getPropertyId());
                                 break;
                             }
@@ -429,7 +430,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     // add if modified value references node
                     InternalValue[] values = prop.getValues();
                     for (int i = 0; i < values.length; i++) {
-                        if (values[i].getUUID().equals(uuid)) {
+                        if (values[i].getNodeId().equals(target)) {
                             refs.addReference(prop.getPropertyId());
                             break;
                         }
@@ -476,10 +477,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = vals[i].getUUID();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
                         addVirtualReference(
-                                references, prop.getPropertyId(), refsId);
+                                references, prop.getPropertyId(),
+                                new NodeReferencesId(vals[i].getNodeId()));
                     }
                 }
             }
@@ -493,19 +493,17 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (oldProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = oldProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = vals[i].getUUID();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
                         removeVirtualReference(
-                                references, oldProp.getPropertyId(), refsId);
+                                references, oldProp.getPropertyId(),
+                                new NodeReferencesId(vals[i].getNodeId()));
                     }
                 }
                 if (newProp.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = newProp.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = vals[i].getUUID();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
                         addVirtualReference(
-                                references, newProp.getPropertyId(), refsId);
+                                references, newProp.getPropertyId(),
+                                new NodeReferencesId(vals[i].getNodeId()));
                     }
                 }
             }
@@ -517,10 +515,9 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 if (prop.getType() == PropertyType.REFERENCE) {
                     InternalValue[] vals = prop.getValues();
                     for (int i = 0; vals != null && i < vals.length; i++) {
-                        UUID uuid = vals[i].getUUID();
-                        NodeReferencesId refsId = new NodeReferencesId(uuid);
                         removeVirtualReference(
-                                references, prop.getPropertyId(), refsId);
+                                references, prop.getPropertyId(),
+                                new NodeReferencesId(vals[i].getNodeId()));
                     }
                 }
             }

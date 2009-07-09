@@ -316,9 +316,9 @@ public class WorkspaceImporter implements Importer {
             VersionHistoryInfo history =
                 versionManager.getVersionHistory(session, node, null);
             InternalValue historyId = InternalValue.create(
-                    history.getVersionHistoryId().getUUID());
+                    history.getVersionHistoryId());
             InternalValue versionId = InternalValue.create(
-                    history.getRootVersionId().getUUID());
+                    history.getRootVersionId());
 
             // jcr:isCheckedOut
             conditionalAddProperty(
@@ -605,17 +605,16 @@ public class WorkspaceImporter implements Importer {
                 InternalValue[] values = prop.getValues();
                 InternalValue[] newVals = new InternalValue[values.length];
                 for (int i = 0; i < values.length; i++) {
-                    InternalValue val = values[i];
-                    NodeId original = new NodeId(val.getUUID());
-                    NodeId adjusted = refTracker.getMappedId(original);
+                    NodeId adjusted =
+                        refTracker.getMappedId(values[i].getNodeId());
                     if (adjusted != null) {
                         newVals[i] = InternalValue.create(
-                                adjusted.getUUID(),
+                                adjusted,
                                 prop.getType() != PropertyType.REFERENCE);
                         modified = true;
                     } else {
                         // reference doesn't need adjusting, just copy old value
-                        newVals[i] = val;
+                        newVals[i] = values[i];
                     }
                 }
                 if (modified) {

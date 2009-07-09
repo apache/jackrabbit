@@ -50,7 +50,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -913,14 +912,14 @@ public class SharedItemStateManager
             if (property.getType() == PropertyType.REFERENCE) {
                 InternalValue[] values = property.getValues();
                 for (int i = 0; values != null && i < values.length; i++) {
-                    addReference(property.getPropertyId(), values[i].getUUID());
+                    addReference(property.getPropertyId(), values[i].getNodeId());
                 }
             }
         }
 
-        private void addReference(PropertyId id, UUID uuid)
+        private void addReference(PropertyId id, NodeId target)
                 throws ItemStateException {
-            NodeReferencesId refsId = new NodeReferencesId(uuid);
+            NodeReferencesId refsId = new NodeReferencesId(target);
             if (virtualProvider == null
                     || !virtualProvider.hasNodeReferences(refsId)) {
                 // get or create the references instance
@@ -947,15 +946,15 @@ public class SharedItemStateManager
                     InternalValue[] values = property.getValues();
                     for (int i = 0; values != null && i < values.length; i++) {
                         removeReference(
-                                property.getPropertyId(), values[i].getUUID());
+                                property.getPropertyId(), values[i].getNodeId());
                     }
                 }
             }
         }
 
-        private void removeReference(PropertyId id, UUID uuid)
+        private void removeReference(PropertyId id, NodeId target)
                 throws ItemStateException {
-            NodeReferencesId refsId = new NodeReferencesId(uuid);
+            NodeReferencesId refsId = new NodeReferencesId(target);
             if (virtualProvider == null
                     || !virtualProvider.hasNodeReferences(refsId)) {
                 // either get node references from change log or load from

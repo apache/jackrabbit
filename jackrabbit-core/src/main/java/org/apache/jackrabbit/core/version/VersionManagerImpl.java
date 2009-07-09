@@ -485,7 +485,7 @@ public class VersionManagerImpl extends AbstractVersionManager
             return null;
         } else {
             return (Version)
-                    ((SessionImpl) history.getSession()).getNodeByUUID(v.getId().getUUID());
+                    ((SessionImpl) history.getSession()).getNodeById(v.getId());
         }
     }
 

@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.NodeIterator;
@@ -72,9 +71,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     private InternalFreeze[] frozenNodes = null;
 
     /**
-     * the frozen uuid of the original node
+     * the frozen id of the original node
      */
-    private UUID frozenUUID = null;
+    private NodeId frozenUUID = null;
 
     /**
      * the frozen primary type of the orginal node
@@ -117,9 +116,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 // we do not automatically upgrade old content, we need to be
                 // ready to handle both types of values here.
                 if (value.getType() == PropertyType.STRING) {
-                    frozenUUID = UUID.fromString(value.getString());
+                    frozenUUID = new NodeId(value.getString());
                 } else {
-                    frozenUUID = value.getUUID();
+                    frozenUUID = value.getNodeId();
                 }
             } else if (prop.getName().equals(NameConstants.JCR_FROZENPRIMARYTYPE)) {
                 // special property
@@ -195,9 +194,8 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public boolean hasFrozenHistory(UUID uuid) {
+    public boolean hasFrozenHistory(NodeId id) {
         try {
-            NodeId id = new NodeId(uuid);
             InternalFreeze[] frozen = getFrozenChildNodes();
             for (int i = 0; i < frozen.length; i++) {
                 if (frozen[i] instanceof InternalFrozenVersionHistory
@@ -222,7 +220,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
-    public UUID getFrozenUUID() {
+    public NodeId getFrozenId() {
         return frozenUUID;
     }
 
@@ -281,7 +279,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
 
         // initialize the internal properties
         node.setPropertyValue(NameConstants.JCR_FROZENUUID,
-                InternalValue.create(src.internalGetUUID().toString()));
+                InternalValue.create(src.getNodeId().toString()));
         node.setPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(((NodeTypeImpl) src.getPrimaryNodeType()).getQName()));
         if (src.hasProperty(NameConstants.JCR_MIXINTYPES)) {
@@ -335,8 +333,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 if (child.isNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                     // create frozen versionable child
                     NodeStateEx newChild = node.addNode(child.getQName(), NameConstants.NT_VERSIONEDCHILD, null, false);
-                    newChild.setPropertyValue(NameConstants.JCR_CHILDVERSIONHISTORY,
-                            InternalValue.create(new UUID(child.getVersionHistory().getUUID())));
+                    newChild.setPropertyValue(
+                            NameConstants.JCR_CHILDVERSIONHISTORY,
+                            InternalValue.create(new NodeId(child.getVersionHistory().getUUID())));
                     /*
                         newChild.setPropertyValue(JCR_BASEVERSION,
                                 InternalValue.create(child.getBaseVersion().getUUID()));

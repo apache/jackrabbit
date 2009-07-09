@@ -70,7 +70,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -515,13 +514,13 @@ public abstract class ItemImpl implements Item {
                                 boolean satisfied = false;
                                 String constraintViolationMsg = null;
                                 try {
-                                    UUID targetUUID = values[i].getUUID();
+                                    NodeId targetId = values[i].getNodeId();
                                     if (propDef.getRequiredType() == PropertyType.WEAKREFERENCE
-                                        && !itemMgr.itemExists(new NodeId(targetUUID))) {
+                                        && !itemMgr.itemExists(targetId)) {
                                         // target of weakref doesn;t exist, skip
                                         continue;
                                     }
-                                    Node targetNode = session.getNodeByUUID(targetUUID);
+                                    Node targetNode = session.getNodeById(targetId);
                                     /**
                                      * constraints are OR-ed, i.e. at least one
                                      * has to be satisfied
@@ -749,9 +748,9 @@ public abstract class ItemImpl implements Item {
                         VersionHistoryInfo history =
                             vMgr.getVersionHistory(session, nodeState, null);
                         InternalValue historyId = InternalValue.create(
-                                history.getVersionHistoryId().getUUID());
+                                history.getVersionHistoryId());
                         InternalValue versionId = InternalValue.create(
-                                history.getRootVersionId().getUUID());
+                                history.getRootVersionId());
                         node.internalSetProperty(
                                 NameConstants.JCR_VERSIONHISTORY, historyId);
                         node.internalSetProperty(

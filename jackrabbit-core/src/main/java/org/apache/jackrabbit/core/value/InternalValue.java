@@ -36,6 +36,7 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
@@ -48,7 +49,6 @@ import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -67,7 +67,7 @@ import org.apache.jackrabbit.uuid.UUID;
  * <tr>URI<td></td><td>URI</td></tr>
  * <tr>DECIMAL<td></td><td>BigDecimal</td></tr>
  * <tr>BINARY<td></td><td>BLOBFileValue</td></tr>
- * <tr>REFERENCE<td></td><td>UUID</td></tr>
+ * <tr>REFERENCE<td></td><td>{@link NodeId}</td></tr>
  * </table>
  * </pre>
  */
@@ -146,9 +146,9 @@ public class InternalValue extends AbstractQValue {
             case PropertyType.LONG:
                 return create(value.getLong());
             case PropertyType.REFERENCE:
-                return create(new UUID(value.getString()));
+                return create(new NodeId(value.getString()));
             case PropertyType.WEAKREFERENCE:
-                return create(new UUID(value.getString()), true);
+                return create(new NodeId(value.getString()), true);
             case PropertyType.URI:
                 try {
                     return create(new URI(value.getString()));
@@ -212,9 +212,9 @@ public class InternalValue extends AbstractQValue {
             case PropertyType.LONG:
                 return new InternalValue(value.getLong());
             case PropertyType.REFERENCE:
-                return create(new UUID(value.getString()));
+                return create(new NodeId(value.getString()));
             case PropertyType.WEAKREFERENCE:
-                return create(new UUID(value.getString()), true);
+                return create(new NodeId(value.getString()), true);
             case PropertyType.URI:
                 return new InternalValue(value.getURI());
             case PropertyType.NAME:
@@ -389,7 +389,7 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return the created value
      */
-    public static InternalValue create(UUID value) {
+    public static InternalValue create(NodeId value) {
         return create(value, false);
     }
 
@@ -398,7 +398,7 @@ public class InternalValue extends AbstractQValue {
      * @param weak
      * @return the created value
      */
-    public static InternalValue create(UUID value, boolean weak) {
+    public static InternalValue create(NodeId value, boolean weak) {
         return new InternalValue(value, weak);
     }
 
@@ -409,9 +409,9 @@ public class InternalValue extends AbstractQValue {
         return (BLOBFileValue) val;
     }
 
-    public UUID getUUID() {
+    public NodeId getNodeId() {
         assert val != null && (type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE);
-        return (UUID) val;
+        return (NodeId) val;
     }
 
     public Calendar getDate() {
@@ -476,9 +476,9 @@ public class InternalValue extends AbstractQValue {
             case PropertyType.DECIMAL:
                 return create(new BigDecimal(s));
             case PropertyType.REFERENCE:
-                return create(new UUID(s));
+                return create(new NodeId(s));
             case PropertyType.WEAKREFERENCE:
-                return create(new UUID(s), true);
+                return create(new NodeId(s), true);
             case PropertyType.PATH:
                 return create(PathFactoryImpl.getInstance().create(s));
             case PropertyType.NAME:
@@ -552,7 +552,7 @@ public class InternalValue extends AbstractQValue {
         super(value);
     }
 
-    private InternalValue(UUID value, boolean weak) {
+    private InternalValue(NodeId value, boolean weak) {
         super(value, weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
     }
 

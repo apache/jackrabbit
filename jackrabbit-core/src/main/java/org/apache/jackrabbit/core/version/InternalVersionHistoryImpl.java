@@ -140,12 +140,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             for (PropertyState pState : labels) {
                 if (pState.getType() == PropertyType.REFERENCE) {
                     Name labelName = pState.getName();
-                    UUID ref = pState.getValues()[0].getUUID();
-                    NodeId id = new NodeId(ref);
+                    NodeId id = pState.getValues()[0].getNodeId();
                     if (node.getState().hasChildNodeEntry(id)) {
                         labelCache.put(labelName, node.getState().getChildNodeEntry(id).getName());
                     } else {
-                        log.warn("Error while resolving label reference. Version missing: " + ref);
+                        log.warn("Error while resolving label reference. Version missing: " + id);
                     }
                 }
             }
@@ -462,7 +461,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             if (version == null) {
                 labelNode.removeProperty(label);
             } else {
-                labelNode.setPropertyValue(label, InternalValue.create(version.getId().getUUID()));
+                labelNode.setPropertyValue(
+                        label, InternalValue.create(version.getId()));
             }
             labelNode.store();
         } catch (RepositoryException e) {
@@ -499,26 +499,27 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             Value[] preds = src.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
             predecessors = new InternalValue[preds.length];
             for (int i = 0; i < preds.length; i++) {
-                UUID predId = UUID.fromString(preds[i].getString());
+                NodeId predId = new NodeId(preds[i].getString());
                 // check if version exist
-                if (!nameCache.containsValue(new NodeId(predId))) {
-                    throw new RepositoryException("invalid predecessor in source node");
+                if (!nameCache.containsValue(predId)) {
+                    throw new RepositoryException(
+                            "Invalid predecessor in source node: " + predId);
                 }
                 predecessors[i] = InternalValue.create(predId);
             }
         } else {
             // with simple versioning, the node does not contain a predecessors
             // property and we just use the 'head' version as predecessor
-            Iterator iter = nameCache.values().iterator();
+            Iterator<NodeId> iter = nameCache.values().iterator();
             NodeId last = null;
             while (iter.hasNext()) {
-                last = (NodeId) iter.next();
+                last = iter.next();
             }
             if (last == null) {
                 // should never happen
                 last = rootVersion.getId();
             }
-            predecessors = new InternalValue[]{InternalValue.create(last.getUUID())};
+            predecessors = new InternalValue[]{InternalValue.create(last)};
         }
 
         NodeId versionId = new NodeId(UUID.randomUUID());
@@ -583,7 +584,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // initialize the 'jcr:copiedFrom' property
         if (copiedFrom != null) {
-            pNode.setPropertyValue(NameConstants.JCR_COPIEDFROM, InternalValue.create(copiedFrom.getUUID(), true));
+            pNode.setPropertyValue(NameConstants.JCR_COPIEDFROM, InternalValue.create(copiedFrom, true));
         }
         
         // create root version
@@ -603,10 +604,10 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         node.setPropertyValue(NameConstants.JCR_FROZENPRIMARYTYPE,
                 InternalValue.create(nodeState.getNodeTypeName()));
 
-        Set mixins = nodeState.getMixinTypeNames();
-        if (mixins.size() > 0) {
+        Set<Name> mixins = nodeState.getMixinTypeNames();
+        if (!mixins.isEmpty()) {
             InternalValue[] ivalues = new InternalValue[mixins.size()];
-            Iterator iter = mixins.iterator();
+            Iterator<Name> iter = mixins.iterator();
             for (int i = 0; i < mixins.size(); i++) {
                 ivalues[i] = InternalValue.create((Name) iter.next());
             }

@@ -450,15 +450,13 @@ public class BatchedItemOperations extends ItemValidator {
             InternalValue[] values = prop.getValues();
             InternalValue[] newVals = new InternalValue[values.length];
             for (int i = 0; i < values.length; i++) {
-                InternalValue val = values[i];
-                NodeId original = new NodeId(val.getUUID());
-                NodeId adjusted = refTracker.getMappedId(original);
+                NodeId adjusted = refTracker.getMappedId(values[i].getNodeId());
                 if (adjusted != null) {
-                    newVals[i] = InternalValue.create(adjusted.getUUID());
+                    newVals[i] = InternalValue.create(adjusted);
                     modified = true;
                 } else {
                     // reference doesn't need adjusting, just copy old value
-                    newVals[i] = val;
+                    newVals[i] = values[i];
                 }
             }
             if (modified) {
@@ -1816,7 +1814,7 @@ public class BatchedItemOperations extends ItemValidator {
                     // the histories jcr:copiedFrom property
                     PropertyId propId = new PropertyId(srcState.getNodeId(), NameConstants.JCR_BASEVERSION);
                     PropertyState prop = (PropertyState) srcStateMgr.getItemState(propId);
-                    copiedFrom = new NodeId(prop.getValues()[0].getUUID());
+                    copiedFrom = prop.getValues()[0].getNodeId();
                 }
                 VersionManager manager = session.getVersionManager();
                 history = manager.getVersionHistory(session, newState, copiedFrom);
@@ -1853,13 +1851,13 @@ public class BatchedItemOperations extends ItemValidator {
                         if (propName.equals(NameConstants.JCR_VERSIONHISTORY)) {
                             // jcr:versionHistory
                             InternalValue value = InternalValue.create(
-                                    history.getVersionHistoryId().getUUID());
+                                    history.getVersionHistoryId());
                             newChildState.setValues(new InternalValue[] { value });
                         } else if (propName.equals(NameConstants.JCR_BASEVERSION)
                                 || propName.equals(NameConstants.JCR_PREDECESSORS)) {
                             // jcr:baseVersion or jcr:predecessors
                             InternalValue value = InternalValue.create(
-                                    history.getRootVersionId().getUUID());
+                                    history.getRootVersionId());
                             newChildState.setValues(new InternalValue[] { value });
                         } else if (propName.equals(NameConstants.JCR_ISCHECKEDOUT)) {
                             // jcr:isCheckedOut

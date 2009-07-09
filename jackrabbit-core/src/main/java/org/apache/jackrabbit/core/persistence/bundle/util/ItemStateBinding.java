@@ -286,33 +286,33 @@ public class ItemStateBinding {
     }
 
     /**
-     * Deserializes a UUID
+     * Deserializes a node identifier
      * @param in the input stream
-     * @return the uuid
+     * @return the node id
      * @throws IOException in an I/O error occurs.
      */
-    public UUID readUUID(DataInputStream in) throws IOException {
+    public NodeId readNodeId(DataInputStream in) throws IOException {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
             in.readFully(bytes);
-            return new UUID(bytes);
+            return new NodeId(new UUID(bytes));
         } else {
             return null;
         }
     }
 
     /**
-     * Serializes a UUID
+     * Serializes a node identifier
      * @param out the output stream
-     * @param uuid the uuid
+     * @param uuid the node id
      * @throws IOException in an I/O error occurs.
      */
-    public void writeUUID(DataOutputStream out, String uuid) throws IOException {
-        if (uuid == null) {
+    public void writeNodeId(DataOutputStream out, String id) throws IOException {
+        if (id == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(UUID.fromString(uuid).getRawBytes());
+            out.write(UUID.fromString(id).getRawBytes());
         }
     }
 
@@ -378,21 +378,6 @@ public class ItemStateBinding {
         } else {
             out.writeBoolean(true);
             out.write(id.getUUID().getRawBytes());
-        }
-    }
-
-    /**
-     * Serializes a UUID
-     * @param out the output stream
-     * @param uuid the uuid
-     * @throws IOException in an I/O error occurs.
-     */
-    public void writeUUID(DataOutputStream out, UUID uuid) throws IOException {
-        if (uuid == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.write(uuid.getRawBytes());
         }
     }
 
@@ -489,8 +474,9 @@ public class ItemStateBinding {
      * @throws IOException in an I/O error occurs.
      */
     public PropertyId readPropertyId(DataInputStream in) throws IOException {
-        UUID uuid = readUUID(in);
+        NodeId id = readNodeId(in);
         Name name = readQName(in);
-        return new PropertyId(new NodeId(uuid), name);
+        return new PropertyId(id, name);
     }
+
 }
