@@ -20,6 +20,7 @@ import java.util.Collections;
 
 import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
+import javax.jcr.NamespaceException;
 
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
@@ -28,6 +29,7 @@ import org.apache.jackrabbit.spi.commons.query.QueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.QueryRootNode;
 import org.apache.jackrabbit.spi.commons.query.QueryParser;
+import org.apache.jackrabbit.spi.Name;
 
 import junit.framework.TestCase;
 
@@ -37,12 +39,39 @@ import junit.framework.TestCase;
 public class QueryFormatTest extends TestCase {
 
     private static final NameResolver RESOLVER = new DefaultNamePathResolver(
-            new DummyNamespaceResolver());
+            new DummyNamespaceResolver() {
+                public String getURI(String prefix) throws NamespaceException {
+                    if (Name.NS_REP_PREFIX.equals(prefix)) {
+                        return Name.NS_REP_URI;
+                    } else {
+                        return super.getURI(prefix);
+                    }
+                }
 
-    private static final QueryNodeFactory FACTORY = new DefaultQueryNodeFactory(Collections.EMPTY_LIST);
+                public String getPrefix(String uri) {
+                    if (Name.NS_REP_URI.equals(uri)) {
+                        return Name.NS_REP_PREFIX;
+                    } else {
+                        return super.getPrefix(uri);
+                    }
+                }
+            });
+
+    private static final QueryNodeFactory FACTORY = new DefaultQueryNodeFactory(Collections.<Name>emptyList());
 
     public void testSelectWithOrderBy() throws InvalidQueryException {
-        String stmt = "//element(*, foo)/(@a|@b) order by @bar";
+        checkStatement("//element(*, foo)/(@a|@b) order by @bar");
+    }
+
+    public void testStarNameTest() throws Exception {
+        checkStatement("//element(*, foo)[foo/*/@bar = 'bla']");
+    }
+
+    public void testRepSimilar() throws Exception {
+        checkStatement("//element(*, foo)[rep:similar(foo, '/some/path')]");
+    }
+
+    protected void checkStatement(String stmt) throws InvalidQueryException {
         QueryRootNode root = QueryParser.parse(stmt, Query.XPATH, RESOLVER, FACTORY);
         assertEquals(stmt, QueryFormat.toString(root, RESOLVER));
     }
