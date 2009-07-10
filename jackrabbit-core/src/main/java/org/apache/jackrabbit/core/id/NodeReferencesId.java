@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.id;
 
-import org.apache.jackrabbit.uuid.UUID;
-
 import java.io.Serializable;
 
 /**
@@ -32,17 +30,6 @@ public class NodeReferencesId implements Serializable {
      * The id of the target node.
      */
     private final NodeId targetId;
-
-    /**
-     * Creates a new instance of this class. Takes the uuid of the target node
-     * as parameter.
-     *
-     * @param uuid uuid of target node
-     * @throws IllegalArgumentException if <code>uuid</code> is <code>null</code>.
-     */
-    public NodeReferencesId(UUID uuid) {
-        targetId = new NodeId(uuid);
-    }
 
     /**
      * Creates a new instance of this class. Takes the id of the target node

@@ -809,9 +809,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 while (rs.next()) {
                     NodeId id;
                     if (getStorageModel() == SM_BINARY_KEYS) {
-                        id = new NodeId(new UUID(rs.getBytes(1)));
+                        id = new NodeId(rs.getBytes(1));
                     } else {
-                        id = new NodeId(new UUID(rs.getLong(1), rs.getLong(2)));
+                        id = new NodeId(rs.getLong(1), rs.getLong(2));
                     }
 
                     // issuing 2nd statement to circumvent issue JCR-1474

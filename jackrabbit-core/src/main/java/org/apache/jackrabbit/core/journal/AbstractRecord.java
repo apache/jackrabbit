@@ -228,7 +228,7 @@ public abstract class AbstractRecord implements Record {
         } else if (uuidType == UUID_LITERAL) {
             byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
             readFully(b);
-            NodeId nodeId = new NodeId(new UUID(b));
+            NodeId nodeId = new NodeId(b);
             nodeIdIndex.put(nodeId, nodeIdIndex.size());
             return nodeId;
         } else {

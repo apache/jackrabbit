@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>SlowQueryHandler</code> implements a dummy query handler for testing
@@ -37,8 +36,7 @@ public class SlowQueryHandler extends SearchIndex {
         } catch (InterruptedException e) {
             // ignore
         }
-        NodeId id = new NodeId(UUID.randomUUID());
-        getContext().getItemStateManager().hasItemState(id);
+        getContext().getItemStateManager().hasItemState(new NodeId());
         super.doInit();
     }
 

@@ -295,7 +295,7 @@ public class ItemStateBinding {
         if (in.readBoolean()) {
             byte[] bytes = new byte[16];
             in.readFully(bytes);
-            return new NodeId(new UUID(bytes));
+            return new NodeId(bytes);
         } else {
             return null;
         }
@@ -360,7 +360,7 @@ public class ItemStateBinding {
             while (pos < 16) {
                 pos += in.read(bytes, pos, 16 - pos);
             }
-            return new NodeId(new UUID(bytes));
+            return new NodeId(bytes);
         } else {
             return null;
         }
