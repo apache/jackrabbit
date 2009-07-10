@@ -417,7 +417,7 @@ abstract class AbstractVersionManager implements VersionManager {
         WriteOperation operation = startWriteOperation();
         try {
             // create deep path
-            NodeId activityId = new NodeId(UUID.randomUUID());
+            NodeId activityId = new NodeId();
             NodeStateEx parent = getParentNode(activitiesRoot, activityId.toString(), NameConstants.REP_ACTIVITIES);
             Name name = getName(activityId.toString());
 

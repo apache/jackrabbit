@@ -461,7 +461,7 @@ public class NodeStateEx {
         NodeId parentId = nodeState.getNodeId();
         // create a new node state
         if (id == null) {
-            id = new NodeId(UUID.randomUUID());
+            id = new NodeId();
         }
         NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
 

@@ -522,7 +522,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             predecessors = new InternalValue[]{InternalValue.create(last)};
         }
 
-        NodeId versionId = new NodeId(UUID.randomUUID());
+        NodeId versionId = new NodeId();
         NodeStateEx vNode = node.addNode(name, NameConstants.NT_VERSION, versionId, true);
 
         // check for jcr:activity
@@ -572,7 +572,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             NodeState nodeState, NodeId copiedFrom) throws RepositoryException {
 
         // create history node
-        NodeId historyId = new NodeId(UUID.randomUUID());
+        NodeId historyId = new NodeId();
         NodeStateEx pNode = parent.addNode(name, NameConstants.NT_VERSIONHISTORY, historyId, true);
 
         // set the versionable uuid
@@ -588,7 +588,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
         
         // create root version
-        NodeId versionId = new NodeId(UUID.randomUUID());
+        NodeId versionId = new NodeId();
         NodeStateEx vNode = pNode.addNode(NameConstants.JCR_ROOTVERSION, NameConstants.NT_VERSION, versionId, true);
 
         // initialize 'created' and 'predecessors'

@@ -342,7 +342,7 @@ public class CachingHierarchyManagerTest extends TestCase {
          * Create a new instance of this class.
          */
         public StaticItemStateManager() {
-            rootNodeId = new NodeId(nextUUID());
+            rootNodeId = nextNodeId();
         }
 
         /**
@@ -387,7 +387,7 @@ public class CachingHierarchyManagerTest extends TestCase {
          * @return new node
          */
         public NodeState addNode(NodeState parent, String name) {
-            NodeId id = new NodeId(nextUUID());
+            NodeId id = nextNodeId();
             NodeState child = new NodeState(id, NameConstants.NT_UNSTRUCTURED,
                     parent.getNodeId(), NodeState.STATUS_EXISTING, false);
             if (listener != null) {
@@ -519,13 +519,13 @@ public class CachingHierarchyManagerTest extends TestCase {
         }
 
         /**
-         * Return the next available UUID. Simply increments the last UUID
+         * Return the next available node id. Simply increments the last UUID
          * returned by <code>1</code>.
          *
          * @return next UUID
          */
-        private UUID nextUUID() {
-            return new UUID(0, lsbGenerator++);
+        private NodeId nextNodeId() {
+            return new NodeId(0, lsbGenerator++);
         }
 
         //----------------------------------------------------- ItemStateManager

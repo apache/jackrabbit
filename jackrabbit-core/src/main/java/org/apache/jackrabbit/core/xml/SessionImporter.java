@@ -289,7 +289,7 @@ public class SessionImporter implements Importer {
                 Value[] newVals = new Value[values.length];
                 for (int i = 0; i < values.length; i++) {
                     Value val = values[i];
-                    NodeId original = new NodeId(UUID.fromString(val.getString()));
+                    NodeId original = new NodeId(val.getString());
                     NodeId adjusted = refTracker.getMappedId(original);
                     if (adjusted != null) {
                         newVals[i] = session.getValueFactory().createValue(
@@ -303,7 +303,7 @@ public class SessionImporter implements Importer {
                 prop.setValue(newVals);
             } else {
                 Value val = prop.getValue();
-                NodeId original = new NodeId(UUID.fromString(val.getString()));
+                NodeId original = new NodeId(val.getString());
                 NodeId adjusted = refTracker.getMappedId(original);
                 if (adjusted != null) {
                     prop.setValue(session.getNodeById(adjusted).getUUID());
