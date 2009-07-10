@@ -60,7 +60,6 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
         long saveOne = System.currentTimeMillis() - time;
-        System.out.println("save one took " + saveOne);
 
         root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
