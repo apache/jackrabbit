@@ -24,7 +24,7 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
  * property using the UUID of the parent node and the name of
  * the property. Once created a property identifier instance is immutable.
  */
-public class PropertyId extends ItemId {
+public class PropertyId implements ItemId {
 
     /** Serial version UID of this class. */
     static final long serialVersionUID = 1118783735407446009L;
