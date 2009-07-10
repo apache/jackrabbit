@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import java.io.IOException;
 
@@ -98,8 +98,8 @@ public final class JackrabbitIndexReader
     /**
      * {@inheritDoc}
      */
-    public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
-        return reader.createDocId(uuid);
+    public ForeignSegmentDocId createDocId(NodeId id) throws IOException {
+        return reader.createDocId(id);
     }
 
     /**

@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.uuid.Constants;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.util.Timer;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
@@ -393,7 +392,7 @@ public class MultiIndex {
      * Atomically updates the index by removing some documents and adding
      * others.
      *
-     * @param remove collection of <code>UUID</code>s that identify documents to
+     * @param remove collection of <code>id</code>s that identify documents to
      *               remove
      * @param add    collection of <code>Document</code>s to add. Some of the
      *               elements in this collection may be <code>null</code>, to
@@ -401,7 +400,7 @@ public class MultiIndex {
      * @throws IOException if an error occurs while updating the index.
      */
     synchronized void update(
-            Collection<UUID> remove, Collection<Document> add)
+            Collection<NodeId> remove, Collection<Document> add)
             throws IOException {
         // make sure a reader is available during long updates
         if (add.size() > handler.getBufferSize()) {
@@ -417,8 +416,8 @@ public class MultiIndex {
 
             boolean flush = false;
 
-            for (UUID uuid : remove) {
-                executeAndLog(new DeleteNode(transactionId, uuid));
+            for (NodeId id : remove) {
+                executeAndLog(new DeleteNode(transactionId, id));
             }
 
             for (Document document : add) {
@@ -451,39 +450,39 @@ public class MultiIndex {
      *                     index.
      */
     void addDocument(Document doc) throws IOException {
-        Collection<UUID> empty = Collections.emptyList();
+        Collection<NodeId> empty = Collections.emptyList();
         update(empty, Collections.singleton(doc));
     }
 
     /**
-     * Deletes the first document that matches the <code>uuid</code>.
+     * Deletes the first document that matches the <code>id</code>.
      *
-     * @param uuid document that match this <code>uuid</code> will be deleted.
+     * @param id document that match this <code>id</code> will be deleted.
      * @throws IOException if an error occurs while deleting the document.
      */
-    void removeDocument(UUID uuid) throws IOException {
+    void removeDocument(NodeId id) throws IOException {
         Collection<Document> empty = Collections.emptyList();
-        update(Collections.singleton(uuid), empty);
+        update(Collections.singleton(id), empty);
     }
 
     /**
-     * Deletes all documents that match the <code>uuid</code>.
+     * Deletes all documents that match the <code>id</code>.
      *
-     * @param uuid documents that match this <code>uuid</code> will be deleted.
+     * @param id documents that match this <code>id</code> will be deleted.
      * @return the number of deleted documents.
      * @throws IOException if an error occurs while deleting documents.
      */
-    synchronized int removeAllDocuments(UUID uuid) throws IOException {
+    synchronized int removeAllDocuments(NodeId id) throws IOException {
         synchronized (updateMonitor) {
             updateInProgress = true;
         }
         int num;
         try {
-            Term idTerm = new Term(FieldNames.UUID, uuid.toString());
+            Term idTerm = new Term(FieldNames.UUID, id.toString());
             executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
             num = volatileIndex.removeDocument(idTerm);
             if (num > 0) {
-                redoLog.append(new DeleteNode(getTransactionId(), uuid));
+                redoLog.append(new DeleteNode(getTransactionId(), id));
             }
             for (int i = 0; i < indexes.size(); i++) {
                 PersistentIndex index = (PersistentIndex) indexes.get(i);
@@ -491,7 +490,7 @@ public class MultiIndex {
                 if (indexNames.contains(index.getName())) {
                     int removed = index.removeDocument(idTerm);
                     if (removed > 0) {
-                        redoLog.append(new DeleteNode(getTransactionId(), uuid));
+                        redoLog.append(new DeleteNode(getTransactionId(), id));
                     }
                     num += removed;
                 }
@@ -1068,7 +1067,7 @@ public class MultiIndex {
         if (excludedIDs.contains(id)) {
             return count;
         }
-        executeAndLog(new AddNode(getTransactionId(), id.getUUID()));
+        executeAndLog(new AddNode(getTransactionId(), id));
         if (++count % 100 == 0) {
             PathResolver resolver = new DefaultNamePathResolver(
                     handler.getContext().getNamespaceRegistry());
@@ -1182,10 +1181,10 @@ public class MultiIndex {
      *                           the indexing queue to the index.
      */
     private void checkIndexingQueue(boolean transactionPresent) {
-        Map<UUID, Document> finished = new HashMap<UUID, Document>();
+        Map<NodeId, Document> finished = new HashMap<NodeId, Document>();
         for (Document document : indexingQueue.getFinishedDocuments()) {
-            UUID uuid = UUID.fromString(document.get(FieldNames.UUID));
-            finished.put(uuid, document);
+            NodeId id = new NodeId(document.get(FieldNames.UUID));
+            finished.put(id, document);
         }
 
         // now update index with the remaining ones if there are any
@@ -1194,14 +1193,14 @@ public class MultiIndex {
                     new Long(finished.size()));
 
             // remove documents from the queue
-            for (UUID uuid : finished.keySet()) {
-                indexingQueue.removeDocument(uuid.toString());
+            for (NodeId id : finished.keySet()) {
+                indexingQueue.removeDocument(id.toString());
             }
 
             try {
                 if (transactionPresent) {
-                    for (UUID uuid : finished.keySet()) {
-                        executeAndLog(new DeleteNode(getTransactionId(), uuid));
+                    for (NodeId id : finished.keySet()) {
+                        executeAndLog(new DeleteNode(getTransactionId(), id));
                     }
                     for (Document document : finished.values()) {
                         executeAndLog(new AddNode(getTransactionId(), document));
@@ -1512,9 +1511,9 @@ public class MultiIndex {
                 + 2;
 
         /**
-         * The uuid of the node to add.
+         * The id of the node to add.
          */
-        private final UUID uuid;
+        private final NodeId id;
 
         /**
          * The document to add to the index, or <code>null</code> if not available.
@@ -1525,11 +1524,11 @@ public class MultiIndex {
          * Creates a new AddNode action.
          *
          * @param transactionId the id of the transaction that executes this action.
-         * @param uuid the uuid of the node to add.
+         * @param id the id of the node to add.
          */
-        AddNode(long transactionId, UUID uuid) {
+        AddNode(long transactionId, NodeId id) {
             super(transactionId, Action.TYPE_ADD_NODE);
-            this.uuid = uuid;
+            this.id = id;
         }
 
         /**
@@ -1539,7 +1538,7 @@ public class MultiIndex {
          * @param doc the document to add.
          */
         AddNode(long transactionId, Document doc) {
-            this(transactionId, UUID.fromString(doc.get(FieldNames.UUID)));
+            this(transactionId, new NodeId(doc.get(FieldNames.UUID)));
             this.doc = doc;
         }
 
@@ -1548,8 +1547,7 @@ public class MultiIndex {
          *
          * @param transactionId the id of the transaction that executes this
          *                      action.
-         * @param arguments     the arguments to this action. The uuid of the node
-         *                      to add
+         * @param arguments     The UUID of the node to add
          * @return the AddNode action.
          * @throws IllegalArgumentException if the arguments are malformed. Not a
          *                                  UUID.
@@ -1560,7 +1558,7 @@ public class MultiIndex {
             if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
                 throw new IllegalArgumentException("arguments is not a uuid");
             }
-            return new AddNode(transactionId, UUID.fromString(arguments));
+            return new AddNode(transactionId, new NodeId(arguments));
         }
 
         /**
@@ -1571,7 +1569,7 @@ public class MultiIndex {
         public void execute(MultiIndex index) throws IOException {
             if (doc == null) {
                 try {
-                    doc = index.createDocument(new NodeId(uuid));
+                    doc = index.createDocument(id);
                 } catch (RepositoryException e) {
                     // node does not exist anymore
                     log.debug(e.getMessage());
@@ -1591,7 +1589,7 @@ public class MultiIndex {
             logLine.append(' ');
             logLine.append(Action.ADD_NODE);
             logLine.append(' ');
-            logLine.append(uuid);
+            logLine.append(id);
             return logLine.toString();
         }
     }
@@ -1801,19 +1799,19 @@ public class MultiIndex {
                 + 2;
 
         /**
-         * The uuid of the node to remove.
+         * The id of the node to remove.
          */
-        private final UUID uuid;
+        private final NodeId id;
 
         /**
          * Creates a new DeleteNode action.
          *
          * @param transactionId the id of the transaction that executes this action.
-         * @param uuid the uuid of the node to delete.
+         * @param id the id of the node to delete.
          */
-        DeleteNode(long transactionId, UUID uuid) {
+        DeleteNode(long transactionId, NodeId id) {
             super(transactionId, Action.TYPE_DELETE_NODE);
-            this.uuid = uuid;
+            this.id = id;
         }
 
         /**
@@ -1821,7 +1819,7 @@ public class MultiIndex {
          *
          * @param transactionId the id of the transaction that executes this
          *                      action.
-         * @param arguments     the uuid of the node to delete.
+         * @param arguments     the UUID of the node to delete.
          * @return the DeleteNode action.
          * @throws IllegalArgumentException if the arguments are malformed. Not a
          *                                  UUID.
@@ -1831,7 +1829,7 @@ public class MultiIndex {
             if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
                 throw new IllegalArgumentException("arguments is not a uuid");
             }
-            return new DeleteNode(transactionId, UUID.fromString(arguments));
+            return new DeleteNode(transactionId, new NodeId(arguments));
         }
 
         /**
@@ -1840,7 +1838,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public void execute(MultiIndex index) throws IOException {
-            String uuidString = uuid.toString();
+            String uuidString = id.toString();
             // check if indexing queue is still working on
             // this node from a previous update
             Document doc = index.indexingQueue.removeDocument(uuidString);
@@ -1874,7 +1872,7 @@ public class MultiIndex {
             logLine.append(' ');
             logLine.append(Action.DELETE_NODE);
             logLine.append(' ');
-            logLine.append(uuid);
+            logLine.append(id);
             return logLine.toString();
         }
     }

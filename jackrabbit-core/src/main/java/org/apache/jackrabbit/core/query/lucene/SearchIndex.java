@@ -44,7 +44,6 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.lucene.analysis.Analyzer;
@@ -327,7 +326,7 @@ public class SearchIndex extends AbstractQueryHandler {
     private boolean autoRepair = true;
 
     /**
-     * The uuid resolver cache size.
+     * The id resolver cache size.
      * <p/>
      * Default value is: <code>1000</code>.
      */
@@ -570,7 +569,7 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * Removes the node with <code>uuid</code> from the search index.
+     * Removes the node with <code>id</code> from the search index.
      * @param id the id of the node to remove from the index.
      * @throws IOException if an error occurs while removing the node from
      * the index.
@@ -584,7 +583,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * {@link MultiIndex#update(Collection, Collection)} and
      * transforms the two iterators to the required types.
      *
-     * @param remove uuids of nodes to remove.
+     * @param remove ids of nodes to remove.
      * @param add    NodeStates to add. Calls to <code>next()</code> on this
      *               iterator may return <code>null</code>, to indicate that a
      *               node could not be indexed successfully.
@@ -595,24 +594,24 @@ public class SearchIndex extends AbstractQueryHandler {
             throws RepositoryException, IOException {
         checkOpen();
 
-        Map<UUID, NodeState> aggregateRoots = new HashMap<UUID, NodeState>();
-        Set<UUID> removedUUIDs = new HashSet<UUID>();
-        Set<UUID> addedUUIDs = new HashSet<UUID>();
+        Map<NodeId, NodeState> aggregateRoots = new HashMap<NodeId, NodeState>();
+        Set<NodeId> removedIds = new HashSet<NodeId>();
+        Set<NodeId> addedIds = new HashSet<NodeId>();
 
-        Collection<UUID> removeCollection = new ArrayList<UUID>();
+        Collection<NodeId> removeCollection = new ArrayList<NodeId>();
         while (remove.hasNext()) {
-            UUID uuid = remove.next().getUUID();
-            removeCollection.add(uuid);
-            removedUUIDs.add(uuid);
+            NodeId id = remove.next();
+            removeCollection.add(id);
+            removedIds.add(id);
         }
 
         Collection<Document> addCollection = new ArrayList<Document>();
         while (add.hasNext()) {
             NodeState state = add.next();
             if (state != null) {
-                UUID uuid = state.getNodeId().getUUID();
-                addedUUIDs.add(uuid);
-                removedUUIDs.remove(uuid);
+                NodeId id = state.getNodeId();
+                addedIds.add(id);
+                removedIds.remove(id);
                 retrieveAggregateRoot(state, aggregateRoots);
 
                 try {
@@ -630,10 +629,10 @@ public class SearchIndex extends AbstractQueryHandler {
 
         // remove any aggregateRoot nodes that are new
         // and therefore already up-to-date
-        aggregateRoots.keySet().removeAll(addedUUIDs);
+        aggregateRoots.keySet().removeAll(addedIds);
 
-        // based on removed UUIDs get affected aggregate root nodes
-        retrieveAggregateRoot(removedUUIDs, aggregateRoots);
+        // based on removed ids get affected aggregate root nodes
+        retrieveAggregateRoot(removedIds, aggregateRoots);
 
         // update aggregates if there are any affected
         if (!aggregateRoots.isEmpty()) {
@@ -728,8 +727,7 @@ public class SearchIndex extends AbstractQueryHandler {
             }
             for (Integer doc : docs) {
                 Document d = reader.document(doc, FieldSelectors.UUID);
-                UUID uuid = UUID.fromString(d.get(FieldNames.UUID));
-                ids.add(new NodeId(uuid));
+                ids.add(new NodeId(d.get(FieldNames.UUID)));
             }
         } finally {
             Util.closeOrRelease(reader);
@@ -1305,7 +1303,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                 for (Fieldable fulltextField : fulltextFields) {
                                     doc.add(fulltextField);
                                 }
-                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().getUUID().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                             }
                         }
                     }
@@ -1333,7 +1331,7 @@ public class SearchIndex extends AbstractQueryHandler {
                                     value = FieldNames.createNamedValue(path, value);
                                     t.setTermBuffer(value);
                                     doc.add(new Field(field.name(), new SingletonTokenStream(t)));
-                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, parent.getNodeId().getUUID().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                    doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, parent.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                                 }
                             }
                         }
@@ -1347,7 +1345,7 @@ public class SearchIndex extends AbstractQueryHandler {
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
                 log.warn("Exception while building indexing aggregate for"
-                        + " node with UUID: " + state.getNodeId().getUUID(), e);
+                        + " node with id: " + state.getNodeId(), e);
             }
         }
     }
@@ -1390,11 +1388,10 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param state the node state for which we want to retrieve the aggregate
      *              root.
-     * @param map   aggregate roots are collected in this map. Key=UUID,
-     *              value=NodeState.
+     * @param map   aggregate roots are collected in this map.
      */
     protected void retrieveAggregateRoot(
-            NodeState state, Map<UUID, NodeState> map) {
+            NodeState state, Map<NodeId, NodeState> map) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
@@ -1404,25 +1401,25 @@ public class SearchIndex extends AbstractQueryHandler {
                 for (AggregateRule aggregateRule : aggregateRules) {
                     NodeState root = aggregateRule.getAggregateRoot(state);
                     if (root != null) {
-                        map.put(root.getNodeId().getUUID(), root);
+                        map.put(root.getNodeId(), root);
                     }
                 }
             } catch (Exception e) {
                 log.warn("Unable to get aggregate root for "
-                        + state.getNodeId().getUUID(), e);
+                        + state.getNodeId(), e);
             }
         }
     }
 
     /**
-     * Retrieves the root of the indexing aggregate for <code>removedUUIDs</code>
+     * Retrieves the root of the indexing aggregate for <code>removedIds</code>
      * and puts it into <code>map</code>.
      *
-     * @param removedUUIDs   the UUIDs of removed nodes.
+     * @param removedIds     the ids of removed nodes.
      * @param map            aggregate roots are collected in this map
      */
     protected void retrieveAggregateRoot(
-            Set<UUID> removedUUIDs, Map<UUID, NodeState> map) {
+            Set<NodeId> removedIds, Map<NodeId, NodeState> map) {
         if (indexingConfig != null) {
             AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
             if (aggregateRules == null) {
@@ -1433,21 +1430,20 @@ public class SearchIndex extends AbstractQueryHandler {
             try {
                 CachingMultiIndexReader reader = index.getIndexReader();
                 try {
-                    Term aggregateUUIDs =
+                    Term aggregateIds =
                         new Term(FieldNames.AGGREGATED_NODE_UUID, "");
                     TermDocs tDocs = reader.termDocs();
                     try {
                         ItemStateManager ism = getContext().getItemStateManager();
-                        for (UUID uuid : removedUUIDs) {
-                            aggregateUUIDs =
-                                aggregateUUIDs.createTerm(uuid.toString());
-                            tDocs.seek(aggregateUUIDs);
+                        for (NodeId id : removedIds) {
+                            aggregateIds =
+                                aggregateIds.createTerm(id.toString());
+                            tDocs.seek(aggregateIds);
                             while (tDocs.next()) {
                                 Document doc = reader.document(
                                         tDocs.doc(), FieldSelectors.UUID);
-                                NodeId nId = new NodeId(
-                                        UUID.fromString(doc.get(FieldNames.UUID)));
-                                map.put(nId.getUUID(), (NodeState) ism.getItemState(nId));
+                                NodeId nId = new NodeId(doc.get(FieldNames.UUID));
+                                map.put(nId, (NodeState) ism.getItemState(nId));
                                 found++;
                             }
                         }
@@ -1577,9 +1573,9 @@ public class SearchIndex extends AbstractQueryHandler {
         /**
          * {@inheritDoc}
          */
-        public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
+        public ForeignSegmentDocId createDocId(NodeId id) throws IOException {
             for (CachingMultiIndexReader subReader : subReaders) {
-                ForeignSegmentDocId doc = subReader.createDocId(uuid);
+                ForeignSegmentDocId doc = subReader.createDocId(id);
                 if (doc != null) {
                     return doc;
                 }

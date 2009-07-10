@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -114,24 +114,24 @@ abstract class DocId {
     }
 
     /**
-     * Creates a <code>DocId</code> based on a node UUID.
+     * Creates a <code>DocId</code> based on a UUID.
      *
-     * @param uuid the node uuid.
-     * @return a <code>DocId</code> based on a node UUID.
+     * @param uuid the UUID
+     * @return a <code>DocId</code> based on the UUID.
      * @throws IllegalArgumentException if the <code>uuid</code> is malformed.
      */
     static DocId create(String uuid) {
-        return create(UUID.fromString(uuid));
+        return create(new NodeId(uuid));
     }
 
     /**
-     * Creates a <code>DocId</code> based on a node UUID.
+     * Creates a <code>DocId</code> based on a node id.
      *
-     * @param uuid the node uuid.
-     * @return a <code>DocId</code> based on a node UUID.
+     * @param id the node id
+     * @return a <code>DocId</code> based on the node id
      */
-    static DocId create(UUID uuid) {
-        return new UUIDDocId(uuid);
+    static DocId create(NodeId id) {
+        return new UUIDDocId(id);
     }
 
     /**
@@ -202,19 +202,14 @@ abstract class DocId {
     }
 
     /**
-     * <code>DocId</code> based on a UUID.
+     * <code>DocId</code> based on a node id.
      */
     private static final class UUIDDocId extends DocId {
 
         /**
-         * The least significant 64 bits of the uuid (bytes 8-15)
+         * The node identifier.
          */
-        private final long lsb;
-
-        /**
-         * The most significant 64 bits of the uuid (bytes 0-7)
-         */
-        private final long msb;
+        private final NodeId id;
 
         /**
          * The previously calculated foreign segment document id.
@@ -222,13 +217,12 @@ abstract class DocId {
         private ForeignSegmentDocId doc;
 
         /**
-         * Creates a <code>DocId</code> based on a Node uuid.
+         * Creates a <code>DocId</code> based on a node id.
          *
-         * @param uuid the Node uuid.
+         * @param id the node id.
          */
-        UUIDDocId(UUID uuid) {
-            this.lsb = uuid.getLeastSignificantBits();
-            this.msb = uuid.getMostSignificantBits();
+        UUIDDocId(NodeId id) {
+            this.id = id;
         }
 
         /**
@@ -243,7 +237,7 @@ abstract class DocId {
             }
             if (realDoc == -1) {
                 // Cached doc was invalid => create new one
-                segDocId = reader.createDocId(new UUID(msb, lsb));
+                segDocId = reader.createDocId(id);
                 if (segDocId != null) {
                     realDoc = reader.getDocumentNumber(segDocId);
                     doc = segDocId;
@@ -284,7 +278,7 @@ abstract class DocId {
          * @return a String representation for this <code>DocId</code>.
          */
         public String toString() {
-            return "UUIDDocId(" + new UUID(msb, lsb) + ")";
+            return "UUIDDocId(" + id + ")";
         }
     }
 
@@ -305,7 +299,7 @@ abstract class DocId {
         MultiUUIDDocId(String[] uuids) {
             this.docIds = new UUIDDocId[uuids.length];
             for (int i = 0; i < uuids.length; i++) {
-                docIds[i] = new UUIDDocId(UUID.fromString(uuids[i]));
+                docIds[i] = new UUIDDocId(new NodeId(uuids[i]));
             }
         }
 
@@ -353,7 +347,7 @@ abstract class DocId {
             for (int i = 0; i < docIds.length; i++) {
                 sb.append(separator);
                 separator = ", ";
-                sb.append(new UUID(docIds[i].msb, docIds[i].lsb));
+                sb.append(docIds[i].id);
             }
             sb.append(")");
             return sb.toString();

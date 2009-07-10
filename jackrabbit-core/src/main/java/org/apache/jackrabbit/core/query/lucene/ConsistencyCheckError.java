@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import java.io.IOException;
 
@@ -31,13 +31,13 @@ abstract class ConsistencyCheckError {
     protected final String message;
 
     /**
-     * The UUID of the affected node.
+     * The id of the affected node.
      */
-    protected final UUID uuid;
+    protected final NodeId id;
 
-    ConsistencyCheckError(String message, UUID uuid) {
+    ConsistencyCheckError(String message, NodeId id) {
         this.message = message;
-        this.uuid = uuid;
+        this.id = id;
     }
 
     /**
