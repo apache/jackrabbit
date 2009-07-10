@@ -91,7 +91,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
         try {
-            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id.getUUID()));
+            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
             ResultSet rs = stmt.getResultSet();
             try {
                 if (rs.next()) {

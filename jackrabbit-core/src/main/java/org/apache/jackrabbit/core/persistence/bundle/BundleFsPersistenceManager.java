@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.uuid.UUID;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -506,7 +505,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throws ItemStateException {
         ArrayList<NodeId> list = new ArrayList<NodeId>();
         try {
-            getListRecursive(list, "", bigger == null ? null : bigger.getUUID(), maxCount);
+            getListRecursive(list, "", bigger == null ? null : bigger, maxCount);
             return list;
         } catch (FileSystemException e) {
             String msg = "failed to read node list: " + bigger + ": " + e;
@@ -518,7 +517,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected UUID getUUIDFromFileName(String fileName) {
+    protected NodeId getIdFromFileName(String fileName) {
         StringBuffer buff = new StringBuffer(35);
         if (!fileName.endsWith("." + NODEFILENAME)) {
             return null;
@@ -536,12 +535,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 }
             }
         }
-        String u = buff.toString();
-        return new UUID(u);
+        return new NodeId(buff.toString());
     }
 
-    private void getListRecursive(ArrayList<NodeId> list, String path, UUID bigger,
-            int maxCount) throws FileSystemException {
+    private void getListRecursive(
+            ArrayList<NodeId> list, String path, NodeId bigger, int maxCount)
+            throws FileSystemException {
         if (maxCount > 0 && list.size() >= maxCount) {
             return;
         }
@@ -549,14 +548,13 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         Arrays.sort(files);
         for (int i = 0; i < files.length; i++) {
             String f = files[i];
-            UUID u = getUUIDFromFileName(path + FileSystem.SEPARATOR + f);
-            if (u == null) {
+            NodeId n = getIdFromFileName(path + FileSystem.SEPARATOR + f);
+            if (n == null) {
                 continue;
             }
-            if (bigger != null && bigger.toString().compareTo(u.toString()) >= 0) {
+            if (bigger != null && bigger.toString().compareTo(n.toString()) >= 0) {
                 continue;
             }
-            NodeId n = new NodeId(u);
             list.add(n);
             if (maxCount > 0 && list.size() >= maxCount) {
                 return;
