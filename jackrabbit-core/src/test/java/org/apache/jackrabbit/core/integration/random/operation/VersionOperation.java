@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.integration.random.operation;
 
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
+import javax.jcr.Node;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.Version;
 import java.util.List;
@@ -43,8 +44,15 @@ public abstract class VersionOperation extends Operation {
      */
     protected Version getRandomVersion(boolean excludeReferenced) throws RepositoryException {
         List allVersions = new ArrayList();
-        for (VersionIterator it = getNode().getVersionHistory().getAllVersions(); it.hasNext(); ) {
+        Node n = getNode();
+        for (VersionIterator it = n.getVersionHistory().getAllVersions(); it.hasNext(); ) {
             Version v = it.nextVersion();
+            if (excludeReferenced) {
+                // quick check if it is the base version
+                if (n.getBaseVersion().isSame(v)) {
+                    continue;
+                }
+            }
             if (v.getPredecessors().length > 0) {
                 if (!excludeReferenced || !v.getReferences().hasNext()) {
                     allVersions.add(v);
