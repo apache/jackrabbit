@@ -55,7 +55,13 @@ public class TestTwoGetStreams extends AbstractJCRTest {
 
         Node root = superuser.getRootNode();
         ValueFactory vf = superuser.getValueFactory();
+
+        long time = System.currentTimeMillis();
         root.setProperty("p1", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
+        superuser.save();
+        long saveOne = System.currentTimeMillis() - time;
+        System.out.println("save one took " + saveOne);
+
         root.setProperty("p2", vf.createBinary(new RandomInputStream(1, STREAM_LENGTH)));
         superuser.save();
 
@@ -71,7 +77,7 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         }
 
         // copying a value should not stream the content
-        long time = System.currentTimeMillis();
+        time = System.currentTimeMillis();
         for (int i = 0; i < 100; i++) {
             Value v = root.getProperty("p1").getValue();
             root.setProperty("p3", v);
@@ -80,7 +86,8 @@ public class TestTwoGetStreams extends AbstractJCRTest {
         time = System.currentTimeMillis() - time;
         // streaming 1 MB again and again takes about 4.3 seconds
         // on my computer; copying the data identifier takes about 16 ms
-        assertTrue("time: " + time, time < 100);
+        // here we test if copying 100 objects took less than saving 50 new objects
+        assertTrue("time: " + time, time < saveOne * 50);
 
     }
 
