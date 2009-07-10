@@ -82,12 +82,16 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
             throws RepositoryException {
         JackrabbitRepository repo = REPOSITORY_INSTANCES.get(home);
         if (repo == null) {
+            TransientRepository tr;
             if (home == null) {
-                repo = new TransientRepository();
+                tr = new TransientRepository();
+                // also remember this instance as the default repository
+                REPOSITORY_INSTANCES.put(null, tr);
             } else {
-                repo = new TransientRepository(conf, home);
+                tr = new TransientRepository(conf, home);
             }
-            REPOSITORY_INSTANCES.put(home, repo);
+            REPOSITORY_INSTANCES.put(tr.getHomeDir(), tr);
+            repo = tr;
         }
         return repo;
     }
