@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -42,7 +42,8 @@ public final class CachingMultiIndexReader
     /**
      * Map of {@link OffsetReader}s, identified by creation tick.
      */
-    private final Map readersByCreationTick = new HashMap();
+    private final Map<Long, OffsetReader> readersByCreationTick =
+        new HashMap<Long, OffsetReader>();
 
     /**
      * Document number cache if available. May be <code>null</code>.
@@ -77,7 +78,7 @@ public final class CachingMultiIndexReader
             starts[i] = maxDoc;
             maxDoc += subReaders[i].maxDoc();
             OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
-            readersByCreationTick.put(new Long(subReaders[i].getCreationTick()), offsetReader);
+            readersByCreationTick.put(subReaders[i].getCreationTick(), offsetReader);
         }
         starts[subReaders.length] = maxDoc;
     }
@@ -116,8 +117,8 @@ public final class CachingMultiIndexReader
                 // check if valid:
                 // 1) reader must be in the set of readers
                 // 2) doc must not be deleted
-                OffsetReader offsetReader = (OffsetReader) readersByCreationTick.get(
-                        new Long(e.creationTick));
+                OffsetReader offsetReader =
+                    readersByCreationTick.get(e.creationTick);
                 if (offsetReader != null && !offsetReader.reader.isDeleted(e.doc)) {
                     return new SingleTermDocs(e.doc + offsetReader.offset);
                 }
@@ -180,12 +181,12 @@ public final class CachingMultiIndexReader
     /**
      * {@inheritDoc}
      */
-    public ForeignSegmentDocId createDocId(UUID uuid) throws IOException {
-        Term id = new Term(FieldNames.UUID, uuid.toString());
+    public ForeignSegmentDocId createDocId(NodeId id) throws IOException {
+        Term term = new Term(FieldNames.UUID, id.toString());
         int doc;
         long tick;
         for (int i = 0; i < subReaders.length; i++) {
-            TermDocs docs = subReaders[i].termDocs(id);
+            TermDocs docs = subReaders[i].termDocs(term);
             try {
                 if (docs.next()) {
                     doc = docs.doc();

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 
 import java.io.IOException;
 
@@ -34,14 +34,14 @@ public interface MultiIndexReader extends ReleaseableIndexReader {
     IndexReader[] getIndexReaders();
 
     /**
-     * Creates a document id for the given <code>uuid</code>.
+     * Creates a document id for the given node identifier.
      *
-     * @param uuid the uuid of the node.
+     * @param id the id of the node.
      * @return a foreign segment doc id or <code>null</code> if there is no node
-     *         with the given <code>uuid</code>.
+     *         with the given <code>id</code>.
      * @throws IOException if an error occurs while reading from the index.
      */
-    ForeignSegmentDocId createDocId(UUID uuid) throws IOException;
+    ForeignSegmentDocId createDocId(NodeId id) throws IOException;
 
     /**
      * Returns the document number for the passed <code>docId</code>. If the id
