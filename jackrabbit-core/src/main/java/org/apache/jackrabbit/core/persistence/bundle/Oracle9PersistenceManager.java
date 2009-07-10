@@ -116,7 +116,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
 
             String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            Object[] params = createParams(bundle.getId().getUUID(), blob, true);
+            Object[] params = createParams(bundle.getId(), blob, true);
             connectionManager.executeStmt(sql, params);
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
@@ -155,7 +155,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             // not have to additionally synchronize on the preparedStatement
 
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            Object[] params = createParams(refs.getTargetId().getUUID(), blob, true);
+            Object[] params = createParams(refs.getTargetId(), blob, true);
             connectionManager.executeStmt(sql, params);
 
             // there's no need to close a ByteArrayOutputStream
