@@ -108,8 +108,7 @@ public class VersionImpl extends NodeImpl implements Version {
         // get base version. this can certainly be optimized
         InternalVersionHistory vh = ((VersionHistoryImpl) getContainingHistory())
                 .getInternalVersionHistory();
-        NodeId id = new NodeId(vh.getVersionableUUID());
-        Node vn = session.getNodeById(id);
+        Node vn = session.getNodeById(vh.getVersionableId());
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
         InternalVersion suc = getInternalVersion().getLinearSuccessor(base);

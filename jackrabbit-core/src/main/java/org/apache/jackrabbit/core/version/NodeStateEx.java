@@ -431,7 +431,7 @@ public class NodeStateEx {
 
         NodeStateEx node = createChildNode(nodeName, nodeTypeName, id);
         if (referenceable) {
-            node.setPropertyValue(NameConstants.JCR_UUID, InternalValue.create(node.getNodeId().getUUID().toString()));
+            node.setPropertyValue(NameConstants.JCR_UUID, InternalValue.create(node.getNodeId().toString()));
         }
         return node;
     }
