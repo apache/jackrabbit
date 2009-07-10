@@ -58,7 +58,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         locking = createISMLocking();
-        NodeId id = new NodeId(UUID.randomUUID());
+        NodeId id = new NodeId();
         state = new NodeState(id, NameConstants.NT_BASE, null, ItemState.STATUS_EXISTING, true);
         refs = new NodeReferences(new NodeReferencesId(state.getNodeId()));
         logs = new ArrayList();

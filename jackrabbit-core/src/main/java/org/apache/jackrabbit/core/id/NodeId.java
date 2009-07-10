@@ -30,16 +30,14 @@ public class NodeId extends UUID implements ItemId {
     private static final long serialVersionUID = 7348217305215708805L;
 
     /**
-     * Creates a node identifier instance for the identified node.
-     *
-     * @param uuid node UUID
+     * Creates a new randomly generated node identifier.
      */
-    public NodeId(UUID uuid) {
-        super(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
-    }
-
     public NodeId() {
         this(UUID.randomUUID());
+    }
+
+    private NodeId(UUID uuid) {
+        super(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
     /**
