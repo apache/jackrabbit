@@ -351,7 +351,17 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             } else if (relPath.getNumOperands() > 0 && relPath.getPathSteps()[0].getNameTest().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
                 propPath.append(resolver.getJCRName(XPathQueryBuilder.FN_POSITION_FULL));
             } else {
-                visit(relPath, data);
+                LocationStepQueryNode[] steps = relPath.getPathSteps();
+                String slash = "";
+                for (int i = 0; i < steps.length; i++) {
+                    propPath.append(slash);
+                    slash = "/";
+                    if (i == steps.length - 1 && node.getOperation() != OPERATION_SIMILAR) {
+                        // last step
+                        propPath.append("@");
+                    }
+                    visit(steps[i], propPath);
+                }
             }
 
             // surround name with property function
@@ -407,6 +417,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
                 sb.append(resolver.getJCRName(XPathQueryBuilder.REP_SIMILAR));
                 sb.append("(").append(propPath).append(", ");
                 appendValue(node, sb);
+                sb.append(")");
             } else if (node.getOperation() == OPERATION_SPELLCHECK) {
                 sb.append(resolver.getJCRName(XPathQueryBuilder.REP_SPELLCHECK));
                 sb.append("(");

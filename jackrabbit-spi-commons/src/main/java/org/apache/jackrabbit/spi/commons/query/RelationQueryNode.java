@@ -175,7 +175,11 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
      */
     public void addPathElement(Path.Element element) {
         LocationStepQueryNode step = factory.createLocationStepQueryNode(relPath);
-        step.setNameTest(element.getName());
+        if (element.getName().equals(STAR_NAME_TEST)) {
+            step.setNameTest(null);
+        } else {
+            step.setNameTest(element.getName());
+        }
         relPath.addPathStep(step);
     }
 
