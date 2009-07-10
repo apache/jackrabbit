@@ -108,8 +108,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     public VersionIterator getAllLinearVersions() throws RepositoryException {
         // get base version. this can certainly be optimized
         InternalVersionHistory vh = getInternalVersionHistory();
-        NodeId id = new NodeId(vh.getVersionableUUID());
-        Node vn = session.getNodeById(id);
+        Node vn = session.getNodeById(vh.getVersionableId());
         InternalVersion base = ((VersionImpl) vn.getBaseVersion()).getInternalVersion();
 
         return new VersionIteratorImpl(session, vh.getRootVersion(), base);
@@ -284,7 +283,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * {@inheritDoc}
      */
     public String getVersionableIdentifier() throws RepositoryException {
-        return getInternalVersionHistory().getVersionableUUID().toString();
+        return getInternalVersionHistory().getVersionableId().toString();
     }
 
     /**

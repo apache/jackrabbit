@@ -125,7 +125,7 @@ abstract class AbstractVersionManager implements VersionManager {
             throws RepositoryException {
         ReadLock lock = acquireReadLock();
         try {
-            String uuid = id.getUUID().toString();
+            String uuid = id.toString();
             Name name = getName(uuid);
 
             NodeStateEx parent = getParentNode(historyRoot, uuid, null);
@@ -276,7 +276,7 @@ abstract class AbstractVersionManager implements VersionManager {
 
         ReadLock lock = acquireReadLock();
         try {
-            String uuid = node.getNodeId().getUUID().toString();
+            String uuid = node.getNodeId().toString();
             Name name = getName(uuid);
 
             NodeStateEx parent = getParentNode(historyRoot, uuid, null);
@@ -379,7 +379,7 @@ abstract class AbstractVersionManager implements VersionManager {
         WriteOperation operation = startWriteOperation();
         try {
             // create deep path
-            String uuid = node.getNodeId().getUUID().toString();
+            String uuid = node.getNodeId().toString();
             NodeStateEx parent = getParentNode(historyRoot, uuid, NameConstants.REP_VERSIONSTORAGE);
             Name name = getName(uuid);
             if (parent.hasNode(name)) {

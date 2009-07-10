@@ -327,8 +327,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
-    public UUID getVersionableUUID() {
-        return versionableId.getUUID();
+    public NodeId getVersionableId() {
+        return versionableId;
     }
 
     /**
@@ -576,7 +576,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         NodeStateEx pNode = parent.addNode(name, NameConstants.NT_VERSIONHISTORY, historyId, true);
 
         // set the versionable uuid
-        String versionableUUID = nodeState.getNodeId().getUUID().toString();
+        String versionableUUID = nodeState.getNodeId().toString();
         pNode.setPropertyValue(NameConstants.JCR_VERSIONABLEUUID, InternalValue.create(versionableUUID));
 
         // create label node

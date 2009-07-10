@@ -301,9 +301,9 @@ public class JcrVersionManagerImpl implements javax.jcr.version.VersionManager {
         Iterator<NodeId> iter = changeSet.keySet().iterator();
         while (iter.hasNext()) {
             InternalVersion v = changeSet.remove(iter.next());
-            NodeId nodeId = new NodeId(v.getVersionHistory().getVersionableUUID());
             try {
-                NodeImpl node = session.getNodeById(nodeId);
+                NodeImpl node = session.getNodeById(
+                        v.getVersionHistory().getVersionableId());
                 InternalVersion base = ((VersionImpl) node.getBaseVersion()).getInternalVersion();
                 VersionImpl version = (VersionImpl) session.getNodeById(v.getId());
                 // if base version is newer than version, add to failed list

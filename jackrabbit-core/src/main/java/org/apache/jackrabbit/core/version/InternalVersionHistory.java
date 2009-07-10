@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.version;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.version.VersionException;
 
@@ -81,11 +80,11 @@ public interface InternalVersionHistory extends InternalVersionItem {
     int getNumVersions();
 
     /**
-     * Returns the UUID of the versionable node that this history belongs to.
+     * Returns the id of the versionable node that this history belongs to.
      *
-     * @return the UUID of the versionable node.
+     * @return the id of the versionable node.
      */
-    UUID getVersionableUUID();
+    NodeId getVersionableId();
 
     /**
      * Returns a name array of all version labels that exist in this
