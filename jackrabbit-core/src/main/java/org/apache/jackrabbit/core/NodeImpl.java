@@ -543,7 +543,7 @@ public class NodeImpl extends ItemImpl implements Node {
         NodeState nodeState;
         try {
             if (id == null) {
-                id = new NodeId(UUID.randomUUID());
+                id = new NodeId();
             }
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),

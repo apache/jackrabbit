@@ -630,7 +630,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             Hits childrenHits = new AdaptingHits();
             for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
                 String uuid = (String) it.next();
-                NodeId id = new NodeId(UUID.fromString(uuid));
+                NodeId id = new NodeId(uuid);
                 try {
                     long time = System.currentTimeMillis();
                     NodeState state = (NodeState) itemMgr.getItemState(id);

@@ -129,7 +129,7 @@ public final class Serializer {
         byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
         if (!Arrays.equals(uuidBytes, NULL_UUID_PLACEHOLDER_BYTES)) {
-            state.setParentId(new NodeId(new UUID(uuidBytes)));
+            state.setParentId(new NodeId(uuidBytes));
         }
         // definitionId
         s = in.readUTF();
@@ -157,7 +157,7 @@ public final class Serializer {
             Name name = NameFactoryImpl.getInstance().create(in.readUTF());    // name
             // uuid
             in.readFully(uuidBytes);
-            state.addChildNodeEntry(name, new NodeId(new UUID(uuidBytes)));
+            state.addChildNodeEntry(name, new NodeId(uuidBytes));
         }
     }
 

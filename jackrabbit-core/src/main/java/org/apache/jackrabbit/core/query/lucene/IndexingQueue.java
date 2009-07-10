@@ -98,11 +98,10 @@ class IndexingQueue {
         String[] uuids = queueStore.getPending();
         for (int i = 0; i < uuids.length; i++) {
             try {
-                UUID uuid = UUID.fromString(uuids[i]);
-                Document doc = index.createDocument(new NodeId(uuid));
+                Document doc = index.createDocument(new NodeId(uuids[i]));
                 pendingDocuments.put(uuids[i], doc);
                 log.debug("added node {}. New size of indexing queue: {}",
-                        uuid, new Integer(pendingDocuments.size()));
+                        uuids[i], new Integer(pendingDocuments.size()));
             } catch (IllegalArgumentException e) {
                 log.warn("Invalid UUID in indexing queue store: " + uuids[i]);
             } catch (RepositoryException e) {

@@ -151,7 +151,7 @@ public class QueryManagerImpl implements QueryManager {
         sanityCheck();
         List<Node> nodes = new ArrayList<Node>();
         try {
-            NodeId nodeId = new NodeId(UUID.fromString(node.getIdentifier()));
+            NodeId nodeId = new NodeId(node.getIdentifier());
             for (NodeId id : searchMgr.getWeaklyReferringNodes(nodeId)) {
                 nodes.add(session.getNodeById(id));
             }

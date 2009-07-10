@@ -38,6 +38,10 @@ public class NodeId extends UUID implements ItemId {
         super(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
+    public NodeId() {
+        this(UUID.randomUUID());
+    }
+
     /**
      * Creates a node identifier from the given UUID string.
      *
