@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.uuid.UUID;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
@@ -385,13 +384,13 @@ public class FineGrainedISMLocking implements ISMLocking {
         }
 
         private static int slotIndex(ItemId id) {
-            UUID uuid;
+            NodeId nodeId;
             if (id.denotesNode()) {
-                uuid = ((NodeId) id).getUUID();
+                nodeId = (NodeId) id;
             } else {
-                uuid = ((PropertyId) id).getParentId().getUUID();
+                nodeId = ((PropertyId) id).getParentId();
             }
-            return ((int) uuid.getLeastSignificantBits()) & 0xf;
+            return ((int) nodeId.getLeastSignificantBits()) & 0xf;
         }
     }
 }
