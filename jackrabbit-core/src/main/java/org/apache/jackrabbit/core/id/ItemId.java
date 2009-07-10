@@ -19,24 +19,23 @@ package org.apache.jackrabbit.core.id;
 import java.io.Serializable;
 
 /**
- * <code>ItemId</code> serves as the base class for the concrete classes
- * <code>PropertyId</code> and <code>NodeId</code> who uniquely identify
- * nodes and properties in a workspace.
+ * Node or property identifier. All content items in a Jackrabbit repository
+ * have an identifier that uniquely identifies the item in a workspace.
+ * <p>
+ * This interface is implemented by both the concrete node and property
+ * identifier classes in order to allow client code to determine whether
+ * an identifier refers to a node or a property.
  */
-public abstract class ItemId implements Serializable {
-
-    /** Serialization UID of this class. */
-    static final long serialVersionUID = -5138008726453328226L;
+public interface ItemId extends Serializable {
 
     /**
-     * Returns <code>true</code> if this id denotes a <code>Node</code>.
+     * Checks whether this identifier denotes a node item.
      *
-     * @return <code>true</code> if this id denotes a <code>Node</code>,
-     *         <code>false</code> if it denotes a <code>Property</code>
+     * @return <code>true</code> if this identifier denotes a node,
+     *         <code>false</code> if a property
      * @see PropertyId
      * @see NodeId
      */
-    public abstract boolean denotesNode();
+    boolean denotesNode();
 
 }
-

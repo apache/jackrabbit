@@ -22,16 +22,12 @@ import org.apache.jackrabbit.uuid.UUID;
  * Node identifier. An instance of this class identifies a node using its UUID.
  * Once created a node identifier instance is immutable.
  */
-public class NodeId extends ItemId implements Comparable<NodeId> {
+public class NodeId extends UUID implements ItemId {
 
-    /** Serial version UID of this class. */
-    static final long serialVersionUID = 7380115476447060008L;
-
-    /** UUID of the identified node */
-    private final UUID uuid;
-
-    /** the precalculated hashcode */
-    private final int hashCode;
+    /**
+     * The serial version UID.
+     */
+    private static final long serialVersionUID = 7348217305215708805L;
 
     /**
      * Creates a node identifier instance for the identified node.
@@ -39,11 +35,7 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
      * @param uuid node UUID
      */
     public NodeId(UUID uuid) {
-        if (uuid == null) {
-            throw new IllegalArgumentException("uuid can not be null");
-        }
-        this.uuid = uuid;
-        this.hashCode = uuid.hashCode();
+        super(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
     /**
@@ -53,15 +45,15 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
      * @throws IllegalArgumentException if the UUID string is invalid
      */
     public NodeId(String uuid) throws IllegalArgumentException {
-        this(new UUID(uuid));
+        super(uuid);
     }
 
     public NodeId(byte[] bytes) {
-        this(new UUID(bytes));
+        super(bytes);
     }
 
     public NodeId(long msb, long lsb) {
-        this(new UUID(msb, lsb));
+        super(msb, lsb);
     }
 
     /**
@@ -81,7 +73,7 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
      * @return node UUID
      */
     public UUID getUUID() {
-        return uuid;
+        return this;
     }
 
     /**
@@ -100,78 +92,7 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
         if (s == null) {
             throw new IllegalArgumentException("invalid NodeId literal");
         }
-        return new NodeId(new UUID(s));
-    }
-
-    /**
-     * Returns a (new) array containing the raw bytes that make up this UUID.
-     *
-     * @return raw bytes of the UUID
-     */
-    public byte[] getRawBytes() {
-        return uuid.getRawBytes();
-    }
-
-    /**
-     * Returns the most significant bits of the UUID.
-     *
-     * @return most significant 64 bits
-     */
-    public long getMostSignificantBits() {
-        return uuid.getMostSignificantBits();
-    }
-
-    /**
-     * Returns the least significant bits of the UUID.
-     *
-     * @return least significant 64 bits
-     */
-    public long getLeastSignificantBits() {
-        return uuid.getLeastSignificantBits();
-    }
-
-    //----------------------------------------------------------< Comparable >
-
-    /**
-     * Compares this node id to the given other identifier.
-     *
-     * @param that the other identifier for the comparison
-     * @return result of comparison
-     */
-    public int compareTo(NodeId that) {
-        return uuid.compareTo(that.uuid);
-    }
-
-    //-------------------------------------------< java.lang.Object overrides >
-    /**
-     * {@inheritDoc}
-     */
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof NodeId) {
-            return uuid.equals(((NodeId) obj).uuid);
-        }
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * Returns the same as <code>this.getUUID().toString()</code>
-     */
-    public String toString() {
-        return uuid.toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * Returns the same as <code>this.getUUID().hashCode()</code>
-     */
-    public int hashCode() {
-        return hashCode;
+        return new NodeId(s);
     }
 
 }
