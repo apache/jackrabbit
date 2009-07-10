@@ -56,6 +56,14 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
         this(new UUID(uuid));
     }
 
+    public NodeId(byte[] bytes) {
+        this(new UUID(bytes));
+    }
+
+    public NodeId(long msb, long lsb) {
+        this(new UUID(msb, lsb));
+    }
+
     /**
      * Returns <code>true</code> as this class represents a node identifier,
      * not a property identifier.
@@ -102,6 +110,24 @@ public class NodeId extends ItemId implements Comparable<NodeId> {
      */
     public byte[] getRawBytes() {
         return uuid.getRawBytes();
+    }
+
+    /**
+     * Returns the most significant bits of the UUID.
+     *
+     * @return most significant 64 bits
+     */
+    public long getMostSignificantBits() {
+        return uuid.getMostSignificantBits();
+    }
+
+    /**
+     * Returns the least significant bits of the UUID.
+     *
+     * @return least significant 64 bits
+     */
+    public long getLeastSignificantBits() {
+        return uuid.getLeastSignificantBits();
     }
 
     //----------------------------------------------------------< Comparable >
