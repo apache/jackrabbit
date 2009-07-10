@@ -88,6 +88,10 @@
               <value>target/derby.log</value>
             </property>
             <property>
+              <name>org.apache.jackrabbit.repository.home</name>
+              <value>target/repository-factory-test</value>
+            </property>
+            <property>
               <name>known.issues</name>
               <value>
                 org.apache.jackrabbit.core.xml.DocumentViewTest#testMultiValue

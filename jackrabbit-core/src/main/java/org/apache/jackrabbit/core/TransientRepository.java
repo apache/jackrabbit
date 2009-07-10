@@ -121,13 +121,20 @@ public class TransientRepository extends AbstractRepository
     private final Properties descriptors;
 
     /**
+     * The path to the repository home directory.
+     */
+    private final String home;
+
+    /**
      * Creates a transient repository proxy that will use the given repository
      * factory to initialize the underlying repository instances.
      *
      * @param factory repository factory
+     * @param home    the path to the repository home directory.
      */
-    public TransientRepository(RepositoryFactory factory) {
+    public TransientRepository(RepositoryFactory factory, String home) {
         this.factory = factory;
+        this.home = home;
         this.repository = null;
         this.descriptors = new Properties();
 
@@ -171,7 +178,7 @@ public class TransientRepository extends AbstractRepository
             public RepositoryImpl getRepository() throws RepositoryException {
                 return RepositoryImpl.create(config);
             }
-        });
+        }, config.getHomeDir());
     }
 
     /**
@@ -231,7 +238,14 @@ public class TransientRepository extends AbstractRepository
                             "Invalid repository configuration file: " + xml, e);
                 }
             }
-        });
+        }, dir.getAbsolutePath());
+    }
+
+    /**
+     * @return the path to the repository home directory.
+     */
+    public String getHomeDir() {
+        return home;
     }
 
     /**
