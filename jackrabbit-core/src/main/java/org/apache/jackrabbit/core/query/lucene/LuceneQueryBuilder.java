@@ -874,10 +874,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             boolean selectParent = true; 
             for (int i = steps.length - 2; i >= 0; i--) {
                 LocationStepQueryNode step = steps[i];
-                Name name = null;
-                if (!RelationQueryNode.STAR_NAME_TEST.equals(steps[i].getNameTest())) {
-                    name = steps[i].getNameTest();
-                }
+                Name name = steps[i].getNameTest();
                 if (i == steps.length - 2) {
                     if (step instanceof DerefQueryNode) {
                         query = createPredicateDeref(query, (DerefQueryNode) step, data);
