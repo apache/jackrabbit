@@ -16,85 +16,224 @@
  */
 package org.apache.jackrabbit.core.id;
 
-import org.apache.jackrabbit.uuid.UUID;
+import java.util.Random;
+import java.util.UUID;
 
 /**
- * Node identifier. An instance of this class identifies a node using its UUID.
- * Once created a node identifier instance is immutable.
+ * Node identifier, i.e. an immutable 128 bit UUID.
  */
-public class NodeId extends UUID implements ItemId {
+public class NodeId implements ItemId, Comparable<NodeId> {
 
     /**
      * The serial version UID.
      */
-    private static final long serialVersionUID = 7348217305215708805L;
+    private static final long serialVersionUID = 5773949574212570258L;
 
     /**
-     * Creates a new randomly generated node identifier.
+     * Returns a node identifier that is represented by the given UUID string.
+     *
+     * @param uuid the UUID string
+     * @return the node identifier
+     * @throws IllegalArgumentException if the given string is <code>null</code>
+     *                                  or not a valid UUID
      */
-    public NodeId() {
-        this(UUID.randomUUID());
+    public static NodeId valueOf(String uuid) throws IllegalArgumentException {
+        if (uuid != null) {
+            return new NodeId(uuid);
+        } else {
+            throw new IllegalArgumentException("NodeId.valueOf(null)");
+        }
     }
 
-    private NodeId(UUID uuid) {
-        super(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+    /**
+     * The most significant 64 bits (bytes 0-7) of the UUID.
+     */
+    private final long msb;
+
+    /**
+     * The least significant 64 bits (bytes 8-15) of the UUID.
+     */
+    private final long lsb;
+
+    /**
+     * Creates a node identifier from the given 128 bits.
+     *
+     * @param msb most significant 64 bits
+     * @param lsb least significant 64 bits
+     */
+    public NodeId(long msb, long lsb) {
+        this.msb = msb;
+        this.lsb = lsb;
+    }
+
+    /**
+     * Creates a node identifier from the given 16 bytes.
+     *
+     * @param bytes array of 16 bytes
+     * @throws NullPointerException if the given array is <code>null</code>
+     * @throws ArrayIndexOutOfBoundsException
+     *             if the given array is less than 16 bytes long
+     */
+    public NodeId(byte[] bytes)
+            throws NullPointerException, ArrayIndexOutOfBoundsException {
+        this(   // Most significant 64 bits
+                ((((long) bytes[0]) & 0xFF) << 56)
+                + ((((long) bytes[1]) & 0xFF) << 48)
+                + ((((long) bytes[2]) & 0xFF) << 40)
+                + ((((long) bytes[3]) & 0xFF) << 32)
+                + ((((long) bytes[4]) & 0xFF) << 24)
+                + ((((long) bytes[5]) & 0xFF) << 16)
+                + ((((long) bytes[6]) & 0xFF) << 8)
+                + ((((long) bytes[7]) & 0xFF)),
+                // Least significant 64 bits
+                ((((long) bytes[8]) & 0xFF) << 56)
+                + ((((long) bytes[9]) & 0xFF) << 48)
+                + ((((long) bytes[10]) & 0xFF) << 40)
+                + ((((long) bytes[11]) & 0xFF) << 32)
+                + ((((long) bytes[12]) & 0xFF) << 24)
+                + ((((long) bytes[13]) & 0xFF) << 16)
+                + ((((long) bytes[14]) & 0xFF) << 8)
+                + ((((long) bytes[15]) & 0xFF)));
+    }
+
+    /**
+     * Creates a node identifier from the given UUID.
+     *
+     * @param uuid UUID
+     */
+    public NodeId(UUID uuid) {
+        this(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
     }
 
     /**
      * Creates a node identifier from the given UUID string.
      *
+     * @see UUID#fromString(String)
      * @param uuid UUID string
      * @throws IllegalArgumentException if the UUID string is invalid
      */
     public NodeId(String uuid) throws IllegalArgumentException {
-        super(uuid);
-    }
-
-    public NodeId(byte[] bytes) {
-        super(bytes);
-    }
-
-    public NodeId(long msb, long lsb) {
-        super(msb, lsb);
+        this(UUID.fromString(uuid));
     }
 
     /**
-     * Returns <code>true</code> as this class represents a node identifier,
-     * not a property identifier.
+     * Creates a node identifier using the given random number generator.
+     *
+     * @param random random number generator
+     */
+    public NodeId(Random random) {
+        this(   // Most significant 64 bits, with version field set to 4
+                random.nextLong() & 0xFfffFfffFfff0fffL | 0x0000000000004000L,
+                // Least significant 64 bits, with variant field set to IETF
+                random.nextLong() & 0x3fffFfffFfffFfffL | 0x8000000000000000L);
+    }
+
+    /**
+     * Creates a random node identifier using a secure random number generator.
+     */
+    public NodeId() {
+        this(SeededSecureRandom.getInstance());
+    }
+
+    /**
+     * Returns the 64 most significant bits of this identifier.
+     *
+     * @return 64 most significant bits
+     */
+    public long getMostSignificantBits() {
+        return msb;
+    }
+
+    /**
+     * Returns the 64 least significant bits of this identifier.
+     *
+     * @return 64 least significant bits
+     */
+    public long getLeastSignificantBits() {
+        return lsb;
+    }
+
+    /**
+     * Returns the 16 bytes of this identifier.
+     *
+     * @return newly allocated array of 16 bytes
+     */
+    public byte[] getRawBytes() {
+        return new byte[] {
+            (byte) (msb >> 56), (byte) (msb >> 48), (byte) (msb >> 40),
+            (byte) (msb >> 32), (byte) (msb >> 24), (byte) (msb >> 16),
+            (byte) (msb >> 8), (byte) msb,
+            (byte) (lsb >> 56), (byte) (lsb >> 48), (byte) (lsb >> 40),
+            (byte) (lsb >> 32), (byte) (lsb >> 24), (byte) (lsb >> 16),
+            (byte) (lsb >> 8), (byte) lsb
+        };
+    }
+
+    //--------------------------------------------------------------< ItemId >
+
+    /**
+     * Returns <code>true</code> to indicate that this is a node identifier.
      *
      * @return always <code>true</code>
-     * @see ItemId#denotesNode()
      */
     public boolean denotesNode() {
         return true;
     }
 
+    //----------------------------------------------------------< Comparable >
+
     /**
-     * Returns the UUID of the identified node.
+     * Compares this identifier to the given other one.
      *
-     * @return node UUID
+     * @param that other identifier
+     * @return -1, 0 or +1 if this identifier is less than, equal to,
+     *         or greater than the given other identifier
      */
-    public UUID getUUID() {
-        return this;
+    public int compareTo(NodeId that) {
+        // This is not a 128 bit integer comparison! See also JCR-687.
+        if (msb < that.msb) {
+            return -1;
+        } else if (msb > that.msb) {
+            return 1;
+        } else if (lsb < that.lsb) {
+            return -1;
+        } else if (lsb > that.lsb) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    //--------------------------------------------------------------< Object >
+
+    /**
+     * Returns the UUID string representation of this identifier.
+     *
+     * @see UUID#toString()
+     * @return UUID string
+     */
+    public String toString() {
+        return new UUID(msb, lsb).toString();
     }
 
     /**
-     * Returns a <code>NodeId</code> holding the value of the specified
-     * string. The string must be in the format returned by the
-     * <code>NodeId.toString()</code> method.
+     * Compares two UUID for equality.
      *
-     * @param s a <code>String</code> containing the <code>NodeId</code>
-     *          representation to be parsed.
-     * @return the <code>NodeId</code> represented by the argument
-     * @throws IllegalArgumentException if the specified string can not be parsed
-     *                                  as a <code>NodeId</code>.
-     * @see #toString()
+     * @see Object#equals(Object)
      */
-    public static NodeId valueOf(String s) throws IllegalArgumentException {
-        if (s == null) {
-            throw new IllegalArgumentException("invalid NodeId literal");
-        }
-        return new NodeId(s);
+    public boolean equals(Object that) {
+        return that instanceof NodeId
+            && msb == ((NodeId) that).msb
+            && lsb == ((NodeId) that).lsb;
+    }
+
+    /**
+     * Returns a hash code of this identifier.
+     *
+     * @return hash code
+     */
+    public int hashCode() {
+        return (int) ((msb >>> 32) ^ msb ^ (lsb >>> 32) ^ lsb);
     }
 
 }
