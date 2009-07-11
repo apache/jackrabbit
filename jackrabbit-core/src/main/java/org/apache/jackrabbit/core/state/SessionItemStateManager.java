@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -206,7 +205,7 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         return stateMgr.getNodeReferences(id);
@@ -215,7 +214,7 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         return stateMgr.hasNodeReferences(id);
     }
 
@@ -997,7 +996,7 @@ public class SessionItemStateManager
         /**
          * {@inheritDoc}
          */
-        public NodeReferences getNodeReferences(NodeReferencesId id)
+        public NodeReferences getNodeReferences(NodeId id)
                 throws NoSuchItemStateException, ItemStateException {
             // n/a
             throw new ItemStateException("getNodeReferences() not implemented");
@@ -1006,7 +1005,7 @@ public class SessionItemStateManager
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeReferencesId id) {
+        public boolean hasNodeReferences(NodeId id) {
             // n/a
             return false;
         }

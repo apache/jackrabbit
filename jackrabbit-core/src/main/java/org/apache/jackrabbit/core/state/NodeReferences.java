@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 
 /**
@@ -37,9 +36,9 @@ public class NodeReferences implements Serializable {
     static final long serialVersionUID = 7007727035982680717L;
 
     /**
-     * identifier of this <code>NodeReferences</code> instance.
+     * Identifier of the target node.
      */
-    protected NodeReferencesId id;
+    protected NodeId id;
 
     /**
      * list of PropertyId's (i.e. the id's of the properties that refer to
@@ -51,22 +50,8 @@ public class NodeReferences implements Serializable {
      */
     protected ArrayList<PropertyId> references = new ArrayList<PropertyId>();
 
-    /**
-     * Package private constructor
-     *
-     * @param id
-     */
-    public NodeReferences(NodeReferencesId id) {
+    public NodeReferences(NodeId id) {
         this.id = id;
-    }
-
-    /**
-     * Returns the identifier of this node references object.
-     *
-     * @return the id of this node references object.
-     */
-    public NodeReferencesId getId() {
-        return id;
     }
 
     /**
@@ -75,7 +60,7 @@ public class NodeReferences implements Serializable {
      * @return the id of the target node
      */
     public NodeId getTargetId() {
-        return id.getTargetId();
+        return id;
     }
 
     /**
@@ -124,4 +109,11 @@ public class NodeReferences implements Serializable {
     public void clearAllReferences() {
         references.clear();
     }
+
+    //--------------------------------------------------------------< Object >
+
+    public String toString() {
+        return "references to " + id;
+    }
+
 }

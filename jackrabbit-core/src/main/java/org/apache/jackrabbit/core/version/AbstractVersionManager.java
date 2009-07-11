@@ -32,12 +32,10 @@ import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -449,9 +447,8 @@ abstract class AbstractVersionManager implements VersionManager {
         try {
             // check if the activity has any references in the workspaces
             NodeId nodeId = activity.getId();
-            NodeReferencesId refId = new NodeReferencesId(nodeId);
-            if (stateMgr.hasNodeReferences(refId)) {
-                NodeReferences refs = stateMgr.getNodeReferences(refId);
+            if (stateMgr.hasNodeReferences(nodeId)) {
+                NodeReferences refs = stateMgr.getNodeReferences(nodeId);
                 if (refs.hasReferences()) {
                     throw new ReferentialIntegrityException("Unable to delete activity. still referenced.");
                 }

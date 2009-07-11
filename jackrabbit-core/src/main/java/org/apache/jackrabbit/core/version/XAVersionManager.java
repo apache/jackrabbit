@@ -42,7 +42,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
@@ -360,12 +359,12 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         ChangeLog changeLog = ((XAItemStateManager) stateMgr).getChangeLog();
         if (changeLog != null) {
-            return changeLog.get(id);
+            return changeLog.getReferencesTo(id);
         }
         return null;
     }
@@ -373,10 +372,10 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         ChangeLog changeLog = ((XAItemStateManager) stateMgr).getChangeLog();
         if (changeLog != null) {
-            return changeLog.get(id) != null;
+            return changeLog.getReferencesTo(id) != null;
         }
         return false;
     }

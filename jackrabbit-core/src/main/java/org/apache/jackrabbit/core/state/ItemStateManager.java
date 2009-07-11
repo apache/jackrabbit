@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * The <code>ItemStateManager</code> interface provides methods for retrieving
@@ -51,7 +51,7 @@ public interface ItemStateManager {
      * @throws NoSuchItemStateException if the item does not exist
      * @throws ItemStateException if an error occurs
      */
-    NodeReferences getNodeReferences(NodeReferencesId id)
+    NodeReferences getNodeReferences(NodeId id)
         throws NoSuchItemStateException, ItemStateException;
 
     /**
@@ -61,5 +61,5 @@ public interface ItemStateManager {
      * @return <code>true</code> if a node reference object exists for the given
      *         id, otherwise <code>false</code>.
      */
-    boolean hasNodeReferences(NodeReferencesId id);
+    boolean hasNodeReferences(NodeId id);
 }

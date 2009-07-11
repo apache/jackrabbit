@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.version.VersionItemStateManager;
 
 /**
@@ -51,7 +51,7 @@ public class ChangeLog {
      * Modified references
      */
     @SuppressWarnings("unchecked")
-    private final Map<NodeReferencesId, NodeReferences> modifiedRefs = (Map<NodeReferencesId, NodeReferences>) new LinkedMap();
+    private final Map<NodeId, NodeReferences> modifiedRefs = (Map<NodeId, NodeReferences>) new LinkedMap();
 
     /**
      * Checks whether this change log contains any changes. This method is
@@ -114,7 +114,7 @@ public class ChangeLog {
      * @param refs refs that has been modified
      */
     public void modified(NodeReferences refs) {
-        modifiedRefs.put(refs.getId(), refs);
+        modifiedRefs.put(refs.id, refs);
     }
 
     /**
@@ -124,7 +124,7 @@ public class ChangeLog {
      *
      * @param targetId target node id
      */
-    public void removeReferencesEntry(NodeReferencesId targetId) {
+    public void removeReferencesEntry(NodeId targetId) {
         modifiedRefs.remove(targetId);
     }
 
@@ -184,13 +184,13 @@ public class ChangeLog {
     }
 
     /**
-     * Return a node references object given its id. Returns
+     * Return a node references object given the target node id. Returns
      * <code>null</code> if the node reference is not in the modified
      * section.
      *
      * @return node references or <code>null</code>
      */
-    public NodeReferences get(NodeReferencesId id) {
+    public NodeReferences getReferencesTo(NodeId id) {
         return modifiedRefs.get(id);
     }
 

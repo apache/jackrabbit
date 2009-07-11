@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -124,8 +123,8 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEFILENAME;
     }
 
-    private static String buildNodeReferencesFilePath(NodeReferencesId id) {
-        return buildNodeFolderPath(id.getTargetId()) + FileSystem.SEPARATOR + NODEREFSFILENAME;
+    private static String buildNodeReferencesFilePath(NodeId id) {
+        return buildNodeFolderPath(id) + FileSystem.SEPARATOR + NODEREFSFILENAME;
     }
 
     //---------------------------------------------------< PersistenceManager >
@@ -259,7 +258,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId id)
+    public synchronized NodeReferences loadReferencesTo(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -355,7 +354,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -366,7 +365,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 out.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store references: " + refs.getId();
+            String msg = "failed to store " + refs;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -435,7 +434,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        String refsFilePath = buildNodeReferencesFilePath(refs.getId());
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -443,7 +442,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete node references: " + refs.getId();
+            String msg = "failed to delete " + refs;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -490,7 +489,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeReferencesId id)
+    public synchronized boolean existsReferencesTo(NodeId id)
             throws ItemStateException {
 
         if (!initialized) {

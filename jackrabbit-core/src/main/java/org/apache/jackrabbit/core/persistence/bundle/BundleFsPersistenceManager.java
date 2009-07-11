@@ -34,7 +34,6 @@ import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 
@@ -296,12 +295,12 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      * @param id the id of the node
      * @return the buffer with the appended data.
      */
-    protected StringBuffer buildNodeReferencesFilePath(StringBuffer buf,
-                                                       NodeReferencesId id) {
+    protected StringBuffer buildNodeReferencesFilePath(
+            StringBuffer buf, NodeId id) {
         if (buf == null) {
             buf = new StringBuffer();
         }
-        buildNodeFolderPath(buf, id.getTargetId());
+        buildNodeFolderPath(buf, id);
         buf.append('.');
         buf.append(NODEREFSFILENAME);
         return buf;
@@ -351,7 +350,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId targetId)
+    public synchronized NodeReferences loadReferencesTo(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -399,7 +398,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             Serializer.serialize(refs, out);
             out.close();
         } catch (Exception e) {
-            String msg = "failed to write property state: " + refs.getTargetId();
+            String msg = "failed to write " + refs;
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -413,13 +412,13 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw new IllegalStateException("not initialized");
         }
         try {
-            StringBuffer buf = buildNodeReferencesFilePath(null, refs.getId());
+            StringBuffer buf = buildNodeReferencesFilePath(null, refs.getTargetId());
             itemFs.deleteFile(buf.toString());
         } catch (Exception e) {
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
             }
-            String msg = "failed to delete references: " + refs.getTargetId();
+            String msg = "failed to delete " + refs;
             BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -428,7 +427,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeReferencesId targetId) throws ItemStateException {
+    public synchronized boolean existsReferencesTo(NodeId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

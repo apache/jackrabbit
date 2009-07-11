@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 
 import EDU.oswego.cs.dl.util.concurrent.Latch;
@@ -239,7 +238,7 @@ public class FineGrainedISMLocking implements ISMLocking {
     private static boolean hasDependency(ChangeLog changeLog, ItemId id) {
         try {
             if (changeLog.get(id) == null) {
-                if (!id.denotesNode() || changeLog.get(new NodeReferencesId((NodeId) id)) == null) {
+                if (!id.denotesNode() || changeLog.getReferencesTo((NodeId) id) == null) {
                     // change log does not contain the item
                     return false;
                 }

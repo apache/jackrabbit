@@ -23,7 +23,6 @@ import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -39,7 +38,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 
 public class CachingHierarchyManagerTest extends TestCase {
 
@@ -559,7 +557,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         /**
          * {@inheritDoc}
          */
-        public NodeReferences getNodeReferences(NodeReferencesId id)
+        public NodeReferences getNodeReferences(NodeId id)
                 throws NoSuchItemStateException, ItemStateException {
             return null;
         }
@@ -567,7 +565,7 @@ public class CachingHierarchyManagerTest extends TestCase {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeReferencesId id) {
+        public boolean hasNodeReferences(NodeId id) {
             return false;
         }
     }

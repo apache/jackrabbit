@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.persistence.bundle.util;
 
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
-import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.util.StringIndex;
@@ -28,7 +26,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.nodetype.NodeDefId;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import java.io.DataInputStream;
@@ -136,46 +133,6 @@ public class ItemStateBinding {
      */
     public BLOBStore getBlobStore() {
         return blobStore;
-    }
-
-    /**
-     * Deserializes a <code>NodeReferences</code> from the data input stream.
-     *
-     * @param in the input stream
-     * @param id the id of the nodereference to deserialize
-     * @param pMgr the persistence manager
-     * @return the node references
-     * @throws IOException in an I/O error occurs.
-     */
-    public NodeReferences readState(DataInputStream in, NodeReferencesId id,
-                                    PersistenceManager pMgr)
-            throws IOException {
-        NodeReferences state = new NodeReferences(id);
-        int count = in.readInt();   // count & version
-        // int version = (count >> 24) | 0x0ff;
-        count &= 0x00ffffff;
-        for (int i = 0; i < count; i++) {
-            state.addReference(readPropertyId(in));    // propertyId
-        }
-        return state;
-    }
-
-    /**
-     * Serializes a <code>NodeReferences</code> to the data output stream.
-     *
-     * @param out the output stream
-     * @param state the state to write.
-     * @throws IOException in an I/O error occurs.
-     */
-    public void writeState(DataOutputStream out, NodeReferences state)
-            throws IOException {
-        // references
-        Collection<PropertyId> c = state.getReferences();
-        out.writeInt(c.size() | (VERSION_CURRENT << 24)); // count
-        for (Iterator<PropertyId> iter = c.iterator(); iter.hasNext();) {
-            PropertyId propId = iter.next();
-            writePropertyId(out, propId);
-        }
     }
 
     /**

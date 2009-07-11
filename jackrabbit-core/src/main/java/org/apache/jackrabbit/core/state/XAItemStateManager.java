@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -311,7 +310,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * check the transactional change log. Fallback is always the call to
      * the base class.
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
@@ -328,7 +327,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * check the transactional change log. Fallback is always the call to
      * the base class.
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         if (virtualProvider != null && virtualProvider.hasNodeReferences(id)) {
             return true;
         }
@@ -366,7 +365,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @throws ItemStateException if an error occurs while reading from the
      *                            underlying shared item state manager.
      */
-    private NodeReferences getReferences(NodeReferencesId id)
+    private NodeReferences getReferences(NodeId id)
             throws ItemStateException {
         NodeReferences refs;
         try {
@@ -377,12 +376,11 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         // apply changes from change log
         ChangeLog changes = getChangeLog();
         if (changes != null) {
-            NodeId target = id.getTargetId();
             // check removed reference properties
             for (PropertyState prop : filterReferenceProperties(changes.deletedStates())) {
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
-                    if (values[i].getNodeId().equals(target)) {
+                    if (values[i].getNodeId().equals(id)) {
                         refs.removeReference(prop.getPropertyId());
                         break;
                     }
@@ -392,7 +390,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
             for (PropertyState prop : filterReferenceProperties(changes.addedStates())) {
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
-                    if (values[i].getNodeId().equals(target)) {
+                    if (values[i].getNodeId().equals(id)) {
                         refs.addReference(prop.getPropertyId());
                         break;
                     }
@@ -409,7 +407,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                         // remove if one of the old values references the node
                         InternalValue[] values = old.getValues();
                         for (int i = 0; i < values.length; i++) {
-                            if (values[i].getNodeId().equals(target)) {
+                            if (values[i].getNodeId().equals(id)) {
                                 refs.removeReference(old.getPropertyId());
                                 break;
                             }
@@ -424,7 +422,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     // add if modified value references node
                     InternalValue[] values = prop.getValues();
                     for (int i = 0; i < values.length; i++) {
-                        if (values[i].getNodeId().equals(target)) {
+                        if (values[i].getNodeId().equals(id)) {
                             refs.addReference(prop.getPropertyId());
                             break;
                         }
@@ -479,7 +477,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         addVirtualReference(
                                 references, prop.getPropertyId(),
-                                new NodeReferencesId(vals[i].getNodeId()));
+                                vals[i].getNodeId());
                     }
                 }
             }
@@ -494,7 +492,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         removeVirtualReference(
                                 references, oldProp.getPropertyId(),
-                                new NodeReferencesId(vals[i].getNodeId()));
+                                vals[i].getNodeId());
                     }
                 }
                 if (newProp.getType() == PropertyType.REFERENCE) {
@@ -502,7 +500,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         addVirtualReference(
                                 references, newProp.getPropertyId(),
-                                new NodeReferencesId(vals[i].getNodeId()));
+                                vals[i].getNodeId());
                     }
                 }
             }
@@ -515,7 +513,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                     for (int i = 0; vals != null && i < vals.length; i++) {
                         removeVirtualReference(
                                 references, prop.getPropertyId(),
-                                new NodeReferencesId(vals[i].getNodeId()));
+                                vals[i].getNodeId());
                     }
                 }
             }
@@ -529,18 +527,18 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * Ignored if <code>refsId.getTargetId()</code> does not denote a
      * virtual node.
      * @param sourceId property id
-     * @param refsId node references id
+     * @param targetId target node id
      */
     private void addVirtualReference(
-            ChangeLog references, PropertyId sourceId, NodeReferencesId refsId)
+            ChangeLog references, PropertyId sourceId, NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = references.get(refsId);
+        NodeReferences refs = references.getReferencesTo(targetId);
         if (refs == null) {
-            refs = virtualProvider.getNodeReferences(refsId);
+            refs = virtualProvider.getNodeReferences(targetId);
         }
-        if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
-            refs = new NodeReferences(refsId);
+        if (refs == null && virtualProvider.hasItemState(targetId)) {
+            refs = new NodeReferences(targetId);
         }
         if (refs != null) {
             refs.addReference(sourceId);
@@ -553,18 +551,18 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * Ignored if <code>refsId.getTargetId()</code> does not denote a
      * virtual node.
      * @param sourceId property id
-     * @param refsId node references id
+     * @param targetId target node id
      */
     private void removeVirtualReference(
-            ChangeLog references, PropertyId sourceId, NodeReferencesId refsId)
+            ChangeLog references, PropertyId sourceId, NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
 
-        NodeReferences refs = references.get(refsId);
+        NodeReferences refs = references.getReferencesTo(targetId);
         if (refs == null) {
-            refs = virtualProvider.getNodeReferences(refsId);
+            refs = virtualProvider.getNodeReferences(targetId);
         }
-        if (refs == null && virtualProvider.hasItemState(refsId.getTargetId())) {
-            refs = new NodeReferences(refsId);
+        if (refs == null && virtualProvider.hasItemState(targetId)) {
+            refs = new NodeReferences(targetId);
         }
         if (refs != null) {
             refs.removeReference(sourceId);

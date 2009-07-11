@@ -25,7 +25,6 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -237,12 +236,12 @@ public abstract class AbstractBundlePersistenceManager implements
      * @param id the id of the node
      * @return the buffer with the appended data.
      */
-    protected StringBuffer buildNodeReferencesFilePath(StringBuffer buf,
-                                                       NodeReferencesId id) {
+    protected StringBuffer buildNodeReferencesFilePath(
+            StringBuffer buf, NodeId id) {
         if (buf == null) {
             buf = new StringBuffer();
         }
-        buildNodeFolderPath(buf, id.getTargetId());
+        buildNodeFolderPath(buf, id);
         buf.append(FileSystem.SEPARATOR);
         buf.append(NODEREFSFILENAME);
         return buf;
@@ -361,12 +360,6 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     protected abstract void destroyBundle(NodePropBundle bundle)
             throws ItemStateException;
-
-    /**
-     * {@inheritDoc}
-     */
-    public abstract NodeReferences load(NodeReferencesId targetId)
-            throws NoSuchItemStateException, ItemStateException;
 
     /**
      * Deletes the node references from the underlying system.

@@ -30,7 +30,6 @@ import org.apache.jackrabbit.core.persistence.AbstractPersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -210,8 +209,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         return buildNodeFolderPath(id) + "/" + NODEFILENAME;
     }
 
-    private String buildNodeReferencesFilePath(NodeReferencesId id) {
-        return buildNodeFolderPath(id.getTargetId()) + "/" + NODEREFSFILENAME;
+    private String buildNodeReferencesFilePath(NodeId id) {
+        return buildNodeFolderPath(id) + "/" + NODEREFSFILENAME;
     }
 
     private void readState(DOMWalker walker, NodeState state)
@@ -395,7 +394,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new ItemStateException(msg);
         }
         // check targetId
-        if (!refs.getId().equals(NodeReferencesId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
+        if (!refs.getTargetId().equals(NodeId.valueOf(walker.getAttribute(TARGETID_ATTRIBUTE)))) {
             String msg = "invalid serialized state: targetId  mismatch";
             log.debug(msg);
             throw new ItemStateException(msg);
@@ -780,7 +779,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId id)
+    public synchronized NodeReferences loadReferencesTo(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -824,8 +823,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        NodeReferencesId id = refs.getId();
-        String refsFilePath = buildNodeReferencesFilePath(id);
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             refsFile.makeParentDirs();
@@ -843,7 +841,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 }
                 writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
                 writer.write("<" + NODEREFERENCES_ELEMENT + " "
-                        + TARGETID_ATTRIBUTE + "=\"" + refs.getId() + "\">\n");
+                        + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)
                 Iterator iter = refs.getReferences().iterator();
                 while (iter.hasNext()) {
@@ -856,7 +854,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.close();
             }
         } catch (Exception e) {
-            String msg = "failed to store references: " + id;
+            String msg = "failed to store " + refs;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -870,8 +868,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             throw new IllegalStateException("not initialized");
         }
 
-        NodeReferencesId id = refs.getId();
-        String refsFilePath = buildNodeReferencesFilePath(id);
+        String refsFilePath = buildNodeReferencesFilePath(refs.getTargetId());
         FileSystemResource refsFile = new FileSystemResource(itemStateFS, refsFilePath);
         try {
             if (refsFile.exists()) {
@@ -879,7 +876,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 refsFile.delete(true);
             }
         } catch (FileSystemException fse) {
-            String msg = "failed to delete references: " + id;
+            String msg = "failed to delete " + refs;
             log.debug(msg);
             throw new ItemStateException(msg, fse);
         }
@@ -926,7 +923,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeReferencesId id)
+    public synchronized boolean existsReferencesTo(NodeId id)
             throws ItemStateException {
 
         if (!initialized) {
