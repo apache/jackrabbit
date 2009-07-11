@@ -178,11 +178,11 @@ class EventConsumer {
      * @param events       the collection of {@link EventState}s.
      * @param deletedItems Iterator of deleted <code>ItemState</code>s.
      */
-    void prepareDeleted(EventStateCollection events, Iterator<ItemState> deletedItems) {
+    void prepareDeleted(EventStateCollection events, Iterable<ItemState> deletedItems) {
         Set<ItemId> denied = null;
         Set<ItemId> deletedIds = new HashSet<ItemId>();
-        while (deletedItems.hasNext()) {
-            deletedIds.add((deletedItems.next()).getId());
+        for (ItemState state : deletedItems) {
+            deletedIds.add(state.getId());
         }
 
         for (Iterator<EventState> it = events.iterator(); it.hasNext();) {

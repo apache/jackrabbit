@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -322,9 +321,8 @@ public class XAVersionManager extends AbstractVersionManager
     public boolean setNodeReferences(ChangeLog references) {
         ChangeLog changeLog = ((XAItemStateManager) stateMgr).getChangeLog();
         if (changeLog != null) {
-            Iterator iterator = references.modifiedRefs();
-            while (iterator.hasNext()) {
-                changeLog.modified((NodeReferences) iterator.next());
+            for (NodeReferences refs : references.modifiedRefs()) {
+                changeLog.modified(refs);
             }
             return true;
         } else {

@@ -34,7 +34,6 @@ import org.apache.jackrabbit.spi.Name;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -190,7 +189,8 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Map of deleted {@link ItemState}s indexed by {@link ItemId}.
          */
-        private final Map deleted = new HashMap();
+        private final Map<ItemId, ItemState> deleted =
+            new HashMap<ItemId, ItemState>();
 
         /**
          * Creates a new <code>AtticItemStateManager</code> based on
@@ -199,8 +199,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
          *  <code>ChangeLog</code>.
          */
         private AtticItemStateManager(ChangeLog changes) {
-            for (Iterator it = changes.deletedStates(); it.hasNext();) {
-                ItemState state = (ItemState) it.next();
+            for (ItemState state : changes.deletedStates()) {
                 deleted.put(state.getId(), state);
             }
         }

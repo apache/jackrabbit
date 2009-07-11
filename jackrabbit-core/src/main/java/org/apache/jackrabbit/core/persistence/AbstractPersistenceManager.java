@@ -25,8 +25,6 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 
-import java.util.Iterator;
-
 /**
  * Implementation <code>PersistenceManager</code> that handles some
  * concepts.
@@ -57,36 +55,28 @@ public abstract class AbstractPersistenceManager implements PersistenceManager {
      * {@inheritDoc}
      */
     public synchronized void store(ChangeLog changeLog) throws ItemStateException {
-        Iterator<ItemState> iter = changeLog.deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : changeLog.deletedStates()) {
             if (state.isNode()) {
                 destroy((NodeState) state);
             } else {
                 destroy((PropertyState) state);
             }
         }
-        iter = changeLog.addedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : changeLog.addedStates()) {
             if (state.isNode()) {
                 store((NodeState) state);
             } else {
                 store((PropertyState) state);
             }
         }
-        iter = changeLog.modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : changeLog.modifiedStates()) {
             if (state.isNode()) {
                 store((NodeState) state);
             } else {
                 store((PropertyState) state);
             }
         }
-        Iterator<NodeReferences> refIter = changeLog.modifiedRefs();
-        while (iter.hasNext()) {
-            NodeReferences refs = refIter.next();
+        for (NodeReferences refs : changeLog.modifiedRefs()) {
             if (refs.hasReferences()) {
                 store(refs);
             } else {

@@ -160,9 +160,7 @@ public final class EventStateCollection {
          */
 
         // 1. modified items
-
-        for (Iterator<ItemState> it = changes.modifiedStates(); it.hasNext();) {
-            ItemState state = it.next();
+        for (ItemState state : changes.modifiedStates()) {
             if (state.isNode()) {
                 // node changed
                 // covers the following cases:
@@ -349,9 +347,7 @@ public final class EventStateCollection {
         }
 
         // 2. removed items
-
-        for (Iterator<ItemState> it = changes.deletedStates(); it.hasNext();) {
-            ItemState state = it.next();
+        for (ItemState state : changes.deletedStates()) {
             if (state.isNode()) {
                 // node deleted
                 NodeState n = (NodeState) state;
@@ -391,9 +387,7 @@ public final class EventStateCollection {
         }
 
         // 3. added items
-
-        for (Iterator<ItemState> it = changes.addedStates(); it.hasNext();) {
-            ItemState state = it.next();
+        for (ItemState state : changes.addedStates()) {
             if (state.isNode()) {
                 // node created
                 NodeState n = (NodeState) state;

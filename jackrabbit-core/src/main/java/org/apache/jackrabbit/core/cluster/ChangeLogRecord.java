@@ -370,27 +370,21 @@ public class ChangeLogRecord extends ClusterRecord {
     protected void doWrite() throws JournalException {
         writeTimestampRecord();
         writeUserDataRecord();
-        Iterator deletedStates = changes.deletedStates();
-        while (deletedStates.hasNext()) {
-            ItemState state = (ItemState) deletedStates.next();
+        for (ItemState state : changes.deletedStates()) {
             if (state.isNode()) {
                 writeNodeRecord(DELETED, (NodeState) state);
             } else {
                 writePropertyRecord(DELETED, (PropertyState) state);
             }
         }
-        Iterator modifiedStates = changes.modifiedStates();
-        while (modifiedStates.hasNext()) {
-            ItemState state = (ItemState) modifiedStates.next();
+        for (ItemState state : changes.modifiedStates()) {
             if (state.isNode()) {
                 writeNodeRecord(MODIFIED, (NodeState) state);
             } else {
                 writePropertyRecord(MODIFIED, (PropertyState) state);
             }
         }
-        Iterator addedStates = changes.addedStates();
-        while (addedStates.hasNext()) {
-            ItemState state = (ItemState) addedStates.next();
+        for (ItemState state : changes.addedStates()) {
             if (state.isNode()) {
                 writeNodeRecord(ADDED, (NodeState) state);
             } else {
