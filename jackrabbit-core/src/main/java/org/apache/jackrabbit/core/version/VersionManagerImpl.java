@@ -50,7 +50,6 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
@@ -370,10 +369,9 @@ public class VersionManagerImpl extends AbstractVersionManager
             // we're currently leverage the fact, that only references to "real"
             // workspaces are recorded.
             NodeId nodeId = activity.getNodeId();
-            NodeReferencesId refId = new NodeReferencesId(nodeId);
-            if (stateMgr.hasNodeReferences(refId)) {
+            if (stateMgr.hasNodeReferences(nodeId)) {
                 try {
-                    NodeReferences refs = stateMgr.getNodeReferences(refId);
+                    NodeReferences refs = stateMgr.getNodeReferences(nodeId);
                     if (refs.hasReferences()) {
                         throw new ActivityViolationException("Unable to checkout. " +
                                 "Activity is already used for the same node in " +
@@ -548,7 +546,7 @@ public class VersionManagerImpl extends AbstractVersionManager
      */
     protected boolean hasItemReferences(NodeId id)
             throws RepositoryException {
-        return stateMgr.hasNodeReferences(new NodeReferencesId(id));
+        return stateMgr.hasNodeReferences(id);
     }
 
     /**

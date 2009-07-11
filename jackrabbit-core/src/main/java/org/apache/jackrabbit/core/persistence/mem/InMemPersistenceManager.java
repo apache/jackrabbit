@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
@@ -72,7 +71,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     protected boolean initialized;
 
     protected Map<ItemId, byte[]> stateStore;
-    protected Map<NodeReferencesId, byte[]> refsStore;
+    protected Map<NodeId, byte[]> refsStore;
 
     // initial size of buffer used to serialize objects
     protected static final int INITIAL_BUFFER_SIZE = 1024;
@@ -214,7 +213,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             int n = in.readInt();   // number of entries
             while (n-- > 0) {
                 String s = in.readUTF();    // target id
-                NodeReferencesId id = NodeReferencesId.valueOf(s);
+                NodeId id = NodeId.valueOf(s);
                 int length = in.readInt();  // data length
                 byte[] data = new byte[length];
                 in.readFully(data);  // data
@@ -266,7 +265,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         try {
             out.writeInt(refsStore.size()); // number of entries
             // entries
-            for (NodeReferencesId id : refsStore.keySet()) {
+            for (NodeId id : refsStore.keySet()) {
                 out.writeUTF(id.toString());    // target id
                 byte[] data = refsStore.get(id);
                 out.writeInt(data.length);  // data length
@@ -287,7 +286,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         stateStore = new HashMap<ItemId, byte[]>(initialCapacity, loadFactor);
-        refsStore = new HashMap<NodeReferencesId, byte[]>(initialCapacity, loadFactor);
+        refsStore = new HashMap<NodeId, byte[]>(initialCapacity, loadFactor);
 
         wspFS = context.getFileSystem();
 
@@ -492,7 +491,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId id)
+    public synchronized NodeReferences loadReferencesTo(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         if (!initialized) {
@@ -531,11 +530,11 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
             Serializer.serialize(refs, out);
 
             // store in serialized format in map for better memory efficiency
-            refsStore.put(refs.getId(), out.toByteArray());
+            refsStore.put(refs.getTargetId(), out.toByteArray());
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to store references: " + refs.getId();
+            String msg = "failed to store " + refs;
             log.debug(msg);
             throw new ItemStateException(msg, e);
         }
@@ -550,7 +549,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
         }
 
         // remove node references
-        refsStore.remove(refs.getId());
+        refsStore.remove(refs.getTargetId());
     }
 
     /**
@@ -576,7 +575,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     /**
      * {@inheritDoc}
      */
-    public boolean exists(NodeReferencesId id) throws ItemStateException {
+    public boolean existsReferencesTo(NodeId id) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }

@@ -252,7 +252,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         }
 
         // check if insert or update
-        boolean update = exists(refs.getId());
+        boolean update = existsReferencesTo(refs.getTargetId());
         String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         Blob blob = null;
@@ -265,12 +265,12 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
             // we are synchronized on this instance, therefore we do not
             // not have to additionally synchronize on the sql statement
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));
-            executeStmt(sql, new Object[]{blob, refs.getId().toString()});
+            executeStmt(sql, new Object[]{blob, refs.getTargetId().toString()});
 
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write node references: " + refs.getId();
+            String msg = "failed to write " + refs;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {

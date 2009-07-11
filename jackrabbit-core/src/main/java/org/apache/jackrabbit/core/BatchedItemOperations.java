@@ -37,7 +37,6 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
@@ -66,7 +65,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -919,10 +917,10 @@ public class BatchedItemOperations extends ItemValidator {
         if ((options & CHECK_REFERENCES) == CHECK_REFERENCES) {
             EffectiveNodeType ent = getEffectiveNodeType(targetState);
             if (ent.includesNodeType(NameConstants.MIX_REFERENCEABLE)) {
-                NodeReferencesId refsId = new NodeReferencesId(targetState.getNodeId());
-                if (stateMgr.hasNodeReferences(refsId)) {
+                NodeId targetId = targetState.getNodeId();
+                if (stateMgr.hasNodeReferences(targetId)) {
                     try {
-                        NodeReferences refs = stateMgr.getNodeReferences(refsId);
+                        NodeReferences refs = stateMgr.getNodeReferences(targetId);
                         if (refs.hasReferences()) {
                             throw new ReferentialIntegrityException(safeGetJCRPath(targetPath)
                                     + ": cannot remove node with references");

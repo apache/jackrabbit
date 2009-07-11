@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -130,7 +129,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
         return stateMgr.getNodeReferences(id);
     }
@@ -138,7 +137,7 @@ class VersionItemStateProvider implements VirtualItemStateProvider, ItemStateLis
     /**
      * @inheritDoc
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         return stateMgr.hasNodeReferences(id);
     }
 

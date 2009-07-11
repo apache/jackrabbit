@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,11 +61,12 @@ public class VersionItemStateManager extends SharedItemStateManager {
         this.pMgr = persistMgr;
     }
 
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    @Override
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
         // check persistence manager
         try {
-            return pMgr.load(id);
+            return pMgr.loadReferencesTo(id);
         } catch (NoSuchItemStateException e) {
             // ignore
         }
@@ -74,10 +74,11 @@ public class VersionItemStateManager extends SharedItemStateManager {
         throw new NoSuchItemStateException(id.toString());
     }
 
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    @Override
+    public boolean hasNodeReferences(NodeId id) {
         // check persistence manager
         try {
-            if (pMgr.exists(id)) {
+            if (pMgr.existsReferencesTo(id)) {
                 return true;
             }
         } catch (ItemStateException e) {
@@ -97,7 +98,7 @@ public class VersionItemStateManager extends SharedItemStateManager {
 
             for (NodeReferences source : references.modifiedRefs()) {
                 // filter out version storage intern ones
-                NodeReferences target = new NodeReferences(source.getId());
+                NodeReferences target = new NodeReferences(source.getTargetId());
                 for (PropertyId id : source.getReferences()) {
                     if (!hasNonVirtualItemState(id.getParentId())) {
                         target.addReference(id);
@@ -121,18 +122,18 @@ public class VersionItemStateManager extends SharedItemStateManager {
         // only store VV-type references and NV-type references
 
         // check whether targets of modified node references exist
-        Set<NodeReferencesId> remove = new HashSet<NodeReferencesId>();
+        Set<NodeId> remove = new HashSet<NodeId>();
         for (NodeReferences refs : changes.modifiedRefs()) {
             // no need to check existence of target if there are no references
             if (refs.hasReferences()) {
                 NodeId id = refs.getTargetId();
                 if (!changes.has(id) && !hasNonVirtualItemState(id)) {
-                    remove.add(refs.getId());
+                    remove.add(refs.getTargetId());
                 }
             }
         }
         // remove references
-        for (NodeReferencesId id : remove) {
+        for (NodeId id : remove) {
             changes.removeReferencesEntry(id);
         }
     }

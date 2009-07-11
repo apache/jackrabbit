@@ -31,7 +31,6 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
@@ -314,13 +313,13 @@ public class SharedItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
-        ISMLocking.ReadLock readLock = acquireReadLock(id.getTargetId());
+        ISMLocking.ReadLock readLock = acquireReadLock(id);
         try {
             // check persistence manager
             try {
-                return persistMgr.load(id);
+                return persistMgr.loadReferencesTo(id);
             } catch (NoSuchItemStateException e) {
                 // ignore
             }
@@ -344,17 +343,17 @@ public class SharedItemStateManager
     /**
      * {@inheritDoc}
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         ISMLocking.ReadLock readLock;
         try {
-            readLock = acquireReadLock(id.getTargetId());
+            readLock = acquireReadLock(id);
         } catch (ItemStateException e) {
             return false;
         }
         try {
             // check persistence manager
             try {
-                if (persistMgr.exists(id)) {
+                if (persistMgr.existsReferencesTo(id)) {
                     return true;
                 }
             } catch (ItemStateException e) {
@@ -669,7 +668,7 @@ public class SharedItemStateManager
                 // (see comment above)
                 for (NodeReferences refs : local.modifiedRefs()) {
                     boolean virtual = false;
-                    NodeId id = refs.getId().getTargetId();
+                    NodeId id = refs.getTargetId();
                     for (int i = 0; i < virtualProviders.length; i++) {
                         if (virtualProviders[i].hasItemState(id)) {
                             ChangeLog virtualRefs = virtualNodeReferences[i];
@@ -909,16 +908,15 @@ public class SharedItemStateManager
 
         private void addReference(PropertyId id, NodeId target)
                 throws ItemStateException {
-            NodeReferencesId refsId = new NodeReferencesId(target);
             if (virtualProvider == null
-                    || !virtualProvider.hasNodeReferences(refsId)) {
+                    || !virtualProvider.hasNodeReferences(target)) {
                 // get or create the references instance
-                NodeReferences refs = local.get(refsId);
+                NodeReferences refs = local.getReferencesTo(target);
                 if (refs == null) {
-                    if (hasNodeReferences(refsId)) {
-                        refs = getNodeReferences(refsId);
+                    if (hasNodeReferences(target)) {
+                        refs = getNodeReferences(target);
                     } else {
-                        refs = new NodeReferences(refsId);
+                        refs = new NodeReferences(target);
                     }
                 }
                 // add reference
@@ -944,14 +942,13 @@ public class SharedItemStateManager
 
         private void removeReference(PropertyId id, NodeId target)
                 throws ItemStateException {
-            NodeReferencesId refsId = new NodeReferencesId(target);
             if (virtualProvider == null
-                    || !virtualProvider.hasNodeReferences(refsId)) {
+                    || !virtualProvider.hasNodeReferences(target)) {
                 // either get node references from change log or load from
                 // persistence manager
-                NodeReferences refs = local.get(refsId);
-                if (refs == null && hasNodeReferences(refsId)) {
-                    refs = getNodeReferences(refsId);
+                NodeReferences refs = local.getReferencesTo(target);
+                if (refs == null && hasNodeReferences(target)) {
+                    refs = getNodeReferences(target);
                 }
                 if (refs != null) {
                     // remove reference
@@ -983,20 +980,20 @@ public class SharedItemStateManager
                 if (state.isNode()) {
                     NodeState node = (NodeState) state;
                     if (isReferenceable(node)) {
-                        NodeReferencesId refsId = new NodeReferencesId(node.getNodeId());
+                        NodeId targetId = node.getNodeId();
                         // either get node references from change log or
                         // load from persistence manager
-                        NodeReferences refs = local.get(refsId);
+                        NodeReferences refs = local.getReferencesTo(targetId);
                         if (refs == null) {
-                            if (!hasNodeReferences(refsId)) {
+                            if (!hasNodeReferences(targetId)) {
                                 continue;
                             }
-                            refs = getNodeReferences(refsId);
+                            refs = getNodeReferences(targetId);
                         }
                         // in some versioning operations (such as restore) a node
                         // may actually be deleted and then again added with the
                         // same UUID, i.e. the node is still referenceable.
-                        if (refs.hasReferences() && !local.has(node.getNodeId())) {
+                        if (refs.hasReferences() && !local.has(targetId)) {
                             String msg = node.getNodeId()
                                     + ": the node cannot be removed because it is still being referenced.";
                             log.debug(msg);

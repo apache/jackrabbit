@@ -144,7 +144,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
         Blob blob = null;
         try {
             // check if insert or update
-            boolean update = exists(refs.getId());
+            boolean update = existsReferencesTo(refs.getTargetId());
             String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
             ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
@@ -161,7 +161,7 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write property state: " + refs.getTargetId();
+            String msg = "failed to write " + refs;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {

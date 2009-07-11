@@ -59,7 +59,6 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
@@ -1234,7 +1233,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized NodeReferences load(NodeReferencesId targetId)
+    public synchronized NodeReferences loadReferencesTo(NodeId targetId)
             throws NoSuchItemStateException, ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -1244,7 +1243,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         InputStream in = null;
         try {
             Statement stmt = connectionManager.executeStmt(
-                    nodeReferenceSelectSQL, getKey(targetId.getTargetId()));
+                    nodeReferenceSelectSQL, getKey(targetId));
             rs = stmt.getResultSet();
             if (!rs.next()) {
                 throw new NoSuchItemStateException(targetId.toString());
@@ -1283,7 +1282,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         }
 
         // check if insert or update
-        boolean update = exists(refs.getId());
+        boolean update = existsReferencesTo(refs.getTargetId());
         String sql = (update) ? nodeReferenceUpdateSQL : nodeReferenceInsertSQL;
 
         try {
@@ -1298,7 +1297,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             // there's no need to close a ByteArrayOutputStream
             //out.close();
         } catch (Exception e) {
-            String msg = "failed to write node references: " + refs.getId();
+            String msg = "failed to write " + refs;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -1319,7 +1318,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             if (e instanceof NoSuchItemStateException) {
                 throw (NoSuchItemStateException) e;
             }
-            String msg = "failed to delete references: " + refs.getTargetId();
+            String msg = "failed to delete " + refs;
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
@@ -1328,15 +1327,15 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean exists(NodeReferencesId targetId) throws ItemStateException {
+    public synchronized boolean existsReferencesTo(NodeId targetId) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
         }
 
         ResultSet rs = null;
         try {
-            Statement stmt = connectionManager.executeStmt(nodeReferenceSelectSQL,
-                    getKey(targetId.getTargetId()));
+            Statement stmt = connectionManager.executeStmt(
+                    nodeReferenceSelectSQL, getKey(targetId));
             rs = stmt.getResultSet();
 
             // a reference exists if the result has at least one entry

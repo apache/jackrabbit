@@ -70,7 +70,6 @@ import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.ItemDef;
@@ -4661,9 +4660,8 @@ public class NodeImpl extends ItemImpl implements Node {
         sanityCheck();
 
         try {
-            NodeReferencesId targetId = new NodeReferencesId((NodeId) id);
-            if (stateMgr.hasNodeReferences(targetId)) {
-                NodeReferences refs = stateMgr.getNodeReferences(targetId);
+            if (stateMgr.hasNodeReferences(getNodeId())) {
+                NodeReferences refs = stateMgr.getNodeReferences(getNodeId());
                 // refs.getReferences() returns a list of PropertyId's
                 List<PropertyId> idList = refs.getReferences();
                 if (name != null) {

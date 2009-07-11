@@ -24,11 +24,9 @@ import junit.framework.TestCase;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
 import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>AbstractISMLockingTest</code> contains test cases for the ISMLocking requirements.
@@ -60,7 +58,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
         locking = createISMLocking();
         NodeId id = new NodeId();
         state = new NodeState(id, NameConstants.NT_BASE, null, ItemState.STATUS_EXISTING, true);
-        refs = new NodeReferences(new NodeReferencesId(state.getNodeId()));
+        refs = new NodeReferences(state.getNodeId());
         logs = new ArrayList();
         ChangeLog log = new ChangeLog();
         log.added(state);

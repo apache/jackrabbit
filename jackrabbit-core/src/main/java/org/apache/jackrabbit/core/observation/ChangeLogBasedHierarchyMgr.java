@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
 
@@ -168,7 +167,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Always throws a {@link UnsupportedOperationException}.
          */
-        public NodeReferences getNodeReferences(NodeReferencesId id)
+        public NodeReferences getNodeReferences(NodeId id)
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
@@ -176,7 +175,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeReferencesId id) {
+        public boolean hasNodeReferences(NodeId id) {
             return false;
         }
     }
@@ -238,7 +237,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * Always throws a {@link UnsupportedOperationException}.
          */
-        public NodeReferences getNodeReferences(NodeReferencesId id)
+        public NodeReferences getNodeReferences(NodeId id)
                 throws NoSuchItemStateException, ItemStateException {
             throw new UnsupportedOperationException();
         }
@@ -246,7 +245,7 @@ class ChangeLogBasedHierarchyMgr extends CachingHierarchyManager {
         /**
          * {@inheritDoc}
          */
-        public boolean hasNodeReferences(NodeReferencesId id) {
+        public boolean hasNodeReferences(NodeId id) {
             return false;
         }
     }

@@ -20,7 +20,6 @@ import javax.jcr.ReferentialIntegrityException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeReferencesId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -206,11 +205,11 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeReferences getNodeReferences(NodeReferencesId id)
+    public NodeReferences getNodeReferences(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
 
         // check change log
-        NodeReferences refs = changeLog.get(id);
+        NodeReferences refs = changeLog.getReferencesTo(id);
         if (refs != null) {
             return refs;
         }
@@ -220,9 +219,9 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public boolean hasNodeReferences(NodeReferencesId id) {
+    public boolean hasNodeReferences(NodeId id) {
         // check change log
-        if (changeLog.get(id) != null) {
+        if (changeLog.getReferencesTo(id) != null) {
             return true;
         }
         return sharedStateMgr.hasNodeReferences(id);
