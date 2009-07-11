@@ -597,9 +597,9 @@ public class SimpleEventListener implements LockEventListener,
      *         <code>false</code> otherwise.
      */
     private static boolean equals(ChangeLog changes1, ChangeLog changes2) {
-        return equals(changes1.addedStates(), changes2.addedStates()) &&
-            equals(changes1.deletedStates(), changes2.deletedStates()) &&
-            equals(changes1.modifiedStates(), changes2.modifiedStates());
+        return equals(changes1.addedStates().iterator(), changes2.addedStates().iterator()) &&
+            equals(changes1.deletedStates().iterator(), changes2.deletedStates().iterator()) &&
+            equals(changes1.modifiedStates().iterator(), changes2.modifiedStates().iterator());
     }
 
     /**

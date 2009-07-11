@@ -20,10 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.NameFactory;
-
-import java.util.Iterator;
 
 /**
  * <code>ChangeLogTest</code> contains the test cases for the methods
@@ -51,10 +48,10 @@ public class ChangeLogTest extends AbstractJCRTest {
         log.added(state);
         log.deleted(state);
 
-        Iterator iter = log.addedStates();
-        assertFalse("State not in added collection", iter.hasNext());
-        iter = log.deletedStates();
-        assertFalse("State not in deleted collection", iter.hasNext());
+        assertFalse("State not in added collection",
+                log.addedStates().iterator().hasNext());
+        assertFalse("State not in deleted collection",
+                log.deletedStates().iterator().hasNext());
     }
 
     /**
@@ -70,10 +67,10 @@ public class ChangeLogTest extends AbstractJCRTest {
         log.added(state);
         log.modified(state);
 
-        Iterator iter = log.addedStates();
-        assertTrue("State still in added collection", iter.hasNext());
-        iter = log.modifiedStates();
-        assertFalse("State not in modified collection", iter.hasNext());
+        assertTrue("State still in added collection",
+                log.addedStates().iterator().hasNext());
+        assertFalse("State not in modified collection",
+                log.modifiedStates().iterator().hasNext());
     }
 
     /**
@@ -93,11 +90,8 @@ public class ChangeLogTest extends AbstractJCRTest {
             log.added(states[i]);
         }
 
-        Iterator iter = log.addedStates();
         int i = 0;
-
-        while (iter.hasNext()) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : log.addedStates()) {
             assertTrue("Added states preserve order.",
                     state.equals(states[i++]));
         }

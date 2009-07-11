@@ -36,7 +36,6 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -380,9 +379,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
         if (changes != null) {
             NodeId target = id.getTargetId();
             // check removed reference properties
-            for (Iterator it = filterReferenceProperties(changes.deletedStates());
-                 it.hasNext(); ) {
-                PropertyState prop = (PropertyState) it.next();
+            for (PropertyState prop : filterReferenceProperties(changes.deletedStates())) {
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
                     if (values[i].getNodeId().equals(target)) {
@@ -392,9 +389,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
             }
             // check added reference properties
-            for (Iterator it = filterReferenceProperties(changes.addedStates());
-                 it.hasNext(); ) {
-                PropertyState prop = (PropertyState) it.next();
+            for (PropertyState prop : filterReferenceProperties(changes.addedStates())) {
                 InternalValue[] values = prop.getValues();
                 for (int i = 0; i < values.length; i++) {
                     if (values[i].getNodeId().equals(target)) {
@@ -404,8 +399,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
             }
             // check modified properties
-            for (Iterator it = changes.modifiedStates(); it.hasNext(); ) {
-                ItemState state = (ItemState) it.next();
+            for (ItemState state : changes.modifiedStates()) {
                 if (state.isNode()) {
                     continue;
                 }
@@ -448,17 +442,24 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @param itemStates item state source iterator.
      * @return iterator over reference property states.
      */
-    private Iterator filterReferenceProperties(Iterator itemStates) {
-        return new FilterIterator(itemStates, new Predicate() {
-            public boolean evaluate(Object object) {
-                ItemState state = (ItemState) object;
-                if (!state.isNode()) {
-                    PropertyState prop = (PropertyState) state;
-                    return prop.getType() == PropertyType.REFERENCE;
-                }
-                return false;
+    private Iterable<PropertyState> filterReferenceProperties(
+            final Iterable<ItemState> itemStates) {
+        return new Iterable<PropertyState>() {
+            @SuppressWarnings("unchecked")
+            public Iterator<PropertyState> iterator() {
+                return (Iterator<PropertyState>) new FilterIterator(
+                        itemStates.iterator(), new Predicate() {
+                    public boolean evaluate(Object object) {
+                        ItemState state = (ItemState) object;
+                        if (!state.isNode()) {
+                            PropertyState prop = (PropertyState) state;
+                            return prop.getType() == PropertyType.REFERENCE;
+                        }
+                        return false;
+                    }
+                });
             }
-        });
+        };
     }
 
     /**
@@ -470,8 +471,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     private void updateVirtualReferences(ChangeLog changes) throws ItemStateException {
         ChangeLog references = new ChangeLog();
 
-        for (Iterator iter = changes.addedStates(); iter.hasNext();) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : changes.addedStates()) {
             if (!state.isNode()) {
                 PropertyState prop = (PropertyState) state;
                 if (prop.getType() == PropertyType.REFERENCE) {
@@ -484,8 +484,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
             }
         }
-        for (Iterator iter = changes.modifiedStates(); iter.hasNext();) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : changes.modifiedStates()) {
             if (!state.isNode()) {
                 PropertyState newProp = (PropertyState) state;
                 PropertyState oldProp =
@@ -508,8 +507,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                 }
             }
         }
-        for (Iterator iter = changes.deletedStates(); iter.hasNext();) {
-            ItemState state = (ItemState) iter.next();
+        for (ItemState state : changes.deletedStates()) {
             if (!state.isNode()) {
                 PropertyState prop = (PropertyState) state;
                 if (prop.getType() == PropertyType.REFERENCE) {

@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeReferencesId;
+import org.apache.jackrabbit.core.version.VersionItemStateManager;
 
 /**
  * Registers changes made to states and references and consolidates
@@ -118,6 +118,17 @@ public class ChangeLog {
     }
 
     /**
+     * Removes the references entry with the given target node id.
+     * This method is called by {@link VersionItemStateManager} to drop
+     * references to virtual nodes.
+     *
+     * @param targetId target node id
+     */
+    public void removeReferencesEntry(NodeReferencesId targetId) {
+        modifiedRefs.remove(targetId);
+    }
+
+    /**
      * Return an item state given its id. Returns <code>null</code>
      * if the item state is neither in the added nor in the modified
      * section. Throws a <code>NoSuchItemStateException</code> if
@@ -184,39 +195,48 @@ public class ChangeLog {
     }
 
     /**
-     * Return an iterator over all added states.
+     * Return the added states in this change log.
      *
-     * @return iterator over all added states.
+     * @return added states
      */
-    public Iterator<ItemState> addedStates() {
-        return addedStates.values().iterator();
+    public Iterable<ItemState> addedStates() {
+        return addedStates.values();
     }
 
     /**
-     * Return an iterator over all modified states.
+     * Return the modified states in this change log.
+     * <p>
+     * Note that this change log must not be modified while iterating
+     * through the returned states.
      *
-     * @return iterator over all modified states.
+     * @return modified states
      */
-    public Iterator<ItemState> modifiedStates() {
-        return modifiedStates.values().iterator();
+    public Iterable<ItemState> modifiedStates() {
+        return modifiedStates.values();
     }
 
     /**
-     * Return an iterator over all deleted states.
+     * Return the deleted states in this change log.
+     * <p>
+     * Note that this change log must not be modified while iterating
+     * through the returned states.
      *
-     * @return iterator over all deleted states.
+     * @return deleted states
      */
-    public Iterator<ItemState> deletedStates() {
-        return deletedStates.values().iterator();
+    public Iterable<ItemState> deletedStates() {
+        return deletedStates.values();
     }
 
     /**
-     * Return an iterator over all modified references.
+     * Return the modified references in this change log.
+     * <p>
+     * Note that this change log must not be modified while iterating
+     * through the returned states.
      *
-     * @return iterator over all modified references.
+     * @return modified references
      */
-    public Iterator<NodeReferences> modifiedRefs() {
-        return modifiedRefs.values().iterator();
+    public Iterable<NodeReferences> modifiedRefs() {
+        return modifiedRefs.values();
     }
 
     /**
@@ -226,9 +246,7 @@ public class ChangeLog {
      */
     public void merge(ChangeLog other) {
         // Remove all states from our 'added' set that have now been deleted
-        Iterator<ItemState> iter = other.deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : other.deletedStates()) {
             if (addedStates.remove(state.getId()) == null) {
                 deletedStates.put(state.getId(), state);
             }
@@ -237,9 +255,7 @@ public class ChangeLog {
         }
 
         // only add modified states that are not already 'added'
-        iter = other.modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : other.modifiedStates()) {
             if (!addedStates.containsKey(state.getId())) {
                 modifiedStates.put(state.getId(), state);
             } else {
@@ -250,9 +266,7 @@ public class ChangeLog {
         }
 
         // add 'added' state, but respect previously deleted
-        iter = other.addedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : other.addedStates()) {
             ItemState deletedState = deletedStates.remove(state.getId());
             if (deletedState != null) {
                 // the newly 'added' state had previously been deleted;
@@ -276,17 +290,14 @@ public class ChangeLog {
      * items we have.
      */
     public void push() {
-        Iterator<ItemState> iter = modifiedStates();
-        while (iter.hasNext()) {
-            iter.next().push();
+        for (ItemState state : modifiedStates()) {
+            state.push();
         }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            iter.next().push();
+        for (ItemState state : deletedStates()) {
+            state.push();
         }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            iter.next().push();
+        for (ItemState state : addedStates()) {
+            state.push();
         }
     }
 
@@ -295,22 +306,16 @@ public class ChangeLog {
      * internal states and notify listeners.
      */
     public void persisted() {
-        Iterator<ItemState> iter = modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : modifiedStates()) {
             state.setStatus(ItemState.STATUS_EXISTING);
             state.notifyStateUpdated();
         }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : deletedStates()) {
             state.setStatus(ItemState.STATUS_EXISTING_REMOVED);
             state.notifyStateDestroyed();
             state.discard();
         }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : addedStates()) {
             state.setStatus(ItemState.STATUS_EXISTING);
             state.notifyStateCreated();
         }
@@ -332,17 +337,14 @@ public class ChangeLog {
      * states.
      */
     public void disconnect() {
-        Iterator<ItemState> iter = modifiedStates();
-        while (iter.hasNext()) {
-            iter.next().disconnect();
+        for (ItemState state : modifiedStates()) {
+            state.disconnect();
         }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            iter.next().disconnect();
+        for (ItemState state : deletedStates()) {
+            state.disconnect();
         }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            iter.next().disconnect();
+        for (ItemState state : addedStates()) {
+            state.disconnect();
         }
     }
 
@@ -354,9 +356,7 @@ public class ChangeLog {
      * @param parent parent manager that will hold current data
      */
     public void undo(ItemStateManager parent) {
-        Iterator<ItemState> iter = modifiedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : modifiedStates()) {
             try {
                 state.connect(parent.getItemState(state.getId()));
                 state.pull();
@@ -364,9 +364,7 @@ public class ChangeLog {
                 state.discard();
             }
         }
-        iter = deletedStates();
-        while (iter.hasNext()) {
-            ItemState state = iter.next();
+        for (ItemState state : deletedStates()) {
             try {
                 state.connect(parent.getItemState(state.getId()));
                 state.pull();
@@ -374,9 +372,8 @@ public class ChangeLog {
                 state.discard();
             }
         }
-        iter = addedStates();
-        while (iter.hasNext()) {
-            iter.next().discard();
+        for (ItemState state : addedStates()) {
+            state.discard();
         }
         reset();
     }

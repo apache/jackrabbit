@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -596,8 +595,7 @@ public class SharedItemStateManager
                  * respective shared item and add the shared items to a
                  * new change log.
                  */
-                for (Iterator<ItemState> iter = local.modifiedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : local.modifiedStates()) {
                     state.connect(getItemState(state.getId()));
                     if (state.isStale()) {
                         boolean merged = false;
@@ -653,8 +651,7 @@ public class SharedItemStateManager
 
                     shared.modified(state.getOverlayedState());
                 }
-                for (Iterator<ItemState> iter = local.deletedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : local.deletedStates()) {
                     state.connect(getItemState(state.getId()));
                     if (state.isStale()) {
                         String msg = state.getId() + " has been modified externally";
@@ -663,16 +660,14 @@ public class SharedItemStateManager
                     }
                     shared.deleted(state.getOverlayedState());
                 }
-                for (Iterator<ItemState> iter = local.addedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : local.addedStates()) {
                     state.connect(createInstance(state));
                     shared.added(state.getOverlayedState());
                 }
 
                 // filter out virtual node references for later processing
                 // (see comment above)
-                for (Iterator<NodeReferences> iter = local.modifiedRefs(); iter.hasNext();) {
-                    NodeReferences refs = iter.next();
+                for (NodeReferences refs : local.modifiedRefs()) {
                     boolean virtual = false;
                     NodeId id = refs.getId().getTargetId();
                     for (int i = 0; i < virtualProviders.length; i++) {
@@ -792,24 +787,21 @@ public class SharedItemStateManager
 
                 local.disconnect();
 
-                for (Iterator<ItemState> iter = shared.modifiedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : shared.modifiedStates()) {
                     try {
                         state.copy(loadItemState(state.getId()), false);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
                 }
-                for (Iterator<ItemState> iter = shared.deletedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : shared.deletedStates()) {
                     try {
                         state.copy(loadItemState(state.getId()), false);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
                 }
-                for (Iterator<ItemState> iter = shared.addedStates(); iter.hasNext();) {
-                    ItemState state = iter.next();
+                for (ItemState state : shared.addedStates()) {
                     state.discard();
                 }
             } finally {
@@ -878,8 +870,7 @@ public class SharedItemStateManager
          */
         private void updateReferences() throws ItemStateException {
             // process added REFERENCE properties
-            for (Iterator<ItemState> i = local.addedStates(); i.hasNext();) {
-                ItemState state = i.next();
+            for (ItemState state : local.addedStates()) {
                 if (!state.isNode()) {
                     // remove refs from the target which have been added externally (JCR-2138)
                     if (hasItemState(state.getId())) {
@@ -891,8 +882,7 @@ public class SharedItemStateManager
             }
 
             // process modified REFERENCE properties
-            for (Iterator<ItemState> i = local.modifiedStates(); i.hasNext();) {
-                ItemState state = i.next();
+            for (ItemState state : local.modifiedStates()) {
                 if (!state.isNode()) {
                     // remove old references from the target
                     removeReferences(getItemState(state.getId()));
@@ -902,8 +892,8 @@ public class SharedItemStateManager
             }
 
             // process removed REFERENCE properties
-            for (Iterator<ItemState> i = local.deletedStates(); i.hasNext();) {
-                removeReferences(i.next());
+            for (ItemState state : local.deletedStates()) {
+                removeReferences(state);
             }
         }
 
@@ -989,8 +979,7 @@ public class SharedItemStateManager
                 throws ReferentialIntegrityException, ItemStateException {
 
             // check whether removed referenceable nodes are still being referenced
-            for (Iterator<ItemState> iter = local.deletedStates(); iter.hasNext();) {
-                ItemState state = iter.next();
+            for (ItemState state : local.deletedStates()) {
                 if (state.isNode()) {
                     NodeState node = (NodeState) state;
                     if (isReferenceable(node)) {
@@ -1018,13 +1007,12 @@ public class SharedItemStateManager
             }
 
             // check whether targets of modified node references exist
-            for (Iterator<NodeReferences> iter = local.modifiedRefs(); iter.hasNext();) {
-                NodeReferences refs = iter.next();
-                NodeId id = refs.getTargetId();
+            for (NodeReferences refs : local.modifiedRefs()) {
                 // no need to check existence of target if there are no references
                 if (refs.hasReferences()) {
                     // please note:
                     // virtual providers are indirectly checked via 'hasItemState()'
+                    NodeId id = refs.getTargetId();
                     if (!local.has(id) && !hasItemState(id)) {
                         String msg = "Target node " + id
                                 + " of REFERENCE property does not exist";
@@ -1177,9 +1165,7 @@ public class SharedItemStateManager
         // Build a copy of the external change log, consisting of shared
         // states we have in our cache. Inform listeners about this
         // change.
-        Iterator<ItemState> modifiedStates = external.modifiedStates();
-        while (modifiedStates.hasNext()) {
-            ItemState state = modifiedStates.next();
+        for (ItemState state : external.modifiedStates()) {
             state = cache.retrieve(state.getId());
             if (state != null) {
                 try {
@@ -1199,9 +1185,7 @@ public class SharedItemStateManager
                 }
             }
         }
-        Iterator<ItemState> deletedStates = external.deletedStates();
-        while (deletedStates.hasNext()) {
-            ItemState state = deletedStates.next();
+        for (ItemState state : external.deletedStates()) {
             state = cache.retrieve(state.getId());
             if (state != null) {
                 shared.deleted(state);

@@ -16,7 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jcr.ReferentialIntegrityException;
 
@@ -94,14 +95,10 @@ public class VersionItemStateManager extends SharedItemStateManager {
         try {
             ChangeLog log = new ChangeLog();
 
-            Iterator iterator = references.modifiedRefs();
-            while (iterator.hasNext()) {
+            for (NodeReferences source : references.modifiedRefs()) {
                 // filter out version storage intern ones
-                NodeReferences source = (NodeReferences) iterator.next();
                 NodeReferences target = new NodeReferences(source.getId());
-                Iterator iter = source.getReferences().iterator();
-                while (iter.hasNext()) {
-                    PropertyId id = (PropertyId) iter.next();
+                for (PropertyId id : source.getReferences()) {
                     if (!hasNonVirtualItemState(id.getParentId())) {
                         target.addReference(id);
                     }
@@ -124,16 +121,19 @@ public class VersionItemStateManager extends SharedItemStateManager {
         // only store VV-type references and NV-type references
 
         // check whether targets of modified node references exist
-        for (Iterator iter = changes.modifiedRefs(); iter.hasNext();) {
-            NodeReferences refs = (NodeReferences) iter.next();
-            NodeId id = refs.getTargetId();
+        Set<NodeReferencesId> remove = new HashSet<NodeReferencesId>();
+        for (NodeReferences refs : changes.modifiedRefs()) {
             // no need to check existence of target if there are no references
             if (refs.hasReferences()) {
+                NodeId id = refs.getTargetId();
                 if (!changes.has(id) && !hasNonVirtualItemState(id)) {
-                    // remove references
-                    iter.remove();
+                    remove.add(refs.getId());
                 }
             }
+        }
+        // remove references
+        for (NodeReferencesId id : remove) {
+            changes.removeReferencesEntry(id);
         }
     }
 }
