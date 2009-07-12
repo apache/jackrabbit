@@ -256,7 +256,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param store if <code>true</code> the node is stored
      * @throws RepositoryException if a repository error occurs
      */
-    private void storeXCessors(List/*<InternalVersion>*/ cessors, Name propname, boolean store)
+    private void storeXCessors(List<InternalVersion> cessors, Name propname, boolean store)
             throws RepositoryException {
         InternalValue[] values = new InternalValue[cessors.size()];
         for (int i = 0; i < values.length; i++) {

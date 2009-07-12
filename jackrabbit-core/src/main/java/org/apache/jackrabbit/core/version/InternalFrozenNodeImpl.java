@@ -35,7 +35,6 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.OnParentVersionAction;
 import javax.jcr.version.VersionException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -103,10 +102,9 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
-        List propList = new ArrayList();
+        List<PropertyState> propList = new ArrayList<PropertyState>();
 
-        for (int i = 0; i < props.length; i++) {
-            PropertyState prop = props[i];
+        for (PropertyState prop : props) {
             if (prop.getName().equals(NameConstants.JCR_FROZENUUID)) {
                 // special property
                 InternalValue value =
@@ -175,13 +173,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
         if (frozenNodes == null) {
             try {
                 // maybe add iterator?
-                List entries = node.getState().getChildNodeEntries();
+                List<ChildNodeEntry> entries =
+                    node.getState().getChildNodeEntries();
                 frozenNodes = new InternalFreeze[entries.size()];
-                Iterator iter = entries.iterator();
                 int i = 0;
-                while (iter.hasNext()) {
-                    ChildNodeEntry entry =
-                            (ChildNodeEntry) iter.next();
+                for (ChildNodeEntry entry : entries) {
                     frozenNodes[i++] = (InternalFreeze) vMgr.getItem(entry.getId());
                 }
             } catch (RepositoryException e) {

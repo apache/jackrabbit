@@ -41,12 +41,12 @@ public class VirtualNodeState extends NodeState {
 
     /**
      * map of property states of this node state
-     * key=propname, value={@link VirtualPropertyState}
      */
-    private final HashMap properties = new HashMap();
+    private final HashMap<Name, VirtualPropertyState> properties =
+        new HashMap<Name, VirtualPropertyState>();
 
     /** a set of hard references to child states */
-    private HashSet stateRefs = null;
+    private HashSet<NodeState> stateRefs = null;
 
     /**
      * creates a new virtual node state
@@ -78,7 +78,7 @@ public class VirtualNodeState extends NodeState {
      * @return the properties.
      */
     public VirtualPropertyState[] getProperties() {
-        return (VirtualPropertyState[]) properties.values().toArray(new VirtualPropertyState[properties.size()]);
+        return properties.values().toArray(new VirtualPropertyState[properties.size()]);
     }
 
 
@@ -191,7 +191,7 @@ public class VirtualNodeState extends NodeState {
      */
     public void setMixinNodeTypes(Name[] mixins) throws RepositoryException {
         if (mixins != null) {
-            HashSet set = new HashSet();
+            HashSet<Name> set = new HashSet<Name>();
             InternalValue[] values = new InternalValue[mixins.length];
             for (int i = 0; i < mixins.length; i++) {
                 set.add(mixins[i]);
@@ -208,7 +208,7 @@ public class VirtualNodeState extends NodeState {
      */
     public void addStateReference(NodeState state) {
         if (stateRefs == null) {
-            stateRefs = new HashSet();
+            stateRefs = new HashSet<NodeState>();
         }
         stateRefs.add(state);
     }

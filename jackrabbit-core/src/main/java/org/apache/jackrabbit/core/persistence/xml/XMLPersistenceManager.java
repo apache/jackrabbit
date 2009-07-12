@@ -59,7 +59,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -254,7 +253,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
         // mixin types
         if (walker.enterElement(MIXINTYPES_ELEMENT)) {
-            Set mixins = new HashSet();
+            Set<Name> mixins = new HashSet<Name>();
             while (walker.iterateElements(MIXINTYPE_ELEMENT)) {
                 mixins.add(factory.create(walker.getAttribute(NAME_ATTRIBUTE)));
             }
@@ -334,7 +333,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
         state.setModCount(Short.parseShort(modCount));
 
         // values
-        ArrayList values = new ArrayList();
+        ArrayList<InternalValue> values = new ArrayList<InternalValue>();
         if (walker.enterElement(VALUES_ELEMENT)) {
             while (walker.iterateElements(VALUE_ELEMENT)) {
                 // read serialized value
@@ -574,18 +573,15 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
                 // mixin types
                 writer.write("\t<" + MIXINTYPES_ELEMENT + ">\n");
-                Iterator iter = state.getMixinTypeNames().iterator();
-                while (iter.hasNext()) {
+                for (Name mixin : state.getMixinTypeNames()) {
                     writer.write("\t\t<" + MIXINTYPE_ELEMENT + " "
-                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(iter.next().toString()) + "\"/>\n");
+                            + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(mixin.toString()) + "\"/>\n");
                 }
                 writer.write("\t</" + MIXINTYPES_ELEMENT + ">\n");
 
                 // properties
                 writer.write("\t<" + PROPERTIES_ELEMENT + ">\n");
-                iter = state.getPropertyNames().iterator();
-                while (iter.hasNext()) {
-                    Name propName = (Name) iter.next();
+                for (Name propName : state.getPropertyNames()) {
                     writer.write("\t\t<" + PROPERTY_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(propName.toString()) + "\">\n");
                     // @todo serialize type, definition id and values
@@ -595,9 +591,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
 
                 // child nodes
                 writer.write("\t<" + NODES_ELEMENT + ">\n");
-                iter = state.getChildNodeEntries().iterator();
-                while (iter.hasNext()) {
-                    ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+                for (ChildNodeEntry entry : state.getChildNodeEntries()) {
                     writer.write("\t\t<" + NODE_ELEMENT + " "
                             + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(entry.getName().toString()) + "\" "
                             + UUID_ATTRIBUTE + "=\"" + entry.getId() + "\">\n");
@@ -843,9 +837,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                 writer.write("<" + NODEREFERENCES_ELEMENT + " "
                         + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)
-                Iterator iter = refs.getReferences().iterator();
-                while (iter.hasNext()) {
-                    PropertyId propId = (PropertyId) iter.next();
+                for (PropertyId propId : refs.getReferences()) {
                     writer.write("\t<" + NODEREFERENCE_ELEMENT + " "
                             + PROPERTYID_ATTRIBUTE + "=\"" + propId + "\"/>\n");
                 }

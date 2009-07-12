@@ -51,7 +51,7 @@ class DocViewImportHandler extends TargetImportHandler {
      * in the startElement method and is popped from the stack in the
      * endElement method.
      */
-    private final Stack stack = new Stack();
+    private final Stack<NodeInfo> stack = new Stack<NodeInfo>();
     // buffer used to merge adjacent character data
     private BufferedStringValue textHandler = null;
 
@@ -156,10 +156,10 @@ class DocViewImportHandler extends TargetImportHandler {
                         new NodeInfo(NameConstants.JCR_XMLTEXT, null, null, null);
                 TextValue[] values =
                         new TextValue[]{textHandler};
-                ArrayList props = new ArrayList();
-                PropInfo prop = new PropInfo(
-                        NameConstants.JCR_XMLCHARACTERS, PropertyType.STRING, values);
-                props.add(prop);
+                ArrayList<PropInfo> props = new ArrayList<PropInfo>();
+                props.add(new PropInfo(
+                        NameConstants.JCR_XMLCHARACTERS,
+                        PropertyType.STRING, values));
                 // call Importer
                 importer.startNode(node, props);
                 importer.endNode(node);
@@ -230,7 +230,7 @@ class DocViewImportHandler extends TargetImportHandler {
             Name nodeTypeName = null;
             Name[] mixinTypes = null;
 
-            ArrayList props = new ArrayList(atts.getLength());
+            ArrayList<PropInfo> props = new ArrayList<PropInfo>(atts.getLength());
             for (int i = 0; i < atts.getLength(); i++) {
                 if (atts.getURI(i).equals(Name.NS_XMLNS_URI)) {
                     // skip namespace declarations reported as attributes
