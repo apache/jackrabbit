@@ -31,7 +31,6 @@ import javax.jcr.NamespaceException;
 import javax.jcr.ValueFactory;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Stack;
 
 /**
@@ -45,7 +44,7 @@ class SysViewImportHandler extends TargetImportHandler {
      * the same instance is popped from the stack in the endElement method
      * when the corresponding sv:node element is encountered.
      */
-    private final Stack stack = new Stack();
+    private final Stack<ImportState> stack = new Stack<ImportState>();
 
     /**
      * fields used temporarily while processing sv:property and sv:value elements
@@ -53,7 +52,8 @@ class SysViewImportHandler extends TargetImportHandler {
     private Name currentPropName;
     private int currentPropType = PropertyType.UNDEFINED;
     // list of AppendableValue objects
-    private ArrayList currentPropValues = new ArrayList();
+    private ArrayList<BufferedStringValue> currentPropValues =
+        new ArrayList<BufferedStringValue>();
     private BufferedStringValue currentPropValue;
 
     /**
@@ -72,7 +72,7 @@ class SysViewImportHandler extends TargetImportHandler {
         }
         Name[] mixinNames = null;
         if (state.mixinNames != null) {
-            mixinNames = (Name[]) state.mixinNames.toArray(
+            mixinNames = state.mixinNames.toArray(
                     new Name[state.mixinNames.size()]);
         }
         NodeId id = null;
@@ -86,8 +86,7 @@ class SysViewImportHandler extends TargetImportHandler {
             if (start) {
                 importer.startNode(node, state.props);
                 // dispose temporary property values
-                for (Iterator iter = state.props.iterator(); iter.hasNext();) {
-                    PropInfo pi = (PropInfo) iter.next();
+                for (PropInfo pi : state.props) {
                     pi.dispose();
                 }
 
@@ -257,7 +256,7 @@ class SysViewImportHandler extends TargetImportHandler {
                 }
             } else if (currentPropName.equals(NameConstants.JCR_MIXINTYPES)) {
                 if (state.mixinNames == null) {
-                    state.mixinNames = new ArrayList(currentPropValues.size());
+                    state.mixinNames = new ArrayList<Name>(currentPropValues.size());
                 }
                 for (int i = 0; i < currentPropValues.size(); i++) {
                     BufferedStringValue val =
@@ -317,7 +316,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of mixin types of current node
          */
-        ArrayList mixinNames;
+        ArrayList<Name> mixinNames;
         /**
          * uuid of current node
          */
@@ -326,7 +325,7 @@ class SysViewImportHandler extends TargetImportHandler {
         /**
          * list of PropInfo instances representing properties of current node
          */
-        ArrayList props = new ArrayList();
+        ArrayList<PropInfo> props = new ArrayList<PropInfo>();
 
         /**
          * flag indicating whether startNode() has been called for current node

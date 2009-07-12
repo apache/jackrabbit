@@ -71,7 +71,7 @@ public class WorkspaceImporter implements Importer {
     private final int uuidBehavior;
 
     private boolean aborted;
-    private Stack parents;
+    private Stack<NodeState> parents;
 
     /**
      * helper object that keeps track of remapped uuid's and imported reference
@@ -124,7 +124,7 @@ public class WorkspaceImporter implements Importer {
 
         refTracker = new ReferenceChangeTracker();
 
-        parents = new Stack();
+        parents = new Stack<NodeState>();
         parents.push(importTarget);
     }
 
@@ -242,7 +242,7 @@ public class WorkspaceImporter implements Importer {
             // => backup list of child node entries beforehand in order
             // to restore it afterwards
             ChildNodeEntry cneConflicting = parent.getChildNodeEntry(nodeInfo.getId());
-            List cneList = new ArrayList(parent.getChildNodeEntries());
+            List<ChildNodeEntry> cneList = new ArrayList<ChildNodeEntry>(parent.getChildNodeEntries());
             // do remove conflicting (recursive)
             itemOps.removeNodeState(conflicting);
             // create new with given uuid at same location as conflicting:
@@ -269,8 +269,7 @@ public class WorkspaceImporter implements Importer {
                 // replace child node entry with different name
                 // but preserving original position
                 parent.removeAllChildNodeEntries();
-                for (Iterator iter = cneList.iterator(); iter.hasNext();) {
-                    ChildNodeEntry cne = (ChildNodeEntry) iter.next();
+                for (ChildNodeEntry cne : cneList) {
                     if (cne.getId().equals(nodeInfo.getId())) {
                         // replace entry with different name
                         parent.addChildNodeEntry(nodeInfo.getName(), nodeInfo.getId());
@@ -388,7 +387,7 @@ public class WorkspaceImporter implements Importer {
     /**
      * {@inheritDoc}
      */
-    public void startNode(NodeInfo nodeInfo, List propInfos)
+    public void startNode(NodeInfo nodeInfo, List<PropInfo> propInfos)
             throws RepositoryException {
         if (aborted) {
             // the import has been aborted, get outta here...
@@ -516,9 +515,7 @@ public class WorkspaceImporter implements Importer {
             }
 
             // process properties
-            Iterator iter = propInfos.iterator();
-            while (iter.hasNext()) {
-                PropInfo pi = (PropInfo) iter.next();
+            for (PropInfo pi : propInfos) {
                 pi.apply(node, itemOps, ntReg, refTracker);
             }
 

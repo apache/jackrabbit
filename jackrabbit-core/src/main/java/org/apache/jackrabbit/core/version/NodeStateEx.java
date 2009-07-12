@@ -32,10 +32,8 @@ import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -136,11 +134,10 @@ public class NodeStateEx {
      * @return the properties of this node
      */
     public PropertyState[] getProperties() throws ItemStateException {
-        Set set = nodeState.getPropertyNames();
+        Set<Name> set = nodeState.getPropertyNames();
         PropertyState[] props = new PropertyState[set.size()];
         int i = 0;
-        for (Iterator iter = set.iterator(); iter.hasNext();) {
-            Name propName = (Name) iter.next();
+        for (Name propName : set) {
             PropertyId propId = new PropertyId(nodeState.getNodeId(), propName);
             props[i++] = (PropertyState) stateMgr.getItemState(propId);
         }
@@ -348,9 +345,7 @@ public class NodeStateEx {
         NodeState state = (NodeState) stateMgr.getItemState(id);
 
         // remove properties
-        Iterator iter = state.getPropertyNames().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
+        for (Name name :  state.getPropertyNames()) {
             PropertyId propId = new PropertyId(id, name);
             PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
             stateMgr.destroy(propState);
@@ -358,9 +353,7 @@ public class NodeStateEx {
         state.removeAllPropertyNames();
 
         // remove child nodes
-        iter = state.getChildNodeEntries().iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+        for (ChildNodeEntry entry : state.getChildNodeEntries()) {
             removeNode(entry.getId());
         }
         state.removeAllChildNodeEntries();
@@ -473,7 +466,7 @@ public class NodeStateEx {
         NodeStateEx node = new NodeStateEx(stateMgr, ntReg, state, name);
         node.setPropertyValue(NameConstants.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
 
-        // add new child node entryn
+        // add new child node entry
         nodeState.addChildNodeEntry(name, id);
         if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
             nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
@@ -489,12 +482,12 @@ public class NodeStateEx {
      */
     public NodeStateEx[] getChildNodes() throws RepositoryException {
         try {
-            List entries = nodeState.getChildNodeEntries();
+            List<ChildNodeEntry> entries = nodeState.getChildNodeEntries();
             NodeStateEx[] children = new NodeStateEx[entries.size()];
-            for (int i = 0; i < entries.size(); i++) {
-                ChildNodeEntry entry = (ChildNodeEntry) entries.get(i);
+            int i = 0;
+            for (ChildNodeEntry entry : entries) {
                 NodeState state = (NodeState) stateMgr.getItemState(entry.getId());
-                children[i] = new NodeStateEx(stateMgr, ntReg, state, entry.getName());
+                children[i++] = new NodeStateEx(stateMgr, ntReg, state, entry.getName());
             }
             return children;
         } catch (ItemStateException e) {
@@ -526,9 +519,7 @@ public class NodeStateEx {
 
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first store all transient properties
-            Set props = state.getPropertyNames();
-            for (Iterator iter = props.iterator(); iter.hasNext();) {
-                Name propName = (Name) iter.next();
+            for (Name propName : state.getPropertyNames()) {
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(
                         new PropertyId(state.getNodeId(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
@@ -536,9 +527,7 @@ public class NodeStateEx {
                 }
             }
             // now store all child node entries
-            List nodes = state.getChildNodeEntries();
-            for (int i = 0; i < nodes.size(); i++) {
-                ChildNodeEntry entry = (ChildNodeEntry) nodes.get(i);
+            for (ChildNodeEntry entry : state.getChildNodeEntries()) {
                 NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
                 store(nstate);
             }
@@ -571,9 +560,7 @@ public class NodeStateEx {
     private void reload(NodeState state) throws ItemStateException {
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
             // first discard all all transient properties
-            Set props = state.getPropertyNames();
-            for (Iterator iter = props.iterator(); iter.hasNext();) {
-                Name propName = (Name) iter.next();
+            for (Name propName : state.getPropertyNames()) {
                 PropertyState pstate = (PropertyState) stateMgr.getItemState(
                         new PropertyId(state.getNodeId(), propName));
                 if (pstate.getStatus() != ItemState.STATUS_EXISTING) {
@@ -581,9 +568,7 @@ public class NodeStateEx {
                 }
             }
             // now reload all child node entries
-            List nodes = state.getChildNodeEntries();
-            for (int i = 0; i < nodes.size(); i++) {
-                ChildNodeEntry entry = (ChildNodeEntry) nodes.get(i);
+            for (ChildNodeEntry entry : state.getChildNodeEntries()) {
                 NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
                 reload(nstate);
             }

@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import java.util.Iterator;
 import java.util.Collection;
 
 /**
@@ -76,7 +75,8 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * Listeners (weak references)
      */
-    private final transient Collection listeners = new WeakIdentityCollection(5);
+    private final transient Collection<ItemStateListener> listeners =
+        new WeakIdentityCollection(5);
 
     /**
      * Creates an abstract virtual item state provider
@@ -360,9 +360,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                 for (int i = 0; i < props.length; i++) {
                     props[i].notifyStateUpdated();
                 }
-                Iterator iter = state.getChildNodeEntries().iterator();
-                while (iter.hasNext()) {
-                    ChildNodeEntry pe = (ChildNodeEntry) iter.next();
+                for (ChildNodeEntry pe : state.getChildNodeEntries()) {
                     invalidateItem(pe.getId(), true);
                 }
             }
@@ -425,7 +423,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     public void stateCreated(ItemState created) {
         ItemStateListener[] la;
         synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+            la = listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -440,7 +438,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     public void stateModified(ItemState modified) {
         ItemStateListener[] la;
         synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+            la = listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -464,7 +462,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
 
         ItemStateListener[] la;
         synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+            la = listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {
@@ -488,7 +486,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
 
         ItemStateListener[] la;
         synchronized (listeners) {
-            la = (ItemStateListener[]) listeners.toArray(new ItemStateListener[listeners.size()]);
+            la = listeners.toArray(new ItemStateListener[listeners.size()]);
         }
         for (int i = 0; i < la.length; i++) {
             if (la[i] != null) {

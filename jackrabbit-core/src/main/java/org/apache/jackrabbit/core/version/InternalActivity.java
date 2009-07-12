@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.Collection;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
