@@ -131,4 +131,19 @@ public class EventImpl implements Event, Serializable {
     public String getUserID() {
         return userId;
     }
+    
+    public String toString() {
+        return new StringBuffer(getClass().getName())
+            .append("[")
+            .append("eventTypes: ").append(type).append(", ")
+            .append("absPath: ").append(path).append(", ")
+            .append("itemId: ").append(itemId).append(", ")
+            .append("parentId: ").append(parentId).append(", ")
+            .append("primaryNodeTypeName: ").append(primaryNodeTypeName).append(", ")
+            .append("mixinTypeNames: ").append(mixinTypeNames).append(", ")
+            .append("userId").append(userId)
+            .append("]")
+            .toString();
+    }
+    
 }
