@@ -1049,7 +1049,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 query.bindValue(entry.getKey(), value);
             }
         }
-        return new QueryInfoImpl(query, query.execute(), idFactory,
+        return new QueryInfoImpl(query.execute(), idFactory,
                 sInfo.getNamePathResolver(), getQValueFactory());
     }
 

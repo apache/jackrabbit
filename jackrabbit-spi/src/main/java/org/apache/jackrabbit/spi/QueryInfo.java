@@ -39,9 +39,16 @@ public interface QueryInfo {
     public RangeIterator getRows();
 
     /**
-     * @return an array of <code>Name</code>s representing the column names of
-     * the query result.
+     * @return an array of <code>String</code>s representing the column names of
+     *         the query result.
      * @see javax.jcr.query.QueryResult#getColumnNames()
      */
     public String[] getColumnNames();
+
+    /**
+     * @return an array of <code>Name</code>s representing the selector names of
+     *         the query result.
+     * @see javax.jcr.query.QueryResult#getSelectorNames()
+     */
+    public Name[] getSelectorNames();
 }
