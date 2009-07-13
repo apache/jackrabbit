@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,10 +196,16 @@ public class QueryImpl extends AbstractQueryImpl {
         }
     }
 
-    // TODO: JCR-2200: Implement Query.getBindVariableNames()
+    /**
+     * {@inheritDoc}
+     */
     public String[] getBindVariableNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException(
-                "JCR-2200: Implement Query.getBindVariableNames()");
+        Name[] names = query.getBindVariableNames();
+        String[] strNames = new String[names.length];
+        for (int i = 0; i < names.length; i++) {
+            strNames[i] = session.getJCRName(names[i]);
+        }
+        return strNames;
     }
 
     /**

@@ -220,10 +220,11 @@ public class QueryImpl implements Query {
         }
     }
 
-    // TODO: JCR-2200: Implement Query.getBindVariableNames()
+    /**
+     * @see Query#getBindVariableNames()
+     */
     public String[] getBindVariableNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException(
-                "JCR-2200: Implement Query.getBindVariableNames()");
+        return varNames.toArray(new String[varNames.size()]);
     }
 
     /**

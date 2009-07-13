@@ -71,6 +71,13 @@ public class BindVariableValueTest extends AbstractQOMTest {
         super.tearDown();
     }
 
+    public void testBindVariableNames() throws RepositoryException {
+        String[] names = qomQuery.getBindVariableNames();
+        assertNotNull(names);
+        assertEquals(1, names.length);
+        assertEquals("v", names[0]);
+    }
+
     public void testIllegalArgumentException() throws RepositoryException {
         try {
             bindVariableValue(qomQuery, "x", vf.createValue(STRING_VALUE));
