@@ -370,7 +370,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
+     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, StaticOperand)}
      */
     public void testFullTextSearch() throws RepositoryException {
         FullTextSearch ftSearch = qf.fullTextSearch(
@@ -378,15 +378,16 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
                 qf.literal(vf.createValue(FULLTEXT_SEARCH_EXPR)));
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertEquals("Wrong propertyName", propertyName1, ftSearch.getPropertyName());
-        // TODO is there some way to check the contents of a StaticOperand?
-        
-        // minimal test of getFullTextSearchExpression()
+
         StaticOperand op = ftSearch.getFullTextSearchExpression();
         assertNotNull(op);
+        assertTrue("not a Literal", op instanceof Literal);
+        Literal literal = (Literal) op;
+        assertEquals(FULLTEXT_SEARCH_EXPR, literal.getLiteralValue().getString());
     }
 
     /**
-     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, String)}
+     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, StaticOperand)}
      */
     public void testFullTextSearchAllProperties() throws RepositoryException {
         FullTextSearch ftSearch = qf.fullTextSearch(
@@ -394,7 +395,23 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
                 qf.literal(vf.createValue(FULLTEXT_SEARCH_EXPR)));
         assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
         assertNull("Property name must be null", ftSearch.getPropertyName());
-        // TODO is there some way to check the contents of a StaticOperand?
+    }
+
+    /**
+     * Test case for {@link QueryObjectModelFactory#fullTextSearch(String, String, StaticOperand)}
+     */
+    public void testFullTextSearchWithBindVariableValue() throws RepositoryException {
+        FullTextSearch ftSearch = qf.fullTextSearch(
+                SELECTOR_NAME1, propertyName1,
+                qf.bindVariable(VARIABLE_NAME));
+        assertEquals("Wrong selector name", SELECTOR_NAME1, ftSearch.getSelectorName());
+        assertEquals("Wrong propertyName", propertyName1, ftSearch.getPropertyName());
+
+        StaticOperand op = ftSearch.getFullTextSearchExpression();
+        assertNotNull(op);
+        assertTrue("not a BindVariableValue", op instanceof BindVariableValue);
+        BindVariableValue value = (BindVariableValue) op;
+        assertEquals(VARIABLE_NAME, value.getBindVariableName());
     }
 
     /**
