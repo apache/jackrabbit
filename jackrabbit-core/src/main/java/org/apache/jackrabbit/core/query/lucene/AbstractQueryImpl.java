@@ -140,6 +140,13 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public Name[] getBindVariableNames() throws RepositoryException {
+        return variableNames.toArray(new Name[variableNames.size()]);
+    }
+
+    /**
      * Adds a name to the set of variables.
      *
      * @param varName the name of the variable.
