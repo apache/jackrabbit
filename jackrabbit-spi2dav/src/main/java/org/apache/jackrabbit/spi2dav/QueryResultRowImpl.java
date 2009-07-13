@@ -56,6 +56,8 @@ public class QueryResultRowImpl implements QueryResultRow {
 
     private final String[] columnNames;
 
+    private final Name[] selectorNames;
+
     public QueryResultRowImpl(MultiStatusResponse response,
                               String[] columnNames,
                               NamePathResolver resolver,
@@ -73,22 +75,23 @@ public class QueryResultRowImpl implements QueryResultRow {
         Value[] values = resultProp.getValues();
         String[] names = resultProp.getColumnNames();
         String[] selectorNames = resultProp.getSelectorNames();
+        this.selectorNames = new Name[selectorNames.length];
         for (int i = 0; i < values.length; i++) {
             try {
                 QValue v = (values[i] == null) ? null : ValueFormat.getQValue(values[i], resolver, qValueFactory);
-                Name s = (selectorNames[i] == null) ? null : resolver.getQName(selectorNames[i]);
+                this.selectorNames[i] = (selectorNames[i] == null) ? null : resolver.getQName(selectorNames[i]);
                 if (jcrScore.equals(names[i])) {
                     Double score = 0.0;
                     if (v != null) {
                         score = v.getDouble();
                     }
-                    scores.put(s, score);
+                    scores.put(this.selectorNames[i], score);
                 } else if (jcrPath.equals(names[i])) {
                     NodeId id = null;
                     if (v != null) {
                         id = idFactory.createNodeId((String) null, v.getPath());
                     }
-                    nodeIds.put(s, id);
+                    nodeIds.put(this.selectorNames[i], id);
                 }
                 qValues.put(names[i], v);
             } catch (RepositoryException e) {
@@ -128,5 +131,9 @@ public class QueryResultRowImpl implements QueryResultRow {
             values[i] = qValues.get(columnNames[i]);
         }
         return values;
+    }
+
+    Name[] getSelectorNames() {
+        return selectorNames;
     }
 }

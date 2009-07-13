@@ -22,6 +22,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModel;
 
@@ -38,7 +39,12 @@ public class SelectorTest extends AbstractQOMTest {
                 qf.selector(testNodeType, "s"), null, null, null);
         forQOMandSQL2(qom, new Callable() {
             public Object call(Query query) throws RepositoryException {
-                NodeIterator it = query.execute().getNodes();
+                QueryResult result = query.execute();
+                String[] names = result.getSelectorNames();
+                assertNotNull(names);
+                assertEquals(1, names.length);
+                assertEquals("s", names[0]);
+                NodeIterator it = result.getNodes();
                 while (it.hasNext()) {
                     assertTrue("Wrong node type", it.nextNode().isNodeType(testNodeType));
                 }

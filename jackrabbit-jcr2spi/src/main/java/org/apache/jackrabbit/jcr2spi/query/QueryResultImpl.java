@@ -19,10 +19,11 @@ package org.apache.jackrabbit.jcr2spi.query;
 import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
 import org.apache.jackrabbit.spi.QueryInfo;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
@@ -61,10 +62,17 @@ class QueryResultImpl implements QueryResult {
         this.queryInfo = queryInfo;
     }
 
-    // TODO: JCR-2201: Implement QueryResult.getSelectorNames()
+    /**
+     * {@inheritDoc}
+     */
     public String[] getSelectorNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException(
-                "JCR-2201: Implement QueryResult.getSelectorNames()");
+        Name[] names = queryInfo.getSelectorNames();
+        String[] sn = new String[names.length];
+        NameResolver resolver = mgrProvider.getNameResolver();
+        for (int i = 0; i < sn.length; i++) {
+            sn[i] = resolver.getJCRName(names[i]);
+        }
+        return sn;
     }
 
     /**

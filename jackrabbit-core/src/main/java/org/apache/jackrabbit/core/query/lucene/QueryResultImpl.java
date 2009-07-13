@@ -182,10 +182,15 @@ public abstract class QueryResultImpl implements QueryResult {
         }
     }
 
-    // TODO: JCR-2201: Implement QueryResult.getSelectorNames()
+    /**
+     * {@inheritDoc}
+     */
     public String[] getSelectorNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException(
-                "JCR-2201: Implement QueryResult.getSelectorNames()");
+        String[] names = new String[selectorNames.length];
+        for (int i = 0; i < selectorNames.length; i++) {
+            names[i] = session.getJCRName(selectorNames[i]);
+        }
+        return names;
     }
 
     /**
