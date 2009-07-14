@@ -22,7 +22,6 @@ import org.apache.lucene.search.TopFieldDocCollector;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

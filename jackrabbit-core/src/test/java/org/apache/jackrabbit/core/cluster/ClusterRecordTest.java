@@ -34,7 +34,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.test.JUnitTest;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Test cases for cluster record production and consumption. Verifies that

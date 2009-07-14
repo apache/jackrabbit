@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.value;
 
-import org.apache.jackrabbit.uuid.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,11 +151,10 @@ class BLOBInMemory extends BLOBFileValue {
     public String toString() {
         StringBuilder buff = new StringBuilder(PREFIX.length() + 2 * data.length);
         buff.append(PREFIX);
-        char[] hex = Constants.hexDigits;
         for (int i = 0; i < data.length; i++) {
             int c = data[i] & 0xff;
-            buff.append(hex[c >> 4]);
-            buff.append(hex[c & 0xf]);
+            buff.append(Integer.toHexString(c >> 4));
+            buff.append(Integer.toHexString(c & 0xf));
         }
         return buff.toString();
     }
