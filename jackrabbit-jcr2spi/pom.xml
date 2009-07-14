@@ -33,7 +33,7 @@
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr2spi</artifactId>
-  <version>1.5.5</version>
+  <version>1.5.7</version>
   <name>Jackrabbit JCR to SPI</name>
 
   <scm>
