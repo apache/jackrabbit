@@ -83,39 +83,23 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     private Iterable itemInfosProvider;
 
     /**
-     * Check whether we can traverse the hierarchy when the item infos are returned in their
-     * canonical order.
-     * @throws RepositoryException
-     */
-    public void testGetItemInfos() throws RepositoryException {
-        itemInfosProvider = new Iterable() {
-            public Iterator iterator() {
-                return itemInfos.iterator();
-            }
-        };
-
-        checkHierarchy();
-    }
-
-    /**
      * Check whether we can traverse the hierarchy when the item info for root is
-     * returned first.
+     * retrieved first.
      * @throws RepositoryException
      */
     public void testGetItemInfosRootFirst() throws RepositoryException {
         itemInfosProvider = new Iterable() {
+            Predicate isRoot = new Predicate() {
+                public boolean evaluate(Object object) {
+                    ItemInfo itemInfo = (ItemInfo) object;
+                    return itemInfo.getPath().denotesRoot();
+                }
+            };
 
             public Iterator iterator() {
-                Predicate isRoot = new Predicate() {
-                    public boolean evaluate(Object object) {
-                        ItemInfo itemInfo = (ItemInfo) object;
-                        return itemInfo.getPath().denotesRoot();
-                    }
-                };
-
                 return new IteratorChain(
-                    new FilterIterator(itemInfos.iterator(), isRoot),
-                    new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isRoot)));
+                        new FilterIterator(itemInfos.iterator(), isRoot),
+                        new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isRoot)));
             }
         };
 
@@ -124,28 +108,29 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     }
 
     /**
-     * Check whether we can traverse the hierarchy when the item info for root is
-     * returned last.
+     * Check whether we can traverse the hierarchy when the item info for a deep item
+     * is retrieved first.
      * @throws RepositoryException
      */
-    public void testGetItemInfosRootLast() throws RepositoryException {
+    public void testGetItemInfosDeepFirst() throws RepositoryException {
+        final String targetPath = "/node2/node21/node211/node2111/node21111/node211111/node2111111";
+
         itemInfosProvider = new Iterable() {
+            Predicate isTarget = new Predicate() {
+                public boolean evaluate(Object object) {
+                    ItemInfo itemInfo = (ItemInfo) object;
+                    return targetPath.equals(toJCRPath(itemInfo.getPath()));
+                }
+            };
 
             public Iterator iterator() {
-                Predicate isRoot = new Predicate() {
-                    public boolean evaluate(Object object) {
-                        ItemInfo itemInfo = (ItemInfo) object;
-                        return itemInfo.getPath().denotesRoot();
-                    }
-                };
-
                 return new IteratorChain(
-                    new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isRoot)),
-                    new FilterIterator(itemInfos.iterator(), isRoot));
+                        new FilterIterator(itemInfos.iterator(), isTarget),
+                        new FilterIterator(itemInfos.iterator(), NotPredicate.getInstance(isTarget)));
             }
         };
 
-        assertTrue(session.getRootNode().getDepth() == 0);
+        assertEquals(targetPath, session.getItem(targetPath).getPath());
         checkHierarchy();
     }
 

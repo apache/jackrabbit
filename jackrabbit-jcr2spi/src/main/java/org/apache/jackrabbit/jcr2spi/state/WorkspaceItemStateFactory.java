@@ -195,45 +195,40 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     private synchronized NodeState createItemStates(NodeId nodeId, Iterator itemInfos,
                                                     NodeEntry entry, boolean isDeep)
             throws ItemNotFoundException, RepositoryException {
-        NodeState nodeState = null;
+        NodeState nodeState;
         ItemInfos infos = new ItemInfos(itemInfos);
+        // first entry in the iterator is the originally requested Node.
+        if (infos.hasNext()) {
+            NodeInfo first = (NodeInfo) infos.next();
+            if (isDeep) {
+                // for a deep state, the hierarchy entry does not correspond to
+                // the given NodeEntry -> retrieve NodeState before executing
+                // validation check.
+                nodeState = createDeepNodeState(first, entry, infos);
+                assertValidState(nodeState, first);
+            } else {
+                // 'isDeep' == false -> the given NodeEntry must match to the
+                // first ItemInfo retrieved from the iterator.
+                assertMatchingPath(first, entry);
+                nodeState = createNodeState(first, entry);
+            }
+        } else {
+            // empty iterator
+            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
+        }
 
+        // deal with all additional ItemInfos that may be present.
         // Assuming locality of the itemInfos, we keep an estimate of a parent entry.
         // This reduces the part of the hierarchy to traverse. For large batches this
         // optimization results in about 25% speed up.
-        NodeEntry aproxParentEntry = entry;
-
+        NodeEntry approxParentEntry = nodeState.getNodeEntry();
         while (infos.hasNext()) {
             ItemInfo info = (ItemInfo) infos.next();
             if (info.denotesNode()) {
-                NodeInfo nodeInfo = (NodeInfo) info;
-
-                if (nodeId.equals(nodeInfo.getId())) {
-                    // This is the originally requested node
-                    if (isDeep) {
-                        // for a deep state, the hierarchy entry does not correspond to
-                        // the given NodeEntry -> retrieve NodeState before executing
-                        // validation check.
-                        nodeState = createDeepNodeState(nodeInfo, entry, infos);
-                        assertValidState(nodeState, nodeInfo);
-                    } else {
-                        // 'isDeep' == false -> the given NodeEntry must match the
-                        // ItemInfo for the originally requested node
-                        assertMatchingPath(nodeInfo, entry);
-                        nodeState = createNodeState(nodeInfo, entry);
-                    }
-                } else {
-                    // deal with additional nodeInfo
-                    aproxParentEntry = createDeepNodeState(nodeInfo, aproxParentEntry, infos).getNodeEntry();
-                }
+                approxParentEntry = createDeepNodeState((NodeInfo) info, approxParentEntry, infos).getNodeEntry();
             } else {
-                // deal with additional propertyInfo
-                createDeepPropertyState((PropertyInfo) info, aproxParentEntry, infos);
+                createDeepPropertyState((PropertyInfo) info, approxParentEntry, infos);
             }
-        }
-
-        if (nodeState == null) {
-            throw new ItemNotFoundException("Node with id " + nodeId + " could not be found.");
         }
         return nodeState;
     }
@@ -373,12 +368,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                     // until the smallest common root is found
                     entry = entry.getParent();
                 }
-                else {
+                else if (missingElems[i].denotesName()) {
                     // Add missing elements starting from the smallest common root
                     Name name = missingElems[i].getName();
                     int index = missingElems[i].getNormalizedIndex();
                     entry = createIntermediateNodeEntry(entry, name, index, infos);
                 }
+                // else denotesCurrent -> ignore
             }
             if (entry == anyParent) {
                 throw new RepositoryException("Internal error while getting deep itemState");
@@ -422,12 +418,13 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
                     // until the smallest common root is found
                     entry = entry.getParent();
                 }
-                else {
+                else if (missingElems[i].denotesName()) {
                     // Add missing elements starting from the smallest common root
                     Name name = missingElems[i].getName();
                     int index = missingElems[i].getNormalizedIndex();
                     entry = createIntermediateNodeEntry(entry, name, index, infos);
                 }
+                // else denotesCurrent -> ignore
                 i++;
             }
             // create PropertyEntry for the last element if not existing yet
@@ -499,7 +496,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
     /**
      * Returns true if the given <code>missingElems</code> start with
-     * a current (.) or the root element, in which case the info is not within
+     * the root element, in which case the info is not within
      * the tree as it is expected.
      * See also #JCR-1797 for the corresponding enhancement request.
      *
@@ -508,7 +505,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     private static boolean startsWithIllegalElement(Path.Element[] missingElems) {
         if (missingElems.length > 0) {
-            return !(missingElems[0].denotesName() || missingElems[0].denotesParent());
+            return missingElems[0].denotesRoot();
         }
         return false;
     }

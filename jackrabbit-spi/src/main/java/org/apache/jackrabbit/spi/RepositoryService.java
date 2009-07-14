@@ -261,16 +261,20 @@ public interface RepositoryService {
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
     /**
-     * Method used to 'batch-read' from the persistent storage. It must contain
-     * the <code>NodeInfo</code> for the given <code>NodeId</code> in the
-     * <code>Iterator</code>. In addition the iterator may contain arbitrary
-     * child <code>ItemInfo</code>s from the entire hierarchy.
+     * Method used to 'batch-read' from the persistent storage. It returns the
+     * <code>NodeInfo</code> for the given <code>NodeId</code> as the first
+     * element in the <code>Iterator</code>. In addition the iterator may contain
+     * child <code>ItemInfo</code>s down to a certain depth. The configuration
+     * process however is left to the implementation.
      *
      * @param sessionInfo
      * @param nodeId
      * @return An <code>Iterator</code> of <code>ItemInfo</code>s containing
      * at least a single element: the <code>NodeInfo</code> that represents
-     * the Node identified by the given <code>NodeId</code>.
+     * the Node identified by the given <code>NodeId</code>. If the Iterator
+     * contains multiple elements, the first is expected to represent the Node
+     * identified by the given <code>NodeId</code> and all subsequent elements
+     * must represent children of that <code>Node</code>.
      * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
