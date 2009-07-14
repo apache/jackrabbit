@@ -27,6 +27,9 @@ import java.io.Serializable;
  * <p>
  * This is a lightweight implementation of an UUID, disregarding the different
  * versions of UUIDs.
+ *
+ * @deprecated This class will be removed in Jackrabbit 2.0.
+ *             Use java.util.UUID instead.
  */
 public class UUID implements Constants, Serializable, Comparable {
 

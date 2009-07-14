@@ -44,6 +44,8 @@ import java.util.Random;
 
 /**
  * XXX begin modification by stefan@apache.org
+ *
+ * @deprecated This class will be removed in Jackrabbit 2.0.
  */
 //public final class VersionFourGenerator implements IdentifierGenerator, QueryConstants {
 public final class VersionFourGenerator implements Constants {

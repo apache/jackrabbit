@@ -22,6 +22,8 @@ package org.apache.jackrabbit.uuid;
  * <p>Copied from the Jakarta Commons-Id project</p>
  * <p/>
  * todo remove and use official commons-id release as soon as it is available
+ *
+ * @deprecated This class will be removed in Jackrabbit 2.0.
  */
 public interface Constants {
 
