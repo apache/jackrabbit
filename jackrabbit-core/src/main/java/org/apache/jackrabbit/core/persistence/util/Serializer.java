@@ -28,7 +28,6 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 import javax.jcr.PropertyType;
@@ -126,7 +125,7 @@ public final class Serializer {
         String s = in.readUTF();
         state.setNodeTypeName(NameFactoryImpl.getInstance().create(s));
         // parentUUID (may be null)
-        byte[] uuidBytes = new byte[UUID.UUID_BYTE_LENGTH];
+        byte[] uuidBytes = new byte[NodeId.UUID_BYTE_LENGTH];
         in.readFully(uuidBytes);
         if (!Arrays.equals(uuidBytes, NULL_UUID_PLACEHOLDER_BYTES)) {
             state.setParentId(new NodeId(uuidBytes));

@@ -24,7 +24,6 @@ import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
@@ -43,6 +42,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * <code>AbstractEvaluationTest</code>...

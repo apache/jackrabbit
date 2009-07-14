@@ -40,8 +40,6 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefReader;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.ParseException;
-import org.apache.jackrabbit.uuid.Constants;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Base implementation for a record.
@@ -226,7 +224,7 @@ public abstract class AbstractRecord implements Record {
                 return (NodeId) nodeIdIndex.getKey(index);
             }
         } else if (uuidType == UUID_LITERAL) {
-            byte[] b = new byte[Constants.UUID_BYTE_LENGTH];
+            byte[] b = new byte[NodeId.UUID_BYTE_LENGTH];
             readFully(b);
             NodeId nodeId = new NodeId(b);
             nodeIdIndex.put(nodeId, nodeIdIndex.size());

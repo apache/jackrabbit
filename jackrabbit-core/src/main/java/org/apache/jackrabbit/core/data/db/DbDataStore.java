@@ -24,7 +24,6 @@ import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryMana
 import org.apache.jackrabbit.core.persistence.bundle.util.TrackingInputStream;
 import org.apache.jackrabbit.core.persistence.bundle.util.ConnectionRecoveryManager.StreamWrapper;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 import javax.jcr.RepositoryException;

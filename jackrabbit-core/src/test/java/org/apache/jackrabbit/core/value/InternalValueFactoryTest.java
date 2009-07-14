@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.QValueFactoryTest;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class InternalValueFactoryTest extends QValueFactoryTest {
         factory = InternalValueFactory.getInstance();
         rootPath = PathFactoryImpl.getInstance().getRootPath();
         testName = NameFactoryImpl.getInstance().create(Name.NS_JCR_URI, "data");
-        reference = UUID.randomUUID().toString();
+        reference = new NodeId().toString();
     }
 
     protected void tearDown() throws Exception {

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,9 +93,8 @@ final class DocNumberCache {
      */
     void put(String uuid, CachingIndexReader reader, int n) {
         LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
-        UUID key = UUID.fromString(uuid);
         synchronized (cacheSegment) {
-            Entry e = (Entry) cacheSegment.get(key);
+            Entry e = (Entry) cacheSegment.get(uuid);
             if (e != null) {
                 // existing entry
                 // ignore if reader is older than the one in entry
@@ -114,7 +112,7 @@ final class DocNumberCache {
             }
 
             if (e != null) {
-                cacheSegment.put(key, e);
+                cacheSegment.put(uuid, e);
             }
         }
     }
@@ -128,14 +126,9 @@ final class DocNumberCache {
      */
     Entry get(String uuid) {
         LRUMap cacheSegment = docNumbers[getSegmentIndex(uuid.charAt(0))];
-        // uuid may be invalid
-        if (uuid.length() != UUID.UUID_FORMATTED_LENGTH) {
-            return null;
-        }
-        UUID key = UUID.fromString(uuid);
         Entry entry;
         synchronized (cacheSegment) {
-            entry = (Entry) cacheSegment.get(key);
+            entry = (Entry) cacheSegment.get(uuid);
         }
         if (log.isInfoEnabled()) {
             accesses++;

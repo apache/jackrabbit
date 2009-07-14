@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.jcr.observation;
 
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -50,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The <code>Subscription</code> class encapsulates a single subscription with

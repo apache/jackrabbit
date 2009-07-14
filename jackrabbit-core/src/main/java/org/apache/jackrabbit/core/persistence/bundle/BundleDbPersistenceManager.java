@@ -60,7 +60,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -973,27 +972,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } finally {
             initialized = false;
         }
-    }
-
-    /**
-     * Sets the key parameters to the prepared statement, starting at
-     * <code>pos</code> and returns the number of key parameters + pos.
-     *
-     * @param stmt the statement
-     * @param uuid the uuid of the key
-     * @param pos the position of the key parameter
-     * @return the number of key parameters + <code>pos</code>
-     * @throws SQLException if an SQL error occurs.
-     */
-    protected int setKey(PreparedStatement stmt, UUID uuid, int pos)
-            throws SQLException {
-        if (getStorageModel() == SM_BINARY_KEYS) {
-            stmt.setBytes(pos++, uuid.getRawBytes());
-        } else {
-            stmt.setLong(pos++, uuid.getMostSignificantBits());
-            stmt.setLong(pos++, uuid.getLeastSignificantBits());
-        }
-        return pos;
     }
 
     /**

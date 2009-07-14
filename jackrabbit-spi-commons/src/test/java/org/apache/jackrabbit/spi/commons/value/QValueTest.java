@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,7 +48,6 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * <code>QValueTest</code>...

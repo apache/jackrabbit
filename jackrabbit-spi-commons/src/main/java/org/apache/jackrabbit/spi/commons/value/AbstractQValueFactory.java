@@ -27,11 +27,11 @@ import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyType;
 import java.util.Calendar;
+import java.util.UUID;
 
 /**
  * <code>AbstractQValueFactory</code>...
