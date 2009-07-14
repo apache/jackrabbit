@@ -36,7 +36,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * This class implements the {@link QueryManager} interface.

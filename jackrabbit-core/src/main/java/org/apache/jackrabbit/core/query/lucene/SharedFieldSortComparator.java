@@ -34,7 +34,6 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Implements a <code>SortComparator</code> which knows how to sort on a lucene

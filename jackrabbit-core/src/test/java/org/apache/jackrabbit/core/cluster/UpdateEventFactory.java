@@ -37,7 +37,6 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 
 /**
  * Simplistic factory that produces update events, consisting of node identifiers,

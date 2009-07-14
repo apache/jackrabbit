@@ -23,7 +23,6 @@ import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.uuid.Constants;
 import org.apache.jackrabbit.util.Timer;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
@@ -1505,10 +1504,9 @@ public class MultiIndex {
         /**
          * The maximum length of a AddNode String.
          */
-        private static final int ENTRY_LENGTH = Long.toString(Long.MAX_VALUE).length()
-                + Action.ADD_NODE.length()
-                + Constants.UUID_FORMATTED_LENGTH
-                + 2;
+        private static final int ENTRY_LENGTH =
+            Long.toString(Long.MAX_VALUE).length() + Action.ADD_NODE.length()
+            + new NodeId().toString().length() + 2;
 
         /**
          * The id of the node to add.
@@ -1554,10 +1552,6 @@ public class MultiIndex {
          */
         static AddNode fromString(long transactionId, String arguments)
                 throws IllegalArgumentException {
-            // simple length check
-            if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
-                throw new IllegalArgumentException("arguments is not a uuid");
-            }
             return new AddNode(transactionId, new NodeId(arguments));
         }
 
@@ -1793,10 +1787,9 @@ public class MultiIndex {
         /**
          * The maximum length of a DeleteNode String.
          */
-        private static final int ENTRY_LENGTH = Long.toString(Long.MAX_VALUE).length()
-                + Action.DELETE_NODE.length()
-                + Constants.UUID_FORMATTED_LENGTH
-                + 2;
+        private static final int ENTRY_LENGTH =
+            Long.toString(Long.MAX_VALUE).length() + Action.DELETE_NODE.length()
+            + new NodeId().toString().length() + 2;
 
         /**
          * The id of the node to remove.
@@ -1825,10 +1818,6 @@ public class MultiIndex {
          *                                  UUID.
          */
         static DeleteNode fromString(long transactionId, String arguments) {
-            // simple length check
-            if (arguments.length() != Constants.UUID_FORMATTED_LENGTH) {
-                throw new IllegalArgumentException("arguments is not a uuid");
-            }
             return new DeleteNode(transactionId, new NodeId(arguments));
         }
 
