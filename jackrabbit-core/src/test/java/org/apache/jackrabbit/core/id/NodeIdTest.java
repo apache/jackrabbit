@@ -78,4 +78,29 @@ public class NodeIdTest extends TestCase {
         }
     }
 
+    public void testUuidFormat() {
+        long maxHigh = 0, maxLow = 0, minHigh = -1L, minLow = -1L;
+        for (int i = 0; i < 100; i++) {
+            NodeId id = new NodeId();
+            assertUuidFormat(id);
+            maxHigh |= id.getMostSignificantBits();
+            maxLow |= id.getLeastSignificantBits();
+            minHigh &= id.getMostSignificantBits();
+            minLow &= id.getLeastSignificantBits();
+        }
+        NodeId max = new NodeId(maxHigh, maxLow);
+        assertEquals("ffffffff-ffff-4fff-bfff-ffffffffffff", max.toString());
+        NodeId min = new NodeId(minHigh, minLow);
+        assertEquals("00000000-0000-4000-8000-000000000000", min.toString());
+    }
+
+    private void assertUuidFormat(NodeId id) {
+        long high = id.getMostSignificantBits();
+        long low = id.getLeastSignificantBits();
+        long high2 = (high & (~0xf000L)) | 0x4000L; // version 4 (random)
+        assertEquals(high, high2);
+        long low2 = (low & 0x3fffffffffffffffL) | 0x8000000000000000L; // variant (Leach-Salz)
+        assertEquals(low, low2);
+    }
+
 }
