@@ -264,8 +264,7 @@ public interface RepositoryService {
      * Method used to 'batch-read' from the persistent storage. It returns the
      * <code>NodeInfo</code> for the given <code>NodeId</code> as the first
      * element in the <code>Iterator</code>. In addition the iterator may contain
-     * child <code>ItemInfo</code>s down to a certain depth. The configuration
-     * process however is left to the implementation.
+     * arbitrary <code>ItemInfo</code>s.
      *
      * @param sessionInfo
      * @param nodeId
@@ -273,8 +272,7 @@ public interface RepositoryService {
      * at least a single element: the <code>NodeInfo</code> that represents
      * the Node identified by the given <code>NodeId</code>. If the Iterator
      * contains multiple elements, the first is expected to represent the Node
-     * identified by the given <code>NodeId</code> and all subsequent elements
-     * must represent children of that <code>Node</code>.
+     * identified by the given <code>NodeId</code>.
      * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
