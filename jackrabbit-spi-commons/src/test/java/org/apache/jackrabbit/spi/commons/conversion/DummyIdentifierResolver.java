@@ -19,12 +19,11 @@ package org.apache.jackrabbit.spi.commons.conversion;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.uuid.UUID;
 
 import javax.jcr.RepositoryException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.UUID;
 
 /**
  * <code>DummyIdentifierResolver</code>...
@@ -34,14 +33,14 @@ class DummyIdentifierResolver implements IdentifierResolver {
     private static final PathFactory FACTORY = PathFactoryImpl.getInstance();
     public static final String JCR_PATH = "/a/b/c";
 
-    private final List validIds;
-    private final List invalidFormats;
-    private final List invalidPaths;
+    private final List<String> validIds;
+    private final List<String> invalidFormats;
+    private final List<String> invalidPaths;
     private final Path path;
 
     DummyIdentifierResolver() throws RepositoryException {
         path = FACTORY.create(FACTORY.getRootPath(), FACTORY.create("{}a\t{}b\t{}c"), true);
-        validIds = new ArrayList();
+        validIds = new ArrayList<String>();
         validIds.add(UUID.randomUUID().toString());
         validIds.add("a:b");
         validIds.add("a[3]");
@@ -52,14 +51,13 @@ class DummyIdentifierResolver implements IdentifierResolver {
         validIds.add("{}\"\"\t{}a[3]\t{}b\t{}c:d");
 
         String invalidID = UUID.randomUUID().toString();
-        String invalidIdSegment = "["+invalidID+"]";
-        String validSegment = "[" + validIds.get(0).toString() + "]";
+        String invalidIdSegment = "[" + invalidID + "]";
+        String validSegment = "[" + validIds.get(0) + "]";
         
-        invalidFormats = new ArrayList();
-        invalidPaths = new ArrayList();
+        invalidFormats = new ArrayList<String>();
+        invalidPaths = new ArrayList<String>();
 
-        for (Iterator it = validIds.iterator(); it.hasNext();) {
-            String validId = it.next().toString();
+        for (String validId : validIds) {
             if (!validId.endsWith("]")) {
                 invalidFormats.add("[" + validId);
             } else {
@@ -88,18 +86,18 @@ class DummyIdentifierResolver implements IdentifierResolver {
         invalidPaths.addAll(invalidFormats);
     }
 
-    List getValidIdentifiers() {
+    List<String> getValidIdentifiers() {
         return validIds;
     }
 
-    List getInvalidIdentifierPaths() {
+    List<String> getInvalidIdentifierPaths() {
         return invalidPaths;
     }
 
-    List getInvalidIdentifierFormats() {
+    List<String> getInvalidIdentifierFormats() {
         return invalidFormats;
     }
-    
+
     public Path getPath(String identifier) throws MalformedPathException {
         if (validIds.contains(identifier)) {
             return path;

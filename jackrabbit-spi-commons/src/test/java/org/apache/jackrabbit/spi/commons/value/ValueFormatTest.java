@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.value;
 
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
@@ -40,6 +39,7 @@ import javax.jcr.ValueFactory;
 import javax.jcr.Value;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -81,7 +81,7 @@ public class ValueFormatTest extends TestCase {
      * @throws RepositoryException
      */
     public void testGetPathQValue() throws RepositoryException {
-        List<String> l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         // a non-normalized absolute path
         l.add("/a/.././b/c/.");
         // an identifier based path
@@ -128,7 +128,7 @@ public class ValueFormatTest extends TestCase {
     }
 
     public void testGetJCRString() throws RepositoryException, URISyntaxException {
-        List<QValue> qvs = new ArrayList();
+        List<QValue> qvs = new ArrayList<QValue>();
 
         String reference = UUID.randomUUID().toString();
         qvs.add(qvFactory.create(reference, PropertyType.WEAKREFERENCE));

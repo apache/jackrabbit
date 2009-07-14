@@ -29,7 +29,6 @@ import org.apache.jackrabbit.server.io.ImportContextImpl;
 import org.apache.jackrabbit.server.io.PropertyExportContext;
 import org.apache.jackrabbit.server.io.PropertyImportContext;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -83,6 +82,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * DavResourceImpl implements a DavResource.

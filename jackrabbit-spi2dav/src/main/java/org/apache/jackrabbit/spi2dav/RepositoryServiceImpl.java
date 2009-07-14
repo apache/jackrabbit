@@ -73,7 +73,6 @@ import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.uuid.UUID;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
@@ -191,6 +190,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * <code>RepositoryServiceImpl</code>...

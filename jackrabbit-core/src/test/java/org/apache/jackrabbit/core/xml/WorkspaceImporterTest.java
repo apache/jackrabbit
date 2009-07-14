@@ -23,7 +23,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.uuid.UUID;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -53,7 +53,7 @@ public class WorkspaceImporterTest extends AbstractJCRTest {
      */
     public void testReferenceImport() throws Exception {
         try {
-            UUID uuid = UUID.randomUUID();
+            NodeId id = new NodeId();
             String xml =
                 "<sv:node sv:name=\"a\""
                 + " xmlns:jcr=\"http://www.jcp.org/jcr/1.0\""
@@ -67,13 +67,13 @@ public class WorkspaceImporterTest extends AbstractJCRTest {
                 + "<sv:property sv:name=\"jcr:mixinTypes\" sv:type=\"Name\">"
                 + "<sv:value>mix:referenceable</sv:value></sv:property>"
                 + "<sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">"
-                + "<sv:value>" + uuid + "</sv:value></sv:property>"
+                + "<sv:value>" + id + "</sv:value></sv:property>"
                 + "</sv:node>"
                 + "<sv:node sv:name=\"c\">"
                 + "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">"
                 + "<sv:value>nt:unstructured</sv:value></sv:property>"
                 + "<sv:property sv:name=\"ref\" sv:type=\"Reference\">"
-                + "<sv:value>" + uuid + "</sv:value></sv:property>"
+                + "<sv:value>" + id + "</sv:value></sv:property>"
                 + "</sv:node>"
                 + "</sv:node>";
             superuser.getWorkspace().importXML(

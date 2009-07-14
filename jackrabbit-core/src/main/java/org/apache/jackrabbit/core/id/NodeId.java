@@ -30,6 +30,11 @@ public class NodeId implements ItemId, Comparable<NodeId> {
     private static final long serialVersionUID = 5773949574212570258L;
 
     /**
+     * Number of bytes in a UUID (16).
+     */
+    public static final int UUID_BYTE_LENGTH = 16;
+
+    /**
      * Returns a node identifier that is represented by the given UUID string.
      *
      * @param uuid the UUID string

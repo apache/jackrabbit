@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.value;
 
-import org.apache.jackrabbit.uuid.UUID;
-
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
+import java.util.UUID;
 import java.math.BigDecimal;
 
 /**
