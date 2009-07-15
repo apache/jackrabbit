@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 1.5.6
+Release Notes -- Apache Jackrabbit -- Version 1.5.7
 
 Introduction
 ------------
@@ -10,7 +10,7 @@ content, full text search, versioning, transactions, observation, and
 more. See the Jackrabbit web site at http://jackrabbit.apache.org/ for
 more information.
 
-Apache Jackrabbit 1.5.6 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.5.7 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 1.5.x releases.
 
@@ -20,21 +20,24 @@ Changes in this release
 -----------------------
 
 All the fixes in this release are listed below per affected component.
-The modified components have had their version numbers upgraded to 1.5.6;
+The modified components have had their version numbers upgraded to 1.5.7;
 other components are still at their previous 1.5.x versions.
 
 jackrabbit-core
 
 Bug fixes
-  [JCR-1633] When node is created and locked in same transaction, ...
-  [JCR-1964] VirtualNodeTypeStateProvider creates PropertyState with type ...
-  [JCR-1969] Invalid node type definitions with test_nodetypes.xml
-  [JCR-2081] NameSet does not implement equals(Object) and hashCode() methods
+  [JCR-2082] Query does not work after logging into workspace with no indexes
+  [JCR-2129] Prevent data inconsistencies due to incorrect or missed ...
+  [JCR-2138] Prevent persistence of faulty back-references
+  [JCR-2168] Avoid premature publication of XAItemStateManager
 
-jackrabbit-jcr-server
+Improvements
+  [JCR-2106] SystemSessions created for GarbageCollector are not logged out of
 
-Bug fixes
-  [JCR-2070] jcr-server should respect child node definition of jcr:content
+jackrabbit-jcr2spi
+
+Improvements
+  [JCR-1797] SPI: RepositoryService.getItemInfos should be allowed to ...
 
 You can look up individual issues for more details in the Jackrabbit
 issue tracker at https://issues.apache.org/jira/browse/JCR.
@@ -45,22 +48,22 @@ Contributors
 The following people have contributed to this release by submitting bug
 reports or by participating in the issue resolution process.
 
-    Alexander Klimetschek  Damon A. Brown        Marcel Reutegger
-    Angela Schreiber       Frank van Lankvelt    Michael Dürig
-    Claus Köll             Jukka Zitting         Roman Puchkovskiy
+    Angela Schreiber       Martijn Hendriks      Peter Dettman
+    Jukka Zitting          Mateusz Juszkiewicz   Thomas Mueller
+    Marcel Reutegger       Michael Dürig
 
 Thank you to everyone involved!
 
 Release Contents
 ----------------
 
-This release consists of a single source archive (jackrabbit-1.5.6-src.jar)
+This release consists of a single source archive (jackrabbit-1.5.7-src.jar)
 that contains all the Apache Jackrabbit components. Use the following
 commands (or the equivalent in your system) to build the release with
 Maven 2 and Java 1.4 or higher:
 
-    jar xf jackrabbit-1.5.6-src.jar
-    cd jackrabbit-1.5.6
+    jar xf jackrabbit-1.5.7-src.jar
+    cd jackrabbit-1.5.7
     mvn install
 
 Note that the OCM components require Java 5 or higher, and are not included
@@ -150,4 +153,28 @@ the on the central Maven repository.
   * Jackrabbit OCM Node Management (jackrabbit-ocm-nodemanagement)
     This component simplifies registration of node types and namespaces
     referenced in OCM mapping descriptors.
+
+About Apache Jackrabbit
+-----------------------
+
+Apache Jackrabbit is a fully conforming implementation of the Content
+Repository for Java Technology API (JCR). A content repository is a
+hierarchical content store with support for structured and unstructured
+content, full text search, versioning, transactions, observation, and
+more. Typical applications that use content repositories include content
+management, document management, and records management systems.
+
+For more information, visit http://jackrabbit.apache.org/
+
+About The Apache Software Foundation
+------------------------------------
+
+Established in 1999, The Apache Software Foundation provides organizational,
+legal, and financial support for more than 100 freely-available,
+collaboratively-developed Open Source projects. The pragmatic Apache License
+enables individual and commercial users to easily deploy Apache software;
+the Foundation's intellectual property framework limits the legal exposure
+of its 2,500+ contributors.
+
+For more information, visit http://www.apache.org/
 
