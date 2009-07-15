@@ -135,28 +135,29 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     /**
      * Creates a {@link Query} for the given statement in the requested
      * language, treating optional languages gracefully
-     *
-     * @param statement the query should be created for
-     * @param language  query language to be used for Query creation
-     * @return
-     *
      * @throws RepositoryException
      */
-    protected Query createQuery(String statement, String language)
-        throws RepositoryException, NotExecutableException {
+    protected Query createQuery(String statement, String language) throws RepositoryException, NotExecutableException {
+        return createQuery(superuser, statement, language);
+    }
+
+    /**
+     * Creates a {@link Query} for the given statement in the requested
+     * language, treating optional languages gracefully
+     * @throws RepositoryException
+     */
+    protected Query createQuery(Session session, String statement, String language) throws RepositoryException, NotExecutableException {
         log.println("Creating query: " + statement);
         try {
-            return qm.createQuery(statement, language);
-        }
-        catch (InvalidQueryException ex) {
-            
-            // if language is optional and not reported as "supported" -> 
+            return session.getWorkspace().getQueryManager().createQuery(statement, language);
+        } catch (InvalidQueryException ex) {
+
+            // if language is optional and not reported as "supported" ->
             // demote to NotExecutableException
-            
-            if (! isSupportedLanguage(language) && ! Query.JCR_SQL2.equals(language)) {
+
+            if (!isSupportedLanguage(language) && !Query.JCR_SQL2.equals(language)) {
                 throw new NotExecutableException("Repository does not support " + language + " query syntax");
-            }
-            else {
+            } else {
                 throw ex;
             }
         }
@@ -302,10 +303,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @param session the session to use for the query.
      * @param xpath the xpath query.
      * @param nodes the expected result nodes.
+     * @throws NotExecutableException 
      */
     protected void executeXPathQuery(Session session, String xpath, Node[] nodes)
-            throws RepositoryException {
-        QueryResult res = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH).execute();
+            throws RepositoryException, NotExecutableException {
+        QueryResult res = createQuery(session, xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
 
@@ -319,7 +321,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSqlQuery(Session session, String sql, Node[] nodes)
             throws RepositoryException, NotExecutableException {
-        QueryResult res = createQuery(sql, Query.SQL).execute();
+        QueryResult res = createQuery(session, sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
 
