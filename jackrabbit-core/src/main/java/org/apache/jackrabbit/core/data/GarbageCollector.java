@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.NodeId;
 import org.apache.jackrabbit.core.PropertyId;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import EDU.oswego.cs.dl.util.concurrent.SynchronizedBoolean;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -83,6 +85,9 @@ public class GarbageCollector {
     private final IterablePersistenceManager[] pmList;
 
     private final Session[] sessionList;
+    private final SessionListener sessionListener;
+    
+    private final SynchronizedBoolean closed = new SynchronizedBoolean(false);
 
     private boolean persistenceManagerScan;
 
@@ -93,7 +98,9 @@ public class GarbageCollector {
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
      *
+     * @param session the session that created this object
      * @param list the persistence managers
+     * @param sessionList the sessions to access the workspaces
      */
     public GarbageCollector(SessionImpl session, IterablePersistenceManager[] list, Session[] sessionList) {
         RepositoryImpl rep = (RepositoryImpl) session.getRepository();
@@ -101,6 +108,16 @@ public class GarbageCollector {
         this.pmList = list;
         this.persistenceManagerScan = list != null;
         this.sessionList = sessionList;
+
+        // Auto-close if the main session logs out
+        this.sessionListener = new SessionListener() {
+            public void loggedOut(SessionImpl session) {
+            }
+            public void loggingOut(SessionImpl session) {
+                close();
+            }
+        };
+        session.addListener(sessionListener);
     }
 
     /**
@@ -230,6 +247,10 @@ public class GarbageCollector {
         }
     }
 
+    /**
+     * The repository was scanned. This method will stop the observation
+     * listener.
+     */
     public void stopScan() throws RepositoryException {
         checkScanStarted();
         for (int i = 0; i < listeners.size(); i++) {
@@ -243,6 +264,11 @@ public class GarbageCollector {
         listeners.clear();
     }
 
+    /**
+     * Delete all unused items in the data store.
+     * 
+     * @return the number of deleted items
+     */
     public int deleteUnused() throws RepositoryException {
         checkScanStarted();
         checkScanStopped();
@@ -261,6 +287,11 @@ public class GarbageCollector {
         }
     }
 
+    /**
+     * Get the data store if one is used.
+     * 
+     * @return the data store, or null
+     */
     public DataStore getDataStore() {
         return store;
     }
@@ -329,8 +360,30 @@ public class GarbageCollector {
          *
          * We can't use node path for this, UUIDs are required as nodes could be
          * moved around.
+         * 
+         * This mechanism requires that all data stores update the last modified 
+         * date when calling addRecord and that record already exists.
          *
          */
+    }
+    
+    /**
+     * Cleanup resources used internally by this instance.
+     */
+    public void close() {
+        if (!closed.set(true)) {
+            for (int i = 0; i < sessionList.length; i++) {
+                sessionList[i].logout();
+            }
+        }
+    }
+
+    /**
+     * Auto-close in case the application didn't call it explicitly.
+     */
+    protected void finalize() throws Throwable {
+        close();
+        super.finalize();
     }
 
     /**
