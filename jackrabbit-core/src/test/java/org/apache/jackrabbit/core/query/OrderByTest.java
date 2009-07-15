@@ -33,7 +33,7 @@ import javax.jcr.query.QueryResult;
 /**
  * Tests queries with order by.
  */
-public class OrderByTest extends AbstractQueryTest {
+public class OrderByTest extends AbstractIndexingTest {
 
     public void testOrderByScore() throws RepositoryException {
         Node n1 = testRootNode.addNode("node1");
@@ -51,12 +51,12 @@ public class OrderByTest extends AbstractQueryTest {
 
         String sql = "SELECT value FROM nt:unstructured WHERE " +
                 "jcr:path LIKE '" + testRoot + "/%' ORDER BY jcr:score, value";
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+        Query q = session.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         QueryResult result = q.execute();
         checkResult(result, 3);
 
         String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by jcr:score(), @value";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        q = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResult(result, 3);
     }
@@ -148,31 +148,31 @@ public class OrderByTest extends AbstractQueryTest {
     //------------------------------< helper >----------------------------------
 
     private Value getValue(String value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value);
+        return session.getValueFactory().createValue(value);
     }
 
     private Value getValue(long value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value);
+        return session.getValueFactory().createValue(value);
     }
 
     private Value getValue(double value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value);
+        return session.getValueFactory().createValue(value);
     }
 
     private Value getValue(boolean value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value);
+        return session.getValueFactory().createValue(value);
     }
 
     private Value getValue(Calendar value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value);
+        return session.getValueFactory().createValue(value);
     }
 
     private Value getNameValue(String value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value, PropertyType.NAME);
+        return session.getValueFactory().createValue(value, PropertyType.NAME);
     }
 
     private Value getPathValue(String value) throws RepositoryException {
-        return superuser.getValueFactory().createValue(value, PropertyType.PATH);
+        return session.getValueFactory().createValue(value, PropertyType.PATH);
     }
 
     /**
@@ -185,8 +185,8 @@ public class OrderByTest extends AbstractQueryTest {
     private void checkChildAxis(Value[] values) throws RepositoryException {
         // child/prop is part of the test indexing configuration,
         // this will use SimpleScoreDocComparator internally
-        checkChildAxis(values, "child", "prop");
-        cleanUpTestRoot(superuser);
+        checkChildAxis(values, "child", "property");
+        cleanUpTestRoot(session);
         // c/p is not in the indexing configuration,
         // this will use RelPathScoreDocComparator internally
         checkChildAxis(values, "c", "p");
