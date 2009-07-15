@@ -67,13 +67,27 @@ public class LocalItemStateManager
      * @param sharedStateMgr shared state manager
      * @param factory event state collection factory
      */
-    public LocalItemStateManager(SharedItemStateManager sharedStateMgr,
+    protected LocalItemStateManager(SharedItemStateManager sharedStateMgr,
                                  EventStateCollectionFactory factory, ItemStateCacheFactory cacheFactory) {
         cache = new ItemStateReferenceCache(cacheFactory);
         this.sharedStateMgr = sharedStateMgr;
         this.factory = factory;
+    }
 
-        sharedStateMgr.addListener(this);
+    /**
+     * Creates a new {@code LocalItemStateManager} instance and registers it as an {@link ItemStateListener}
+     * with the given {@link SharedItemStateManager}. 
+     * 
+     * @param sharedStateMgr the {@link SharedItemStateManager}
+     * @param factory the {@link EventStateCollectionFactory}
+     * @param cacheFactory the {@link ItemStateCacheFactory}
+     * @return a new {@code LocalItemStateManager} instance
+     */
+    public static LocalItemStateManager createInstance(SharedItemStateManager sharedStateMgr,
+            EventStateCollectionFactory factory, ItemStateCacheFactory cacheFactory) {
+        LocalItemStateManager mgr = new LocalItemStateManager(sharedStateMgr, factory, cacheFactory);
+        sharedStateMgr.addListener(mgr);
+        return mgr;
     }
 
     /**
