@@ -41,7 +41,6 @@
     <param name="synonymProviderConfigPath" value="../synonyms.properties"/>
     <param name="supportHighlighting" value="true"/>
     <param name="excerptProviderClass" value="org.apache.jackrabbit.core.query.lucene.WeightedHTMLExcerpt"/>
-    <param name="indexingConfiguration" value="${wsp.home}/indexing-configuration.xml"/>
   </SearchIndex>
 </Workspace>
 
