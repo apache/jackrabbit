@@ -425,9 +425,7 @@ public class LocalItemStateManager
                 cache.cache(local);
             }
         }
-        if (local != null) {
-            dispatcher.notifyStateCreated(created);
-        }
+        dispatcher.notifyStateCreated(created);
     }
 
     /**
