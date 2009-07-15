@@ -20,6 +20,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.util.ISO9075;
 
+import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
@@ -126,13 +127,14 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @see #createQuery(String, String)
      */
-    protected Query createQuery(Statement statement) throws RepositoryException {
+    protected Query createQuery(Statement statement)
+        throws RepositoryException, NotExecutableException {
         return createQuery(statement.getStatement(), statement.getLanguage());
     }
 
     /**
      * Creates a {@link Query} for the given statement in the requested
-     * language
+     * language, treating optional languages gracefully
      *
      * @param statement the query should be created for
      * @param language  query language to be used for Query creation
@@ -140,10 +142,24 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      *
      * @throws RepositoryException
      */
-    protected Query createQuery(String statement, String language) throws RepositoryException {
+    protected Query createQuery(String statement, String language)
+        throws RepositoryException, NotExecutableException {
         log.println("Creating query: " + statement);
-        return superuser.getWorkspace().getQueryManager().createQuery(statement,
-                language);
+        try {
+            return qm.createQuery(statement, language);
+        }
+        catch (InvalidQueryException ex) {
+            
+            // if language is optional and not reported as "supported" -> 
+            // demote to NotExecutableException
+            
+            if (! isSupportedLanguage(language) && ! Query.JCR_SQL2.equals(language)) {
+                throw new NotExecutableException("Repository does not support " + language + " query syntax");
+            }
+            else {
+                throw ex;
+            }
+        }
     }
 
     /**
@@ -155,7 +171,8 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      * @see #execute(String, String)
      */
-    protected QueryResult execute(Statement statement) throws RepositoryException {
+    protected QueryResult execute(Statement statement)
+        throws RepositoryException, NotExecutableException {
         return execute(statement.getStatement(), statement.getLanguage());
     }
 
@@ -170,7 +187,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @throws RepositoryException
      */
     protected QueryResult execute(String statement, String language)
-            throws RepositoryException {
+            throws RepositoryException, NotExecutableException {
         Query query = createQuery(statement, language);
         return query.execute();
     }
@@ -298,10 +315,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @param session the session to use for the query.
      * @param sql the sql query.
      * @param nodes the expected result nodes.
+     * @throws NotExecutableException 
      */
     protected void executeSqlQuery(Session session, String sql, Node[] nodes)
-            throws RepositoryException {
-        QueryResult res = session.getWorkspace().getQueryManager().createQuery(sql, Query.SQL).execute();
+            throws RepositoryException, NotExecutableException {
+        QueryResult res = createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
 
