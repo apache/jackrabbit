@@ -71,7 +71,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
     /**
      * Tests the method <code>NodeIterator.getPosition()</code>.
      */
-    public void testGetPosition() throws RepositoryException {
+    public void testGetPosition() throws RepositoryException, NotExecutableException {
         QueryResult rs = execute(xpathRoot + "//*", Query.XPATH);
 
         // getPosition initially returns 0
@@ -89,8 +89,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
     /**
      * Tests the method <code>NodeIterator.getPosition()</code> on an empty
      * <code>NodeIterator</code>.
+     * @throws NotExecutableException 
      */
-    public void testGetPositionEmptyIterator() throws RepositoryException {
+    public void testGetPositionEmptyIterator() throws RepositoryException, NotExecutableException {
         QueryResult rs = execute(xpathRoot + "/" + nodeName4, Query.XPATH);
 
         NodeIterator it = rs.getNodes();
@@ -103,8 +104,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * Tests if a {@link java.util.NoSuchElementException} is thrown when {@link
      * javax.jcr.NodeIterator#nextNode()} is called and there are no more nodes
      * available.
+     * @throws NotExecutableException 
      */
-    public void testNoSuchElementException() throws RepositoryException {
+    public void testNoSuchElementException() throws RepositoryException, NotExecutableException {
         NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
         while (it.hasNext()) {
             it.nextNode();
@@ -119,8 +121,9 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
 
     /**
      * Tests if {@link javax.jcr.NodeIterator#skip(long)} works correctly.
+     * @throws NotExecutableException 
      */
-    public void testSkip() throws RepositoryException {
+    public void testSkip() throws RepositoryException, NotExecutableException {
         String query = xpathRoot + "//*";
         QueryResult rs = execute(query, Query.XPATH);
         NodeIterator it = rs.getNodes();

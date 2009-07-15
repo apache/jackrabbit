@@ -66,7 +66,7 @@ public class SQLJcrPathTest extends AbstractQueryTest {
         String queryStatement = "select * from " + nodeTypeName;
 
         // execute the search query
-        Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, Query.SQL);
+        Query query = super.createQuery(queryStatement, Query.SQL);
         QueryResult result = query.execute();
 
         assertTrue("jcr:path must be present in query result row",
