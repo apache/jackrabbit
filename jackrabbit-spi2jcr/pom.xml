@@ -143,14 +143,14 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr2spi</artifactId>
-      <version>1.5.7</version>
+      <version>1.5.0</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr2spi</artifactId>
-      <version>1.5.7</version>
+      <version>1.5.0</version>
       <classifier></classifier>
       <scope>test</scope>
     </dependency>
