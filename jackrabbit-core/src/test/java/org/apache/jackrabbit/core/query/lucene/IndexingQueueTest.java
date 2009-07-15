@@ -152,6 +152,38 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         assertEquals(num, q.execute().getNodes().getSize());
     }
 
+    /*
+     * Test case for JCR-2082
+     */
+    public void testReaderUpToDate() throws Exception {
+        Extractor.sleepTime = 10;
+        SearchIndex index = (SearchIndex) getQueryHandler();
+        File indexDir = new File(index.getPath());
+
+        // shutdown workspace
+        RepositoryImpl repo = (RepositoryImpl) session.getRepository();
+        session.logout();
+        session = null;
+        superuser.logout();
+        superuser = null;
+        TestHelper.shutdownWorkspace(WORKSPACE_NAME, repo);
+
+        // delete index
+        try {
+            FileUtil.delete(indexDir);
+        } catch (IOException e) {
+            fail("Unable to delete index directory");
+        }
+
+        // start workspace again by getting a session
+        session = helper.getSuperuserSession(WORKSPACE_NAME);
+
+        qm = session.getWorkspace().getQueryManager();
+
+        Query q = qm.createQuery(testPath, Query.XPATH);
+        assertEquals(1, getSize(q.execute().getNodes()));
+    }
+
     private int createFiles(Node folder, byte[] data,
                             int filesPerLevel, int levels, int count)
             throws RepositoryException {

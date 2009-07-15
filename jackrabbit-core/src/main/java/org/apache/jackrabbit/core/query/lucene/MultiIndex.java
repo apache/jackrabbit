@@ -375,6 +375,7 @@ public class MultiIndex {
                 count = createIndex(rootState, rootPath, stateMgr, count);
                 executeAndLog(new Commit(getTransactionId()));
                 log.info("Created initial index for {} nodes", new Long(count));
+                releaseMultiReader();
                 scheduleFlushTask();
             } catch (Exception e) {
                 String msg = "Error indexing workspace";
