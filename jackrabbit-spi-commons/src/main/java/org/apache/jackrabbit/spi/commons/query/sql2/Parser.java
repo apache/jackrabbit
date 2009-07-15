@@ -331,19 +331,19 @@ public class Parser {
                 if (readIf("*")) {
                     read(",");
                     c = factory.fullTextSearch(
-                            name, null, factory.literal(readString()));
+                            name, null, parseStaticOperand());
                 } else {
                     String selector = name;
                     name = readName();
                     read(",");
                     c = factory.fullTextSearch(
-                            selector, name, factory.literal(readString()));
+                            selector, name, parseStaticOperand());
                 }
             } else {
                 read(",");
                 c = factory.fullTextSearch(
                         getOnlySelectorName(), name,
-                        factory.literal(readString()));
+                        parseStaticOperand());
             }
         } else if ("ISSAMENODE".equalsIgnoreCase(functionName)) {
             String name = readName();

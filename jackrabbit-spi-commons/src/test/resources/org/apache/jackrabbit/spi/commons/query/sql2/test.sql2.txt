@@ -86,6 +86,7 @@ select * from test as t where not t.name is null
 
 # 6.7.19 FullTextSearch (p 113)
 select * from test where contains(name, 'hello -world')
+select * from test where contains(name, $x)
 select * from test as t where contains(t.*, 'hello -world')
 select * from test as t where contains([t].name, 'hello -world')
 
