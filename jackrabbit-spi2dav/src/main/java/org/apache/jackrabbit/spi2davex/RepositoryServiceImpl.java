@@ -86,6 +86,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     private static final String ORDER_POSITION_LAST = "#last";
     private static final String ORDER_POSITION_BEFORE = "#before";
 
+    private static final String DEFAULT_CHARSET = "UTF-8";
+
     /**
      * base uri to the extended jcr-server that can handle the GET and POST
      * (or PATCH) requests sent by this service implementation.
@@ -694,7 +696,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
          * @param value
          */
         private void addPart(String paramName, String value) {
-            parts.add(new StringPart(paramName, value));
+            parts.add(new StringPart(paramName, value, DEFAULT_CHARSET));
         }
 
         /**
@@ -711,13 +713,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     part = new FilePart(paramName, new BinaryPartSource(value));
                     break;
                 case PropertyType.NAME:
-                    part = new StringPart(paramName, resolver.getJCRName(value.getName()));
+                    part = new StringPart(paramName, resolver.getJCRName(value.getName()), DEFAULT_CHARSET);
                     break;
                 case PropertyType.PATH:
-                    part = new StringPart(paramName, resolver.getJCRPath(value.getPath()));
+                    part = new StringPart(paramName, resolver.getJCRPath(value.getPath()), DEFAULT_CHARSET);
                     break;
                 default:
-                    part = new StringPart(paramName, value.getString());
+                    part = new StringPart(paramName, value.getString(), DEFAULT_CHARSET);
             }
             String ctype = JcrValueType.contentTypeFromType(value.getType());
             ((PartBase) part).setContentType(ctype);
