@@ -859,7 +859,15 @@ public class SharedItemStateManager
         private void updateReferences() throws ItemStateException {
             // process added REFERENCE properties
             for (Iterator i = local.addedStates(); i.hasNext(); ) {
-                addReferences((ItemState) i.next());
+                ItemState state = (ItemState) i.next();
+                if (!state.isNode()) {
+                    // remove refs from the target which have been added externally (JCR-2138)
+                    if (hasItemState(state.getId())) {
+                        removeReferences(getItemState(state.getId()));
+                    }
+                    // add new references to the target
+                    addReferences((PropertyState) state);
+                }
             }
 
             // process modified REFERENCE properties
@@ -869,7 +877,7 @@ public class SharedItemStateManager
                     // remove old references from the target
                     removeReferences(getItemState(state.getId()));
                     // add new references to the target
-                    addReferences(state);
+                    addReferences((PropertyState) state);
                 }
             }
 
@@ -879,16 +887,12 @@ public class SharedItemStateManager
             }
         }
 
-        private void addReferences(ItemState state)
-                throws NoSuchItemStateException, ItemStateException {
-            if (!state.isNode()) {
-                PropertyState property = (PropertyState) state;
-                if (property.getType() == PropertyType.REFERENCE) {
-                    InternalValue[] values = property.getValues();
-                    for (int i = 0; values != null && i < values.length; i++) {
-                        addReference(
-                                property.getPropertyId(), values[i].getUUID());
-                    }
+        private void addReferences(PropertyState property) throws NoSuchItemStateException,
+                ItemStateException {
+            if (property.getType() == PropertyType.REFERENCE) {
+                InternalValue[] values = property.getValues();
+                for (int i = 0; values != null && i < values.length; i++) {
+                    addReference(property.getPropertyId(), values[i].getUUID());
                 }
             }
         }

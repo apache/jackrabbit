@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeImplTest.class);
         suite.addTestSuite(InvalidDateTest.class);
         suite.addTestSuite(SessionGarbageCollectedTest.class);
+        suite.addTestSuite(ReferencesTest.class);
 
         return suite;
     }
