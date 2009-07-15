@@ -30,6 +30,7 @@ Bug fixes
   [JCR-2129] Prevent data inconsistencies due to incorrect or missed ...
   [JCR-2138] Prevent persistence of faulty back-references
   [JCR-2168] Avoid premature publication of XAItemStateManager
+  [JCR-2169] BundleDbPersistenceManager consistencyFix doesn't fix missing ...
 
 Improvements
   [JCR-2106] SystemSessions created for GarbageCollector are not logged out of
