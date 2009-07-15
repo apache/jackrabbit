@@ -56,6 +56,22 @@ class ClusterSession implements Session {
     }
 
     /**
+     * Returns <code>true</code> if the given <code>userId</code> is the same as
+     * the {@link #userId} of this session.
+     *
+     * @param userId the user id or <code>null</code>.
+     * @return <code>true</code> if they are the same; <code>false</code>
+     *         otherwise.
+     */
+    boolean isUserId(String userId) {
+        if (userId == null) {
+            return this.userId == null;
+        } else {
+            return userId.equals(this.userId);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public String getUserID() {
@@ -284,7 +300,7 @@ class ClusterSession implements Session {
     public boolean equals(Object obj) {
         if (obj instanceof ClusterSession) {
             ClusterSession other = (ClusterSession) obj;
-            return userId.equals(other.userId);
+            return isUserId(other.userId);
         }
         return false;
     }
