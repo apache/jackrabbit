@@ -120,7 +120,17 @@ public class ConcurrentNodeModificationTest extends AbstractJCRTest {
                     state = "adding property to subnode " + i;
                     n1.setProperty("testprop", "xxx");
                     if (i % 10 == 0) {
-                        state = "saving pending subnodes";
+                        state = "saving pending (added) subnodes";
+                        session.save();
+                    }
+                    randomSleep();
+                }
+
+                for (int i = 0; i < NUM_NODES; i++) {
+                    state = "removing subnode " + i;
+                    n.getNode("x" + identity + i).remove();
+                    if (i % 10 == 0) {
+                        state = "saving pending (removed) subnodes";
                         session.save();
                     }
                     randomSleep();
