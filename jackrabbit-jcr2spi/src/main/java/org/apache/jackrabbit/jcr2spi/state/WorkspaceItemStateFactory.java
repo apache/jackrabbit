@@ -217,13 +217,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
         }
 
         // deal with all additional ItemInfos that may be present.
-        NodeEntry parentEntry = nodeState.getNodeEntry();
+        // Assuming locality of the itemInfos, we keep an estimate of a parent entry.
+        // This reduces the part of the hierarchy to traverse. For large batches this
+        // optimization results in about 25% speed up.
+        NodeEntry approxParentEntry = nodeState.getNodeEntry();
         while (infos.hasNext()) {
             ItemInfo info = (ItemInfo) infos.next();
             if (info.denotesNode()) {
-                createDeepNodeState((NodeInfo) info, parentEntry, infos);
+                approxParentEntry = createDeepNodeState((NodeInfo) info, approxParentEntry, infos).getNodeEntry();
             } else {
-                createDeepPropertyState((PropertyInfo) info, parentEntry, infos);
+                createDeepPropertyState((PropertyInfo) info, approxParentEntry, infos);
             }
         }
         return nodeState;
@@ -359,9 +362,18 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
 
             NodeEntry entry = anyParent;
             for (int i = 0; i < missingElems.length; i++) {
-                Name name = missingElems[i].getName();
-                int index = missingElems[i].getNormalizedIndex();
-                entry = createIntermediateNodeEntry(entry, name, index, infos);
+                if (missingElems[i].denotesParent()) {
+                    // Walk up the hierarchy for 'negative' paths
+                    // until the smallest common root is found
+                    entry = entry.getParent();
+                }
+                else if (missingElems[i].denotesName()) {
+                    // Add missing elements starting from the smallest common root
+                    Name name = missingElems[i].getName();
+                    int index = missingElems[i].getNormalizedIndex();
+                    entry = createIntermediateNodeEntry(entry, name, index, infos);
+                }
+                // else denotesCurrent -> ignore
             }
             if (entry == anyParent) {
                 throw new RepositoryException("Internal error while getting deep itemState");
@@ -400,9 +412,18 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
             int i = 0;
             // NodeEntries except for the very last 'missingElem'
             while (i < missingElems.length - 1) {
-                Name name = missingElems[i].getName();
-                int index = missingElems[i].getNormalizedIndex();
-                entry = createIntermediateNodeEntry(entry, name, index, infos);
+                if (missingElems[i].denotesParent()) {
+                    // Walk up the hierarchy for 'negative' paths
+                    // until the smallest common root is found
+                    entry = entry.getParent();
+                }
+                else if (missingElems[i].denotesName()) {
+                    // Add missing elements starting from the smallest common root
+                    Name name = missingElems[i].getName();
+                    int index = missingElems[i].getNormalizedIndex();
+                    entry = createIntermediateNodeEntry(entry, name, index, infos);
+                }
+                // else denotesCurrent -> ignore
                 i++;
             }
             // create PropertyEntry for the last element if not existing yet
@@ -473,8 +494,8 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
     }
 
     /**
-     * Returns true if the given <code>missingElems</code> start with a parent (..),
-     * a current (.) or the root element, in which case the info is not within
+     * Returns true if the given <code>missingElems</code> start with
+     * the root element, in which case the info is not within
      * the tree as it is expected.
      * See also #JCR-1797 for the corresponding enhancement request.
      *
@@ -483,7 +504,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory implemen
      */
     private static boolean startsWithIllegalElement(Path.Element[] missingElems) {
         if (missingElems.length > 0) {
-            return !missingElems[0].denotesName();
+            return missingElems[0].denotesRoot();
         }
         return false;
     }
