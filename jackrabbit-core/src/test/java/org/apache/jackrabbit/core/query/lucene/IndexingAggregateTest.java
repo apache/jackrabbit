@@ -145,31 +145,6 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         checkResultSequence(q.execute().getRows(), (Node[]) expected.toArray(new Node[expected.size()]));
     }
 
-    public void disabled_testPerformance() throws RepositoryException {
-        createNodes(testRootNode, 10, 4, 0, new NodeCreationCallback() {
-            public void nodeCreated(Node node, int count) throws
-                    RepositoryException {
-                node.addNode("child").setProperty("property", "value" + count);
-                // save once in a while
-                if (count % 1000 == 0) {
-                    session.save();
-                    System.out.println("added " + count + " nodes so far.");
-                }
-            }
-        });
-        session.save();
-
-        String xpath = testPath + "//*[child/@property] order by child/@property";
-        for (int i = 0; i < 3; i++) {
-            long time = System.currentTimeMillis();
-            Query query = qm.createQuery(xpath, Query.XPATH);
-            query.setLimit(20);
-            query.execute().getNodes().getSize();
-            time = System.currentTimeMillis() - time;
-            System.out.println("executed query in " + time + " ms.");
-        }
-    }
-
     private static Node addFile(Node folder, String name, long lastModified)
             throws RepositoryException {
         Node file = folder.addNode(name, "nt:file");
