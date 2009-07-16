@@ -29,7 +29,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
 import java.security.Principal;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -131,9 +130,8 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     /**
      * @see AccessControlUtils#isAdminOrSystem(Set)
      */
-    public boolean isAdminOrSystem(Set principals) {
-        for (Iterator it = principals.iterator(); it.hasNext();) {
-            Principal p = (Principal) it.next();
+    public boolean isAdminOrSystem(Set<Principal> principals) {
+        for (Principal p : principals) {
             if (p instanceof AdminPrincipal || p instanceof SystemPrincipal) {
                 return true;
             }
@@ -144,7 +142,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     /**
      * @see AccessControlUtils#isReadOnly(Set)
      */
-    public boolean isReadOnly(Set principals) {
+    public boolean isReadOnly(Set<Principal> principals) {
         // TODO: find ways to determine read-only status
         return false;
     }

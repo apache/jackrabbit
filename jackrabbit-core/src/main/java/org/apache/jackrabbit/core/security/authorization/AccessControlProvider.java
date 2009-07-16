@@ -22,9 +22,10 @@ import org.apache.jackrabbit.spi.Path;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
-import java.security.Principal;
 
 /**
  * The AccessControlProvider is used to provide access control policy and entry
