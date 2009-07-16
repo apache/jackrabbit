@@ -24,7 +24,6 @@ import java.util.Set;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.ParsingReader;
 
 /**
@@ -35,7 +34,7 @@ public class DefaultTextExtractor implements TextExtractor {
     /**
      * Auto-detecting parser.
      */
-    private static final Parser PARSER;
+    private static final AutoDetectParser PARSER;
 
     /**
      * Supported content types.
@@ -43,34 +42,21 @@ public class DefaultTextExtractor implements TextExtractor {
     private static final String[] TYPES;
 
     static {
-        // The default Tika configuration refers to Apache POI libraries that
-        // are compiled for Java 5, and can thus not be loaded in Java 1.4.
-        // This makes it impossible to load the default Tika configuration
-        // (see TIKA-217 for background), and so we need to use the following
-        // workaround to instantiate the Tika AutoDetectParser without the
-        // POI classes (and thus support for MS Office formats) when running
-        // on Java 1.4.
-        AutoDetectParser parser;
-        if ("1.4".equals(System.getProperty("java.specification.version"))) {
-            InputStream stream =
-                DefaultTextExtractor.class.getResourceAsStream("tika-config-jdk14.xml");
+        InputStream stream =
+            DefaultTextExtractor.class.getResourceAsStream("tika-config.xml");
+        try {
             try {
-                try {
-                    parser = new AutoDetectParser(new TikaConfig(stream));
-                } finally {
-                    stream.close();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(
-                        "Unable to load Tika configuration", e);
-            }
-        } else {
-            parser = new AutoDetectParser();
-        }
-        PARSER = parser;
+                PARSER = new AutoDetectParser(new TikaConfig(stream));
 
-        Set types = parser.getParsers().keySet();
-        TYPES = (String[]) types.toArray(new String[types.size()]);
+                Set<String> types = PARSER.getParsers().keySet();
+                TYPES = types.toArray(new String[types.size()]);
+            } finally {
+                stream.close();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Unable to load Tika configuration", e);
+        }
     }
 
     public String[] getContentTypes() {
