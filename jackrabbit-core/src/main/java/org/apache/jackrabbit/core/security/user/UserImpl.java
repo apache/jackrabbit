@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -68,7 +67,7 @@ public class UserImpl extends AuthorizableImpl implements User {
 
     //-------------------------------------------------------< Authorizable >---
     /**
-     * @see Authorizable#getID()
+     * @see org.apache.jackrabbit.api.security.user.Authorizable#getID()
      */
     public String getID() throws RepositoryException {
         return id;
