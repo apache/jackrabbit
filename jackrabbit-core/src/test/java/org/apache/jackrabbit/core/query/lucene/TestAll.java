@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Search tests");
 
         suite.addTestSuite(IndexingQueueTest.class);
+        suite.addTestSuite(IndexingAggregateTest.class);
 
         return suite;
     }

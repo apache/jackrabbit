@@ -56,7 +56,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SynonymProviderTest.class);
         suite.addTestSuite(ArrayHitsTest.class);
         suite.addTestSuite(ExcerptTest.class);
-        suite.addTestSuite(IndexingAggregateTest.class);
         suite.addTestSuite(IndexFormatVersionTest.class);
         suite.addTestSuite(IndexingRuleTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
