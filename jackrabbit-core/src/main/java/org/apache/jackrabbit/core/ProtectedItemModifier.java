@@ -37,12 +37,12 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 
 /**
- * <code>SecurityItemModifier</code>: An abstract helper class to allow classes
- * of the security API residing outside of the core package to modify and remove
- * protected items for security. The protected item definitions are required in
- * order not to have security relevant content being changed through common
- * item operations but forcing the usage of the security API. The latter asserts
- * that implementation specific constraints are not violated.
+ * <code>ProtectedItemModifier</code>: An abstract helper class to allow classes
+ * residing outside of the core package to modify and remove protected items.
+ * The protected item definitions are required in order not to have security
+ * relevant content being changed through common item operations but forcing
+ * the usage of the corresponding APIs, which assert that implementation
+ * specific constraints are not violated.
  */
 public abstract class ProtectedItemModifier {
 
