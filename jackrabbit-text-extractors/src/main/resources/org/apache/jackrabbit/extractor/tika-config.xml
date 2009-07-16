@@ -28,6 +28,22 @@
       <mime>image/svg+xml</mime>
     </parser>
 
+    <parser name="parse-office" class="org.apache.tika.parser.microsoft.OfficeParser">
+      <mime>application/x-tika-msoffice</mime>
+      <mime>application/msword</mime>
+      <mime>application/vnd.ms-excel</mime>
+      <mime>application/vnd.ms-powerpoint</mime>
+      <mime>application/vnd.visio</mime>
+      <mime>application/vnd.ms-outlook</mime>
+    </parser>
+
+    <parser name="parse-ooxml" class="org.apache.tika.parser.microsoft.ooxml.OOXMLParser">
+      <mime>application/vnd.openxmlformats-package.core-properties+xml</mime>
+      <mime>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</mime>
+      <mime>application/vnd.openxmlformats-officedocument.presentationml.presentation</mime>
+      <mime>application/vnd.openxmlformats-officedocument.wordprocessingml.document</mime>
+    </parser>
+
     <parser name="parse-html" class="org.apache.tika.parser.html.HtmlParser">
       <mime>text/html</mime>
       <mime>application/xhtml+xml</mime>
@@ -92,22 +108,6 @@
       <mime>image/x-icon</mime>
       <mime>image/x-psd</mime>
       <mime>image/x-xcf</mime>
-    </parser>
-
-    <parser name="parse-zip" class="org.apache.tika.parser.pkg.ZipParser">
-      <mime>application/zip</mime>
-    </parser>
-
-    <parser name="parse-tar" class="org.apache.tika.parser.pkg.TarParser">
-      <mime>application/x-tar</mime>
-    </parser>
-
-    <parser name="parse-gzip" class="org.apache.tika.parser.pkg.GzipParser">
-      <mime>application/x-gzip</mime>
-    </parser>
-
-    <parser name="parse-bzip2" class="org.apache.tika.parser.pkg.Bzip2Parser">
-      <mime>application/x-bzip</mime>
     </parser>
 
     <parser name="parse-class" class="org.apache.tika.parser.asm.ClassParser">
