@@ -43,6 +43,7 @@ import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
@@ -84,6 +85,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     private static final String ORDER_POSITION_LAST = "#last";
     private static final String ORDER_POSITION_BEFORE = "#before";
+
+    private static final String DEFAULT_CHARSET = "UTF-8";
 
     /**
      * base uri to the extended jcr-server that can handle the GET and POST
@@ -587,7 +590,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             for (int i = 0; i < mixinNodeTypeNames.length; i++) {
                 vs[i] = getQValueFactory(sessionInfo).create(mixinNodeTypeNames[i]);
             }
-            addProperty(nodeId, resolver.getQName(JcrConstants.JCR_MIXINTYPES), vs);
+            addProperty(nodeId, NameConstants.JCR_MIXINTYPES, vs);
         }
 
         /**
@@ -677,7 +680,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
          * @param value
          */
         private void addPart(String paramName, String value) {
-            parts.add(new StringPart(paramName, value));
+            parts.add(new StringPart(paramName, value, DEFAULT_CHARSET));
         }
 
         /**
@@ -694,13 +697,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     part = new FilePart(paramName, new BinaryPartSource(value));
                     break;
                 case PropertyType.NAME:
-                    part = new StringPart(paramName, resolver.getJCRName(value.getName()));
+                    part = new StringPart(paramName, resolver.getJCRName(value.getName()), DEFAULT_CHARSET);
                     break;
                 case PropertyType.PATH:
-                    part = new StringPart(paramName, resolver.getJCRPath(value.getPath()));
+                    part = new StringPart(paramName, resolver.getJCRPath(value.getPath()), DEFAULT_CHARSET);
                     break;
                 default:
-                    part = new StringPart(paramName, value.getString());
+                    part = new StringPart(paramName, value.getString(), DEFAULT_CHARSET);
             }
             String ctype = JcrValueType.contentTypeFromType(value.getType());
             ((PartBase) part).setContentType(ctype);
