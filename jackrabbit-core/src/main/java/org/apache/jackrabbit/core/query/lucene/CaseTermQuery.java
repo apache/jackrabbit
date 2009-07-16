@@ -79,14 +79,15 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
         CaseTermEnum(IndexReader reader) throws IOException {
             // gather all terms that match
             // keep them in order and remember the doc frequency as value
-            final Map orderedTerms = new LinkedHashMap();
+            final Map<Term, Integer> orderedTerms =
+                new LinkedHashMap<Term, Integer>();
 
             Term term = getTerm();
 
             // there are always two range scanse: one with an initial
             // lower case character and another one with an initial upper case
             // character
-            List rangeScans = new ArrayList(2);
+            List<RangeScan> rangeScans = new ArrayList<RangeScan>(2);
             nameLength = FieldNames.getNameLength(term.text());
             String propName = term.text().substring(0, nameLength);
             this.termText = new OffsetCharSequence(nameLength, term.text());
@@ -125,16 +126,14 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     rangeScans.add(new RangeScan(reader, term, term));
                 }
 
-                Iterator it = rangeScans.iterator();
-                while (it.hasNext()) {
-                    TermEnum terms = (TermEnum) it.next();
+                for (TermEnum terms : rangeScans) {
                     do {
                         Term t = terms.term();
                         if (t != null) {
                             currentTerm.setBase(t.text());
                             int compare = currentTerm.compareTo(termText);
                             if (compare == 0) {
-                                orderedTerms.put(t, new Integer(terms.docFreq()));
+                                orderedTerms.put(t, terms.docFreq());
                             } else if (compare < 0) {
                                 // try next one
                             } else {
@@ -146,9 +145,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     } while (terms.next());
                 }
             } finally {
-                Iterator it = rangeScans.iterator();
-                while (it.hasNext()) {
-                    TermEnum terms = (TermEnum) it.next();
+                for (TermEnum terms : rangeScans) {
                     try {
                         terms.close();
                     } catch (IOException e) {
@@ -157,7 +154,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
             }
 
-            final Iterator it = orderedTerms.keySet().iterator();
+            final Iterator<Term> it = orderedTerms.keySet().iterator();
 
             setEnum(new TermEnum() {
 
@@ -177,7 +174,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
 
                 public int docFreq() {
-                    Integer docFreq = (Integer) orderedTerms.get(current);
+                    Integer docFreq = orderedTerms.get(current);
                     return docFreq != null ? docFreq.intValue() : 0;
                 }
 
@@ -186,7 +183,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 }
 
                 private void getNext() {
-                    current = it.hasNext() ? (Term) it.next() : null;
+                    current = it.hasNext() ? it.next() : null;
                 }
             });
         }

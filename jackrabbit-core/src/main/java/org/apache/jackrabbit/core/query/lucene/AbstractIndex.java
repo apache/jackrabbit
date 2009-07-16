@@ -33,7 +33,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.BitSet;
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implements common functionality for a lucene index.
@@ -462,15 +462,14 @@ abstract class AbstractIndex {
      * @throws IOException if the document cannot be added to the indexing
      *                     queue.
      */
+    @SuppressWarnings("unchecked")
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
             // mark the document that reindexing is required
             copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
                     Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-            Iterator fields = doc.getFields().iterator();
-            while (fields.hasNext()) {
-                Fieldable f = (Fieldable) fields.next();
+            for (Fieldable f : (List<Fieldable>) doc.getFields()) {
                 Fieldable field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
                 Field.Store stored = getStoreParameter(f);

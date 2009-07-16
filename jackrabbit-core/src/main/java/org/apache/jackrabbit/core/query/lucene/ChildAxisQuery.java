@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
@@ -451,18 +450,18 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     calc[0] = new SimpleChildrenCalculator(reader, hResolver);
                     contextScorer.score(new HitCollector() {
 
-                        private List docIds = new ArrayList();
+                        private List<Integer> docIds = new ArrayList<Integer>();
 
                         public void collect(int doc, float score) {
                             calc[0].collectContextHit(doc);
                             if (docIds != null) {
-                                docIds.add(new Integer(doc));
+                                docIds.add(doc);
                                 if (docIds.size() > CONTEXT_SIZE_THRESHOLD) {
                                     // switch
                                     calc[0] = new HierarchyResolvingChildrenCalculator(
                                             reader, hResolver);
-                                    for (Iterator it = docIds.iterator(); it.hasNext(); ) {
-                                        calc[0].collectContextHit(((Integer) it.next()).intValue());
+                                    for (int docId : docIds) {
+                                        calc[0].collectContextHit(docId);
                                     }
                                     // indicate that we switched
                                     docIds = null;
@@ -486,19 +485,17 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     if (nameTest == null) {
                         // only select this node if it is the child at
                         // specified position
+                        List<ChildNodeEntry> childNodes = state.getChildNodeEntries();
                         if (position == LocationStepQueryNode.LAST) {
                             // only select last
-                            List childNodes = state.getChildNodeEntries();
                             if (childNodes.size() == 0
-                                    || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                        .getId().equals(id)) {
+                                    || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
                                 return false;
                             }
                         } else {
-                            List childNodes = state.getChildNodeEntries();
                             if (position < 1
                                     || childNodes.size() < position
-                                    || !((ChildNodeEntry) childNodes.get(position - 1)).getId().equals(id)) {
+                                    || !(childNodes.get(position - 1)).getId().equals(id)) {
                                 return false;
                             }
                         }
@@ -515,10 +512,9 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                             } else {
                                 // only use the last one
                                 Name name = entry.getName();
-                                List childNodes = state.getChildNodeEntries(name);
+                                List<ChildNodeEntry> childNodes = state.getChildNodeEntries(name);
                                 if (childNodes.size() == 0
-                                        || !((ChildNodeEntry) childNodes.get(childNodes.size() - 1))
-                                            .getId().equals(id)) {
+                                        || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
                                     return false;
                                 }
                             }
@@ -619,31 +615,30 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
          */
         public Hits getHits() throws IOException {
             // read the uuids of the context nodes
-            Map uuids = new HashMap();
+            Map<Integer, String> uuids = new HashMap<Integer, String>();
             for (int i = contextHits.next(); i > -1; i = contextHits.next()) {
                 String uuid = reader.document(i, FieldSelectors.UUID).get(FieldNames.UUID);
-                uuids.put(new Integer(i), uuid);
+                uuids.put(i, uuid);
             }
 
             // get child node entries for each hit
             Hits childrenHits = new AdaptingHits();
-            for (Iterator it = uuids.values().iterator(); it.hasNext(); ) {
-                String uuid = (String) it.next();
+            for (String uuid : uuids.values()) {
                 NodeId id = new NodeId(uuid);
                 try {
                     long time = System.currentTimeMillis();
                     NodeState state = (NodeState) itemMgr.getItemState(id);
                     time = System.currentTimeMillis() - time;
-                    log.debug("got NodeState with id {} in {} ms.", id, new Long(time));
-                    Iterator entries;
+                    log.debug("got NodeState with id {} in {} ms.", id, time);
+                    List<ChildNodeEntry> entries;
                     if (nameTest != null) {
-                        entries = state.getChildNodeEntries(nameTest).iterator();
+                        entries = state.getChildNodeEntries(nameTest);
                     } else {
                         // get all children
-                        entries = state.getChildNodeEntries().iterator();
+                        entries = state.getChildNodeEntries();
                     }
-                    while (entries.hasNext()) {
-                        NodeId childId = ((ChildNodeEntry) entries.next()).getId();
+                    for (ChildNodeEntry entry : entries) {
+                        NodeId childId = entry.getId();
                         Term uuidTerm = new Term(FieldNames.UUID, childId.toString());
                         TermDocs docs = reader.termDocs(uuidTerm);
                         try {
@@ -673,7 +668,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
         /**
          * The document numbers of the context hits.
          */
-        private final Set docIds = new HashSet();
+        private final Set<Integer> docIds = new HashSet<Integer>();
 
         /**
          * Creates a new hierarchy resolving children calculator.
@@ -690,7 +685,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
          * {@inheritDoc}
          */
         protected void collectContextHit(int doc) {
-            docIds.add(new Integer(doc));
+            docIds.add(doc);
         }
 
         /**
@@ -705,12 +700,12 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                 docs = hResolver.getParents(h, docs);
                 if (docs.length == 1) {
                     // optimize single value
-                    if (docIds.contains(new Integer(docs[0]))) {
+                    if (docIds.contains(docs[0])) {
                         childrenHits.set(h);
                     }
                 } else {
                     for (int i = 0; i < docs.length; i++) {
-                        if (docIds.contains(new Integer(docs[i]))) {
+                        if (docIds.contains(docs[i])) {
                             childrenHits.set(h);
                         }
                     }
@@ -718,7 +713,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             }
             time = System.currentTimeMillis() - time;
 
-            log.debug("Filtered hits in {} ms.", new Long(time));
+            log.debug("Filtered hits in {} ms.", time);
             return childrenHits;
         }
     }
