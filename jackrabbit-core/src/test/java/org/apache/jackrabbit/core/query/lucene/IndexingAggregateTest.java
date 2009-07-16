@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
+package org.apache.jackrabbit.core.query.lucene;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
@@ -24,12 +24,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 
 /**
  * <code>IndexingAggregateTest</code> checks if the nt:file nt:resource
@@ -37,7 +38,7 @@ import java.util.Iterator;
  */
 public class IndexingAggregateTest extends AbstractIndexingTest {
 
-    public void testNtFileAggregate() throws RepositoryException, IOException {
+    public void testNtFileAggregate() throws Exception {
         String sqlBase = "SELECT * FROM nt:file"
                 + " WHERE jcr:path LIKE '" + testRoot + "/%"
                 + "' AND CONTAINS";
@@ -57,6 +58,7 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
 
         testRootNode.save();
+        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlDog, new Node[]{file});
 
@@ -66,6 +68,7 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         writer.flush();
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
         testRootNode.save();
+        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlCat, new Node[]{file});
 
@@ -92,8 +95,20 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         resource.setProperty("jcr:mimeType", "text/plain");
         resource.setProperty("jcr:data", new ByteArrayInputStream(out.toByteArray()));
         testRootNode.save();
+        waitUntilQueueEmpty();
 
         executeSQLQuery(sqlCat, new Node[]{file});
+    }
+
+    protected void waitUntilQueueEmpty() throws Exception {
+        SearchIndex index = (SearchIndex) getQueryHandler();
+        IndexingQueue queue = index.getIndex().getIndexingQueue();
+        index.getIndex().flush();
+        synchronized (index.getIndex()) {
+            while (queue.getNumPendingDocuments() > 0) {
+                index.getIndex().wait(50);
+            }
+        }
     }
 
     public void testContentLastModified() throws RepositoryException {
@@ -148,7 +163,7 @@ public class IndexingAggregateTest extends AbstractIndexingTest {
         for (int i = 0; i < 3; i++) {
             long time = System.currentTimeMillis();
             Query query = qm.createQuery(xpath, Query.XPATH);
-            ((QueryImpl) query).setLimit(20);
+            query.setLimit(20);
             query.execute().getNodes().getSize();
             time = System.currentTimeMillis() - time;
             System.out.println("executed query in " + time + " ms.");
