@@ -36,7 +36,6 @@ import java.io.StringReader;
 import java.io.Reader;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.SortedMap;
 import java.util.Arrays;
@@ -177,14 +176,12 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
     /**
      * @return the extracted terms from the query.
      */
-    protected final Set getQueryTerms() {
-        Set extractedTerms = new HashSet();
-        Set relevantTerms = new HashSet();
+    protected final Set<Term> getQueryTerms() {
+        Set<Term> extractedTerms = new HashSet<Term>();
+        Set<Term> relevantTerms = new HashSet<Term>();
         query.extractTerms(extractedTerms);
         // only keep terms for fulltext fields
-        Iterator it = extractedTerms.iterator();
-        while (it.hasNext()) {
-            Term t = (Term) it.next();
+        for (Term t : extractedTerms) {
             if (t.field().equals(FieldNames.FULLTEXT)) {
                 relevantTerms.add(t);
             } else {
@@ -230,7 +227,8 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
      */
     private TermPositionVector createTermPositionVector(String text) {
         // term -> TermVectorOffsetInfo[]
-        final SortedMap termMap = new TreeMap();
+        final SortedMap<String, TermVectorOffsetInfo[]> termMap =
+            new TreeMap<String, TermVectorOffsetInfo[]>();
         Reader r = new StringReader(text);
         TokenStream ts = index.getTextAnalyzer().tokenStream("", r);
         Token t = new Token();

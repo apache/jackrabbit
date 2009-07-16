@@ -42,7 +42,6 @@ import javax.jcr.NamespaceException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * <code>AggregateRule</code> defines a configuration for a node index
@@ -154,12 +153,12 @@ class AggregateRuleImpl implements AggregateRule {
     public NodeState[] getAggregatedNodeStates(NodeState nodeState)
             throws ItemStateException {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
-            List nodeStates = new ArrayList();
+            List<NodeState> nodeStates = new ArrayList<NodeState>();
             for (int i = 0; i < nodeIncludes.length; i++) {
                 nodeStates.addAll(Arrays.asList(nodeIncludes[i].resolve(nodeState)));
             }
             if (nodeStates.size() > 0) {
-                return (NodeState[]) nodeStates.toArray(new NodeState[nodeStates.size()]);
+                return nodeStates.toArray(new NodeState[nodeStates.size()]);
             }
         }
         return null;
@@ -171,14 +170,13 @@ class AggregateRuleImpl implements AggregateRule {
     public PropertyState[] getAggregatedPropertyStates(NodeState nodeState)
             throws ItemStateException {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
-            List propStates = new ArrayList();
+            List<PropertyState> propStates = new ArrayList<PropertyState>();
             for (int i = 0; i < propertyIncludes.length; i++) {
                 propStates.addAll(Arrays.asList(
                         propertyIncludes[i].resolvePropertyStates(nodeState)));
             }
             if (propStates.size() > 0) {
-                return (PropertyState[]) propStates.toArray(
-                        new PropertyState[propStates.size()]);
+                return propStates.toArray(new PropertyState[propStates.size()]);
             }
         }
         return null;
@@ -216,7 +214,7 @@ class AggregateRuleImpl implements AggregateRule {
      */
     private NodeInclude[] getNodeIncludes(Node config)
             throws MalformedPathException, IllegalNameException, NamespaceException {
-        List includes = new ArrayList();
+        List<NodeInclude> includes = new ArrayList<NodeInclude>();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node n = childNodes.item(i);
@@ -226,19 +224,18 @@ class AggregateRuleImpl implements AggregateRule {
                 if (ntAttr != null) {
                     ntName = resolver.getQName(ntAttr.getNodeValue());
                 }
-                String[] elements = Text.explode(getTextContent(n), '/');
                 PathBuilder builder = new PathBuilder();
-                for (int j = 0; j < elements.length; j++) {
-                    if (elements[j].equals("*")) {
+                for (String element : Text.explode(getTextContent(n), '/')) {
+                    if (element.equals("*")) {
                         builder.addLast(NameConstants.ANY_NAME);
                     } else {
-                        builder.addLast(resolver.getQName(elements[j]));
+                        builder.addLast(resolver.getQName(element));
                     }
                 }
                 includes.add(new NodeInclude(builder.getPath(), ntName));
             }
         }
-        return (NodeInclude[]) includes.toArray(new NodeInclude[includes.size()]);
+        return includes.toArray(new NodeInclude[includes.size()]);
     }
 
     /**
@@ -258,23 +255,22 @@ class AggregateRuleImpl implements AggregateRule {
     private PropertyInclude[] getPropertyIncludes(Node config) throws
             MalformedPathException, IllegalNameException, NamespaceException,
             RepositoryException {
-        List includes = new ArrayList();
+        List<PropertyInclude> includes = new ArrayList<PropertyInclude>();
         NodeList childNodes = config.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node n = childNodes.item(i);
             if (n.getNodeName().equals("include-property")) {
-                String[] elements = Text.explode(getTextContent(n), '/');
                 PathBuilder builder = new PathBuilder();
-                for (int j = 0; j < elements.length; j++) {
-                    if (elements[j].equals("*")) {
+                for (String element : Text.explode(getTextContent(n), '/')) {
+                    if (element.equals("*")) {
                         throw new IllegalNameException("* not supported in include-property");
                     }
-                    builder.addLast(resolver.getQName(elements[j]));
+                    builder.addLast(resolver.getQName(element));
                 }
                 includes.add(new PropertyInclude(builder.getPath()));
             }
         }
-        return (PropertyInclude[]) includes.toArray(new PropertyInclude[includes.size()]);
+        return includes.toArray(new PropertyInclude[includes.size()]);
     }
 
     //---------------------------< internal >-----------------------------------
@@ -378,10 +374,10 @@ class AggregateRuleImpl implements AggregateRule {
          * @throws ItemStateException if an error occurs while accessing node
          *                            states.
          */
-        protected void resolve(NodeState nodeState, List collector, int offset)
+        protected void resolve(NodeState nodeState, List<NodeState> collector, int offset)
                 throws ItemStateException {
             Name currentName = pattern.getElements()[offset].getName();
-            List cne;
+            List<ChildNodeEntry> cne;
             if (currentName.getLocalName().equals("*")) {
                 // matches all
                 cne = nodeState.getChildNodeEntries();
@@ -390,10 +386,8 @@ class AggregateRuleImpl implements AggregateRule {
             }
             if (pattern.getLength() - 1 == offset) {
                 // last segment -> add to collector if node type matches
-                Iterator it = cne.iterator();
-                while (it.hasNext()) {
-                    NodeId id = ((ChildNodeEntry) it.next()).getId();
-                    NodeState ns = (NodeState) ism.getItemState(id);
+                for (ChildNodeEntry entry : cne) {
+                    NodeState ns = (NodeState) ism.getItemState(entry.getId());
                     if (nodeTypeName == null || ns.getNodeTypeName().equals(nodeTypeName)) {
                         collector.add(ns);
                     }
@@ -401,9 +395,8 @@ class AggregateRuleImpl implements AggregateRule {
             } else {
                 // traverse
                 offset++;
-                Iterator it = cne.iterator();
-                while (it.hasNext()) {
-                    NodeId id = ((ChildNodeEntry) it.next()).getId();
+                for (ChildNodeEntry entry : cne) {
+                    NodeId id = entry.getId();
                     resolve((NodeState) ism.getItemState(id), collector, offset);
                 }
             }
@@ -433,9 +426,9 @@ class AggregateRuleImpl implements AggregateRule {
          *                            node states.
          */
         NodeState[] resolve(NodeState nodeState) throws ItemStateException {
-            List nodeStates = new ArrayList();
+            List<NodeState> nodeStates = new ArrayList<NodeState>();
             resolve(nodeState, nodeStates, 0);
-            return (NodeState[]) nodeStates.toArray(new NodeState[nodeStates.size()]);
+            return nodeStates.toArray(new NodeState[nodeStates.size()]);
         }
     }
 
@@ -459,18 +452,16 @@ class AggregateRuleImpl implements AggregateRule {
          */
         PropertyState[] resolvePropertyStates(NodeState nodeState)
                 throws ItemStateException {
-            List nodeStates = new ArrayList();
+            List<NodeState> nodeStates = new ArrayList<NodeState>();
             resolve(nodeState, nodeStates, 0);
-            List propStates = new ArrayList();
-            for (Iterator it = nodeStates.iterator(); it.hasNext(); ) {
-                NodeState state = (NodeState) it.next();
+            List<PropertyState> propStates = new ArrayList<PropertyState>();
+            for (NodeState state : nodeStates) {
                 if (state.hasPropertyName(propertyName)) {
                     PropertyId propId = new PropertyId(state.getNodeId(), propertyName);
-                    propStates.add(ism.getItemState(propId));
+                    propStates.add((PropertyState) ism.getItemState(propId));
                 }
             }
-            return (PropertyState[]) propStates.toArray(
-                    new PropertyState[propStates.size()]);
+            return propStates.toArray(new PropertyState[propStates.size()]);
         }
     }
 }
