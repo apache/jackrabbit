@@ -72,16 +72,13 @@ import java.util.Set;
  * her/his group membership,</li>
  *
  * <li>members of the 'User administrator' group are allowed to create, modify
- * and remove those users whose node representation is within the subtree
- * defined by the node representation of the editing user,</li>
+ * and remove users,</li>
  *
  * <li>members of the 'Group administrator' group are allowed to create, modify
  * and remove groups,</li>
  *
  * <li>group membership can only be edited by members of the 'Group administrator'
- * and the 'User administrator' group. The range of users that can be added
- * as member to any Group is limited to those that are editable according to
- * the restrictions described above for the 'User administrator'.</li>
+ * and the 'User administrator' group.</li>
  * </ul>
  */
 public class UserAccessControlProvider extends AbstractAccessControlProvider
@@ -127,7 +124,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
     //----------------------------------------------< AccessControlProvider >---
     /**
-     * @see AccessControlProvider#init(Session, Map)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(Session, Map)
      */
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
@@ -155,7 +152,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     /**
-     * @see AccessControlProvider#getEffectivePolicies(Path)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(Path)
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
@@ -165,7 +162,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     /**
      * Always returns <code>null</code>.
      *
-     * @see AccessControlProvider#getEditor(Session)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEditor(Session)
      */
     public AccessControlEditor getEditor(Session session) {
         checkInitialized();
@@ -175,7 +172,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     /**
-     * @see AccessControlProvider#compilePermissions(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#compilePermissions(Set)
      */
     public CompiledPermissions compilePermissions(Set principals) throws RepositoryException {
         checkInitialized();
@@ -195,7 +192,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     /**
-     * @see AccessControlProvider#canAccessRoot(Set)
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#canAccessRoot(Set)
      */
     public boolean canAccessRoot(Set principals) throws RepositoryException {
         checkInitialized();
@@ -347,100 +344,81 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             if (usersPath.equals(abs2Path)) {
                 /*
                  below the user-tree
-                 - determine position of target relative to the node of the editing user
+                 - determine position of target relative
+                 - target may not be below an existing user but only below an
+                   authorizable folder.
                  - determine if the editing user is user/group-admin
                  - special treatment for rep:groups property
                  */
                 NodeImpl node = (NodeImpl) getExistingNode(path);
-                NodeImpl authN = null;
-                // seek next rep:authorizable parent
-                if (node.isNodeType(NT_REP_AUTHORIZABLE)) {
-                    authN = node;
-                } else if (node.isNodeType(NT_REP_AUTHORIZABLE_FOLDER)) {
-                    NodeImpl parent = node;
-                    while (authN == null && parent.getDepth() > 0) {
-                        parent = (NodeImpl) parent.getParent();
-                        if (parent.isNodeType(NT_REP_AUTHORIZABLE)) {
-                            authN = parent;
-                        } else if (!parent.isNodeType(NT_REP_AUTHORIZABLE_FOLDER)) {
-                            // outside of user/group-tree
-                            break;
-                        }
-                    }
-                } // else: outside of user tree -> authN = null
 
-                if (authN != null && authN.isNodeType(NT_REP_USER)) {
-                    int relDepth = session.getHierarchyManager().getRelativeDepth(userNode.getNodeId(), authN.getNodeId());
+                if (node.isNodeType(NT_REP_AUTHORIZABLE) || node.isNodeType(NT_REP_AUTHORIZABLE_FOLDER)) {
+                    boolean editingHimSelf = node.isSame(userNode);
                     boolean isGroupProp = P_GROUPS.equals(path.getNameElement().getName());
                     // only user-admin is allowed to modify users.
                     // for group membership (rep:groups) group-admin is required
                     // in addition.
-                    boolean requiredGroups = isUserAdmin;
-                    if (requiredGroups && isGroupProp) {
-                        requiredGroups = isGroupAdmin;
+                    boolean memberOfRequiredGroups = isUserAdmin;
+                    if (memberOfRequiredGroups && isGroupProp) {
+                        memberOfRequiredGroups = isGroupAdmin;
                     }
-                    switch (relDepth) {
-                        case -1:
-                            // authN is not below the userNode -> can't write anyway.
-                            break;
-                        case 0:
-                            /*
-                            authN is same node as userNode. 3 cases to distinguish
-                            1) user is User-Admin -> R, W
-                            2) user is NOT U-admin but nodeID is its own node.
-                            3) special treatment for rep:group property which can
-                               only be modified by group-administrators
-                            */
-                            Path aPath = session.getQPath(authN.getPath());
-                            if (requiredGroups) {
-                                // principals contain 'user-admin'
-                                // -> user can modify items below the user-node except rep:group.
-                                // principals contains 'user-admin' + 'group-admin'
-                                // -> user can modify rep:group property as well.
-                                if (path.equals(aPath)) {
-                                    allows |= (Permission.ADD_NODE | Permission.REMOVE_PROPERTY | Permission.SET_PROPERTY);
-                                } else {
-                                    allows |= Permission.ALL;
-                                }
-                                if (calcPrivs) {
-                                    // grant WRITE privilege
-                                    // note: ac-read/modification is not included
-                                    //       remove_node is not included
-                                    privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
-                                    if (!path.equals(aPath)) {
-                                       privs |= getPrivilegeBits(Privilege.JCR_REMOVE_NODE);
-                                    }
-                                }
-                            } else if (userNode.isSame(node) && (!isGroupProp || isGroupAdmin)) {
-                                // user can only read && write his own props
-                                // except for the rep:group property.
-                                allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
-                                if (calcPrivs) {
-                                    privs |= getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES);
-                                }
-                            } // else some other node below but not U-admin -> read-only.
-                            break;
-                        default:
-                            /*
-                            authN is somewhere below the userNode, i.e.
-                            1) nodeId points to an authorizable below userNode
-                            2) nodeId points to an auth-folder below some authorizable below userNode.
-
-                            In either case user-admin group-membership is
-                            required in order to get write permission.
-                            group-admin group-membership is required in addition
-                            if rep:groups is the target item.
-                            */
-                            if (requiredGroups) {
-                                allows = Permission.ALL;
-                                if (calcPrivs) {
-                                    // grant WRITE privilege
-                                    // note: ac-read/modification is not included
-                                    privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                    if (editingHimSelf) {
+                        /*
+                        node to be modified is same node as userNode. 3 cases to distinguish
+                        1) user is User-Admin -> R, W
+                        2) user is NOT U-admin but nodeID is its own node.
+                        3) special treatment for rep:group property which can
+                           only be modified by group-administrators
+                        */
+                        Path aPath = session.getQPath(node.getPath());
+                        if (memberOfRequiredGroups) {
+                            // principals contain 'user-admin'
+                            // -> user can modify items below the user-node except rep:group.
+                            // principals contains 'user-admin' + 'group-admin'
+                            // -> user can modify rep:group property as well.
+                            if (path.equals(aPath)) {
+                                allows |= (Permission.ADD_NODE | Permission.REMOVE_PROPERTY | Permission.SET_PROPERTY);
+                            } else {
+                                allows |= Permission.ALL;
+                            }
+                            if (calcPrivs) {
+                                // grant WRITE privilege
+                                // note: ac-read/modification is not included
+                                //       remove_node is not included
+                                privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                                if (!path.equals(aPath)) {
+                                    privs |= getPrivilegeBits(Privilege.JCR_REMOVE_NODE);
                                 }
                             }
+                        } else if (userNode.isSame(node) && (!isGroupProp || isGroupAdmin)) {
+                            // user can only read && write his own props
+                            // except for the rep:group property.
+                            allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
+                            if (calcPrivs) {
+                                privs |= getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES);
+                            }
+                        } // else some other node below but not U-admin -> read-only.
+                    } else {
+                        /*
+                        authN points to some other user-node, i.e.
+                        1) nodeId points to an authorizable that isn't the editing user
+                        2) nodeId points to an auth-folder within the user-tree
+
+                        In either case user-admin group-membership is
+                        required in order to get write permission.
+                        group-admin group-membership is required in addition
+                        if rep:groups is the target item.
+                        */
+                        if (memberOfRequiredGroups) {
+                            allows = Permission.ALL;
+                            if (calcPrivs) {
+                                // grant WRITE privilege
+                                // note: ac-read/modification is not included
+                                privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                            }
+                        }
                     }
-                } // no rep:User parent node found.
+                } // outside of the user tree
             } else if (groupsPath.equals(abs2Path)) {
                 /*
                 below group-tree:

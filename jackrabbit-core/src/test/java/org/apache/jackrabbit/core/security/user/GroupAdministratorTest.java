@@ -42,8 +42,8 @@ public class GroupAdministratorTest extends AbstractUserTest {
     private String uPath;
     private Session uSession;
 
-    private String parentUID;
-    private String childUID;
+    private String otherUID;
+    private String otherUID2;
     private String grID;
 
 
@@ -55,13 +55,13 @@ public class GroupAdministratorTest extends AbstractUserTest {
         // create a first user
         Principal p = getTestPrincipal();
         UserImpl pUser = (UserImpl) userMgr.createUser(p.getName(), buildPassword(p));
-        parentUID = pUser.getID();
+        otherUID = pUser.getID();
 
-        // create a second user 'below' the first user and make it group-admin
+        // create a second user and make it group-admin
         p = getTestPrincipal();
         String pw = buildPassword(p);
         Credentials creds = buildCredentials(p.getName(), pw);
-        User user = userMgr.createUser(p.getName(), pw, p, pUser.getNode().getPath());
+        User user = userMgr.createUser(p.getName(), pw);
         uID = user.getID();
         uPath = ((UserImpl) user).getNode().getPath();
 
@@ -88,7 +88,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
             groupAdmin.removeMember(userMgr.getAuthorizable(uID));
 
             // remove all users that have been created
-            Authorizable a = userMgr.getAuthorizable(parentUID);
+            Authorizable a = userMgr.getAuthorizable(otherUID);
             if (a != null) {
                 a.remove();
             }
@@ -97,13 +97,13 @@ public class GroupAdministratorTest extends AbstractUserTest {
         super.tearDown();
     }
 
-    private String getChildID() throws RepositoryException {
-        if (childUID == null) {
-            // create a third child user below
+    private String getYetAnotherID() throws RepositoryException {
+        if (otherUID2 == null) {
+            // create a third user
             Principal p = getTestPrincipal();
-            childUID = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
+            otherUID2 = userMgr.createUser(p.getName(), buildPassword(p), p, uPath).getID();
         }
-        return childUID;
+        return otherUID2;
     }
 
     public void testIsGroupAdmin() throws RepositoryException, NotExecutableException {
@@ -157,7 +157,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         Group testGroup = null;
         try {
             testGroup = umgr.createGroup(getTestPrincipal(), "/any/intermediate/path");
-            assertTrue(Text.isDescendant(UserConstants.GROUPS_PATH + "/any/intermediate/path", ((GroupImpl)testGroup).getNode().getPath()));
+            assertEquals("Intermediate path must be ignored.",-1, ((GroupImpl)testGroup).getNode().getPath().indexOf("/any/intermediate/path"));
         } finally {
             if (testGroup != null) {
                 testGroup.remove();
@@ -165,15 +165,15 @@ public class GroupAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testAddChildToGroup() throws RepositoryException, NotExecutableException {
+    public void testAddToGroup() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(uSession);
-        Authorizable cU = umgr.getAuthorizable(getChildID());
+        Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
         Group gr = (Group) umgr.getAuthorizable(grID);
 
-        // adding and removing the child-user as member of a group not
+        // adding and removing the child-user as member of a group must not 
         // succeed as long editing session is not user-admin.
         try {
-            assertFalse(gr.addMember(cU));
+            assertFalse("Modifying group membership requires GroupAdmin and UserAdmin.",gr.addMember(cU));
         } catch (AccessDeniedException e) {
             // ok
         } finally {
@@ -181,9 +181,9 @@ public class GroupAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testAddChildToGroup2() throws RepositoryException, NotExecutableException {
+    public void testAddToGroup2() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(uSession);
-        Authorizable cU = umgr.getAuthorizable(getChildID());
+        Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
 
         Authorizable auth = umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
         if (auth == null || !auth.isGroup()) {
@@ -223,7 +223,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
             assertTrue(userAdmin.isMember(self));
 
             // add child-user to test group
-            Authorizable testUser = umgr.getAuthorizable(getChildID());
+            Authorizable testUser = umgr.getAuthorizable(getYetAnotherID());
             assertFalse(testGroup.isMember(testUser));
             assertTrue(testGroup.addMember(testUser));
         } finally {
@@ -241,7 +241,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         try {
             // let superuser create child user below the user with uID.
             UserManager umgr = getUserManager(uSession);
-            Authorizable cU = umgr.getAuthorizable(getChildID());
+            Authorizable cU = umgr.getAuthorizable(getYetAnotherID());
             Group uadminGr = (Group) umgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
             if (uadminGr.isMember(cU)) {
                 throw new RepositoryException("Test user is already member -> cannot execute.");
@@ -257,14 +257,14 @@ public class GroupAdministratorTest extends AbstractUserTest {
         }
     }
 
-    public void testAddParentToGroup() throws RepositoryException, NotExecutableException {
+    public void testAddOtherUserToGroup() throws RepositoryException, NotExecutableException {
         UserManager umgr = getUserManager(uSession);
 
-        Authorizable pU = umgr.getAuthorizable(parentUID);
+        Authorizable pU = umgr.getAuthorizable(otherUID);
         Group gr = (Group) umgr.getAuthorizable(groupAdmin.getID());
 
-        // adding and removing the parent-user as member of a group must
-        // never succeed.
+        // adding and removing the parent-user as member of a group must not
+        // succeed: editing session isn't UserAdmin
         try {
             assertFalse(gr.addMember(pU));
         } catch (AccessDeniedException e) {
@@ -273,7 +273,8 @@ public class GroupAdministratorTest extends AbstractUserTest {
             gr.removeMember(pU);
         }
 
-        // ... even if the editing user becomes member of the user-admin group
+        // ... if the editing user becomes member of the user-admin group it
+        // must work.
         Group uAdministrators = null;
         try {
             Authorizable userAdmin = userMgr.getAuthorizable(UserConstants.USER_ADMIN_GROUP_NAME);
@@ -283,12 +284,8 @@ public class GroupAdministratorTest extends AbstractUserTest {
             uAdministrators = (Group) userAdmin;
             uAdministrators.addMember(userMgr.getAuthorizable(uID));
 
-            try {
-                assertFalse(gr.addMember(pU));
-                gr.removeMember(pU);
-            } catch (AccessDeniedException e) {
-                // fine as well.
-            }
+            assertTrue(gr.addMember(pU));
+            gr.removeMember(pU);
         } finally {
             // let superuser do the clean up.
             // remove testuser from u-admin group again.
@@ -410,7 +407,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         UserManager umgr = getUserManager(uSession);
         Principal selfPrinc = umgr.getAuthorizable(uID).getPrincipal();
 
-        User child = (User) umgr.getAuthorizable(getChildID());
+        User child = (User) umgr.getAuthorizable(getYetAnotherID());
         Impersonation impers = child.getImpersonation();
         assertFalse(impers.allows(buildSubject(selfPrinc)));
         try {
@@ -420,7 +417,7 @@ public class GroupAdministratorTest extends AbstractUserTest {
         }
         assertFalse(impers.allows(buildSubject(selfPrinc)));
 
-        User parent = (User) umgr.getAuthorizable(parentUID);
+        User parent = (User) umgr.getAuthorizable(otherUID);
         impers = parent.getImpersonation();
         assertFalse(impers.allows(buildSubject(selfPrinc)));
         try {
@@ -429,5 +426,22 @@ public class GroupAdministratorTest extends AbstractUserTest {
             // ok.
         }
         assertFalse(impers.allows(buildSubject(selfPrinc)));
+    }
+
+    public void testPersisted() throws NotExecutableException, RepositoryException {
+        UserManager umgr = getUserManager(uSession);
+        Group gr = null;
+        try {
+            Principal p = getTestPrincipal();
+            gr = umgr.createGroup(p);
+
+            Authorizable az = userMgr.getAuthorizable(gr.getID());
+            assertNotNull(az);
+            assertEquals(gr.getID(), az.getID());
+        } finally {
+            if (gr != null) {
+                gr.remove();
+            }
+        }
     }
 }

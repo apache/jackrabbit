@@ -45,6 +45,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(IndexNodeResolverTest.class);
         suite.addTestSuite(TraversingNodeResolverTest.class);
 
+        suite.addTestSuite(IdResolverTest.class);
+
         return suite;
     }
 }

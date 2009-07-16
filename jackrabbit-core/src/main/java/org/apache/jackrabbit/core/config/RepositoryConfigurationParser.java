@@ -83,6 +83,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     private static final String WORKSPACE_ACCESS_ELEMENT = "WorkspaceAccessManager";
 
+    /**
+     * Name of the optional UserManagerConfig element that defines the
+     * configuration options for the user manager.
+     */
+    private static final String USER_MANAGER_ELEMENT = "UserManager";
+
     /** Name of the general workspace configuration element. */
     public static final String WORKSPACES_ELEMENT = "Workspaces";
 
@@ -324,7 +330,13 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             if (element != null) {
                 wac = parseBeanConfig(smElement, WORKSPACE_ACCESS_ELEMENT);
             }
-            return new SecurityManagerConfig(bc, wspAttr, wac);
+
+            BeanConfig umc = null;
+            element = getElement(smElement, USER_MANAGER_ELEMENT, false);
+            if (element != null) {
+                umc = parseBeanConfig(smElement, USER_MANAGER_ELEMENT);
+            }
+            return new SecurityManagerConfig(bc, wspAttr, wac, umc);
         } else {
             return null;
         }
