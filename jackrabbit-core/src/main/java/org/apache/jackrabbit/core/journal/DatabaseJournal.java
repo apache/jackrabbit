@@ -176,14 +176,14 @@ public class DatabaseJournal extends AbstractJournal {
      * Statement returning the local revision of this cluster node.
      */
     private PreparedStatement getLocalRevisionStmt;
-    
+
     /**
-     * Statement for inserting the local revision of this cluster node. 
+     * Statement for inserting the local revision of this cluster node.
      */
     private PreparedStatement insertLocalRevisionStmt;
-    
+
     /**
-     * Statement for updating the local revision of this cluster node. 
+     * Statement for updating the local revision of this cluster node.
      */
     private PreparedStatement updateLocalRevisionStmt;
 
@@ -205,7 +205,7 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * Whether the revision table janitor thread is enabled.
      */
-    private boolean janitorEnabled = false;
+    private boolean janitorEnabled;
 
     /**
      * The sleep time of the revision table janitor in seconds, 1 day default.
@@ -260,19 +260,19 @@ public class DatabaseJournal extends AbstractJournal {
      * SQL statement removing a set of revisions with from the journal table.
      */
     protected String cleanRevisionStmtSQL;
-    
+
     /**
      * SQL statement returning the local revision of this cluster node.
      */
     protected String getLocalRevisionStmtSQL;
-    
+
     /**
-     * SQL statement for inserting the local revision of this cluster node. 
+     * SQL statement for inserting the local revision of this cluster node.
      */
     protected String insertLocalRevisionStmtSQL;
 
     /**
-     * SQL statement for updating the local revision of this cluster node. 
+     * SQL statement for updating the local revision of this cluster node.
      */
     protected String updateLocalRevisionStmtSQL;
 
@@ -618,7 +618,7 @@ public class DatabaseJournal extends AbstractJournal {
         insertLocalRevisionStmt = null;
         close(updateLocalRevisionStmt);
         updateLocalRevisionStmt = null;
-        
+
         close(connection);
         connection = null;
     }
@@ -951,7 +951,7 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Get the database type.
-     * 
+     *
      * @return the database type
      */
     public String getDatabaseType() {
@@ -962,7 +962,7 @@ public class DatabaseJournal extends AbstractJournal {
      * Get the database type.
      * @deprecated
      * This method is deprecated; {@link #getDatabaseType} should be used instead.
-     * 
+     *
      * @return the database type
      */
     public String getSchema() {
@@ -1010,7 +1010,7 @@ public class DatabaseJournal extends AbstractJournal {
 
     /**
      * Set the database type.
-     * 
+     *
      * @param databaseType the database type
      */
     public void setDatabaseType(String databaseType) {
@@ -1020,8 +1020,8 @@ public class DatabaseJournal extends AbstractJournal {
     /**
      * Set the database type.
     * @deprecated
-    * This method is deprecated; {@link #getDatabaseType} should be used instead.
-     * 
+    * This method is deprecated; {@link #setDatabaseType} should be used instead.
+     *
      * @param databaseType the database type
      */
     public void setSchema(String databaseType) {
@@ -1062,7 +1062,7 @@ public class DatabaseJournal extends AbstractJournal {
         janitorNextRun.set(Calendar.SECOND, 0);
         janitorNextRun.set(Calendar.MILLISECOND, 0);
     }
-   
+
     /**
      * This class manages the local revision of the cluster node. It
      * persists the local revision in the LOCAL_REVISIONS table in the
@@ -1076,9 +1076,9 @@ public class DatabaseJournal extends AbstractJournal {
         private long localRevision;
 
         /**
-         * Indicates whether the init method has been called. 
+         * Indicates whether the init method has been called.
          */
-        private boolean initialized = false;
+        private boolean initialized;
 
         /**
          * Checks whether there's a local revision value in the database for this
@@ -1160,7 +1160,7 @@ public class DatabaseJournal extends AbstractJournal {
                 DatabaseJournal.this.close(true);
             }
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -1195,7 +1195,7 @@ public class DatabaseJournal extends AbstractJournal {
             }
             log.info("Interrupted: stopping clean-up task.");
         }
-        
+
         /**
          * Cleans old revisions from the clustering table.
          */

@@ -41,6 +41,7 @@ import org.apache.jackrabbit.core.journal.RecordConsumer;
 import org.apache.jackrabbit.core.journal.RecordProducer;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDef;
+import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.slf4j.Logger;
@@ -138,7 +139,7 @@ public class ClusterNode implements Runnable,
      * @since Apache Jackrabbit 1.6
      * @see <a href="https://issues.apache.org/jira/browse/JCR-1753">JCR-1753</a>
      */
-    private volatile int syncCount = 0;
+    private volatile int syncCount;
 
     /**
      * Status flag, one of {@link #NONE}, {@link #STARTED} or {@link #STOPPED}.
@@ -148,12 +149,12 @@ public class ClusterNode implements Runnable,
     /**
      * Map of available lock listeners, indexed by workspace name.
      */
-    private final Map wspLockListeners = new HashMap();
+    private final Map<String, LockEventListener> wspLockListeners = new HashMap<String, LockEventListener>();
 
     /**
      * Map of available update listeners, indexed by workspace name.
      */
-    private final Map wspUpdateListeners = new HashMap();
+    private final Map<String, UpdateEventListener> wspUpdateListeners = new HashMap<String, UpdateEventListener>();
 
     /**
      * Versioning update listener.
@@ -169,7 +170,7 @@ public class ClusterNode implements Runnable,
      * Create workspace listener
      */
     private WorkspaceListener createWorkspaceListener;
-    
+
     /**
      * Node type listener.
      */
@@ -625,7 +626,7 @@ public class ClusterNode implements Runnable,
                 return;
             }
 
-            List events = update.getEvents();
+            List<EventState> events = update.getEvents();
             ChangeLog changes = update.getChanges();
             boolean succeeded = false;
 
@@ -840,7 +841,7 @@ public class ClusterNode implements Runnable,
 
         UpdateEventListener listener = null;
         if (workspace != null) {
-            listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
+            listener = wspUpdateListeners.get(workspace);
             if (listener == null) {
                 try {
                     clusterContext.updateEventsReady(workspace);
@@ -849,7 +850,7 @@ public class ClusterNode implements Runnable,
                             workspace + " online: " + e.getMessage();
                     log.warn(msg);
                 }
-                listener = (UpdateEventListener) wspUpdateListeners.get(workspace);
+                listener = wspUpdateListeners.get(workspace);
                 if (listener ==  null) {
                     String msg = "Update listener unavailable for workspace: " + workspace;
                     log.error(msg);
@@ -883,7 +884,7 @@ public class ClusterNode implements Runnable,
     public void process(LockRecord record) {
         String workspace = record.getWorkspace();
 
-        LockEventListener listener = (LockEventListener) wspLockListeners.get(workspace);
+        LockEventListener listener = wspLockListeners.get(workspace);
         if (listener == null) {
             try {
                 clusterContext.lockEventsReady(workspace);
@@ -892,7 +893,7 @@ public class ClusterNode implements Runnable,
                         workspace + " online: " + e.getMessage();
                 log.warn(msg);
             }
-            listener = (LockEventListener) wspLockListeners.get(workspace);
+            listener = wspLockListeners.get(workspace);
             if (listener ==  null) {
                 String msg = "Lock channel unavailable for workspace: " + workspace;
                 log.error(msg);

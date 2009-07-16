@@ -30,33 +30,33 @@ public interface ClusterRecordProcessor {
      *
      * @param record change log record
      */
-    public void process(ChangeLogRecord record);
+    void process(ChangeLogRecord record);
 
     /**
      * Process a lock record.
      *
      * @param record lock record
      */
-    public void process(LockRecord record);
+    void process(LockRecord record);
 
     /**
      * Process a namespace record.
      *
      * @param record namespace record
      */
-    public void process(NamespaceRecord record);
+    void process(NamespaceRecord record);
 
     /**
      * Process a node type record
      *
      * @param record node type record
      */
-    public void process(NodeTypeRecord record);
+    void process(NodeTypeRecord record);
 
     /**
      * Process a workspace record
      * @param record workspace record
      */
-    public void process(WorkspaceRecord record);
+    void process(WorkspaceRecord record);
 
 }

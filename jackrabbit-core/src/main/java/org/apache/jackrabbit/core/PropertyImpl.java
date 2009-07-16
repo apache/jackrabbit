@@ -259,14 +259,14 @@ public class PropertyImpl extends ItemImpl implements Property {
             ((NodeImpl) getParent()).removeChildProperty(((PropertyId) id).getName());
             return;
         }
-        ArrayList list = new ArrayList();
+        ArrayList<InternalValue> list = new ArrayList<InternalValue>();
         // compact array (purge null entries)
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] != null) {
-                list.add(values[i]);
+        for (InternalValue v : values) {
+            if (v != null) {
+                list.add(v);
             }
         }
-        values = (InternalValue[]) list.toArray(new InternalValue[list.size()]);
+        values = list.toArray(new InternalValue[list.size()]);
 
         // modify the state of this property
         PropertyState thisState = (PropertyState) getOrCreateTransientItemState();
@@ -474,7 +474,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     }
 
     public InputStream getStream() throws RepositoryException {
-        return getValue().getStream();
+        return getValue().getBinary().getStream();
     }
 
     public long getLong() throws RepositoryException {
