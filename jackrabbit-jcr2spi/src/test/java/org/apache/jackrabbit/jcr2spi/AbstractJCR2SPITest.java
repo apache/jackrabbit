@@ -250,7 +250,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId)
             throws RepositoryException {
 
-        return getPropertyDefinition(sessionInfo, propertyId);
+        return repositoryService.getPropertyDefinition(sessionInfo, propertyId);
     }
 
     public abstract NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
@@ -260,6 +260,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public abstract Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 
     public abstract PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId);
+
+    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName,
+            boolean weakReferences) throws RepositoryException {
+
+        return repositoryService.getReferences(sessionInfo, nodeId, propertyName, weakReferences);
+    }
 
     //-----------------------------------------------< general modification >---
 
@@ -323,6 +329,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.lock(sessionInfo, nodeId, deep, sessionScoped);
     }
 
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped,
+            long timeoutHint, String ownerHint) throws RepositoryException {
+
+        return repositoryService.lock(sessionInfo, nodeId, deep, sessionScoped, timeoutHint, ownerHint);
+    }
+
     public void refreshLock(SessionInfo sessionInfo, NodeId nodeId)
             throws RepositoryException {
 
@@ -335,7 +347,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.unlock(sessionInfo, nodeId);
     }
 
-
     //---------------------------------------------------------< Versioning >---
 
     public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
@@ -344,6 +355,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         repositoryService.checkout(sessionInfo, nodeId);
+    }
+
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
+            throws RepositoryException {
+
+        return repositoryService.checkpoint(sessionInfo, nodeId);
     }
 
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId)
@@ -370,6 +387,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort);
     }
 
+    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName,
+            boolean bestEffort, boolean isShallow) throws RepositoryException {
+
+        return repositoryService.merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort, isShallow);
+    }
+
     public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds,
             NodeId[] predecessorIds) throws RepositoryException {
 
@@ -379,7 +402,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId,
             Name label, boolean moveLabel) throws RepositoryException {
 
-        addVersionLabel(sessionInfo, versionHistoryId, versionId, label, moveLabel);
+        repositoryService.addVersionLabel(sessionInfo, versionHistoryId, versionId, label, moveLabel);
     }
 
     public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId,
@@ -388,6 +411,29 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.removeVersionLabel(sessionInfo, versionHistoryId, versionId, label);
     }
 
+    public NodeId createActivity(SessionInfo sessionInfo, String title)
+            throws RepositoryException {
+
+        return repositoryService.createActivity(sessionInfo, title);
+    }
+
+    public void removeActivity(SessionInfo sessionInfo, NodeId activityId)
+            throws RepositoryException {
+
+        repositoryService.removeActivity(sessionInfo, activityId);
+    }
+
+    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId)
+            throws RepositoryException {
+
+        return repositoryService.mergeActivity(sessionInfo, activityId);
+    }
+
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId)
+            throws RepositoryException {
+
+        return repositoryService.createConfiguration(sessionInfo, nodeId, baselineId);
+    }
 
     //----------------------------------------------------------< Searching >---
 
@@ -435,6 +481,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             InterruptedException {
 
         return repositoryService.getEvents(subscription, timeout);
+    }
+
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after)
+            throws RepositoryException {
+
+        return repositoryService.getEvents(sessionInfo, filter, after);
     }
 
     public void dispose(Subscription subscription) throws RepositoryException {
@@ -485,23 +537,19 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getQNodeTypeDefinitions(sessionInfo, nodeTypeNames);
     }
 
-    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId)
-            throws RepositoryException {
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions,
+            boolean allowUpdate) throws RepositoryException {
 
-        return repositoryService.checkpoint(sessionInfo, nodeId);
+        repositoryService.registerNodeTypes(sessionInfo, nodeTypeDefinitions, allowUpdate);
     }
 
-    public NodeId createActivity(SessionInfo sessionInfo, String title)
-            throws RepositoryException {
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames)
+            throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
 
-        return repositoryService.createActivity(sessionInfo, title);
+        repositoryService.unregisterNodeTypes(sessionInfo, nodeTypeNames);
     }
 
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId, NodeId baselineId)
-            throws RepositoryException {
-
-        return repositoryService.createConfiguration(sessionInfo, nodeId, baselineId);
-    }
+    //-----------------------------------------------< Workspace Management >---
 
     public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName)
             throws RepositoryException {
@@ -512,56 +560,6 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public void deleteWorkspace(SessionInfo sessionInfo, String name) throws RepositoryException {
         repositoryService.deleteWorkspace(sessionInfo, name);
     }
-
-    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after)
-            throws RepositoryException {
-
-        return repositoryService.getEvents(sessionInfo, filter, after);
-    }
-
-    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName,
-            boolean weakReferences) throws RepositoryException {
-
-        return getReferences(sessionInfo, nodeId, propertyName, weakReferences);
-    }
-
-    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped,
-            long timeoutHint, String ownerHint) throws RepositoryException {
-
-        return repositoryService.lock(sessionInfo, nodeId, deep, sessionScoped, timeoutHint, ownerHint);
-    }
-
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName,
-            boolean bestEffort, boolean isShallow) throws RepositoryException {
-
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Iterator mergeActivity(SessionInfo sessionInfo, NodeId activityId)
-            throws RepositoryException {
-
-        return repositoryService.mergeActivity(sessionInfo, activityId);
-    }
-
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions,
-            boolean allowUpdate) throws RepositoryException {
-
-        repositoryService.registerNodeTypes(sessionInfo, nodeTypeDefinitions, allowUpdate);
-    }
-
-    public void removeActivity(SessionInfo sessionInfo, NodeId activityId)
-            throws RepositoryException {
-
-        repositoryService.removeActivity(sessionInfo, activityId);
-    }
-
-    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames)
-            throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-
-        repositoryService.unregisterNodeTypes(sessionInfo, nodeTypeNames);
-    }
-
 }
 
 
