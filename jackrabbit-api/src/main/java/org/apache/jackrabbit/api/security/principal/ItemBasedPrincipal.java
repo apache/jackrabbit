@@ -14,23 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.principal;
+package org.apache.jackrabbit.api.security.principal;
 
 import javax.jcr.RepositoryException;
 
 /**
- * <code>ItemBasedPrincipal</code> is a <code>Principal</code> that is
- * persisted as item within the repository. In addition to the methods
- * inherited from the {@link java.security.Principal} interface it therefore provides
- * a {@link #getPath()} method.
+ * <code>ItemBasedPrincipal</code> is a <code>Principal</code> having a
+ * corresponding item within the JCR repository. In addition to the methods
+ * inherited from the {@link java.security.Principal} interface it therefore
+ * provides a {@link #getPath()} method.
  */
 public interface ItemBasedPrincipal extends JackrabbitPrincipal {
 
     /**
-     * @return the path of the {@link javax.jcr.Item} that represents this
+     * Returns the JCR path of the item that corresponds to this
+     * <code>Principal</code>.
+     * 
+     * @return the path of the {@link javax.jcr.Item} that corresponds to this
      * <code>Principal</code>.
      * @throws RepositoryException If an error occurs while retrieving the
-     *                             <code>Item</code> path.
+     * <code>Item</code> path.
      */
     String getPath() throws RepositoryException;
 }

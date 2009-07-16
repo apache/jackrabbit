@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
-import org.apache.jackrabbit.core.security.principal.ItemBasedPrincipal;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;

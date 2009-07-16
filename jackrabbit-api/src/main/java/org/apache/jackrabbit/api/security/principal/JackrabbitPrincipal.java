@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.principal;
+package org.apache.jackrabbit.api.security.principal;
 
 import java.security.Principal;
 
 /**
- * <code>JackrabbitPrincipal</code>
- * Marks the principal to be the result of authentication against the repository.
+ * <code>JackrabbitPrincipal</code> marks the principal to be the result of
+ * authentication against the repository.
  */
 public interface JackrabbitPrincipal extends Principal {
 
