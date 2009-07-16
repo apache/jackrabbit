@@ -223,9 +223,9 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
     public String getUserID(Subject subject) throws RepositoryException {
         String uid = null;
         // if SimpleCredentials are present, the UserID can easily be retrieved.
-        Iterator creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
+        Iterator<SimpleCredentials> creds = subject.getPublicCredentials(SimpleCredentials.class).iterator();
         if (creds.hasNext()) {
-            SimpleCredentials sc = (SimpleCredentials) creds.next();
+            SimpleCredentials sc = creds.next();
             uid = sc.getUserID();
         } else if (anonymID != null && !subject.getPrincipals(AnonymousPrincipal.class).isEmpty()) {
             uid = anonymID;
@@ -233,8 +233,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             // assume that UserID and principal name
             // are the same (not totally correct) and thus return the name
             // of the first non-group principal.
-            for (Iterator it = subject.getPrincipals().iterator(); it.hasNext();) {
-                Principal p = (Principal) it.next();
+            for (Principal p : subject.getPrincipals()) {
                 if (!(p instanceof Group)) {
                     uid = p.getName();
                     break;
@@ -271,7 +270,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
      */
     private class SimplePrincipalProvider implements PrincipalProvider {
 
-        private final Map principals = new HashMap();
+        private final Map<String, Principal> principals = new HashMap<String, Principal>();
 
         private SimplePrincipalProvider() {
             if (adminID != null) {
@@ -287,7 +286,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
 
         public Principal getPrincipal(String principalName) {
             if (principals.containsKey(principalName)) {
-                return (Principal) principals.get(principalName);
+                return principals.get(principalName);
             } else {
                 return new UserPrincipal(principalName);
             }
@@ -316,7 +315,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
                     it = new PrincipalIteratorAdapter(Collections.singletonList(EveryonePrincipal.getInstance()));
                     break;
                 case PrincipalManager.SEARCH_TYPE_NOT_GROUP:
-                    Set set = new HashSet(principals.values());
+                    Set<Principal> set = new HashSet<Principal>(principals.values());
                     set.remove(EveryonePrincipal.getInstance());
                     it = new PrincipalIteratorAdapter(set);
                     break;

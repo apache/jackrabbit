@@ -31,21 +31,21 @@ import java.util.Arrays;
 /**
  * <code>AccessControlEntryIterator</code>...
  */
-public class AccessControlEntryIterator implements Iterator {
+public class AccessControlEntryIterator implements Iterator<AccessControlEntry> {
 
     private static Logger log = LoggerFactory.getLogger(AccessControlEntryIterator.class);
 
-    private final List acls = new ArrayList();
-    private Iterator currentEntries;
-    private Object next;
+    private final List<AccessControlList> acls = new ArrayList<AccessControlList>();
+    private Iterator<AccessControlEntry> currentEntries;
+    private AccessControlEntry next;
 
-    public AccessControlEntryIterator(List aces) {
+    public AccessControlEntryIterator(List<AccessControlList> aces) {
         this(new AccessControlList[] {new UnmodifiableAccessControlList(aces)});
     }
 
     public AccessControlEntryIterator(AccessControlList[] acls) {
-        for (int i = 0; i < acls.length; i++) {
-            this.acls.add(acls[i]);
+        for (AccessControlList a : acls) {
+            this.acls.add(a);
         }
         next = seekNext();
     }
@@ -58,16 +58,16 @@ public class AccessControlEntryIterator implements Iterator {
         return next != null;
     }
 
-    public Object next() {
+    public AccessControlEntry next() {
         if (next == null) {
             throw new NoSuchElementException();
         }
-        Object ret = next;
+        AccessControlEntry ret = next;
         next = seekNext();
         return ret;
     }
 
-    private Object seekNext() {
+    private AccessControlEntry seekNext() {
         while (currentEntries == null || !currentEntries.hasNext()) {
             if (acls.isEmpty()) {
                 // reached last acl -> break out of while loop
@@ -76,7 +76,7 @@ public class AccessControlEntryIterator implements Iterator {
             } else {
                 AccessControlEntry[] entries = new AccessControlEntry[0];
                 try {
-                    entries = ((AccessControlList) acls.remove(0)).getAccessControlEntries();
+                    entries = (acls.remove(0)).getAccessControlEntries();
                 } catch (RepositoryException e) {
                     log.error("Unable to retrieve ACEs: " + e.getMessage() + " -> try next.");
                 }

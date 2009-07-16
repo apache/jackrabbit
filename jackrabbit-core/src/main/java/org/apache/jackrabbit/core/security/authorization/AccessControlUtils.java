@@ -20,6 +20,8 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.core.ItemImpl;
 
 import javax.jcr.RepositoryException;
+
+import java.security.Principal;
 import java.util.Set;
 
 /**
@@ -58,7 +60,7 @@ public interface AccessControlUtils {
      * @return true if the specified set of principals contains an
      * <code>AdminPrincipal</code> or a <code>SystemPrincipal</code>.
      */
-    boolean isAdminOrSystem(Set principals);
+    boolean isAdminOrSystem(Set<Principal> principals);
 
     /**
      * Test if if the specified set of principals will have read-only permissions
@@ -69,6 +71,6 @@ public interface AccessControlUtils {
      * @return true if the specified set of principals will only be granted
      * read permission on all items.
      */
-    boolean isReadOnly(Set principals);
+    boolean isReadOnly(Set<Principal> principals);
 
 }
