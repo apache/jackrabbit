@@ -99,7 +99,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * List of <code>EventState</code>s.
      */
-    private List events;
+    private List<EventState> events;
 
     /**
      * The user data.
@@ -126,7 +126,7 @@ public class ChangeLogRecord extends ClusterRecord {
      * @param timestamp when the changes for this record were persisted.
      * @param userData the user data associated with these changes.
      */
-    public ChangeLogRecord(ChangeLog changes, List events,
+    public ChangeLogRecord(ChangeLog changes, List<EventState> events,
                            Record record, String workspace,
                            long timestamp, String userData) {
         super(record, workspace);
@@ -149,7 +149,7 @@ public class ChangeLogRecord extends ClusterRecord {
 
         this.identifier = identifier;
         this.changes = new ChangeLog();
-        this.events = new ArrayList();
+        this.events = new ArrayList<EventState>();
     }
 
     /**
@@ -276,16 +276,16 @@ public class ChangeLogRecord extends ClusterRecord {
         Path.Element childRelPath = record.readPathElement();
         Name ntName = record.readQName();
 
-        Set mixins = new HashSet();
+        Set<Name> mixins = new HashSet<Name>();
         int mixinCount = record.readInt();
         for (int i = 0; i < mixinCount; i++) {
             mixins.add(record.readQName());
         }
         String userId = record.readString();
 
-        Map info = null;
+        Map<String, InternalValue> info = null;
         if (type == Event.NODE_MOVED) {
-            info = new HashMap();
+            info = new HashMap<String, InternalValue>();
             // read info map
             int infoSize = record.readInt();
             for (int i = 0; i < infoSize; i++) {
@@ -325,7 +325,7 @@ public class ChangeLogRecord extends ClusterRecord {
      */
     private EventState createEventState(int type, NodeId parentId, Path parentPath,
                                         NodeId childId, Path.Element childRelPath,
-                                        Name ntName, Set mixins, String userId) {
+                                        Name ntName, Set<Name> mixins, String userId) {
         switch (type) {
             case Event.NODE_ADDED:
                 return EventState.childNodeAdded(parentId, parentPath, childId, childRelPath,
@@ -392,9 +392,7 @@ public class ChangeLogRecord extends ClusterRecord {
             }
         }
 
-        Iterator iter = events.iterator();
-        while (iter.hasNext()) {
-            EventState event = (EventState) iter.next();
+        for (EventState event : events) {
             writeEventRecord(event);
         }
     }
@@ -466,22 +464,21 @@ public class ChangeLogRecord extends ClusterRecord {
         record.writePathElement(event.getChildRelPath());
         record.writeQName(event.getNodeType());
 
-        Set mixins = event.getMixinNames();
+        Set<Name> mixins = event.getMixinNames();
         record.writeInt(mixins.size());
-        Iterator iter = mixins.iterator();
+        Iterator<Name> iter = mixins.iterator();
         while (iter.hasNext()) {
-            record.writeQName((Name) iter.next());
+            record.writeQName(iter.next());
         }
         record.writeString(event.getUserId());
 
         if (event.getType() == Event.NODE_MOVED) {
             // write info map
-            Map info = event.getInfo();
+            Map<String, InternalValue> info = event.getInfo();
             record.writeInt(info.size());
-            for (Iterator it = info.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry entry = (Map.Entry) it.next();
-                String key = (String) entry.getKey();
-                InternalValue value = (InternalValue) entry.getValue();
+            for (Map.Entry<String, InternalValue> entry : info.entrySet()) {
+                String key = entry.getKey();
+                InternalValue value = entry.getValue();
                 record.writeString(key);
                 if (value == null) {
                     // use undefined for null value
@@ -515,7 +512,7 @@ public class ChangeLogRecord extends ClusterRecord {
      *
      * @return events
      */
-    public List getEvents() {
+    public List<EventState> getEvents() {
         return Collections.unmodifiableList(events);
     }
 

@@ -27,12 +27,12 @@ public interface WorkspaceListener {
 
     /**
      * Workspace created on another cluster node.
-     * 
+     *
      * @param workspaceName
      * @param configTemplate
      * @throws RepositoryException
      */
-    public void externalWorkspaceCreated(String workspaceName,
+    void externalWorkspaceCreated(String workspaceName,
             InputSource configTemplate) throws RepositoryException;
 
 }

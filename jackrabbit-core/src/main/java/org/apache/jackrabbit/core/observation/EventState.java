@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -107,7 +109,7 @@ public class EventState {
     /**
      * Set of mixin QNames assigned to the parent node.
      */
-    private final Set mixins;
+    private final Set<Name> mixins;
 
     /**
      * Set of node types. This Set consists of the primary node type and all
@@ -116,7 +118,7 @@ public class EventState {
      * This <code>Set</code> is initialized when
      * {@link #getNodeTypes(NodeTypeManagerImpl)} is called for the first time.
      */
-    private Set allTypes;
+    private Set<NodeType> allTypes;
 
     /**
      * The session that caused this event.
@@ -142,13 +144,13 @@ public class EventState {
     /**
      * The info Map associated with this event.
      */
-    private Map info = Collections.EMPTY_MAP;
+    private Map<String, InternalValue> info = Collections.emptyMap();
 
     /**
      * If set to <code>true</code>, indicates that the child node of a node
      * added or removed event is a shareable node.
      */
-    private boolean shareableNode = false;
+    private boolean shareableNode;
 
     /**
      * Creates a new <code>EventState</code> instance.
@@ -169,7 +171,7 @@ public class EventState {
      */
     private EventState(int type, NodeId parentId, Path parentPath,
                        NodeId childId, Path.Element childPath, Name nodeType,
-                       Set mixins, Session session, boolean external) {
+                       Set<Name> mixins, Session session, boolean external) {
 
         int mask = (Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
         if ((type & mask) > 0) {
@@ -214,7 +216,7 @@ public class EventState {
                                             NodeId childId,
                                             Path.Element childPath,
                                             Name nodeType,
-                                            Set mixins,
+                                            Set<Name> mixins,
                                             Session session) {
 
         return childNodeAdded(parentId, parentPath, childId,
@@ -242,7 +244,7 @@ public class EventState {
                                             NodeId childId,
                                             Path.Element childPath,
                                             Name nodeType,
-                                            Set mixins,
+                                            Set<Name> mixins,
                                             Session session,
                                             boolean external) {
 
@@ -270,7 +272,7 @@ public class EventState {
                                               NodeId childId,
                                               Path.Element childPath,
                                               Name nodeType,
-                                              Set mixins,
+                                              Set<Name> mixins,
                                               Session session) {
 
         return childNodeRemoved(parentId, parentPath, childId,
@@ -298,7 +300,7 @@ public class EventState {
                                               NodeId childId,
                                               Path.Element childPath,
                                               Name nodeType,
-                                              Set mixins,
+                                              Set<Name> mixins,
                                               Session session,
                                               boolean external) {
 
@@ -330,7 +332,7 @@ public class EventState {
                                        NodeId childId,
                                        Path.Element childPath,
                                        Name nodeType,
-                                       Set mixins,
+                                       Set<Name> mixins,
                                        Session session,
                                        boolean external) {
 
@@ -361,7 +363,7 @@ public class EventState {
                                        NodeId childId,
                                        Path srcPath,
                                        Name nodeType,
-                                       Set mixins,
+                                       Set<Name> mixins,
                                        Session session,
                                        boolean external)
             throws ItemStateException {
@@ -369,7 +371,7 @@ public class EventState {
             EventState es = nodeMoved(parentId, destPath.getAncestor(1),
                     childId, destPath.getNameElement(), nodeType, mixins,
                     session, external);
-            Map info = new HashMap();
+            Map<String, InternalValue> info = new HashMap<String, InternalValue>();
             info.put(SRC_ABS_PATH, InternalValue.create(srcPath));
             info.put(DEST_ABS_PATH, InternalValue.create(destPath));
             es.setInfo(info);
@@ -412,12 +414,12 @@ public class EventState {
                                            Path.Element srcChildPath,
                                            Path.Element beforeChildPath,
                                            Name nodeType,
-                                           Set mixins,
+                                           Set<Name> mixins,
                                            Session session,
                                            boolean external) {
         EventState es = nodeMoved(parentId, parentPath, childId, destChildPath,
                nodeType, mixins, session, external);
-        Map info = new HashMap();
+        Map<String, InternalValue> info = new HashMap<String, InternalValue>();
         info.put(SRC_CHILD_REL_PATH, createValue(srcChildPath));
         InternalValue value = null;
         if (beforeChildPath != null) {
@@ -446,7 +448,7 @@ public class EventState {
                                            Path parentPath,
                                            Path.Element childPath,
                                            Name nodeType,
-                                           Set mixins,
+                                           Set<Name> mixins,
                                            Session session) {
 
         return propertyAdded(parentId, parentPath, childPath,
@@ -472,7 +474,7 @@ public class EventState {
                                            Path parentPath,
                                            Path.Element childPath,
                                            Name nodeType,
-                                           Set mixins,
+                                           Set<Name> mixins,
                                            Session session,
                                            boolean external) {
 
@@ -498,7 +500,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.Element childPath,
                                              Name nodeType,
-                                             Set mixins,
+                                             Set<Name> mixins,
                                              Session session) {
 
         return propertyRemoved(parentId, parentPath, childPath,
@@ -524,7 +526,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.Element childPath,
                                              Name nodeType,
-                                             Set mixins,
+                                             Set<Name> mixins,
                                              Session session,
                                              boolean external) {
 
@@ -550,7 +552,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.Element childPath,
                                              Name nodeType,
-                                             Set mixins,
+                                             Set<Name> mixins,
                                              Session session) {
 
         return propertyChanged(parentId, parentPath, childPath,
@@ -576,7 +578,7 @@ public class EventState {
                                              Path parentPath,
                                              Path.Element childPath,
                                              Name nodeType,
-                                             Set mixins,
+                                             Set<Name> mixins,
                                              Session session,
                                              boolean external) {
 
@@ -645,7 +647,7 @@ public class EventState {
      *
      * @return the mixin names as <code>Name</code>s.
      */
-    public Set getMixinNames() {
+    public Set<Name> getMixinNames() {
         return mixins;
     }
 
@@ -657,17 +659,17 @@ public class EventState {
      *
      * @return <code>Set</code> of {@link javax.jcr.nodetype.NodeType}s.
      */
-    public Set getNodeTypes(NodeTypeManagerImpl ntMgr) {
+    public Set<NodeType> getNodeTypes(NodeTypeManagerImpl ntMgr) {
         if (allTypes == null) {
-            Set tmp = new HashSet();
+            Set<NodeType> tmp = new HashSet<NodeType>();
             try {
                 tmp.add(ntMgr.getNodeType(nodeType));
             } catch (NoSuchNodeTypeException e) {
                 log.warn("Unknown node type: " + nodeType);
             }
-            Iterator it = mixins.iterator();
+            Iterator<Name> it = mixins.iterator();
             while (it.hasNext()) {
-                Name mixinName = (Name) it.next();
+                Name mixinName = it.next();
                 try {
                     tmp.add(ntMgr.getNodeType(mixinName));
                 } catch (NoSuchNodeTypeException e) {
@@ -725,7 +727,7 @@ public class EventState {
     /**
      * @return an unmodifiable info Map.
      */
-    public Map getInfo() {
+    public Map<String, InternalValue> getInfo() {
         return info;
     }
 
@@ -734,8 +736,8 @@ public class EventState {
      *
      * @param info the new info map.
      */
-    public void setInfo(Map info) {
-        this.info = Collections.unmodifiableMap(new HashMap(info));
+    public void setInfo(Map<String, InternalValue> info) {
+        this.info = Collections.unmodifiableMap(new HashMap<String, InternalValue>(info));
     }
 
     /**

@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.observation;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import javax.jcr.observation.Event;
@@ -141,11 +140,10 @@ public final class EventImpl implements JackrabbitEvent, Event {
     /**
      * {@inheritDoc}
      */
-    public Map getInfo() throws RepositoryException {
-        Map info = new HashMap();
-        for (Iterator it = eventState.getInfo().entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Map.Entry) it.next();
-            InternalValue value = (InternalValue) entry.getValue();
+    public Map<String, String> getInfo() throws RepositoryException {
+        Map<String, String> info = new HashMap<String, String>();
+        for (Map.Entry<String, InternalValue> entry : eventState.getInfo().entrySet()) {
+            InternalValue value = entry.getValue();
             String strValue = null;
             if (value != null) {
                 strValue = ValueFormat.getJCRString(value, session);

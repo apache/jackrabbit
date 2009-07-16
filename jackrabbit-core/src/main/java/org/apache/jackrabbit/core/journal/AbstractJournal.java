@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
+import java.io.File;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
+import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 
 /**
  * Base journal implementation.
@@ -58,12 +58,12 @@ public abstract class AbstractJournal implements Journal {
     /**
      * Map of registered consumers.
      */
-    private final Map consumers = new HashMap();
+    private final Map<String, RecordConsumer> consumers = new HashMap<String, RecordConsumer>();
 
     /**
      * Map of registered producers.
      */
-    private final Map producers = new HashMap();
+    private final Map<String, RecordProducer> producers = new HashMap<String, RecordProducer>();
 
     /**
      * Journal lock, allowing multiple readers (synchronizing their contents)
@@ -128,7 +128,7 @@ public abstract class AbstractJournal implements Journal {
      */
     public RecordConsumer getConsumer(String identifier) {
         synchronized (consumers) {
-            return (RecordConsumer) consumers.get(identifier);
+            return consumers.get(identifier);
         }
     }
 
@@ -137,7 +137,7 @@ public abstract class AbstractJournal implements Journal {
      */
     public RecordProducer getProducer(String identifier) {
         synchronized (producers) {
-            RecordProducer producer = (RecordProducer) producers.get(identifier);
+            RecordProducer producer = producers.get(identifier);
             if (producer == null) {
                 producer = createProducer(identifier);
                 producers.put(identifier, producer);
@@ -163,9 +163,7 @@ public abstract class AbstractJournal implements Journal {
         long minimalRevision = Long.MAX_VALUE;
 
         synchronized (consumers) {
-            Iterator iter = consumers.values().iterator();
-            while (iter.hasNext()) {
-                RecordConsumer consumer = (RecordConsumer) iter.next();
+            for (RecordConsumer consumer : consumers.values()) {
                 if (consumer.getRevision() < minimalRevision) {
                     minimalRevision = consumer.getRevision();
                 }
@@ -225,9 +223,7 @@ public abstract class AbstractJournal implements Journal {
         }
 
         if (stopRevision > 0) {
-            Iterator iter = consumers.values().iterator();
-            while (iter.hasNext()) {
-                RecordConsumer consumer = (RecordConsumer) iter.next();
+            for (RecordConsumer consumer : consumers.values()) {
                 consumer.setRevision(stopRevision);
             }
             log.info("Synchronized to revision: " + stopRevision);

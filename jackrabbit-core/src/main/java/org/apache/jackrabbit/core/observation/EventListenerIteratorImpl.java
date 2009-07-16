@@ -48,7 +48,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     /**
      * Current position
      */
-    private long pos = 0;
+    private long pos;
 
     /**
      * Creates a new <code>EventListenerIteratorImpl</code>.

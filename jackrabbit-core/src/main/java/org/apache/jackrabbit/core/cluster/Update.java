@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.cluster;
 
 import java.util.List;
 
+import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 
 /**
@@ -55,7 +56,7 @@ public interface Update {
      *
      * @return collection of <code>EventState</code>s
      */
-    List getEvents();
+    List<EventState> getEvents();
 
     /**
      * Returns the timestamp whe this update occured.
