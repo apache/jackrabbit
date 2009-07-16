@@ -319,7 +319,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             return true;
         } catch (RepositoryException e) {
             // revert all pending changes and rethrow.
-            log.warn("Error while editing group membership:", e.getMessage());
             getSession().refresh(false);
             throw e;
         }
@@ -372,7 +371,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 }
             } catch (ItemNotFoundException e) {
                 // groupNode doesn't exist any more
-                log.warn("Group node referenced by " + getID() + " doesn't exist -> Ignored from membership list.");
+                log.warn("Group node referenced by " + getID() + " doesn't exist anymore -> Ignored from membership list.");
                 // TODO: ev. clean up list of group memberships
             }
         }
