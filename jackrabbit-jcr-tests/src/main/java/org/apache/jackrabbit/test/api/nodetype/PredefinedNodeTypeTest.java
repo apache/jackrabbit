@@ -97,6 +97,11 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
         }
     }
 
+    /** Test for the predefined mix:lifecycle node type. */
+    public void testLifecycle() throws NotExecutableException {
+        testPredefinedNodeType("mix:lifecycle");
+    }
+
     /** Test for the predefined mix:lockable node type. */
     public void testLockable() throws NotExecutableException {
         testPredefinedNodeType("mix:lockable");

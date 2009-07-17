@@ -148,22 +148,21 @@ public class TestAll extends TestCase {
         suite.addTestSuite(GetWeakReferencesTest.class);
 
         //// new Session features
-        
         suite.addTestSuite(SessionRemoveItemTest.class);
         suite.addTestSuite(HasPermissionTest.class);
 
         //// new Workspace features
-        
         suite.addTestSuite(WorkspaceTest.class);
-        
+
         //// shareable nodes
-        
         suite.addTestSuite(ShareableNodeTest.class);
-        
+
         //// repository factory
-        
         suite.addTestSuite(RepositoryFactoryTest.class);
-        
+
+        //// lifecycle management
+        suite.addTestSuite(LifecycleTest.class);
+
         return suite;
     }
 }
