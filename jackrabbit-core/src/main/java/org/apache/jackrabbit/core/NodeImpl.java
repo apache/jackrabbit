@@ -32,6 +32,7 @@ import java.util.Set;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
 import javax.jcr.InvalidItemStateException;
+import javax.jcr.InvalidLifecycleTransitionException;
 import javax.jcr.Item;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -66,6 +67,7 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
 import javax.jcr.version.VersionManager;
 
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -112,6 +114,9 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
@@ -5054,28 +5059,83 @@ public class NodeImpl extends ItemImpl implements Node {
         return prop;
     }
 
-    // TODO: JCR-1565 JSR 283 lifecycle management
+    /**
+     * Returns all allowed transitions from the current lifecycle state of
+     * this node.
+     * <p>
+     * The lifecycle policy node referenced by the "jcr:lifecyclePolicy"
+     * property is expected to contain a "transitions" node with a list of
+     * child nodes, one for each transition. These transition nodes must
+     * have single-valued string "from" and "to" properties that identify
+     * the allowed source and target states of each transition.
+     * <p>
+     * Note that future versions of Apache Jackrabbit may well use different
+     * lifecycle policy implementations.
+     *
+     * @since Apache Jackrabbit 2.0
+     * @return allowed transitions for the current lifecycle state of this node
+     * @throws UnsupportedRepositoryOperationException
+     *             if this node does not have the mix:lifecycle mixin node type
+     * @throws RepositoryException if another error occurs
+     */
     public String[] getAllowedLifecycleTransistions()
-            throws RepositoryException {
+            throws UnsupportedRepositoryOperationException, RepositoryException {
         if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
-            throw new UnsupportedRepositoryOperationException();
+            Node policy = getProperty(JCR_LIFECYCLE_POLICY).getNode();
+            String state = getProperty(JCR_CURRENT_LIFECYCLE_STATE).getString();
+
+            List<String> targetStates = new ArrayList<String>();
+            if (policy.hasNode("transitions")) {
+                Node transitions = policy.getNode("transitions");
+                for (Node transition : JcrUtils.getChildNodes(transitions)) {
+                    String from = transition.getProperty("from").getString();
+                    if (from.equals(state)) {
+                        String to = transition.getProperty("to").getString();
+                        targetStates.add(to);
+                    }
+                }
+            }
+
+            return targetStates.toArray(new String[targetStates.size()]);
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Only nodes with mixin node type mix:lifecycle"
-                    + " may participate in a lifecycle.");
+                    + " may participate in a lifecycle: " + this);
         }
     }
 
-    // TODO: JCR-1565 JSR 283 lifecycle management
+    /**
+     * Transitions this node through its lifecycle to the given target state.
+     *
+     * @since Apache Jackrabbit 2.0
+     * @see #getAllowedLifecycleTransistions()
+     * @param transition target lifecycle state
+     * @throws UnsupportedRepositoryOperationException
+     *             if this node does not have the mix:lifecycle mixin node type
+     * @throws InvalidLifecycleTransitionException
+     *             if the given target state is not among the allowed
+     *             transitions from the current lifecycle state of this node
+     * @throws RepositoryException if another error occurs
+     */
     public void followLifecycleTransition(String transition)
-            throws RepositoryException {
-        if (isNodeType(NameConstants.MIX_LIFECYCLE)) {
-            throw new UnsupportedRepositoryOperationException();
-        } else {
-            throw new UnsupportedRepositoryOperationException(
-                    "Only nodes with mixin node type mix:lifecycle"
-                    + " may participate in a lifecycle.");
+            throws UnsupportedRepositoryOperationException,
+            InvalidLifecycleTransitionException, RepositoryException {
+        // getAllowedLifecycleTransitions checks for the mix:lifecycle mixin
+        for (String target : getAllowedLifecycleTransistions()) {
+            if (target.equals(transition)) {
+                PropertyImpl property = getProperty(JCR_CURRENT_LIFECYCLE_STATE);
+                property.internalSetValue(
+                        new InternalValue[] { InternalValue.create(target) },
+                        PropertyType.STRING);
+                property.save();
+                return;
+            }
         }
+
+        // No valid transition found
+        throw new InvalidLifecycleTransitionException(
+                "Invalid lifecycle transition \""
+                + transition  + "\" for " + this);
     }
 
     //--------------------------------------------------------------< Object >
