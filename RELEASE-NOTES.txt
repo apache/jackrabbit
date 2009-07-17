@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha5
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha6
 
 Introduction
 ------------
