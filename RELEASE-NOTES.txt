@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0-alpha4
+Release Notes -- Apache Jackrabbit -- Version 2.0-alpha5
 
 Introduction
 ------------
@@ -37,6 +37,8 @@ notable changes in this release are:
     separately from the Jackrabbit content repository. See the individual
     components for their most recent releases.
 
+  * Data store feature enabled in the default repository configuration.
+
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
 
@@ -45,13 +47,12 @@ Jackrabbit releases, please see the Jackrabbit issue tracker at
 JCR 2.0 feature completeness
 ----------------------------
 
-The following 41 top level JCR 2.0 implementation issues are being tracked in
+The following 42 top level JCR 2.0 implementation issues are being tracked in
 the Jackrabbit issue tracker. Most of them have already been partially
 implemented, but the issue will only be marked as resolved once no more
 related work is needed.
 
-Open (16 issues)
-  [JCR-1565] JSR 283 lifecycle management
+Open (12 issues)
   [JCR-1588] JSR 283: Access Control
   [JCR-1590] JSR 283: Locking
   [JCR-1591] JSR 283: NodeType Management
@@ -62,14 +63,12 @@ Open (16 issues)
   [JCR-2085] test case (TCK) maintenance for JCR 2.0
   [JCR-2092] make spi query code compatible with JCR 2.0
   [JCR-2116] JSR 283: Built-In Node Types
-  [JCR-2137] Use type StaticOperand for fullTextSearchExpression
   [JCR-2140] JSR 283: Baselines
-  [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
-  [JCR-2200] Implement Query.getBindVariableNames()
-  [JCR-2201] Implement QueryResult.getSelectorNames()
+  [JCR-2208] update tests so that both Query.XPATH and Query:SQL are ...
 
-Resolved (25 issues)
+Resolved (30 issues)
   [JCR-1564] JSR 283 namespace handling
+  [JCR-1565] JSR 283 lifecycle management
   [JCR-1589] JSR 283: Retention & Hold Management
   [JCR-1592] JSR 283: Activities
   [JCR-1593] JSR 283: Simple versioning
@@ -94,6 +93,10 @@ Resolved (25 issues)
   [JCR-2091] Searchability settings in PropertyDefinition
   [JCR-2093] Implement QueryObjectModelFactory.fullTextSearch() in ...
   [JCR-2117] JSR 283: adopt CND syntax changes
+  [JCR-2137] Use type StaticOperand for fullTextSearchExpression
+  [JCR-2198] Text.escapeIllegalJCRChars should be adjusted to match the ...
+  [JCR-2200] Implement Query.getBindVariableNames()
+  [JCR-2201] Implement QueryResult.getSelectorNames()
 
 Release Contents
 ----------------
