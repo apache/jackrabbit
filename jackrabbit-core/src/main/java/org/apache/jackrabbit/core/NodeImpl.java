@@ -117,6 +117,8 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_CURRENT_LIFECYCLE_STATE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
 
 /**
  * <code>NodeImpl</code> implements the <code>Node</code> interface.
@@ -5076,7 +5078,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @return allowed transitions for the current lifecycle state of this node
      * @throws UnsupportedRepositoryOperationException
      *             if this node does not have the mix:lifecycle mixin node type
-     * @throws RepositoryException if another error occurs
+     * @throws RepositoryException if a repository error occurs
      */
     public String[] getAllowedLifecycleTransistions()
             throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -5115,7 +5117,7 @@ public class NodeImpl extends ItemImpl implements Node {
      * @throws InvalidLifecycleTransitionException
      *             if the given target state is not among the allowed
      *             transitions from the current lifecycle state of this node
-     * @throws RepositoryException if another error occurs
+     * @throws RepositoryException if a repository error occurs
      */
     public void followLifecycleTransition(String transition)
             throws UnsupportedRepositoryOperationException,
@@ -5136,6 +5138,39 @@ public class NodeImpl extends ItemImpl implements Node {
         throw new InvalidLifecycleTransitionException(
                 "Invalid lifecycle transition \""
                 + transition  + "\" for " + this);
+    }
+
+    /**
+     * Assigns the given lifecycle policy to this node and sets the
+     * current state to the one given.
+     * <p>
+     * Note that currently no special checks are made against the given
+     * arguments, and that you will need to explicitly persist these changes
+     * by calling save().
+     * <p>
+     * Note that future versions of Apache Jackrabbit may well use different
+     * lifecycle policy implementations.
+     *
+     * @param policy lifecycle policy node
+     * @param state current lifecycle state
+     * @throws RepositoryException if a repository error occurs
+     */
+    public void assignLifecyclePolicy(Node policy, String state)
+            throws RepositoryException {
+        if (!(policy instanceof NodeImpl)
+                || !((NodeImpl) policy).isNodeType(MIX_REFERENCEABLE)) {
+            throw new RepositoryException(
+                    policy + " is not referenceable, so it can not be"
+                    + " used as a lifecycle policy");
+        }
+
+        addMixin(MIX_LIFECYCLE);
+        internalSetProperty(
+                JCR_LIFECYCLE_POLICY,
+                InternalValue.create(((NodeImpl) policy).getNodeId()));
+        internalSetProperty(
+                JCR_CURRENT_LIFECYCLE_STATE,
+                InternalValue.create(state));
     }
 
     //--------------------------------------------------------------< Object >

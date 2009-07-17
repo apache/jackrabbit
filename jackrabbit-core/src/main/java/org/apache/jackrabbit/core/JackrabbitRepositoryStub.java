@@ -39,6 +39,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.retention.RetentionPolicy;
 
 import org.apache.commons.io.IOUtils;
@@ -235,6 +236,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         addPropertyTestData(getOrAddNode(data, "property"));
         addQueryTestData(getOrAddNode(data, "query"));
         addNodeTestData(getOrAddNode(data, "node"));
+        addLifecycleTestData(getOrAddNode(data, "lifecycle"));
         addExportTestData(getOrAddNode(data, "docViewTest"));
 
         Node conf = getOrAddNode(session.getRootNode(), "testconf");
@@ -328,6 +330,22 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
                 factory.createValue(resource),
                 factory.createValue(resReference)
             });
+    }
+
+    /**
+     * Creates a lifecycle policy node and another node with a lifecycle
+     * referencing that policy.
+     */
+    private void addLifecycleTestData(Node node) throws RepositoryException {
+        Node policy = getOrAddNode(node, "policy");
+        policy.addMixin(NodeType.MIX_REFERENCEABLE);
+        Node transitions = getOrAddNode(policy, "transitions");
+        Node transition = getOrAddNode(transitions, "identity");
+        transition.setProperty("from", "identity");
+        transition.setProperty("to", "identity");
+
+        Node lifecycle = getOrAddNode(node, "node");
+        ((NodeImpl) lifecycle).assignLifecyclePolicy(policy, "identity");
     }
 
     private void addExportTestData(Node node) throws RepositoryException, IOException {
