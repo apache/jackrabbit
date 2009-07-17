@@ -54,7 +54,8 @@ public class XASessionImpl extends SessionImpl
     /**
      * Global transactions
      */
-    private static final Map txGlobal = Collections.synchronizedMap(new HashMap());
+    private static final Map<Xid, TransactionContext> txGlobal =
+        Collections.synchronizedMap(new HashMap<Xid, TransactionContext>());
 
     /**
      * System property specifying the default Transaction Timeout
@@ -386,9 +387,7 @@ public class XASessionImpl extends SessionImpl
      */
     public synchronized void associate(TransactionContext tx) {
         this.tx = tx;
-
-        for (int i = 0; i < txResources.length; i++) {
-            InternalXAResource txResource = txResources[i];
+        for (InternalXAResource txResource : txResources) {
             txResource.associate(tx);
         }
     }

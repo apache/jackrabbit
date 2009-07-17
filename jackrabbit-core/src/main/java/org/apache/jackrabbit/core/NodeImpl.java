@@ -2970,10 +2970,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList nodes = new ArrayList();
-        // traverse children using a special filtering 'collector'
-        accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
-        return new NodeIteratorAdapter(nodes);
+        return ChildrenCollectorFilter.collectChildNodes(this, namePattern);
     }
 
     /**
@@ -2984,10 +2981,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList properties = new ArrayList();
-        // traverse children using a special filtering 'collector'
-        accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
-        return new PropertyIteratorAdapter(properties);
+        return ChildrenCollectorFilter.collectProperties(this, namePattern);
     }
 
     /**
@@ -3462,10 +3456,8 @@ public class NodeImpl extends ItemImpl implements Node {
             throws NoSuchWorkspaceException, AccessDeniedException,
             VersionException, LockException, InvalidItemStateException,
             RepositoryException {
-
-        List failedIds = new ArrayList();
+        List<ItemId> failedIds = new ArrayList<ItemId>();
         internalMerge(srcWorkspace, failedIds, bestEffort, isShallow);
-
         return new LazyItemIterator(itemMgr, failedIds);
     }
 
@@ -4772,10 +4764,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList nodes = new ArrayList();
-        // traverse children using a special filtering 'collector'
-        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
-        return new NodeIteratorAdapter(nodes);
+        return ChildrenCollectorFilter.collectChildNodes(this, nameGlobs);
     }
 
     /**
@@ -4786,10 +4775,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // check state of this instance
         sanityCheck();
 
-        ArrayList props = new ArrayList();
-        // traverse children using a special filtering 'collector'
-        accept(new ChildrenCollectorFilter(nameGlobs, props, false, true, 1));
-        return new PropertyIteratorAdapter(props);
+        return ChildrenCollectorFilter.collectProperties(this, nameGlobs);
     }
 
     /**
