@@ -52,8 +52,6 @@ import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 
-import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
@@ -447,10 +445,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeIterator getNodes(String namePattern) throws RepositoryException {
         checkStatus();
-        ArrayList nodes = new ArrayList();
-        // traverse children using a special filtering item visitor
-        accept(new ChildrenCollectorFilter(namePattern, nodes, true, false, 1));
-        return new NodeIteratorAdapter(nodes);
+
+        return ChildrenCollectorFilter.collectChildNodes(this, namePattern);
     }
 
     /**
@@ -458,10 +454,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public NodeIterator getNodes(String[] nameGlobs) throws RepositoryException {
         checkStatus();
-        List nodes = new ArrayList();
-        // traverse child nodes using a filtering item visitor
-        accept(new ChildrenCollectorFilter(nameGlobs, nodes, true, false, 1));
-        return new NodeIteratorAdapter(nodes);
+
+        return ChildrenCollectorFilter.collectChildNodes(this, nameGlobs);
     }
 
     /**
@@ -505,10 +499,8 @@ public class NodeImpl extends ItemImpl implements Node {
      */
     public PropertyIterator getProperties(String namePattern) throws RepositoryException {
         checkStatus();
-        ArrayList properties = new ArrayList();
-        // traverse children using a filtering item visitor
-        accept(new ChildrenCollectorFilter(namePattern, properties, false, true, 1));
-        return new PropertyIteratorAdapter(properties);
+
+        return ChildrenCollectorFilter.collectProperties(this, namePattern);
     }
 
     /**
@@ -517,10 +509,8 @@ public class NodeImpl extends ItemImpl implements Node {
     public PropertyIterator getProperties(String[] nameGlobs)
             throws RepositoryException {
         checkStatus();
-        List properties = new ArrayList();
-        // traverse child properties using a filtering item visitor
-        accept(new ChildrenCollectorFilter(nameGlobs, properties, false, true, 1));
-        return new PropertyIteratorAdapter(properties);
+
+        return ChildrenCollectorFilter.collectProperties(this, nameGlobs);
     }
 
     /**

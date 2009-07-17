@@ -577,10 +577,9 @@ public class ItemManager implements Dumpable, ItemStateListener {
             log.debug(msg);
             throw new RepositoryException(msg);
         }
-        Iterator iter = ((NodeState) data.getState()).getChildNodeEntries().iterator();
 
-        while (iter.hasNext()) {
-            ChildNodeEntry entry = (ChildNodeEntry) iter.next();
+        NodeState state = (NodeState) data.getState();
+        for (ChildNodeEntry entry : state.getChildNodeEntries()) {
             // make sure any of the properties can be read.
             if (canRead(entry.getId())) {
                 return true;

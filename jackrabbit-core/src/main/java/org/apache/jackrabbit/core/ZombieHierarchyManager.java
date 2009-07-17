@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.Iterator;
-
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -102,10 +100,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
                                                          Name name,
                                                          int index) {
         // check removed child node entries first
-        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry =
-                    (ChildNodeEntry) iter.next();
+        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
             if (entry.getName().equals(name)
                     && entry.getIndex() == index) {
                 return entry;
@@ -124,10 +119,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
                                                          NodeId id) {
         // check removed child node entries first
-        Iterator iter = parent.getRemovedChildNodeEntries().iterator();
-        while (iter.hasNext()) {
-            ChildNodeEntry entry =
-                    (ChildNodeEntry) iter.next();
+        for (ChildNodeEntry entry : parent.getRemovedChildNodeEntries()) {
             if (entry.getId().equals(id)) {
                 return entry;
             }

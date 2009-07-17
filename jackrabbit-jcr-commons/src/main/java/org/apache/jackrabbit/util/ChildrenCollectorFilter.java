@@ -16,10 +16,18 @@
  */
 package org.apache.jackrabbit.util;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.util.TraversingItemVisitor;
+
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
+import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
@@ -33,7 +41,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
     static final char WILDCARD_CHAR = '*';
     static final String OR = "|";
 
-    private final Collection children;
+    private final Collection<Item> children;
     private final boolean collectNodes;
     private final boolean collectProperties;
     // namePattern and nameGlobs fields are used mutually exclusive
@@ -52,7 +60,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
      */
     public ChildrenCollectorFilter(
-            String namePattern, Collection children,
+            String namePattern, Collection<Item> children,
             boolean collectNodes, boolean collectProperties, int maxLevel) {
         super(false, maxLevel);
         this.namePattern = namePattern;
@@ -74,7 +82,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      *                          (e.g. 1 for direct children only, 2 for children and their children, and so on)
      */
     public ChildrenCollectorFilter(
-            String[] nameGlobs, Collection children,
+            String[] nameGlobs, Collection<Item> children,
             boolean collectNodes, boolean collectProperties, int maxLevel) {
         super(false, maxLevel);
         this.nameGlobs = nameGlobs;
@@ -82,6 +90,38 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
         this.children = children;
         this.collectNodes = collectNodes;
         this.collectProperties = collectProperties;
+    }
+
+    public static NodeIterator collectChildNodes(
+            Node node, String namePattern) throws RepositoryException {
+        Collection<Item> nodes = new ArrayList<Item>();
+        node.accept(new ChildrenCollectorFilter(
+                namePattern, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
+    }
+
+    public static NodeIterator collectChildNodes(
+            Node node, String[] nameGlobs) throws RepositoryException {
+        Collection<Item> nodes = new ArrayList<Item>();
+        node.accept(new ChildrenCollectorFilter(
+                nameGlobs, nodes, true, false, 1));
+        return new NodeIteratorAdapter(nodes);
+    }
+
+    public static PropertyIterator collectProperties(
+            Node node, String namePattern) throws RepositoryException {
+        Collection<Item> properties = new ArrayList<Item>();
+        node.accept(new ChildrenCollectorFilter(
+                namePattern, properties, false, true, 1));
+        return new PropertyIteratorAdapter(properties);
+    }
+
+    public static PropertyIterator collectProperties(
+            Node node, String[] nameGlobs) throws RepositoryException {
+        Collection<Item> properties = new ArrayList<Item>();
+        node.accept(new ChildrenCollectorFilter(
+                nameGlobs, properties, false, true, 1));
+        return new PropertyIteratorAdapter(properties);
     }
 
     /**

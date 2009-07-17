@@ -25,11 +25,12 @@ import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.security.AccessControlContext;
 import java.security.AccessController;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -205,7 +206,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * active sessions (weak references)
      */
-    private final ReferenceMap activeSessions =
+    private final Map<SessionImpl, SessionImpl> activeSessions =
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     // misc. statistics
@@ -1109,17 +1110,16 @@ public class RepositoryImpl extends AbstractRepository
         // (copy sessions to array to avoid ConcurrentModificationException;
         // manually copy entries rather than calling ReferenceMap#toArray() in
         // order to work around  http://issues.apache.org/bugzilla/show_bug.cgi?id=25551)
-        SessionImpl[] sa;
+        List<SessionImpl> sa;
         synchronized (activeSessions) {
-            int cnt = 0;
-            sa = new SessionImpl[activeSessions.size()];
-            for (Iterator<SessionImpl> it = activeSessions.values().iterator(); it.hasNext(); cnt++) {
-                sa[cnt] = it.next();
+            sa = new ArrayList<SessionImpl>(activeSessions.size());
+            for (SessionImpl session : activeSessions.values()) {
+                sa.add(session);
             }
         }
-        for (int i = 0; i < sa.length; i++) {
-            if (sa[i] != null) {
-                sa[i].logout();
+        for (SessionImpl session : sa) {
+            if (session != null) {
+                session.logout();
             }
         }
 
@@ -2264,8 +2264,7 @@ public class RepositoryImpl extends AbstractRepository
 
                 synchronized (activeSessions) {
                     // remove workspaces with active sessions
-                    for (Iterator it = activeSessions.values().iterator(); it.hasNext();) {
-                        SessionImpl ses = (SessionImpl) it.next();
+                    for (SessionImpl ses : activeSessions.values()) {
                         wspNames.remove(ses.getWorkspace().getName());
                     }
                 }
