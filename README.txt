@@ -20,12 +20,12 @@ Apache Jackrabbit is a project of the Apache Software Foundation.
 Building Jackrabbit
 ===================
 
-To build Jackrabbit, you first need to download the jcr-2.0-b18.jar and
-jcr-2.0-b18.xml files from https://issues.apache.org/jira/browse/JCR-1104
+To build Jackrabbit, you first need to download the jcr-2.0-b110.jar and
+jcr-2.0-b110.xml files from https://issues.apache.org/jira/browse/JCR-1104
 and install them to your local Maven repository:
 
     mvn install:install-file \
-        -Dfile=jcr-2.0-b19.jar -DpomFile=jcr-2.0-b19.xml
+        -Dfile=jcr-2.0-b110.jar -DpomFile=jcr-2.0-b110.xml
 
 Once you've installed the jar, you can build Jackrabbit like this:
 
