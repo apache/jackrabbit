@@ -44,6 +44,7 @@ import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
+import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -187,6 +188,12 @@ public class GetItemsTest extends AbstractJCR2SPITest {
         }
 
         return jcrPath.toString();
+    }
+
+    @Override
+    protected QNodeDefinition createRootNodeDefinition() {
+        fail("Not implemented");
+        return null;
     }
 
     @Override

@@ -91,13 +91,12 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             protected void checkCredentials(Credentials credentials, String workspaceName)
                     throws LoginException {
 
-                // empty
+                AbstractJCR2SPITest.this.checkCredentials(credentials, workspaceName);
             }
 
             @Override
             protected QNodeDefinition createRootNodeDefinition() throws RepositoryException {
-                // todo implement createRootNodeDefinition
-                return null;
+                return AbstractJCR2SPITest.this.createRootNodeDefinition();
             }
 
             @Override
@@ -182,6 +181,10 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return RepositoryImpl.create(config);
     }
 
+    protected void checkCredentials(Credentials credentials, String workspaceName) {
+        // empty -> all credentials are valid by default
+    }
+
     // -----------------------------------------------------< RepositoryService >---
 
     public IdFactory getIdFactory() throws RepositoryException {
@@ -252,6 +255,8 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
         return repositoryService.getPropertyDefinition(sessionInfo, propertyId);
     }
+
+    protected abstract QNodeDefinition createRootNodeDefinition();
 
     public abstract NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
