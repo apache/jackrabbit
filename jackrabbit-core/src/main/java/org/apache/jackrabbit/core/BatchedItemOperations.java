@@ -1508,7 +1508,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @param def
      * @return the computed values
      */
-    private InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
+    public static InternalValue[] computeSystemGeneratedPropertyValues(NodeState parent,
                                                                  PropDef def) {
         InternalValue[] genValues = null;
 

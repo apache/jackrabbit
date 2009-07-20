@@ -16,29 +16,28 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeImpl;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionException;
+
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.version.VersionException;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Implements a <code>InternalVersionHistory</code>
@@ -400,7 +399,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             // Check if there is only root version and version labels nodes
             if (childNodes.length == 2) {
                 log.debug("Removing orphan version history as it contains only two children");
-                NodeStateEx parentNode = vMgr.getNodeStateEx(node.getParentId());
+                NodeStateEx parentNode = node.getParent();
                 // Remove version history node
                 parentNode.removeNode(node.getName());
                 // store changes for this node and his children
@@ -489,22 +488,21 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    InternalVersionImpl checkin(Name name, NodeImpl src)
+    InternalVersionImpl checkin(Name name, NodeStateEx src)
             throws RepositoryException {
 
         // copy predecessors from src node
         InternalValue[] predecessors;
         if (src.hasProperty(NameConstants.JCR_PREDECESSORS)) {
-            Value[] preds = src.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-            predecessors = new InternalValue[preds.length];
-            for (int i = 0; i < preds.length; i++) {
-                NodeId predId = new NodeId(preds[i].getString());
+            predecessors = src.getPropertyValues(NameConstants.JCR_PREDECESSORS);
+            // check all predecessors
+            for (InternalValue pred: predecessors) {
+                NodeId predId = pred.getNodeId();
                 // check if version exist
                 if (!nameCache.containsValue(predId)) {
                     throw new RepositoryException(
                             "Invalid predecessor in source node: " + predId);
                 }
-                predecessors[i] = InternalValue.create(predId);
             }
         } else {
             // with simple versioning, the node does not contain a predecessors
@@ -526,7 +524,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
 
         // check for jcr:activity
         if (src.hasProperty(NameConstants.JCR_ACTIVITY)) {
-            InternalValue act = src.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue();
+            InternalValue act = src.getPropertyValue(NameConstants.JCR_ACTIVITY);
             vNode.setPropertyValue(NameConstants.JCR_ACTIVITY, act);
         }
 
@@ -608,7 +606,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             InternalValue[] ivalues = new InternalValue[mixins.size()];
             Iterator<Name> iter = mixins.iterator();
             for (int i = 0; i < mixins.size(); i++) {
-                ivalues[i] = InternalValue.create((Name) iter.next());
+                ivalues[i] = InternalValue.create(iter.next());
             }
             node.setPropertyValues(NameConstants.JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }

@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.HashMap;
-
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PathNotFoundException;
@@ -35,7 +32,6 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.QueryManager;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
@@ -52,10 +48,6 @@ import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.core.version.DateVersionSelector;
-import org.apache.jackrabbit.core.version.JcrVersionManagerImpl;
-import org.apache.jackrabbit.core.version.VersionImpl;
-import org.apache.jackrabbit.core.version.VersionSelector;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.Importer;
 import org.apache.jackrabbit.core.xml.WorkspaceImporter;
@@ -256,7 +248,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     public VersionManager getVersionManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
         if (versionMgr == null) {
-            versionMgr = new JcrVersionManagerImpl(session);
+            versionMgr = new JcrVersionManagerImpl(session, stateMgr, hierMgr);
         }
         return versionMgr;
     }
@@ -784,90 +776,14 @@ public class WorkspaceImpl extends AbstractWorkspace
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     public void restore(Version[] versions, boolean removeExisting)
             throws ItemExistsException, UnsupportedRepositoryOperationException,
             VersionException, LockException, InvalidItemStateException,
             RepositoryException {
-
-        // todo: perform restore operations direct on the node states
-
         // check state of this instance
         sanityCheck();
-
-        // add all versions to map of versions to restore
-        final HashMap<String, VersionImpl> toRestore = new HashMap<String, VersionImpl>();
-        for (Version v : versions) {
-            VersionHistory vh = v.getContainingHistory();
-            // check for collision
-            if (toRestore.containsKey(vh.getUUID())) {
-                throw new VersionException("Unable to restore. Two or more versions have same version history.");
-            }
-            toRestore.put(vh.getUUID(), (VersionImpl) v);
-        }
-
-        // create a version selector to the set of versions
-        VersionSelector vsel = new VersionSelector() {
-            public Version select(VersionHistory versionHistory) throws RepositoryException {
-                // try to select version as specified
-                Version v = toRestore.get(versionHistory.getUUID());
-                if (v == null) {
-                    // select latest one
-                    v = DateVersionSelector.selectByDate(versionHistory, null);
-                }
-                return v;
-            }
-        };
-
-        // check for pending changes
-        if (session.hasPendingChanges()) {
-            String msg = "Unable to restore version. Session has pending changes.";
-            log.debug(msg);
-            throw new InvalidItemStateException(msg);
-        }
-        // TODO: add checks for lock/hold...
-        boolean success = false;
-        try {
-            // now restore all versions that have a node in the ws
-            int numRestored = 0;
-            while (toRestore.size() > 0) {
-                Version[] restored = null;
-                for (VersionImpl v : toRestore.values()) {
-                    try {
-                        NodeImpl node = (NodeImpl) session.getNodeById(v.getInternalFrozenNode().getFrozenId());
-                        restored = node.internalRestore(v, vsel, removeExisting);
-                        // remove restored versions from set
-                        for (Version r : restored) {
-                            toRestore.remove(r.getContainingHistory().getUUID());
-                        }
-                        numRestored += restored.length;
-                        break;
-                    } catch (ItemNotFoundException e) {
-                        // ignore
-                    }
-                }
-                if (restored == null) {
-                    if (numRestored == 0) {
-                        throw new VersionException("Unable to restore. At least one version needs"
-                                + " existing versionable node in workspace.");
-                    } else {
-                        throw new VersionException("Unable to restore. All versions with non"
-                                + " existing versionable nodes need parent.");
-                    }
-                }
-            }
-            session.save();
-            success = true;
-        } finally {
-            if (!success) {
-                // revert session
-                try {
-                    log.debug("reverting changes applied during restore...");
-                    session.refresh(false);
-                } catch (RepositoryException e) {
-                    log.error("Error while reverting changes applied during restore.", e);
-                }
-            }
-        }
+        getVersionManager().restore(versions, removeExisting);
     }
 
     /**

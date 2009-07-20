@@ -16,16 +16,13 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import org.apache.jackrabbit.core.NodeImpl;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 
 /**
  * This interface defines the version manager. It gives access to the underlying
@@ -62,28 +59,31 @@ public interface VersionManager {
      * invokes the checkin() on the persistent version manager and remaps the
      * newly created version objects.
      *
+     * @param session session that invokes the checkin
      * @param node node to checkin
      * @return the newly created version
      * @throws RepositoryException if an error occurs
      */
-    Version checkin(NodeImpl node) throws RepositoryException;
+    InternalVersion checkin(Session session, NodeStateEx node) throws RepositoryException;
 
     /**
      * invokes the checkout() on the persistent version manager.
      *
-     * @param node node to checkout
-     * @return the base version
+     * @param state node to checkout
+     * @param activityId node id if the current activity
+     * @return the base version id
      * @throws RepositoryException if an error occurs
      */
-    Version checkout(NodeImpl node) throws RepositoryException;
+    NodeId canCheckout(NodeStateEx state, NodeId activityId) throws RepositoryException;
 
     /**
      * Removes the specified version from the given version history.
+     * @param session the session that performs the remove
      * @param history version history to remove the version from
      * @param versionName name of the version
      * @throws RepositoryException if an error occurs
      */
-    void removeVersion(VersionHistory history, Name versionName)
+    void removeVersion(Session session, InternalVersionHistory history, Name versionName)
             throws RepositoryException;
 
     /**
@@ -94,6 +94,7 @@ public interface VersionManager {
      * In either case, the version the label was previously assigned is returned,
      * or <code>null</code> of the label was not moved.
      *
+     * @param session the session that performs the operation
      * @param history version history
      * @param version name of the version
      * @param label new label
@@ -101,8 +102,10 @@ public interface VersionManager {
      * @return the version that had the label or <code>null</code>
      * @throws RepositoryException if an error occurs
      */
-    Version setVersionLabel(VersionHistory history, Name version, Name label,
-                            boolean move)
+    InternalVersion setVersionLabel(Session session, 
+                                    InternalVersionHistory history,
+                                    Name version, Name label,
+                                    boolean move)
             throws RepositoryException;
 
     /**

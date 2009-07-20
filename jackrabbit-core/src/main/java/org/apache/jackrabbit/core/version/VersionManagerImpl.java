@@ -24,12 +24,9 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.ActivityViolationException;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
@@ -427,10 +424,9 @@ public class VersionManagerImpl extends AbstractVersionManager
      * checks if the checkout is valid in respect to a possible activity set on
      * the session
      */
-    public Version checkout(NodeImpl node) throws RepositoryException {
-        NodeId baseId = NodeId.valueOf(node.getProperty(NameConstants.JCR_BASEVERSION).getString());
-        NodeImpl activity = (NodeImpl) node.getSession().getWorkspace().getVersionManager().getActivity();
-        if (activity != null) {
+    public NodeId canCheckout(NodeStateEx state, NodeId activityId) throws RepositoryException {
+        NodeId baseId = state.getPropertyValue(NameConstants.JCR_BASEVERSION).getNodeId();
+        if (activityId != null) {
             // If there exists another workspace with node N' where N' also has version
             // history H, N' is checked out and the jcr:activity property of N'
             // references A, then the checkout fails with an
@@ -439,10 +435,9 @@ public class VersionManagerImpl extends AbstractVersionManager
 
             // we're currently leverage the fact, that only references to "real"
             // workspaces are recorded.
-            NodeId nodeId = activity.getNodeId();
-            if (stateMgr.hasNodeReferences(nodeId)) {
+            if (stateMgr.hasNodeReferences(activityId)) {
                 try {
-                    NodeReferences refs = stateMgr.getNodeReferences(nodeId);
+                    NodeReferences refs = stateMgr.getNodeReferences(activityId);
                     if (refs.hasReferences()) {
                         throw new ActivityViolationException("Unable to checkout. " +
                                 "Activity is already used for the same node in " +
@@ -453,12 +448,11 @@ public class VersionManagerImpl extends AbstractVersionManager
                 }
             }
 
-            // TODO:
             // If there is a version in H that is not an eventual predecessor of N but
             // whose jcr:activity references A, then the checkout fails with an
             // ActivityViolationException
-            InternalActivityImpl a = (InternalActivityImpl) getItem(nodeId);
-            NodeId historyId = NodeId.valueOf(node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString());
+            InternalActivityImpl a = (InternalActivityImpl) getItem(activityId);
+            NodeId historyId = state.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
             InternalVersionHistory history = (InternalVersionHistory) getItem(historyId);
             InternalVersion version = a.getLatestVersion(history);
             if (version != null) {
@@ -472,8 +466,7 @@ public class VersionManagerImpl extends AbstractVersionManager
                 }
             }
         }
-        return (VersionImpl)
-                ((SessionImpl) node.getSession()).getNodeById(baseId);
+        return baseId;
     }
 
     /**
@@ -482,16 +475,17 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public Version checkin(final NodeImpl node) throws RepositoryException {
-        InternalVersion version = (InternalVersion)
-                escFactory.doSourced((SessionImpl) node.getSession(), new SourcedTarget() {
+    public InternalVersion checkin(final Session session, final NodeStateEx node)
+            throws RepositoryException {
+        return (InternalVersion)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
                 InternalVersionHistory vh;
-                if (node.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+                if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     // in full versioning, the history id can be retrieved via
                     // the property
-                    String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
-                    vh = getVersionHistory(NodeId.valueOf(histUUID));
+                    NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
+                    vh = getVersionHistory(histId);
                     return internalCheckin((InternalVersionHistoryImpl) vh, node, false);
                 } else {
                     // in simple versioning the history id needs to be calculated
@@ -500,9 +494,6 @@ public class VersionManagerImpl extends AbstractVersionManager
                 }
             }
         });
-
-        return (VersionImpl)
-                ((SessionImpl) node.getSession()).getNodeById(version.getId());
     }
 
     /**
@@ -511,20 +502,19 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public void removeVersion(VersionHistory history, final Name name)
+    public void removeVersion(Session session,
+                              final InternalVersionHistory history,
+                              final Name name)
             throws VersionException, RepositoryException {
 
-        final VersionHistoryImpl historyImpl = (VersionHistoryImpl) history;
-        if (!historyImpl.hasNode(name)) {
+        if (!history.hasVersion(name)) {
             throw new VersionException("Version with name " + name.toString()
                     + " does not exist in this VersionHistory");
         }
 
-        escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget() {
+        escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
-                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                        historyImpl.getInternalVersionHistory();
-                internalRemoveVersion(vh, name);
+                internalRemoveVersion((InternalVersionHistoryImpl) history, name);
                 return null;
             }
         });
@@ -536,26 +526,18 @@ public class VersionManagerImpl extends AbstractVersionManager
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
-    public Version setVersionLabel(final VersionHistory history,
-                                   final Name version, final Name label,
-                                   final boolean move)
+    public InternalVersion setVersionLabel(Session session,
+                                           final InternalVersionHistory history,
+                                           final Name version, final Name label,
+                                           final boolean move)
             throws RepositoryException {
 
-        InternalVersion v = (InternalVersion)
-                escFactory.doSourced((SessionImpl) history.getSession(), new SourcedTarget() {
+        return (InternalVersion)
+                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
             public Object run() throws RepositoryException {
-                InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                        ((VersionHistoryImpl) history).getInternalVersionHistory();
-                return setVersionLabel(vh, version, label, move);
+                return setVersionLabel((InternalVersionHistoryImpl) history, version, label, move);
             }
         });
-
-        if (v == null) {
-            return null;
-        } else {
-            return (Version)
-                    ((SessionImpl) history.getSession()).getNodeById(v.getId());
-        }
     }
 
     /**

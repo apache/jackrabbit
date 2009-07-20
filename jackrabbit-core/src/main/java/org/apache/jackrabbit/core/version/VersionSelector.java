@@ -17,8 +17,6 @@
 package org.apache.jackrabbit.core.version;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 
 /**
  * This Interface defines the version selector that needs to provide a version,
@@ -42,10 +40,7 @@ import javax.jcr.version.VersionHistory;
  *
  * @see DateVersionSelector
  * @see LabelVersionSelector
- * @see org.apache.jackrabbit.core.NodeImpl#restore(String, boolean)
- * @see org.apache.jackrabbit.core.NodeImpl#restore(Version, boolean)
- * @see org.apache.jackrabbit.core.NodeImpl#restore(Version, String, boolean)
- * @see org.apache.jackrabbit.core.NodeImpl#restoreByLabel(String, boolean)
+ * @see javax.jcr.version.VersionManager#restore
  *
  */
 public interface VersionSelector {
@@ -59,6 +54,6 @@ public interface VersionSelector {
      * @return A version or <code>null</code>.
      * @throws RepositoryException if an error occurs.
      */
-    Version select(VersionHistory versionHistory) throws RepositoryException;
+    InternalVersion select(InternalVersionHistory versionHistory) throws RepositoryException;
 
 }
