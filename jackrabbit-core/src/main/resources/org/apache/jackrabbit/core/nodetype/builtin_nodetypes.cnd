@@ -269,7 +269,7 @@
  * and does not necessarily imply the use of the UUID syntax, or global uniqueness.
  * The identifier of a referenceable node must be a referenceable identifier.
  * Referenceable identifiers must fulfill a number of constraints beyond the
- * minimum required of standard identifiers (see ¤3.8.3 Referenceable Identifiers).
+ * minimum required of standard identifiers (see 3.8.3 Referenceable Identifiers).
  * A reference property is a property that holds the referenceable identifier of a
  * referenceable node and therefore serves as a pointer to that node. The two types
  * of reference properties, REFERENCE and WEAKREFERENCE differ in that the former
