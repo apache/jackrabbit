@@ -21,21 +21,20 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
 
 import org.apache.jackrabbit.core.InternalXAResource;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.TransactionException;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
+import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -44,8 +43,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
-import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
-import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
@@ -225,66 +222,62 @@ public class XAVersionManager extends AbstractVersionManager
     /**
      * {@inheritDoc}
      */
-    public Version checkout(NodeImpl node) throws RepositoryException {
-        return vMgr.checkout(node);
+    public NodeId canCheckout(NodeStateEx state, NodeId activityId) throws RepositoryException {
+        return vMgr.canCheckout(state, activityId);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Version checkin(NodeImpl node) throws RepositoryException {
+    public InternalVersion checkin(Session session, NodeStateEx node) throws RepositoryException {
         if (isInXA()) {
             InternalVersionHistory vh;
             InternalVersion version;
-            if (node.isNodeType(NameConstants.MIX_VERSIONABLE)) {
+            if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                 // in full versioning, the history id can be retrieved via
                 // the property
-                String histUUID = node.getProperty(NameConstants.JCR_VERSIONHISTORY).getString();
-                vh = getVersionHistory(NodeId.valueOf(histUUID));
+                NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
+                vh = getVersionHistory(histId);
                 version = internalCheckin((InternalVersionHistoryImpl) vh, node, false);
             } else {
                 // in simple versioning the history id needs to be calculated
                 vh = getVersionHistoryOfNode(node.getNodeId());
                 version = internalCheckin((InternalVersionHistoryImpl) vh, node, true);
             }
-            return (Version) ((SessionImpl) node.getSession()).getNodeById(version.getId());
+            return version;
+        } else {
+            return vMgr.checkin(session, node);
         }
-        return vMgr.checkin(node);
     }
 
     /**
      * {@inheritDoc}
      */
-    public void removeVersion(VersionHistory history, Name versionName)
+    public void removeVersion(Session session, InternalVersionHistory history,
+                              Name versionName)
             throws RepositoryException {
-
         if (isInXA()) {
-            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    ((VersionHistoryImpl) history).getInternalVersionHistory();
-            internalRemoveVersion(vh, versionName);
-            return;
+            internalRemoveVersion((InternalVersionHistoryImpl) history, versionName);
+        } else {
+            vMgr.removeVersion(session, history, versionName);
         }
-        vMgr.removeVersion(history, versionName);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Version setVersionLabel(VersionHistory history, Name version,
-                                   Name label, boolean move)
+    public InternalVersion setVersionLabel(Session session,
+                                           InternalVersionHistory history,
+                                           Name version,
+                                           Name label, boolean move)
             throws RepositoryException {
 
         if (isInXA()) {
-            InternalVersionHistoryImpl vh = (InternalVersionHistoryImpl)
-                    ((VersionHistoryImpl) history).getInternalVersionHistory();
-            InternalVersion v = setVersionLabel(vh, version, label, move);
-            if (v == null) {
-                return null;
-            } else {
-                return (Version) ((SessionImpl) history.getSession()).getNodeById(v.getId());
-            }
+            return setVersionLabel((InternalVersionHistoryImpl) history,
+                    version, label, move);
+        } else {
+            return vMgr.setVersionLabel(session, history, version, label, move);
         }
-        return vMgr.setVersionLabel(history, version, label, move);
     }
 
     /**
@@ -466,7 +459,7 @@ public class XAVersionManager extends AbstractVersionManager
      * Before modifying version history given, make a local copy of it.
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeImpl node, boolean simple)
+                                      NodeStateEx node, boolean simple)
             throws RepositoryException {
 
         if (history.getVersionManager() != this) {

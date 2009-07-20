@@ -27,6 +27,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
@@ -593,7 +594,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * @see javax.jcr.Node#checkin()
      */
     protected InternalVersion internalCheckin(InternalVersionHistoryImpl history,
-                                      NodeImpl node, boolean simple)
+                                      NodeStateEx node, boolean simple)
             throws RepositoryException {
         WriteOperation operation = startWriteOperation();
         try {
@@ -602,11 +603,10 @@ abstract class AbstractVersionManager implements VersionManager {
 
             // check for jcr:activity
             if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
-                NodeId actId = node.getProperty(NameConstants.JCR_ACTIVITY).internalGetValue().getNodeId();
+                NodeId actId = node.getPropertyValue(NameConstants.JCR_ACTIVITY).getNodeId();
                 InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
                 act.addVersion(v);
             }
-
             operation.save();
             return v;
         } catch (ItemStateException e) {
@@ -659,7 +659,7 @@ abstract class AbstractVersionManager implements VersionManager {
      * @throws RepositoryException if an error occurs.
      */
     protected String calculateCheckinVersionName(InternalVersionHistoryImpl history,
-                                                 NodeImpl node, boolean simple)
+                                                 NodeStateEx node, boolean simple)
             throws RepositoryException {
         InternalVersion best = null;
         if (simple) {
@@ -668,9 +668,9 @@ abstract class AbstractVersionManager implements VersionManager {
             best = history.getVersion(names[names.length - 1]);
         } else {
             // 1. search a predecessor, suitable for generating the new name
-            Value[] values = node.getProperty(NameConstants.JCR_PREDECESSORS).getValues();
-            for (Value value: values) {
-                InternalVersion pred = history.getVersion(NodeId.valueOf(value.getString()));
+            InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
+            for (InternalValue value: values) {
+                InternalVersion pred = history.getVersion(value.getNodeId());
                 if (best == null
                         || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
                     best = pred;

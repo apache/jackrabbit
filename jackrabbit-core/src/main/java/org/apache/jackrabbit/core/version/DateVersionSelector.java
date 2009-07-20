@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
-import javax.jcr.version.VersionIterator;
 import java.util.Calendar;
+
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * This Class implements a version selector that selects a version by creation
@@ -57,7 +57,7 @@ public class DateVersionSelector implements VersionSelector {
      * Creates a <code>DateVersionSelector</code> that will select the latest
      * version of all those that are older than the given date.
      *
-     * @param date
+     * @param date reference date
      */
     public DateVersionSelector(Calendar date) {
         this.date = date;
@@ -67,8 +67,8 @@ public class DateVersionSelector implements VersionSelector {
      * Creates a <code>DateVersionSelector</code> that will select the latest
      * version of all those that are older than the given date.
      *
-     * @param date
-     * @param returnLatest
+     * @param date reference date
+     * @param returnLatest if <code>true</code> latest is selected
      */
     public DateVersionSelector(Calendar date, boolean returnLatest) {
         this.date = date;
@@ -87,7 +87,7 @@ public class DateVersionSelector implements VersionSelector {
     /**
      * Sets the date hint
      *
-     * @param date
+     * @param date reference date
      */
     public void setDate(Calendar date) {
         this.date = date;
@@ -107,22 +107,20 @@ public class DateVersionSelector implements VersionSelector {
      * Sets the flag, if the latest version should be selected, if no
      * version can be found using the given hint.
      *
-     * @param returnLatest
+     * @param returnLatest the <ocde>returnLatest</code> flag
      */
     public void setReturnLatest(boolean returnLatest) {
         this.returnLatest = returnLatest;
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Selects a version from the given version history using the previously
      * assigned hint in the following order: name, label, date, latest.
-     *
-     * @param versionHistory
-     * @return
-     * @throws RepositoryException
      */
-    public Version select(VersionHistory versionHistory) throws RepositoryException {
-        Version selected = null;
+    public InternalVersion select(InternalVersionHistory versionHistory) throws RepositoryException {
+        InternalVersion selected = null;
         if (date != null) {
             selected = DateVersionSelector.selectByDate(versionHistory, date);
         }
@@ -135,21 +133,20 @@ public class DateVersionSelector implements VersionSelector {
     /**
      * Selects a version by date.
      *
-     * @param history
-     * @param date
+     * @param history history to select from
+     * @param date reference date
      * @return the latest version that is older than the given date date or
      * <code>null</code>
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
-    public static Version selectByDate(VersionHistory history, Calendar date)
+    public static InternalVersion selectByDate(InternalVersionHistory history, Calendar date)
             throws RepositoryException {
         long time = (date != null) ? date.getTimeInMillis() : Long.MAX_VALUE;
         long latestDate = Long.MIN_VALUE;
-        Version latestVersion = null;
-        VersionIterator iter = history.getAllVersions();
-        while (iter.hasNext()) {
-            Version v = iter.nextVersion();
-            if (v.getPredecessors().length == 0) {
+        InternalVersion latestVersion = null;
+        for (Name name: history.getVersionNames()) {
+            InternalVersion v = history.getVersion(name);
+            if (v.isRootVersion()) {
                 // ignore root version
                 continue;
             }

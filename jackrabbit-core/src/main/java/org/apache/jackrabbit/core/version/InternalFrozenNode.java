@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.Set;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
@@ -64,7 +66,7 @@ public interface InternalFrozenNode extends InternalFreeze {
      *
      * @return the list of names of the frozen mixin types.
      */
-    Name[] getFrozenMixinTypes();
+    Set<Name> getFrozenMixinTypes();
 
     /**
      * Checks if this frozen node has the frozen version history

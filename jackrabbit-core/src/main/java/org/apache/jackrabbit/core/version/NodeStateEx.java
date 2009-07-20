@@ -16,31 +16,33 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.ItemExistsException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+
+import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeDef;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.nodetype.PropDef;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.PropertyType;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
  * This Class provides some basic node operations directly on the node state.
@@ -70,8 +72,10 @@ public class NodeStateEx {
     /**
      * Creates a new persistent node
      *
-     * @param stateMgr
-     * @param nodeState
+     * @param stateMgr state manager
+     * @param ntReg node type registry
+     * @param nodeState underlying node state
+     * @param name name (can be null)
      */
     public NodeStateEx(UpdatableItemStateManager stateMgr,
                        NodeTypeRegistry ntReg,
@@ -80,6 +84,26 @@ public class NodeStateEx {
         this.ntReg = ntReg;
         this.stateMgr = stateMgr;
         this.name = name;
+    }
+
+    /**
+     * Creates a new persistent node
+     *
+     * @param stateMgr state manager
+     * @param ntReg node type registry
+     * @param nodeId node id
+     * @throws RepositoryException if the node state can't be loaded
+     */
+    public NodeStateEx(UpdatableItemStateManager stateMgr,
+                       NodeTypeRegistry ntReg,
+                       NodeId nodeId) throws RepositoryException {
+        try {
+            this.ntReg = ntReg;
+            this.stateMgr = stateMgr;
+            this.nodeState = (NodeState) stateMgr.getItemState(nodeId);
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        }
     }
 
 
@@ -95,7 +119,7 @@ public class NodeStateEx {
                 NodeState parent = (NodeState) stateMgr.getItemState(parentId);
                 name = parent.getChildNodeEntry(nodeState.getNodeId()).getName();
             } catch (ItemStateException e) {
-                // should never occurr
+                // should never occur
                 throw new IllegalStateException(e.toString());
             }
         }
@@ -121,6 +145,19 @@ public class NodeStateEx {
     }
 
     /**
+     * Returns the parent node of this node
+     *
+     * @return the parent node of this node or <code>null</code> if root node
+     * @throws RepositoryException if an error occurs
+     */
+    public NodeStateEx getParent() throws RepositoryException {
+        if (nodeState.getParentId() == null) {
+            return null;
+        }
+        return getNode(nodeState.getParentId());
+    }
+
+    /**
      * Returns the underlaying node state.
      * @return the underlaying node state.
      */
@@ -132,6 +169,7 @@ public class NodeStateEx {
      * Returns the properties of this node
      *
      * @return the properties of this node
+     * @throws ItemStateException if an error occurs
      */
     public PropertyState[] getProperties() throws ItemStateException {
         Set<Name> set = nodeState.getPropertyNames();
@@ -147,7 +185,7 @@ public class NodeStateEx {
     /**
      * Checks if the given property exists
      *
-     * @param name
+     * @param name name of the property
      * @return <code>true</code> if the given property exists.
      */
     public boolean hasProperty(Name name) {
@@ -158,7 +196,7 @@ public class NodeStateEx {
     /**
      * Returns the values of the given property of <code>null</code>
      *
-     * @param name
+     * @param name name of the property
      * @return the values of the given property.
      */
     public InternalValue[] getPropertyValues(Name name) {
@@ -174,7 +212,7 @@ public class NodeStateEx {
     /**
      * Returns the value of the given property or <code>null</code>
      *
-     * @param name
+     * @param name name of the property
      * @return the value of the given property.
      */
     public InternalValue getPropertyValue(Name name) {
@@ -190,9 +228,9 @@ public class NodeStateEx {
     /**
      * Sets the property value
      *
-     * @param name
-     * @param value
-     * @throws RepositoryException
+     * @param name name of the property
+     * @param value value to set
+     * @throws RepositoryException if an error occurs
      */
     public void setPropertyValue(Name name, InternalValue value)
             throws RepositoryException {
@@ -202,10 +240,10 @@ public class NodeStateEx {
     /**
      * Sets the property values
      *
-     * @param name
-     * @param type
-     * @param values
-     * @throws RepositoryException
+     * @param name name of the property
+     * @param type property type
+     * @param values values to set
+     * @throws RepositoryException if an error occurs
      */
     public void setPropertyValues(Name name, int type, InternalValue[] values)
             throws RepositoryException {
@@ -215,56 +253,43 @@ public class NodeStateEx {
     /**
      * Sets the property values
      *
-     * @param name
-     * @param type
-     * @param values
-     * @throws RepositoryException
+     * @param name name of the property
+     * @param type type of the values
+     * @param values values to set
+     * @param multiple <code>true</code>for MV properties
+     * @return the modified property state
+     * @throws RepositoryException if an error occurs
      */
-    public void setPropertyValues(Name name, int type, InternalValue[] values, boolean multiple)
+    public PropertyState setPropertyValues(Name name, int type, InternalValue[] values, boolean multiple)
             throws RepositoryException {
-
-        PropertyState prop = getOrCreatePropertyState(name, type, multiple);
-        prop.setValues(values);
-    }
-
-
-    /**
-     * Retrieves or creates a new property state as child property of this node
-     *
-     * @param name
-     * @param type
-     * @param multiValued
-     * @return the property state
-     * @throws RepositoryException
-     */
-    private PropertyState getOrCreatePropertyState(Name name, int type, boolean multiValued)
-            throws RepositoryException {
-
         PropertyId propId = new PropertyId(nodeState.getNodeId(), name);
         if (stateMgr.hasItemState(propId)) {
             try {
                 PropertyState propState = (PropertyState) stateMgr.getItemState(propId);
-                // someone calling this method will always alter the property state, so set status to modified
                 if (propState.getStatus() == ItemState.STATUS_EXISTING) {
                     propState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 }
-                // although this is not quite correct, we mark node as modified aswell
+                // although this is not quite correct, we mark node as modified as well
                 if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
                     nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 }
+                propState.setType(type);
+                propState.setValues(values);
                 return propState;
             } catch (ItemStateException e) {
                 throw new RepositoryException("Unable to create property: " + e.toString());
             }
         } else {
+
+            PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(name, type, multiple);
+
             PropertyState propState = stateMgr.createNew(name, nodeState.getNodeId());
             propState.setType(type);
-            propState.setMultiValued(multiValued);
-
-            PropDef pd = getEffectiveNodeType().getApplicablePropertyDef(name, type, multiValued);
+            propState.setMultiValued(multiple);
             propState.setDefinitionId(pd.getId());
+            propState.setValues(values);
 
-            // need to store nodestate
+            // need to store node state
             nodeState.addPropertyName(name);
             if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
@@ -278,7 +303,7 @@ public class NodeStateEx {
      * of this node's primary and mixin node types.
      *
      * @return the effective node type
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public EffectiveNodeType getEffectiveNodeType() throws RepositoryException {
         try {
@@ -293,7 +318,7 @@ public class NodeStateEx {
     /**
      * checks if the given child node exists.
      *
-     * @param name
+     * @param name name of the node
      * @return <code>true</code> if the given child exists.
      */
     public boolean hasNode(Name name) {
@@ -303,30 +328,53 @@ public class NodeStateEx {
     /**
      * removes the (first) child node with the given name.
      *
-     * @param name
+     * @param name name of hte node
      * @return <code>true</code> if the child was removed
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public boolean removeNode(Name name) throws RepositoryException {
         return removeNode(name, 1);
     }
 
     /**
+     * removes the given child node
+     *
+     * @param node child node to remove
+     * @return <code>true</code> if the child was removed
+     * @throws RepositoryException if an error occurs
+     */
+    public boolean removeNode(NodeStateEx node) throws RepositoryException {
+        // locate child node entry
+        return removeNode(nodeState.getChildNodeEntry(node.getNodeId()));
+    }
+
+
+    /**
      * removes the child node with the given name and 1-based index
      *
-     * @param name
-     * @param index
+     * @param name name of the child node
+     * @param index index of the child node
      * @return <code>true</code> if the child was removed.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public boolean removeNode(Name name, int index) throws RepositoryException {
+        return removeNode(nodeState.getChildNodeEntry(name, index));
+    }
+
+    /**
+     * removes the child node with the given child node entry
+     *
+     * @param entry entry to remove
+     * @return <code>true</code> if the child was removed.
+     * @throws RepositoryException if an error occurs
+     */
+    public boolean removeNode(ChildNodeEntry entry) throws RepositoryException {
         try {
-            ChildNodeEntry entry = nodeState.getChildNodeEntry(name, index);
             if (entry == null) {
                 return false;
             } else {
                 removeNode(entry.getId());
-                nodeState.removeChildNodeEntry(name, index);
+                nodeState.removeChildNodeEntry(entry.getId());
                 nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 return true;
             }
@@ -338,8 +386,8 @@ public class NodeStateEx {
     /**
      * removes recursively the node with the given id
      *
-     * @param id
-     * @throws ItemStateException
+     * @param id node id
+     * @throws ItemStateException if an error occurs
      */
     private void removeNode(NodeId id) throws ItemStateException {
         NodeState state = (NodeState) stateMgr.getItemState(id);
@@ -365,9 +413,9 @@ public class NodeStateEx {
     /**
      * removes the property with the given name
      *
-     * @param name
+     * @param name name of the property
      * @return <code>true</code> if the property was removed.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public boolean removeProperty(Name name) throws RepositoryException {
         try {
@@ -390,10 +438,10 @@ public class NodeStateEx {
      * retrieves the child node with the given name and 1-base index or
      * <code>null</code> if the node does not exist.
      *
-     * @param name
-     * @param index
+     * @param name name of hte child node
+     * @param index index of thechild node
      * @return the node state.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public NodeStateEx getNode(Name name, int index) throws RepositoryException {
         ChildNodeEntry entry = nodeState.getChildNodeEntry(name, index);
@@ -409,14 +457,57 @@ public class NodeStateEx {
     }
 
     /**
+     * Returns the node with the given id.
+     * @param id node id
+     * @return the new node state
+     * @throws RepositoryException if an error occurs
+     */
+    public NodeStateEx getNode(NodeId id) throws RepositoryException {
+        try {
+            NodeState state = (NodeState) stateMgr.getItemState(id);
+            return new NodeStateEx(stateMgr, ntReg, state, name);
+        } catch (ItemStateException e) {
+            throw new RepositoryException("Unable to getNode: " + e.toString());
+        }
+    }
+
+    /**
+     * Checks if the given node state exists
+     * @param id node id
+     * @return <code>true</code> if the node state exists
+     */
+    public boolean hasNode(NodeId id) {
+        return stateMgr.hasItemState(id);
+    }
+
+    /**
      * Adds a new child node with the given name
      *
-     * @param nodeName
-     * @param nodeTypeName
+     * @param nodeName name of the new node
+     * @param nodeTypeName node type name
+     * @param id id of the new node
      * @return the node state
-     * @throws NoSuchNodeTypeException
-     * @throws ConstraintViolationException
-     * @throws RepositoryException
+     * @throws NoSuchNodeTypeException if the node type does not exist
+     * @throws ConstraintViolationException if there is a constraint violation
+     * @throws RepositoryException if an error occurs
+     */
+    public NodeStateEx addNode(Name nodeName, Name nodeTypeName, NodeId id)
+            throws NoSuchNodeTypeException, ConstraintViolationException, RepositoryException {
+        return addNode(nodeName, nodeTypeName, id,
+                ntReg.getEffectiveNodeType(nodeTypeName).includesNodeType(NameConstants.MIX_REFERENCEABLE));
+    }
+
+    /**
+     * Adds a new child node with the given name
+     *
+     * @param nodeName name of the new node
+     * @param nodeTypeName node type name
+     * @param id id of the new node
+     * @param referenceable if <code>true</code>, a UUID property is created
+     * @return the node state
+     * @throws NoSuchNodeTypeException if the node type does not exist
+     * @throws ConstraintViolationException if there is a constraint violation
+     * @throws RepositoryException if an error occurs
      */
     public NodeStateEx addNode(Name nodeName, Name nodeTypeName,
                                NodeId id, boolean referenceable)
@@ -445,9 +536,11 @@ public class NodeStateEx {
     /**
      * creates a new child node
      *
-     * @param name
-     * @param id
+     * @param name name
+     * @param nodeTypeName node type name
+     * @param id id
      * @return the newly created node.
+     * @throws RepositoryException if an error occurs
      */
     private NodeStateEx createChildNode(Name name, Name nodeTypeName, NodeId id)
             throws RepositoryException {
@@ -475,10 +568,119 @@ public class NodeStateEx {
     }
 
     /**
+     * Moves the source node to this node using the given name.
+     * @param src shareable source node
+     * @param name name of new node
+     * @param createShare if <code>true</code> a share is created instead.
+     * @return child node
+     * @throws RepositoryException if an error occurs
+     */
+    public NodeStateEx moveFrom(NodeStateEx src, Name name, boolean createShare)
+            throws RepositoryException {
+        if (name == null) {
+            name = src.getName();
+        }
+        // (4) check for name collisions
+        NodeDef def;
+        try {
+            def = getEffectiveNodeType().getApplicableChildNodeDef(name, nodeState.getNodeTypeName(), ntReg);
+        } catch (RepositoryException re) {
+            String msg = "no definition found in parent node's node type for new node";
+            throw new ConstraintViolationException(msg, re);
+        }
+        ChildNodeEntry cne = nodeState.getChildNodeEntry(name, 1);
+        if (cne != null) {
+            // there's already a child node entry with that name;
+            // check same-name sibling setting of new node
+            if (!def.allowsSameNameSiblings()) {
+                throw new ItemExistsException(getNodeId() + "/" + name);
+            }
+            NodeState existingChild;
+            try {
+                // check same-name sibling setting of existing node
+                existingChild = (NodeState) stateMgr.getItemState(cne.getId());
+            } catch (ItemStateException e) {
+                throw new RepositoryException(e);
+            }
+            if (!ntReg.getNodeDef(existingChild.getDefinitionId()).allowsSameNameSiblings()) {
+                throw new ItemExistsException(existingChild.toString());
+            }
+        } else {
+            // check if 'add' is allowed
+            if (getDefinition().isProtected()) {
+                String msg = "not allowed to modify a protected node";
+                throw new ConstraintViolationException(msg);
+            }
+        }
+
+        if (createShare) {
+            // (5) do clone operation
+            NodeId parentId = getNodeId();
+            src.addShareParent(parentId);
+            // attach to this parent
+            nodeState.addChildNodeEntry(name, src.getNodeId());
+            if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
+                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            }
+            return new NodeStateEx(stateMgr, ntReg, src.getState(), name);
+        } else {
+            // detach from parent
+            NodeStateEx parent = getNode(src.getParentId());
+            parent.nodeState.removeChildNodeEntry(src.getNodeId());
+            if (parent.nodeState.getStatus() == ItemState.STATUS_EXISTING) {
+                parent.nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            }
+            // attach to this parent
+            nodeState.addChildNodeEntry(name, src.getNodeId());
+            if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
+                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            }
+            NodeState srcState = src.getState();
+            srcState.setParentId(getNodeId());
+            srcState.setDefinitionId(def.getId());
+            
+            if (srcState.getStatus() == ItemState.STATUS_EXISTING) {
+                srcState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+            }
+            return new NodeStateEx(stateMgr, ntReg, srcState, name);
+        }
+    }
+
+    /**
+     * Adds a share parent id
+     * @param parentId the parent id
+     * @throws RepositoryException if an error occurs
+     */
+    private void addShareParent(NodeId parentId) throws RepositoryException {
+        // verify that we're shareable
+        if (!nodeState.isShareable()) {
+            String msg = this + " is not shareable.";
+            throw new RepositoryException(msg);
+        }
+
+        // detect share cycle (TODO)
+        // NodeId srcId = getNodeId();
+        //HierarchyManager hierMgr = session.getHierarchyManager();
+        //if (parentId.equals(srcId) || hierMgr.isAncestor(srcId, parentId)) {
+        //    String msg = "This would create a share cycle.";
+        //    log.debug(msg);
+        //    throw new RepositoryException(msg);
+        //}
+
+        if (!nodeState.containsShare(parentId)) {
+            if (nodeState.addShare(parentId)) {
+                return;
+            }
+        }
+        String msg = "Adding a shareable node twice to the same parent is not supported.";
+        throw new UnsupportedRepositoryOperationException(msg);
+    }
+
+    /**
      * returns all child nodes
      *
      * @return the child nodes.
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public NodeStateEx[] getChildNodes() throws RepositoryException {
         try {
@@ -498,7 +700,7 @@ public class NodeStateEx {
     /**
      * stores the persistent state recursively
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public void store() throws RepositoryException {
         try {
@@ -511,8 +713,8 @@ public class NodeStateEx {
     /**
      * stores the given persistent state recursively
      *
-     * @param state
-     * @throws ItemStateException
+     * @param state node state to store
+     * @throws ItemStateException if an error occurs
      */
     private void store(NodeState state)
             throws ItemStateException {
@@ -539,12 +741,12 @@ public class NodeStateEx {
     /**
      * reloads the persistent state recursively
      *
-     * @throws RepositoryException
+     * @throws RepositoryException if an error occurs
      */
     public void reload() throws RepositoryException {
         try {
             reload(nodeState);
-            // refetch nodestate if discarded
+            // refetch node state if discarded
             nodeState = (NodeState) stateMgr.getItemState(nodeState.getNodeId());
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -554,8 +756,8 @@ public class NodeStateEx {
     /**
      * reloads the given persistent state recursively
      *
-     * @param state
-     * @throws ItemStateException
+     * @param state node state
+     * @throws ItemStateException if an error occurs
      */
     private void reload(NodeState state) throws ItemStateException {
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
@@ -580,8 +782,8 @@ public class NodeStateEx {
     /**
      * copies a property
      *
-     * @param prop
-     * @throws RepositoryException
+     * @param prop source property
+     * @throws RepositoryException if an error occurs
      */
     public void copyFrom(PropertyImpl prop) throws RepositoryException {
         if (prop.getDefinition().isMultiple()) {
@@ -594,6 +796,38 @@ public class NodeStateEx {
         } else {
             setPropertyValue(prop.getQName(), prop.internalGetValue().createCopy());
         }
+    }
+
+    /**
+     * copies a property
+     *
+     * @param prop source property
+     * @throws RepositoryException if an error occurs
+     */
+    public void copyFrom(PropertyState prop) throws RepositoryException {
+        InternalValue[] values = prop.getValues();
+        InternalValue[] copiedValues = new InternalValue[values.length];
+        for (int i = 0; i < values.length; i++) {
+            copiedValues[i] = values[i].createCopy();
+        }
+        setPropertyValues(prop.getName(), prop.getType(), copiedValues, prop.isMultiValued());
+    }
+
+    /**
+     * Returns the NodeDef for this state
+     * @return the node def
+     */
+    public NodeDef getDefinition() {
+        return ntReg.getNodeDef(nodeState.getDefinitionId());
+    }
+
+    /**
+     * Returns the property definition for the property state
+     * @param prop the property state
+     * @return the prop def
+     */
+    public PropDef getDefinition(PropertyState prop) {
+        return ntReg.getPropDef(prop.getDefinitionId());
     }
 
 }

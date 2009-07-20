@@ -164,7 +164,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             // check permissions
             checkVersionManagementPermission();
             session.getVersionManager().setVersionLabel(
-                    this, session.getQName(versionName),
+                    session, getInternalVersionHistory(), session.getQName(versionName),
                     session.getQName(label), move);
         } catch (NameException e) {
             throw new VersionException(e);
@@ -178,7 +178,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            javax.jcr.version.Version existing = session.getVersionManager().setVersionLabel(this, null, session.getQName(label), true);
+            InternalVersion existing = session.getVersionManager().setVersionLabel(
+                    session, getInternalVersionHistory(), null, session.getQName(label), true);
             if (existing == null) {
                 throw new VersionException("No version with label '" + label + "' exists in this version history.");
             }
@@ -249,7 +250,8 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         try {
             // check permissions
             checkVersionManagementPermission();
-            session.getVersionManager().removeVersion(this, session.getQName(versionName));
+            session.getVersionManager().removeVersion(session,
+                    getInternalVersionHistory(), session.getQName(versionName));
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
