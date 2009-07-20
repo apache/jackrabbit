@@ -506,7 +506,7 @@
   + * (nt:versionHistory) = nt:versionHistory protected sns ABORT
   + * (rep:versionStorage) = rep:versionStorage protected sns ABORT
   + * (rep:activities) = rep:activities protected sns ABORT
-  + * (rep:configurations) = rep:activities protected sns ABORT
+  + * (rep:configurations) = rep:configurations protected sns ABORT
 
 [rep:activities]
   + * (nt:activity) = nt:activity protected sns ABORT
