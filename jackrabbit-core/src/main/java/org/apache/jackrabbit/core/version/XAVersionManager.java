@@ -167,15 +167,32 @@ public class XAVersionManager extends AbstractVersionManager
      */
     public NodeId createActivity(Session session, String title)
             throws RepositoryException {
-
         if (isInXA()) {
             NodeStateEx state = internalCreateActivity(title);
             InternalActivityImpl activity =
                 new InternalActivityImpl(vMgr, state);
             xaItems.put(state.getNodeId(), activity);
             return state.getNodeId();
+        } else {
+            return vMgr.createActivity(session, title);
         }
-        return vMgr.createActivity(session, title);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalConfiguration createConfiguration(Session session,
+                                                     NodeId rootId,
+                                                     InternalBaseline baseline)
+            throws RepositoryException {
+        if (isInXA()) {
+            NodeStateEx state = internalCreateConfiguration(rootId, baseline);
+            InternalConfiguration config = new InternalConfigurationImpl(vMgr, state);
+            xaItems.put(state.getNodeId(), config);
+            return config;
+        } else {
+            return vMgr.createConfiguration(session, rootId, baseline);
+        }
     }
 
     /**

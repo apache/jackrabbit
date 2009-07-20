@@ -141,6 +141,11 @@ public class RepositoryImpl extends AbstractRepository
     public static final NodeId ACTIVITIES_NODE_ID = NodeId.valueOf("deadbeef-face-babe-ac71-babecafebabe");
 
     /**
+     * hardcoded id of the "/jcr:system/jcr:versionStorage/jcr:configurations" node
+     */
+    public static final NodeId CONFIGURATIONS_NODE_ID = NodeId.valueOf("deadbeef-face-babe-c04f-babecafebabe");
+
+    /**
      * hardcoded id of the "/jcr:system/jcr:nodeTypes" node
      */
     public static final NodeId NODETYPES_NODE_ID = NodeId.valueOf("deadbeef-cafe-cafe-cafe-babecafebabe");
@@ -474,6 +479,7 @@ public class RepositoryImpl extends AbstractRepository
                 SYSTEM_ROOT_NODE_ID,
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
+                CONFIGURATIONS_NODE_ID,
                 cacheFactory,
                 ismLocking);
     }

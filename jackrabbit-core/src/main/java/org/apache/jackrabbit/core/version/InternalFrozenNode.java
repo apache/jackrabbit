@@ -68,7 +68,7 @@ public interface InternalFrozenNode extends InternalFreeze {
 
     /**
      * Checks if this frozen node has the frozen version history
-     * @param id
+     * @param id if to check
      * @return <code>true</code> if this node has the history;
      *         <code>false</code> otherwise.
      */

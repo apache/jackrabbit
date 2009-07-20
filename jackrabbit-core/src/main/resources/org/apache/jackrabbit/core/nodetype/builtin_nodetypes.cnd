@@ -506,14 +506,19 @@
   + * (nt:versionHistory) = nt:versionHistory protected sns ABORT
   + * (rep:versionStorage) = rep:versionStorage protected sns ABORT
   + * (rep:activities) = rep:activities protected sns ABORT
+  + * (rep:configurations) = rep:activities protected sns ABORT
 
 [rep:activities]
   + * (nt:activity) = nt:activity protected sns ABORT
   + * (rep:activities) = rep:activities protected sns ABORT
 
+[rep:configurations]
+  + * (nt:configuration) = nt:configuration protected sns ABORT
+  + * (rep:configurations) = rep:configurations protected sns ABORT
+
 // implementation note: because node references are not maintained within the
 // version storage, we store a bidirectional relationship between activities and
- // the respective versions
+// the respective versions
 [rep:VersionReference] mix
   - rep:versions (reference) protected multiple abort
   

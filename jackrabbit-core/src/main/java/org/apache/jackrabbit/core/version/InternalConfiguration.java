@@ -23,27 +23,32 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.id.NodeId;
 
 /**
- * This interface defines the internal activity.
+ * This interface defines the internal represenation of a configuration.
+ *
+ * A configuration is a partial subgraph of a workspace. It consists of the tree
+ * rooted at a particular node (called the configuration root node) minus any
+ * subgraphs that are part of another configuration.
+ * <p/>
+ * An internal configuration soley stores the root id of the actual
+ * configuration in the workspace. The configuration is stored at the same
+ * relative path as it's baseline history.
  */
-public interface InternalActivity extends InternalVersionItem {
+public interface InternalConfiguration extends InternalVersionItem {
 
     /**
-     * Returns the latest version of the given history that is referenced in this activity.
-     * @param history the history
-     * @return the version
+     * Returns the id of the root node of the configuration
+     * @return the id of the root node.
      * @throws RepositoryException if an error occurs
      */
-    InternalVersion getLatestVersion(InternalVersionHistory history)
-            throws RepositoryException;
+    NodeId getRootId() throws RepositoryException;
 
     /**
-     * Returns the changeset of this activity.
-     * This is the set of versions that are the latest members of this activity
-     * in their respective version histories. the changeset is a map grouped by
-     * the nodeid of the respective histories.
-     * @return the changeset
+     * Returns the current baseline of this configuration, i.e. the version of
+     * this "versionable"
+     *
+     * @return the baseline
      * @throws RepositoryException if an error occurs
      */
-    Map<NodeId, InternalVersion> getChangeSet() throws RepositoryException;
+    InternalBaseline getBaseline() throws RepositoryException;
 
 }
